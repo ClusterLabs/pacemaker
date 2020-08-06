@@ -11,6 +11,7 @@
 
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 #include <crm/services.h>
 
@@ -670,8 +671,8 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
     guint interval2_ms = 0;
 
     CRM_ASSERT(rsc);
-    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
-         operation = __xml_next_element(operation)) {
+    for (operation = pcmk__xe_first_child(rsc->ops_xml); operation != NULL;
+         operation = pcmk__xe_next(operation)) {
 
         if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
             value = crm_element_value(operation, "name");
@@ -894,9 +895,9 @@ Recurring(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
-        for (operation = __xml_first_child_element(rsc->ops_xml);
+        for (operation = pcmk__xe_first_child(rsc->ops_xml);
              operation != NULL;
-             operation = __xml_next_element(operation)) {
+             operation = pcmk__xe_next(operation)) {
 
             if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 RecurringOp(rsc, start, node, operation, data_set);
@@ -1107,9 +1108,9 @@ Recurring_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
-        for (operation = __xml_first_child_element(rsc->ops_xml);
+        for (operation = pcmk__xe_first_child(rsc->ops_xml);
              operation != NULL;
-             operation = __xml_next_element(operation)) {
+             operation = pcmk__xe_next(operation)) {
 
             if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 RecurringOp_Stopped(rsc, start, node, operation, data_set);

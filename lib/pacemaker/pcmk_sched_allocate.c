@@ -15,6 +15,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <glib.h>
 
@@ -430,8 +431,8 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         DeleteRsc(rsc, node, FALSE, data_set);
     }
 
-    for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
-         rsc_op = __xml_next_element(rsc_op)) {
+    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
+         rsc_op = pcmk__xe_next(rsc_op)) {
 
         if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             op_list = g_list_prepend(op_list, rsc_op);
@@ -558,9 +559,11 @@ check_actions(pe_working_set_t * data_set)
 
     xmlNode *node_state = NULL;
 
-    for (node_state = __xml_first_child_element(status); node_state != NULL;
-         node_state = __xml_next_element(node_state)) {
-        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
+    for (node_state = pcmk__xe_first_child(status); node_state != NULL;
+         node_state = pcmk__xe_next(node_state)) {
+
+        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE,
+                         pcmk__str_none)) {
             id = crm_element_value(node_state, XML_ATTR_ID);
             lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
             lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
@@ -582,9 +585,9 @@ check_actions(pe_working_set_t * data_set)
                 || pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 xmlNode *rsc_entry = NULL;
 
-                for (rsc_entry = __xml_first_child_element(lrm_rscs);
+                for (rsc_entry = pcmk__xe_first_child(lrm_rscs);
                      rsc_entry != NULL;
-                     rsc_entry = __xml_next_element(rsc_entry)) {
+                     rsc_entry = pcmk__xe_next(rsc_entry)) {
 
                     if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 

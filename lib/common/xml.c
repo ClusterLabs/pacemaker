@@ -145,7 +145,8 @@ reset_xml_node_flags(xmlNode *xml)
         p->flags = 0;
     }
 
-    for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
+    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
+         cIter = pcmk__xml_next(cIter)) {
         reset_xml_node_flags(cIter);
     }
 }
@@ -162,7 +163,8 @@ pcmk__mark_xml_created(xmlNode *xml)
             pcmk__set_xml_flags(p, xpf_created);
             mark_xml_node_dirty(xml);
         }
-        for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
+        for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
+             cIter = pcmk__xml_next(cIter)) {
             pcmk__mark_xml_created(cIter);
         }
     }
@@ -351,7 +353,8 @@ accept_attr_deletions(xmlNode *xml)
         }
     }
 
-    for (cIter = __xml_first_child(xml); cIter != NULL; cIter = __xml_next(cIter)) {
+    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
+         cIter = pcmk__xml_next(cIter)) {
         accept_attr_deletions(cIter);
     }
 }
@@ -455,7 +458,8 @@ find_xml_node(xmlNode * root, const char *search_path, gboolean must_find)
         return NULL;
     }
 
-    for (a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
+    for (a_child = pcmk__xml_first_child(root); a_child != NULL;
+         a_child = pcmk__xml_next(a_child)) {
         if (strcmp((const char *)a_child->name, search_path) == 0) {
 /* 		crm_trace("returning node (%s).", crm_element_name(a_child)); */
             return a_child;
@@ -496,8 +500,8 @@ pcmk__xe_match(xmlNode *parent, const char *node_name,
     /* ensure attr_v specified when attr_n is */
     CRM_CHECK(attr_n == NULL || attr_v != NULL, return NULL);
 
-    for (xmlNode *child = __xml_first_child(parent); child != NULL;
-         child = __xml_next(child)) {
+    for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
+         child = pcmk__xml_next(child)) {
         if (pcmk__str_eq(node_name, (const char *) (child->name),
                          pcmk__str_null_matches)
             && ((attr_n == NULL) || attr_matches(child, attr_n, attr_v))) {
@@ -550,7 +554,8 @@ fix_plus_plus_recursive(xmlNode * target)
 
         expand_plus_plus(target, p_name, p_value);
     }
-    for (child = __xml_first_child(target); child != NULL; child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(target); child != NULL;
+         child = pcmk__xml_next(child)) {
         fix_plus_plus_recursive(child);
     }
 }
@@ -1494,7 +1499,8 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
         offset = 0;
         max = 0;
 
-        for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(data); child != NULL;
+             child = pcmk__xml_next(child)) {
             pcmk__xe_log(log_level, file, function, line, prefix, child,
                          depth + 1,
                          options|xml_log_option_open|xml_log_option_close);
@@ -1593,7 +1599,8 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
         free(prefix_del);
         free(spaces);
 
-        for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(data); child != NULL;
+             child = pcmk__xml_next(child)) {
             log_xml_changes(log_level, file, function, line, prefix, child,
                             depth + 1, options);
         }
@@ -1602,7 +1609,8 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
                      options|xml_log_option_close);
 
     } else {
-        for (child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(data); child != NULL;
+             child = pcmk__xml_next(child)) {
             log_xml_changes(log_level, file, function, line, prefix, child,
                             depth + 1, options);
         }
@@ -1661,7 +1669,8 @@ log_data_element(int log_level, const char *file, const char *function, int line
     if (pcmk_is_set(options, xml_log_option_diff_short)
                && !pcmk_is_set(options, xml_log_option_diff_all)) {
         /* Still searching for the actual change */
-        for (a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
+        for (a_child = pcmk__xml_first_child(data); a_child != NULL;
+             a_child = pcmk__xml_next(a_child)) {
             log_data_element(log_level, file, function, line, prefix, a_child, depth + 1, options);
         }
     } else {
@@ -2300,11 +2309,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     xml_diff_attrs(old_xml, new_xml);
 
     // Check for differences in the original children
-    for (cIter = __xml_first_child(old_xml); cIter != NULL; ) {
+    for (cIter = pcmk__xml_first_child(old_xml); cIter != NULL; ) {
         xmlNode *old_child = cIter;
         xmlNode *new_child = pcmk__xml_match(new_xml, cIter, true);
 
-        cIter = __xml_next(cIter);
+        cIter = pcmk__xml_next(cIter);
         if(new_child) {
             mark_xml_changes(old_child, new_child, TRUE);
 
@@ -2314,11 +2323,11 @@ mark_xml_changes(xmlNode *old_xml, xmlNode *new_xml, bool check_top)
     }
 
     // Check for moved or created children
-    for (cIter = __xml_first_child(new_xml); cIter != NULL; ) {
+    for (cIter = pcmk__xml_first_child(new_xml); cIter != NULL; ) {
         xmlNode *new_child = cIter;
         xmlNode *old_child = pcmk__xml_match(old_xml, cIter, true);
 
-        cIter = __xml_next(cIter);
+        cIter = pcmk__xml_next(cIter);
         if(old_child == NULL) {
             // This is a newly created child
             p = new_child->_private;
@@ -2380,11 +2389,11 @@ can_prune_leaf(xmlNode * xml_node)
         can_prune = FALSE;
     }
 
-    cIter = __xml_first_child(xml_node);
+    cIter = pcmk__xml_first_child(xml_node);
     while (cIter) {
         xmlNode *child = cIter;
 
-        cIter = __xml_next(cIter);
+        cIter = pcmk__xml_next(cIter);
         if (can_prune_leaf(child)) {
             free_xml(child);
         } else {
@@ -2410,7 +2419,8 @@ pcmk__xc_match(xmlNode *root, xmlNode *search_comment, bool exact)
 
     CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
 
-    for (a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
+    for (a_child = pcmk__xml_first_child(root); a_child != NULL;
+         a_child = pcmk__xml_next(a_child)) {
         if (exact) {
             int offset = pcmk__xml_position(a_child, xpf_skip);
             xml_private_t *p = a_child->_private;
@@ -2560,7 +2570,8 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
         }
     }
 
-    for (a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
+    for (a_child = pcmk__xml_first_child(update); a_child != NULL;
+         a_child = pcmk__xml_next(a_child)) {
 #if XML_PARSER_DEBUG
         crm_trace("Updating child <%s%s%s%s%s/>", crm_str(object_name),
                   object_href ? " " : "",
@@ -2602,8 +2613,8 @@ update_xml_child(xmlNode * child, xmlNode * to_update)
         pcmk__xml_update(NULL, child, to_update, false);
     }
 
-    for (child_of_child = __xml_first_child(child); child_of_child != NULL;
-         child_of_child = __xml_next(child_of_child)) {
+    for (child_of_child = pcmk__xml_first_child(child); child_of_child != NULL;
+         child_of_child = pcmk__xml_next(child_of_child)) {
         /* only update the first one */
         if (can_update) {
             break;
@@ -2638,7 +2649,8 @@ find_xml_children(xmlNode ** children, xmlNode * root,
     if (search_matches || match_found == 0) {
         xmlNode *child = NULL;
 
-        for (child = __xml_first_child(root); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(root); child != NULL;
+             child = pcmk__xml_next(child)) {
             match_found += find_xml_children(children, child, tag, field, value, search_matches);
         }
     }
@@ -2712,9 +2724,9 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
         can_delete = FALSE;
     }
 
-    child_of_child = __xml_first_child(child);
+    child_of_child = pcmk__xml_first_child(child);
     while (child_of_child) {
-        xmlNode *next = __xml_next(child_of_child);
+        xmlNode *next = pcmk__xml_next(child_of_child);
 
         can_delete = replace_xml_child(child, child_of_child, update, delete_only);
 
@@ -2748,8 +2760,8 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     pcmk_nvpairs2xml_attrs(nvpairs, result);
     pcmk_free_nvpairs(nvpairs);
 
-    for (child = __xml_first_child(input); child != NULL;
-         child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(input); child != NULL;
+         child = pcmk__xml_next(child)) {
 
         if (recursive) {
             sorted_xml(child, result, recursive);
@@ -2766,8 +2778,8 @@ first_named_child(const xmlNode *parent, const char *name)
 {
     xmlNode *match = NULL;
 
-    for (match = __xml_first_child_element(parent); match != NULL;
-         match = __xml_next_element(match)) {
+    for (match = pcmk__xe_first_child(parent); match != NULL;
+         match = pcmk__xe_next(match)) {
         /*
          * name == NULL gives first child regardless of name; this is
          * semantically incorrect in this function, but may be necessary
@@ -2790,14 +2802,14 @@ first_named_child(const xmlNode *parent, const char *name)
 xmlNode *
 crm_next_same_xml(const xmlNode *sibling)
 {
-    xmlNode *match = __xml_next_element(sibling);
+    xmlNode *match = pcmk__xe_next(sibling);
     const char *name = crm_element_name(sibling);
 
     while (match != NULL) {
         if (!strcmp(crm_element_name(match), name)) {
             return match;
         }
-        match = __xml_next_element(match);
+        match = pcmk__xe_next(match);
     }
     return NULL;
 }

@@ -167,8 +167,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // Now recursively do the same for each child node of this node
-    for (cIter = __xml_first_child(xml); cIter != NULL;
-         cIter = __xml_next(cIter)) {
+    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
+         cIter = pcmk__xml_next(cIter)) {
         add_xml_changes_to_patchset(cIter, patchset);
     }
 
@@ -515,8 +515,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
     if (format == 2) {
         xmlNode *change = NULL;
 
-        for (change = __xml_first_child(patchset); change != NULL;
-             change = __xml_next(change)) {
+        for (change = pcmk__xml_first_child(patchset); change != NULL;
+             change = pcmk__xml_next(change)) {
             const char *op = crm_element_value(change, XML_DIFF_OP);
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
 
@@ -554,8 +554,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 
                 buffer_set[0] = 0;
                 buffer_unset[0] = 0;
-                for (child = __xml_first_child(clist); child != NULL;
-                     child = __xml_next(child)) {
+                for (child = pcmk__xml_first_child(clist); child != NULL;
+                     child = pcmk__xml_next(child)) {
                     const char *name = crm_element_value(child, "name");
 
                     op = crm_element_value(child, XML_DIFF_OP);
@@ -613,8 +613,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
     }
 
     removed = find_xml_node(patchset, "diff-removed", FALSE);
-    for (child = __xml_first_child(removed); child != NULL;
-         child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(removed); child != NULL;
+         child = pcmk__xml_next(child)) {
         log_data_element(log_level, __FILE__, function, __LINE__, "- ", child,
                          0, options|xml_log_option_diff_minus);
         if (is_first) {
@@ -626,8 +626,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 
     is_first = TRUE;
     added = find_xml_node(patchset, "diff-added", FALSE);
-    for (child = __xml_first_child(added); child != NULL;
-         child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(added); child != NULL;
+         child = pcmk__xml_next(child)) {
         log_data_element(log_level, __FILE__, function, __LINE__, "+ ", child,
                          0, options|xml_log_option_diff_plus);
         if (is_first) {
@@ -688,11 +688,11 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
     }
 
     // Changes to child objects
-    cIter = __xml_first_child(target);
+    cIter = pcmk__xml_first_child(target);
     while (cIter) {
         xmlNode *target_child = cIter;
 
-        cIter = __xml_next(cIter);
+        cIter = pcmk__xml_next(cIter);
         patch_child = pcmk__xml_match(patch, target_child, false);
         process_v1_removals(target_child, patch_child);
     }
@@ -755,8 +755,8 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
     }
 
     // Changes to child objects
-    for (patch_child = __xml_first_child(patch); patch_child != NULL;
-         patch_child = __xml_next(patch_child)) {
+    for (patch_child = pcmk__xml_first_child(patch); patch_child != NULL;
+         patch_child = pcmk__xml_next(patch_child)) {
 
         target_child = pcmk__xml_match(target, patch_child, false);
         process_v1_additions(target, target_child, patch_child);
@@ -942,8 +942,8 @@ apply_v1_patchset(xmlNode *xml, xmlNode *patchset)
     xmlNode *old = copy_xml(xml);
 
     crm_trace("Subtraction Phase");
-    for (child_diff = __xml_first_child(removed); child_diff != NULL;
-         child_diff = __xml_next(child_diff)) {
+    for (child_diff = pcmk__xml_first_child(removed); child_diff != NULL;
+         child_diff = pcmk__xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, rc = FALSE);
         if (root_nodes_seen == 0) {
             process_v1_removals(xml, child_diff);
@@ -962,8 +962,8 @@ apply_v1_patchset(xmlNode *xml, xmlNode *patchset)
     if (rc == pcmk_rc_ok) {
         xmlNode *child_diff = NULL;
 
-        for (child_diff = __xml_first_child(added); child_diff != NULL;
-             child_diff = __xml_next(child_diff)) {
+        for (child_diff = pcmk__xml_first_child(added); child_diff != NULL;
+             child_diff = pcmk__xml_next(child_diff)) {
             CRM_CHECK(root_nodes_seen == 0, rc = FALSE);
             if (root_nodes_seen == 0) {
                 process_v1_additions(NULL, xml, child_diff);
@@ -991,9 +991,9 @@ first_matching_xml_child(xmlNode *parent, const char *name, const char *id,
 {
     xmlNode *cIter = NULL;
 
-    for (cIter = __xml_first_child(parent); cIter != NULL;
-         cIter = __xml_next(cIter)) {
-        if (strcmp((const char *)cIter->name, name) != 0) {
+    for (cIter = pcmk__xml_first_child(parent); cIter != NULL;
+         cIter = pcmk__xml_next(cIter)) {
+        if (strcmp((const char *) cIter->name, name) != 0) {
             continue;
         } else if (id) {
             const char *cid = ID(cIter);
@@ -1153,8 +1153,8 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
     GListPtr change_objs = NULL;
     GListPtr gIter = NULL;
 
-    for (change = __xml_first_child(patchset); change != NULL;
-         change = __xml_next(change)) {
+    for (change = pcmk__xml_first_child(patchset); change != NULL;
+         change = pcmk__xml_next(change)) {
         xmlNode *match = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
@@ -1207,8 +1207,8 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
             xmlAttr *pIter = pcmk__first_xml_attr(match);
             xmlNode *attrs = NULL;
 
-            attrs = __xml_first_child(first_named_child(change,
-                                                        XML_DIFF_RESULT));
+            attrs = pcmk__xml_first_child(first_named_child(change,
+                                                            XML_DIFF_RESULT));
             if (attrs == NULL) {
                 rc = ENOMSG;
                 continue;
@@ -1422,8 +1422,8 @@ purge_diff_markers(xmlNode *a_node)
     CRM_CHECK(a_node != NULL, return);
 
     xml_remove_prop(a_node, XML_DIFF_MARKER);
-    for (child = __xml_first_child(a_node); child != NULL;
-         child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(a_node); child != NULL;
+         child = pcmk__xml_next(child)) {
         purge_diff_markers(child);
     }
 }
@@ -1535,8 +1535,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     diff = create_xml_node(parent, name);
 
     // Changes to child objects
-    for (left_child = __xml_first_child(left); left_child != NULL;
-         left_child = __xml_next(left_child)) {
+    for (left_child = pcmk__xml_first_child(left); left_child != NULL;
+         left_child = pcmk__xml_next(left_child)) {
         gboolean child_changed = FALSE;
 
         right_child = pcmk__xml_match(right, left_child, false);
@@ -1675,8 +1675,8 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     }
 
     crm_trace("Subtraction Phase");
-    for (child_diff = __xml_first_child(removed); child_diff != NULL;
-         child_diff = __xml_next(child_diff)) {
+    for (child_diff = pcmk__xml_first_child(removed); child_diff != NULL;
+         child_diff = pcmk__xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, result = FALSE);
         if (root_nodes_seen == 0) {
             *new_xml = subtract_xml_object(NULL, old_xml, child_diff, FALSE,
@@ -1699,8 +1699,8 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     if (result) {
         xmlNode *child_diff = NULL;
 
-        for (child_diff = __xml_first_child(added); child_diff != NULL;
-             child_diff = __xml_next(child_diff)) {
+        for (child_diff = pcmk__xml_first_child(added); child_diff != NULL;
+             child_diff = pcmk__xml_next(child_diff)) {
             CRM_CHECK(root_nodes_seen == 0, result = FALSE);
             if (root_nodes_seen == 0) {
                 pcmk__xml_update(NULL, *new_xml, child_diff, true);

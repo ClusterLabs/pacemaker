@@ -22,6 +22,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <pacemaker-fenced.h>
 
@@ -223,8 +224,8 @@ stonith_xml_history_to_list(xmlNode *history)
 
     CRM_LOG_ASSERT(rv != NULL);
 
-    for (xml_op = __xml_first_child(history); xml_op != NULL;
-         xml_op = __xml_next(xml_op)) {
+    for (xml_op = pcmk__xml_first_child(history); xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
         remote_fencing_op_t *op = NULL;
         char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
         int state;

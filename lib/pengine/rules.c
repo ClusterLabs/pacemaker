@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <glib.h>
 
@@ -450,8 +451,8 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
         list = list->children;
     }
 
-    for (an_attr = __xml_first_child_element(list); an_attr != NULL;
-         an_attr = __xml_next_element(an_attr)) {
+    for (an_attr = pcmk__xe_first_child(list); an_attr != NULL;
+         an_attr = pcmk__xe_next(an_attr)) {
 
         if (pcmk__str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, pcmk__str_none)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
@@ -500,12 +501,13 @@ get_versioned_rule(xmlNode * attr_set)
     xmlNode * rule = NULL;
     xmlNode * expr = NULL;
 
-    for (rule = __xml_first_child_element(attr_set); rule != NULL;
-         rule = __xml_next_element(rule)) {
+    for (rule = pcmk__xe_first_child(attr_set); rule != NULL;
+         rule = pcmk__xe_next(rule)) {
 
-        if (pcmk__str_eq((const char *)rule->name, XML_TAG_RULE, pcmk__str_none)) {
-            for (expr = __xml_first_child_element(rule); expr != NULL;
-                 expr = __xml_next_element(expr)) {
+        if (pcmk__str_eq((const char *)rule->name, XML_TAG_RULE,
+                         pcmk__str_none)) {
+            for (expr = pcmk__xe_first_child(rule); expr != NULL;
+                 expr = pcmk__xe_next(expr)) {
 
                 if (find_expression_type(expr) == version_expr) {
                     return rule;
@@ -536,15 +538,15 @@ add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
         return;
     }
 
-    expr = __xml_first_child_element(rule);
+    expr = pcmk__xe_first_child(rule);
     while (expr != NULL) {
         if (find_expression_type(expr) != version_expr) {
             xmlNode *node = expr;
 
-            expr = __xml_next_element(expr);
+            expr = pcmk__xe_next(expr);
             free_xml(node);
         } else {
-            expr = __xml_next_element(expr);
+            expr = pcmk__xe_next(expr);
         }
     }
 
@@ -623,8 +625,8 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
     if (xml_obj == NULL) {
         return NULL;
     }
-    for (attr_set = __xml_first_child_element(xml_obj); attr_set != NULL;
-         attr_set = __xml_next_element(attr_set)) {
+    for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
+         attr_set = pcmk__xe_next(attr_set)) {
 
         /* Uncertain if set_name == NULL check is strictly necessary here */
         if (pcmk__str_eq(set_name, (const char *)attr_set->name, pcmk__str_null_matches)) {
@@ -821,7 +823,7 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
 
     if (versioned_params && ra_version) {
         GHashTable *node_hash = crm_str_table_new();
-        xmlNode *attr_set = __xml_first_child_element(versioned_params);
+        xmlNode *attr_set = pcmk__xe_first_child(versioned_params);
 
         if (attr_set) {
             g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),
@@ -880,8 +882,8 @@ pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data, crm_time_t *next_cha
     }
 
     crm_trace("Testing rule %s", ID(rule));
-    for (expr = __xml_first_child_element(rule); expr != NULL;
-         expr = __xml_next_element(expr)) {
+    for (expr = pcmk__xe_first_child(rule); expr != NULL;
+         expr = pcmk__xe_next(expr)) {
 
         test = pe_eval_subexpr(expr, rule_data, next_change);
         empty = FALSE;

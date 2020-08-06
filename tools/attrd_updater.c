@@ -19,6 +19,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/ipc.h>
 
 #include <crm/common/attrd_internal.h>
@@ -381,8 +382,11 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
     gboolean have_values = FALSE;
 
     /* Iterate through reply's XML tags (a node tag for each host-value pair) */
-    for (child = __xml_first_child(reply); child != NULL; child = __xml_next(child)) {
-        if (!pcmk__str_eq((const char *)child->name, XML_CIB_TAG_NODE, pcmk__str_casei)) {
+    for (child = pcmk__xml_first_child(reply); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        if (!pcmk__str_eq((const char *)child->name, XML_CIB_TAG_NODE,
+                          pcmk__str_casei)) {
             crm_warn("Ignoring unexpected %s tag in query reply", child->name);
         } else {
             reply_host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);

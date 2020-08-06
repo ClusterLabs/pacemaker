@@ -16,6 +16,7 @@
 #include <crm/msg_xml.h>
 #include <crm/cluster.h>
 #include <crm/cib.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/cib/internal.h>
@@ -617,7 +618,8 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             clear_attribute_value_seen();
         }
 
-        for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(xml); child != NULL;
+             child = pcmk__xml_next(child)) {
             host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);
             attrd_peer_update(peer, child, host, TRUE);
         }

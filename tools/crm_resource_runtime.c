@@ -10,6 +10,7 @@
 #include <crm_resource.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/lists_internal.h>
+#include <crm/common/xml_internal.h>
 
 static int
 do_find_resource(const char *rsc, pe_resource_t * the_rsc, pe_working_set_t * data_set)
@@ -133,7 +134,8 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
         rc = EINVAL;
         printf("Multiple attributes match name=%s\n", attr_name);
 
-        for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(xml_search); child != NULL;
+             child = pcmk__xml_next(child)) {
             printf("  Value: %s \t(id=%s)\n",
                    crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
@@ -615,8 +617,9 @@ clear_rsc_failures(pcmk_ipc_api_t *controld_api, const char *node_name,
                                           crm_parse_interval_spec(interval_spec));
     }
 
-    for (xmlNode *xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
-         xml_op = __xml_next(xml_op)) {
+    for (xmlNode *xml_op = pcmk__xml_first_child(data_set->failed);
+         xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
 
         failed_id = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
         if (failed_id == NULL) {

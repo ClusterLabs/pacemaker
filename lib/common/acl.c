@@ -21,6 +21,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
 #define MAX_XPATH_LEN	4096
@@ -147,8 +148,8 @@ parse_acl_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
 {
     xmlNode *child = NULL;
 
-    for (child = __xml_first_child_element(acl_entry); child;
-         child = __xml_next_element(child)) {
+    for (child = pcmk__xe_first_child(acl_entry); child;
+         child = pcmk__xe_next(child)) {
         const char *tag = crm_element_name(child);
         const char *kind = crm_element_value(child, XML_ACL_ATTR_KIND);
 
@@ -167,8 +168,8 @@ parse_acl_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
             if (ref_role) {
                 xmlNode *role = NULL;
 
-                for (role = __xml_first_child_element(acl_top); role;
-                     role = __xml_next_element(role)) {
+                for (role = pcmk__xe_first_child(acl_top); role;
+                     role = pcmk__xe_next(role)) {
                     if (!strcmp(XML_ACL_TAG_ROLE, (const char *) role->name)) {
                         const char *role_id = crm_element_value(role,
                                                                 XML_ATTR_ID);
@@ -323,8 +324,8 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
         if (acls) {
             xmlNode *child = NULL;
 
-            for (child = __xml_first_child_element(acls); child;
-                 child = __xml_next_element(child)) {
+            for (child = pcmk__xe_first_child(acls); child;
+                 child = pcmk__xe_next(child)) {
                 const char *tag = crm_element_name(child);
 
                 if (!strcmp(tag, XML_ACL_TAG_USER)
@@ -388,11 +389,11 @@ purge_xml_attributes(xmlNode *xml)
         xmlUnsetProp(xml, tmp->name);
     }
 
-    child = __xml_first_child(xml);
+    child = pcmk__xml_first_child(xml);
     while ( child != NULL ) {
         xmlNode *tmp = child;
 
-        child = __xml_next(child);
+        child = pcmk__xml_next(child);
         readable_children |= purge_xml_attributes(tmp);
     }
 
@@ -568,9 +569,9 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
         }
     }
 
-    for (xmlNode *cIter = __xml_first_child(xml); cIter != NULL; ) {
+    for (xmlNode *cIter = pcmk__xml_first_child(xml); cIter != NULL; ) {
         xmlNode *child = cIter;
-        cIter = __xml_next(cIter); /* In case it is free'd */
+        cIter = pcmk__xml_next(cIter); /* In case it is free'd */
         pcmk__apply_creation_acl(child, true);
     }
 }

@@ -32,6 +32,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <crm/common/util.h>
 #include <pacemaker-fenced.h>
@@ -1810,7 +1811,8 @@ add_device_properties(xmlNode *xml, remote_fencing_op_t *op,
     /* Parse action-specific device properties */
     parse_action_specific(xml, result->host, device, op_requested_action(op),
                           op, st_phase_requested, props);
-    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(xml); child != NULL;
+         child = pcmk__xml_next(child)) {
         /* Replies for "reboot" operations will include the action-specific
          * values for "off" and "on" in child elements, just in case the reboot
          * winds up getting remapped.
@@ -1849,7 +1851,8 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
     result->devices = crm_str_table_new();
 
     /* Each child element describes one capable device available to the peer */
-    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(xml); child != NULL;
+         child = pcmk__xml_next(child)) {
         const char *device = ID(child);
 
         if (device) {

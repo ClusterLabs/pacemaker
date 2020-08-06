@@ -12,6 +12,7 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/common/alerts_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/rules_internal.h>
 
 static void
@@ -99,8 +100,8 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
     xmlNode *event_type = NULL;
     uint32_t flags = pcmk__alert_none;
 
-    for (event_type = __xml_first_child_element(select); event_type != NULL;
-         event_type = __xml_next_element(event_type)) {
+    for (event_type = pcmk__xe_first_child(select); event_type != NULL;
+         event_type = pcmk__xe_next(event_type)) {
 
         const char *tagname = crm_element_name(event_type);
 

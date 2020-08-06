@@ -159,4 +159,80 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
 char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
                               const char *filespec);
 
+/*!
+ * \internal
+ * \brief Return first non-text child node of an XML node
+ *
+ * \param[in] parent  XML node to check
+ *
+ * \return First non-text child node of \p parent (or NULL if none)
+ */
+static inline xmlNode *
+pcmk__xml_first_child(const xmlNode *parent)
+{
+    xmlNode *child = (parent? parent->children : NULL);
+
+    while (child && (child->type == XML_TEXT_NODE)) {
+        child = child->next;
+    }
+    return child;
+}
+
+/*!
+ * \internal
+ * \brief Return next non-text sibling node of an XML node
+ *
+ * \param[in] child  XML node to check
+ *
+ * \return Next non-text sibling of \p child (or NULL if none)
+ */
+static inline xmlNode *
+pcmk__xml_next(const xmlNode *child)
+{
+    xmlNode *next = (child? child->next : NULL);
+
+    while (next && (next->type == XML_TEXT_NODE)) {
+        next = next->next;
+    }
+    return next;
+}
+
+/*!
+ * \internal
+ * \brief Return first non-text child element of an XML node
+ *
+ * \param[in] parent  XML node to check
+ *
+ * \return First child element of \p parent (or NULL if none)
+ */
+static inline xmlNode *
+pcmk__xe_first_child(const xmlNode *parent)
+{
+    xmlNode *child = (parent? parent->children : NULL);
+
+    while (child && (child->type != XML_ELEMENT_NODE)) {
+        child = child->next;
+    }
+    return child;
+}
+
+/*!
+ * \internal
+ * \brief Return next non-text sibling element of an XML element
+ *
+ * \param[in] child  XML element to check
+ *
+ * \return Next sibling element of \p child (or NULL if none)
+ */
+static inline xmlNode *
+pcmk__xe_next(const xmlNode *child)
+{
+    xmlNode *next = child? child->next : NULL;
+
+    while (next && (next->type != XML_ELEMENT_NODE)) {
+        next = next->next;
+    }
+    return next;
+}
+
 #endif // PCMK__XML_INTERNAL__H

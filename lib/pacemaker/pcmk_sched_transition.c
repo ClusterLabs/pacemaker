@@ -23,6 +23,7 @@
 #include <crm/cib.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -139,8 +140,8 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     op->t_rcchange = op->t_run;
 
     op->call_id = 0;
-    for (xop = __xml_first_child_element(cib_resource); xop != NULL;
-         xop = __xml_next_element(xop)) {
+    for (xop = pcmk__xe_first_child(cib_resource); xop != NULL;
+         xop = pcmk__xe_next(xop)) {
 
         int tmp = 0;
 

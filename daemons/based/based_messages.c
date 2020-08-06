@@ -426,7 +426,8 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
     } else {
         xmlNode *child = NULL;
 
-        for (child = __xml_first_child(delete_spec); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(delete_spec); child != NULL;
+             child = pcmk__xml_next(child)) {
             int tmp_result = delete_cib_object(equiv_node, child);
 
             /*  only the first error is likely to be interesting */

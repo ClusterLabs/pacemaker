@@ -24,6 +24,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cib/internal.h>
 
 #define attr_msg(level, fmt, args...) do {	\
@@ -144,7 +145,8 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         rc = -ENOTUNIQ;
         attr_msg(LOG_WARNING, "Multiple attributes match name=%s", attr_name);
 
-        for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(xml_search); child != NULL;
+             child = pcmk__xml_next(child)) {
             attr_msg(LOG_INFO, "  Value: %s \t(id=%s)",
                      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
@@ -408,7 +410,7 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
     /* If there are multiple results, the first is sufficient */
     tag = (const char *) (result->name);
     if (pcmk__str_eq(tag, "xpath-query", pcmk__str_casei)) {
-        result = __xml_first_child(result);
+        result = pcmk__xml_first_child(result);
         CRM_CHECK(result != NULL, return rc);
         tag = (const char *) (result->name);
     }
@@ -543,8 +545,11 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     rc = -ENXIO;
     *uname = NULL;
 
-    for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
-        if (pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
+    for (a_child = pcmk__xml_first_child(xml_obj); a_child != NULL;
+         a_child = pcmk__xml_next(a_child)) {
+
+        if (pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_NODE,
+                         pcmk__str_none)) {
             child_name = ID(a_child);
             if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
                 child_name = crm_element_value(a_child, XML_ATTR_UNAME);

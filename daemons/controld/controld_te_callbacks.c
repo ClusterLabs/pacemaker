@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/cluster.h>        /* For ONLINESTATUS etc */
 
@@ -221,8 +222,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 static void
 process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
 {
-    for (xmlNode *rsc_op = __xml_first_child(lrm_resource); rsc_op != NULL;
-         rsc_op = __xml_next(rsc_op)) {
+    for (xmlNode *rsc_op = pcmk__xml_first_child(lrm_resource); rsc_op != NULL;
+         rsc_op = pcmk__xml_next(rsc_op)) {
         process_graph_event(rsc_op, node);
     }
     if (shutdown_lock_cleared(lrm_resource)) {
@@ -268,7 +269,8 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         return;
     }
 
-    for (rsc = __xml_first_child(xml); rsc != NULL; rsc = __xml_next(rsc)) {
+    for (rsc = pcmk__xml_first_child(xml); rsc != NULL;
+         rsc = pcmk__xml_next(rsc)) {
         crm_trace("Processing %s", ID(rsc));
         process_lrm_resource_diff(rsc, node);
     }
@@ -407,8 +409,8 @@ static void
 process_status_diff(xmlNode *status, xmlNode *change, const char *op,
                     const char *xpath)
 {
-    for (xmlNode *state = __xml_first_child(status); state != NULL;
-         state = __xml_next(state)) {
+    for (xmlNode *state = pcmk__xml_first_child(status); state != NULL;
+         state = pcmk__xml_next(state)) {
         process_node_state_diff(state, change, op, xpath);
     }
 }
@@ -434,8 +436,8 @@ te_update_diff_v2(xmlNode *diff)
 {
     crm_log_xml_trace(diff, "Patch:Raw");
 
-    for (xmlNode *change = __xml_first_child(diff); change != NULL;
-         change = __xml_next(change)) {
+    for (xmlNode *change = pcmk__xml_first_child(diff); change != NULL;
+         change = pcmk__xml_next(change)) {
 
         xmlNode *match = NULL;
         const char *name = NULL;

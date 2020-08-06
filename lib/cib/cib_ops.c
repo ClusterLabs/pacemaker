@@ -297,7 +297,8 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     obj_root = get_object_root(section, *result_cib);
     if(pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
         xmlNode *child = NULL;
-        for(child = __xml_first_child(input); child; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(input); child;
+             child = pcmk__xml_next(child)) {
             if (replace_xml_child(NULL, obj_root, child, TRUE) == FALSE) {
                 crm_trace("No matching object to delete: %s=%s", child->name, ID(child));
             }
@@ -448,7 +449,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     crm_trace("Processing children of <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
-    for (a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
+    for (a_child = pcmk__xml_first_child(update); a_child != NULL;
+         a_child = pcmk__xml_next(a_child)) {
         int tmp_result = 0;
 
         crm_trace("Updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
@@ -550,7 +552,8 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     if (pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
         xmlNode *a_child = NULL;
 
-        for (a_child = __xml_first_child(input); a_child != NULL; a_child = __xml_next(a_child)) {
+        for (a_child = pcmk__xml_first_child(input); a_child != NULL;
+             a_child = pcmk__xml_next(a_child)) {
             result = add_cib_object(update_section, a_child);
             if (update_results(failed, a_child, op, result)) {
                 break;

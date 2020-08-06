@@ -27,6 +27,7 @@
 #include <crm/fencing/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <crm/common/mainloop.h>
 
@@ -1145,7 +1146,8 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output,
                                           LOG_NEVER);
 
-        for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
+        for (op = pcmk__xml_first_child(reply); op != NULL;
+             op = pcmk__xml_next(op)) {
             stonith_history_t *kvp;
             long long completed;
 
