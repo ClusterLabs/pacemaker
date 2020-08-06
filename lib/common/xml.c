@@ -710,40 +710,6 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
     return node;
 }
 
-int
-pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
-                    int offset, size_t buffer_size)
-{
-    const char *id = ID(xml);
-
-    if(offset == 0 && prefix == NULL && xml->parent) {
-        offset = pcmk__element_xpath(NULL, xml->parent, buffer, offset,
-                                     buffer_size);
-    }
-
-    if(id) {
-        offset += snprintf(buffer + offset, buffer_size - offset,
-                           "/%s[@id='%s']", (const char *) xml->name, id);
-    } else if(xml->name) {
-        offset += snprintf(buffer + offset, buffer_size - offset,
-                           "/%s", (const char *) xml->name);
-    }
-
-    return offset;
-}
-
-char *
-xml_get_path(xmlNode *xml)
-{
-    int offset = 0;
-    char buffer[XML_BUFFER_SIZE];
-
-    if (pcmk__element_xpath(NULL, xml, buffer, offset, sizeof(buffer)) > 0) {
-        return strdup(buffer);
-    }
-    return NULL;
-}
-
 /*!
  * Free an XML element and all of its children, removing it from its parent
  *

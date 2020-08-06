@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <md5.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -264,4 +265,32 @@ pcmk__xa_filterable(const char *name)
         }
     }
     return false;
+}
+
+char *
+crm_md5sum(const char *buffer)
+{
+    int lpc = 0, len = 0;
+    char *digest = NULL;
+    unsigned char raw_digest[MD5_DIGEST_SIZE];
+
+    if (buffer == NULL) {
+        buffer = "";
+    }
+    len = strlen(buffer);
+
+    crm_trace("Beginning digest of %d bytes", len);
+    digest = malloc(2 * MD5_DIGEST_SIZE + 1);
+    if (digest) {
+        md5_buffer(buffer, len, raw_digest);
+        for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
+            sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
+        }
+        digest[(2 * MD5_DIGEST_SIZE)] = 0;
+        crm_trace("Digest %s.", digest);
+
+    } else {
+        crm_err("Could not create digest");
+    }
+    return digest;
 }
