@@ -29,8 +29,6 @@
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
-#define XML_BUFFER_SIZE 4096
-
 static xmlNode *subtract_xml_comment(xmlNode *parent, xmlNode *left,
                                      xmlNode *right, gboolean *changed);
 
@@ -96,7 +94,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     // If this XML node is new, just report that
     if (patchset && pcmk_is_set(p->flags, xpf_created)) {
         int offset = 0;
-        char buffer[XML_BUFFER_SIZE];
+        char buffer[PCMK__BUFFER_SIZE];
 
         if (pcmk__element_xpath(NULL, xml->parent, buffer, offset,
                                 sizeof(buffer)) > 0) {
@@ -125,7 +123,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
         if (change == NULL) {
             int offset = 0;
-            char buffer[XML_BUFFER_SIZE];
+            char buffer[PCMK__BUFFER_SIZE];
 
             if (pcmk__element_xpath(NULL, xml, buffer, offset,
                                     sizeof(buffer)) > 0) {
@@ -177,7 +175,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     p = xml->_private;
     if (patchset && pcmk_is_set(p->flags, xpf_moved)) {
         int offset = 0;
-        char buffer[XML_BUFFER_SIZE];
+        char buffer[PCMK__BUFFER_SIZE];
 
         crm_trace("%s.%s moved to position %d",
                   xml->name, ID(xml), pcmk__xml_position(xml, xpf_skip));
@@ -549,8 +547,8 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 
             } else if (strcmp(op, "modify") == 0) {
                 xmlNode *clist = first_named_child(change, XML_DIFF_LIST);
-                char buffer_set[XML_BUFFER_SIZE];
-                char buffer_unset[XML_BUFFER_SIZE];
+                char buffer_set[PCMK__BUFFER_SIZE];
+                char buffer_unset[PCMK__BUFFER_SIZE];
                 int o_set = 0;
                 int o_unset = 0;
 
@@ -567,20 +565,20 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
 
                         if (o_set > 0) {
                             o_set += snprintf(buffer_set + o_set,
-                                              XML_BUFFER_SIZE - o_set, ", ");
+                                              PCMK__BUFFER_SIZE - o_set, ", ");
                         }
                         o_set += snprintf(buffer_set + o_set,
-                                          XML_BUFFER_SIZE - o_set, "@%s=%s",
+                                          PCMK__BUFFER_SIZE - o_set, "@%s=%s",
                                           name, value);
 
                     } else if (strcmp(op, "unset") == 0) {
                         if (o_unset > 0) {
                             o_unset += snprintf(buffer_unset + o_unset,
-                                                XML_BUFFER_SIZE - o_unset,
+                                                PCMK__BUFFER_SIZE - o_unset,
                                                 ", ");
                         }
                         o_unset += snprintf(buffer_unset + o_unset,
-                                            XML_BUFFER_SIZE - o_unset, "@%s",
+                                            PCMK__BUFFER_SIZE - o_unset, "@%s",
                                             name);
                     }
                 }

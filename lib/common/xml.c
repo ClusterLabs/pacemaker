@@ -29,8 +29,6 @@
 #include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
-#define XML_BUFFER_SIZE	4096
-
 // Define this as 1 in development to get insanely verbose trace messages
 #ifndef XML_PARSER_DEBUG
 #define XML_PARSER_DEBUG 0
@@ -740,7 +738,7 @@ free_xml_with_position(xmlNode * child, int position)
 
         } else if (pcmk__check_acl(child, NULL, xpf_acl_write) == FALSE) {
             int offset = 0;
-            char buffer[XML_BUFFER_SIZE];
+            char buffer[PCMK__BUFFER_SIZE];
 
             pcmk__element_xpath(NULL, child, buffer, offset, sizeof(buffer));
             crm_trace("Cannot remove %s %x", buffer, p->flags);
@@ -750,7 +748,7 @@ free_xml_with_position(xmlNode * child, int position)
             if (doc && pcmk__tracking_xml_changes(child, FALSE)
                 && !pcmk_is_set(p->flags, xpf_created)) {
                 int offset = 0;
-                char buffer[XML_BUFFER_SIZE];
+                char buffer[PCMK__BUFFER_SIZE];
 
                 if (pcmk__element_xpath(NULL, child, buffer, offset,
                                         sizeof(buffer)) > 0) {
@@ -899,10 +897,11 @@ stdin2xml(void)
     xmlNode *xml_obj = NULL;
 
     do {
-        xml_buffer = pcmk__realloc(xml_buffer, data_length + XML_BUFFER_SIZE);
-        read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
+        xml_buffer = pcmk__realloc(xml_buffer, data_length + PCMK__BUFFER_SIZE);
+        read_chars = fread(xml_buffer + data_length, 1, PCMK__BUFFER_SIZE,
+                           stdin);
         data_length += read_chars;
-    } while (read_chars == XML_BUFFER_SIZE);
+    } while (read_chars == PCMK__BUFFER_SIZE);
 
     if (data_length == 0) {
         crm_warn("No XML supplied on stdin");
@@ -947,8 +946,8 @@ decompress_file(const char *filename)
     // cppcheck seems not to understand the abort-logic in pcmk__realloc
     // cppcheck-suppress memleak
     while (rc == BZ_OK) {
-        buffer = pcmk__realloc(buffer, XML_BUFFER_SIZE + length + 1);
-        read_len = BZ2_bzRead(&rc, bz_file, buffer + length, XML_BUFFER_SIZE);
+        buffer = pcmk__realloc(buffer, PCMK__BUFFER_SIZE + length + 1);
+        read_len = BZ2_bzRead(&rc, bz_file, buffer + length, PCMK__BUFFER_SIZE);
 
         crm_trace("Read %ld bytes from file: %d", (long)read_len, rc);
 

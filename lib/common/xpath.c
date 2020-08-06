@@ -286,13 +286,11 @@ pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
     return offset;
 }
 
-#define XML_BUFFER_SIZE	4096
-
 char *
 xml_get_path(xmlNode *xml)
 {
     int offset = 0;
-    char buffer[XML_BUFFER_SIZE];
+    char buffer[PCMK__BUFFER_SIZE];
 
     if (pcmk__element_xpath(NULL, xml, buffer, offset, sizeof(buffer)) > 0) {
         return strdup(buffer);

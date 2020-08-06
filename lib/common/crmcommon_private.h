@@ -21,6 +21,9 @@
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
+// Decent chunk size for processing large amounts of data
+#define PCMK__BUFFER_SIZE 4096
+
 /*
  * XML and ACLs
  */
