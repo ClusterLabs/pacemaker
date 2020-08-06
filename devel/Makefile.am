@@ -7,16 +7,6 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-EXTRA_SCRIPTS		= coccinelle/test/testrunner.sh
-EXTRA_DIST		= $(EXTRA_SCRIPTS) \
-				  coccinelle/ref-passed-variables-inited.cocci \
-				  coccinelle/string-any-of.cocci \
-				  coccinelle/string-empty.cocci \
-				  coccinelle/string-null-matches.cocci \
-				  coccinelle/string-replacements.cocci \
-				  coccinelle/test/ref-passed-variables-inited.input.c \
-				  coccinelle/test/ref-passed-variables-inited.output
-
 # Coccinelle is a tool that takes special patch-like files (called semantic patches) and
 # applies them throughout a source tree.  This is useful when refactoring, changing APIs,
 # catching dangerous or incorrect code, and other similar tasks.  It's not especially
@@ -35,9 +25,18 @@ EXTRA_DIST		= $(EXTRA_SCRIPTS) \
 #
 # ref-passed-variables-inited.cocci seems to be returning some false positives around
 # GHashTableIters, so it is disabled for the moment.
-COCCI_FILES ?= coccinelle/string-any-of.cocci \
-			   coccinelle/string-empty.cocci \
-			   coccinelle/string-null-matches.cocci
+COCCI_FILES ?=	coccinelle/string-any-of.cocci			\
+		coccinelle/string-empty.cocci			\
+		coccinelle/string-null-matches.cocci		\
+		coccinelle/use-func.cocci
+
+
+EXTRA_SCRIPTS		= coccinelle/test/testrunner.sh
+EXTRA_DIST		= $(EXTRA_SCRIPTS) $(COCCI_FILES)		\
+			  coccinelle/ref-passed-variables-inited.cocci	\
+			  coccinelle/string-replacements.cocci		\
+			  coccinelle/test/ref-passed-variables-inited.input.c \
+			  coccinelle/test/ref-passed-variables-inited.output
 
 # Any file in this list is allowed to use any of the pcmk__ internal functions.
 # Coccinelle can use any transformation that depends on "internal" to rewrite
