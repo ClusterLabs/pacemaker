@@ -20,6 +20,7 @@
 
 #include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/strings_internal.h>
 
 // Internal ACL-related utilities (from acl.c)
 
@@ -205,52 +206,6 @@ GQuark pcmk__exitc_error_quark(void);
 #define PCMK__RC_ERROR       pcmk__rc_error_quark()
 #define PCMK__EXITC_ERROR    pcmk__exitc_error_quark()
 
-
-/* internal generic string functions (from strings.c) */
-
-int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
-                          guint *result);
-bool pcmk__starts_with(const char *str, const char *prefix);
-bool pcmk__ends_with(const char *s, const char *match);
-bool pcmk__ends_with_ext(const char *s, const char *match);
-char *pcmk__add_word(char *list, const char *word);
-int pcmk__compress(const char *data, unsigned int length, unsigned int max,
-                   char **result, unsigned int *result_len);
-
-int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
-gboolean pcmk__str_in_list(GList *lst, const gchar *s);
-
-bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
-bool pcmk__str_none_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
-
-/* Correctly displaying singular or plural is complicated; consider "1 node has"
- * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.
- *
- * if (a == 1) {
- *     crm_info("singular message"):
- * } else {
- *     crm_info("plural message");
- * }
- *
- * though even that's not sufficient for all languages besides English (if we
- * ever desire to do translations of output and log messages). But the following
- * convenience macros are "good enough" and more concise for many cases.
- */
-
-/* Example:
- * crm_info("Found %d %s", nentries,
- *          pcmk__plural_alt(nentries, "entry", "entries"));
- */
-#define pcmk__plural_alt(i, s1, s2) (((i) == 1)? (s1) : (s2))
-
-// Example: crm_info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
-#define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
-
-static inline int
-pcmk__str_empty(const char *s)
-{
-    return (s == NULL) || (s[0] == '\0');
-}
 
 static inline char *
 pcmk__getpid_s(void)
