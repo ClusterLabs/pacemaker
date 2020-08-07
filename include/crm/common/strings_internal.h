@@ -14,6 +14,11 @@
 
 #include <glib.h>               // guint, GList, GHashTable
 
+/* internal constants for generic string functions (from strings.c) */
+
+#define PCMK__PARSE_INT_DEFAULT -1
+#define PCMK__PARSE_DBL_DEFAULT -1.0
+
 /* internal generic string functions (from strings.c) */
 
 enum pcmk__str_flags {

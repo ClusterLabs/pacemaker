@@ -24,8 +24,8 @@ only_separator(void) {
     long long start, end;
 
     g_assert(pcmk__parse_ll_range("-", &start, &end) == pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, -1);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
@@ -34,7 +34,7 @@ no_range_end(void) {
 
     g_assert(pcmk__parse_ll_range("2000-", &start, &end) == pcmk_rc_ok);
     g_assert_cmpint(start, ==, 2000);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
@@ -42,7 +42,7 @@ no_range_start(void) {
     long long start, end;
 
     g_assert(pcmk__parse_ll_range("-2020", &start, &end) == pcmk_rc_ok);
-    g_assert_cmpint(start, ==, -1);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
     g_assert_cmpint(end, ==, 2020);
 }
 
@@ -60,12 +60,12 @@ garbage(void) {
     long long start, end;
 
     g_assert(pcmk__parse_ll_range("2000x-", &start, &end) == pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, -1);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 
     g_assert(pcmk__parse_ll_range("-x2000", &start, &end) == pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, -1);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 }
 
 int main(int argc, char **argv) {

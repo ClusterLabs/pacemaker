@@ -50,7 +50,7 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
 static int
 scan_ll(const char *text, long long *result, char **end_text)
 {
-    long long local_result = -1;
+    long long local_result = PCMK__PARSE_INT_DEFAULT;
     char *local_end_text = NULL;
     int rc = pcmk_rc_ok;
 
@@ -68,15 +68,15 @@ scan_ll(const char *text, long long *result, char **end_text)
 
         } else if (errno != 0) {
             rc = errno;
-            local_result = -1;
-            crm_err("Could not parse integer from %s (using -1 instead): %s",
-                    text, pcmk_rc_str(rc));
+            local_result = PCMK__PARSE_INT_DEFAULT;
+            crm_err("Could not parse integer from %s (using %d instead): %s",
+                    text, PCMK__PARSE_INT_DEFAULT, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             rc = EINVAL;
-            local_result = -1;
-            crm_err("Could not parse integer from %s (using -1 instead): "
-                    "No digits found", text);
+            local_result = PCMK__PARSE_INT_DEFAULT;
+            crm_err("Could not parse integer from %s (using %d instead): "
+                    "No digits found", text, PCMK__PARSE_INT_DEFAULT);
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
@@ -100,7 +100,8 @@ scan_ll(const char *text, long long *result, char **end_text)
  * \param[in] text          The string to parse
  * \param[in] default_text  Default string to parse if text is NULL
  *
- * \return Parsed value on success, -1 (and set errno) on error
+ * \return Parsed value on success, PCMK__PARSE_INT_DEFAULT (and set
+ *         errno) on error
  */
 long long
 crm_parse_ll(const char *text, const char *default_text)
@@ -112,7 +113,7 @@ crm_parse_ll(const char *text, const char *default_text)
         if (text == NULL) {
             crm_err("No default conversion value supplied");
             errno = EINVAL;
-            return -1;
+            return PCMK__PARSE_INT_DEFAULT;
         }
     }
     scan_ll(text, &result, NULL);
@@ -125,8 +126,9 @@ crm_parse_ll(const char *text, const char *default_text)
  * \param[in] text          The string to parse
  * \param[in] default_text  Default string to parse if text is NULL
  *
- * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to ERANGE)
- *         if parsed value is out of integer range, otherwise -1 (and set errno)
+ * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to
+ *         ERANGE) if parsed value is out of integer range, otherwise
+ *         PCMK__PARSE_INT_DEFAULT (and set errno)
  */
 int
 crm_parse_int(const char *text, const char *default_text)
@@ -158,7 +160,8 @@ crm_parse_int(const char *text, const char *default_text)
  * \brief Scan a double-precision floating-point value from a string
  *
  * \param[in]      text         The string to parse
- * \param[out]     result       Parsed value on success, or -1 on error
+ * \param[out]     result       Parsed value on success, or
+ *                              \c PCMK__PARSE_DBL_DEFAULT on error
  * \param[in]      default_text Default string to parse if \p text is
  *                              \c NULL
  * \param[out]     end_text     If not \c NULL, where to store a pointer
@@ -179,7 +182,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
     char *local_end_text = NULL;
 
     CRM_ASSERT(result != NULL);
-    *result = -1.0;
+    *result = PCMK__PARSE_DBL_DEFAULT;
 
     text = (text != NULL) ? text : default_text;
 
@@ -216,16 +219,21 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
 
         } else if (errno != 0) {
             rc = errno;
-            *result = -1.0; // strtod() set *result = 0 on parse failure
+            // strtod() set *result = 0 on parse failure
+            *result = PCMK__PARSE_DBL_DEFAULT;
+
             crm_debug("Could not parse floating-point value from '%s' (using "
-                      "-1 instead): %s", text, pcmk_rc_str(rc));
+                      "%.1f instead): %s", text, PCMK__PARSE_DBL_DEFAULT,
+                      pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             // errno == 0, but nothing was parsed
             rc = EINVAL;
-            *result = -1.0;
+            *result = PCMK__PARSE_DBL_DEFAULT;
+
             crm_debug("Could not parse floating-point value from '%s' (using "
-                      "-1 instead): No digits found", text);
+                      "%.1f instead): No digits found", text,
+                      PCMK__PARSE_DBL_DEFAULT);
 
         } else if (fabs(*result) <= DBL_MIN) {
             /*
@@ -325,7 +333,8 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
  * \param[in] input  String with a number and units (optionally with whitespace
  *                   before and/or after the number)
  *
- * \return Milliseconds corresponding to string expression, or -1 on error
+ * \return Milliseconds corresponding to string expression, or
+ *         PCMK__PARSE_INT_DEFAULT on error
  */
 long long
 crm_get_msec(const char *input)
@@ -334,18 +343,18 @@ crm_get_msec(const char *input)
     const char *units;
     long long multiplier = 1000;
     long long divisor = 1;
-    long long msec = -1;
+    long long msec = PCMK__PARSE_INT_DEFAULT;
     size_t num_len = 0;
     char *end_text = NULL;
 
     if (input == NULL) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
 
     num_start = input + strspn(input, WHITESPACE);
     num_len = strspn(num_start, NUMCHARS);
     if (num_len < 1) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
     units = num_start + num_len;
     units += strspn(units, WHITESPACE);
@@ -366,7 +375,7 @@ crm_get_msec(const char *input)
         multiplier = 60 * 60 * 1000;
         divisor = 1;
     } else if ((*units != EOS) && (*units != '\n') && (*units != '\r')) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
 
     scan_ll(num_start, &msec, &end_text);
@@ -693,8 +702,8 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 
     CRM_ASSERT(start != NULL && end != NULL);
 
-    *start = -1;
-    *end = -1;
+    *start = PCMK__PARSE_INT_DEFAULT;
+    *end = PCMK__PARSE_INT_DEFAULT;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
     if (pcmk__str_empty(srcstring) || !strcmp(srcstring, "-")) {
@@ -728,7 +737,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
             }
         }
     } else if (*remainder && *remainder != '-') {
-        *start = -1;
+        *start = PCMK__PARSE_INT_DEFAULT;
         return pcmk_rc_unknown_format;
     } else {
         /* The input string contained only one number.  Set start and end
