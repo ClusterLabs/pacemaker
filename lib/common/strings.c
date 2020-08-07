@@ -18,7 +18,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <float.h>  // DBL_MIN
 #include <limits.h>
+#include <math.h>   // fabs()
 #include <bzlib.h>
 #include <sys/types.h>
 
@@ -147,6 +149,120 @@ crm_parse_int(const char *text, const char *default_text)
     }
 
     return (int) result;
+}
+
+/*!
+ * \internal
+ * \brief Scan a double-precision floating-point value from a string
+ *
+ * \param[in]      text         The string to parse
+ * \param[out]     result       Parsed value on success, or -1 on error
+ * \param[in]      default_text Default string to parse if \p text is
+ *                              \c NULL
+ * \param[out]     end_text     If not \c NULL, where to store a pointer
+ *                              to the position immediately after the
+ *                              value
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
+ *         \c EINVAL on failed string conversion due to invalid input,
+ *         \c EOVERFLOW on arithmetic overflow, \c pcmk_rc_underflow
+ *         on arithmetic underflow, or \c errno from \c strtod() on
+ *         other parse errors)
+ */
+int
+pcmk__scan_double(const char *text, double *result, const char *default_text,
+                  char **end_text)
+{
+    int rc = pcmk_rc_ok;
+    char *local_end_text = NULL;
+
+    CRM_ASSERT(result != NULL);
+    *result = -1.0;
+
+    text = (text != NULL) ? text : default_text;
+
+    if (text == NULL) {
+        rc = EINVAL;
+        crm_debug("No text and no default conversion value supplied");
+
+    } else {
+        errno = 0;
+        *result = strtod(text, &local_end_text);
+
+        if (errno == ERANGE) {
+            /*
+             * Overflow: strtod() returns +/- HUGE_VAL and sets errno to
+             *           ERANGE
+             *
+             * Underflow: strtod() returns "a value whose magnitude is
+             *            no greater than the smallest normalized
+             *            positive" double. Whether ERANGE is set is
+             *            implementation-defined.
+             */
+            const char *over_under;
+
+            if (fabs(*result) > DBL_MIN) {
+                rc = EOVERFLOW;
+                over_under = "over";
+            } else {
+                rc = pcmk_rc_underflow;
+                over_under = "under";
+            }
+
+            crm_debug("Floating-point value parsed from '%s' would %sflow "
+                      "(using %g instead)", text, over_under, *result);
+
+        } else if (errno != 0) {
+            rc = errno;
+            *result = -1.0; // strtod() set *result = 0 on parse failure
+            crm_debug("Could not parse floating-point value from '%s' (using "
+                      "-1 instead): %s", text, pcmk_rc_str(rc));
+
+        } else if (local_end_text == text) {
+            // errno == 0, but nothing was parsed
+            rc = EINVAL;
+            *result = -1.0;
+            crm_debug("Could not parse floating-point value from '%s' (using "
+                      "-1 instead): No digits found", text);
+
+        } else if (fabs(*result) <= DBL_MIN) {
+            /*
+             * errno == 0 and text was parsed, but value might have
+             * underflowed.
+             *
+             * ERANGE might not be set for underflow. Check magnitude
+             * of *result, but also make sure the input number is not
+             * actually zero (0 <= DBL_MIN is not underflow).
+             *
+             * This check must come last. A parse failure in strtod()
+             * also sets *result == 0, so a parse failure would match
+             * this test condition prematurely.
+             */
+            for (const char *p = text; p != local_end_text; p++) {
+                if (strchr("0.eE", *p) == NULL) {
+                    rc = pcmk_rc_underflow;
+                    crm_debug("Floating-point value parsed from '%s' would "
+                              "underflow (using %g instead)", text, *result);
+                    break;
+                }
+            }
+
+        } else {
+            crm_trace("Floating-point value parsed successfully from "
+                      "'%s': %g", text, *result);
+        }
+
+        if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
+            crm_debug("Characters left over after parsing '%s': '%s'",
+                      text, local_end_text);
+        }
+    }
+
+    if (end_text != NULL) {
+        *end_text = local_end_text;
+    }
+
+    return rc;
 }
 
 /*!

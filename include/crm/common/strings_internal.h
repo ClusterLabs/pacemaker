@@ -23,6 +23,8 @@ enum pcmk__str_flags {
     pcmk__str_regex         = 1 << 2
 };
 
+int pcmk__scan_double(const char *text, double *result,
+                      const char *default_text, char **end_text);
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
 bool pcmk__starts_with(const char *str, const char *prefix);
