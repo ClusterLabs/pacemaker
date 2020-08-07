@@ -27,8 +27,6 @@
 
 #include "crm_mon.h"
 
-static void print_resources_heading(pcmk__output_t *out, unsigned int mon_ops);
-static void print_resources_closing(pcmk__output_t *out, unsigned int mon_ops);
 static int print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
                            unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
                            gboolean print_summary, GListPtr only_node, GListPtr only_rsc,
@@ -123,58 +121,6 @@ build_rsc_list(pe_working_set_t *data_set, const char *s) {
 
 /*!
  * \internal
- * \brief Print resources section heading appropriate to options
- *
- * \param[in] out     The output functions structure.
- * \param[in] mon_ops Bitmask of mon_op_*.
- */
-static void
-print_resources_heading(pcmk__output_t *out, unsigned int mon_ops)
-{
-    const char *heading;
-
-    if (pcmk_is_set(mon_ops, mon_op_group_by_node)) {
-
-        /* Active resources have already been printed by node */
-        heading = pcmk_is_set(mon_ops, mon_op_inactive_resources)? "Inactive Resources" : NULL;
-
-    } else if (pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-        heading = "Full List of Resources";
-
-    } else {
-        heading = "Active Resources";
-    }
-
-    /* Print section heading */
-    out->begin_list(out, NULL, NULL, "%s", heading);
-}
-
-/*!
- * \internal
- * \brief Print whatever resource section closing is appropriate
- *
- * \param[in] out     The output functions structure.
- * \param[in] mon_ops Bitmask of mon_op_*.
- */
-static void
-print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
-{
-    const char *heading;
-
-    /* What type of resources we did or did not display */
-    if (pcmk_is_set(mon_ops, mon_op_group_by_node)) {
-        heading = "inactive ";
-    } else if (pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-        heading = "";
-    } else {
-        heading = "active ";
-    }
-
-    out->list_item(out, NULL, "No %sresources", heading);
-}
-
-/*!
- * \internal
  * \brief Print whatever resource section(s) are appropriate
  *
  * \param[in] out           The output functions structure.
@@ -203,7 +149,15 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
 
-    print_resources_heading(out, mon_ops);
+    if (pcmk_is_set(mon_ops, mon_op_group_by_node)) {
+        /* Active resources have already been printed by node */
+        out->begin_list(out, NULL, NULL, "%s", pcmk_is_set(mon_ops, mon_op_inactive_resources) ?
+                                               "Inactive Resources" : "");
+    } else if (pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
+        out->begin_list(out, NULL, NULL, "Full List of Resources");
+    } else {
+        out->begin_list(out, NULL, NULL, "Active Resources");
+    }
 
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
@@ -258,7 +212,13 @@ print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
     }
 
     if (print_summary && rc != pcmk_rc_ok) {
-        print_resources_closing(out, mon_ops);
+        if (pcmk_is_set(mon_ops, mon_op_group_by_node)) {
+            out->list_item(out, NULL, "No inactive resources");
+        } else if (pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
+            out->list_item(out, NULL, "No resources");
+        } else {
+            out->list_item(out, NULL, "No active resources");
+        }
     }
 
     out->end_list(out);
