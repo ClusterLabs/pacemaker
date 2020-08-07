@@ -51,6 +51,7 @@
               <attribute name="type" ann:defaultValue="string">
                 <choice>
                   <value>string</value>
+                  <value>integer</value>
                   <value>number</value>
                   <value>version</value>
                 </choice>
