@@ -154,6 +154,7 @@ gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 bool BE_QUIET = FALSE;
 static crm_exit_t exit_code = CRM_EX_OK;
+static pcmk__output_t *out = NULL;
 
 // Things that should be cleaned up on exit
 static GError *error = NULL;
@@ -166,13 +167,30 @@ static pe_working_set_t *data_set = NULL;
 
 #define INDENT "                                    "
 
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 // Clean up and exit
 static crm_exit_t
 bye(crm_exit_t ec)
 {
     if (error != NULL) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        if (out != NULL) {
+            out->err(out, "%s: %s", g_get_prgname(), error->message);
+        } else {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        }
+
         g_clear_error(&error);
+    }
+
+    if (out != NULL) {
+        out->finish(out, ec, true, NULL);
+        pcmk__output_free(out);
     }
 
     if (cib_conn != NULL) {
@@ -1428,7 +1446,7 @@ validate_cmdline(crm_exit_t *exit_code)
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
@@ -1471,7 +1489,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "had failed permanently and has been repaired by an administrator):\n\n"
                               "\t# crm_resource --resource myResource --cleanup --node aNode\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     /* Add the -Q option, which cannot be part of the globally supported options
@@ -1504,9 +1522,11 @@ main(int argc, char **argv)
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     GOptionContext *context = NULL;
+    GOptionGroup *output_group = NULL;
     gchar **processed_args = NULL;
 
-    context = build_arg_context(args);
+    context = build_arg_context(args, &output_group);
+    pcmk__register_formats(output_group, formats);
     crm_log_cli_init("crm_resource");
 
     processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
@@ -1518,6 +1538,14 @@ main(int argc, char **argv)
 
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
+    }
+
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "Error creating output format %s: %s\n",
+                args->output_ty, pcmk_rc_str(rc));
+        exit_code = CRM_EX_ERROR;
+        goto done;
     }
 
     options.resource_verbose = args->verbosity;
@@ -1593,9 +1621,22 @@ main(int argc, char **argv)
         goto done;
     }
 
+    if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
+        /* Kind of a hack to display XML lists using a real tag instead of <list>.  This just
+         * saves from having to write custom messages to build the lists around all these things
+         */
+        if (options.rsc_cmd == cmd_list_resources || options.rsc_cmd == cmd_query_xml ||
+            options.rsc_cmd == cmd_query_raw_xml || options.rsc_cmd == cmd_list_active_ops ||
+            options.rsc_cmd == cmd_list_all_ops) {
+            pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
+        } else {
+            pcmk__force_args(context, &error, "%s --xml-substitute", g_get_prgname());
+        }
+    }
+
     if (args->version) {
-        /* FIXME:  When crm_resource is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_USAGE);
+        out->version(out, false);
+        goto done;
     }
 
     if (optind > argc) {
