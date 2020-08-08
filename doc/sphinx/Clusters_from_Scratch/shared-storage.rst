@@ -1,3 +1,6 @@
+.. index::
+   pair: storage; DRBD
+
 Replicate Storage Using DRBD
 ----------------------------
 

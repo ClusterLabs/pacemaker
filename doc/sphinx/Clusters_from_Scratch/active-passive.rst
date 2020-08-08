@@ -1,6 +1,9 @@
 Create an Active/Passive Cluster
 --------------------------------
 
+.. index::
+   pair: resource; IP address
+
 Add a Resource
 ##############
 
@@ -240,6 +243,9 @@ gets going on the node, but it eventually will look like the below.)
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
+
+
+.. index:: stickiness
 
 Prevent Resources from Moving after Recovery
 ############################################

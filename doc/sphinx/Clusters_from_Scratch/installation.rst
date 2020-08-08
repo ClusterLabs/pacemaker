@@ -180,9 +180,6 @@ Next, ensure that the routes are as expected:
 
 If there is no line beginning with **default via**, then you may need to add a line such as
 
-.. index ::
-    pair: source; Bash
-
 ``GATEWAY="192.168.122.1"``
 
 to the device configuration using the same process as described above for
@@ -254,6 +251,10 @@ Apply any package updates released since your installation image was created:
 
     [root@pcmk-1 ~]# yum update
 
+
+.. index::
+    single: node; short name
+
 Use Short Node Names
 ____________________
 
@@ -261,25 +262,16 @@ During installation, we filled in the machine's fully qualified domain
 name (FQDN), which can be rather long when it appears in cluster logs and
 status output. See for yourself how the machine identifies itself:
 
-.. index ::
-    pair: Nodes; short name
-
 .. code-block:: none
 
     [root@pcmk-1 ~]# uname -n
     pcmk-1.localdomain
-
-.. index ::
-    pair: Nodes; Domain name (Query)
 
 We can use the `hostnamectl` tool to strip off the domain name:
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# hostnamectl set-hostname $(uname -n | sed s/\\..*//)
-
-.. index ::
-    pair: Nodes; Domain name (Remove from host name)
 
 Now, check that the machine is using the correct name:
 
@@ -344,6 +336,9 @@ We can now verify the setup by again using ping:
     3 packets transmitted, 3 received, 0% packet loss, time 2001ms
     rtt min/avg/max/mdev = 0.164/0.275/0.475/0.141 ms
 
+
+.. index:: SSH
+
 Configure SSH
 _____________
 
@@ -352,8 +347,6 @@ remotely. For the purposes of this guide, we will create a key without a
 password (using the -N option) so that we can perform remote actions
 without being prompted.
 
-.. index::
-    single: SSH
 
 .. WARNING::
 
@@ -362,6 +355,10 @@ without being prompted.
     the demo.
 
 Create a new key and allow anyone with that key to log in:
+
+
+.. index::
+    single: SSH; key
 
 .Creating and Activating a new SSH Key
 
@@ -386,9 +383,6 @@ Create a new key and allow anyone with that key to log in:
     |                 |
     +-----------------+
     [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
-
-.. index::
-    single: Creating and Activating a new SSH Key
 
 Install the key on the other node:
 

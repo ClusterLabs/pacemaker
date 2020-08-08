@@ -7,10 +7,10 @@ The Scope of this Document
 Computer clusters can be used to provide highly available services or
 resources. The redundancy of multiple machines is used to guard
 against failures of many types.
-      
+
 This document will walk through the installation and setup of simple
 clusters using the |CFS_DISTRO| distribution, version |CFS_DISTRO_VER|.
-      
+
 The clusters described here will use Pacemaker and Corosync to provide
 resource management and messaging. Required packages and modifications
 to their configuration files are described along with the use of the

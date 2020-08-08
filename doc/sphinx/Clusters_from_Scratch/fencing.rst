@@ -1,3 +1,5 @@
+.. index:: fencing
+
 Configure Fencing
 -----------------
 
@@ -37,6 +39,10 @@ In order to guarantee the safety of your data [#]_, fencing is enabled by defaul
     vendors will refuse to support clusters that have fencing disabled. Even
     disabling it for a test cluster means you won't be able to test real failure
     scenarios.
+
+
+.. index::
+   single: fencing; device
 
 Choose a Fence Device
 #####################
