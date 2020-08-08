@@ -201,6 +201,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 # Test results
 *.log
 *.trs
+/lib/common/tests/strings/pcmk__scan_double
 /lib/common/tests/strings/pcmk__parse_ll_range
 /lib/common/tests/strings/pcmk__str_any_of
 /lib/common/tests/strings/pcmk__strcmp
