@@ -44,6 +44,7 @@ gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
+bool pcmk__char_in_any_str(int ch, ...) G_GNUC_NULL_TERMINATED;
 
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
 
