@@ -882,7 +882,7 @@ pcmk__char_in_any_str(int ch, ...)
     return rc;
 }
 
-/*
+/*!
  * \brief Sort strings, with numeric portions sorted numerically
  *
  * Sort two strings case-insensitively like strcasecmp(), but with any numeric
