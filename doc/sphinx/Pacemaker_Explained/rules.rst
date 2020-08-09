@@ -112,9 +112,16 @@ Rules
     indexterm:[XML element,expression element,attribute attribute]
    
    |type
-   |+string+
+   |The default type for +lt+, +gt+, +lte+, and +gte+ operations is
+    +number+ if either value contains a decimal point character, or
+    +integer+ otherwise. The default type for all other operations is
+    +string+. If a numeric parse fails for either value, then the values
+    are compared as type +string+.
    |How the node attributes should be compared. Allowed values are
-    +string+, +integer+, and +version+.
+    +string+, +integer+, +number+, and +version+. +integer+ truncates
+    floating-point values if necessary before performing an integer
+    comparison. +number+ performs a floating-point comparison.
+
     indexterm:[XML attribute,type attribute,expression element]
     indexterm:[XML element,expression element,type attribute]
    
