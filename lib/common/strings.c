@@ -42,7 +42,10 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
  * \param[out] result    If not NULL, where to store scanned value
  * \param[out] end_text  If not NULL, where to store pointer to just after value
  *
- * \return Standard Pacemaker return code (also set errno on error)
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
+ *         \c EINVAL on failed string conversion due to invalid input,
+ *         or \c EOVERFLOW on arithmetic overflow)
+ * \note Sets \c errno on error
  */
 static int
 scan_ll(const char *text, long long *result, char **end_text)
@@ -59,7 +62,7 @@ scan_ll(const char *text, long long *result, char **end_text)
         local_result = strtoll(text, &local_end_text, 10);
 #endif
         if (errno == ERANGE) {
-            rc = errno;
+            rc = EOVERFLOW;
             crm_warn("Integer parsed from %s was clipped to %lld",
                      text, local_result);
 
