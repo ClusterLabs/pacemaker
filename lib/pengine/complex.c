@@ -69,20 +69,20 @@ resource_object_functions_t resource_class_functions[] = {
 static enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+    if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
         return pe_native;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
         return pe_group;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
         return pe_clone;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_MASTER)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_MASTER, pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
         return pe_clone;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
         return pe_container;
     }
 
@@ -375,7 +375,7 @@ detect_promotable(pe_resource_t *rsc)
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (safe_str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER)) {
+    if (pcmk__str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER, pcmk__str_casei)) {
         /* @TODO in some future version, pe_warn_once() here,
          *       then drop support in even later version
          */
@@ -573,7 +573,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
-    if (safe_str_eq(value, "restart")) {
+    if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
         (*rsc)->restart_type = pe_restart_restart;
         pe_rsc_trace((*rsc), "\tDependency restart handling: restart");
         pe_warn_once(pe_wo_restart_type,
@@ -585,11 +585,11 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
-    if (safe_str_eq(value, "stop_only")) {
+    if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
         (*rsc)->recovery_type = recovery_stop_only;
         pe_rsc_trace((*rsc), "\tMultiple running resource recovery: stop only");
 
-    } else if (safe_str_eq(value, "block")) {
+    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
         (*rsc)->recovery_type = recovery_block;
         pe_rsc_trace((*rsc), "\tMultiple running resource recovery: block");
 
@@ -618,7 +618,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         }
     }
 
-    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
         set_bit((*rsc)->flags, pe_rsc_fence_device);
     }
@@ -626,12 +626,12 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
 
   handle_requires_pref:
-    if (safe_str_eq(value, "nothing")) {
+    if (pcmk__str_eq(value, "nothing", pcmk__str_casei)) {
 
-    } else if (safe_str_eq(value, "quorum")) {
+    } else if (pcmk__str_eq(value, "quorum", pcmk__str_casei)) {
         set_bit((*rsc)->flags, pe_rsc_needs_quorum);
 
-    } else if (safe_str_eq(value, "unfencing")) {
+    } else if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
         if (is_set((*rsc)->flags, pe_rsc_fence_device)) {
             pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
                               "to 'quorum' because fencing devices cannot "
@@ -653,7 +653,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
             set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
         }
 
-    } else if (safe_str_eq(value, "fencing")) {
+    } else if (pcmk__str_eq(value, "fencing", pcmk__str_casei)) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
         if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
@@ -668,10 +668,9 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
             value = "quorum";
 
         } else if (((*rsc)->variant == pe_native)
-                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
-                                  PCMK_RESOURCE_CLASS_OCF)
-                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker")
-                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote")
+                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS), PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)
+                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker", pcmk__str_casei)
+                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote", pcmk__str_casei)
             ) {
             value = "quorum";
 

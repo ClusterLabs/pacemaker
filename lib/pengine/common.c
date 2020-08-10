@@ -353,47 +353,47 @@ fail2text(enum action_fail_response fail)
 enum action_tasks
 text2task(const char *task)
 {
-    if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+    if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         return stop_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_STOPPED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STOPPED, pcmk__str_casei)) {
         return stopped_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
         return start_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_STARTED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STARTED, pcmk__str_casei)) {
         return started_rsc;
-    } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         return shutdown_crm;
-    } else if (safe_str_eq(task, CRM_OP_FENCE)) {
+    } else if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
         return stonith_node;
-    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         return monitor_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei)) {
         return action_notify;
-    } else if (safe_str_eq(task, CRMD_ACTION_NOTIFIED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFIED, pcmk__str_casei)) {
         return action_notified;
-    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
         return action_promote;
-    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
         return action_demote;
-    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTED, pcmk__str_casei)) {
         return action_promoted;
-    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTED, pcmk__str_casei)) {
         return action_demoted;
     }
 #if SUPPORT_TRACING
-    if (safe_str_eq(task, CRMD_ACTION_CANCEL)) {
+    if (pcmk__str_eq(task, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_DELETE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DELETE, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRM_OP_PROBED)) {
+    } else if (pcmk__str_eq(task, CRM_OP_PROBED, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
+    } else if (pcmk__str_eq(task, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         return no_action;
     }
     crm_trace("Unsupported action: %s", task);
@@ -480,15 +480,15 @@ enum rsc_role_e
 text2role(const char *role)
 {
     CRM_ASSERT(role != NULL);
-    if (safe_str_eq(role, RSC_ROLE_STOPPED_S)) {
+    if (pcmk__str_eq(role, RSC_ROLE_STOPPED_S, pcmk__str_casei)) {
         return RSC_ROLE_STOPPED;
-    } else if (safe_str_eq(role, RSC_ROLE_STARTED_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_casei)) {
         return RSC_ROLE_STARTED;
-    } else if (safe_str_eq(role, RSC_ROLE_SLAVE_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_SLAVE_S, pcmk__str_casei)) {
         return RSC_ROLE_SLAVE;
-    } else if (safe_str_eq(role, RSC_ROLE_MASTER_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_MASTER_S, pcmk__str_casei)) {
         return RSC_ROLE_MASTER;
-    } else if (safe_str_eq(role, RSC_ROLE_UNKNOWN_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
         return RSC_ROLE_UNKNOWN;
     }
     crm_err("Unknown role: %s", role);
@@ -574,7 +574,7 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
     if (name == NULL || value == NULL) {
         return;
 
-    } else if (safe_str_eq(value, "#default")) {
+    } else if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
         return;
 
     } else if (g_hash_table_lookup(hash, name) == NULL) {
@@ -596,7 +596,7 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
     }
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if(source == NULL || safe_str_eq("host", source) == FALSE) {
+    if(source == NULL || pcmk__str_eq("host", source, pcmk__str_casei) == FALSE) {
         return g_hash_table_lookup(node->details->attrs, name);
     }
 

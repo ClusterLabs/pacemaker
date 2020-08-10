@@ -182,11 +182,11 @@ crm_add_logfile(const char *filename)
 
     if (filename == NULL) {
         return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, "none")) {
+    } else if(pcmk__str_eq(filename, "none", pcmk__str_casei)) {
         return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, "/dev/null")) {
+    } else if(pcmk__str_eq(filename, "/dev/null", pcmk__str_casei)) {
         return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, default_logfile)) {
+    } else if(pcmk__str_eq(filename, default_logfile, pcmk__str_casei)) {
         is_default = TRUE;
     }
 
@@ -769,7 +769,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         pcmk__set_env_option("logfacility", facility);
     }
 
-    if (safe_str_eq(facility, "none")) {
+    if (pcmk__str_eq(facility, "none", pcmk__str_casei)) {
         quiet = TRUE;
 
 
@@ -805,7 +805,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     crm_enable_stderr(to_stderr);
 
     /* Should we log to a file */
-    if (safe_str_eq("none", logfile)) {
+    if (pcmk__str_eq("none", logfile, pcmk__str_casei)) {
         /* No soup^Hlogs for you! */
     } else if(crm_is_daemon) {
         // Daemons always get a log file, unless explicitly set to "none"

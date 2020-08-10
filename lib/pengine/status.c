@@ -415,7 +415,7 @@ pe_find_node_id(GListPtr nodes, const char *id)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (node && safe_str_eq(node->details->id, id)) {
+        if (node && pcmk__str_eq(node->details->id, id, pcmk__str_casei)) {
             return node;
         }
     }
@@ -431,7 +431,7 @@ pe_find_node(GListPtr nodes, const char *uname)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (node && safe_str_eq(node->details->uname, uname)) {
+        if (node && pcmk__str_eq(node->details->uname, uname, pcmk__str_casei)) {
             return node;
         }
     }

@@ -145,10 +145,10 @@ pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
     xmlNode *update = create_attrd_op(user_name);
 
     /* remap common aliases */
-    if (safe_str_eq(section, "reboot")) {
+    if (pcmk__str_eq(section, "reboot", pcmk__str_casei)) {
         section = XML_CIB_TAG_STATUS;
 
-    } else if (safe_str_eq(section, "forever")) {
+    } else if (pcmk__str_eq(section, "forever", pcmk__str_casei)) {
         section = XML_CIB_TAG_NODES;
     }
 
@@ -294,7 +294,7 @@ pcmk__node_attr_target(const char *name)
         const char *host_physical = getenv(phys_var);
 
         // It is important to use the name by which the scheduler knows us
-        if (host_physical && safe_str_eq(target, "host")) {
+        if (host_physical && pcmk__str_eq(target, "host", pcmk__str_casei)) {
             name = host_physical;
 
         } else {

@@ -106,12 +106,12 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
     offset--;
 
     notify = strstr(mutable_key, "_post_notify");
-    if (notify && safe_str_eq(notify, "_post_notify")) {
+    if (notify && pcmk__str_eq(notify, "_post_notify", pcmk__str_casei)) {
         notify[0] = 0;
     }
 
     notify = strstr(mutable_key, "_pre_notify");
-    if (notify && safe_str_eq(notify, "_pre_notify")) {
+    if (notify && pcmk__str_eq(notify, "_pre_notify", pcmk__str_casei)) {
         notify[0] = 0;
     }
 

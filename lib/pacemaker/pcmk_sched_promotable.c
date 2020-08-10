@@ -118,10 +118,10 @@ check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
         } else if (is_set(action->flags, pe_action_optional)) {
             continue;
 
-        } else if (safe_str_eq(RSC_DEMOTE, action->task)) {
+        } else if (pcmk__str_eq(RSC_DEMOTE, action->task, pcmk__str_casei)) {
             *demoting = TRUE;
 
-        } else if (safe_str_eq(RSC_PROMOTE, action->task)) {
+        } else if (pcmk__str_eq(RSC_PROMOTE, action->task, pcmk__str_casei)) {
             *promoting = TRUE;
         }
     }
@@ -952,7 +952,7 @@ node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         const char *tmp = pe_node_attribute_raw(node, attr);
 
-        if (safe_str_eq(value, tmp)) {
+        if (pcmk__str_eq(value, tmp, pcmk__str_casei)) {
             crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
             node->weight = pe__add_scores(node->weight, score);
         }

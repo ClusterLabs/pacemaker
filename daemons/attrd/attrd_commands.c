@@ -415,7 +415,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         crm_xml_add(reply, PCMK__XA_ATTR_NAME, attr);
 
         /* Allow caller to use "localhost" to refer to local node */
-        if (safe_str_eq(host, "localhost")) {
+        if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
             host = attrd_cluster->uname;
             crm_trace("Mapped localhost to %s", host);
         }
@@ -594,20 +594,20 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
                         PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
         attrd_peer_update(peer, xml, host, FALSE);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_SYNC)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_casei)) {
         attrd_peer_sync(peer, xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
         attrd_peer_remove(host, TRUE, peer->uname);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
         /* It is not currently possible to receive this as a peer command,
          * but will be, if we one day enable propagating this operation.
          */
         attrd_peer_clear_failure(peer, xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE)
-              && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_casei)
+               && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
         xmlNode *child = NULL;
 
         crm_info("Processing %s from %s", op, peer->uname);
@@ -746,7 +746,7 @@ attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            if (safe_str_eq(v->nodename, attrd_cluster->uname) && v->seen == FALSE) {
+            if (pcmk__str_eq(v->nodename, attrd_cluster->uname, pcmk__str_casei) && v->seen == FALSE) {
                 crm_trace("Syncing %s[%s] = %s to everyone.(from local only attributes)", a->id, v->nodename, v->current);
 
                 build = TRUE;
@@ -791,7 +791,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     // Look up or create attribute entry
     a = g_hash_table_lookup(attributes, attr);
     if (a == NULL) {
-        if (update_both || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE)) {
+        if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
             a = create_attribute(xml);
         } else {
             crm_warn("Could not update %s: attribute not found", attr);
@@ -800,7 +800,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     }
 
     // Update attribute dampening
-    if (update_both || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY)) {
+    if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
         const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
         int dampen = 0;
 
@@ -859,7 +859,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     v = attrd_lookup_or_create_value(a->values, host, xml);
 
     if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
-        && safe_str_eq(host, attrd_cluster->uname)) {
+        && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
 
         xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
 
@@ -961,7 +961,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             break;
 
         case crm_status_nstate:
-            if (safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
+            if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */

@@ -177,7 +177,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (safe_str_eq("now", date_time_s)) {
+    if (pcmk__str_eq("now", date_time_s, pcmk__str_casei)) {
         date_time = crm_time_new(NULL);
 
         if (date_time == NULL) {

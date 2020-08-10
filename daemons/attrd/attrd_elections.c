@@ -132,7 +132,7 @@ void
 attrd_remove_voter(const crm_node_t *peer)
 {
     election_remove(writer, peer->uname);
-    if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
+    if (peer_writer && pcmk__str_eq(peer->uname, peer_writer, pcmk__str_casei)) {
         free(peer_writer);
         peer_writer = NULL;
         crm_notice("Lost attribute writer %s", peer->uname);

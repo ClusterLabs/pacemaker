@@ -56,7 +56,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
     } else if (pe_rsc_is_clone(parent)
                && is_not_set(rsc->flags, pe_rsc_unique)
                && rsc->clone_name
-               && safe_str_eq(requested_name, rsc->clone_name)
+               && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
 
         for (GListPtr iter = parent->children; iter; iter = iter->next) {
@@ -264,7 +264,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         printf("\n");
     }
 
-    if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
+    if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
         if (force == FALSE) {
             rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
@@ -358,7 +358,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         free(local_attr_id);
         free(local_attr_set);
 
-        if(recursive && safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+        if(recursive && pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
             GListPtr lpc = NULL;
 
             if(need_init) {
@@ -412,7 +412,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         printf("\n");
     }
 
-    if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+    if(pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
         resources = find_matching_attr_resources(rsc, requested_name, attr_set, attr_set_type,
                                                  attr_id, attr_name, cib, "delete", force);
     } else {
@@ -1553,7 +1553,7 @@ static inline bool action_is_pending(pe_action_t *action)
         return false;
     } else if(is_set(action->flags, pe_action_pseudo)) {
         return false;
-    } else if(safe_str_eq("notify", action->task)) {
+    } else if(pcmk__str_eq("notify", action->task, pcmk__str_casei)) {
         return false;
     }
     return true;
@@ -1706,7 +1706,7 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
-    if (safe_str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         CMD_ERR("Sorry, the %s option doesn't support %s resources yet",
                 action, rsc_class);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
@@ -1793,7 +1793,7 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
         }
 
         /* hide output for validate-all if not in verbose */
-        if (resource_verbose == 0 && safe_str_eq(action, "validate-all"))
+        if (resource_verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei))
             goto done;
 
         if (op->stdout_data) {
@@ -1849,13 +1849,13 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
     const char *action = NULL;
     GHashTable *params = NULL;
 
-    if (safe_str_eq(rsc_action, "validate")) {
+    if (pcmk__str_eq(rsc_action, "validate", pcmk__str_casei)) {
         action = "validate-all";
 
-    } else if (safe_str_eq(rsc_action, "force-check")) {
+    } else if (pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
         action = "monitor";
 
-    } else if (safe_str_eq(rsc_action, "force-stop")) {
+    } else if (pcmk__str_eq(rsc_action, "force-stop", pcmk__str_casei)) {
         action = rsc_action+6;
 
     } else if (pcmk__str_any_of(rsc_action, "force-start", "force-demote",

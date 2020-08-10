@@ -191,19 +191,19 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 static void
 set_join_state(const char * start_state)
 {
-    if (safe_str_eq(start_state, "standby")) {
+    if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
         update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
                              NULL, NULL, NULL, "standby", "on", TRUE, NULL, NULL);
 
-    } else if (safe_str_eq(start_state, "online")) {
+    } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
         update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
                              NULL, NULL, NULL, "standby", "off", TRUE, NULL, NULL);
 
-    } else if (safe_str_eq(start_state, "default")) {
+    } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
 
     } else {
@@ -250,7 +250,7 @@ do_cl_join_finalize_respond(long long action,
         return;
     }
 
-    if (AM_I_DC == FALSE && safe_str_eq(welcome_from, fsa_our_uname)) {
+    if (AM_I_DC == FALSE && pcmk__str_eq(welcome_from, fsa_our_uname, pcmk__str_casei)) {
         crm_warn("Discarding our own welcome - we're no longer the DC");
         return;
     }

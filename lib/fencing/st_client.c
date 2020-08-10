@@ -175,7 +175,7 @@ stonith_namespace2text(enum stonith_namespace st_namespace)
 enum stonith_namespace
 stonith_get_namespace(const char *agent, const char *namespace_s)
 {
-    if (safe_str_eq(namespace_s, "internal")) {
+    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_casei)) {
         return st_namespace_internal;
     }
 
@@ -480,7 +480,7 @@ append_arg(const char *key, const char *value, GHashTable **args)
         return;
     } else if (strstr(key, CRM_META)) {
         return;
-    } else if (safe_str_eq(key, "crm_feature_set")) {
+    } else if (pcmk__str_eq(key, "crm_feature_set", pcmk__str_casei)) {
         return;
     }
 
@@ -549,7 +549,7 @@ make_args(const char *agent, const char *action, const char *victim,
         }
 
         /* Check if we need to supply the victim in any other form */
-        if(safe_str_eq(agent, "fence_legacy")) {
+        if(pcmk__str_eq(agent, "fence_legacy", pcmk__str_casei)) {
             value = agent;
 
         } else if (param == NULL) {
@@ -563,7 +563,7 @@ make_args(const char *agent, const char *action, const char *victim,
 
             value = g_hash_table_lookup(device_args, param);
 
-        } else if (safe_str_eq(param, "none")) {
+        } else if (pcmk__str_eq(param, "none", pcmk__str_casei)) {
             value = param;      /* Nothing more to do */
 
         } else {
@@ -1441,12 +1441,12 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     type = crm_element_value(blob.xml, F_TYPE);
     crm_trace("Activating %s callbacks...", type);
 
-    if (safe_str_eq(type, T_STONITH_NG)) {
+    if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei)) {
         stonith_perform_callback(st, blob.xml, 0, 0);
 
-    } else if (safe_str_eq(type, T_STONITH_NOTIFY)) {
+    } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_casei)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
-    } else if (safe_str_eq(type, T_STONITH_TIMEOUT_VALUE)) {
+    } else if (pcmk__str_eq(type, T_STONITH_TIMEOUT_VALUE, pcmk__str_casei)) {
         int call_id = 0;
         int timeout = 0;
 
@@ -1752,7 +1752,7 @@ xml_to_event(xmlNode * msg)
 
     crm_element_value_int(msg, F_STONITH_RC, &(event->result));
 
-    if (safe_str_eq(ntype, T_STONITH_NOTIFY_FENCE)) {
+    if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
 
         if (data) {
@@ -2051,7 +2051,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
-        if (safe_str_eq(params->key, STONITH_ATTR_HOSTARG)) {
+        if (pcmk__str_eq(params->key, STONITH_ATTR_HOSTARG, pcmk__str_casei)) {
             host_arg = params->value;
         }
 
@@ -2554,9 +2554,9 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
         }
 
          if ((prev_hp->state == st_done) &&
-            safe_str_eq(event->target, prev_hp->target) &&
-            safe_str_eq(event->action, prev_hp->action) &&
-            safe_str_eq(event->delegate, prev_hp->delegate) &&
+            pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
+            pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
+            pcmk__str_eq(event->delegate, prev_hp->delegate, pcmk__str_casei) &&
             (event->completed < prev_hp->completed)) {
             ret = TRUE;
             break;
@@ -2692,10 +2692,10 @@ stonith__device_parameter_flags(xmlNode *metadata)
 
         parameter = crm_element_value(match, "name");
 
-        if (safe_str_eq(parameter, "plug")) {
+        if (pcmk__str_eq(parameter, "plug", pcmk__str_casei)) {
             set_bit(flags, st_device_supports_parameter_plug);
 
-        } else if (safe_str_eq(parameter, "port")) {
+        } else if (pcmk__str_eq(parameter, "port", pcmk__str_casei)) {
             set_bit(flags, st_device_supports_parameter_port);
         }
     }

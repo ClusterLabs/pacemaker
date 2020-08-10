@@ -515,7 +515,7 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
     options.validate_cmdline = TRUE;
     options.require_resource = FALSE;
 
-    if(safe_str_eq(option_name, "--provider") == TRUE) {
+    if(pcmk__str_eq(option_name, "--provider", pcmk__str_casei) == TRUE) {
         if (options.v_provider) {
            free(options.v_provider);
         }
@@ -969,7 +969,7 @@ list_providers(const char *command, const char *spec, crm_exit_t *exit_code)
         rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, spec, &list);
         text = "OCF providers";
 
-    } else if (safe_str_eq("--list-standards", command)) {
+    } else if (pcmk__str_eq("--list-standards", command, pcmk__str_casei)) {
         rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
         text = "standards";
     }
@@ -1255,7 +1255,7 @@ validate_cmdline(crm_exit_t *exit_code)
                     "--resource cannot be used with --class, --agent, and --provider");
 
     // If --class, --agent, or --provider are given, --validate must also be given.
-    } else if (!safe_str_eq(options.rsc_long_cmd, "validate")) {
+    } else if (!pcmk__str_eq(options.rsc_long_cmd, "validate", pcmk__str_casei)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "--class, --agent, and --provider require --validate");
 
@@ -1382,13 +1382,13 @@ main(int argc, char **argv)
                          "--list-standards", NULL)) {
         rc = list_providers(options.extra_option, options.extra_arg, &exit_code);
         goto done;
-    } else if (safe_str_eq(options.extra_option, "--show-metadata")) {
+    } else if (pcmk__str_eq(options.extra_option, "--show-metadata", pcmk__str_casei)) {
         rc = show_metadata(options.extra_arg, &exit_code);
         goto done;
-    } else if (safe_str_eq(options.extra_option, "--list-agents")) {
+    } else if (pcmk__str_eq(options.extra_option, "--list-agents", pcmk__str_casei)) {
         rc = list_agents(options.extra_arg, &exit_code);
         goto done;
-    } else if (safe_str_eq(options.extra_option, "--option")) {
+    } else if (pcmk__str_eq(options.extra_option, "--option", pcmk__str_casei)) {
         rc = set_option(options.extra_arg);
         if (rc != pcmk_rc_ok) {
             goto done;
@@ -1571,7 +1571,7 @@ main(int argc, char **argv)
     } else if (options.rsc_cmd == 'l') {
         rc = list_raw();
 
-    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && safe_str_eq(options.rsc_long_cmd, "restart")) {
+    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && pcmk__str_eq(options.rsc_long_cmd, "restart", pcmk__str_casei)) {
         /* We don't pass data_set because rsc needs to stay valid for the entire
          * lifetime of cli_resource_restart(), but it will reset and update the
          * working set multiple times, so it needs to use its own copy.
@@ -1580,7 +1580,7 @@ main(int argc, char **argv)
                                   cib_conn, options.cib_options, options.promoted_role_only,
                                   options.force);
 
-    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && safe_str_eq(options.rsc_long_cmd, "wait")) {
+    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && pcmk__str_eq(options.rsc_long_cmd, "wait", pcmk__str_casei)) {
         rc = wait_till_stable(options.timeout_ms, cib_conn);
 
     } else if (options.rsc_cmd == 0 && options.rsc_long_cmd) {

@@ -79,8 +79,8 @@ notify_callback(stonith_t * st, stonith_event_t * e)
         return;
     }
 
-    if (safe_str_eq(async_fence_data.target, e->target) &&
-        safe_str_eq(async_fence_data.action, e->action)) {
+    if (pcmk__str_eq(async_fence_data.target, e->target, pcmk__str_casei) &&
+        pcmk__str_eq(async_fence_data.action, e->action, pcmk__str_casei)) {
 
         async_fence_data.rc = e->result;
         g_main_loop_quit(mainloop);
@@ -187,7 +187,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
 
     rc = st->cmds->history(st, st_opts | (cleanup ? st_opt_cleanup : 0) |
                            (broadcast ? st_opt_broadcast : 0),
-                           safe_str_eq(target, "*") ? NULL : target,
+                           pcmk__str_eq(target, "*", pcmk__str_casei) ? NULL : target,
                            &history, timeout/1000);
 
     if (cleanup) {

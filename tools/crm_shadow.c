@@ -47,7 +47,7 @@ shadow_setup(char *name, gboolean do_switch)
 
     printf("Setting up shadow instance\n");
 
-    if (safe_str_eq(new_prompt, prompt)) {
+    if (pcmk__str_eq(new_prompt, prompt, pcmk__str_casei)) {
         /* nothing to do */
         goto done;
 

@@ -210,7 +210,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
         if ((node->weight > best_score) && can_run_resources(node)
-            && safe_str_eq(value, pe_node_attribute_raw(node, attr))) {
+            && pcmk__str_eq(value, pe_node_attribute_raw(node, attr), pcmk__str_casei)) {
 
             best_score = node->weight;
             best_node = node->details->uname;
@@ -990,7 +990,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         GListPtr stop_ops = NULL;
         GListPtr local_gIter = NULL;
 
-        if (node && safe_str_eq(stop_node_uname, node_uname)) {
+        if (node && pcmk__str_eq(stop_node_uname, node_uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1808,7 +1808,7 @@ influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocatio
     lh_value = pe_node_attribute_raw(rsc_lh->allocated_to, attribute);
     rh_value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
 
-    if (!safe_str_eq(lh_value, rh_value)) {
+    if (!pcmk__str_eq(lh_value, rh_value, pcmk__str_casei)) {
         if(constraint->score == INFINITY && constraint->role_lh == RSC_ROLE_MASTER) {
             rsc_lh->priority = -INFINITY;
         }
@@ -1861,7 +1861,7 @@ colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_
                          constraint->score, rsc_rh->id);
             node->weight = pe__add_scores(-constraint->score, node->weight);
 
-        } else if (safe_str_eq(pe_node_attribute_raw(node, attribute), value)) {
+        } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value, pcmk__str_casei)) {
             if (constraint->score < CRM_SCORE_INFINITY) {
                 pe_rsc_trace(rsc_lh, "%s: %s@%s += %d",
                              constraint->id, rsc_lh->id,
@@ -2069,7 +2069,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     if (is_set(filter, pe_action_runnable)
         && is_not_set(then->flags, pe_action_runnable)
         && is_set(then->rsc->flags, pe_rsc_managed)
-        && safe_str_eq(then->task, RSC_START)) {
+        && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
         reason = "stop";
     }
 
@@ -2122,11 +2122,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if (!then_rsc) {
             /* ignore */
-        } else if ((then_rsc_role == RSC_ROLE_STOPPED) && safe_str_eq(then->task, RSC_STOP)) {
+        } else if ((then_rsc_role == RSC_ROLE_STOPPED) && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_casei)) {
             /* ignore... if 'then' is supposed to be stopped after 'first', but
              * then is already stopped, there is nothing to be done when non-symmetrical.  */
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
-                   && safe_str_eq(then->task, RSC_START)
+                   && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)
                    && is_set(then->flags, pe_action_optional)
                    && then->node
                    && pcmk__list_of_1(then_rsc->running_on)
@@ -2910,7 +2910,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     if (pe__is_guest_or_remote_node(node)) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
+        if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because Pacemaker Remote nodes cannot run stonith agents",
                          rsc->id, node->details->id);
@@ -3167,7 +3167,7 @@ native_start_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_worki
                 break;
 
             case rsc_req_quorum:
-                if (safe_str_eq(action->task, RSC_START)
+                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
                     && pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
                     && !rsc_is_known_on(rsc, target)) {
 

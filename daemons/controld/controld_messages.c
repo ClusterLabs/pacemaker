@@ -346,7 +346,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_warn("Cannot route empty message");
         return TRUE;
 
-    } else if (safe_str_eq(task, CRM_OP_HELLO)) {
+    } else if (pcmk__str_eq(task, CRM_OP_HELLO, pcmk__str_casei)) {
         /* quietly ignore */
         crm_trace("No routing needed for hello message %s", ref);
         return TRUE;
@@ -391,13 +391,13 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = 1;
         }
 
-    } else if (safe_str_eq(fsa_our_uname, host_to)) {
+    } else if (pcmk__str_eq(fsa_our_uname, host_to, pcmk__str_casei)) {
         is_local = 1;
-    } else if (is_for_crm && safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+    } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
-        if (safe_str_eq(mode, XML_TAG_CIB)) {
+        if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
             // Local delete of an offline node's resource history
             is_local = 1;
         }
@@ -914,7 +914,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
         return I_STOP;
     }
 
-    if (safe_str_eq(host_from, fsa_our_dc)) {
+    if (pcmk__str_eq(host_from, fsa_our_dc, pcmk__str_casei)) {
         // Must be logic error -- DC confirming its own unrequested shutdown
         crm_err("Shutting down controller immediately due to "
                 "unexpected shutdown confirmation");
@@ -1150,7 +1150,7 @@ handle_response(xmlNode *stored_msg)
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);
 
-        } else if (safe_str_eq(msg_ref, fsa_pe_ref)) {
+        } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_casei)) {
             ha_msg_input_t fsa_input;
 
             controld_stop_sched_timer();

@@ -79,10 +79,10 @@ main(int argc, char **argv)
         }
     }
 
-    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         crmd_metadata();
         return CRM_EX_OK;
-    } else if (argc - optind == 1 && safe_str_eq("version", argv[optind])) {
+    } else if (argc - optind == 1 && pcmk__str_eq("version", argv[optind], pcmk__str_casei)) {
         fprintf(stdout, "CRM Version: %s (%s)\n", PACEMAKER_VERSION, BUILD_VERSION);
         return CRM_EX_OK;
     }

@@ -353,7 +353,7 @@ stonith_merge_in_history_list(GHashTable *history)
 
         if ((op->state != st_failed) &&
             (op->state != st_done) &&
-            safe_str_eq(op->originator, stonith_our_uname)) {
+            pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
             crm_warn("received pending action we are supposed to be the "
                      "owner but it's not in our records -> fail it");
             op->state = st_failed;
@@ -441,7 +441,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         st_opt_broadcast | st_opt_discard_reply,
                                         NULL);
         } else if (remote_peer &&
-                   !safe_str_eq(remote_peer, stonith_our_uname)) {
+                   !pcmk__str_eq(remote_peer, stonith_our_uname, pcmk__str_casei)) {
             xmlNode *history = get_xpath_object("//" F_STONITH_HISTORY_LIST,
                                                 msg, LOG_NEVER);
             GHashTable *received_history =

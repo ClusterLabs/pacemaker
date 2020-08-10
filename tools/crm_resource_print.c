@@ -31,7 +31,7 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
             continue;
         }
 
-        if (safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
+        if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
             printf("Constraint %s %s %s %s %s %s %s\n",
                    crm_element_name(xml_obj),
                    cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
@@ -41,7 +41,7 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
                    cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
                    cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
 
-        } else if (safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj), pcmk__str_casei)) {
             /* unpack_location(xml_obj, data_set); */
         }
     }
@@ -58,7 +58,7 @@ cli_resource_print_cts(pe_resource_t * rsc)
     const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     pe_node_t *node = pe__current_node(rsc);
 
-    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         needs_quorum = FALSE;
     } else {
         // @TODO check requires in resource meta-data and rsc_defaults
@@ -295,10 +295,10 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, const char *a
 
     params = crm_str_table_new();
 
-    if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
+    if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
         get_rsc_attributes(params, rsc, current, data_set);
 
-    } else if (safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+    } else if (pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
         /* No need to redirect to the parent */
         get_meta_attributes(params, rsc, current, data_set);
 

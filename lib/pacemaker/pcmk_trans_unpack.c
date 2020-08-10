@@ -41,13 +41,13 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
 
-    if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
+    if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
         action->type = action_type_rsc;
 
-    } else if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_PSEUDO_EVENT)) {
+    } else if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_PSEUDO_EVENT, pcmk__str_casei)) {
         action->type = action_type_pseudo;
 
-    } else if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
+    } else if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT, pcmk__str_casei)) {
         action->type = action_type_crm;
     }
 

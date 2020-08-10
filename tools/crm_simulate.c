@@ -456,7 +456,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
             printf("GuestNode %s: %s\n", node_name, node_mode);
         } else if (pe__is_remote_node(node)) {
             printf("RemoteNode %s: %s\n", node_name, node_mode);
-        } else if (safe_str_eq(node->details->uname, node->details->id)) {
+        } else if (pcmk__str_eq(node->details->uname, node->details->id, pcmk__str_casei)) {
             printf("Node %s: %s\n", node_name, node_mode);
         } else {
             printf("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
@@ -514,7 +514,7 @@ create_action_name(pe_action_t *action)
         action_host = "<none>";
     }
 
-    if (safe_str_eq(action->task, RSC_CANCEL)) {
+    if (pcmk__str_eq(action->task, RSC_CANCEL, pcmk__str_casei)) {
         prefix = "Cancel ";
         task = action->cancel_task;
     }
@@ -552,7 +552,7 @@ create_action_name(pe_action_t *action)
         }
         free(key);
 
-    } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
         action_name = crm_strdup_printf("%s%s '%s' %s", prefix, action->task, op, action_host);
@@ -716,7 +716,7 @@ setup_input(const char *input, const char *output, GError **error)
             return pcmk_rc_no_input;
         }
 
-    } else if (safe_str_eq(input, "-")) {
+    } else if (pcmk__str_eq(input, "-", pcmk__str_casei)) {
         cib_object = filename2xml(NULL);
 
     } else {

@@ -235,7 +235,7 @@ done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
 
     // Free any reply data that was allocated
-    if (safe_str_eq(value, PCMK__CONTROLD_CMD_NODES)) {
+    if (pcmk__str_eq(value, PCMK__CONTROLD_CMD_NODES, pcmk__str_casei)) {
         g_list_free_full(reply_data.data.nodes, free);
     }
 }

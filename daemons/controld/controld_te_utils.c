@@ -175,7 +175,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         xmlNode *search = NULL;
 
         for(search = reason; search; search = search->parent) {
-            if (safe_str_eq(XML_TAG_DIFF, TYPE(search))) {
+            if (pcmk__str_eq(XML_TAG_DIFF, TYPE(search), pcmk__str_casei)) {
                 diff = search;
                 break;
             }
@@ -184,7 +184,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         if(diff) {
             xml_patch_versions(diff, add, del);
             for(search = reason; search; search = search->parent) {
-                if (safe_str_eq(XML_DIFF_CHANGE, TYPE(search))) {
+                if (pcmk__str_eq(XML_DIFF_CHANGE, TYPE(search), pcmk__str_casei)) {
                     change = search;
                     break;
                 }
@@ -235,7 +235,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        add[0], add[1], add[2], fn, line, path,
                        (transition_graph->complete? "true" : "false"));
 
-        } else if (safe_str_eq(XML_CIB_TAG_NVPAIR, kind)) { 
+        } else if (pcmk__str_eq(XML_CIB_TAG_NVPAIR, kind, pcmk__str_casei)) { 
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        transition_graph->id,
@@ -245,7 +245,7 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        (transition_graph->complete? "true" : "false"));
 
-        } else if (safe_str_eq(XML_LRM_TAG_RSC_OP, kind)) {
+        } else if (pcmk__str_eq(XML_LRM_TAG_RSC_OP, kind, pcmk__str_casei)) {
             const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
 
             do_crm_log(level, "Transition %d aborted by operation %s '%s' on %s: %s "

@@ -728,11 +728,11 @@ clone_update_pseudo_status(pe_resource_t * rsc, gboolean * stopping, gboolean * 
             pe_rsc_trace(rsc, "Skipping unrunnable: %s", action->uuid);
             continue;
 
-        } else if (safe_str_eq(RSC_STOP, action->task)) {
+        } else if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei)) {
             pe_rsc_trace(rsc, "Stopping due to: %s", action->uuid);
             *stopping = TRUE;
 
-        } else if (safe_str_eq(RSC_START, action->task)) {
+        } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)) {
             if (is_set(action->flags, pe_action_runnable) == FALSE) {
                 pe_rsc_trace(rsc, "Skipping pseudo-op: %s run=%d, pseudo=%d",
                              action->uuid, is_set(action->flags, pe_action_runnable),
@@ -1168,8 +1168,8 @@ clone_child_action(pe_action_t * action)
     enum action_tasks result = no_action;
     pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
 
-    if (safe_str_eq(action->task, "notify")
-        || safe_str_eq(action->task, "notified")) {
+    if (pcmk__str_eq(action->task, "notify", pcmk__str_casei)
+        || pcmk__str_eq(action->task, "notified", pcmk__str_casei)) {
 
         /* Find the action we're notifying about instead */
 

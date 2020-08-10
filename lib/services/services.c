@@ -216,7 +216,7 @@ resources_action_create(const char *name, const char *standard,
     op->flags = flags;
     op->id = pcmk__op_key(name, action, interval_ms);
 
-    if (is_set(ra_caps, pcmk_ra_cap_status) && safe_str_eq(action, "monitor")) {
+    if (is_set(ra_caps, pcmk_ra_cap_status) && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
         op->action = strdup("status");
     } else {
         op->action = strdup(action);
@@ -255,7 +255,7 @@ resources_action_create(const char *name, const char *standard,
         op->opaque->exec = dup_file_path(op->agent, NAGIOS_PLUGIN_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
 
-        if (safe_str_eq(op->action, "monitor") && (op->interval_ms == 0)) {
+        if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) && (op->interval_ms == 0)) {
             /* Invoke --version for a nagios probe */
             op->opaque->args[1] = strdup("--version");
 
@@ -271,7 +271,7 @@ resources_action_create(const char *name, const char *standard,
             while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value) &&
                    index <= args_size - 3) {
 
-                if (safe_str_eq(key, XML_ATTR_CRM_VERSION) || strstr(key, CRM_META "_")) {
+                if (pcmk__str_eq(key, XML_ATTR_CRM_VERSION, pcmk__str_casei) || strstr(key, CRM_META "_")) {
                     continue;
                 }
                 op->opaque->args[index++] = crm_strdup_printf("--%s", key);
@@ -782,7 +782,7 @@ is_op_blocked(const char *rsc)
 
     for (gIter = inflight_ops; gIter != NULL; gIter = gIter->next) {
         op = gIter->data;
-        if (safe_str_eq(op->rsc, rsc)) {
+        if (pcmk__str_eq(op->rsc, rsc, pcmk__str_casei)) {
             return TRUE;
         }
     }
@@ -857,12 +857,12 @@ action_get_metadata(svc_action_t *op)
         return FALSE;
     }
 
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
         return (services__get_lsb_metadata(op->agent, &op->stdout_data) >= 0);
     }
 
 #if SUPPORT_NAGIOS
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS)) {
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
         return services__get_nagios_metadata(op->agent, &op->stdout_data) >= 0;
     }
 #endif
@@ -882,7 +882,7 @@ services_action_sync(svc_action_t * op)
 
     op->synchronous = true;
 
-    if (safe_str_eq(op->action, "meta-data")) {
+    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         /* Synchronous meta-data operations are handled specially. Since most
          * resource classes don't provide any meta-data, it has to be
          * synthesized from available information about the agent.
@@ -1057,7 +1057,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
         goto done;
     }
 
-    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SERVICE)) {
+    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
         if (services__lsb_agent_exists(agent)) {
             rc = TRUE;
 #if SUPPORT_SYSTEMD
@@ -1073,24 +1073,24 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
             rc = FALSE;
         }
 
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_OCF)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         rc = services__ocf_agent_exists(provider, agent);
 
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_LSB)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
         rc = services__lsb_agent_exists(agent);
 
 #if SUPPORT_SYSTEMD
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         rc = systemd_unit_exists(agent);
 #endif
 
 #if SUPPORT_UPSTART
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_casei)) {
         rc = upstart_job_exists(agent);
 #endif
 
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
         rc = services__nagios_agent_exists(agent);
 #endif
 

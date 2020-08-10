@@ -37,7 +37,7 @@ static GHashTable *stonith_failures = NULL;
 void
 update_stonith_max_attempts(const char *value)
 {
-    if (safe_str_eq(value, CRM_INFINITY_S)) {
+    if (pcmk__str_eq(value, CRM_INFINITY_S, pcmk__str_casei)) {
        stonith_max_attempts = CRM_SCORE_INFINITY;
     } else {
        stonith_max_attempts = (unsigned long int) crm_parse_ll(value, NULL);
@@ -47,7 +47,7 @@ update_stonith_max_attempts(const char *value)
 void
 set_fence_reaction(const char *reaction_s)
 {
-    if (safe_str_eq(reaction_s, "panic")) {
+    if (pcmk__str_eq(reaction_s, "panic", pcmk__str_casei)) {
         fence_reaction_panic = TRUE;
 
     } else {
@@ -295,7 +295,7 @@ remove_stonith_cleanup(const char *target)
         char *iter_name = tmp->data;
 
         iter = iter->next;
-        if (safe_str_eq(target, iter_name)) {
+        if (pcmk__str_eq(target, iter_name, pcmk__str_casei)) {
             crm_trace("Removing %s from the cleanup list", iter_name);
             stonith_cleanup_list = g_list_delete_link(stonith_cleanup_list, tmp);
             free(iter_name);
@@ -385,7 +385,7 @@ fail_incompletable_stonith(crm_graph_t *graph)
             }
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-            if (task && safe_str_eq(task, CRM_OP_FENCE)) {
+            if (task && pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
                 action->failed = TRUE;
                 last_action = action->xml;
                 update_graph(graph, action);
@@ -450,7 +450,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
 
     crmd_alert_fencing_op(st_event);
 
-    if ((st_event->result == pcmk_ok) && safe_str_eq("on", st_event->action)) {
+    if ((st_event->result == pcmk_ok) && pcmk__str_eq("on", st_event->action, pcmk__str_casei)) {
         crm_notice("%s was successfully unfenced by %s (at the request of %s)",
                    st_event->target,
                    st_event->executioner? st_event->executioner : "<anyone>",
@@ -458,7 +458,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
                 /* TODO: Hook up st_event->device */
         return;
 
-    } else if (safe_str_eq("on", st_event->action)) {
+    } else if (pcmk__str_eq("on", st_event->action, pcmk__str_casei)) {
         crm_err("Unfencing of %s by %s failed: %s (%d)",
                 st_event->target,
                 st_event->executioner? st_event->executioner : "<anyone>",
@@ -492,7 +492,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
      * DC later. The current DC has already updated its fail count in
      * tengine_stonith_callback().
      */
-    if (!AM_I_DC && safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
+    if (!AM_I_DC && pcmk__str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         if (st_event->result == pcmk_ok) {
             st_fail_count_reset(st_event->target);
         } else {
@@ -512,7 +512,9 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
     if (st_event->result == pcmk_ok) {
         crm_node_t *peer = crm_find_known_peer_full(0, st_event->target, CRM_GET_PEER_ANY);
         const char *uuid = NULL;
-        gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
+        gboolean we_are_executioner = pcmk__str_eq(st_event->executioner,
+                                                   fsa_our_uname,
+                                                   pcmk__str_casei);
 
         if (peer == NULL) {
             return;
@@ -752,7 +754,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         crm_info("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             te_action_confirmed(action, NULL);
-            if (safe_str_eq("on", op)) {
+            if (pcmk__str_eq("on", op, pcmk__str_casei)) {
                 const char *value = NULL;
                 char *now = crm_ttoa(time(NULL));
 

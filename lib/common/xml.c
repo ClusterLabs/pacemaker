@@ -1070,8 +1070,9 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
 
     name = crm_element_name(target);
     CRM_CHECK(name != NULL, return);
-    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
-    CRM_CHECK(safe_str_eq(ID(target), ID(patch)), return);
+    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(patch), pcmk__str_casei),
+              return);
+    CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     /* check for XML_DIFF_MARKER in a child */
     id = crm_element_value_copy(target, XML_ATTR_ID);
@@ -1145,8 +1146,9 @@ __add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * patch)
 
     name = crm_element_name(target);
     CRM_CHECK(name != NULL, return);
-    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(patch)), return);
-    CRM_CHECK(safe_str_eq(ID(target), ID(patch)), return);
+    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(patch), pcmk__str_casei),
+              return);
+    CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
     for (xIter = pcmk__first_xml_attr(patch); xIter != NULL; xIter = xIter->next) {
         const char *p_name = (const char *)xIter->name;
@@ -3758,10 +3760,9 @@ xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
 void
 xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    CRM_CHECK(safe_str_eq(crm_element_name(old_xml),
-                          crm_element_name(new_xml)),
+    CRM_CHECK(pcmk__str_eq(crm_element_name(old_xml), crm_element_name(new_xml), pcmk__str_casei),
               return);
-    CRM_CHECK(safe_str_eq(ID(old_xml), ID(new_xml)), return);
+    CRM_CHECK(pcmk__str_eq(ID(old_xml), ID(new_xml), pcmk__str_casei), return);
 
     if(xml_tracking_changes(new_xml) == FALSE) {
         xml_track_changes(new_xml, NULL, NULL, FALSE);
@@ -3860,7 +3861,7 @@ find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact)
         }
 
         if (a_child->type == XML_COMMENT_NODE
-            && safe_str_eq((const char *)a_child->content, (const char *)search_comment->content)) {
+            && pcmk__str_eq((const char *)a_child->content, (const char *)search_comment->content, pcmk__str_casei)) {
             return a_child;
 
         } else if (exact) {
@@ -3936,7 +3937,8 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
     name = crm_element_name(left);
     CRM_CHECK(name != NULL, return NULL);
-    CRM_CHECK(safe_str_eq(crm_element_name(left), crm_element_name(right)), return NULL);
+    CRM_CHECK(pcmk__str_eq(crm_element_name(left), crm_element_name(right), pcmk__str_casei),
+              return NULL);
 
     /* check for XML_DIFF_MARKER in a child */
     value = crm_element_value(right, XML_DIFF_MARKER);
@@ -4154,7 +4156,8 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
 #endif
     }
 
-    CRM_CHECK(safe_str_eq(crm_element_name(target), crm_element_name(update)), return 0);
+    CRM_CHECK(pcmk__str_eq(crm_element_name(target), crm_element_name(update), pcmk__str_casei),
+              return 0);
 
     if (as_diff == FALSE) {
         /* So that expand_plus_plus() gets called */

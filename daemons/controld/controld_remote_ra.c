@@ -299,10 +299,10 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
         return;
     }
 
-    if (safe_str_eq(cmd->action, "start")) {
+    if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
         remote_node_up(cmd->rsc_id);
 
-    } else if (safe_str_eq(cmd->action, "migrate_from")) {
+    } else if (pcmk__str_eq(cmd->action, "migrate_from", pcmk__str_casei)) {
         /* After a successful migration, we don't need to do remote_node_up()
          * because the DC already knows the node is up, and we don't want to
          * clear LRM history etc. We do need to add the remote node to this
@@ -315,7 +315,7 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
         CRM_CHECK(node != NULL, return);
         crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, 0);
 
-    } else if (safe_str_eq(cmd->action, "stop")) {
+    } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);
         remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
 
@@ -631,7 +631,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         report_remote_ra_result(cmd);
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_poke && safe_str_eq(cmd->action, "monitor")) {
+    } else if (op->type == lrmd_event_poke && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
 
         if (cmd->monitor_timeout_id) {
             g_source_remove(cmd->monitor_timeout_id);
@@ -659,7 +659,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         }
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_disconnect && safe_str_eq(cmd->action, "monitor")) {
+    } else if (op->type == lrmd_event_disconnect && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         if (ra_data->active == TRUE && (cmd->cancel == FALSE)) {
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
             cmd->op_status = PCMK_LRM_OP_ERROR;
@@ -669,7 +669,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         }
         cmd_handled = TRUE;
 
-    } else if (op->type == lrmd_event_new_client && safe_str_eq(cmd->action, "stop")) {
+    } else if (op->type == lrmd_event_new_client && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
 
         handle_remote_ra_stop(lrm_state, cmd);
         cmd_handled = TRUE;
@@ -738,9 +738,9 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
         if (pcmk__str_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
                             XML_RSC_ATTR_REMOTE_RA_SERVER, NULL)) {
             server = tmp->value;
-        } else if (safe_str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT)) {
+        } else if (pcmk__str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT, pcmk__str_casei)) {
             port = atoi(tmp->value);
-        } else if (safe_str_eq(tmp->key, CRM_META"_"XML_RSC_ATTR_CONTAINER)) {
+        } else if (pcmk__str_eq(tmp->key, CRM_META "_" XML_RSC_ATTR_CONTAINER, pcmk__str_casei)) {
             ra_data->controlling_guest = TRUE;
         }
     }
@@ -937,7 +937,7 @@ fail_all_monitor_cmds(GList * list)
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
-        if ((cmd->interval_ms > 0) && safe_str_eq(cmd->action, "monitor")) {
+        if ((cmd->interval_ms > 0) && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
             rm_list = g_list_append(rm_list, cmd);
         }
     }
@@ -969,7 +969,7 @@ remove_cmd(GList * list, const char *action, guint interval_ms)
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
         if ((cmd->interval_ms == interval_ms)
-            && safe_str_eq(cmd->action, action)) {
+            && pcmk__str_eq(cmd->action, action, pcmk__str_casei)) {
             break;
         }
         cmd = NULL;
@@ -999,7 +999,7 @@ remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
                                          interval_ms);
     if (ra_data->cur_cmd &&
         (ra_data->cur_cmd->interval_ms == interval_ms) &&
-        (safe_str_eq(ra_data->cur_cmd->action, action))) {
+        (pcmk__str_eq(ra_data->cur_cmd->action, action, pcmk__str_casei))) {
 
         ra_data->cur_cmd->cancel = TRUE;
     }
@@ -1027,7 +1027,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     if (ra_data->cur_cmd &&
         ra_data->cur_cmd->cancel == FALSE &&
         (ra_data->cur_cmd->interval_ms == interval_ms) &&
-        safe_str_eq(ra_data->cur_cmd->action, "monitor")) {
+        pcmk__str_eq(ra_data->cur_cmd->action, "monitor", pcmk__str_casei)) {
 
         cmd = ra_data->cur_cmd;
         goto handle_dup;
@@ -1036,7 +1036,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     for (gIter = ra_data->recurring_cmds; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
         if ((cmd->interval_ms == interval_ms)
-            && safe_str_eq(cmd->action, "monitor")) {
+            && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
             goto handle_dup;
         }
     }
@@ -1044,7 +1044,7 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     for (gIter = ra_data->cmds; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
         if ((cmd->interval_ms == interval_ms)
-            && safe_str_eq(cmd->action, "monitor")) {
+            && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
             goto handle_dup;
         }
     }

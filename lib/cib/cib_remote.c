@@ -360,10 +360,10 @@ cib_remote_callback_dispatch(gpointer user_data)
 
         crm_trace("Activating %s callbacks...", type);
 
-        if (safe_str_eq(type, T_CIB)) {
+        if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
             cib_native_callback(cib, msg, 0, 0);
 
-        } else if (safe_str_eq(type, T_CIB_NOTIFY)) {
+        } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
             g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
         } else {

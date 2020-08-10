@@ -962,7 +962,7 @@ pe__bundle_needs_remote_name(pe_resource_t *rsc)
     }
 
     value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_REMOTE_RA_ADDR);
-    if (safe_str_eq(value, "#uname") == FALSE) {
+    if (pcmk__str_eq(value, "#uname", pcmk__str_casei) == FALSE) {
         return FALSE;
 
     } else {

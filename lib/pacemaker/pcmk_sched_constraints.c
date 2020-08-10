@@ -94,16 +94,16 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
         if (lifetime && !evaluate_lifetime(lifetime, data_set)) {
             crm_info("Constraint %s %s is not active", tag, id);
 
-        } else if (safe_str_eq(XML_CONS_TAG_RSC_ORDER, tag)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_ORDER, tag, pcmk__str_casei)) {
             unpack_rsc_order(xml_obj, data_set);
 
-        } else if (safe_str_eq(XML_CONS_TAG_RSC_DEPEND, tag)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, tag, pcmk__str_casei)) {
             unpack_rsc_colocation(xml_obj, data_set);
 
-        } else if (safe_str_eq(XML_CONS_TAG_RSC_LOCATION, tag)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, tag, pcmk__str_casei)) {
             unpack_location(xml_obj, data_set);
 
-        } else if (safe_str_eq(XML_CONS_TAG_RSC_TICKET, tag)) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_TICKET, tag, pcmk__str_casei)) {
             unpack_rsc_ticket(xml_obj, data_set);
 
         } else {
@@ -117,28 +117,28 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
 static const char *
 invert_action(const char *action)
 {
-    if (safe_str_eq(action, RSC_START)) {
+    if (pcmk__str_eq(action, RSC_START, pcmk__str_casei)) {
         return RSC_STOP;
 
-    } else if (safe_str_eq(action, RSC_STOP)) {
+    } else if (pcmk__str_eq(action, RSC_STOP, pcmk__str_casei)) {
         return RSC_START;
 
-    } else if (safe_str_eq(action, RSC_PROMOTE)) {
+    } else if (pcmk__str_eq(action, RSC_PROMOTE, pcmk__str_casei)) {
         return RSC_DEMOTE;
 
-    } else if (safe_str_eq(action, RSC_DEMOTE)) {
+    } else if (pcmk__str_eq(action, RSC_DEMOTE, pcmk__str_casei)) {
         return RSC_PROMOTE;
 
-    } else if (safe_str_eq(action, RSC_PROMOTED)) {
+    } else if (pcmk__str_eq(action, RSC_PROMOTED, pcmk__str_casei)) {
         return RSC_DEMOTED;
 
-    } else if (safe_str_eq(action, RSC_DEMOTED)) {
+    } else if (pcmk__str_eq(action, RSC_DEMOTED, pcmk__str_casei)) {
         return RSC_PROMOTED;
 
-    } else if (safe_str_eq(action, RSC_STARTED)) {
+    } else if (pcmk__str_eq(action, RSC_STARTED, pcmk__str_casei)) {
         return RSC_STOPPED;
 
-    } else if (safe_str_eq(action, RSC_STOPPED)) {
+    } else if (pcmk__str_eq(action, RSC_STOPPED, pcmk__str_casei)) {
         return RSC_STARTED;
     }
     crm_warn("Unknown action '%s' specified in order constraint", action);
@@ -168,13 +168,13 @@ get_ordering_type(xmlNode * xml_obj)
                          "and will be removed in a future release (use 'kind' instead)");
         }
 
-    } else if (safe_str_eq(kind, "Mandatory")) {
+    } else if (pcmk__str_eq(kind, "Mandatory", pcmk__str_casei)) {
         kind_e = pe_order_kind_mandatory;
 
-    } else if (safe_str_eq(kind, "Optional")) {
+    } else if (pcmk__str_eq(kind, "Optional", pcmk__str_casei)) {
         kind_e = pe_order_kind_optional;
 
-    } else if (safe_str_eq(kind, "Serialize")) {
+    } else if (pcmk__str_eq(kind, "Serialize", pcmk__str_casei)) {
         kind_e = pe_order_kind_serialize;
 
     } else {
@@ -1099,7 +1099,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
             raw_score = FALSE;
         }
     }
-    if (safe_str_eq(boolean, "or")) {
+    if (pcmk__str_eq(boolean, "or", pcmk__str_casei)) {
         do_and = FALSE;
     }
 
@@ -1476,7 +1476,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
         goto cleanup_order;
     }
 
-    if (safe_str_eq(lh_task, RSC_START) && safe_str_eq(rh_task, RSC_START)) {
+    if (pcmk__str_eq(lh_task, RSC_START, pcmk__str_casei) && pcmk__str_eq(rh_task, RSC_START, pcmk__str_casei)) {
         int flags = pe_order_optional;
 
         if (lh_migratable && rh_migratable) {
@@ -1503,7 +1503,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
                                 NULL, flags, data_set);
         }
 
-    } else if (rh_migratable == TRUE && safe_str_eq(lh_task, RSC_STOP) && safe_str_eq(rh_task, RSC_STOP)) {
+    } else if (rh_migratable == TRUE && pcmk__str_eq(lh_task, RSC_STOP, pcmk__str_casei) && pcmk__str_eq(rh_task, RSC_STOP, pcmk__str_casei)) {
         int flags = pe_order_optional;
 
         if (lh_migratable) {
@@ -1529,7 +1529,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
                                 NULL, flags, data_set);
         }
 
-    } else if (safe_str_eq(lh_task, RSC_PROMOTE) && safe_str_eq(rh_task, RSC_START)) {
+    } else if (pcmk__str_eq(lh_task, RSC_PROMOTE, pcmk__str_casei) && pcmk__str_eq(rh_task, RSC_START, pcmk__str_casei)) {
         int flags = pe_order_optional;
 
         if (rh_migratable) {
@@ -1542,7 +1542,7 @@ handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
                                 NULL, flags, data_set);
         }
 
-    } else if (safe_str_eq(lh_task, RSC_DEMOTE) && safe_str_eq(rh_task, RSC_STOP)) {
+    } else if (pcmk__str_eq(lh_task, RSC_DEMOTE, pcmk__str_casei) && pcmk__str_eq(rh_task, RSC_STOP, pcmk__str_casei)) {
         int flags = pe_order_optional;
 
         if (rh_migratable) {
@@ -1876,7 +1876,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         action_2 = invert_action(action_2);
     }
 
-    if(safe_str_eq(RSC_STOP, action_1) || safe_str_eq(RSC_DEMOTE, action_1)) {
+    if(pcmk__str_eq(RSC_STOP, action_1, pcmk__str_casei) || pcmk__str_eq(RSC_DEMOTE, action_1, pcmk__str_casei)) {
         /* Assuming: A -> ( B || C) -> D
          * The one-or-more logic only applies during the start/promote phase
          * During shutdown neither B nor can shutdown until D is down, so simply turn require_all back on.
@@ -2298,7 +2298,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
     if (sequential != NULL && crm_is_true(sequential) == FALSE) {
         return TRUE;
 
-    } else if (local_score >= 0 && safe_str_eq(ordering, "group")) {
+    } else if (local_score >= 0 && pcmk__str_eq(ordering, "group", pcmk__str_casei)) {
         for (xml_rsc = __xml_first_child_element(set); xml_rsc != NULL;
              xml_rsc = __xml_next_element(xml_rsc)) {
 
@@ -2349,7 +2349,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                      xml_rsc_with = __xml_next_element(xml_rsc_with)) {
 
                     if (crm_str_eq((const char *)xml_rsc_with->name, XML_TAG_RESOURCE_REF, TRUE)) {
-                        if (safe_str_eq(resource->id, ID(xml_rsc_with))) {
+                        if (pcmk__str_eq(resource->id, ID(xml_rsc_with), pcmk__str_casei)) {
                             break;
                         }
                         EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
@@ -2733,7 +2733,7 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
     new_rsc_ticket->rsc_lh = rsc_lh;
     new_rsc_ticket->role_lh = text2role(state_lh);
 
-    if (safe_str_eq(loss_policy, "fence")) {
+    if (pcmk__str_eq(loss_policy, "fence", pcmk__str_casei)) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             new_rsc_ticket->loss_policy = loss_ticket_fence;
         } else {
@@ -2749,19 +2749,19 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                   role2text(new_rsc_ticket->role_lh));
 
-    } else if (safe_str_eq(loss_policy, "freeze")) {
+    } else if (pcmk__str_eq(loss_policy, "freeze", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Freeze %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                   role2text(new_rsc_ticket->role_lh));
         new_rsc_ticket->loss_policy = loss_ticket_freeze;
 
-    } else if (safe_str_eq(loss_policy, "demote")) {
+    } else if (pcmk__str_eq(loss_policy, "demote", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Demote %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                   role2text(new_rsc_ticket->role_lh));
         new_rsc_ticket->loss_policy = loss_ticket_demote;
 
-    } else if (safe_str_eq(loss_policy, "stop")) {
+    } else if (pcmk__str_eq(loss_policy, "stop", pcmk__str_casei)) {
         crm_debug("On loss of ticket '%s': Stop %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                   role2text(new_rsc_ticket->role_lh));

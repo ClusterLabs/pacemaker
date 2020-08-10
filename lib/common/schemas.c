@@ -1035,7 +1035,7 @@ get_schema_version(const char *name)
         name = "none";
     }
     for (; lpc < xml_schema_max; lpc++) {
-        if (safe_str_eq(name, known_schemas[lpc].name)) {
+        if (pcmk__str_eq(name, known_schemas[lpc].name, pcmk__str_casei)) {
             return lpc;
         }
     }

@@ -1105,7 +1105,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
         return;
     }
 
-    if (safe_str_eq(args->output_ty, "html")) {
+    if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
         char *dest = NULL;
 
         if (args->output_dest != NULL) {
@@ -1114,9 +1114,9 @@ reconcile_output_format(pcmk__common_args_t *args) {
 
         retval = as_html_cb("h", dest, NULL, &err);
         free(dest);
-    } else if (safe_str_eq(args->output_ty, "text")) {
+    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_casei)) {
         retval = no_curses_cb("N", NULL, NULL, &err);
-    } else if (safe_str_eq(args->output_ty, "xml")) {
+    } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_casei)) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
         }
@@ -1543,11 +1543,11 @@ reduce_stonith_history(stonith_history_t *history)
             for (np = new; ; np = np->next) {
                 if ((hp->state == st_done) || (hp->state == st_failed)) {
                     /* action not in progress */
-                    if (safe_str_eq(hp->target, np->target) &&
-                        safe_str_eq(hp->action, np->action) &&
+                    if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
+                        pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
                         (hp->state == np->state) &&
                         ((hp->state == st_done) ||
-                         safe_str_eq(hp->delegate, np->delegate))) {
+                         pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
                             /* purge older hp */
                             stonith_history_free(hp);
                             break;

@@ -256,14 +256,14 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 
     crm_trace("Testing " PCMK__OP_FMT " on %s",
               rsc->id, task, interval_ms, active_node->details->uname);
-    if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
+    if ((interval_ms == 0) && pcmk__str_eq(task, RSC_STATUS, pcmk__str_casei)) {
         /* Reload based on the start action not a probe */
         task = RSC_START;
 
-    } else if ((interval_ms == 0) && safe_str_eq(task, RSC_MIGRATED)) {
+    } else if ((interval_ms == 0) && pcmk__str_eq(task, RSC_MIGRATED, pcmk__str_casei)) {
         /* Reload based on the start action not a migrate */
         task = RSC_START;
-    } else if ((interval_ms == 0) && safe_str_eq(task, RSC_PROMOTE)) {
+    } else if ((interval_ms == 0) && pcmk__str_eq(task, RSC_PROMOTE, pcmk__str_casei)) {
         /* Reload based on the start action not a promote */
         task = RSC_START;
     }
@@ -808,7 +808,7 @@ apply_system_health(pe_working_set_t * data_set)
         pcmk__score_green = 0;
         return TRUE;
 
-    } else if (safe_str_eq(health_strategy, "migrate-on-red")) {
+    } else if (pcmk__str_eq(health_strategy, "migrate-on-red", pcmk__str_casei)) {
 
         /* Resources on nodes which have health values of red are
          * weighted away from that node.
@@ -817,7 +817,7 @@ apply_system_health(pe_working_set_t * data_set)
         pcmk__score_yellow = 0;
         pcmk__score_green = 0;
 
-    } else if (safe_str_eq(health_strategy, "only-green")) {
+    } else if (pcmk__str_eq(health_strategy, "only-green", pcmk__str_casei)) {
 
         /* Resources on nodes which have health values of red or yellow
          * are forced away from that node.
@@ -826,14 +826,14 @@ apply_system_health(pe_working_set_t * data_set)
         pcmk__score_yellow = -INFINITY;
         pcmk__score_green = 0;
 
-    } else if (safe_str_eq(health_strategy, "progressive")) {
+    } else if (pcmk__str_eq(health_strategy, "progressive", pcmk__str_casei)) {
         /* Same as the above, but use the r/y/g scores provided by the user
          * Defaults are provided by the pe_prefs table
          * Also, custom health "base score" can be used
          */
         base_health = crm_parse_int(pe_pref(data_set->config_hash, "node-health-base"), "0");
 
-    } else if (safe_str_eq(health_strategy, "custom")) {
+    } else if (pcmk__str_eq(health_strategy, "custom", pcmk__str_casei)) {
 
         /* Requires the admin to configure the rsc_location constaints for
          * processing the stored health scores
@@ -1711,7 +1711,7 @@ stage6(pe_working_set_t * data_set)
          * clone stop that's also ordered before the shutdowns, thus leading to
          * a graph loop.
          */
-        if (safe_str_eq(dc_down->task, CRM_OP_SHUTDOWN)) {
+        if (pcmk__str_eq(dc_down->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
             for (gIter = shutdown_ops; gIter != NULL; gIter = gIter->next) {
                 pe_action_t *node_stop = (pe_action_t *) gIter->data;
 
@@ -1865,12 +1865,12 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
         parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(lh_rsc->id, op_type, interval_ms);
 
-        if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && safe_str_eq(op_type, RSC_STOP)) {
+        if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
             free(key);
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                          lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
 
-        } else if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_SLAVE && safe_str_eq(op_type, RSC_DEMOTE)) {
+        } else if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_SLAVE && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
             free(key);
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                          lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
@@ -2241,7 +2241,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
          * any start of the resource in this transition.
          */
         if (action->rsc->is_remote_node &&
-            safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT)) {
+            pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
 
             custom_action_order(action->rsc,
                 NULL,
@@ -2285,13 +2285,13 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
          * remote connection. This ensures that if the connection fails to
          * start, we leave the resource running on the original node.
          */
-        if (safe_str_eq(action->task, RSC_START)) {
+        if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
             for (GList *item = action->rsc->actions; item != NULL;
                  item = item->next) {
                 pe_action_t *rsc_action = item->data;
 
                 if ((rsc_action->node->details != action->node->details)
-                    && safe_str_eq(rsc_action->task, RSC_STOP)) {
+                    && pcmk__str_eq(rsc_action->task, RSC_STOP, pcmk__str_casei)) {
                     custom_action_order(remote, start_key(remote), NULL,
                                         action->rsc, NULL, rsc_action,
                                         pe_order_optional, data_set);
@@ -2327,18 +2327,18 @@ order_first_probe_unneeded(pe_action_t * probe, pe_action_t * rh_action)
      * since probe will be performed after the node is
      * unfenced.
      */
-    if (safe_str_eq(rh_action->task, CRM_OP_FENCE)
+    if (pcmk__str_eq(rh_action->task, CRM_OP_FENCE, pcmk__str_casei)
          && probe->node && rh_action->node
          && probe->node->details == rh_action->node->details) {
         const char *op = g_hash_table_lookup(rh_action->meta, "stonith_action");
 
-        if (safe_str_eq(op, "on")) {
+        if (pcmk__str_eq(op, "on", pcmk__str_casei)) {
             return TRUE;
         }
     }
 
     // Shutdown waits for probe to complete only if it's on the same node
-    if ((safe_str_eq(rh_action->task, CRM_OP_SHUTDOWN))
+    if ((pcmk__str_eq(rh_action->task, CRM_OP_SHUTDOWN, pcmk__str_casei))
         && probe->node && rh_action->node
         && probe->node->details != rh_action->node->details) {
         return TRUE;
@@ -2400,7 +2400,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
          * after the container starts again.
          */
         if (rh_rsc && lh_rsc->container == rh_rsc) {
-            if (rh_action && safe_str_eq(rh_action->task, RSC_STOP)) {
+            if (rh_action && pcmk__str_eq(rh_action->task, RSC_STOP, pcmk__str_casei)) {
                 continue;
 
             } else if (rh_action == NULL && rh_action_task
@@ -2514,10 +2514,10 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
             GListPtr then_actions = NULL;
             enum pe_ordering probe_order_type = pe_order_optional;
 
-            if (safe_str_eq(after->task, RSC_START)) {
+            if (pcmk__str_eq(after->task, RSC_START, pcmk__str_casei)) {
                 then_actions = pe__resource_actions(after->rsc, NULL, RSC_STOP, FALSE);
 
-            } else if (safe_str_eq(after->task, RSC_PROMOTE)) {
+            } else if (pcmk__str_eq(after->task, RSC_PROMOTE, pcmk__str_casei)) {
                 then_actions = pe__resource_actions(after->rsc, NULL, RSC_DEMOTE, FALSE);
             }
 
@@ -3028,9 +3028,9 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
         }
 
 
-        if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
+        if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
             task = strdup("Shutdown");
-        } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+        } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
             const char *op = g_hash_table_lookup(action->meta, "stonith_action");
             task = crm_strdup_printf("Fence (%s)", op);
         }

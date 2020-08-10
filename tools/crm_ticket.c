@@ -295,7 +295,7 @@ ticket_warning(const char *ticket_id, const char *action)
     const char *word = NULL;
 
     warning = calloc(1, text_max);
-    if (safe_str_eq(action, "grant")) {
+    if (pcmk__str_eq(action, "grant", pcmk__str_casei)) {
         offset += snprintf(warning + offset, text_max - offset,
                            "This command cannot help you verify whether '%s' has been already granted elsewhere.\n",
                            ticket_id);
@@ -355,7 +355,7 @@ allow_modification(const char *ticket_id, GListPtr attr_delete,
     for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
         const char *key = (const char *)list_iter->data;
 
-        if (safe_str_eq(key, "granted")) {
+        if (pcmk__str_eq(key, "granted", pcmk__str_casei)) {
             ticket_warning(ticket_id, "revoke");
             return FALSE;
         }
@@ -413,7 +413,7 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
         crm_xml_add(ticket_state_xml, key, value);
 
-        if (safe_str_eq(key, "granted")
+        if (pcmk__str_eq(key, "granted", pcmk__str_casei)
             && (ticket == NULL || ticket->granted == FALSE)
             && crm_is_true(value)) {
 

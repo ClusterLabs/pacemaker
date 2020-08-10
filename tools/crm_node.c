@@ -91,15 +91,15 @@ static GOptionEntry addl_entries[] = {
 
 gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (safe_str_eq("-i", option_name) || safe_str_eq("--cluster-id", option_name)) {
+    if (pcmk__str_eq("-i", option_name, pcmk__str_casei) || pcmk__str_eq("--cluster-id", option_name, pcmk__str_casei)) {
         options.command = 'i';
-    } else if (safe_str_eq("-l", option_name) || safe_str_eq("--list", option_name)) {
+    } else if (pcmk__str_eq("-l", option_name, pcmk__str_casei) || pcmk__str_eq("--list", option_name, pcmk__str_casei)) {
         options.command = 'l';
-    } else if (safe_str_eq("-n", option_name) || safe_str_eq("--name", option_name)) {
+    } else if (pcmk__str_eq("-n", option_name, pcmk__str_casei) || pcmk__str_eq("--name", option_name, pcmk__str_casei)) {
         options.command = 'n';
-    } else if (safe_str_eq("-p", option_name) || safe_str_eq("--partition", option_name)) {
+    } else if (pcmk__str_eq("-p", option_name, pcmk__str_casei) || pcmk__str_eq("--partition", option_name, pcmk__str_casei)) {
         options.command = 'p';
-    } else if (safe_str_eq("-q", option_name) || safe_str_eq("--quorum", option_name)) {
+    } else if (pcmk__str_eq("-q", option_name, pcmk__str_casei) || pcmk__str_eq("--quorum", option_name, pcmk__str_casei)) {
         options.command = 'q';
     } else {
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s\n", option_name);
@@ -421,7 +421,7 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
     crm_trace("Removing %s[%ld] from the %s membership cache",
               node_name, nodeid, target);
 
-    if(safe_str_eq(target, T_ATTRD)) {
+    if(pcmk__str_eq(target, T_ATTRD, pcmk__str_casei)) {
         cmd = create_xml_node(NULL, __FUNCTION__);
 
         crm_xml_add(cmd, F_TYPE, T_ATTRD);

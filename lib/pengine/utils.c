@@ -524,7 +524,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         }
         action->uuid = strdup(key);
 
-        if (safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+        if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
             // Resource history deletion for a node can be done on the DC
             pe_set_action_bit(action, pe_action_dc);
         }
@@ -711,7 +711,7 @@ unpack_operation_on_fail(pe_action_t * action)
     const char *enabled = NULL;
     const char *value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
 
-    if (safe_str_eq(action->task, CRMD_ACTION_STOP)
+    if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
         && !valid_stop_on_fail(value)) {
 
         pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s stop "
@@ -719,7 +719,7 @@ unpack_operation_on_fail(pe_action_t * action)
                          "allowed for stop", action->rsc->id, value);
         return NULL;
 
-    } else if (safe_str_eq(action->task, CRMD_ACTION_DEMOTE) && !value) {
+    } else if (pcmk__str_eq(action->task, CRMD_ACTION_DEMOTE, pcmk__str_casei) && !value) {
         /* demote on_fail defaults to master monitor value if present */
         xmlNode *operation = NULL;
 
@@ -744,16 +744,16 @@ unpack_operation_on_fail(pe_action_t * action)
                 continue;
             } else if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
-            } else if (safe_str_eq(on_fail, "demote")) {
+            } else if (pcmk__str_eq(on_fail, "demote", pcmk__str_casei)) {
                 continue;
             }
 
             value = on_fail;
         }
-    } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         value = "ignore";
 
-    } else if (safe_str_eq(value, "demote")) {
+    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         name = crm_element_value(action->op_entry, "name");
         role = crm_element_value(action->op_entry, "role");
         on_fail = crm_element_value(action->op_entry, XML_OP_ATTR_ON_FAIL);
@@ -904,7 +904,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
 
     for (child = first_named_child(rsc->ops_xml, XML_ATTR_OP);
          child != NULL; child = crm_next_same_xml(child)) {
-        if (safe_str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME))) {
+        if (pcmk__str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME), pcmk__str_casei)) {
             timeout = crm_element_value(child, XML_ATTR_TIMEOUT);
             break;
         }
@@ -948,11 +948,11 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
 
-            if (safe_str_eq(name, XML_OP_ATTR_START_DELAY)) {
+            if (pcmk__str_eq(name, XML_OP_ATTR_START_DELAY, pcmk__str_casei)) {
                 int start_delay = unpack_start_delay(value, NULL);
 
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
-            } else if (safe_str_eq(name, XML_OP_ATTR_ORIGIN)) {
+            } else if (pcmk__str_eq(name, XML_OP_ATTR_ORIGIN, pcmk__str_casei)) {
                 long long start_delay = 0;
 
                 if (unpack_interval_origin(value, xml_obj, interval_ms, now,
@@ -961,7 +961,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
                                 XML_OP_ATTR_START_DELAY);
                     crm_xml_add_ll(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
                 }
-            } else if (safe_str_eq(name, XML_ATTR_TIMEOUT)) {
+            } else if (pcmk__str_eq(name, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
                 int timeout = unpack_timeout(value);
 
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, timeout);
@@ -1078,7 +1078,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 
     } else {
         // Probe timeouts default to minimum-interval monitor's
-        if (safe_str_eq(action->task, RSC_STATUS) && (interval_ms == 0)) {
+        if (pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei) && (interval_ms == 0)) {
 
             xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
 
@@ -1122,12 +1122,12 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 
     if (value == NULL) {
 
-    } else if (safe_str_eq(value, "block")) {
+    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
         action->on_fail = action_fail_block;
         g_hash_table_insert(action->meta, strdup(XML_OP_ATTR_ON_FAIL), strdup("block"));
         value = "block"; // The above could destroy the original string
 
-    } else if (safe_str_eq(value, "fence")) {
+    } else if (pcmk__str_eq(value, "fence", pcmk__str_casei)) {
         action->on_fail = action_fail_fence;
         value = "node fencing";
 
@@ -1140,7 +1140,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
             value = "stop resource";
         }
 
-    } else if (safe_str_eq(value, "standby")) {
+    } else if (pcmk__str_eq(value, "standby", pcmk__str_casei)) {
         action->on_fail = action_fail_standby;
         value = "node standby";
 
@@ -1148,20 +1148,20 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         action->on_fail = action_fail_ignore;
         value = "ignore";
 
-    } else if (safe_str_eq(value, "migrate")) {
+    } else if (pcmk__str_eq(value, "migrate", pcmk__str_casei)) {
         action->on_fail = action_fail_migrate;
         value = "force migration";
 
-    } else if (safe_str_eq(value, "stop")) {
+    } else if (pcmk__str_eq(value, "stop", pcmk__str_casei)) {
         action->on_fail = action_fail_stop;
         action->fail_role = RSC_ROLE_STOPPED;
         value = "stop resource";
 
-    } else if (safe_str_eq(value, "restart")) {
+    } else if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
         action->on_fail = action_fail_recover;
         value = "restart (and possibly migrate)";
 
-    } else if (safe_str_eq(value, "restart-container")) {
+    } else if (pcmk__str_eq(value, "restart-container", pcmk__str_casei)) {
         if (container) {
             action->on_fail = action_fail_restart_container;
             value = "restart container (and possibly migrate)";
@@ -1170,7 +1170,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
             value = NULL;
         }
 
-    } else if (safe_str_eq(value, "demote")) {
+    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         action->on_fail = action_fail_demote;
         value = "demote instance";
 
@@ -1194,8 +1194,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
      * failures. */
     } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
                 (pe__resource_is_remote_conn(action->rsc, data_set) &&
-               !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && (interval_ms == 0)) &&
-                (!pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)))) {
+               !(pcmk__str_eq(action->task, CRMD_ACTION_STATUS, pcmk__str_casei) && (interval_ms == 0)) &&
+               (!pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)))) {
 
         if (!is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
@@ -1215,7 +1215,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
             action->on_fail = action_fail_reset_remote;
         }
 
-    } else if (value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
+    } else if (value == NULL && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             action->on_fail = action_fail_fence;
             value = "resource fence (default)";
@@ -1245,7 +1245,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     }
     /* defaults */
     if (action->fail_role == RSC_ROLE_UNKNOWN) {
-        if (safe_str_eq(action->task, CRMD_ACTION_PROMOTE)) {
+        if (pcmk__str_eq(action->task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
             action->fail_role = RSC_ROLE_SLAVE;
         } else {
             action->fail_role = RSC_ROLE_STARTED;
@@ -1304,14 +1304,14 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
 
             interval_ms = crm_parse_interval_spec(interval_spec);
             match_key = pcmk__op_key(rsc->id, name, interval_ms);
-            if (safe_str_eq(key, match_key)) {
+            if (pcmk__str_eq(key, match_key, pcmk__str_casei)) {
                 op = operation;
             }
             free(match_key);
 
             if (rsc->clone_name) {
                 match_key = pcmk__op_key(rsc->clone_name, name, interval_ms);
-                if (safe_str_eq(key, match_key)) {
+                if (pcmk__str_eq(key, match_key, pcmk__str_casei)) {
                     op = operation;
                 }
                 free(match_key);
@@ -1439,9 +1439,9 @@ find_recurring_actions(GListPtr input, pe_node_t * not_on_node)
         value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL_MS);
         if (value == NULL) {
             /* skip */
-        } else if (safe_str_eq(value, "0")) {
+        } else if (pcmk__str_eq(value, "0", pcmk__str_casei)) {
             /* skip */
-        } else if (safe_str_eq(CRMD_ACTION_CANCEL, action->task)) {
+        } else if (pcmk__str_eq(CRMD_ACTION_CANCEL, action->task, pcmk__str_casei)) {
             /* skip */
         } else if (not_on_node == NULL) {
             crm_trace("(null) Found: %s", action->uuid);
@@ -1621,7 +1621,7 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
     pe_node_t *match = NULL;
 
     if ((rsc->exclusive_discover || (node->rsc_discover_mode == pe_discover_never))
-        && safe_str_eq(tag, "symmetric_default")) {
+        && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and
          * exclusive nodes should not have the symmetric_default constraint
          * applied to them.
@@ -1706,7 +1706,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
     const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
     const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
 
-    if (safe_str_eq(a_xml_id, b_xml_id)) {
+    if (pcmk__str_eq(a_xml_id, b_xml_id, pcmk__str_casei)) {
         /* We have duplicate lrm_rsc_op entries in the status
          * section which is unlikely to be a good thing
          *    - we can handle it easily enough, but we need to get
@@ -1832,7 +1832,7 @@ get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
     CRM_CHECK(role != NULL, return FALSE);
 
     if (pcmk__str_eq(value, "started", pcmk__str_null_matches | pcmk__str_casei)
-        || safe_str_eq("default", value)) {
+        || pcmk__str_eq("default", value, pcmk__str_casei)) {
         return FALSE;
     }
 

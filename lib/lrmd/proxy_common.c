@@ -220,10 +220,10 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
     crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
     /* This is msg from remote ipc client going to real ipc server */
 
-    if (safe_str_eq(op, LRMD_IPC_OP_DESTROY)) {
+    if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_casei)) {
         remote_proxy_end_session(proxy);
 
-    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST)) {
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
         const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);
@@ -257,7 +257,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             const char *type = crm_element_value(request, F_TYPE);
             int rc = 0;
 
-            if (safe_str_eq(type, T_ATTRD)
+            if (pcmk__str_eq(type, T_ATTRD, pcmk__str_casei)
                 && crm_element_value(request,
                                      PCMK__XA_ATTR_NODE_NAME) == NULL) {
                 crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, proxy->node_name);

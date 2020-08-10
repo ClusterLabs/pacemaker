@@ -102,7 +102,7 @@ history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
 
         if ((op->interval_ms == existing->interval_ms)
             && crm_str_eq(op->rsc_id, existing->rsc_id, TRUE)
-            && safe_str_eq(op->op_type, existing->op_type)) {
+            && pcmk__str_eq(op->op_type, existing->op_type, pcmk__str_casei)) {
 
             history->recurring_op_list = g_list_delete_link(history->recurring_op_list, iter);
             lrmd_free_event(existing);
@@ -170,7 +170,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         return;
     }
 
-    if (safe_str_eq(op->op_type, RSC_NOTIFY)) {
+    if (pcmk__str_eq(op->op_type, RSC_NOTIFY, pcmk__str_casei)) {
         return;
     }
 
@@ -244,7 +244,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
                   op->rsc_id, op->op_type, op->interval_ms);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
-    } else if (entry->recurring_op_list && safe_str_eq(op->op_type, RSC_STATUS) == FALSE) {
+    } else if (entry->recurring_op_list && pcmk__str_eq(op->op_type, RSC_STATUS, pcmk__str_casei) == FALSE) {
         crm_trace("Dropping %d recurring ops because of: " PCMK__OP_FMT,
                   g_list_length(entry->recurring_op_list), op->rsc_id,
                   op->op_type, op->interval_ms);
@@ -524,7 +524,7 @@ build_parameter_list(const lrmd_event_data_t *op,
 
         } else if (max) {
             for (int lpc = 0; lpc < max; lpc++) {
-                if (safe_str_eq(secure_terms[lpc], param->rap_name)) {
+                if (pcmk__str_eq(secure_terms[lpc], param->rap_name, pcmk__str_casei)) {
                     accept = TRUE;
                     break;
                 }
@@ -749,11 +749,11 @@ is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
 
     crm_trace("Processing %s: %s.%d=%d", rsc_id, entry->last->op_type,
               entry->last->interval_ms, entry->last->rc);
-    if (entry->last->rc == PCMK_OCF_OK && safe_str_eq(entry->last->op_type, CRMD_ACTION_STOP)) {
+    if (entry->last->rc == PCMK_OCF_OK && pcmk__str_eq(entry->last->op_type, CRMD_ACTION_STOP, pcmk__str_casei)) {
         return FALSE;
 
     } else if (entry->last->rc == PCMK_OCF_OK
-               && safe_str_eq(entry->last->op_type, CRMD_ACTION_MIGRATE)) {
+               && pcmk__str_eq(entry->last->op_type, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         // A stricter check is too complex ... leave that to the scheduler
         return FALSE;
 
@@ -1076,7 +1076,7 @@ last_failed_matches_op(rsc_history_t *entry, const char *op, guint interval_ms)
     if (op == NULL) {
         return TRUE;
     }
-    return (safe_str_eq(op, entry->failed->op_type)
+    return (pcmk__str_eq(op, entry->failed->op_type, pcmk__str_casei)
             && (interval_ms == entry->failed->interval_ms));
 }
 
@@ -1455,7 +1455,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
 
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
 
-    if (safe_str_eq(operation, RSC_NOTIFY)) { // Notifications can't fail
+    if (pcmk__str_eq(operation, RSC_NOTIFY, pcmk__str_casei)) { // Notifications can't fail
         fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_OK);
     } else {
         fake_op_status(lrm_state, op, op_status, rc);
@@ -1772,13 +1772,13 @@ do_lrm_invoke(long long action,
               crm_op, from_sys);
 #endif
 
-    if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
+    if (pcmk__str_eq(crm_op, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
             crm_rsc_delete = TRUE; // from crm_resource
         }
         operation = CRMD_ACTION_DELETE;
 
-    } else if (safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_FAIL, pcmk__str_casei)) {
         fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
                           from_sys);
         return;
@@ -1787,13 +1787,13 @@ do_lrm_invoke(long long action,
         operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
     }
 
-    if (safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
+    if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         handle_refresh_op(lrm_state, user_name, from_host, from_sys);
 
-    } else if (safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_casei)) {
         handle_query_op(input->msg, lrm_state);
 
-    } else if (safe_str_eq(operation, CRM_OP_PROBED)) {
+    } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_casei)) {
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);
 
@@ -1849,12 +1849,12 @@ do_lrm_invoke(long long action,
             return;
         }
 
-        if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
+        if (pcmk__str_eq(operation, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
             if (!do_lrm_cancel(input, lrm_state, rsc, from_host, from_sys)) {
                 crm_log_xml_warn(input->xml, "Bad command");
             }
 
-        } else if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
+        } else if (pcmk__str_eq(operation, CRMD_ACTION_DELETE, pcmk__str_casei)) {
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
 
@@ -1903,9 +1903,9 @@ resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
         while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
             g_hash_table_replace(params, crm_meta_name(key), strdup(value));
 
-            if (safe_str_eq(key, XML_ATTR_TIMEOUT)) {
+            if (pcmk__str_eq(key, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
                 op->timeout = crm_parse_int(value, "0");
-            } else if (safe_str_eq(key, XML_OP_ATTR_START_DELAY)) {
+            } else if (pcmk__str_eq(key, XML_OP_ATTR_START_DELAY, pcmk__str_casei)) {
                 op->start_delay = crm_parse_int(value, "0");
             }
         }
@@ -1946,7 +1946,7 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     op->start_delay = 0;
 
     if (rsc_op == NULL) {
-        CRM_LOG_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+        CRM_LOG_ASSERT(pcmk__str_eq(CRMD_ACTION_STOP, operation, pcmk__str_casei));
         op->user_data = NULL;
         /* the stop_all_resources() case
          * by definition there is no DC (or they'd be shutting
@@ -2255,7 +2255,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
                transition, rsc->id, operation, op->interval_ms);
 
-    if (is_set(fsa_input_register, R_SHUTDOWN) && safe_str_eq(operation, RSC_START)) {
+    if (is_set(fsa_input_register, R_SHUTDOWN) && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
         send_nack = TRUE;
 
@@ -2419,7 +2419,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     update = iter;
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
-    if (safe_str_eq(node_name, fsa_our_uname)) {
+    if (pcmk__str_eq(node_name, fsa_our_uname, pcmk__str_casei)) {
         uuid = fsa_our_uuid;
 
     } else {
@@ -2562,7 +2562,7 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
     }
 
     if (crm_str_eq(entry->failed->rsc_id, rsc_id, TRUE)
-        && safe_str_eq(entry->failed->op_type, op_type)
+        && pcmk__str_eq(entry->failed->op_type, op_type, pcmk__str_casei)
         && entry->failed->interval_ms == interval_ms) {
         return TRUE;
     }

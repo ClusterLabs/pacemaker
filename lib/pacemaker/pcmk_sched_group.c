@@ -149,11 +149,11 @@ group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
         if (is_set(action->flags, pe_action_optional)) {
             continue;
         }
-        if (safe_str_eq(RSC_STOP, action->task) && is_set(action->flags, pe_action_runnable)) {
+        if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei) && is_set(action->flags, pe_action_runnable)) {
             group_data->child_stopping = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is stopping", action->uuid);
 
-        } else if (safe_str_eq(RSC_START, action->task)
+        } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)
                    && is_set(action->flags, pe_action_runnable)) {
             group_data->child_starting = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is starting", action->uuid);

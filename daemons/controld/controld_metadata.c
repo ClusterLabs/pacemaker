@@ -215,7 +215,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
         const char *action_name = crm_element_value(match, "name");
 
-        if (safe_str_eq(action_name, "reload")) {
+        if (pcmk__str_eq(action_name, "reload", pcmk__str_casei)) {
             set_bit(md->ra_flags, ra_supports_reload);
             break; // since this is the only action we currently care about
         }

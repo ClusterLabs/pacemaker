@@ -113,10 +113,10 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userda
     crm_trace("Activating %s callbacks...", type);
     crm_log_xml_explicit(msg, "cib-reply");
 
-    if (safe_str_eq(type, T_CIB)) {
+    if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
         cib_native_callback(cib, msg, 0, 0);
 
-    } else if (safe_str_eq(type, T_CIB_NOTIFY)) {
+    } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
         g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
     } else {

@@ -402,9 +402,9 @@ lrmd_tls_dispatch(gpointer userdata)
     }
     while (xml) {
         const char *msg_type = crm_element_value(xml, F_LRMD_REMOTE_MSG_TYPE);
-        if (safe_str_eq(msg_type, "notify")) {
+        if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             lrmd_dispatch_internal(lrmd, xml);
-        } else if (safe_str_eq(msg_type, "reply")) {
+        } else if (pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             if (native->expected_late_replies > 0) {
                 native->expected_late_replies--;
             } else {
@@ -656,7 +656,7 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
             crm_err("Empty msg type received while waiting for reply");
             free_xml(xml);
             xml = NULL;
-        } else if (safe_str_eq(msg_type, "notify")) {
+        } else if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             /* got a notify while waiting for reply, trigger the notify to be processed later */
             crm_info("queueing notify");
             native->pending_notify = g_list_append(native->pending_notify, xml);
@@ -1768,7 +1768,7 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
         return -EINVAL;
     }
 
-    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         lrmd_key_value_freeall(params);
         return stonith_get_metadata(provider, type, output);
     }
@@ -1917,7 +1917,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
     int rc = 0;
     int stonith_count = 0; // Initially, whether to include stonith devices
 
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         stonith_count = 1;
 
     } else {
@@ -1958,7 +1958,7 @@ does_provider_have_agent(const char *agent, const char *provider, const char *cl
 
     agents = resources_list_agents(class, provider);
     for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
-        if (safe_str_eq(agent, gIter2->data)) {
+        if (pcmk__str_eq(agent, gIter2->data, pcmk__str_casei)) {
             found = 1;
         }
     }

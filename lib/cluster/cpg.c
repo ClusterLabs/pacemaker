@@ -332,7 +332,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
     } else if (check_message_sanity(msg, data) == FALSE) {
         goto badmsg;
 
-    } else if (safe_str_eq("identify", data)) {
+    } else if (pcmk__str_eq("identify", data, pcmk__str_casei)) {
         char *pid_s = pcmk__getpid_s();
 
         send_cluster_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
@@ -778,24 +778,24 @@ text2msg_type(const char *text)
 
     CRM_CHECK(text != NULL, return type);
     text = pcmk_message_name(text);
-    if (safe_str_eq(text, "ais")) {
+    if (pcmk__str_eq(text, "ais", pcmk__str_casei)) {
         type = crm_msg_ais;
-    } else if (safe_str_eq(text, CRM_SYSTEM_CIB)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_casei)) {
         type = crm_msg_cib;
-    } else if (safe_str_eq(text, CRM_SYSTEM_CRMD)
-               || safe_str_eq(text, CRM_SYSTEM_DC)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_CRMD, pcmk__str_casei)
+               || pcmk__str_eq(text, CRM_SYSTEM_DC, pcmk__str_casei)) {
         type = crm_msg_crmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_TENGINE)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         type = crm_msg_te;
-    } else if (safe_str_eq(text, CRM_SYSTEM_PENGINE)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_PENGINE, pcmk__str_casei)) {
         type = crm_msg_pe;
-    } else if (safe_str_eq(text, CRM_SYSTEM_LRMD)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_casei)) {
         type = crm_msg_lrmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_STONITHD)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_STONITHD, pcmk__str_casei)) {
         type = crm_msg_stonithd;
-    } else if (safe_str_eq(text, "stonith-ng")) {
+    } else if (pcmk__str_eq(text, "stonith-ng", pcmk__str_casei)) {
         type = crm_msg_stonith_ng;
-    } else if (safe_str_eq(text, "attrd")) {
+    } else if (pcmk__str_eq(text, "attrd", pcmk__str_casei)) {
         type = crm_msg_attrd;
 
     } else {

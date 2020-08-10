@@ -806,7 +806,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     for (lpc = 0; lpc < max_msg_types; lpc++) {
-        if (safe_str_eq(op, cib_file_ops[lpc].op)) {
+        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
             fn = &(cib_file_ops[lpc].fn);
             query = cib_file_ops[lpc].read_only;
             break;

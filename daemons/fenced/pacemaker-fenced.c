@@ -97,7 +97,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
 
     op = crm_element_value(request, F_CRM_TASK);
-    if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
+    if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         crm_xml_add(request, F_TYPE, T_STONITH_NG);
         crm_xml_add(request, F_STONITH_OPERATION, op);
         crm_xml_add(request, F_STONITH_CLIENTID, c->id);
@@ -263,19 +263,19 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
 long long
 get_stonith_flag(const char *name)
 {
-    if (safe_str_eq(name, T_STONITH_NOTIFY_FENCE)) {
+    if (pcmk__str_eq(name, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         return st_callback_notify_fence;
 
-    } else if (safe_str_eq(name, STONITH_OP_DEVICE_ADD)) {
+    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
         return st_callback_device_add;
 
-    } else if (safe_str_eq(name, STONITH_OP_DEVICE_DEL)) {
+    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_DEL, pcmk__str_casei)) {
         return st_callback_device_del;
 
-    } else if (safe_str_eq(name, T_STONITH_NOTIFY_HISTORY)) {
+    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY, pcmk__str_casei)) {
         return st_callback_notify_history;
 
-    } else if (safe_str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED)) {
+    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk__str_casei)) {
         return st_callback_notify_history_synced;
 
     }
@@ -726,7 +726,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             (strcmp(op, "move") == 0) ||
             strstr(xpath, "/"XML_CIB_TAG_STATUS)) {
             continue;
-        } else if (safe_str_eq(op, "delete") && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
+        } else if (pcmk__str_eq(op, "delete", pcmk__str_casei) && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
             const char *rsc_id = NULL;
             char *search = NULL;
             char *mutable = NULL;
@@ -1308,7 +1308,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         printf("<?xml version=\"1.0\"?><!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n");
         printf("<resource-agent name=\"pacemaker-fenced\">\n");
         printf(" <version>1.0</version>\n");

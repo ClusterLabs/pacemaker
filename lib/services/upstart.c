@@ -341,18 +341,18 @@ upstart_mask_error(svc_action_t *op, const char *error)
 {
     crm_trace("Could not issue %s for %s: %s", op->action, op->rsc, error);
     if(strstr(error, UPSTART_06_API ".Error.UnknownInstance")) {
-        if(safe_str_eq(op->action, "stop")) {
+        if(pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
             crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
             op->rc = PCMK_OCF_OK;
 
-        } else if(safe_str_eq(op->action, "start")) {
+        } else if(pcmk__str_eq(op->action, "start", pcmk__str_casei)) {
             crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
             op->rc = PCMK_OCF_NOT_INSTALLED;
             op->status = PCMK_LRM_OP_NOT_INSTALLED;
         }
         return TRUE;
 
-    } else if (safe_str_eq(op->action, "start")
+    } else if (pcmk__str_eq(op->action, "start", pcmk__str_casei)
                && strstr(error, UPSTART_06_API ".Error.AlreadyStarted")) {
         crm_trace("Mapping %s failure for %s: starting a started resource is allowed", op->action, op->rsc);
         op->rc = PCMK_OCF_OK;
@@ -429,7 +429,7 @@ upstart_job_exec(svc_action_t * op)
     op->rc = PCMK_OCF_UNKNOWN_ERROR;
     CRM_ASSERT(upstart_init());
 
-    if (safe_str_eq(op->action, "meta-data")) {
+    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         op->stdout_data = upstart_job_metadata(op->agent);
         op->rc = PCMK_OCF_OK;
         goto cleanup;

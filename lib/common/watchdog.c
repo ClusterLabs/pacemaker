@@ -97,7 +97,7 @@ pcmk_panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    if (safe_str_eq("crash", getenv("PCMK_panic_action"))) {
+    if (pcmk__str_eq("crash", getenv("PCMK_panic_action"), pcmk__str_casei)) {
         sysrq_trigger('c');
     } else {
         sysrq_trigger('b');

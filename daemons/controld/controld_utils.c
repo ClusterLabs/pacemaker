@@ -734,7 +734,7 @@ update_dc(xmlNode * msg)
         fsa_our_dc_version = strdup(dc_version);
     }
 
-    if (safe_str_eq(fsa_our_dc, last_dc)) {
+    if (pcmk__str_eq(fsa_our_dc, last_dc, pcmk__str_casei)) {
         /* do nothing */
 
     } else if (fsa_our_dc != NULL) {

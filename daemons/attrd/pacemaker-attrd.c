@@ -268,31 +268,31 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
     }
 
-    if (safe_str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE)) {
+    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_peer_remove(client->name, xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_clear_failure(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_REFRESH)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_REFRESH, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_QUERY)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_QUERY, pcmk__str_casei)) {
         /* queries will get reply, so no ack is necessary */
         attrd_client_query(client, id, flags, xml);
 
