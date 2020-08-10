@@ -331,7 +331,7 @@ void
 process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t * data_set)
 {
     CRM_CHECK(rsc && prefer && data_set, return);
-    if (safe_str_neq(data_set->placement_strategy, "default")) {
+    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GHashTableIter iter;
         GListPtr colocated_rscs = NULL;
         gboolean any_capable = FALSE;

@@ -1662,7 +1662,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 
     node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 
-    while (n != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(n))) {
+    while (n != NULL && !pcmk__str_eq(XML_CIB_TAG_STATE, TYPE(n), pcmk__str_casei)) {
         n = n->parent;
     }
 

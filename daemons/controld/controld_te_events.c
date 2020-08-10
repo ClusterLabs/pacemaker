@@ -230,18 +230,18 @@ get_cancel_action(const char *id, const char *node)
             crm_action_t *action = (crm_action_t *) gIter2->data;
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-            if (safe_str_neq(CRMD_ACTION_CANCEL, task)) {
+            if (!pcmk__str_eq(CRMD_ACTION_CANCEL, task, pcmk__str_casei)) {
                 continue;
             }
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-            if (safe_str_neq(task, id)) {
+            if (!pcmk__str_eq(task, id, pcmk__str_casei)) {
                 crm_trace("Wrong key %s for %s on %s", task, id, node);
                 continue;
             }
 
             target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-            if (node && safe_str_neq(target, node)) {
+            if (node && !pcmk__str_eq(target, node, pcmk__str_casei)) {
                 crm_trace("Wrong node %s for %s on %s", target, id, node);
                 continue;
             }

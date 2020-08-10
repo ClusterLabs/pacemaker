@@ -223,13 +223,13 @@ cib_remote_auth(xmlNode * login)
     }
 
     tmp = crm_element_name(login);
-    if (safe_str_neq(tmp, "cib_command")) {
+    if (!pcmk__str_eq(tmp, "cib_command", pcmk__str_casei)) {
         crm_err("Wrong tag: %s", tmp);
         return FALSE;
     }
 
     tmp = crm_element_value(login, "op");
-    if (safe_str_neq(tmp, "authenticate")) {
+    if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         crm_err("Wrong operation: %s", tmp);
         return FALSE;
     }
@@ -408,7 +408,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     const char *value = NULL;
 
     value = crm_element_name(command);
-    if (safe_str_neq(value, "cib_command")) {
+    if (!pcmk__str_eq(value, "cib_command", pcmk__str_casei)) {
         crm_log_xml_trace(command, "Bad command: ");
         return;
     }
@@ -668,7 +668,7 @@ authenticate_user(const char *user, const char *passwd)
         crm_err("Unknown user authenticated.");
         goto bail;
 
-    } else if (safe_str_neq(p_user, user)) {
+    } else if (!pcmk__str_eq(p_user, user, pcmk__str_casei)) {
         crm_err("User mismatch: %s vs. %s.", (const char *)p_user, (const char *)user);
         goto bail;
     }

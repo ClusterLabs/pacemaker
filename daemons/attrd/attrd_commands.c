@@ -607,7 +607,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         attrd_peer_clear_failure(peer, xml);
 
     } else if (safe_str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE)
-              && safe_str_neq(peer->uname, attrd_cluster->uname)) {
+              && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
         xmlNode *child = NULL;
 
         crm_info("Processing %s from %s", op, peer->uname);
@@ -858,7 +858,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 
     v = attrd_lookup_or_create_value(a->values, host, xml);
 
-    if (filter && safe_str_neq(v->current, value)
+    if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
         && safe_str_eq(host, attrd_cluster->uname)) {
 
         xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
@@ -877,7 +877,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         send_attrd_message(NULL, sync);
         free_xml(sync);
 
-    } else if (safe_str_neq(v->current, value)) {
+    } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
         crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
                    attr, host, v->current? v->current : "(unset)", value? value : "(unset)", peer->uname);
         free(v->current);

@@ -400,7 +400,7 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
                 clear_bit(flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
             }
-            if (safe_str_neq(task_s, action->task)
+            if (!pcmk__str_eq(task_s, action->task, pcmk__str_casei)
                 && is_set(flags, pe_action_runnable)
                 && is_set(child_flags, pe_action_runnable) == FALSE) {
                 pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,

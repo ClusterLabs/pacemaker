@@ -526,7 +526,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
      * with doing the local notifications once we receive
      * the broadcast back. */
     subt = crm_element_value(data, F_SUBTYPE);
-    if (dup == FALSE && safe_str_neq(subt, "broadcast")) {
+    if (dup == FALSE && !pcmk__str_eq(subt, "broadcast", pcmk__str_casei)) {
         /* Defer notification until the bcast message arrives */
         stonith_bcast_result_to_peers(op, rc, (op_merged? TRUE: FALSE));
         goto remote_op_done_cleanup;
@@ -534,7 +534,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
 
     if (rc == pcmk_ok || dup) {
         level = LOG_NOTICE;
-    } else if (safe_str_neq(op->originator, stonith_our_uname)) {
+    } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         level = LOG_NOTICE;
     }
 
@@ -885,10 +885,10 @@ merge_duplicates(remote_fencing_op_t * op)
         if (other->state > st_exec) {
             /* Must be in-progress */
             continue;
-        } else if (safe_str_neq(op->target, other->target)) {
+        } else if (!pcmk__str_eq(op->target, other->target, pcmk__str_casei)) {
             /* Must be for the same node */
             continue;
-        } else if (safe_str_neq(op->action, other_action)) {
+        } else if (!pcmk__str_eq(op->action, other_action, pcmk__str_casei)) {
             crm_trace("Must be for the same action: %s vs. %s",
                       op->action, other_action);
             continue;
@@ -1194,7 +1194,7 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
         if ((options & FIND_PEER_SKIP_TARGET) && safe_str_eq(peer->host, op->target)) {
             continue;
         }
-        if ((options & FIND_PEER_TARGET_ONLY) && safe_str_neq(peer->host, op->target)) {
+        if ((options & FIND_PEER_TARGET_ONLY) && !pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
             continue;
         }
 
@@ -1572,7 +1572,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
             /* TODO check devices to verify watchdog will be in use */
         } else if(stonith_watchdog_timeout_ms > 0
                   && safe_str_eq(peer->host, op->target)
-                  && safe_str_neq(op->action, "on")) {
+                  && !pcmk__str_eq(op->action, "on", pcmk__str_casei)) {
             crm_notice("Waiting %lds for %s to self-fence (%s) for client %s.%.8s",
                        stonith_watchdog_timeout_ms/1000, op->target, op->action,
                        op->client_name, op->id);
@@ -2014,7 +2014,7 @@ process_remote_stonith_exec(xmlNode * msg)
         return -EOPNOTSUPP;
     }
 
-    if (op->devices && device && safe_str_neq(op->devices->data, device)) {
+    if (op->devices && device && !pcmk__str_eq(op->devices->data, device, pcmk__str_casei)) {
         crm_err("Received outdated reply for device %s (instead of %s) to "
                 "fence (%s) %s. Operation already timed out at peer level.",
                 device, (const char *) op->devices->data, op->action, op->target);
@@ -2032,7 +2032,7 @@ process_remote_stonith_exec(xmlNode * msg)
         }
         remote_op_done(op, msg, rc, FALSE);
         return pcmk_ok;
-    } else if (safe_str_neq(op->originator, stonith_our_uname)) {
+    } else if (!pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */
         crm_err

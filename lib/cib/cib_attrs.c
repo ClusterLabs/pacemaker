@@ -277,7 +277,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
             }
         }
 
-        if (node_uuid == NULL && safe_str_neq(node_type, XML_CIB_TAG_TICKETS)) {
+        if (node_uuid == NULL && !pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             if (safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
                 xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
             } else {

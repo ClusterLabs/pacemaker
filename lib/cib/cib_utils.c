@@ -600,7 +600,7 @@ cib_native_notify(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback");
         return;
 
-    } else if (safe_str_neq(entry->event, event)) {
+    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
         crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }

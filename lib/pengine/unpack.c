@@ -459,7 +459,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
 
     for (attr_set = __xml_first_child_element(xml_obj); attr_set != NULL;
          attr_set = __xml_next_element(attr_set)) {
-        if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
+        if (!pcmk__str_eq((const char *)attr_set->name, XML_TAG_META_SETS, pcmk__str_casei)) {
             continue;
         }
 
@@ -608,7 +608,7 @@ setup_container(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     container_id = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_CONTAINER);
-    if (container_id && safe_str_neq(container_id, rsc->id)) {
+    if (container_id && !pcmk__str_eq(container_id, rsc->id, pcmk__str_casei)) {
         pe_resource_t *container = pe_find_resource(data_set->resources, container_id);
 
         if (container) {
@@ -1842,8 +1842,8 @@ unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *
         }
     }
 
-    if (rsc && safe_str_neq(rsc_id, rsc->id)
-        && safe_str_neq(rsc_id, rsc->clone_name)) {
+    if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_casei)
+        && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_casei)) {
 
         free(rsc->clone_name);
         rsc->clone_name = strdup(rsc_id);
@@ -2369,7 +2369,7 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
         const char *rsc_id;
         const char *container_id;
 
-        if (safe_str_neq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE)) {
+        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_casei)) {
             continue;
         }
 
@@ -3968,7 +3968,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
         if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
             const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
 
-            if (node != NULL && safe_str_neq(uname, node)) {
+            if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
                 continue;
             }
 
@@ -4000,7 +4000,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
                         const char *rsc_id = crm_element_value(lrm_rsc, XML_ATTR_ID);
 
-                        if (rsc != NULL && safe_str_neq(rsc_id, rsc)) {
+                        if (rsc != NULL && !pcmk__str_eq(rsc_id, rsc, pcmk__str_casei)) {
                             continue;
                         }
 

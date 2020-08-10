@@ -89,7 +89,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
     char *interval_str = NULL;
     char *buf = NULL;
 
-    if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
+    if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
         char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
         interval_str = crm_strdup_printf(" %s", pair);
         free(pair);
@@ -367,7 +367,7 @@ pe__node_display_name(pe_node_t *node, bool print_detail)
     }
 
     /* Node ID is displayed if different from uname and detail is requested */
-    if (print_detail && safe_str_neq(node->details->uname, node->details->id)) {
+    if (print_detail && !pcmk__str_eq(node->details->uname, node->details->id, pcmk__str_casei)) {
         node_id = node->details->id;
     }
 
@@ -1506,7 +1506,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
                (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
     xmlSetProp(node, (pcmkXmlStr) "task", (pcmkXmlStr) task);
 
-    if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
+    if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
         char *s = crm_strdup_printf("%sms", interval_ms_s);
         xmlSetProp(node, (pcmkXmlStr) "interval", (pcmkXmlStr) s);
         free(s);

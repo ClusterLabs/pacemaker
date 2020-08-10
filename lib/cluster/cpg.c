@@ -268,7 +268,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
             /* Not for us */
             crm_trace("Not for us: %u != %u", msg->host.id, local_nodeid);
             return NULL;
-        } else if (msg->host.size != 0 && safe_str_neq(msg->host.uname, local_name)) {
+        } else if (msg->host.size != 0 && !pcmk__str_eq(msg->host.uname, local_name, pcmk__str_casei)) {
             /* Not for us */
             crm_trace("Not for us: %s != %s", msg->host.uname, local_name);
             return NULL;

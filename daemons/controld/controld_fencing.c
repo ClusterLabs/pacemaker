@@ -51,7 +51,7 @@ set_fence_reaction(const char *reaction_s)
         fence_reaction_panic = TRUE;
 
     } else {
-        if (safe_str_neq(reaction_s, "stop")) {
+        if (!pcmk__str_eq(reaction_s, "stop", pcmk__str_casei)) {
             crm_warn("Invalid value '%s' for %s, using 'stop'",
                      reaction_s, XML_CONFIG_ATTR_FENCE_REACTION);
         }
@@ -534,7 +534,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
              */
 
             if (st_event->client_origin
-                && safe_str_neq(st_event->client_origin, te_client_id)) {
+                && !pcmk__str_eq(st_event->client_origin, te_client_id, pcmk__str_casei)) {
 
                 /* Abort the current transition graph if it wasn't us
                  * that invoked stonith to fence someone
@@ -731,7 +731,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     CRM_CHECK(decode_transition_key(userdata, &uuid, &transition_id, &stonith_id, NULL),
               goto bail);
 
-    if (transition_graph->complete || stonith_id < 0 || safe_str_neq(uuid, te_uuid)
+    if (transition_graph->complete || stonith_id < 0 || !pcmk__str_eq(uuid, te_uuid, pcmk__str_casei)
         || transition_graph->id != transition_id) {
         crm_info("Ignoring STONITH action initiated outside of the current transition");
         goto bail;

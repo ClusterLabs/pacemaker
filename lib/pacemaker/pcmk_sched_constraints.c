@@ -196,7 +196,7 @@ pe_find_constraint_resource(GListPtr rsc_list, const char *id)
                                                      pe_find_renamed);
 
         if (match != NULL) {
-            if(safe_str_neq(match->id, id)) {
+            if(!pcmk__str_eq(match->id, id, pcmk__str_casei)) {
                 /* We found an instance of a clone instead */
                 match = uber_parent(match);
                 crm_debug("Found %s for %s", match->id, id);
@@ -530,7 +530,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
         GListPtr tag_refs = NULL;
         GListPtr gIter = NULL;
 
-        if (safe_str_neq((const char *)set->name, XML_CONS_TAG_RSC_SET)) {
+        if (!pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_casei)) {
             continue;
         }
 
@@ -541,7 +541,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
             pe_tag_t *tag = NULL;
             const char *id = ID(xml_rsc);
 
-            if (safe_str_neq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF)) {
+            if (!pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_casei)) {
                 continue;
             }
 

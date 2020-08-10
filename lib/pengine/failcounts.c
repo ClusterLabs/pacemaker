@@ -46,7 +46,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
                          &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
-        || safe_str_neq(conf_op_name, lrm_op_task)) {
+        || !pcmk__str_eq(conf_op_name, lrm_op_task, pcmk__str_casei)) {
         return FALSE;
     }
 

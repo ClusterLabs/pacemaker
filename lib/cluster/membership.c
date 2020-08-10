@@ -301,7 +301,7 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
     } else if (search->id && node->id != search->id) {
         return FALSE;
 
-    } else if (search->id == 0 && safe_str_neq(node->uname, search->uname)) {
+    } else if (search->id == 0 && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
         return FALSE;
 
     } else if (crm_is_peer_active(value) == FALSE) {
@@ -863,7 +863,7 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
     }
 
     last = node->expected;
-    if (expected != NULL && safe_str_neq(node->expected, expected)) {
+    if (expected != NULL && !pcmk__str_eq(node->expected, expected, pcmk__str_casei)) {
         node->expected = strdup(expected);
         changed = TRUE;
     }
@@ -912,7 +912,7 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         }
     }
 
-    if (state && safe_str_neq(node->state, state)) {
+    if (state && !pcmk__str_eq(node->state, state, pcmk__str_casei)) {
         char *last = node->state;
 
         node->state = strdup(state);
@@ -1115,7 +1115,7 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         g_hash_table_replace(crm_known_peer_cache, uniqueid, node);
 
     } else if (is_set(node->flags, crm_node_dirty)) {
-        if (safe_str_neq(uname, node->uname)) {
+        if (!pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
             free(node->uname);
             node->uname = strdup(uname);
             CRM_ASSERT(node->uname != NULL);

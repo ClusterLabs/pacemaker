@@ -231,7 +231,7 @@ do_cl_join_finalize_respond(long long action,
     const char *ack_nack = crm_element_value(input->msg, CRM_OP_JOIN_ACKNAK);
     const char *welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
 
-    if (safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
+    if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
         crm_trace("Ignoring op=%s message", op);
         return;
     }

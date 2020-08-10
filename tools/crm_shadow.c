@@ -374,7 +374,7 @@ main(int argc, char **argv)
     } else if (command != 's' && command != 'c') {
         const char *local = getenv("CIB_shadow");
 
-        if (local != NULL && safe_str_neq(local, shadow) && force_flag == FALSE) {
+        if (local != NULL && !pcmk__str_eq(local, shadow, pcmk__str_casei) && force_flag == FALSE) {
             fprintf(stderr,
                     "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
                     "  To prevent accidental destruction of the cluster,"

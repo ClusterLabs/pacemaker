@@ -773,7 +773,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
 
     quiet_log(" * Fencing %s (%s)\n", target, op);
-    if(safe_str_neq(op, "on")) {
+    if(!pcmk__str_eq(op, "on", pcmk__str_casei)) {
         int rc = 0;
         char xpath[STATUS_PATH_MAX];
         xmlNode *cib_node = modify_node(fake_cib, target, FALSE);

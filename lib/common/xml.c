@@ -1087,7 +1087,7 @@ __subtract_xml_object(xmlNode * target, xmlNode * patch)
         const char *p_name = (const char *)xIter->name;
 
         /* Removing and then restoring the id field would change the ordering of properties */
-        if (safe_str_neq(p_name, XML_ATTR_ID)) {
+        if (!pcmk__str_eq(p_name, XML_ATTR_ID, pcmk__str_casei)) {
             xml_remove_prop(target, p_name);
         }
     }
@@ -1737,7 +1737,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         }
 
         new_digest = calculate_xml_versioned_digest(xml, FALSE, TRUE, version);
-        if (safe_str_neq(new_digest, digest)) {
+        if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
             crm_info("v%d digest mis-match: expected %s, calculated %s", format, digest, new_digest);
             rc = -pcmk_err_diff_failed;
 
@@ -3433,7 +3433,7 @@ apply_xml_diff(xmlNode *old_xml, xmlNode * diff, xmlNode **new_xml)
 
         purge_diff_markers(*new_xml);       /* Purge now so the diff is ok */
         new_digest = calculate_xml_versioned_digest(*new_xml, FALSE, TRUE, version);
-        if (safe_str_neq(new_digest, digest)) {
+        if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
             crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
             result = FALSE;
 
@@ -3879,7 +3879,7 @@ subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right,
     CRM_CHECK(left->type == XML_COMMENT_NODE, return NULL);
 
     if (right == NULL
-        || safe_str_neq((const char *)left->content, (const char *)right->content)) {
+        || !pcmk__str_eq((const char *)left->content, (const char *)right->content, pcmk__str_casei)) {
         xmlNode *deleted = NULL;
 
         deleted = add_node_copy(parent, left);
@@ -4091,7 +4091,7 @@ add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
         add_node_copy(parent, update);
 
     /* We won't reach here currently */
-    } else if (safe_str_neq((const char *)target->content, (const char *)update->content)) {
+    } else if (!pcmk__str_eq((const char *)target->content, (const char *)update->content, pcmk__str_casei)) {
         xmlFree(target->content);
         target->content = xmlStrdup(update->content);
     }
@@ -4204,10 +4204,10 @@ update_xml_child(xmlNode * child, xmlNode * to_update)
     CRM_CHECK(child != NULL, return FALSE);
     CRM_CHECK(to_update != NULL, return FALSE);
 
-    if (safe_str_neq(crm_element_name(to_update), crm_element_name(child))) {
+    if (!pcmk__str_eq(crm_element_name(to_update), crm_element_name(child), pcmk__str_casei)) {
         can_update = FALSE;
 
-    } else if (safe_str_neq(ID(to_update), ID(child))) {
+    } else if (!pcmk__str_eq(ID(to_update), ID(child), pcmk__str_casei)) {
         can_update = FALSE;
 
     } else if (can_update) {
@@ -4238,9 +4238,9 @@ find_xml_children(xmlNode ** children, xmlNode * root,
     CRM_CHECK(root != NULL, return FALSE);
     CRM_CHECK(children != NULL, return FALSE);
 
-    if (tag != NULL && safe_str_neq(tag, crm_element_name(root))) {
+    if (tag != NULL && !pcmk__str_eq(tag, crm_element_name(root), pcmk__str_casei)) {
 
-    } else if (value != NULL && safe_str_neq(value, crm_element_value(root, field))) {
+    } else if (value != NULL && !pcmk__str_eq(value, crm_element_value(root, field), pcmk__str_casei)) {
 
     } else {
         if (*children == NULL) {
@@ -4280,7 +4280,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     if (up_id == NULL || (child_id && strcmp(child_id, up_id) == 0)) {
         can_delete = TRUE;
     }
-    if (safe_str_neq(crm_element_name(update), crm_element_name(child))) {
+    if (!pcmk__str_eq(crm_element_name(update), crm_element_name(child), pcmk__str_casei)) {
         can_delete = FALSE;
     }
     if (can_delete && delete_only) {
@@ -4291,7 +4291,7 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
             const char *p_value = pcmk__xml_attr_value(pIter);
 
             right_val = crm_element_value(child, p_name);
-            if (safe_str_neq(p_value, right_val)) {
+            if (!pcmk__str_eq(p_value, right_val, pcmk__str_casei)) {
                 can_delete = FALSE;
             }
         }

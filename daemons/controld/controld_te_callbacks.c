@@ -325,7 +325,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     char *node_uuid = NULL;
     crm_action_t *down = NULL;
 
-    if(safe_str_neq(op, "delete")) {
+    if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
         abort_transition(INFINITY, tg_restart, reason, change);
         return;
     }

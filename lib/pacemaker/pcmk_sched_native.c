@@ -217,7 +217,7 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
         }
     }
 
-    if (safe_str_neq(attr, CRM_ATTR_UNAME)) {
+    if (!pcmk__str_eq(attr, CRM_ATTR_UNAME, pcmk__str_casei)) {
         if (best_node == NULL) {
             crm_info("No allowed node for %s matches node attribute %s=%s",
                      rsc->id, attr, value);
@@ -669,7 +669,7 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
 
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             value = crm_element_value(operation, "name");
-            if (safe_str_neq(value, name)) {
+            if (!pcmk__str_eq(value, name, pcmk__str_casei)) {
                 continue;
             }
 
@@ -1478,7 +1478,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
-                        && safe_str_neq(data_set->placement_strategy, "default");
+                        && !pcmk__str_eq(data_set->placement_strategy,
+                                         "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
     custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -2532,7 +2533,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         return;
     }
 
-    if (current != NULL && next != NULL && safe_str_neq(current->details->id, next->details->id)) {
+    if (current != NULL && next != NULL && !pcmk__str_eq(current->details->id, next->details->id, pcmk__str_casei)) {
         moving = TRUE;
     }
 

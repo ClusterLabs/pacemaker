@@ -515,7 +515,7 @@ crm_is_corosync_peer_active(const crm_node_t * node)
         crm_trace("NULL");
         return FALSE;
 
-    } else if (safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+    } else if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
         crm_trace("%s: state=%s", node->uname, node->state);
         return FALSE;
 

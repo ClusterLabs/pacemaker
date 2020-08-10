@@ -254,7 +254,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                    replica->ipaddr, port->source,
                                    port->target);
-            } else if(safe_str_neq(data->container_network, "host")) {
+            } else if(!pcmk__str_eq(data->container_network, "host", pcmk__str_casei)) {
                 // No need to do port mapping if net=host
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
             }
@@ -422,7 +422,7 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                    replica->ipaddr, port->source,
                                    port->target);
-            } else if(safe_str_neq(data->container_network, "host")) {
+            } else if(!pcmk__str_eq(data->container_network, "host", pcmk__str_casei)) {
                 // No need to do port mapping if net=host
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
             }
@@ -974,7 +974,7 @@ pe__bundle_needs_remote_name(pe_resource_t *rsc)
 
         for (int m = 0; m < 3; m++) {
             value = crm_element_value(rsc->xml, match[m][0]);
-            if (safe_str_neq(value, match[m][1])) {
+            if (!pcmk__str_eq(value, match[m][1], pcmk__str_casei)) {
                 return FALSE;
             }
         }

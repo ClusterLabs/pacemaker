@@ -500,7 +500,7 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
      * but ignore it here just in case any other library callers
      * fail to do so.
      */
-    if (safe_str_neq(key, STONITH_ATTR_ACTION_OP)) {
+    if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)) {
         append_arg(key, value, user_data);
         return;
     }
@@ -1527,7 +1527,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
 
             native->token = crm_element_value_copy(reply, F_STONITH_CLIENTID);
-            if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
+            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));
                 crm_log_xml_debug(reply, "Invalid fencer reply");
@@ -1817,7 +1817,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback");
         return;
 
-    } else if (safe_str_neq(entry->event, event)) {
+    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
         crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }

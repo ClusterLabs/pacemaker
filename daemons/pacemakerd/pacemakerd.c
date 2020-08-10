@@ -1177,7 +1177,7 @@ main(int argc, char **argv)
     {
         const char *facility = pcmk__env_option("logfacility");
 
-        if (facility && safe_str_neq(facility, "none")) {
+        if (facility && !pcmk__str_eq(facility, "none", pcmk__str_casei)) {
             setenv("HA_LOGFACILITY", facility, 1);
         }
     }

@@ -375,7 +375,7 @@ main(int argc, char **argv)
         type = XML_CIB_TAG_CRMCONFIG;
 
     } else if (safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
-    } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
+    } else if (!pcmk__str_eq(type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
@@ -401,7 +401,7 @@ main(int argc, char **argv)
 
     if (attr_pattern) {
         if (((command != 'v') && (command != 'D'))
-            || safe_str_neq(type, XML_CIB_TAG_STATUS)) {
+            || !pcmk__str_eq(type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
 
             fprintf(stderr, "Error: pattern can only be used with till-reboot update or delete\n");
             crm_exit(CRM_EX_USAGE);

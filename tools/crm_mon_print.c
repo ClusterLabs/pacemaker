@@ -483,7 +483,7 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
             }
         }
 
-        if (safe_str_neq(type, "ping") && safe_str_neq(type, "pingd")) {
+        if (!pcmk__str_eq(type, "ping", pcmk__str_casei) && !pcmk__str_eq(type, "pingd", pcmk__str_casei)) {
             return FALSE;
         }
 

@@ -550,7 +550,7 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
         n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
     }
     expand_list(n_data->stop, &rsc_list, &node_list);
-    if (rsc_list != NULL && safe_str_neq(" ", rsc_list)) {
+    if (rsc_list != NULL && !pcmk__str_eq(" ", rsc_list, pcmk__str_casei)) {
         if (safe_str_eq(n_data->action, RSC_STOP)) {
             required = TRUE;
         }

@@ -428,7 +428,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
             standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
         }
 
-        if (safe_str_neq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+        if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
             continue;
         }
 
@@ -600,7 +600,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     /* We only care about STONITH resources. */
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return;
     }
 
@@ -815,7 +815,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             rsc_id = crm_element_value(match, XML_ATTR_ID);
             standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
 
-            if (safe_str_neq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+            if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
                 continue;
             }
 

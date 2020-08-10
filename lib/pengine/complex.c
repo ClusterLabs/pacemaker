@@ -540,7 +540,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
-    if (value != NULL && safe_str_neq("default", value)) {
+    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
             set_bit((*rsc)->flags, pe_rsc_managed);
         } else {
@@ -599,12 +599,12 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
-    if (value != NULL && safe_str_neq("default", value)) {
+    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->stickiness = char2score(value);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
-    if (value != NULL && safe_str_neq("default", value)) {
+    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->migration_threshold = char2score(value);
         if ((*rsc)->migration_threshold < 0) {
             /* @TODO We use 1 here to preserve previous behavior, but this

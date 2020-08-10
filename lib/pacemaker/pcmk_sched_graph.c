@@ -456,7 +456,7 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (safe_str_neq(action->task, RSC_START)) {
+        if (!pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
             continue;
         }
         if (is_set(action->flags, pe_action_runnable)) {
@@ -725,7 +725,7 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
             pe_rsc_trace(action->rsc, "Skipping %s: node %s is in maintenance mode",
                          action->uuid, node->details->uname);
             continue;
-        } else if (safe_str_neq(action->task, RSC_STOP)) {
+        } else if (!pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
             continue;
         } else if (is_not_set(action->rsc->flags, pe_rsc_managed)
                    && is_not_set(action->rsc->flags, pe_rsc_block)) {
@@ -1176,7 +1176,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
              * and fall into the clause above instead
              */
             crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
-            if (action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {
+            if (action->rsc->clone_name && !pcmk__str_eq(xml_id, action->rsc->clone_name, pcmk__str_casei)) {
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
             } else {
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
@@ -1351,7 +1351,7 @@ should_dump_action(pe_action_t *action)
 
             if (is_not_set(wrapper->action->flags, pe_action_runnable)) {
                 /* Only interested in runnable operations */
-            } else if (safe_str_neq(wrapper->action->task, RSC_START)) {
+            } else if (!pcmk__str_eq(wrapper->action->task, RSC_START, pcmk__str_casei)) {
                 /* Only interested in start operations */
             } else if (is_set(wrapper->action->flags, pe_action_dumped)
                        || should_dump_action(wrapper->action)) {
@@ -1377,7 +1377,7 @@ should_dump_action(pe_action_t *action)
 
     // Monitors should be dumped even for unmanaged resources
     } else if (action->rsc && is_not_set(action->rsc->flags, pe_rsc_managed)
-               && safe_str_neq(action->task, RSC_STATUS)) {
+               && !pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)) {
 
         const char *interval_ms_s = g_hash_table_lookup(action->meta,
                                                         XML_LRM_ATTR_INTERVAL_MS);
@@ -1492,7 +1492,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if (is_not_set(input->action->flags, pe_action_runnable)
                && (type == pe_order_none)
-               && safe_str_neq(input->action->uuid, CRM_OP_PROBED)) {
+               && !pcmk__str_eq(input->action->uuid, CRM_OP_PROBED, pcmk__str_casei)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional and input unrunnable",
                   action->uuid, action->id,

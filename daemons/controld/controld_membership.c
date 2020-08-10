@@ -225,7 +225,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         crm_node_t *node = NULL;
         gboolean known = FALSE;
 
-        if (safe_str_neq(crm_element_name(node_xml), XML_CIB_TAG_NODE)) {
+        if (!pcmk__str_eq(crm_element_name(node_xml), XML_CIB_TAG_NODE, pcmk__str_casei)) {
             continue;
         }
 

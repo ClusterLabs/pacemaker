@@ -57,7 +57,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                && is_not_set(rsc->flags, pe_rsc_unique)
                && rsc->clone_name
                && safe_str_eq(requested_name, rsc->clone_name)
-               && safe_str_neq(requested_name, rsc->id)) {
+               && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
 
         for (GListPtr iter = parent->children; iter; iter = iter->next) {
             found += do_find_resource(requested_name, iter->data, data_set);
@@ -629,27 +629,27 @@ clear_rsc_failures(pcmk_ipc_api_t *controld_api, const char *node_name,
                                                                   failed_id,
                                                                   pe_find_renamed|pe_find_anon);
 
-            if (!fail_rsc || safe_str_neq(rsc_id, fail_rsc->id)) {
+            if (!fail_rsc || !pcmk__str_eq(rsc_id, fail_rsc->id, pcmk__str_casei)) {
                 continue;
             }
         }
 
         // Host name should always have been provided by this point
         failed_value = crm_element_value(xml_op, XML_ATTR_UNAME);
-        if (safe_str_neq(node_name, failed_value)) {
+        if (!pcmk__str_eq(node_name, failed_value, pcmk__str_casei)) {
             continue;
         }
 
         // No operation specified means all operations match
         if (operation) {
             failed_value = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-            if (safe_str_neq(operation, failed_value)) {
+            if (!pcmk__str_eq(operation, failed_value, pcmk__str_casei)) {
                 continue;
             }
 
             // Interval (if operation was specified) defaults to 0 (not all)
             failed_value = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
-            if (safe_str_neq(interval_ms_s, failed_value)) {
+            if (!pcmk__str_eq(interval_ms_s, failed_value, pcmk__str_casei)) {
                 continue;
             }
         }
@@ -1682,7 +1682,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
             const char *dc_version = g_hash_table_lookup(data_set->config_hash,
                                                          "dc-version");
 
-            if (safe_str_neq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION)) {
+            if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
                 printf("warning: wait option may not work properly in "
                        "mixed-version cluster\n");
                 printed_version_warning = TRUE;

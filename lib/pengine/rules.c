@@ -121,7 +121,7 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_eq(tag, XML_TAG_RULE)) {
         return nested_rule;
 
-    } else if (safe_str_neq(tag, "expression")) {
+    } else if (!pcmk__str_eq(tag, "expression", pcmk__str_casei)) {
         return not_expr;
 
     } else if (pcmk__str_any_of(attr, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID, NULL)) {

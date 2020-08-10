@@ -210,7 +210,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                                                                  version ? version :
                                                                  CRM_FEATURE_SET);
 
-            if (safe_str_neq(digest_verify, digest)) {
+            if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
                 crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer,
                         digest_verify, digest);
                 reason = "digest mismatch";

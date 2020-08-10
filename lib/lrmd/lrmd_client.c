@@ -665,7 +665,7 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
                 mainloop_set_trigger(native->process_notify);
             }
             xml = NULL;
-        } else if (safe_str_neq(msg_type, "reply")) {
+        } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             /* msg isn't a reply, make some noise */
             crm_err("Expected a reply, got %s", msg_type);
             free_xml(xml);
@@ -978,7 +978,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
                 LRMD_PROTOCOL_VERSION, version);
             crm_log_xml_err(reply, "Protocol Error");
 
-        } else if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
+        } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             crm_err("Invalid registration message: %s", msg_type);
             crm_log_xml_err(reply, "Bad reply");
             rc = -EPROTO;

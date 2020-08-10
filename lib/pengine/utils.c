@@ -740,7 +740,7 @@ unpack_operation_on_fail(pe_action_t * action)
                 continue;
             } else if (enabled && !crm_is_true(enabled)) {
                 continue;
-            } else if (safe_str_neq(name, "monitor") || safe_str_neq(role, "Master")) {
+            } else if (!pcmk__str_eq(name, "monitor", pcmk__str_casei) || !pcmk__str_eq(role, "Master", pcmk__str_casei)) {
                 continue;
             } else if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
@@ -760,9 +760,9 @@ unpack_operation_on_fail(pe_action_t * action)
         interval_spec = crm_element_value(action->op_entry,
                                           XML_LRM_ATTR_INTERVAL);
 
-        if (safe_str_neq(name, CRMD_ACTION_PROMOTE)
-            && (safe_str_neq(name, CRMD_ACTION_STATUS)
-                || safe_str_neq(role, "Master")
+        if (!pcmk__str_eq(name, CRMD_ACTION_PROMOTE, pcmk__str_casei)
+            && (!pcmk__str_eq(name, CRMD_ACTION_STATUS, pcmk__str_casei)
+                || !pcmk__str_eq(role, "Master", pcmk__str_casei)
                 || (crm_parse_interval_spec(interval_spec) == 0))) {
             pcmk__config_err("Resetting '" XML_OP_ATTR_ON_FAIL "' for %s %s "
                              "action to default value because 'demote' is not "
@@ -796,7 +796,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
                 continue;
             }
 
-            if (safe_str_neq(name, RSC_STATUS)) {
+            if (!pcmk__str_eq(name, RSC_STATUS, pcmk__str_casei)) {
                 continue;
             }
 
@@ -1195,7 +1195,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
                 (pe__resource_is_remote_conn(action->rsc, data_set) &&
                !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && (interval_ms == 0)) &&
-                (safe_str_neq(action->task, CRMD_ACTION_START)))) {
+                (!pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)))) {
 
         if (!is_set(action->rsc->flags, pe_rsc_managed)) {
             action->on_fail = action_fail_stop;
@@ -1491,10 +1491,10 @@ find_first_action(GListPtr input, const char *uuid, const char *task, pe_node_t 
     for (gIter = input; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (uuid != NULL && safe_str_neq(uuid, action->uuid)) {
+        if (uuid != NULL && !pcmk__str_eq(uuid, action->uuid, pcmk__str_casei)) {
             continue;
 
-        } else if (task != NULL && safe_str_neq(task, action->task)) {
+        } else if (task != NULL && !pcmk__str_eq(task, action->task, pcmk__str_casei)) {
             continue;
 
         } else if (on_node == NULL) {
@@ -1522,7 +1522,7 @@ find_actions(GListPtr input, const char *key, const pe_node_t *on_node)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (safe_str_neq(key, action->uuid)) {
+        if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
             crm_trace("%s does not match action %s", key, action->uuid);
             continue;
 
@@ -1571,11 +1571,10 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
             crm_trace("Skipping comparison of %s vs action %s without node",
                       key, action->uuid);
 
-        } else if (safe_str_neq(key, action->uuid)) {
+        } else if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
             crm_trace("Desired action %s doesn't match %s", key, action->uuid);
 
-        } else if (safe_str_neq(on_node->details->id,
-                                action->node->details->id)) {
+        } else if (!pcmk__str_eq(on_node->details->id, action->node->details->id, pcmk__str_casei)) {
             crm_trace("Action %s desired node ID %s doesn't match %s",
                       key, on_node->details->id, action->node->details->id);
 
@@ -1779,7 +1778,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
          *
          * [a|b]_id == -1 means it's a shutdown operation and _always_ comes last
          */
-        if (safe_str_neq(a_uuid, b_uuid) || a_id == b_id) {
+        if (!pcmk__str_eq(a_uuid, b_uuid, pcmk__str_casei) || a_id == b_id) {
             /*
              * some of the logic in here may be redundant...
              *

@@ -351,7 +351,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_trace("No routing needed for hello message %s", ref);
         return TRUE;
 
-    } else if (safe_str_neq(type, T_CRM)) {
+    } else if (!pcmk__str_eq(type, T_CRM, pcmk__str_casei)) {
         crm_warn("Cannot route message %s: Type is '%s' not '" T_CRM "'",
                  ref, (type? type : "missing"));
         crm_log_xml_warn(msg, "[bad message type]");
@@ -528,7 +528,7 @@ controld_authorize_ipc_message(xmlNode *client_msg, pcmk__client_t *curr_client,
         goto rejected;
     }
 
-    if (safe_str_neq(CRM_OP_HELLO, op)) {
+    if (!pcmk__str_eq(CRM_OP_HELLO, op, pcmk__str_casei)) {
         // Only hello messages need to be authorized
         return true;
     }

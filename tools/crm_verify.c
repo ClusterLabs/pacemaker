@@ -243,7 +243,7 @@ main(int argc, char **argv)
     }
 
     xml_tag = crm_element_name(cib_object);
-    if (safe_str_neq(xml_tag, XML_TAG_CIB)) {
+    if (!pcmk__str_eq(xml_tag, XML_TAG_CIB, pcmk__str_casei)) {
         fprintf(stderr,
                 "This tool can only check complete configurations (i.e. those starting with <cib>).\n");
         rc = -EBADMSG;

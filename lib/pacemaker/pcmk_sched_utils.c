@@ -317,7 +317,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
                 update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
                 /* set_bit(rsc->flags, pe_rsc_block); */
 
-            } else if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
+            } else if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
                 if(safe_str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC))) {
                     /* This is a recurring monitor for the stopped state, leave it alone */
 

@@ -815,7 +815,7 @@ notify_one_client(gpointer key, gpointer value, gpointer user_data)
     pcmk__client_t *client = value;
     struct notify_new_client_data *data = user_data;
 
-    if (safe_str_neq(client->id, data->new_client->id)) {
+    if (!pcmk__str_eq(client->id, data->new_client->id, pcmk__str_casei)) {
         send_client_notify(key, (gpointer) client, (gpointer) data->notify);
     }
 }
@@ -1731,7 +1731,7 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
             continue;
         }
 
-        if (client_id && safe_str_neq(cmd->client_id, client_id)) {
+        if (client_id && !pcmk__str_eq(cmd->client_id, client_id, pcmk__str_casei)) {
             continue;
         }
 

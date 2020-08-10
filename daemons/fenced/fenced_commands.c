@@ -1105,7 +1105,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
         } else {
             char *other_value = g_hash_table_lookup(second, key);
 
-            if (!other_value || safe_str_neq(other_value, value)) {
+            if (!other_value || !pcmk__str_eq(other_value, value, pcmk__str_casei)) {
                 crm_trace("Different value for %s: %s != %s", key, other_value, value);
                 return 1;
             }
@@ -1128,7 +1128,7 @@ device_has_duplicate(stonith_device_t * device)
         crm_trace("No match for %s", device->id);
         return NULL;
 
-    } else if (safe_str_neq(dup->agent, device->agent)) {
+    } else if (!pcmk__str_eq(dup->agent, device->agent, pcmk__str_casei)) {
         crm_trace("Different agent: %s != %s", dup->agent, device->agent);
         return NULL;
     }
@@ -2061,7 +2061,7 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
                crm_str_eq(cmd->action, "list", TRUE) || crm_str_eq(cmd->action, "status", TRUE)) {
         crm_trace("Never broadcast '%s' replies", cmd->action);
 
-    } else if (!stand_alone && safe_str_eq(cmd->origin, cmd->victim) && safe_str_neq(cmd->action, "on")) {
+    } else if (!stand_alone && safe_str_eq(cmd->origin, cmd->victim) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
         crm_trace("Broadcast '%s' reply for %s", cmd->action, cmd->victim);
         crm_xml_add(reply, F_SUBTYPE, "broadcast");
         bcast = TRUE;
@@ -2212,9 +2212,9 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
          * 4. The device scheduled to execute the action is the same.
          */
         if (safe_str_eq(cmd->client, cmd_other->client) ||
-            safe_str_neq(cmd->victim, cmd_other->victim) ||
-            safe_str_neq(cmd->action, cmd_other->action) ||
-            safe_str_neq(cmd->device, cmd_other->device)) {
+            !pcmk__str_eq(cmd->victim, cmd_other->victim, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->action, cmd_other->action, pcmk__str_casei) ||
+            !pcmk__str_eq(cmd->device, cmd_other->device, pcmk__str_casei)) {
 
             continue;
         }
@@ -2449,7 +2449,7 @@ check_alternate_host(const char *target)
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
             crm_trace("Checking for %s.%d != %s", entry->uname, entry->id, target);
             if (fencing_peer_active(entry)
-                && safe_str_neq(entry->uname, target)) {
+                && !pcmk__str_eq(entry->uname, target, pcmk__str_casei)) {
                 alternate_host = entry->uname;
                 break;
             }

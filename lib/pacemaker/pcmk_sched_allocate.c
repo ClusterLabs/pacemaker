@@ -1373,7 +1373,7 @@ stage5(pe_working_set_t * data_set)
     GListPtr gIter = NULL;
     int log_prio = show_utilization? LOG_STDOUT : LOG_TRACE;
 
-    if (safe_str_neq(data_set->placement_strategy, "default")) {
+    if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GListPtr nodes = g_list_copy(data_set->nodes);
 
         nodes = sort_nodes_by_weight(nodes, NULL, data_set);
@@ -2386,7 +2386,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
          * the alternative of stop action if the status of the resource is
          * unknown yet.
          */
-        if (lh_action && safe_str_neq(lh_action->task, RSC_STOP)) {
+        if (lh_action && !pcmk__str_eq(lh_action->task, RSC_STOP, pcmk__str_casei)) {
             continue;
 
         } else if (lh_action == NULL
@@ -2491,7 +2491,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
         return;
     }
 
-    if (safe_str_neq(probe->task, RSC_STATUS)) {
+    if (!pcmk__str_eq(probe->task, RSC_STATUS, pcmk__str_casei)) {
         return;
     }
 
@@ -2750,7 +2750,7 @@ order_then_probes(pe_working_set_t * data_set)
                     break;
                 }
 
-            } else if(safe_str_neq(first->task, RSC_START)) {
+            } else if(!pcmk__str_eq(first->task, RSC_START, pcmk__str_casei)) {
                 crm_trace("Not a start op %s for %s", first->uuid, start->uuid);
             }
 

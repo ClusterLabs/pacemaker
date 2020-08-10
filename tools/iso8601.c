@@ -245,7 +245,7 @@ main(int argc, char **argv)
             char *dt_s = crm_time_as_string(later,
                                             print_options | crm_time_log_date |
                                             crm_time_log_timeofday);
-            if (safe_str_neq(expected_s, dt_s)) {
+            if (!pcmk__str_eq(expected_s, dt_s, pcmk__str_casei)) {
                 exit_code = CRM_EX_ERROR;
             }
             free(dt_s);
@@ -256,7 +256,7 @@ main(int argc, char **argv)
         char *dt_s = crm_time_as_string(date_time,
                                         print_options | crm_time_log_date | crm_time_log_timeofday);
 
-        if (safe_str_neq(expected_s, dt_s)) {
+        if (!pcmk__str_eq(expected_s, dt_s, pcmk__str_casei)) {
             exit_code = CRM_EX_ERROR;
         }
         free(dt_s);

@@ -32,7 +32,7 @@ crmd_ha_msg_filter(xmlNode * msg)
         if (safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
             const char *from = crm_element_value(msg, F_ORIG);
 
-            if (safe_str_neq(from, fsa_our_uname)) {
+            if (!pcmk__str_eq(from, fsa_our_uname, pcmk__str_casei)) {
                 int level = LOG_INFO;
                 const char *op = crm_element_value(msg, F_CRM_TASK);
 
@@ -88,7 +88,7 @@ node_alive(const crm_node_t *node)
         return 1;
 
     } else if (is_not_set(node->processes, crm_get_cluster_proc())
-               && safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+               && !pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
         // Completely down cluster node: neither cluster member nor peer
         return -1;
     }
@@ -130,7 +130,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             /* This callback should not be called unless the state actually
              * changed, but here's a failsafe just in case.
              */
-            CRM_CHECK(safe_str_neq(data, node->state), return);
+            CRM_CHECK(!pcmk__str_eq(data, node->state, pcmk__str_casei),
+                      return);
 
             crm_info("%s node %s is now %s (was %s)",
                      (is_remote? "Remote" : "Cluster"),

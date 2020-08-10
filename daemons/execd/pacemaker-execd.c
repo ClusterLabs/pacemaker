@@ -472,7 +472,7 @@ main(int argc, char **argv, char **envp)
     }
 
     option = pcmk__env_option("logfile");
-    if(option && safe_str_neq(option, "none")) {
+    if(option && !pcmk__str_eq(option, "none", pcmk__str_casei)) {
         setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
 
         if (pcmk__env_option_enabled(crm_system_name, "debug")) {

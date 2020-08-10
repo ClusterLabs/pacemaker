@@ -885,7 +885,7 @@ controld_rc2event(lrmd_event_data_t *event, int rc)
 void
 controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
 {
-    if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+    if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
@@ -1552,7 +1552,7 @@ handle_refresh_op(lrm_state_t *lrm_state, const char *user_name,
     fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
     crm_info("Forced a local resource history refresh: call=%d", rc);
 
-    if (safe_str_neq(CRM_SYSTEM_CRMD, from_sys)) {
+    if (!pcmk__str_eq(CRM_SYSTEM_CRMD, from_sys, pcmk__str_casei)) {
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, fragment, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
                                         fsa_our_uuid);
@@ -1742,7 +1742,8 @@ do_lrm_invoke(long long action,
     bool crm_rsc_delete = FALSE;
 
     target_node = lrm_op_target(input->xml);
-    is_remote_node = safe_str_neq(target_node, fsa_our_uname);
+    is_remote_node = !pcmk__str_eq(target_node, fsa_our_uname,
+                                   pcmk__str_casei);
 
     lrm_state = lrm_state_find(target_node);
     if ((lrm_state == NULL) && is_remote_node) {
@@ -1760,7 +1761,7 @@ do_lrm_invoke(long long action,
 
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
     from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
-    if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+    if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
 #if ENABLE_ACL
@@ -1772,7 +1773,7 @@ do_lrm_invoke(long long action,
 #endif
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
-        if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+        if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
             crm_rsc_delete = TRUE; // from crm_resource
         }
         operation = CRMD_ACTION_DELETE;
@@ -1803,7 +1804,8 @@ do_lrm_invoke(long long action,
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
         xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
-        gboolean create_rsc = safe_str_neq(operation, CRMD_ACTION_DELETE);
+        gboolean create_rsc = !pcmk__str_eq(operation, CRMD_ACTION_DELETE,
+                                            pcmk__str_casei);
         int rc;
 
         // We can't return anything meaningful without a resource ID
@@ -1981,7 +1983,7 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     }
 #endif
 
-    if (safe_str_neq(operation, RSC_STOP)) {
+    if (!pcmk__str_eq(operation, RSC_STOP, pcmk__str_casei)) {
         op->params = params;
 
     } else {
@@ -2260,7 +2262,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     } else if (fsa_state != S_NOT_DC
                && fsa_state != S_POLICY_ENGINE /* Recalculating */
                && fsa_state != S_TRANSITION_ENGINE
-               && safe_str_neq(operation, CRMD_ACTION_STOP)) {
+               && !pcmk__str_eq(operation, CRMD_ACTION_STOP, pcmk__str_casei)) {
         send_nack = TRUE;
     }
 
@@ -2824,7 +2826,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     }
 
     if (lrm_state) {
-        if (safe_str_neq(op->op_type, RSC_METADATA)) {
+        if (!pcmk__str_eq(op->op_type, RSC_METADATA, pcmk__str_casei)) {
             crmd_alert_resource_op(lrm_state->node_name, op);
         } else if (rsc && (op->rc == PCMK_OCF_OK)) {
             char *metadata = unescape_newlines(op->output);
