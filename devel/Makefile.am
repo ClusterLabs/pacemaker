@@ -35,8 +35,7 @@ EXTRA_DIST		= $(EXTRA_SCRIPTS) \
 # ref-passed-variables-inited.cocci seems to be returning some false positives around
 # GHashTableIters, so it is disabled for the moment.
 COCCI_FILES ?= coccinelle/string-empty.cocci \
-			   coccinelle/string-null-matches.cocci \
-			   coccinelle/string-replacements.cocci
+			   coccinelle/string-null-matches.cocci
 
 cocci:
 	for f in $(COCCI_FILES); do \

@@ -262,21 +262,6 @@ crm_get_msec(const char *input)
 }
 
 gboolean
-safe_str_neq(const char *a, const char *b)
-{
-    if (a == b) {
-        return FALSE;
-
-    } else if (a == NULL || b == NULL) {
-        return TRUE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
-gboolean
 crm_is_true(const char *s)
 {
     gboolean ret = FALSE;
@@ -322,26 +307,6 @@ crm_strip_trailing_newline(char *str)
     }
 
     return str;
-}
-
-gboolean
-crm_str_eq(const char *a, const char *b, gboolean use_case)
-{
-    if (use_case) {
-        return g_strcmp0(a, b) == 0;
-
-        /* TODO - Figure out which calls, if any, really need to be case independent */
-    } else if (a == b) {
-        return TRUE;
-
-    } else if (a == NULL || b == NULL) {
-        /* shouldn't be comparing NULLs */
-        return FALSE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return TRUE;
-    }
-    return FALSE;
 }
 
 /*!
@@ -849,4 +814,47 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
     } else {
         return strcmp(s1, s2);
     }
+}
+
+// Deprecated functions kept only for backward API compatibility
+
+gboolean safe_str_neq(const char *a, const char *b);
+
+gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean
+safe_str_neq(const char *a, const char *b)
+{
+    if (a == b) {
+        return FALSE;
+
+    } else if (a == NULL || b == NULL) {
+        return TRUE;
+
+    } else if (strcasecmp(a, b) == 0) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean
+crm_str_eq(const char *a, const char *b, gboolean use_case)
+{
+    if (use_case) {
+        return g_strcmp0(a, b) == 0;
+
+        /* TODO - Figure out which calls, if any, really need to be case independent */
+    } else if (a == b) {
+        return TRUE;
+
+    } else if (a == NULL || b == NULL) {
+        /* shouldn't be comparing NULLs */
+        return FALSE;
+
+    } else if (strcasecmp(a, b) == 0) {
+        return TRUE;
+    }
+    return FALSE;
 }
