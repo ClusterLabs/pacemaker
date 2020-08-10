@@ -69,6 +69,16 @@ typedef int (*pcmk__message_fn_t)(pcmk__output_t *out, va_list args);
  * then passing that table to pcmk__register_messages().  Separate handlers
  * can be defined for the same message, but for different formats (xml vs.
  * text).  Unknown formats will be ignored.
+ *
+ * Additionally, a "default" value for fmt_table can be used.  In this case,
+ * fn will be registered for all supported formats.  It is also possible to
+ * register a default and then override that registration with a format-specific
+ * function if necessary.
+ *
+ * \note The ::pcmk__message_entry_t table is processed in one pass, in order,
+ * from top to bottom.  This means later entries with the same message_id will
+ * override previous ones.  Thus, any default entry must come before any
+ * format-specific entries for the same message_id.
  */
 typedef struct pcmk__message_entry_s {
     /*!

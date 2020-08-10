@@ -141,7 +141,7 @@ pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table) {
     pcmk__message_entry_t *entry;
 
     for (entry = table; entry->message_id != NULL; entry++) {
-        if (safe_str_eq(out->fmt_name, entry->fmt_name)) {
+        if (pcmk__str_any_of(entry->fmt_name, "default", out->fmt_name, NULL)) {
             pcmk__register_message(out, entry->message_id, entry->fn);
         }
     }
