@@ -671,6 +671,18 @@ pcmk__str_in_list(GList *lst, const gchar *s)
     return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a string matches any of a list of strings
+ *
+ * \param[in]     s    String to search for in \p ...
+ * \param[in]     ...  Strings to compare \p s against. Final argument
+ *                     must be \c NULL.
+ *
+ * \return \c true if \p s is found in \p ..., or \c false otherwise
+ * \note The match is case-insensitive. \p ... must contain at least one
+ *       argument (\c NULL).
+ */
 bool
 pcmk__str_any_of(const char *s, ...)
 {

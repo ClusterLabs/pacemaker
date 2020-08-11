@@ -222,6 +222,19 @@ gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 
+/*!
+ * \internal
+ * \def pcmk__str_none_of(s, ...)
+ * \brief Check whether a string matches none of a list of strings
+ *
+ * \param[in]     s    String to search for in \p ...
+ * \param[in]     ...  Strings to compare \p s against. Final argument
+ *                     must be \c NULL.
+ *
+ * \return \c true if \p s is not found in \p ..., or \c false otherwise
+ * \note The match is case-insensitive. \p ... must contain at least one
+ *       argument (\c NULL).
+ */
 #define pcmk__str_none_of(s, ...) !pcmk__str_any_of(s, __VA_ARGS__)
 
 /* Correctly displaying singular or plural is complicated; consider "1 node has"
