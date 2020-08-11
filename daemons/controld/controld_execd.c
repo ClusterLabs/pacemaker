@@ -244,7 +244,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
                   op->rsc_id, op->op_type, op->interval_ms);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
-    } else if (entry->recurring_op_list && pcmk__str_eq(op->op_type, RSC_STATUS, pcmk__str_casei) == FALSE) {
+    } else if (entry->recurring_op_list && !pcmk__str_eq(op->op_type, RSC_STATUS, pcmk__str_casei)) {
         crm_trace("Dropping %d recurring ops because of: " PCMK__OP_FMT,
                   g_list_length(entry->recurring_op_list), op->rsc_id,
                   op->op_type, op->interval_ms);

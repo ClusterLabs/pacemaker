@@ -596,7 +596,7 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
     }
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if(source == NULL || pcmk__str_eq("host", source, pcmk__str_casei) == FALSE) {
+    if(source == NULL || !pcmk__str_eq("host", source, pcmk__str_casei)) {
         return g_hash_table_lookup(node->details->attrs, name);
     }
 

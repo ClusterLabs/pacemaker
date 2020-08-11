@@ -836,7 +836,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = ID(xml_tag);
 
-        if (pcmk__str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, pcmk__str_none) == FALSE) {
+        if (!pcmk__str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, pcmk__str_none)) {
             continue;
         }
 
@@ -851,7 +851,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 
             const char *obj_ref = ID(xml_obj_ref);
 
-            if (pcmk__str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, pcmk__str_none) == FALSE) {
+            if (!pcmk__str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, pcmk__str_none)) {
                 continue;
             }
 
@@ -945,7 +945,7 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child_element(xml_tickets); xml_obj != NULL;
          xml_obj = __xml_next_element(xml_obj)) {
 
-        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, pcmk__str_none) == FALSE) {
+        if (!pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, pcmk__str_none)) {
             continue;
         }
         unpack_ticket_state(xml_obj, data_set);
@@ -961,7 +961,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     xmlNode *attrs = NULL;
     pe_resource_t *rsc = NULL;
 
-    if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none) == FALSE) {
+    if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
         return;
     }
 
@@ -1032,7 +1032,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
         pe_node_t *this_node = NULL;
         bool process = FALSE;
 
-        if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none) == FALSE) {
+        if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             continue;
         }
 

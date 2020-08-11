@@ -515,7 +515,7 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
     options.validate_cmdline = TRUE;
     options.require_resource = FALSE;
 
-    if(pcmk__str_eq(option_name, "--provider", pcmk__str_casei) == TRUE) {
+    if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
         if (options.v_provider) {
            free(options.v_provider);
         }

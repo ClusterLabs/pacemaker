@@ -329,7 +329,7 @@ process_ping_reply(xmlNode *reply)
         }
 
         crm_trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
-        if(pcmk__str_eq(ping_digest, digest, pcmk__str_casei) == FALSE) {
+        if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
             xmlNode *remote_cib = get_message_xml(pong, F_CIB_CALLDATA);
 
             crm_notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s %p",
