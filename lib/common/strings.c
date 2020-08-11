@@ -79,8 +79,7 @@ scan_ll(const char *text, long long *result, char **end_text)
                     "No digits found", text);
         }
 
-        if ((end_text == NULL) && (local_end_text != NULL)
-            && (local_end_text[0] != '\0')) {
+        if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
             crm_warn("Characters left over after parsing '%s': '%s'",
                      text, local_end_text);
         }
