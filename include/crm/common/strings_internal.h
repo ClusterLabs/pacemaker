@@ -16,6 +16,13 @@
 
 /* internal generic string functions (from strings.c) */
 
+enum pcmk__str_flags {
+    pcmk__str_none          = 0,
+    pcmk__str_casei         = 1 << 0,
+    pcmk__str_null_matches  = 1 << 1,
+    pcmk__str_regex         = 1 << 2
+};
+
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
 bool pcmk__starts_with(const char *str, const char *prefix);
@@ -29,6 +36,14 @@ int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end
 gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
+
+int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
+
+static inline bool
+pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)
+{
+    return pcmk__strcmp(s1, s2, flags) == 0;
+}
 
 /* Correctly displaying singular or plural is complicated; consider "1 node has"
  * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.
