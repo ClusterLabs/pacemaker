@@ -247,7 +247,7 @@ apply_include(const gchar *includes, GError **error) {
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);
             }
-        } else if (pcmk__str_eq(*s, "default", pcmk__str_none) || pcmk__str_eq(*s, "defaults", pcmk__str_none)) {
+        } else if (pcmk__str_any_of(*s, "default", "defaults", NULL)) {
             show |= default_includes(output_format);
         } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
             show = 0;

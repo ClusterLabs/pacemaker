@@ -532,9 +532,9 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 
 gboolean
 attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_eq(option_name, "-m", pcmk__str_none) || pcmk__str_eq(option_name, "--meta", pcmk__str_none)) {
+    if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
         options.attr_set_type = XML_TAG_META_SETS;
-    } else if (pcmk__str_eq(option_name, "-z", pcmk__str_none) || pcmk__str_eq(option_name, "--utilization", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
         options.attr_set_type = XML_TAG_UTILIZATION;
     }
 
@@ -565,7 +565,7 @@ class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 
 gboolean
 cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_eq(option_name, "-C", pcmk__str_none) || pcmk__str_eq(option_name, "--cleanup", pcmk__str_none)) {
+    if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
         options.rsc_cmd = 'C';
     } else {
         options.rsc_cmd = 'R';
@@ -622,25 +622,25 @@ fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_eq(option_name, "-U", pcmk__str_none) || pcmk__str_eq(option_name, "--clear", pcmk__str_none)) {
+    if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'U';
-    } else if (pcmk__str_eq(option_name, "-B", pcmk__str_none) || pcmk__str_eq(option_name, "--ban", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'B';
-    } else if (pcmk__str_eq(option_name, "-M", pcmk__str_none) || pcmk__str_eq(option_name, "--move", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'M';
-    } else if (pcmk__str_eq(option_name, "-q", pcmk__str_none) || pcmk__str_eq(option_name, "--query-xml", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
         options.rsc_cmd = 'q';
-    } else if (pcmk__str_eq(option_name, "-w", pcmk__str_none) || pcmk__str_eq(option_name, "--query-xml-raw", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
         options.rsc_cmd = 'w';
-    } else if (pcmk__str_eq(option_name, "-W", pcmk__str_none) || pcmk__str_eq(option_name, "--locate", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'W';
-    } else if (pcmk__str_eq(option_name, "-A", pcmk__str_none) || pcmk__str_eq(option_name, "--stack", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'A';
     } else {
@@ -653,7 +653,7 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_eq(option_name, "-g", pcmk__str_none) || pcmk__str_eq(option_name, "--get-parameter", pcmk__str_none)) {
+    if (pcmk__str_any_of(option_name, "-g", "--get-parameter", NULL)) {
         options.rsc_cmd = 'g';
     } else {
         options.rsc_cmd = 'G';
@@ -670,13 +670,13 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 
 gboolean
 list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_eq(option_name, "-c", pcmk__str_none) || pcmk__str_eq(option_name, "--list-cts", pcmk__str_none)) {
+    if (pcmk__str_any_of(option_name, "-c", "--list-cts", NULL)) {
         options.rsc_cmd = 'c';
-    } else if (pcmk__str_eq(option_name, "-L", pcmk__str_none) || pcmk__str_eq(option_name, "--list", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-L", "--list", NULL)) {
         options.rsc_cmd = 'L';
-    } else if (pcmk__str_eq(option_name, "-l", pcmk__str_none) || pcmk__str_eq(option_name, "--list-raw", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-l", "--list-raw", NULL)) {
         options.rsc_cmd = 'l';
-    } else if (pcmk__str_eq(option_name, "-O", pcmk__str_none) || pcmk__str_eq(option_name, "--list-operations", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
         options.rsc_cmd = 'O';
     } else {
         options.rsc_cmd = 'o';
@@ -688,7 +688,7 @@ list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (pcmk__str_eq(option_name, "-p", pcmk__str_none) || pcmk__str_eq(option_name, "--set-parameter", pcmk__str_none)) {
+    if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
         options.rsc_cmd = 'p';
     } else {
         options.rsc_cmd = 'd';

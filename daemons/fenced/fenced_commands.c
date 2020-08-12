@@ -2059,8 +2059,7 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
         crm_trace("Metadata query for %s", cmd->device);
         output = NULL;
 
-    } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_none) ||
-               pcmk__str_eq(cmd->action, "list", pcmk__str_none) || pcmk__str_eq(cmd->action, "status", pcmk__str_none)) {
+    } else if (pcmk__str_any_of(cmd->action, "monitor", "list", "status", NULL)) {
         crm_trace("Never broadcast '%s' replies", cmd->action);
 
     } else if (!stand_alone && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
@@ -2146,8 +2145,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     device = g_hash_table_lookup(device_list, cmd->device);
     if (device) {
         if (!device->verified && (rc == pcmk_ok) &&
-            (pcmk__str_eq(cmd->action, "list", pcmk__str_casei) ||
-             pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei) || pcmk__str_eq(cmd->action, "status", pcmk__str_casei))) {
+            (pcmk__strcase_any_of(cmd->action, "list", "monitor", "status", NULL))) {
 
             device->verified = TRUE;
         }

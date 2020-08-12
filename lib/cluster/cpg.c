@@ -782,8 +782,7 @@ text2msg_type(const char *text)
         type = crm_msg_ais;
     } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_casei)) {
         type = crm_msg_cib;
-    } else if (pcmk__str_eq(text, CRM_SYSTEM_CRMD, pcmk__str_casei)
-               || pcmk__str_eq(text, CRM_SYSTEM_DC, pcmk__str_casei)) {
+    } else if (pcmk__strcase_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
         type = crm_msg_crmd;
     } else if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         type = crm_msg_te;

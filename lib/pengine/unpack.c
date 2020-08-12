@@ -2211,7 +2211,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
         } else if ((implied_monitor_start <= *stop_index) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
             const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
 
-            if (pcmk__str_eq(rc, "0", pcmk__str_casei) || pcmk__str_eq(rc, "8", pcmk__str_casei)) {
+            if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
             }
         } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {

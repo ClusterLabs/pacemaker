@@ -607,9 +607,7 @@ pcmk_hostname()
 
 bool
 pcmk_str_is_infinity(const char *s) {
-    return pcmk__str_eq(s, CRM_INFINITY_S, pcmk__str_none) || pcmk__str_eq(s,
-                                                                           CRM_PLUS_INFINITY_S,
-                                                                           pcmk__str_none);
+    return pcmk__str_any_of(s, CRM_INFINITY_S, CRM_PLUS_INFINITY_S, NULL);
 }
 
 bool

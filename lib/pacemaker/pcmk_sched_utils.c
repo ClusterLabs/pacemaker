@@ -720,8 +720,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    if (pcmk__str_eq(op->op_type, CRMD_ACTION_MIGRATE, pcmk__str_none)
-        || pcmk__str_eq(op->op_type, CRMD_ACTION_MIGRATED, pcmk__str_none)) {
+    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */

@@ -1168,8 +1168,7 @@ clone_child_action(pe_action_t * action)
     enum action_tasks result = no_action;
     pe_resource_t *child = (pe_resource_t *) action->rsc->children->data;
 
-    if (pcmk__str_eq(action->task, "notify", pcmk__str_casei)
-        || pcmk__str_eq(action->task, "notified", pcmk__str_casei)) {
+    if (pcmk__strcase_any_of(action->task, "notify", "notified", NULL)) {
 
         /* Find the action we're notifying about instead */
 

@@ -96,8 +96,7 @@ print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
                 fprintf(stdout, ", ");
             }
             fprintf(stdout, "%s=", name);
-            if (pcmk__str_eq(name, "last-granted", pcmk__str_none)
-                || pcmk__str_eq(name, "expires", pcmk__str_none)) {
+            if (pcmk__str_any_of(name, "last-granted", "expires", NULL)) {
                 print_date(crm_parse_int(value, 0));
             } else {
                 fprintf(stdout, "%s", value);
