@@ -404,7 +404,7 @@ pcmk__valid_positive_number(const char *value)
 bool
 pcmk__valid_quorum(const char *value)
 {
-    return pcmk__str_any_of(value, "stop", "freeze", "ignore", "demote", "suicide", NULL);
+    return pcmk__strcase_any_of(value, "stop", "freeze", "ignore", "demote", "suicide", NULL);
 }
 
 bool

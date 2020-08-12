@@ -697,7 +697,7 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
 static bool
 op_cannot_recur(const char *name)
 {
-    return pcmk__str_any_of(name, RSC_STOP, RSC_START, RSC_DEMOTE, RSC_PROMOTE, NULL);
+    return pcmk__strcase_any_of(name, RSC_STOP, RSC_START, RSC_DEMOTE, RSC_PROMOTE, NULL);
 }
 
 static void

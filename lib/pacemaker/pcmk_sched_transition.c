@@ -278,9 +278,9 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
                 "  Please supply the class and type to continue\n", resource, ID(cib_node));
         return NULL;
 
-    } else if (!pcmk__str_any_of(rclass, PCMK_RESOURCE_CLASS_OCF, PCMK_RESOURCE_CLASS_STONITH,
-                                PCMK_RESOURCE_CLASS_SERVICE, PCMK_RESOURCE_CLASS_UPSTART,
-                                PCMK_RESOURCE_CLASS_SYSTEMD, PCMK_RESOURCE_CLASS_LSB, NULL)) {
+    } else if (!pcmk__strcase_any_of(rclass, PCMK_RESOURCE_CLASS_OCF, PCMK_RESOURCE_CLASS_STONITH,
+                                     PCMK_RESOURCE_CLASS_SERVICE, PCMK_RESOURCE_CLASS_UPSTART,
+                                     PCMK_RESOURCE_CLASS_SYSTEMD, PCMK_RESOURCE_CLASS_LSB, NULL)) {
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
         return NULL;
 
@@ -629,7 +629,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     char *uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
     const char *router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if (pcmk__str_any_of(operation, CRM_OP_PROBED, CRM_OP_REPROBE, NULL)) {
+    if (pcmk__strcase_any_of(operation, CRM_OP_PROBED, CRM_OP_REPROBE, NULL)) {
         crm_info("Skipping %s op for %s", operation, node);
         goto done;
     }
@@ -655,7 +655,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         }
     }
 
-    if (pcmk__str_any_of(operation, "delete", RSC_METADATA, NULL)) {
+    if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
         quiet_log(" * Resource action: %-15s %s on %s\n", resource, operation, node);
         goto done;
     }

@@ -1362,7 +1362,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
         crm_info("Node %s is active", this_node->details->uname);
 
-    } else if (pcmk__str_any_of(join, CRMD_JOINSTATE_PENDING, CRMD_JOINSTATE_DOWN, NULL)) {
+    } else if (pcmk__strcase_any_of(join, CRMD_JOINSTATE_PENDING, CRMD_JOINSTATE_DOWN, NULL)) {
         crm_info("Node %s is not ready to run resources", this_node->details->uname);
         this_node->details->standby = TRUE;
         this_node->details->pending = TRUE;
@@ -2205,7 +2205,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
             && pcmk__str_eq(status, "0", pcmk__str_casei)) {
             *stop_index = counter;
 
-        } else if (pcmk__str_any_of(task, CRMD_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
+        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
             *start_index = counter;
 
         } else if ((implied_monitor_start <= *stop_index) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
@@ -2214,7 +2214,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
             if (pcmk__str_eq(rc, "0", pcmk__str_casei) || pcmk__str_eq(rc, "8", pcmk__str_casei)) {
                 implied_monitor_start = counter;
             }
-        } else if (pcmk__str_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {
+        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {
             implied_clone_start = counter;
         }
     }

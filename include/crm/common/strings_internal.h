@@ -35,6 +35,7 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
 int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
 gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
+bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);

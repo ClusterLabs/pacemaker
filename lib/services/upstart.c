@@ -447,7 +447,7 @@ upstart_job_exec(svc_action_t * op)
         goto cleanup;
     }
 
-    if (pcmk__str_any_of(op->action, "monitor", "status", NULL)) {
+    if (pcmk__strcase_any_of(op->action, "monitor", "status", NULL)) {
         char *path = get_first_instance(job, op->timeout);
 
         op->rc = PCMK_OCF_NOT_RUNNING;

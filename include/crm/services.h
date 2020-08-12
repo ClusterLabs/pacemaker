@@ -404,7 +404,7 @@ gboolean services_alert_async(svc_action_t *action,
     services_get_ocf_exitcode(const char *action, int lsb_exitcode)
     {
         /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-        if (action && !pcmk__str_any_of(action, "status", "monitor", NULL)) {
+        if (action && !pcmk__strcase_any_of(action, "status", "monitor", NULL)) {
             if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
                 return PCMK_OCF_UNKNOWN_ERROR;
             }

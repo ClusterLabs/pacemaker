@@ -1657,7 +1657,7 @@ get_flags(const char *id, enum pe_order_kind kind,
     } else if (kind == pe_order_kind_mandatory) {
         crm_trace("Upgrade %s: implies right", id);
         flags |= pe_order_implies_then;
-        if (pcmk__str_any_of(action_first, RSC_START, RSC_PROMOTE, NULL)) {
+        if (pcmk__strcase_any_of(action_first, RSC_START, RSC_PROMOTE, NULL)) {
             crm_trace("Upgrade %s: runnable", id);
             flags |= pe_order_runnable_left;
         }

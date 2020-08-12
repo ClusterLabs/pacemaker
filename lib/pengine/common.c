@@ -23,20 +23,20 @@ gboolean was_processing_warning = FALSE;
 static bool
 check_health(const char *value)
 {
-    return pcmk__str_any_of(value, "none", "custom", "only-green", "progressive",
+    return pcmk__strcase_any_of(value, "none", "custom", "only-green", "progressive",
                            "migrate-on-red", NULL);
 }
 
 static bool
 check_stonith_action(const char *value)
 {
-    return pcmk__str_any_of(value, "reboot", "poweroff", "off", NULL);
+    return pcmk__strcase_any_of(value, "reboot", "poweroff", "off", NULL);
 }
 
 static bool
 check_placement_strategy(const char *value)
 {
-    return pcmk__str_any_of(value, "default", "utilization", "minimal",
+    return pcmk__strcase_any_of(value, "default", "utilization", "minimal",
                            "balanced", NULL);
 }
 

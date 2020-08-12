@@ -1858,8 +1858,8 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
     } else if (pcmk__str_eq(rsc_action, "force-stop", pcmk__str_casei)) {
         action = rsc_action+6;
 
-    } else if (pcmk__str_any_of(rsc_action, "force-start", "force-demote",
-                               "force-promote", NULL)) {
+    } else if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
+                                    "force-promote", NULL)) {
         action = rsc_action+6;
 
         if(pe_rsc_is_clone(rsc)) {

@@ -225,8 +225,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         }
         entry->last = lrmd_copy_event(op);
 
-        if (op->params && pcmk__str_any_of(op->op_type, CRMD_ACTION_START,
-                                          "reload", CRMD_ACTION_STATUS, NULL)) {
+        if (op->params && pcmk__strcase_any_of(op->op_type, CRMD_ACTION_START,
+                                               "reload", CRMD_ACTION_STATUS, NULL)) {
             if (entry->stop_params) {
                 g_hash_table_destroy(entry->stop_params);
             }
@@ -1590,7 +1590,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
     crm_notice("Forcing the status of all resources to be redetected");
     force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
 
-    if (!pcmk__str_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
+    if (!pcmk__strcase_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
 
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
@@ -1797,7 +1797,7 @@ do_lrm_invoke(long long action,
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);
 
-    } else if (pcmk__str_any_of(CRM_OP_REPROBE, operation, crm_op, NULL)) {
+    } else if (pcmk__strcase_any_of(CRM_OP_REPROBE, operation, crm_op, NULL)) {
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
                           is_remote_node);
 
@@ -1977,8 +1977,8 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
 
 #if ENABLE_VERSIONED_ATTRS
     if (lrm_state && !is_remote_lrmd_ra(NULL, NULL, rsc_id)
-        && !pcmk__str_any_of(op_type, CRMD_ACTION_METADATA, CRMD_ACTION_DELETE,
-                              NULL)) {
+        && !pcmk__strcase_any_of(op_type, CRMD_ACTION_METADATA, CRMD_ACTION_DELETE,
+                                 NULL)) {
         resolve_versioned_parameters(lrm_state, rsc_id, rsc_op, params);
     }
 #endif
@@ -2023,7 +2023,7 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     op->user_data = strdup(transition);
 
     if (op->interval_ms != 0) {
-        if (pcmk__str_any_of(operation, CRMD_ACTION_START, CRMD_ACTION_STOP, NULL)) {
+        if (pcmk__strcase_any_of(operation, CRMD_ACTION_START, CRMD_ACTION_STOP, NULL)) {
             crm_err("Start and Stop actions cannot have an interval: %u",
                     op->interval_ms);
             op->interval_ms = 0;

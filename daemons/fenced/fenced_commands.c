@@ -124,7 +124,7 @@ get_action_delay_max(stonith_device_t * device, const char * action)
     const char *value = NULL;
     int delay_max = 0;
 
-    if (!pcmk__str_any_of(action, "off", "reboot", NULL)) {
+    if (!pcmk__strcase_any_of(action, "off", "reboot", NULL)) {
         return 0;
     }
 
@@ -142,7 +142,7 @@ get_action_delay_base(stonith_device_t * device, const char * action)
     const char *value = NULL;
     int delay_base = 0;
 
-    if (!pcmk__str_any_of(action, "off", "reboot", NULL)) {
+    if (!pcmk__strcase_any_of(action, "off", "reboot", NULL)) {
         return 0;
     }
 
@@ -1738,7 +1738,7 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     g_hash_table_iter_init(&gIter, device_list);
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&device)) {
         check_type = target_list_type(device);
-        if (pcmk__str_any_of(check_type, "status", "dynamic-list", NULL)) {
+        if (pcmk__strcase_any_of(check_type, "status", "dynamic-list", NULL)) {
             devices_needing_async_query++;
         }
     }

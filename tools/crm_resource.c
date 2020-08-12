@@ -964,8 +964,8 @@ list_providers(const char *command, const char *spec, crm_exit_t *exit_code)
     lrmd_list_t *iter = NULL;
     lrmd_t *lrmd_conn = lrmd_api_new();
 
-    if (pcmk__str_any_of(command, "--list-ocf-providers",
-                        "--list-ocf-alternatives", NULL)) {
+    if (pcmk__strcase_any_of(command, "--list-ocf-providers",
+                             "--list-ocf-alternatives", NULL)) {
         rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, spec, &list);
         text = "OCF providers";
 
@@ -1378,8 +1378,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (pcmk__str_any_of(options.extra_option, "--list-ocf-providers", "--list-ocf-alternatives",
-                         "--list-standards", NULL)) {
+    if (pcmk__strcase_any_of(options.extra_option, "--list-ocf-providers", "--list-ocf-alternatives",
+                             "--list-standards", NULL)) {
         rc = list_providers(options.extra_option, options.extra_arg, &exit_code);
         goto done;
     } else if (pcmk__str_eq(options.extra_option, "--show-metadata", pcmk__str_casei)) {

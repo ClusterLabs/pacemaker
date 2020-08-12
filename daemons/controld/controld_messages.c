@@ -375,8 +375,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = 0;
 
         } else if (is_for_crm) {
-            if (pcmk__str_any_of(task, CRM_OP_NODE_INFO,
-                                 PCMK__CONTROLD_CMD_NODES, NULL)) {
+            if (pcmk__strcase_any_of(task, CRM_OP_NODE_INFO,
+                                     PCMK__CONTROLD_CMD_NODES, NULL)) {
                 /* Node info requests do not specify a host, which is normally
                  * treated as "all hosts", because the whole point is that the
                  * client may not know the local node name. Always handle these
@@ -412,8 +412,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             crm_trace("Route message %s locally as DC request", ref);
             return FALSE; // More to be done by caller
 
-        } else if (originated_locally && !pcmk__str_any_of(sys_from, CRM_SYSTEM_PENGINE,
-                                                           CRM_SYSTEM_TENGINE, NULL)) {
+        } else if (originated_locally && !pcmk__strcase_any_of(sys_from, CRM_SYSTEM_PENGINE,
+                                                               CRM_SYSTEM_TENGINE, NULL)) {
 
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {

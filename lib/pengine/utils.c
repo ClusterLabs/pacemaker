@@ -697,7 +697,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 static bool
 valid_stop_on_fail(const char *value)
 {
-    return !pcmk__str_any_of(value, "standby", "demote", "stop", NULL);
+    return !pcmk__strcase_any_of(value, "standby", "demote", "stop", NULL);
 }
 
 static const char *
@@ -1099,7 +1099,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         }
     }
 
-    if (!pcmk__str_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
+    if (!pcmk__strcase_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
         value = "nothing (not start/promote)";
 
@@ -1144,7 +1144,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         action->on_fail = action_fail_standby;
         value = "node standby";
 
-    } else if (pcmk__str_any_of(value, "ignore", "nothing", NULL)) {
+    } else if (pcmk__strcase_any_of(value, "ignore", "nothing", NULL)) {
         action->on_fail = action_fail_ignore;
         value = "ignore";
 

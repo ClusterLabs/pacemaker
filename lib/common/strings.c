@@ -637,25 +637,45 @@ pcmk__str_in_list(GList *lst, const gchar *s)
     return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
 }
 
-bool
-pcmk__str_any_of(const char *s, ...)
+static bool
+str_any_of(bool casei, const char *s, va_list args)
 {
     bool rc = false;
-    va_list ap;
-
-    va_start(ap, s);
 
     while (1) {
-        const char *ele = va_arg(ap, const char *);
+        const char *ele = va_arg(args, const char *);
 
         if (ele == NULL) {
             break;
-        } else if (pcmk__str_eq(s, ele, pcmk__str_casei)) {
+        } else if (pcmk__str_eq(s, ele, casei ? pcmk__str_casei : pcmk__str_none)) {
             rc = true;
             break;
         }
     }
 
+    return rc;
+}
+
+bool
+pcmk__strcase_any_of(const char *s, ...)
+{
+    va_list ap;
+    bool rc;
+
+    va_start(ap, s);
+    rc = str_any_of(true, s, ap);
+    va_end(ap);
+    return rc;
+}
+
+bool
+pcmk__str_any_of(const char *s, ...)
+{
+    va_list ap;
+    bool rc;
+
+    va_start(ap, s);
+    rc = str_any_of(false, s, ap);
     va_end(ap);
     return rc;
 }

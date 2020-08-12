@@ -207,7 +207,7 @@ get_resource_type(const char *name)
     } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
         return pe_group;
 
-    } else if (pcmk__str_any_of(name, XML_CIB_TAG_INCARNATION, XML_CIB_TAG_MASTER, NULL)) {
+    } else if (pcmk__strcase_any_of(name, XML_CIB_TAG_INCARNATION, XML_CIB_TAG_MASTER, NULL)) {
         return pe_clone;
 
     } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {

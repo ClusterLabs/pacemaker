@@ -828,8 +828,8 @@ get_router_node(pe_action_t *action)
     }
 
     /* 1. before connection rsc moves. */
-    if (pcmk__str_any_of(task, "stop", "demote", "migrate_from", "migrate_to",
-                         NULL) && !partial_migration) {
+    if (pcmk__strcase_any_of(task, "stop", "demote", "migrate_from", "migrate_to",
+                             NULL) && !partial_migration) {
         router_node = began_on;
 
     /* 2. after connection rsc moves. */
@@ -955,7 +955,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
         /* Fencing makes the action's node and any hosted guest nodes down */
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
 
-        if (pcmk__str_any_of(fence, "off", "reboot", NULL)) {
+        if (pcmk__strcase_any_of(fence, "off", "reboot", NULL)) {
             xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
             add_node_to_xml_by_id(action->node->details->id, downed);
             pe_foreach_guest_node(data_set, action->node, add_node_to_xml, downed);
@@ -1391,7 +1391,7 @@ should_dump_action(pe_action_t *action)
     }
 
     if (is_set(action->flags, pe_action_pseudo) ||
-        pcmk__str_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN, NULL)) {
+        pcmk__strcase_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN, NULL)) {
         /* skip the next checks */
         return true;
     }

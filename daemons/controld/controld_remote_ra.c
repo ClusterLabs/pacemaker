@@ -415,7 +415,7 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (!pcmk__str_any_of(cmd->action, "start", "migrate_from", NULL)) {
+    if (!pcmk__strcase_any_of(cmd->action, "start", "migrate_from", NULL)) {
         return FALSE;
     }
     update_remaining_timeout(cmd);
@@ -597,8 +597,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
-    if (op->type == lrmd_event_connect && pcmk__str_any_of(cmd->action, "start",
-                                                          "migrate_from", NULL)) {
+    if (op->type == lrmd_event_connect && pcmk__strcase_any_of(cmd->action, "start",
+                                                               "migrate_from", NULL)) {
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
 
@@ -735,8 +735,8 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
-        if (pcmk__str_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
-                            XML_RSC_ATTR_REMOTE_RA_SERVER, NULL)) {
+        if (pcmk__strcase_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
+                                 XML_RSC_ATTR_REMOTE_RA_SERVER, NULL)) {
             server = tmp->value;
         } else if (pcmk__str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT, pcmk__str_casei)) {
             port = atoi(tmp->value);

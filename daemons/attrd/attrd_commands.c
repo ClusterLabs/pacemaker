@@ -590,8 +590,8 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     peer_won = attrd_check_for_new_writer(peer, xml);
 
-    if (pcmk__str_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
-                        PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
+    if (pcmk__strcase_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
+                             PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
         attrd_peer_update(peer, xml, host, FALSE);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_casei)) {
