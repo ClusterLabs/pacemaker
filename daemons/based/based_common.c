@@ -49,7 +49,7 @@ cib_prepare_common(xmlNode * root, const char *section)
     }
 
     /* grab the section specified for the command */
-    if (section != NULL && data != NULL && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)) {
+    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
         data = get_object_root(section, data);
     }
 

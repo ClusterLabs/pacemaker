@@ -607,10 +607,12 @@ pcmk_hostname()
 
 bool
 pcmk_str_is_infinity(const char *s) {
-    return crm_str_eq(s, CRM_INFINITY_S, TRUE) || crm_str_eq(s, CRM_PLUS_INFINITY_S, TRUE);
+    return pcmk__str_eq(s, CRM_INFINITY_S, pcmk__str_none) || pcmk__str_eq(s,
+                                                                           CRM_PLUS_INFINITY_S,
+                                                                           pcmk__str_none);
 }
 
 bool
 pcmk_str_is_minus_infinity(const char *s) {
-    return crm_str_eq(s, CRM_MINUS_INFINITY_S, TRUE);
+    return pcmk__str_eq(s, CRM_MINUS_INFINITY_S, pcmk__str_none);
 }

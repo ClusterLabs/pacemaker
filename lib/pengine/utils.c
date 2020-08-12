@@ -728,7 +728,7 @@ unpack_operation_on_fail(pe_action_t * action)
         for (operation = __xml_first_child_element(action->rsc->ops_xml);
              operation && !value; operation = __xml_next_element(operation)) {
 
-            if (!crm_str_eq((const char *)operation->name, "op", TRUE)) {
+            if (!pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 continue;
             }
             name = crm_element_value(operation, "name");
@@ -788,7 +788,7 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
     for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
 
-        if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
             name = crm_element_value(operation, "name");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
             value = crm_element_value(operation, "enabled");
@@ -1294,7 +1294,7 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
   retry:
     for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
-        if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
             name = crm_element_value(operation, "name");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
             value = crm_element_value(operation, "enabled");
@@ -2362,7 +2362,7 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
         } else if (is_not_set(candidate->flags, pe_rsc_fence_device)) {
             continue;
 
-        } else if (crm_str_eq(provides, "unfencing", FALSE) || crm_str_eq(requires, "unfencing", FALSE)) {
+        } else if (pcmk__str_eq(provides, "unfencing", pcmk__str_casei) || pcmk__str_eq(requires, "unfencing", pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
         }
     }
@@ -2599,7 +2599,7 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     for (gIter = tag->refs; gIter != NULL; gIter = gIter->next) {
         const char *existing_ref = (const char *) gIter->data;
 
-        if (crm_str_eq(existing_ref, obj_ref, TRUE)){
+        if (pcmk__str_eq(existing_ref, obj_ref, pcmk__str_none)){
             is_existing = TRUE;
             break;
         }

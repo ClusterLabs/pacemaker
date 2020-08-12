@@ -108,7 +108,7 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
 
     for (action_set = __xml_first_child(xml_synapse); action_set != NULL;
          action_set = __xml_next(action_set)) {
-        if (crm_str_eq((const char *)action_set->name, "action_set", TRUE)) {
+        if (pcmk__str_eq((const char *)action_set->name, "action_set", pcmk__str_none)) {
             xmlNode *action = NULL;
 
             for (action = __xml_first_child(action_set); action != NULL;
@@ -131,7 +131,7 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     crm_trace("look for inputs in synapse %s", ID(xml_synapse));
 
     for (inputs = __xml_first_child(xml_synapse); inputs != NULL; inputs = __xml_next(inputs)) {
-        if (crm_str_eq((const char *)inputs->name, "inputs", TRUE)) {
+        if (pcmk__str_eq((const char *)inputs->name, "inputs", pcmk__str_none)) {
             xmlNode *trigger = NULL;
 
             for (trigger = __xml_first_child(inputs); trigger != NULL;
@@ -216,7 +216,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     }
 
     for (synapse = __xml_first_child(xml_graph); synapse != NULL; synapse = __xml_next(synapse)) {
-        if (crm_str_eq((const char *)synapse->name, "synapse", TRUE)) {
+        if (pcmk__str_eq((const char *)synapse->name, "synapse", pcmk__str_none)) {
             synapse_t *new_synapse = unpack_synapse(new_graph, synapse);
 
             if (new_synapse != NULL) {

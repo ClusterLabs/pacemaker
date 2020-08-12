@@ -544,16 +544,12 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     }
     /* just proceed state on sbd pinging us */
     if (from && strstr(from, "sbd")) {
-        if (crm_str_eq(pacemakerd_state,
-                       XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE,
-                       TRUE)) {
+        if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE, pcmk__str_none)) {
             if (pcmk__get_sbd_sync_resource_startup()) {
                 crm_notice("Shutdown-complete-state passed to SBD.");
             }
             shutdown_complete_state_reported_to = c->pid;
-        } else if (crm_str_eq(pacemakerd_state,
-                              XML_PING_ATTR_PACEMAKERDSTATE_WAITPING,
-                              TRUE)) {
+        } else if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_WAITPING, pcmk__str_none)) {
             crm_notice("Received startup-trigger from SBD.");
             pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
             mainloop_set_trigger(startup_trigger);
@@ -577,16 +573,16 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     task = crm_element_value(msg, F_CRM_TASK);
-    if (crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
+    if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
         crm_notice("Shutting down in response to IPC request %s from %s",
                    crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
         pcmk_shutdown(15);
 
-    } else if (crm_str_eq(task, CRM_OP_RM_NODE_CACHE, TRUE)) {
+    } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
         crm_trace("Ignoring IPC request to purge node "
                   "because peer cache is not used");
 
-    } else if (crm_str_eq(task, CRM_OP_PING, TRUE)) {
+    } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
         pcmk_handle_ping_request(c, msg, id);
 
     } else {

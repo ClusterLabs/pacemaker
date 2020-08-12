@@ -190,7 +190,7 @@ struct {
 static unsigned int
 find_section_bit(const char *name) {
     for (int i = 0; sections[i].name != NULL; i++) {
-        if (crm_str_eq(sections[i].name, name, FALSE)) {
+        if (pcmk__str_eq(sections[i].name, name, pcmk__str_casei)) {
             return sections[i].bit;
         }
     }
@@ -206,9 +206,9 @@ apply_exclude(const gchar *excludes, GError **error) {
     for (char **s = parts; *s != NULL; s++) {
         unsigned int bit = find_section_bit(*s);
 
-        if (crm_str_eq(*s, "all", TRUE)) {
+        if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
-        } else if (crm_str_eq(*s, "none", TRUE)) {
+        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (bit != 0) {
             show &= ~bit;
@@ -235,7 +235,7 @@ apply_include(const gchar *includes, GError **error) {
     for (char **s = parts; *s != NULL; s++) {
         unsigned int bit = find_section_bit(*s);
 
-        if (crm_str_eq(*s, "all", TRUE)) {
+        if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (pcmk__starts_with(*s, "bans")) {
             show |= mon_show_bans;
@@ -247,9 +247,9 @@ apply_include(const gchar *includes, GError **error) {
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);
             }
-        } else if (crm_str_eq(*s, "default", TRUE) || crm_str_eq(*s, "defaults", TRUE)) {
+        } else if (pcmk__str_eq(*s, "default", pcmk__str_none) || pcmk__str_eq(*s, "defaults", pcmk__str_none)) {
             show |= default_includes(output_format);
-        } else if (crm_str_eq(*s, "none", TRUE)) {
+        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
             show = 0;
         } else if (bit != 0) {
             show |= bit;

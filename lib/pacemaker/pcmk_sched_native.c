@@ -667,7 +667,7 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
     for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
 
-        if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
             value = crm_element_value(operation, "name");
             if (!pcmk__str_eq(value, name, pcmk__str_casei)) {
                 continue;
@@ -890,7 +890,7 @@ Recurring(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working
              operation != NULL;
              operation = __xml_next_element(operation)) {
 
-            if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+            if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 RecurringOp(rsc, start, node, operation, data_set);
             }
         }
@@ -1100,7 +1100,7 @@ Recurring_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe
              operation != NULL;
              operation = __xml_next_element(operation)) {
 
-            if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+            if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 RecurringOp_Stopped(rsc, start, node, operation, data_set);
             }
         }

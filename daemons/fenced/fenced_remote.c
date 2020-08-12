@@ -1040,7 +1040,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     /* For a RELAY operation, set fenced on the client. */
     operation = crm_element_value(request, F_STONITH_OPERATION);
 
-    if (crm_str_eq(operation, STONITH_OP_RELAY, TRUE)) {
+    if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         op->client_name = crm_strdup_printf("%s.%lu", crm_system_name,
                                          (unsigned long) getpid());
     } else {
@@ -1151,7 +1151,7 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
 
     /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
     operation = crm_element_value(request, F_STONITH_OPERATION);
-    if (crm_str_eq(operation, STONITH_OP_RELAY, TRUE)) {
+    if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         relay_op_id = crm_element_value(request, F_STONITH_REMOTE_OP_ID);
         if (relay_op_id) {
             crm_xml_add(query, F_STONITH_REMOTE_OP_ID_RELAY, relay_op_id);

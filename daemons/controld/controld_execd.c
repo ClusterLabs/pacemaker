@@ -101,7 +101,7 @@ history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
         lrmd_event_data_t *existing = iter->data;
 
         if ((op->interval_ms == existing->interval_ms)
-            && crm_str_eq(op->rsc_id, existing->rsc_id, TRUE)
+            && pcmk__str_eq(op->rsc_id, existing->rsc_id, pcmk__str_none)
             && pcmk__str_eq(op->op_type, existing->op_type, pcmk__str_casei)) {
 
             history->recurring_op_list = g_list_delete_link(history->recurring_op_list, iter);
@@ -471,7 +471,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 
             g_hash_table_iter_init(&hIter, lrm_state->pending_ops);
             while (g_hash_table_iter_next(&hIter, (gpointer*)&key, (gpointer*)&pending)) {
-                if (crm_str_eq(entry->id, pending->rsc_id, TRUE)) {
+                if (pcmk__str_eq(entry->id, pending->rsc_id, pcmk__str_none)) {
                     crm_notice("%sction %s (%s) incomplete at %s",
                                pending->interval_ms == 0 ? "A" : "Recurring a",
                                key, pending->op_key, when);
@@ -919,7 +919,7 @@ lrm_remove_deleted_rsc(gpointer key, gpointer value, gpointer user_data)
     struct delete_event_s *event = user_data;
     struct pending_deletion_op_s *op = value;
 
-    if (crm_str_eq(event->rsc, op->rsc, TRUE)) {
+    if (pcmk__str_eq(event->rsc, op->rsc, pcmk__str_none)) {
         notify_deleted(event->lrm_state, op->input, event->rsc, event->rc);
         return TRUE;
     }
@@ -932,7 +932,7 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
     const char *rsc = user_data;
     active_op_t *pending = value;
 
-    if (crm_str_eq(rsc, pending->rsc_id, TRUE)) {
+    if (pcmk__str_eq(rsc, pending->rsc_id, pcmk__str_none)) {
         crm_info("Removing op %s:%d for deleted resource %s",
                  pending->op_key, pending->call_id, rsc);
         return TRUE;
@@ -1200,7 +1200,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
     struct cancel_data *data = user_data;
     active_op_t *op = value;
 
-    if (crm_str_eq(op->op_key, data->key, TRUE)) {
+    if (pcmk__str_eq(op->op_key, data->key, pcmk__str_none)) {
         data->done = TRUE;
         remove = !cancel_op(data->lrm_state, data->rsc->id, key, op->call_id, data->remove);
     }
@@ -2129,7 +2129,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
     active_op_t *op = value;
 
     if ((op->interval_ms != 0)
-        && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
+        && pcmk__str_eq(op->rsc_id, event->rsc->id, pcmk__str_none)) {
 
         crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, (char*)key);
         remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
@@ -2561,7 +2561,7 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
         return FALSE;
     }
 
-    if (crm_str_eq(entry->failed->rsc_id, rsc_id, TRUE)
+    if (pcmk__str_eq(entry->failed->rsc_id, rsc_id, pcmk__str_none)
         && pcmk__str_eq(entry->failed->op_type, op_type, pcmk__str_casei)
         && entry->failed->interval_ms == interval_ms) {
         return TRUE;

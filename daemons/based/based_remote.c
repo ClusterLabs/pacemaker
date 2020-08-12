@@ -186,7 +186,7 @@ check_group_membership(const char *usr, const char *grp)
     }
 
     group = getgrgid(pwd->pw_gid);
-    if (group != NULL && crm_str_eq(grp, group->gr_name, TRUE)) {
+    if (group != NULL && pcmk__str_eq(grp, group->gr_name, pcmk__str_none)) {
         return TRUE;
     }
 
@@ -202,7 +202,7 @@ check_group_membership(const char *usr, const char *grp)
         if (member == NULL) {
             break;
 
-        } else if (crm_str_eq(usr, member, TRUE)) {
+        } else if (pcmk__str_eq(usr, member, pcmk__str_none)) {
             return TRUE;
         }
     };

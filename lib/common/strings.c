@@ -470,7 +470,7 @@ g_str_hash_traditional(gconstpointer v)
 gboolean
 crm_strcase_equal(gconstpointer a, gconstpointer b)
 {
-    return crm_str_eq((const char *) a, (const char *) b, FALSE);
+    return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
 guint
@@ -685,7 +685,7 @@ pcmk__str_any_of(const char *s, ...)
 
         if (ele == NULL) {
             break;
-        } else if (crm_str_eq(s, ele, FALSE)) {
+        } else if (pcmk__str_eq(s, ele, pcmk__str_casei)) {
             rc = true;
             break;
         }

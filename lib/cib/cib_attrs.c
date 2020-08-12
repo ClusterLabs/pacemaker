@@ -544,7 +544,7 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     *uname = NULL;
 
     for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
-        if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, TRUE)) {
+        if (pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
             child_name = ID(a_child);
             if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
                 child_name = crm_element_value(a_child, XML_ATTR_UNAME);

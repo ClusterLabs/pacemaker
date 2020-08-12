@@ -453,7 +453,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     for (an_attr = __xml_first_child_element(list); an_attr != NULL;
          an_attr = __xml_next_element(an_attr)) {
 
-        if (crm_str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, TRUE)) {
+        if (pcmk__str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, pcmk__str_none)) {
             xmlNode *ref_nvpair = expand_idref(an_attr, top);
 
             name = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
@@ -501,7 +501,7 @@ get_versioned_rule(xmlNode * attr_set)
     for (rule = __xml_first_child_element(attr_set); rule != NULL;
          rule = __xml_next_element(rule)) {
 
-        if (crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
+        if (pcmk__str_eq((const char *)rule->name, XML_TAG_RULE, pcmk__str_none)) {
             for (expr = __xml_first_child_element(rule); expr != NULL;
                  expr = __xml_next_element(expr)) {
 
@@ -1224,7 +1224,7 @@ pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data) {
         return FALSE;
     }
 
-    if (!crm_str_eq(name, rule_data->op_data->op_name, TRUE)) {
+    if (!pcmk__str_eq(name, rule_data->op_data->op_name, pcmk__str_none)) {
         crm_trace("Name doesn't match: %s != %s", name, rule_data->op_data->op_name);
         return FALSE;
     }
@@ -1288,20 +1288,20 @@ pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
     }
 
     if (class != NULL &&
-        !crm_str_eq(class, rule_data->rsc_data->standard, TRUE)) {
+        !pcmk__str_eq(class, rule_data->rsc_data->standard, pcmk__str_none)) {
         crm_trace("Class doesn't match: %s != %s", class, rule_data->rsc_data->standard);
         return FALSE;
     }
 
     if ((provider == NULL && rule_data->rsc_data->provider != NULL) ||
         (provider != NULL && rule_data->rsc_data->provider == NULL) ||
-        !crm_str_eq(provider, rule_data->rsc_data->provider, TRUE)) {
+        !pcmk__str_eq(provider, rule_data->rsc_data->provider, pcmk__str_none)) {
         crm_trace("Provider doesn't match: %s != %s", provider, rule_data->rsc_data->provider);
         return FALSE;
     }
 
     if (type != NULL &&
-        !crm_str_eq(type, rule_data->rsc_data->agent, TRUE)) {
+        !pcmk__str_eq(type, rule_data->rsc_data->agent, pcmk__str_none)) {
         crm_trace("Agent doesn't match: %s != %s", type, rule_data->rsc_data->agent);
         return FALSE;
     }

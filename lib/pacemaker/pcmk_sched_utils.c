@@ -556,7 +556,7 @@ append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
 
 #if 0
     if (level < get_crm_log_level()
-        && op->interval_ms == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
+        && op->interval_ms == 0 && pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
         char *digest_source = dump_xml_unformatted(args_xml);
 
         do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n",
@@ -613,7 +613,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     /* Record a successful reload as a start, and a failed reload as a monitor,
      * to make life easier for the scheduler when determining the current state.
      */
-    if (crm_str_eq(task, "reload", TRUE)) {
+    if (pcmk__str_eq(task, "reload", pcmk__str_none)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_START;
         } else {
@@ -622,7 +622,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
-    if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
+    if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 
@@ -720,8 +720,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    if (crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE, TRUE)
-        || crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
+    if (pcmk__str_eq(op->op_type, CRMD_ACTION_MIGRATE, pcmk__str_none)
+        || pcmk__str_eq(op->op_type, CRMD_ACTION_MIGRATED, pcmk__str_none)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */

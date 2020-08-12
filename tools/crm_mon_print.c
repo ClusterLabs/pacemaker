@@ -294,7 +294,7 @@ get_operation_list(xmlNode *rsc_entry) {
             continue;
         }
 
-        if (crm_str_eq((const char *) rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             op_list = g_list_append(op_list, rsc_op);
         }
     }
@@ -387,7 +387,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
         const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
         pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
-        if (!crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
             continue;
         }
 
@@ -566,7 +566,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
          node_state = __xml_next_element(node_state)) {
         pe_node_t *node;
 
-        if (!crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+        if (!pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             continue;
         }
 

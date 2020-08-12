@@ -207,7 +207,7 @@ template_op_key(xmlNode * op)
     char *key = NULL;
 
     if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_null_matches)
-        || crm_str_eq(role, RSC_ROLE_SLAVE_S, TRUE)) {
+        || pcmk__str_eq(role, RSC_ROLE_SLAVE_S, pcmk__str_none)) {
         role = RSC_ROLE_UNKNOWN_S;
     }
 
@@ -244,7 +244,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
         return FALSE;
     }
 
-    if (crm_str_eq(template_ref, id, TRUE)) {
+    if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pe_err("The resource object '%s' should not reference itself", id);
         return FALSE;
     }
@@ -278,7 +278,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
         new_child = add_node_copy(new_xml, child_xml);
 
-        if (crm_str_eq((const char *)new_child->name, "operations", TRUE)) {
+        if (pcmk__str_eq((const char *)new_child->name, "operations", pcmk__str_none)) {
             rsc_ops = new_child;
         }
     }
@@ -352,7 +352,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    if (crm_str_eq(template_ref, id, TRUE)) {
+    if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pe_err("The resource object '%s' should not reference itself", id);
         return FALSE;
     }

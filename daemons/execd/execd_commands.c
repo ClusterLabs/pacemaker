@@ -1835,46 +1835,46 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
-    if (crm_str_eq(op, CRM_OP_IPC_FWD, TRUE)) {
+    if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
 #ifdef SUPPORT_REMOTE
         ipc_proxy_forward_client(client, request);
 #endif
         do_reply = 1;
-    } else if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+    } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
         reply = process_lrmd_signon(client, request, call_id);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_REG, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
         rc = process_lrmd_rsc_register(client, id, request);
         do_notify = 1;
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_INFO, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_INFO, pcmk__str_none)) {
         reply = process_lrmd_get_rsc_info(request, call_id);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_UNREG, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
         rc = process_lrmd_rsc_unregister(client, id, request);
         /* don't notify anyone about failed un-registers */
         if (rc == pcmk_ok || rc == -EINPROGRESS) {
             do_notify = 1;
         }
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_EXEC, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
         rc = process_lrmd_rsc_exec(client, id, request);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_CANCEL, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_CANCEL, pcmk__str_none)) {
         rc = process_lrmd_rsc_cancel(client, id, request);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_POKE, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
         do_notify = 1;
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_CHECK, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
         xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
         const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
         CRM_LOG_ASSERT(data != NULL);
         pcmk__valid_sbd_timeout(timeout);
-    } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_ALERT_EXEC, pcmk__str_none)) {
         rc = process_lrmd_alert_exec(client, id, request);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_GET_RECURRING, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_GET_RECURRING, pcmk__str_none)) {
         reply = process_lrmd_get_recurring(request, call_id);
         do_reply = 1;
     } else {

@@ -168,7 +168,7 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
     const char *remote_peer = crm_element_value(msg, F_ORIG);
     const char *op = crm_element_value(msg, F_STONITH_OPERATION);
 
-    if (crm_str_eq(op, "poke", TRUE)) {
+    if (pcmk__str_eq(op, "poke", pcmk__str_none)) {
         return;
     }
 

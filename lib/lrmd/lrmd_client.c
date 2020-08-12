@@ -273,11 +273,11 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     crm_element_value_int(msg, F_LRMD_CALLID, &event.call_id);
     event.rsc_id = crm_element_value(msg, F_LRMD_RSC_ID);
 
-    if (crm_str_eq(type, LRMD_OP_RSC_REG, TRUE)) {
+    if (pcmk__str_eq(type, LRMD_OP_RSC_REG, pcmk__str_none)) {
         event.type = lrmd_event_register;
-    } else if (crm_str_eq(type, LRMD_OP_RSC_UNREG, TRUE)) {
+    } else if (pcmk__str_eq(type, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
         event.type = lrmd_event_unregister;
-    } else if (crm_str_eq(type, LRMD_OP_RSC_EXEC, TRUE)) {
+    } else if (pcmk__str_eq(type, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
         time_t epoch = 0;
 
         crm_element_value_int(msg, F_LRMD_TIMEOUT, &event.timeout);
@@ -303,9 +303,9 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
         event.type = lrmd_event_exec_complete;
 
         event.params = xml2list(msg);
-    } else if (crm_str_eq(type, LRMD_OP_NEW_CLIENT, TRUE)) {
+    } else if (pcmk__str_eq(type, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
         event.type = lrmd_event_new_client;
-    } else if (crm_str_eq(type, LRMD_OP_POKE, TRUE)) {
+    } else if (pcmk__str_eq(type, LRMD_OP_POKE, pcmk__str_none)) {
         event.type = lrmd_event_poke;
     } else {
         return 1;

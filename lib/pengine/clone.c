@@ -184,8 +184,8 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     for (a_child = __xml_first_child_element(xml_obj); a_child != NULL;
          a_child = __xml_next_element(a_child)) {
 
-        if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)
-        || crm_str_eq((const char *)a_child->name, XML_CIB_TAG_GROUP, TRUE)) {
+        if (pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, pcmk__str_none)
+            || pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_GROUP, pcmk__str_none)) {
             clone_data->xml_obj_child = a_child;
             break;
         }

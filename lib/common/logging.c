@@ -646,7 +646,7 @@ crm_priority2int(const char *name)
     int lpc;
 
     for (lpc = 0; name != NULL && p_names[lpc].name != NULL; lpc++) {
-        if (crm_str_eq(p_names[lpc].name, name, TRUE)) {
+        if (pcmk__str_eq(p_names[lpc].name, name, pcmk__str_none)) {
             return p_names[lpc].priority;
         }
     }

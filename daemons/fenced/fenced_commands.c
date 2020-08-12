@@ -2059,8 +2059,8 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
         crm_trace("Metadata query for %s", cmd->device);
         output = NULL;
 
-    } else if (crm_str_eq(cmd->action, "monitor", TRUE) ||
-               crm_str_eq(cmd->action, "list", TRUE) || crm_str_eq(cmd->action, "status", TRUE)) {
+    } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_none) ||
+               pcmk__str_eq(cmd->action, "list", pcmk__str_none) || pcmk__str_eq(cmd->action, "status", pcmk__str_none)) {
         crm_trace("Never broadcast '%s' replies", cmd->action);
 
     } else if (!stand_alone && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
@@ -2548,7 +2548,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         CRM_ASSERT(client == NULL || client->request_id == id);
     }
 
-    if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+    if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
         xmlNode *reply = create_xml_node(NULL, "reply");
 
         CRM_ASSERT(client);
@@ -2559,10 +2559,10 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         free_xml(reply);
         return 0;
 
-    } else if (crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_EXEC, pcmk__str_none)) {
         rc = stonith_device_action(request, &output);
 
-    } else if (crm_str_eq(op, STONITH_OP_TIMEOUT_UPDATE, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_TIMEOUT_UPDATE, pcmk__str_none)) {
         const char *call_id = crm_element_value(request, F_STONITH_CALLID);
         const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
         int op_timeout = 0;
@@ -2571,7 +2571,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         do_stonith_async_timeout_update(client_id, call_id, op_timeout);
         return 0;
 
-    } else if (crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         if (remote_peer) {
             create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
         }
@@ -2582,7 +2582,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         stonith_query(request, remote_peer, client_id, call_options);
         return 0;
 
-    } else if (crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
+    } else if (pcmk__str_eq(op, T_STONITH_NOTIFY, pcmk__str_none)) {
         const char *flag_name = NULL;
 
         CRM_ASSERT(client);
@@ -2603,7 +2603,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         }
         return 0;
 
-    } else if (crm_str_eq(op, STONITH_OP_RELAY, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_RELAY, pcmk__str_none)) {
         xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
 
         crm_notice("Peer %s has received a forwarded fencing request from %s to fence (%s) peer %s",
@@ -2616,7 +2616,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
             rc = -EINPROGRESS;
         }
 
-    } else if (crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_FENCE, pcmk__str_none)) {
 
         if (remote_peer || stand_alone) {
             rc = stonith_fence(request);
@@ -2685,7 +2685,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
             }
         }
 
-    } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_FENCE_HISTORY, pcmk__str_none)) {
         rc = stonith_fence_history(request, &data, remote_peer, call_options);
         if (call_options & st_opt_discard_reply) {
             /* we don't expect answers to the broadcast
@@ -2695,27 +2695,27 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
             return pcmk_ok;
         }
 
-    } else if (crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_ADD, pcmk__str_none)) {
         const char *device_id = NULL;
 
         rc = stonith_device_register(request, &device_id, FALSE);
         do_stonith_notify_device(call_options, op, rc, device_id);
 
-    } else if (crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_DEL, pcmk__str_none)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
         const char *device_id = crm_element_value(dev, XML_ATTR_ID);
 
         rc = stonith_device_remove(device_id, FALSE);
         do_stonith_notify_device(call_options, op, rc, device_id);
 
-    } else if (crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_ADD, pcmk__str_none)) {
         char *device_id = NULL;
 
         rc = stonith_level_register(request, &device_id);
         do_stonith_notify_level(call_options, op, rc, device_id);
         free(device_id);
 
-    } else if (crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_DEL, pcmk__str_none)) {
         char *device_id = NULL;
 
         rc = stonith_level_remove(request, &device_id);
@@ -2765,11 +2765,11 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
 {
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
 
-    if (crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
+    if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
-    } else if (crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
+    } else if (pcmk__str_eq(op, T_STONITH_NOTIFY, pcmk__str_none)) {
         process_remote_stonith_exec(request);
-    } else if (crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+    } else if (pcmk__str_eq(op, STONITH_OP_FENCE, pcmk__str_none)) {
         /* Reply to a complex fencing op */
         process_remote_stonith_exec(request);
     } else {

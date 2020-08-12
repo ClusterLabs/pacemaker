@@ -165,7 +165,7 @@ check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
         value = crm_element_value(rsc->xml, attr_list[attr_lpc]);
         old_value = crm_element_value(rsc_entry, attr_list[attr_lpc]);
         if (value == old_value  /* i.e. NULL */
-            || crm_str_eq(value, old_value, TRUE)) {
+            || pcmk__str_eq(value, old_value, pcmk__str_none)) {
             continue;
         }
 
@@ -432,7 +432,7 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
     for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
          rsc_op = __xml_next_element(rsc_op)) {
 
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             op_list = g_list_prepend(op_list, rsc_op);
         }
     }
@@ -559,7 +559,7 @@ check_actions(pe_working_set_t * data_set)
 
     for (node_state = __xml_first_child_element(status); node_state != NULL;
          node_state = __xml_next_element(node_state)) {
-        if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             id = crm_element_value(node_state, XML_ATTR_ID);
             lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
             lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
@@ -584,7 +584,7 @@ check_actions(pe_working_set_t * data_set)
                      rsc_entry != NULL;
                      rsc_entry = __xml_next_element(rsc_entry)) {
 
-                    if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+                    if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 
                         if (xml_has_children(rsc_entry)) {
                             GListPtr gIter = NULL;
@@ -2979,7 +2979,7 @@ stage8(pe_working_set_t * data_set)
             && is_not_set(action->rsc->flags, pe_rsc_maintenance)
             && is_not_set(action->flags, pe_action_optional)
             && is_not_set(action->flags, pe_action_runnable)
-            && crm_str_eq(action->task, RSC_STOP, TRUE)
+            && pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)
             ) {
             /* Eventually we should just ignore the 'fence' case
              * But for now it's the best way to detect (in CTS) when

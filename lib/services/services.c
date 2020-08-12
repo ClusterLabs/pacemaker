@@ -1028,7 +1028,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 
     standards = resources_list_standards();
     for (iter = standards; iter != NULL; iter = iter->next) {
-        if (crm_str_eq(iter->data, standard, TRUE)) {
+        if (pcmk__str_eq(iter->data, standard, pcmk__str_none)) {
             rc = TRUE;
             break;
         }
@@ -1044,7 +1044,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
     if (has_providers == TRUE && provider != NULL) {
         providers = resources_list_providers(standard);
         for (iter = providers; iter != NULL; iter = iter->next) {
-            if (crm_str_eq(iter->data, provider, TRUE)) {
+            if (pcmk__str_eq(iter->data, provider, pcmk__str_none)) {
                 rc = TRUE;
                 break;
             }

@@ -178,7 +178,7 @@ crm_map_element_name(const xmlNode *xml)
 {
     const char *name = crm_element_name(xml);
 
-    if (crm_str_eq(name, "master", TRUE)) {
+    if (strcmp(name, "master") == 0) {
         return "clone";
     } else {
         return name;

@@ -1811,7 +1811,7 @@ find_entity_by_attr_or_just_name(xmlNode *parent, const char *node_name,
         /* XXX uncertain if the first check is strictly necessary here */
         if (pcmk__str_eq(node_name, (const char *)child->name, pcmk__str_null_matches)) {
             if (attr_n == NULL
-                    || crm_str_eq(crm_element_value(child, attr_n), attr_v, TRUE)) {
+                    || pcmk__str_eq(crm_element_value(child, attr_n), attr_v, pcmk__str_none)) {
                 return child;
             }
         }

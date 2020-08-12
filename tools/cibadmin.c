@@ -657,7 +657,7 @@ main(int argc, char **argv)
         g_main_loop_run(mainloop);
 
     } else if ((rc == -pcmk_err_schema_unchanged)
-               && crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
+               && pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
         report_schema_unchanged();
 
     } else if (rc < 0) {
@@ -665,7 +665,7 @@ main(int argc, char **argv)
         fprintf(stderr, "Call failed: %s\n", pcmk_strerror(rc));
 
         if (rc == -pcmk_err_schema_validation) {
-            if (crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
+            if (pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
                 xmlNode *obj = NULL;
                 int version = 0, rc = 0;
 

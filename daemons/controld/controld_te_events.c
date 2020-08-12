@@ -379,7 +379,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         desc = "initiated outside of the cluster";
         abort_transition(INFINITY, tg_restart, "Unexpected event", event);
 
-    } else if ((action_num < 0) || (crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE)) {
+    } else if ((action_num < 0) || (pcmk__str_eq(update_te_uuid, te_uuid, pcmk__str_none) == FALSE)) {
         desc = "initiated by a different DC";
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
 

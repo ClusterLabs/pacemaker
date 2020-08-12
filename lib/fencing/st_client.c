@@ -2384,7 +2384,7 @@ stonith_agent_exists(const char *agent, int timeout)
     st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout == 0 ? 120 : timeout);
 
     for (dIter = devices; dIter != NULL; dIter = dIter->next) {
-        if (crm_str_eq(dIter->value, agent, TRUE)) {
+        if (pcmk__str_eq(dIter->value, agent, pcmk__str_none)) {
             rc = TRUE;
             break;
         }

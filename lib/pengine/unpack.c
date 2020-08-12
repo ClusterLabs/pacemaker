@@ -545,7 +545,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child_element(xml_nodes); xml_obj != NULL;
          xml_obj = __xml_next_element(xml_obj)) {
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
             new_node = NULL;
 
             id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -654,7 +654,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         /* Check for guest nodes, which are defined by special meta-attributes
          * of a primitive of any type (for example, VirtualDomain or Xen).
          */
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
             /* This will add an ocf:pacemaker:remote primitive to the
              * configuration for the guest node's connection, to be unpacked
              * later.
@@ -672,7 +672,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         /* Check for guest nodes inside a group. Clones are currently not
          * supported as guest nodes.
          */
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, pcmk__str_none)) {
             xmlNode *xml_obj2 = NULL;
             for (xml_obj2 = __xml_first_child_element(xml_obj); xml_obj2 != NULL;
                  xml_obj2 = __xml_next_element(xml_obj2)) {
@@ -774,7 +774,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 
         pe_resource_t *new_rsc = NULL;
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, pcmk__str_none)) {
             const char *template_id = ID(xml_obj);
 
             if (template_id && g_hash_table_lookup_extended(data_set->template_rsc_sets,
@@ -836,7 +836,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = ID(xml_tag);
 
-        if (crm_str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, TRUE) == FALSE) {
+        if (pcmk__str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, pcmk__str_none) == FALSE) {
             continue;
         }
 
@@ -851,7 +851,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 
             const char *obj_ref = ID(xml_obj_ref);
 
-            if (crm_str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, TRUE) == FALSE) {
+            if (pcmk__str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, pcmk__str_none) == FALSE) {
                 continue;
             }
 
@@ -902,7 +902,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
         const char *prop_name = (const char *)xIter->name;
         const char *prop_value = crm_element_value(xml_ticket, prop_name);
 
-        if (crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
+        if (pcmk__str_eq(prop_name, XML_ATTR_ID, pcmk__str_none)) {
             continue;
         }
         g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
@@ -945,7 +945,7 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child_element(xml_tickets); xml_obj != NULL;
          xml_obj = __xml_next_element(xml_obj)) {
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, TRUE) == FALSE) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, pcmk__str_none) == FALSE) {
             continue;
         }
         unpack_ticket_state(xml_obj, data_set);
@@ -961,7 +961,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     xmlNode *attrs = NULL;
     pe_resource_t *rsc = NULL;
 
-    if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+    if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none) == FALSE) {
         return;
     }
 
@@ -1032,7 +1032,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
         pe_node_t *this_node = NULL;
         bool process = FALSE;
 
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+        if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none) == FALSE) {
             continue;
         }
 
@@ -1133,10 +1133,10 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     for (state = __xml_first_child_element(status); state != NULL;
          state = __xml_next_element(state)) {
 
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
+        if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
             unpack_tickets_state((xmlNode *) state, data_set);
 
-        } else if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
+        } else if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             xmlNode *attrs = NULL;
             const char *resource_discovery_enabled = NULL;
 
@@ -2282,7 +2282,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
 
     for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
          rsc_op = __xml_next_element(rsc_op)) {
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             op_list = g_list_prepend(op_list, rsc_op);
         }
     }
@@ -2408,7 +2408,7 @@ unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_rsc_list,
     for (rsc_entry = __xml_first_child_element(lrm_rsc_list); rsc_entry != NULL;
          rsc_entry = __xml_next_element(rsc_entry)) {
 
-        if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
             pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
             if (!rsc) {
                 continue;
@@ -3905,7 +3905,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
     for (rsc_op = __xml_first_child_element(rsc_entry);
          rsc_op != NULL; rsc_op = __xml_next_element(rsc_op)) {
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             crm_xml_add(rsc_op, "resource", rsc);
             crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
@@ -3965,7 +3965,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     for (node_state = __xml_first_child_element(status); node_state != NULL;
          node_state = __xml_next_element(node_state)) {
 
-        if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
 
             if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
@@ -3996,7 +3996,7 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
                 for (lrm_rsc = __xml_first_child_element(tmp); lrm_rsc != NULL;
                      lrm_rsc = __xml_next_element(lrm_rsc)) {
-                    if (crm_str_eq((const char *)lrm_rsc->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+                    if (pcmk__str_eq((const char *)lrm_rsc->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 
                         const char *rsc_id = crm_element_value(lrm_rsc, XML_ATTR_ID);
 

@@ -61,7 +61,7 @@ guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
 
-#  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
+#  define safe_str_eq(a, b) pcmk__str_eq(a, b, pcmk__str_casei)
 #  define crm_str_hash g_str_hash_traditional
 
 static inline char *

@@ -145,7 +145,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 {
     const char *op = crm_element_value(op_request, F_CIB_OPERATION);
 
-    if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+    if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
         if (flags & crm_ipc_client_response) {
             xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
 
@@ -157,7 +157,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         }
         return;
 
-    } else if (crm_str_eq(op, T_CIB_NOTIFY, TRUE)) {
+    } else if (pcmk__str_eq(op, T_CIB_NOTIFY, pcmk__str_none)) {
         /* Update the notify filters for this client */
         int on_off = 0;
         long long bit = 0;
@@ -1246,7 +1246,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         /* Always write to disk for replace ops,
          * this also negates the need to detect ordering changes
          */
-        if (crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
+        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
             config_changed = TRUE;
         }
     }
@@ -1267,7 +1267,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             cib_read_config(config_hash, result_cib);
         }
 
-        if (crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
+        if (pcmk__str_eq(CIB_OP_REPLACE, op, pcmk__str_none)) {
             if (section == NULL) {
                 send_r_notify = TRUE;
 
@@ -1284,7 +1284,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
                 send_r_notify = TRUE;
             }
 
-        } else if (crm_str_eq(CIB_OP_ERASE, op, TRUE)) {
+        } else if (pcmk__str_eq(CIB_OP_ERASE, op, pcmk__str_none)) {
             send_r_notify = TRUE;
         }
 
