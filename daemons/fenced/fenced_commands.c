@@ -123,7 +123,7 @@ get_action_delay_max(stonith_device_t * device, const char * action)
     const char *value = NULL;
     int delay_max = 0;
 
-    if (pcmk__str_none_of(action, "off", "reboot", NULL)) {
+    if (!pcmk__str_any_of(action, "off", "reboot", NULL)) {
         return 0;
     }
 
@@ -141,7 +141,7 @@ get_action_delay_base(stonith_device_t * device, const char * action)
     const char *value = NULL;
     int delay_base = 0;
 
-    if (pcmk__str_none_of(action, "off", "reboot", NULL)) {
+    if (!pcmk__str_any_of(action, "off", "reboot", NULL)) {
         return 0;
     }
 

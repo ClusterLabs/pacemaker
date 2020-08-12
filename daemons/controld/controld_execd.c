@@ -1590,7 +1590,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
     crm_notice("Forcing the status of all resources to be redetected");
     force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
 
-    if (pcmk__str_none_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
+    if (!pcmk__str_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
 
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
@@ -1975,7 +1975,7 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
 
 #if ENABLE_VERSIONED_ATTRS
     if (lrm_state && !is_remote_lrmd_ra(NULL, NULL, rsc_id)
-        && pcmk__str_none_of(op_type, CRMD_ACTION_METADATA, CRMD_ACTION_DELETE,
+        && !pcmk__str_any_of(op_type, CRMD_ACTION_METADATA, CRMD_ACTION_DELETE,
                               NULL)) {
         resolve_versioned_parameters(lrm_state, rsc_id, rsc_op, params);
     }

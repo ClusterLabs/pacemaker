@@ -278,7 +278,7 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
                 "  Please supply the class and type to continue\n", resource, ID(cib_node));
         return NULL;
 
-    } else if (pcmk__str_none_of(rclass, PCMK_RESOURCE_CLASS_OCF, PCMK_RESOURCE_CLASS_STONITH,
+    } else if (!pcmk__str_any_of(rclass, PCMK_RESOURCE_CLASS_OCF, PCMK_RESOURCE_CLASS_STONITH,
                                 PCMK_RESOURCE_CLASS_SERVICE, PCMK_RESOURCE_CLASS_UPSTART,
                                 PCMK_RESOURCE_CLASS_SYSTEMD, PCMK_RESOURCE_CLASS_LSB, NULL)) {
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);

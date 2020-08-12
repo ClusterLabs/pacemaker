@@ -415,7 +415,7 @@ retry_start_cmd_cb(gpointer data)
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (pcmk__str_none_of(cmd->action, "start", "migrate_from", NULL)) {
+    if (!pcmk__str_any_of(cmd->action, "start", "migrate_from", NULL)) {
         return FALSE;
     }
     update_remaining_timeout(cmd);

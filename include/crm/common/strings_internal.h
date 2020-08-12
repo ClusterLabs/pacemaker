@@ -29,7 +29,6 @@ int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end
 gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
-bool pcmk__str_none_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 
 /* Correctly displaying singular or plural is complicated; consider "1 node has"
  * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.

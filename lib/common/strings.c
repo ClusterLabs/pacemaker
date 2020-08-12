@@ -694,29 +694,6 @@ pcmk__str_any_of(const char *s, ...)
     return rc;
 }
 
-bool
-pcmk__str_none_of(const char *s, ...)
-{
-    bool rc = true;
-    va_list ap;
-
-    va_start(ap, s);
-
-    while (1) {
-        const char *ele = va_arg(ap, const char *);
-
-        if (ele == NULL) {
-            break;
-        } else if (crm_str_eq(s, ele, FALSE)) {
-            rc = false;
-            break;
-        }
-    }
-
-    va_end(ap);
-    return rc;
-}
-
 /*
  * \brief Sort strings, with numeric portions sorted numerically
  *
