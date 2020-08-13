@@ -1,3 +1,6 @@
+.. index::
+   single: guest node; example
+
 Guest Node Quick Example
 ------------------------
 
@@ -6,10 +9,6 @@ new concept of guest nodes by reading through this quick example without
 having to sort through all the detailed walk-through steps. Here are the key
 configuration ingredients that make this possible using libvirt and KVM virtual
 guests. These steps strip everything down to the very basics.
-
-.. index::
-    single: guest node
-    pair: node; guest node
 
 Mile-High View of Configuration Steps
 #####################################

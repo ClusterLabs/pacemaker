@@ -1,3 +1,6 @@
+.. index::
+   single: remote node; walk-through
+
 Remote Node Walk-through
 ------------------------
 
@@ -14,6 +17,9 @@ a third to act as the remote node.
 
 Configure Remote Node
 #####################
+
+.. index::
+   single: remote node; firewall
 
 Configure Firewall on Remote Node
 _________________________________
@@ -302,6 +308,10 @@ resource creation.
 
     Never involve a remote node connection resource in a resource group,
     colocation constraint, or order constraint.
+
+
+.. index::
+   single: remote node; fencing
 
 Fencing Remote Nodes
 ####################
