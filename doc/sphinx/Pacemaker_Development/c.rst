@@ -1,5 +1,12 @@
+.. index::
+   single: C
+   pair: C; guidelines
+
 C Coding Guidelines
 -------------------
+
+.. index::
+   pair: C; style
 
 Style Guidelines
 ################
@@ -15,7 +22,8 @@ writing, and reviewing code easier.
 
 .. index::
    pair: C; boilerplate
-   pair: licensing; C boilerplate
+   pair: license; C
+   pair: copyright; C
 
 C Boilerplate
 _____________
@@ -70,22 +78,22 @@ inclusion by C++, and give a Doxygen file description. For example:
    }
    #endif
 
-Line Formatting
-_______________
-
 .. index::
    pair: C; whitespace
+
+Line Formatting
+_______________
 
 * Indentation must be 4 spaces, no tabs.
 * Do not leave trailing whitespace.
 * Lines should be no longer than 80 characters unless limiting line length
   significantly impacts readability.
 
+.. index::
+   pair: C; pointer
+
 Pointers
 ________
-
-.. index::
-   pair: C; pointers
 
 * The ``*`` goes by the variable name, not the type:
 
@@ -100,11 +108,11 @@ ________
    char *foo = (char *) bar;
 
 
+.. index::
+   pair: C; function
+
 Function Definitions
 ____________________
-
-.. index::
-   pair: C; functions
 
 * In the function definition, put the return type on its own line, and place
   the opening brace by itself on a line.
@@ -173,11 +181,11 @@ _________________________________________________
            command3;
    }
 
+.. index::
+   pair: C; operator
+
 Operators
 _________
-
-.. index::
-   pair: C; operators
 
 * Operators have spaces from both sides.
 * Do not rely on operator precedence; use parentheses when mixing operators
@@ -214,8 +222,8 @@ specified rather than left to the compiler, new values can be added anywhere.
 .. index::
    pair: C; API documentation
 
-Documentation
-_____________
+API documentation
+_________________
 
 All public API header files, functions, structs, enums, etc.,
 should be documented with Doxygen comment blocks, as Pacemaker's
@@ -224,11 +232,11 @@ is automatically generated via Doxygen. It is helpful to document
 private symbols in the same way, with an ``\internal`` tag in the
 Doxygen comment.
 
-Symbol Naming
-_____________
-
 .. index::
    pair: C; naming
+
+Symbol Naming
+_____________
 
 * All file and function names should be unique across the entire project,
   to allow for individual tracing via ``PCMK_trace_files`` and
@@ -244,12 +252,18 @@ _____________
   of which is being used (e.g. ``interval_spec``, ``interval_ms``, or
   ``interval_ms_s`` instead of ``interval``).
 
+.. index::
+   pair: C; memory
+
 Memory Allocation
 _________________
 
 * Always use ``calloc()`` rather than ``malloc()``. It has no additional cost on
   modern operating systems, and reduces the severity and security risks of
   uninitialized memory usage bugs.
+
+.. index::
+   pair: C; logging
 
 Logging
 _______
@@ -263,6 +277,9 @@ _______
   "<null>" is a sufficient output representation in such case, you can use the
   ``crm_str()`` convenience macro; otherwise, the ternary operator is an
   obvious choice.
+
+.. index::
+   pair: C; regular expression
 
 Regular Expressions
 ___________________

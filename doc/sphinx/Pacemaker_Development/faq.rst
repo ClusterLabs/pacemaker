@@ -9,7 +9,11 @@ Frequently Asked Questions
 
 ----
 
-.. index:: downloads, source code, git, GitHub
+.. index::
+   single: download
+   single: source code
+   single: git
+   single: git; GitHub
 
 :Q: Where is the source code for Pacemaker?
 :A: The `source code for Pacemaker <https://github.com/ClusterLabs/pacemaker>`_ is
@@ -23,7 +27,8 @@ Frequently Asked Questions
 
 ----
 
-.. index:: branches
+.. index::
+   single: git; branch
 
 :Q: What are the different Git branches and repositories used for?
 :A: * The `master branch <https://github.com/ClusterLabs/pacemaker/tree/master>`_
@@ -65,7 +70,7 @@ Frequently Asked Questions
 ----
 
 .. index::
-   pair: git; commit messages
+   single: git; commit message
 
 :Q: How should I format my Git commit messages?
 :A: See existing examples in the git log. The first line should look like
@@ -96,7 +101,7 @@ Frequently Asked Questions
 
 ----
 
-.. index:: licensing
+.. index:: license
 
 :Q: What is Pacemaker's license?
 :A: Except where noted otherwise in the file itself, the source code for all
@@ -131,7 +136,7 @@ Frequently Asked Questions
 
 ----
 
-.. index:: mailing lists
+.. index:: mailing list
 
 :Q: What if I still have questions?
 :A: Ask on the
