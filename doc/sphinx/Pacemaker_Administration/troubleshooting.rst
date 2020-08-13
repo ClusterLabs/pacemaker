@@ -1,5 +1,9 @@
+.. index:: troubleshooting
+
 Troubleshooting Cluster Problems
 --------------------------------
+
+.. index:: logging, pacemaker.log
 
 Logging
 #######
@@ -27,6 +31,8 @@ grow enormous quite quickly. Because rotated logs are by default named with the
 year, month, and day only, this can cause name collisions if your logs exceed
 100MB in a single day. You can add ``dateformat -%Y%m%d-%H`` to the rotation
 configuration to avoid this.
+
+.. index:: transition
 
 Transitions
 ###########

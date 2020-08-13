@@ -1,11 +1,18 @@
+.. index:: upgrade
+
 Upgrading a Pacemaker Cluster
 -----------------------------
+
+.. index:: version
 
 Pacemaker Versioning
 ####################
 
 Pacemaker has an overall release version, plus separate version numbers for
 certain internal components.
+
+.. index::
+   single: version; release
 
 * **Pacemaker release version:** This version consists of three numbers
   (*x.y.z*).
@@ -24,6 +31,10 @@ certain internal components.
   The release counter (the *z* in *x.y.z*) is increased with all public releases
   of Pacemaker, which typically include both bug fixes and new features.
 
+.. index::
+   single: feature set
+   single: version; feature set
+
 * **CRM feature set:** This version number applies to the communication between
   full cluster nodes, and is used to avoid problems in mixed-version clusters.
 
@@ -36,6 +47,9 @@ certain internal components.
   Pacemaker ensures that the longest-running node is the cluster's DC. This
   ensures new features are not enabled until all nodes are upgraded to support
   them.
+
+.. index::
+   single: version; Pacemaker Remote protocol
 
 * **Pacemaker Remote protocol version:** This version applies to communication
   between a Pacemaker Remote node and the cluster. It increases when an older
@@ -50,10 +64,17 @@ certain internal components.
   older version. This can be useful, for example, to host a legacy application
   in an older operating system version used as a Pacemaker Remote node.
 
+.. index::
+   single: version; XML schema
+
 * **XML schema version:** Pacemaker’s configuration syntax — what's allowed in
   the Configuration Information Base (CIB) — has its own version. This allows
   the configuration syntax to evolve over time while still allowing clusters
   with older configurations to work without change.
+
+
+.. index::
+   single: upgrade; methods
 
 Upgrading Cluster Software
 ##########################
@@ -71,26 +92,18 @@ disadvantages.
    |                                                   |          | nodes    |        |         |          | [#]_     |
    +===================================================+==========+==========+========+=========+==========+==========+
    | Complete cluster shutdown                         | yes      | yes      | always | N/A     | no       | yes      |
-   |                                                   |          |          |        |         |          |          |
-   | .. index::                                        |          |          |        |         |          |          |
-   |    pair: cluster; upgrade with shutdown           |          |          |        |         |          |          |
-   |    pair: upgrade; upgrade with shutdown           |          |          |        |         |          |          |
    +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
    | Rolling (node by node)                            | no       | yes      | always | yes     | yes      | no       |
    |                                                   |          |          | [#]_   |         |          |          |
-   |                                                   |          |          |        |         |          |          |
-   | .. index::                                        |          |          |        |         |          |          |
-   |    pair: cluster; rolling upgrade                 |          |          |        |         |          |          |
-   |    pair: upgrade; rolling upgrade                 |          |          |        |         |          |          |
    +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
    | Detach and reattach                               | yes      | no       | only   | no      | no       | yes      |
    |                                                   |          |          | due to |         |          |          |
    |                                                   |          |          | failure|         |          |          |
-   |                                                   |          |          |        |         |          |          |
-   | .. index::                                        |          |          |        |         |          |          |
-   |    pair: cluster; upgrade with detach and reattach|          |          |        |         |          |          |
-   |    pair: upgrade; upgrade with detach and reattach|          |          |        |         |          |          |
    +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
+
+
+.. index::
+   single: upgrade; shutdown
 
 Complete Cluster Shutdown
 _________________________
@@ -117,6 +130,10 @@ One variation of this approach is to build a new cluster on new hosts.
 This allows the new version to be tested beforehand, and minimizes downtime by
 having the new nodes ready to be placed in production as soon as the old nodes
 are shut down.
+
+
+.. index::
+   single: upgrade; rolling upgrade
 
 Rolling (node by node)
 ______________________
@@ -181,6 +198,9 @@ To perform a rolling upgrade, on each node in turn:
    | Pacemaker 0.7.z         | Pacemaker 0.6.z           |
    +-------------------------+---------------------------+
 
+.. index::
+   single: upgrade; detach and reattach
+
 Detach and Reattach
 ___________________
 
@@ -222,11 +242,11 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
    cluster. A common example is using the ``ocf:pacemaker:ping`` resource to
    set a node attribute used to locate other resources.
 
+.. index::
+   pair: upgrade; CIB
+
 Upgrading the Configuration
 ###########################
-
-.. index::
-   pair: upgrading; configuration
 
 The CIB schema version can change from one Pacemaker version to another.
 
@@ -256,12 +276,12 @@ A more cautious approach would proceed like this:
 
       # crm_shadow --create shadow
 
+.. index::
+   single: configuration; verify
+
 #. Verify the configuration is valid with the new software (which may be
    stricter about syntax mistakes, or may have dropped support for deprecated
    features):
-
-   .. index::
-      pair: verify; configuration
 
    .. code-block:: none
 
