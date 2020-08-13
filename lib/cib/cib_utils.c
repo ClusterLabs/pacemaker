@@ -120,7 +120,7 @@ get_object_path(const char *object_type)
 
     for (; lpc < max; lpc++) {
         if ((object_type == NULL && known_paths[lpc].name == NULL)
-            || safe_str_eq(object_type, known_paths[lpc].name)) {
+            || pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
             return known_paths[lpc].path;
         }
     }
@@ -134,7 +134,7 @@ get_object_parent(const char *object_type)
     int max = DIMOF(known_paths);
 
     for (; lpc < max; lpc++) {
-        if (safe_str_eq(object_type, known_paths[lpc].name)) {
+        if (pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
             return known_paths[lpc].parent;
         }
     }
@@ -414,7 +414,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         free_xml(c);
     }
 
-    if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
         /* Throttle the amount of costly validation we perform due to status updates
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
@@ -600,7 +600,7 @@ cib_native_notify(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback");
         return;
 
-    } else if (safe_str_neq(entry->event, event)) {
+    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
         crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }

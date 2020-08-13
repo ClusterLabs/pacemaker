@@ -806,7 +806,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     for (lpc = 0; lpc < max_msg_types; lpc++) {
-        if (safe_str_eq(op, cib_file_ops[lpc].op)) {
+        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
             fn = &(cib_file_ops[lpc].fn);
             query = cib_file_ops[lpc].read_only;
             break;
@@ -826,7 +826,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
 #endif
 
     /* Mirror the logic in cib_prepare_common() */
-    if (section != NULL && data != NULL && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)) {
+    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
         data = get_object_root(section, data);
     }
 

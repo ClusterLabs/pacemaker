@@ -158,7 +158,7 @@ main(int argc, char **argv)
                 break;
         }
     }
-    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         cib_metadata();
         return CRM_EX_OK;
     }

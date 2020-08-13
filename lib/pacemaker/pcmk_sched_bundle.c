@@ -720,8 +720,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
 
             if (first_action == NULL) {
                 if (is_not_set(first_child->flags, pe_rsc_orphan)
-                    && crm_str_eq(first_task, RSC_STOP, TRUE) == FALSE
-                    && crm_str_eq(first_task, RSC_DEMOTE, TRUE) == FALSE) {
+                    && !pcmk__str_any_of(first_task, RSC_STOP, RSC_DEMOTE, NULL)) {
                     crm_err("Internal error: No action found for %s in %s (first)",
                             first_task, first_child->id);
 
@@ -736,8 +735,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             /* We're only interested if 'then' is neither stopping nor being demoted */ 
             if (then_action == NULL) {
                 if (is_not_set(then_child->flags, pe_rsc_orphan)
-                    && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE
-                    && crm_str_eq(then->task, RSC_DEMOTE, TRUE) == FALSE) {
+                    && !pcmk__str_any_of(then->task, RSC_STOP, RSC_DEMOTE, NULL)) {
                     crm_err("Internal error: No action found for %s in %s (then)",
                             then->task, then_child->id);
 

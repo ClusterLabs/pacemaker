@@ -69,20 +69,20 @@ resource_object_functions_t resource_class_functions[] = {
 static enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+    if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
         return pe_native;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
         return pe_group;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
         return pe_clone;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_MASTER)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_MASTER, pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
         return pe_clone;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
         return pe_container;
     }
 
@@ -206,8 +206,8 @@ template_op_key(xmlNode * op)
     const char *role = crm_element_value(op, "role");
     char *key = NULL;
 
-    if (role == NULL || crm_str_eq(role, RSC_ROLE_STARTED_S, TRUE)
-        || crm_str_eq(role, RSC_ROLE_SLAVE_S, TRUE)) {
+    if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_null_matches)
+        || pcmk__str_eq(role, RSC_ROLE_SLAVE_S, pcmk__str_none)) {
         role = RSC_ROLE_UNKNOWN_S;
     }
 
@@ -244,7 +244,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
         return FALSE;
     }
 
-    if (crm_str_eq(template_ref, id, TRUE)) {
+    if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pe_err("The resource object '%s' should not reference itself", id);
         return FALSE;
     }
@@ -278,7 +278,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
         new_child = add_node_copy(new_xml, child_xml);
 
-        if (crm_str_eq((const char *)new_child->name, "operations", TRUE)) {
+        if (pcmk__str_eq((const char *)new_child->name, "operations", pcmk__str_none)) {
             rsc_ops = new_child;
         }
     }
@@ -352,7 +352,7 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    if (crm_str_eq(template_ref, id, TRUE)) {
+    if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pe_err("The resource object '%s' should not reference itself", id);
         return FALSE;
     }
@@ -375,7 +375,7 @@ detect_promotable(pe_resource_t *rsc)
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (safe_str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER)) {
+    if (pcmk__str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER, pcmk__str_casei)) {
         /* @TODO in some future version, pe_warn_once() here,
          *       then drop support in even later version
          */
@@ -540,7 +540,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
-    if (value != NULL && safe_str_neq("default", value)) {
+    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         if (crm_is_true(value)) {
             set_bit((*rsc)->flags, pe_rsc_managed);
         } else {
@@ -573,7 +573,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
-    if (safe_str_eq(value, "restart")) {
+    if (pcmk__str_eq(value, "restart", pcmk__str_casei)) {
         (*rsc)->restart_type = pe_restart_restart;
         pe_rsc_trace((*rsc), "\tDependency restart handling: restart");
         pe_warn_once(pe_wo_restart_type,
@@ -585,11 +585,11 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);
-    if (safe_str_eq(value, "stop_only")) {
+    if (pcmk__str_eq(value, "stop_only", pcmk__str_casei)) {
         (*rsc)->recovery_type = recovery_stop_only;
         pe_rsc_trace((*rsc), "\tMultiple running resource recovery: stop only");
 
-    } else if (safe_str_eq(value, "block")) {
+    } else if (pcmk__str_eq(value, "block", pcmk__str_casei)) {
         (*rsc)->recovery_type = recovery_block;
         pe_rsc_trace((*rsc), "\tMultiple running resource recovery: block");
 
@@ -599,12 +599,12 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_STICKINESS);
-    if (value != NULL && safe_str_neq("default", value)) {
+    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->stickiness = char2score(value);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
-    if (value != NULL && safe_str_neq("default", value)) {
+    if (value != NULL && !pcmk__str_eq("default", value, pcmk__str_casei)) {
         (*rsc)->migration_threshold = char2score(value);
         if ((*rsc)->migration_threshold < 0) {
             /* @TODO We use 1 here to preserve previous behavior, but this
@@ -618,7 +618,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         }
     }
 
-    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
         set_bit((*rsc)->flags, pe_rsc_fence_device);
     }
@@ -626,12 +626,12 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
 
   handle_requires_pref:
-    if (safe_str_eq(value, "nothing")) {
+    if (pcmk__str_eq(value, "nothing", pcmk__str_casei)) {
 
-    } else if (safe_str_eq(value, "quorum")) {
+    } else if (pcmk__str_eq(value, "quorum", pcmk__str_casei)) {
         set_bit((*rsc)->flags, pe_rsc_needs_quorum);
 
-    } else if (safe_str_eq(value, "unfencing")) {
+    } else if (pcmk__str_eq(value, "unfencing", pcmk__str_casei)) {
         if (is_set((*rsc)->flags, pe_rsc_fence_device)) {
             pcmk__config_warn("Resetting '" XML_RSC_ATTR_REQUIRES "' for %s "
                               "to 'quorum' because fencing devices cannot "
@@ -653,7 +653,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
             set_bit((*rsc)->flags, pe_rsc_needs_unfencing);
         }
 
-    } else if (safe_str_eq(value, "fencing")) {
+    } else if (pcmk__str_eq(value, "fencing", pcmk__str_casei)) {
         set_bit((*rsc)->flags, pe_rsc_needs_fencing);
         if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
@@ -668,10 +668,9 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
             value = "quorum";
 
         } else if (((*rsc)->variant == pe_native)
-                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
-                                  PCMK_RESOURCE_CLASS_OCF)
-                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker")
-                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote")
+                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS), PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)
+                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker", pcmk__str_casei)
+                   && pcmk__str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote", pcmk__str_casei)
             ) {
             value = "quorum";
 

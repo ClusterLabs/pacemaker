@@ -128,7 +128,7 @@ static void log_action(stonith_action_t *action, pid_t pid);
 enum stonith_namespace
 stonith_text2namespace(const char *namespace_s)
 {
-    if ((namespace_s == NULL) || !strcmp(namespace_s, "any")) {
+    if (pcmk__str_eq(namespace_s, "any", pcmk__str_null_matches)) {
         return st_namespace_any;
 
     } else if (!strcmp(namespace_s, "redhat")
@@ -175,7 +175,7 @@ stonith_namespace2text(enum stonith_namespace st_namespace)
 enum stonith_namespace
 stonith_get_namespace(const char *agent, const char *namespace_s)
 {
-    if (safe_str_eq(namespace_s, "internal")) {
+    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_casei)) {
         return st_namespace_internal;
     }
 
@@ -480,7 +480,7 @@ append_arg(const char *key, const char *value, GHashTable **args)
         return;
     } else if (strstr(key, CRM_META)) {
         return;
-    } else if (safe_str_eq(key, "crm_feature_set")) {
+    } else if (pcmk__str_eq(key, "crm_feature_set", pcmk__str_casei)) {
         return;
     }
 
@@ -500,7 +500,7 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
      * but ignore it here just in case any other library callers
      * fail to do so.
      */
-    if (safe_str_neq(key, STONITH_ATTR_ACTION_OP)) {
+    if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)) {
         append_arg(key, value, user_data);
         return;
     }
@@ -549,7 +549,7 @@ make_args(const char *agent, const char *action, const char *victim,
         }
 
         /* Check if we need to supply the victim in any other form */
-        if(safe_str_eq(agent, "fence_legacy")) {
+        if(pcmk__str_eq(agent, "fence_legacy", pcmk__str_casei)) {
             value = agent;
 
         } else if (param == NULL) {
@@ -563,7 +563,7 @@ make_args(const char *agent, const char *action, const char *victim,
 
             value = g_hash_table_lookup(device_args, param);
 
-        } else if (safe_str_eq(param, "none")) {
+        } else if (pcmk__str_eq(param, "none", pcmk__str_casei)) {
             value = param;      /* Nothing more to do */
 
         } else {
@@ -571,7 +571,7 @@ make_args(const char *agent, const char *action, const char *victim,
         }
 
         /* Don't overwrite explictly set values for $param */
-        if (value == NULL || safe_str_eq(value, "dynamic")) {
+        if (pcmk__str_eq(value, "dynamic", pcmk__str_null_matches | pcmk__str_casei)) {
             crm_debug("Performing '%s' action targeting '%s' as '%s=%s'", action, victim, param,
                       alias);
             append_arg(param, alias, &arg_list);
@@ -1441,12 +1441,12 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     type = crm_element_value(blob.xml, F_TYPE);
     crm_trace("Activating %s callbacks...", type);
 
-    if (safe_str_eq(type, T_STONITH_NG)) {
+    if (pcmk__str_eq(type, T_STONITH_NG, pcmk__str_casei)) {
         stonith_perform_callback(st, blob.xml, 0, 0);
 
-    } else if (safe_str_eq(type, T_STONITH_NOTIFY)) {
+    } else if (pcmk__str_eq(type, T_STONITH_NOTIFY, pcmk__str_casei)) {
         foreach_notify_entry(private, stonith_send_notification, &blob);
-    } else if (safe_str_eq(type, T_STONITH_TIMEOUT_VALUE)) {
+    } else if (pcmk__str_eq(type, T_STONITH_TIMEOUT_VALUE, pcmk__str_casei)) {
         int call_id = 0;
         int timeout = 0;
 
@@ -1527,7 +1527,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             const char *msg_type = crm_element_value(reply, F_STONITH_OPERATION);
 
             native->token = crm_element_value_copy(reply, F_STONITH_CLIENTID);
-            if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
+            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));
                 crm_log_xml_debug(reply, "Invalid fencer reply");
@@ -1752,7 +1752,7 @@ xml_to_event(xmlNode * msg)
 
     crm_element_value_int(msg, F_STONITH_RC, &(event->result));
 
-    if (safe_str_eq(ntype, T_STONITH_NOTIFY_FENCE)) {
+    if (pcmk__str_eq(ntype, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         event->operation = crm_element_value_copy(msg, F_STONITH_OPERATION);
 
         if (data) {
@@ -1817,7 +1817,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback");
         return;
 
-    } else if (safe_str_neq(entry->event, event)) {
+    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
         crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }
@@ -2051,7 +2051,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
-        if (safe_str_eq(params->key, STONITH_ATTR_HOSTARG)) {
+        if (pcmk__str_eq(params->key, STONITH_ATTR_HOSTARG, pcmk__str_casei)) {
             host_arg = params->value;
         }
 
@@ -2384,7 +2384,7 @@ stonith_agent_exists(const char *agent, int timeout)
     st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout == 0 ? 120 : timeout);
 
     for (dIter = devices; dIter != NULL; dIter = dIter->next) {
-        if (crm_str_eq(dIter->value, agent, TRUE)) {
+        if (pcmk__str_eq(dIter->value, agent, pcmk__str_none)) {
             rc = TRUE;
             break;
         }
@@ -2462,7 +2462,7 @@ parse_list_line(const char *line, int len, GList **output)
                          line + entry_start, entry_start, i);
                 free(entry);
 
-            } else if (pcmk__str_any_of(entry, "on", "off", NULL)) {
+            } else if (pcmk__strcase_any_of(entry, "on", "off", NULL)) {
                 /* Some agents print the target status in the list output,
                  * though none are known now (the separate list-status command
                  * is used for this, but it can also print "UNKNOWN"). To handle
@@ -2554,9 +2554,9 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
         }
 
          if ((prev_hp->state == st_done) &&
-            safe_str_eq(event->target, prev_hp->target) &&
-            safe_str_eq(event->action, prev_hp->action) &&
-            safe_str_eq(event->delegate, prev_hp->delegate) &&
+            pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
+            pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
+            pcmk__str_eq(event->delegate, prev_hp->delegate, pcmk__str_casei) &&
             (event->completed < prev_hp->completed)) {
             ret = TRUE;
             break;
@@ -2692,10 +2692,10 @@ stonith__device_parameter_flags(xmlNode *metadata)
 
         parameter = crm_element_value(match, "name");
 
-        if (safe_str_eq(parameter, "plug")) {
+        if (pcmk__str_eq(parameter, "plug", pcmk__str_casei)) {
             set_bit(flags, st_device_supports_parameter_plug);
 
-        } else if (safe_str_eq(parameter, "port")) {
+        } else if (pcmk__str_eq(parameter, "port", pcmk__str_casei)) {
             set_bit(flags, st_device_supports_parameter_port);
         }
     }

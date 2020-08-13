@@ -66,16 +66,16 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
     CRM_ASSERT(value != NULL);
     *value = NULL;
 
-    if (safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+    if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
         node_uuid = NULL;
         set_type = XML_CIB_TAG_PROPSET;
 
-    } else if (pcmk__str_any_of(section, XML_CIB_TAG_OPCONFIG, XML_CIB_TAG_RSCCONFIG,
-                               NULL)) {
+    } else if (pcmk__strcase_any_of(section, XML_CIB_TAG_OPCONFIG, XML_CIB_TAG_RSCCONFIG,
+                                    NULL)) {
         node_uuid = NULL;
         set_type = XML_TAG_META_SETS;
 
-    } else if (safe_str_eq(section, XML_CIB_TAG_TICKETS)) {
+    } else if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         node_uuid = NULL;
         section = XML_CIB_TAG_STATUS;
         node_type = XML_CIB_TAG_TICKETS;
@@ -92,13 +92,13 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
 
     attr_snprintf(xpath_string, offset, XPATH_MAX, "%.128s", get_object_path(section));
 
-    if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
+    if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", node_type);
 
     } else if (node_uuid) {
         const char *node_type = XML_CIB_TAG_NODE;
 
-        if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+        if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
             node_type = XML_CIB_TAG_STATE;
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
@@ -196,7 +196,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
 
     } else {
         crm_trace("%s does not exist, create it", attr_name);
-        if (safe_str_eq(section, XML_CIB_TAG_TICKETS)) {
+        if (pcmk__str_eq(section, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             node_uuid = NULL;
             section = XML_CIB_TAG_STATUS;
             node_type = XML_CIB_TAG_TICKETS;
@@ -204,13 +204,13 @@ update_attr_delegate(cib_t * the_cib, int call_options,
             xml_top = create_xml_node(xml_obj, XML_CIB_TAG_STATUS);
             xml_obj = create_xml_node(xml_top, XML_CIB_TAG_TICKETS);
 
-        } else if (safe_str_eq(section, XML_CIB_TAG_NODES)) {
+        } else if (pcmk__str_eq(section, XML_CIB_TAG_NODES, pcmk__str_casei)) {
 
             if (node_uuid == NULL) {
                 return -EINVAL;
             }
 
-            if (safe_str_eq(node_type, "remote")) {
+            if (pcmk__str_eq(node_type, "remote", pcmk__str_casei)) {
                 xml_top = create_xml_node(xml_obj, XML_CIB_TAG_NODES);
                 xml_obj = create_xml_node(xml_top, XML_CIB_TAG_NODE);
                 crm_xml_add(xml_obj, XML_ATTR_TYPE, "remote");
@@ -220,7 +220,7 @@ update_attr_delegate(cib_t * the_cib, int call_options,
                 tag = XML_CIB_TAG_NODE;
             }
 
-        } else if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+        } else if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
             tag = XML_TAG_TRANSIENT_NODEATTRS;
             if (node_uuid == NULL) {
                 return -EINVAL;
@@ -236,10 +236,10 @@ update_attr_delegate(cib_t * the_cib, int call_options,
         }
 
         if (set_name == NULL) {
-            if (safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+            if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
                 local_set_name = strdup(CIB_OPTIONS_FIRST);
 
-            } else if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
+            } else if (pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
                 local_set_name = crm_strdup_printf("%s-%s", section,
                                                    XML_CIB_TAG_TICKETS);
 
@@ -277,8 +277,8 @@ update_attr_delegate(cib_t * the_cib, int call_options,
             }
         }
 
-        if (node_uuid == NULL && safe_str_neq(node_type, XML_CIB_TAG_TICKETS)) {
-            if (safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
+        if (node_uuid == NULL && !pcmk__str_eq(node_type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+            if (pcmk__str_eq(section, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
                 xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_PROPSET);
             } else {
                 xml_obj = create_xml_node(xml_obj, XML_TAG_META_SETS);
@@ -407,16 +407,16 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
 
     /* If there are multiple results, the first is sufficient */
     tag = (const char *) (result->name);
-    if (safe_str_eq(tag, "xpath-query")) {
+    if (pcmk__str_eq(tag, "xpath-query", pcmk__str_casei)) {
         result = __xml_first_child(result);
         CRM_CHECK(result != NULL, return rc);
         tag = (const char *) (result->name);
     }
 
-    if (safe_str_eq(tag, XML_CIB_TAG_NODE)) {
+    if (pcmk__str_eq(tag, XML_CIB_TAG_NODE, pcmk__str_casei)) {
         /* Result is <node> tag from <nodes> section */
 
-        if (safe_str_eq(crm_element_value(result, XML_ATTR_TYPE), "remote")) {
+        if (pcmk__str_eq(crm_element_value(result, XML_ATTR_TYPE), "remote", pcmk__str_casei)) {
             parsed_uuid = crm_element_value(result, XML_ATTR_UNAME);
             parsed_is_remote = TRUE;
         } else {
@@ -424,19 +424,19 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
             parsed_is_remote = FALSE;
         }
 
-    } else if (safe_str_eq(tag, XML_CIB_TAG_RESOURCE)) {
+    } else if (pcmk__str_eq(tag, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
         /* Result is <primitive> for ocf:pacemaker:remote resource */
 
         parsed_uuid = ID(result);
         parsed_is_remote = TRUE;
 
-    } else if (safe_str_eq(tag, XML_CIB_TAG_NVPAIR)) {
+    } else if (pcmk__str_eq(tag, XML_CIB_TAG_NVPAIR, pcmk__str_casei)) {
         /* Result is remote-node parameter of <primitive> for guest node */
 
         parsed_uuid = crm_element_value(result, XML_NVPAIR_ATTR_VALUE);
         parsed_is_remote = TRUE;
 
-    } else if (safe_str_eq(tag, XML_CIB_TAG_STATE)) {
+    } else if (pcmk__str_eq(tag, XML_CIB_TAG_STATE, pcmk__str_casei)) {
         /* Result is <node_state> tag from <status> section */
 
         parsed_uuid = crm_element_value(result, XML_ATTR_UNAME);
@@ -535,7 +535,8 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     }
 
     xml_obj = fragment;
-    CRM_CHECK(safe_str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES), return -ENOMSG);
+    CRM_CHECK(pcmk__str_eq(crm_element_name(xml_obj), XML_CIB_TAG_NODES, pcmk__str_casei),
+              return -ENOMSG);
     CRM_ASSERT(xml_obj != NULL);
     crm_log_xml_trace(xml_obj, "Result section");
 
@@ -543,9 +544,9 @@ query_node_uname(cib_t * the_cib, const char *uuid, char **uname)
     *uname = NULL;
 
     for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
-        if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, TRUE)) {
+        if (pcmk__str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
             child_name = ID(a_child);
-            if (safe_str_eq(uuid, child_name)) {
+            if (pcmk__str_eq(uuid, child_name, pcmk__str_casei)) {
                 child_name = crm_element_value(a_child, XML_ATTR_UNAME);
                 if (child_name != NULL) {
                     *uname = strdup(child_name);
@@ -569,7 +570,7 @@ set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *st
     CRM_CHECK(uuid != NULL, return -EINVAL);
     CRM_CHECK(standby_value != NULL, return -EINVAL);
 
-    if (pcmk__str_any_of(scope, "reboot", XML_CIB_TAG_STATUS, NULL)) {
+    if (pcmk__strcase_any_of(scope, "reboot", XML_CIB_TAG_STATUS, NULL)) {
         scope = XML_CIB_TAG_STATUS;
         attr_id = crm_strdup_printf("transient-standby-%.256s", uuid);
 

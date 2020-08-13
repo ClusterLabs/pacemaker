@@ -13,6 +13,7 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <regex.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -261,21 +262,6 @@ crm_get_msec(const char *input)
 }
 
 gboolean
-safe_str_neq(const char *a, const char *b)
-{
-    if (a == b) {
-        return FALSE;
-
-    } else if (a == NULL || b == NULL) {
-        return TRUE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return FALSE;
-    }
-    return TRUE;
-}
-
-gboolean
 crm_is_true(const char *s)
 {
     gboolean ret = FALSE;
@@ -321,26 +307,6 @@ crm_strip_trailing_newline(char *str)
     }
 
     return str;
-}
-
-gboolean
-crm_str_eq(const char *a, const char *b, gboolean use_case)
-{
-    if (use_case) {
-        return g_strcmp0(a, b) == 0;
-
-        /* TODO - Figure out which calls, if any, really need to be case independent */
-    } else if (a == b) {
-        return TRUE;
-
-    } else if (a == NULL || b == NULL) {
-        /* shouldn't be comparing NULLs */
-        return FALSE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return TRUE;
-    }
-    return FALSE;
 }
 
 /*!
@@ -469,7 +435,7 @@ g_str_hash_traditional(gconstpointer v)
 gboolean
 crm_strcase_equal(gconstpointer a, gconstpointer b)
 {
-    return crm_str_eq((const char *) a, (const char *) b, FALSE);
+    return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
 guint
@@ -613,7 +579,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     *end = -1;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring == NULL || strcmp(srcstring, "") == 0 || strcmp(srcstring, "-") == 0) {
+    if (pcmk__str_empty(srcstring) || !strcmp(srcstring, "-")) {
         return pcmk_rc_unknown_format;
     }
 
@@ -657,6 +623,18 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Find a string in a list of strings
+ *
+ * Search \p lst for \p s, taking case into account.  As a special case,
+ * if "*" is the only element of \p lst, the search is successful.
+ *
+ * \param[in]  lst  List to search
+ * \param[in]  s    String to search for
+ *
+ * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
+ */
 gboolean
 pcmk__str_in_list(GList *lst, const gchar *s)
 {
@@ -671,48 +649,70 @@ pcmk__str_in_list(GList *lst, const gchar *s)
     return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
 }
 
-bool
-pcmk__str_any_of(const char *s, ...)
+static bool
+str_any_of(bool casei, const char *s, va_list args)
 {
     bool rc = false;
-    va_list ap;
-
-    va_start(ap, s);
 
     while (1) {
-        const char *ele = va_arg(ap, const char *);
+        const char *ele = va_arg(args, const char *);
 
         if (ele == NULL) {
             break;
-        } else if (crm_str_eq(s, ele, FALSE)) {
+        } else if (pcmk__str_eq(s, ele, casei ? pcmk__str_casei : pcmk__str_none)) {
             rc = true;
             break;
         }
     }
 
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Is a string a member of a list of strings?
+ *
+ * \param[in]  s    String to search for in \p ...
+ * \param[in]  ...  Strings to compare \p s against.  The final string
+ *                  must be NULL.
+ *
+ * \note The comparison is done case-insensitively.  The function name is
+ *       meant to be reminiscent of strcasecmp.
+ *
+ * \return \c true if \p s is in \p ..., or \c false otherwise
+ */
+bool
+pcmk__strcase_any_of(const char *s, ...)
+{
+    va_list ap;
+    bool rc;
+
+    va_start(ap, s);
+    rc = str_any_of(true, s, ap);
     va_end(ap);
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Is a string a member of a list of strings?
+ *
+ * \param[in]  s    String to search for in \p ...
+ * \param[in]  ...  Strings to compare \p s against.  The final string
+ *                  must be NULL.
+ *
+ * \note The comparison is done taking case into account.
+ *
+ * \return \c true if \p s is in \p ..., or \c false otherwise
+ */
 bool
-pcmk__str_none_of(const char *s, ...)
+pcmk__str_any_of(const char *s, ...)
 {
-    bool rc = true;
     va_list ap;
+    bool rc;
 
     va_start(ap, s);
-
-    while (1) {
-        const char *ele = va_arg(ap, const char *);
-
-        if (ele == NULL) {
-            break;
-        } else if (crm_str_eq(s, ele, FALSE)) {
-            rc = false;
-            break;
-        }
-    }
-
+    rc = str_any_of(false, s, ap);
     va_end(ap);
     return rc;
 }
@@ -779,4 +779,139 @@ pcmk_numeric_strcasecmp(const char *s1, const char *s2)
         return 1;
     }
     return 0;
+}
+
+/*
+ * \brief Sort strings.
+ *
+ * This is your one-stop function for string comparison.  By default, this
+ * function works like g_strcmp0.  That is, like strcmp but a NULL string
+ * sorts before a non-NULL string.
+ *
+ * Behavior can be changed with various flags:
+ *
+ * - pcmk__str_regex - The second string is a regular expression that the
+ *                     first string will be matched against.
+ * - pcmk__str_casei - By default, comparisons are done taking case into
+ *                     account.  This flag makes comparisons case-insensitive.
+ *                     This can be combined with pcmk__str_regex.
+ * - pcmk__str_null_matches - If one string is NULL and the other is not,
+ *                            still return 0.
+ *
+ * \param[in] s1    First string to compare
+ * \param[in] s2    Second string to compare, or a regular expression to
+ *                  match if pcmk__str_regex is set
+ * \param[in] flags A bitfield of pcmk__str_flags to modify operation
+ *
+ * \retval -1 \p s1 is NULL or comes before \p s2
+ * \retval  0 \p s1 and \p s2 are equal, or \p s1 is found in \p s2 if
+ *            pcmk__str_regex is set
+ * \retval  1 \p s2 is NULL or \p s1 comes after \p s2, or if \p s2
+ *            is an invalid regular expression, or \p s1 was not found
+ *            in \p s2 if pcmk__str_regex is set.
+ */
+int
+pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
+{
+    /* If this flag is set, the second string is a regex. */
+    if (is_set(flags, pcmk__str_regex)) {
+        regex_t *r_patt = calloc(1, sizeof(regex_t));
+        int reg_flags = REG_EXTENDED | REG_NOSUB | (is_set(flags, pcmk__str_casei) ? REG_ICASE : 0);
+        int regcomp_rc = 0;
+        int rc = 0;
+
+        if (s1 == NULL || s2 == NULL) {
+            free(r_patt);
+            return 1;
+        }
+
+        regcomp_rc = regcomp(r_patt, s2, reg_flags);
+        if (regcomp_rc != 0) {
+            rc = 1;
+            crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
+        } else {
+            rc = regexec(r_patt, s1, 0, NULL, 0);
+
+            if (rc != 0) {
+                rc = 1;
+            }
+        }
+
+        regfree(r_patt);
+        free(r_patt);
+        return rc;
+    }
+
+    /* If the strings are the same pointer, return 0 immediately. */
+    if (s1 == s2) {
+        return 0;
+    }
+
+    /* If this flag is set, return 0 if either (or both) of the input strings
+     * are NULL.  If neither one is NULL, we need to continue and compare
+     * them normally.
+     */
+    if (is_set(flags, pcmk__str_null_matches)) {
+        if (s1 == NULL || s2 == NULL) {
+            return 0;
+        }
+    }
+
+    /* Handle the cases where one is NULL and the str_null_matches flag is not set.
+     * A NULL string always sorts to the beginning.
+     */
+    if (s1 == NULL) {
+        return -1;
+    } else if (s2 == NULL) {
+        return 1;
+    }
+
+    if (is_set(flags, pcmk__str_casei)) {
+        return strcasecmp(s1, s2);
+    } else {
+        return strcmp(s1, s2);
+    }
+}
+
+// Deprecated functions kept only for backward API compatibility
+
+gboolean safe_str_neq(const char *a, const char *b);
+
+gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean
+safe_str_neq(const char *a, const char *b)
+{
+    if (a == b) {
+        return FALSE;
+
+    } else if (a == NULL || b == NULL) {
+        return TRUE;
+
+    } else if (strcasecmp(a, b) == 0) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean
+crm_str_eq(const char *a, const char *b, gboolean use_case)
+{
+    if (use_case) {
+        return g_strcmp0(a, b) == 0;
+
+        /* TODO - Figure out which calls, if any, really need to be case independent */
+    } else if (a == b) {
+        return TRUE;
+
+    } else if (a == NULL || b == NULL) {
+        /* shouldn't be comparing NULLs */
+        return FALSE;
+
+    } else if (strcasecmp(a, b) == 0) {
+        return TRUE;
+    }
+    return FALSE;
 }

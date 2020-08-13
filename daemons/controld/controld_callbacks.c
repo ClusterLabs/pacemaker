@@ -29,10 +29,10 @@ crmd_ha_msg_filter(xmlNode * msg)
     if (AM_I_DC) {
         const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
 
-        if (safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
+        if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
             const char *from = crm_element_value(msg, F_ORIG);
 
-            if (safe_str_neq(from, fsa_our_uname)) {
+            if (!pcmk__str_eq(from, fsa_our_uname, pcmk__str_casei)) {
                 int level = LOG_INFO;
                 const char *op = crm_element_value(msg, F_CRM_TASK);
 
@@ -54,7 +54,7 @@ crmd_ha_msg_filter(xmlNode * msg)
     } else {
         const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
 
-        if (safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
+        if (pcmk__str_eq(sys_to, CRM_SYSTEM_DC, pcmk__str_casei)) {
             return;
         }
     }
@@ -81,14 +81,14 @@ node_alive(const crm_node_t *node)
 {
     if (is_set(node->flags, crm_remote_node)) {
         // Pacemaker Remote nodes can't be partially alive
-        return safe_str_eq(node->state, CRM_NODE_MEMBER)? 1: -1;
+        return pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei) ? 1: -1;
 
     } else if (crm_is_peer_active(node)) {
         // Completely up cluster node: both cluster member and peer
         return 1;
 
     } else if (is_not_set(node->processes, crm_get_cluster_proc())
-               && safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+               && !pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
         // Completely down cluster node: neither cluster member nor peer
         return -1;
     }
@@ -130,13 +130,14 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             /* This callback should not be called unless the state actually
              * changed, but here's a failsafe just in case.
              */
-            CRM_CHECK(safe_str_neq(data, node->state), return);
+            CRM_CHECK(!pcmk__str_eq(data, node->state, pcmk__str_casei),
+                      return);
 
             crm_info("%s node %s is now %s (was %s)",
                      (is_remote? "Remote" : "Cluster"),
                      node->uname, state_text(node->state), state_text(data));
 
-            if (safe_str_eq(CRM_NODE_MEMBER, node->state)) {
+            if (pcmk__str_eq(CRM_NODE_MEMBER, node->state, pcmk__str_casei)) {
                 appeared = TRUE;
                 if (!is_remote) {
                     remove_stonith_cleanup(node->uname);
@@ -181,12 +182,12 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 return;
             }
 
-            if (safe_str_eq(node->uname, fsa_our_uname) && !appeared) {
+            if (pcmk__str_eq(node->uname, fsa_our_uname, pcmk__str_casei) && !appeared) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
 
-            } else if (safe_str_eq(node->uname, fsa_our_dc) && crm_is_peer_active(node) == FALSE) {
+            } else if (pcmk__str_eq(node->uname, fsa_our_dc, pcmk__str_casei) && crm_is_peer_active(node) == FALSE) {
                 /* Did the DC leave us? */
                 crm_notice("Our peer on the DC (%s) is dead", fsa_our_dc);
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
@@ -237,13 +238,13 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         if (down) {
             const char *task = crm_element_value(down->xml, XML_LRM_ATTR_TASK);
 
-            if (safe_str_eq(task, CRM_OP_FENCE)) {
+            if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
 
                 /* tengine_stonith_callback() confirms fence actions */
                 crm_trace("Updating CIB %s fencer reported fencing of %s complete",
                           (down->confirmed? "after" : "before"), node->uname);
 
-            } else if (!appeared && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+            } else if (!appeared && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
 
                 // Shutdown actions are immediately confirmed (i.e. no_wait)
                 if (!is_remote) {

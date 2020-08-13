@@ -46,21 +46,21 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
                          &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
-        || safe_str_neq(conf_op_name, lrm_op_task)) {
+        || !pcmk__str_eq(conf_op_name, lrm_op_task, pcmk__str_casei)) {
         return FALSE;
     }
 
     lrm_op_id = ID(lrm_op_xml);
     last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
 
-    if (safe_str_eq(last_failure_key, lrm_op_id)) {
+    if (pcmk__str_eq(last_failure_key, lrm_op_id, pcmk__str_casei)) {
         matched = TRUE;
 
     } else {
         char *expected_op_key = pcmk__op_key(rsc_id, conf_op_name,
                                                 conf_op_interval_ms);
 
-        if (safe_str_eq(expected_op_key, lrm_op_id)) {
+        if (pcmk__str_eq(expected_op_key, lrm_op_id, pcmk__str_casei)) {
             int rc = 0;
             int target_rc = pe__target_rc_from_xml(lrm_op_xml);
 

@@ -150,12 +150,12 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
      * defuse the short exit timer to give the cluster time to
      * stop any resources we're running.
      */
-    if (safe_str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_ACK)) {
+    if (pcmk__str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_ACK, pcmk__str_casei)) {
         handle_shutdown_ack();
         return;
     }
 
-    if (safe_str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_NACK)) {
+    if (pcmk__str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_NACK, pcmk__str_casei)) {
         handle_shutdown_nack();
         return;
     }
@@ -184,11 +184,11 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
      * and forwarding it to connection 1.
      */
 
-    if (safe_str_eq(msg_type, LRMD_IPC_OP_EVENT)) {
+    if (pcmk__str_eq(msg_type, LRMD_IPC_OP_EVENT, pcmk__str_casei)) {
         crm_trace("Sending event to %s", ipc_client->id);
         rc = pcmk__ipc_send_xml(ipc_client, 0, msg, crm_ipc_server_event);
 
-    } else if (safe_str_eq(msg_type, LRMD_IPC_OP_RESPONSE)) {
+    } else if (pcmk__str_eq(msg_type, LRMD_IPC_OP_RESPONSE, pcmk__str_casei)) {
         int msg_id = 0;
 
         crm_element_value_int(xml, F_LRMD_IPC_MSG_ID, &msg_id);
@@ -198,7 +198,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
         ipc_client->request_id = 0;
 
-    } else if (safe_str_eq(msg_type, LRMD_IPC_OP_DESTROY)) {
+    } else if (pcmk__str_eq(msg_type, LRMD_IPC_OP_DESTROY, pcmk__str_casei)) {
         qb_ipcs_disconnect(ipc_client->ipcs);
 
     } else {
@@ -393,7 +393,7 @@ ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
     g_hash_table_iter_init(&iter, ipc_clients);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & ipc_client)) {
         const char *proxy_id = ipc_client->userdata;
-        if (safe_str_eq(proxy_id, ipc_proxy->id)) {
+        if (pcmk__str_eq(proxy_id, ipc_proxy->id, pcmk__str_casei)) {
             crm_info("ipc proxy connection for client %s pid %d destroyed because cluster node disconnected.",
                 ipc_client->id, ipc_client->pid);
             /* we can't remove during the iteration, so copy items

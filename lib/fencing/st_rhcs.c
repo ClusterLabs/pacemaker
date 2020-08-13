@@ -273,7 +273,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             return -ETIME;
         }
 
-    } else if (safe_str_eq(host_arg, "none")) {
+    } else if (pcmk__str_eq(host_arg, "none", pcmk__str_casei)) {
         host_arg = NULL;
     }
 

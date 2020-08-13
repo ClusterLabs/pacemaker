@@ -36,11 +36,11 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
         crm_update_peer_join(__FUNCTION__, node, crm_join_none);
 
         if(node && node->uname) {
-            if (safe_str_eq(fsa_our_uname, node->uname)) {
+            if (pcmk__str_eq(fsa_our_uname, node->uname, pcmk__str_casei)) {
                 crm_err("We're not part of the cluster anymore");
                 register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
-            } else if (AM_I_DC == FALSE && safe_str_eq(node->uname, fsa_our_dc)) {
+            } else if (AM_I_DC == FALSE && pcmk__str_eq(node->uname, fsa_our_dc, pcmk__str_casei)) {
                 crm_warn("Our DC node (%s) left the cluster", node->uname);
                 register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
             }
@@ -151,7 +151,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
     if ((flags & node_update_cluster) && node->state) {
         crm_xml_add_boolean(node_state, XML_NODE_IN_CLUSTER,
-                            safe_str_eq(node->state, CRM_NODE_MEMBER));
+                            pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei));
     }
 
     if (!is_set(node->flags, crm_remote_node)) {
@@ -211,7 +211,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         return;
     }
 
-    if (safe_str_eq(crm_element_name(output), XML_CIB_TAG_NODE)) {
+    if (pcmk__str_eq(crm_element_name(output), XML_CIB_TAG_NODE, pcmk__str_casei)) {
         node_xml = output;
 
     } else {
@@ -225,7 +225,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         crm_node_t *node = NULL;
         gboolean known = FALSE;
 
-        if (safe_str_neq(crm_element_name(node_xml), XML_CIB_TAG_NODE)) {
+        if (!pcmk__str_eq(crm_element_name(node_xml), XML_CIB_TAG_NODE, pcmk__str_casei)) {
             continue;
         }
 
@@ -239,9 +239,9 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (node->uuid
-                && safe_str_eq(node->uuid, node_uuid)
+                && pcmk__str_eq(node->uuid, node_uuid, pcmk__str_casei)
                 && node->uname
-                && safe_str_eq(node->uname, node_uname)) {
+                && pcmk__str_eq(node->uname, node_uname, pcmk__str_casei)) {
 
                 known = TRUE;
                 break;

@@ -126,7 +126,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
         crm_info("Not making join-%d offer to inactive node %s",
                  current_join_id,
                  (member->uname? member->uname : "with unknown name"));
-        if(member->expected == NULL && safe_str_eq(member->state, CRM_NODE_LOST)) {
+        if(member->expected == NULL && pcmk__str_eq(member->state, CRM_NODE_LOST, pcmk__str_casei)) {
             /* You would think this unsafe, but in fact this plus an
              * active resource is what causes it to be fenced.
              *
@@ -364,7 +364,7 @@ do_dc_join_filter_offer(long long action,
         max_generation_xml = copy_xml(generation);
         max_generation_from = strdup(join_from);
 
-    } else if (cmp < 0 || (cmp == 0 && safe_str_eq(join_from, fsa_our_uname))) {
+    } else if (cmp < 0 || (cmp == 0 && pcmk__str_eq(join_from, fsa_our_uname, pcmk__str_casei))) {
         crm_debug("Accepting join-%d request from %s (with better "
                   "CIB generation than current best from %s) " CRM_XS " ref=%s",
                   join_id, join_from, max_generation_from, ref);
@@ -434,7 +434,7 @@ do_dc_join_finalize(long long action,
     }
 
     clear_bit(fsa_input_register, R_HAVE_CIB);
-    if (max_generation_from == NULL || safe_str_eq(max_generation_from, fsa_our_uname)) {
+    if (pcmk__str_eq(max_generation_from, fsa_our_uname, pcmk__str_null_matches | pcmk__str_casei)) {
         set_bit(fsa_input_register, R_HAVE_CIB);
     }
 
@@ -588,7 +588,7 @@ do_dc_join_ack(long long action,
         section = controld_section_lrm_unlocked;
     }
     controld_delete_node_state(join_from, section, cib_scope_local);
-    if (safe_str_eq(join_from, fsa_our_uname)) {
+    if (pcmk__str_eq(join_from, fsa_our_uname, pcmk__str_casei)) {
         xmlNode *now_dc_lrmd_state = controld_query_executor_state(fsa_our_uname);
 
         if (now_dc_lrmd_state != NULL) {

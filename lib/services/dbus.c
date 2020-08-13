@@ -344,7 +344,7 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
                 case DBUS_TYPE_STRING:
                     dbus_message_iter_get_basic(&sv, &name);
 
-                    if(data->name && strcmp(name.str, data->name) != 0) {
+                    if(!pcmk__str_eq(data->name, name.str, pcmk__str_null_matches)) {
                         dbus_message_iter_next (&sv); /* Skip the value */
                     }
                     break;

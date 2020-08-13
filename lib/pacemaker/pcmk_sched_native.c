@@ -210,14 +210,14 @@ best_node_score_matching_attr(const pe_resource_t *rsc, const char *attr,
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
         if ((node->weight > best_score) && can_run_resources(node)
-            && safe_str_eq(value, pe_node_attribute_raw(node, attr))) {
+            && pcmk__str_eq(value, pe_node_attribute_raw(node, attr), pcmk__str_casei)) {
 
             best_score = node->weight;
             best_node = node->details->uname;
         }
     }
 
-    if (safe_str_neq(attr, CRM_ATTR_UNAME)) {
+    if (!pcmk__str_eq(attr, CRM_ATTR_UNAME, pcmk__str_casei)) {
         if (best_node == NULL) {
             crm_info("No allowed node for %s matches node attribute %s=%s",
                      rsc->id, attr, value);
@@ -483,7 +483,7 @@ node_has_been_unfenced(pe_node_t *node)
 {
     const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
 
-    return unfenced && strcmp("0", unfenced);
+    return !pcmk__str_eq(unfenced, "0", pcmk__str_null_matches);
 }
 
 static inline bool
@@ -667,9 +667,9 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
     for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
          operation = __xml_next_element(operation)) {
 
-        if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+        if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
             value = crm_element_value(operation, "name");
-            if (safe_str_neq(value, name)) {
+            if (!pcmk__str_eq(value, name, pcmk__str_casei)) {
                 continue;
             }
 
@@ -697,7 +697,7 @@ is_op_dup(pe_resource_t *rsc, const char *name, guint interval_ms)
 static bool
 op_cannot_recur(const char *name)
 {
-    return pcmk__str_any_of(name, RSC_STOP, RSC_START, RSC_DEMOTE, RSC_PROMOTE, NULL);
+    return pcmk__strcase_any_of(name, RSC_STOP, RSC_START, RSC_DEMOTE, RSC_PROMOTE, NULL);
 }
 
 static void
@@ -890,7 +890,7 @@ Recurring(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working
              operation != NULL;
              operation = __xml_next_element(operation)) {
 
-            if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+            if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 RecurringOp(rsc, start, node, operation, data_set);
             }
         }
@@ -990,7 +990,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         GListPtr stop_ops = NULL;
         GListPtr local_gIter = NULL;
 
-        if (node && safe_str_eq(stop_node_uname, node_uname)) {
+        if (node && pcmk__str_eq(stop_node_uname, node_uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1100,7 +1100,7 @@ Recurring_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe
              operation != NULL;
              operation = __xml_next_element(operation)) {
 
-            if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
+            if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 RecurringOp_Stopped(rsc, start, node, operation, data_set);
             }
         }
@@ -1478,7 +1478,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
-                        && safe_str_neq(data_set->placement_strategy, "default");
+                        && !pcmk__str_eq(data_set->placement_strategy,
+                                         "default", pcmk__str_casei);
 
     // Order stops before starts (i.e. restart)
     custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -1807,7 +1808,7 @@ influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocatio
     lh_value = pe_node_attribute_raw(rsc_lh->allocated_to, attribute);
     rh_value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
 
-    if (!safe_str_eq(lh_value, rh_value)) {
+    if (!pcmk__str_eq(lh_value, rh_value, pcmk__str_casei)) {
         if(constraint->score == INFINITY && constraint->role_lh == RSC_ROLE_MASTER) {
             rsc_lh->priority = -INFINITY;
         }
@@ -1860,7 +1861,7 @@ colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_
                          constraint->score, rsc_rh->id);
             node->weight = pe__add_scores(-constraint->score, node->weight);
 
-        } else if (safe_str_eq(pe_node_attribute_raw(node, attribute), value)) {
+        } else if (pcmk__str_eq(pe_node_attribute_raw(node, attribute), value, pcmk__str_casei)) {
             if (constraint->score < CRM_SCORE_INFINITY) {
                 pe_rsc_trace(rsc_lh, "%s: %s@%s += %d",
                              constraint->id, rsc_lh->id,
@@ -2068,7 +2069,7 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     if (is_set(filter, pe_action_runnable)
         && is_not_set(then->flags, pe_action_runnable)
         && is_set(then->rsc->flags, pe_rsc_managed)
-        && safe_str_eq(then->task, RSC_START)) {
+        && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
         reason = "stop";
     }
 
@@ -2121,11 +2122,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if (!then_rsc) {
             /* ignore */
-        } else if ((then_rsc_role == RSC_ROLE_STOPPED) && safe_str_eq(then->task, RSC_STOP)) {
+        } else if ((then_rsc_role == RSC_ROLE_STOPPED) && pcmk__str_eq(then->task, RSC_STOP, pcmk__str_casei)) {
             /* ignore... if 'then' is supposed to be stopped after 'first', but
              * then is already stopped, there is nothing to be done when non-symmetrical.  */
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
-                   && safe_str_eq(then->task, RSC_START)
+                   && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)
                    && is_set(then->flags, pe_action_optional)
                    && then->node
                    && pcmk__list_of_1(then_rsc->running_on)
@@ -2532,7 +2533,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         return;
     }
 
-    if (current != NULL && next != NULL && safe_str_neq(current->details->id, next->details->id)) {
+    if (current != NULL && next != NULL && !pcmk__str_eq(current->details->id, next->details->id, pcmk__str_casei)) {
         moving = TRUE;
     }
 
@@ -2909,7 +2910,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     if (pe__is_guest_or_remote_node(node)) {
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
+        if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
             pe_rsc_trace(rsc,
                          "Skipping probe for %s on %s because Pacemaker Remote nodes cannot run stonith agents",
                          rsc->id, node->details->id);
@@ -3166,7 +3167,7 @@ native_start_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_worki
                 break;
 
             case rsc_req_quorum:
-                if (safe_str_eq(action->task, RSC_START)
+                if (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
                     && pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
                     && !rsc_is_known_on(rsc, target)) {
 

@@ -702,10 +702,10 @@ update_dc(xmlNode * msg)
         CRM_CHECK(dc_version != NULL, return FALSE);
         CRM_CHECK(welcome_from != NULL, return FALSE);
 
-        if (AM_I_DC && safe_str_neq(welcome_from, fsa_our_uname)) {
+        if (AM_I_DC && !pcmk__str_eq(welcome_from, fsa_our_uname, pcmk__str_casei)) {
             invalid = TRUE;
 
-        } else if (fsa_our_dc && safe_str_neq(welcome_from, fsa_our_dc)) {
+        } else if (fsa_our_dc && !pcmk__str_eq(welcome_from, fsa_our_dc, pcmk__str_casei)) {
             invalid = TRUE;
         }
 
@@ -734,7 +734,7 @@ update_dc(xmlNode * msg)
         fsa_our_dc_version = strdup(dc_version);
     }
 
-    if (safe_str_eq(fsa_our_dc, last_dc)) {
+    if (pcmk__str_eq(fsa_our_dc, last_dc, pcmk__str_casei)) {
         /* do nothing */
 
     } else if (fsa_our_dc != NULL) {
@@ -864,7 +864,7 @@ get_node_id(xmlNode *lrm_rsc_op)
 {
     xmlNode *node = lrm_rsc_op;
 
-    while (node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
+    while (node != NULL && !pcmk__str_eq(XML_CIB_TAG_STATE, TYPE(node), pcmk__str_casei)) {
         node = node->parent;
     }
 

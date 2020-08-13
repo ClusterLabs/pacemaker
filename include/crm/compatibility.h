@@ -201,16 +201,16 @@ extern "C" {
 static inline enum pe_obj_types
 get_resource_type(const char *name)
 {
-    if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+    if (pcmk__str_eq(name, XML_CIB_TAG_RESOURCE, pcmk__str_casei)) {
         return pe_native;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_GROUP, pcmk__str_casei)) {
         return pe_group;
 
-    } else if (pcmk__str_any_of(name, XML_CIB_TAG_INCARNATION, XML_CIB_TAG_MASTER, NULL)) {
+    } else if (pcmk__strcase_any_of(name, XML_CIB_TAG_INCARNATION, XML_CIB_TAG_MASTER, NULL)) {
         return pe_clone;
 
-    } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
+    } else if (pcmk__str_eq(name, XML_CIB_TAG_CONTAINER, pcmk__str_casei)) {
         return pe_container;
     }
 

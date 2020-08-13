@@ -277,7 +277,7 @@ main(int argc, char **argv)
     /* Where does the XML come from?  If one of various command line options were
      * given, use those.  Otherwise, connect to the CIB and use that.
      */
-    if (safe_str_eq(options.input_xml, "-")) {
+    if (pcmk__str_eq(options.input_xml, "-", pcmk__str_casei)) {
         input = stdin2xml();
 
         if (input == NULL) {

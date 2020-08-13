@@ -226,7 +226,7 @@ pcmk__verify_digest(xmlNode *input, const char *expected)
             return false;
         }
     }
-    passed = safe_str_eq(expected, calculated);
+    passed = pcmk__str_eq(expected, calculated, pcmk__str_casei);
     if (passed) {
         crm_trace("Digest comparison passed: %s", calculated);
     } else {

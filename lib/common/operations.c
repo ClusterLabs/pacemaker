@@ -106,12 +106,12 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
     offset--;
 
     notify = strstr(mutable_key, "_post_notify");
-    if (notify && safe_str_eq(notify, "_post_notify")) {
+    if (notify && pcmk__str_eq(notify, "_post_notify", pcmk__str_casei)) {
         notify[0] = 0;
     }
 
     notify = strstr(mutable_key, "_pre_notify");
-    if (notify && safe_str_eq(notify, "_pre_notify")) {
+    if (notify && pcmk__str_eq(notify, "_pre_notify", pcmk__str_casei)) {
         notify[0] = 0;
     }
 
@@ -415,8 +415,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
     }
 
     /* Meta-data is only needed for these actions */
-    if (op
-        && strcmp(op, CRMD_ACTION_START)
+    if (!pcmk__str_eq(op, CRMD_ACTION_START, pcmk__str_null_matches)
         && strcmp(op, CRMD_ACTION_STATUS)
         && strcmp(op, CRMD_ACTION_PROMOTE)
         && strcmp(op, CRMD_ACTION_DEMOTE)

@@ -4,25 +4,33 @@
 
 static void
 empty_input_list(void) {
+    g_assert(pcmk__strcase_any_of("xxx", NULL) == false);
     g_assert(pcmk__str_any_of("xxx", NULL) == false);
+    g_assert(pcmk__strcase_any_of("", NULL) == false);
     g_assert(pcmk__str_any_of("", NULL) == false);
 }
 
 static void
 empty_string(void) {
+    g_assert(pcmk__strcase_any_of("", "xxx", "yyy", NULL) == false);
     g_assert(pcmk__str_any_of("", "xxx", "yyy", NULL) == false);
+    g_assert(pcmk__strcase_any_of(NULL, "xxx", "yyy", NULL) == false);
     g_assert(pcmk__str_any_of(NULL, "xxx", "yyy", NULL) == false);
 }
 
 static void
 in_list(void) {
+    g_assert(pcmk__strcase_any_of("xxx", "aaa", "bbb", "xxx", NULL) == true);
     g_assert(pcmk__str_any_of("xxx", "aaa", "bbb", "xxx", NULL) == true);
-    g_assert(pcmk__str_any_of("XXX", "aaa", "bbb", "xxx", NULL) == true);
+    g_assert(pcmk__strcase_any_of("XXX", "aaa", "bbb", "xxx", NULL) == true);
+    g_assert(pcmk__str_any_of("XXX", "aaa", "bbb", "xxx", NULL) == false);
 }
 
 static void
 not_in_list(void) {
+    g_assert(pcmk__strcase_any_of("xxx", "aaa", "bbb", NULL) == false);
     g_assert(pcmk__str_any_of("xxx", "aaa", "bbb", NULL) == false);
+    g_assert(pcmk__str_any_of("AAA", "aaa", "bbb", NULL) == false);
 }
 
 int main(int argc, char **argv) {

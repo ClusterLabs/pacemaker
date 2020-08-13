@@ -178,7 +178,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
         CRM_ASSERT(rsc_id != NULL);
 
         /* filter dups */
-        if (safe_str_eq(rsc_id, last_rsc_id)) {
+        if (pcmk__str_eq(rsc_id, last_rsc_id, pcmk__str_casei)) {
             continue;
         }
         last_rsc_id = rsc_id;
@@ -302,10 +302,10 @@ pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe
             const char *interval_ms_s = g_hash_table_lookup(mon->meta,
                                                             XML_LRM_ATTR_INTERVAL_MS);
 
-            if ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0")) {
+            if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
                 pe_rsc_trace(rsc, "Skipping %s: interval", mon->uuid);
                 continue;
-            } else if (safe_str_eq(mon->task, RSC_CANCEL)) {
+            } else if (pcmk__str_eq(mon->task, RSC_CANCEL, pcmk__str_casei)) {
                 pe_rsc_trace(rsc, "Skipping %s: cancel", mon->uuid);
                 continue;
             }
@@ -550,8 +550,8 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
         n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
     }
     expand_list(n_data->stop, &rsc_list, &node_list);
-    if (rsc_list != NULL && safe_str_neq(" ", rsc_list)) {
-        if (safe_str_eq(n_data->action, RSC_STOP)) {
+    if (rsc_list != NULL && !pcmk__str_eq(" ", rsc_list, pcmk__str_casei)) {
+        if (pcmk__str_eq(n_data->action, RSC_STOP, pcmk__str_casei)) {
             required = TRUE;
         }
     }
@@ -560,7 +560,7 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
 
     if (n_data->start) {
         n_data->start = g_list_sort(n_data->start, sort_notify_entries);
-        if (rsc_list && safe_str_eq(n_data->action, RSC_START)) {
+        if (rsc_list && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_casei)) {
             required = TRUE;
         }
     }
@@ -570,7 +570,7 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
 
     if (n_data->demote) {
         n_data->demote = g_list_sort(n_data->demote, sort_notify_entries);
-        if (safe_str_eq(n_data->action, RSC_DEMOTE)) {
+        if (pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_casei)) {
             required = TRUE;
         }
     }
@@ -581,7 +581,7 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
 
     if (n_data->promote) {
         n_data->promote = g_list_sort(n_data->promote, sort_notify_entries);
-        if (safe_str_eq(n_data->action, RSC_PROMOTE)) {
+        if (pcmk__str_eq(n_data->action, RSC_PROMOTE, pcmk__str_casei)) {
             required = TRUE;
         }
     }
@@ -629,7 +629,7 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
     g_list_free(nodes);
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if (safe_str_eq("host", source)) {
+    if (pcmk__str_eq("host", source, pcmk__str_casei)) {
         expand_node_list(data_set->nodes, &node_list, &metal_list);
         add_notify_env_free(n_data, "notify_all_hosts", metal_list);
     } else {

@@ -218,7 +218,7 @@ typedef GList *GListPtr;
 
 static inline const char *
 crm_action_str(const char *task, guint interval_ms) {
-    if(safe_str_eq(task, RSC_STATUS) && !interval_ms) {
+    if (task && strcasecmp(task, RSC_STATUS) && !interval_ms) {
         return "probe";
     }
     return task;

@@ -149,11 +149,11 @@ group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
         if (is_set(action->flags, pe_action_optional)) {
             continue;
         }
-        if (safe_str_eq(RSC_STOP, action->task) && is_set(action->flags, pe_action_runnable)) {
+        if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei) && is_set(action->flags, pe_action_runnable)) {
             group_data->child_stopping = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is stopping", action->uuid);
 
-        } else if (safe_str_eq(RSC_START, action->task)
+        } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)
                    && is_set(action->flags, pe_action_runnable)) {
             group_data->child_starting = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is starting", action->uuid);
@@ -400,7 +400,7 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
                 clear_bit(flags, pe_action_optional);
                 pe_clear_action_bit(action, pe_action_optional);
             }
-            if (safe_str_neq(task_s, action->task)
+            if (!pcmk__str_eq(task_s, action->task, pcmk__str_casei)
                 && is_set(flags, pe_action_runnable)
                 && is_set(child_flags, pe_action_runnable) == FALSE) {
                 pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,

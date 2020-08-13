@@ -53,7 +53,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
             } else if (action->type == action_type_crm) {
                 const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
 
-                if (safe_str_eq(task, CRM_OP_FENCE)) {
+                if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
                     continue;
                 }
             }
@@ -67,7 +67,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
                 }
             }
 
-            if (safe_str_eq(target_uuid, down_node) || safe_str_eq(router_uuid, down_node)) {
+            if (pcmk__str_eq(target_uuid, down_node, pcmk__str_casei) || pcmk__str_eq(router_uuid, down_node, pcmk__str_casei)) {
                 action->failed = TRUE;
                 synapse->failed = TRUE;
                 last_action = action->xml;
@@ -124,7 +124,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     // Nothing needs to be done for success or status refresh
     if (rc == target_rc) {
         return FALSE;
-    } else if (safe_str_eq(origin, "build_active_RAs")) {
+    } else if (pcmk__str_eq(origin, "build_active_RAs", pcmk__str_casei)) {
         crm_debug("No update for %s (rc=%d) on %s: Old failure from lrm status refresh",
                   id, rc, on_uname);
         return FALSE;
@@ -136,18 +136,18 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
               crm_err("Couldn't parse: %s", ID(event)); goto bail);
 
     /* Decide whether update is necessary and what value to use */
-    if ((interval_ms > 0) || safe_str_eq(task, CRMD_ACTION_PROMOTE)
-        || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+    if ((interval_ms > 0) || pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)
+        || pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
         do_update = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
         do_update = TRUE;
         if (failed_start_offset == NULL) {
             failed_start_offset = strdup(CRM_INFINITY_S);
         }
         value = failed_start_offset;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         do_update = TRUE;
         if (failed_stop_offset == NULL) {
             failed_stop_offset = strdup(CRM_INFINITY_S);
@@ -230,18 +230,18 @@ get_cancel_action(const char *id, const char *node)
             crm_action_t *action = (crm_action_t *) gIter2->data;
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-            if (safe_str_neq(CRMD_ACTION_CANCEL, task)) {
+            if (!pcmk__str_eq(CRMD_ACTION_CANCEL, task, pcmk__str_casei)) {
                 continue;
             }
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-            if (safe_str_neq(task, id)) {
+            if (!pcmk__str_eq(task, id, pcmk__str_casei)) {
                 crm_trace("Wrong key %s for %s on %s", task, id, node);
                 continue;
             }
 
             target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-            if (node && safe_str_neq(target, node)) {
+            if (node && !pcmk__str_eq(target, node, pcmk__str_casei)) {
                 crm_trace("Wrong node %s for %s on %s", target, id, node);
                 continue;
             }
@@ -379,7 +379,7 @@ process_graph_event(xmlNode *event, const char *event_node)
         desc = "initiated outside of the cluster";
         abort_transition(INFINITY, tg_restart, "Unexpected event", event);
 
-    } else if ((action_num < 0) || (crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE)) {
+    } else if ((action_num < 0) || !pcmk__str_eq(update_te_uuid, te_uuid, pcmk__str_none)) {
         desc = "initiated by a different DC";
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
 
@@ -437,8 +437,7 @@ process_graph_event(xmlNode *event, const char *event_node)
              * (This is the only case where desc == NULL.)
              */
 
-            if (safe_str_eq(crm_meta_value(action->params, XML_OP_ATTR_ON_FAIL),
-                            "ignore")) {
+            if (pcmk__str_eq(crm_meta_value(action->params, XML_OP_ATTR_ON_FAIL), "ignore", pcmk__str_casei)) {
                 ignore_failures = TRUE;
 
             } else if (rc != target_rc) {

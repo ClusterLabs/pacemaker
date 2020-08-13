@@ -301,7 +301,7 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
     } else if (search->id && node->id != search->id) {
         return FALSE;
 
-    } else if (search->id == 0 && safe_str_neq(node->uname, search->uname)) {
+    } else if (search->id == 0 && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
         return FALSE;
 
     } else if (crm_is_peer_active(value) == FALSE) {
@@ -580,7 +580,7 @@ crm_find_peer(unsigned int id, const char *uname)
         }
 
     } else if(uname && by_id->uname) {
-        if(safe_str_eq(uname, by_id->uname)) {
+        if(pcmk__str_eq(uname, by_id->uname, pcmk__str_casei)) {
             crm_notice("Node '%s' has changed its ID from %u to %u", by_id->uname, by_name->id, by_id->id);
             g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
 
@@ -737,7 +737,7 @@ crm_update_peer_uname(crm_node_t *node, const char *uname)
               crm_err("Bug: can't update node name to %s without node", uname);
               return);
 
-    if (safe_str_eq(uname, node->uname)) {
+    if (pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
         crm_debug("Node uname '%s' did not change", uname);
         return;
     }
@@ -802,7 +802,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
             changed = TRUE;
         }
 
-    } else if (safe_str_eq(status, ONLINESTATUS)) {
+    } else if (pcmk__str_eq(status, ONLINESTATUS, pcmk__str_casei)) {
         if ((node->processes & flag) != flag) {
             set_bit(node->processes, flag);
             changed = TRUE;
@@ -863,7 +863,7 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
     }
 
     last = node->expected;
-    if (expected != NULL && safe_str_neq(node->expected, expected)) {
+    if (expected != NULL && !pcmk__str_eq(node->expected, expected, pcmk__str_casei)) {
         node->expected = strdup(expected);
         changed = TRUE;
     }
@@ -904,7 +904,7 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
                       CRM_XS " source=%s", state, source);
               return NULL);
 
-    is_member = safe_str_eq(state, CRM_NODE_MEMBER);
+    is_member = pcmk__str_eq(state, CRM_NODE_MEMBER, pcmk__str_casei);
     if (is_member) {
         node->when_lost = 0;
         if (membership) {
@@ -912,7 +912,7 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         }
     }
 
-    if (state && safe_str_neq(node->state, state)) {
+    if (state && !pcmk__str_eq(node->state, state, pcmk__str_casei)) {
         char *last = node->state;
 
         node->state = strdup(state);
@@ -1065,12 +1065,12 @@ crm_find_known_peer(const char *id, const char *uname)
         }
 
     } else if (uname && by_id->uname
-               && safe_str_eq(uname, by_id->uname)) {
+               && pcmk__str_eq(uname, by_id->uname, pcmk__str_casei)) {
         /* Multiple nodes have the same uname in the CIB.
          * Return by_id. */
 
     } else if (id && by_name->uuid
-               && safe_str_eq(id, by_name->uuid)) {
+               && pcmk__str_eq(id, by_name->uuid, pcmk__str_casei)) {
         /* Multiple nodes have the same id in the CIB.
          * Return by_name. */
         node = by_name;
@@ -1115,7 +1115,7 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         g_hash_table_replace(crm_known_peer_cache, uniqueid, node);
 
     } else if (is_set(node->flags, crm_node_dirty)) {
-        if (safe_str_neq(uname, node->uname)) {
+        if (!pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
             free(node->uname);
             node->uname = strdup(uname);
             CRM_ASSERT(node->uname != NULL);

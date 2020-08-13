@@ -90,7 +90,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
         const char *value = NULL;
 
-        if (safe_str_eq(CRM_OP_PROBED, name)) {
+        if (pcmk__str_eq(CRM_OP_PROBED, name, pcmk__str_casei)) {
             value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
         }
 
@@ -325,7 +325,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     char *node_uuid = NULL;
     crm_action_t *down = NULL;
 
-    if(safe_str_neq(op, "delete")) {
+    if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
         abort_transition(INFINITY, tg_restart, reason, change);
         return;
     }
@@ -491,12 +491,12 @@ te_update_diff_v2(xmlNode *diff)
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
-                   || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
+                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
-                   || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
+                   || pcmk__str_eq(name, XML_TAG_TRANSIENT_NODEATTRS, pcmk__str_casei)) {
             abort_unless_down(xpath, op, change, "Transient attribute change");
             break; // Won't be packaged with operation results we may be waiting for
 
@@ -616,9 +616,9 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         crm_trace("Bad sys-to %s", crm_str(sys_to));
         return FALSE;
 
-    } else if (safe_str_eq(op, CRM_OP_INVOKE_LRM)
-               && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
-/* 		  && safe_str_eq(type, XML_ATTR_RESPONSE) */
+    } else if (pcmk__str_eq(op, CRM_OP_INVOKE_LRM, pcmk__str_casei)
+               && pcmk__str_eq(sys_from, CRM_SYSTEM_LRMD, pcmk__str_casei)
+/* 		  && pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_casei) */
         ) {
         xmlXPathObject *xpathObj = NULL;
 

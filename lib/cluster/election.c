@@ -439,7 +439,7 @@ parse_election_message(election_t *e, xmlNode *message, struct vote *vote)
 
     // Op-specific validation
 
-    if (crm_str_eq(vote->op, CRM_OP_VOTE, TRUE)) {
+    if (pcmk__str_eq(vote->op, CRM_OP_VOTE, pcmk__str_none)) {
         // Only vote ops have uptime
         crm_element_value_timeval(message, F_CRM_ELECTION_AGE_S,
                                   F_CRM_ELECTION_AGE_US, &(vote->age));
@@ -449,7 +449,7 @@ parse_election_message(election_t *e, xmlNode *message, struct vote *vote)
             return FALSE;
         }
 
-    } else if (!crm_str_eq(vote->op, CRM_OP_NOVOTE, TRUE)) {
+    } else if (!pcmk__str_eq(vote->op, CRM_OP_NOVOTE, pcmk__str_none)) {
         crm_info("Cannot process %s message from %s because %s is not a known election op",
                  (e? e->name : "election"), vote->from, vote->op);
         return FALSE;
@@ -542,7 +542,8 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
     your_node = crm_get_peer(0, vote.from);
     our_node = crm_get_peer(0, e->uname);
     we_are_owner = (our_node != NULL)
-                   && crm_str_eq(our_node->uuid, vote.election_owner, TRUE);
+                   && pcmk__str_eq(our_node->uuid, vote.election_owner,
+                                   pcmk__str_none);
 
     if(can_win == FALSE) {
         reason = "Not eligible";
@@ -564,8 +565,8 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
         log_level = LOG_WARNING;
         done = TRUE;
 
-    } else if (crm_str_eq(vote.op, CRM_OP_NOVOTE, TRUE)
-               || crm_str_eq(vote.from, e->uname, TRUE)) {
+    } else if (pcmk__str_eq(vote.op, CRM_OP_NOVOTE, pcmk__str_none)
+               || pcmk__str_eq(vote.from, e->uname, pcmk__str_none)) {
         /* Receiving our own broadcast vote, or a no-vote from peer, is a vote
          * for us to win
          */

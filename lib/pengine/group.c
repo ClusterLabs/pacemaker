@@ -50,7 +50,7 @@ group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     for (xml_native_rsc = __xml_first_child_element(xml_obj); xml_native_rsc != NULL;
          xml_native_rsc = __xml_next_element(xml_native_rsc)) {
-        if (crm_str_eq((const char *)xml_native_rsc->name, XML_CIB_TAG_RESOURCE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_native_rsc->name, XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
             pe_resource_t *new_rsc = NULL;
 
             crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);

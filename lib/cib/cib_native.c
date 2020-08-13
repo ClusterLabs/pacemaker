@@ -113,10 +113,10 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userda
     crm_trace("Activating %s callbacks...", type);
     crm_log_xml_explicit(msg, "cib-reply");
 
-    if (safe_str_eq(type, T_CIB)) {
+    if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
         cib_native_callback(cib, msg, 0, 0);
 
-    } else if (safe_str_eq(type, T_CIB_NOTIFY)) {
+    } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
         g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
     } else {
@@ -212,7 +212,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
             rc = pcmk_ok;
             crm_log_xml_trace(reply, "reg-reply");
 
-            if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
+            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
                 crm_info("Reply to CIB registration message has "
                          "unknown type '%s'", msg_type);
                 rc = -EPROTO;
@@ -422,7 +422,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
             break;
 
         default:
-            if (safe_str_neq(op, CIB_OP_QUERY)) {
+            if (!pcmk__str_eq(op, CIB_OP_QUERY, pcmk__str_casei)) {
                 crm_warn("Call failed: %s", pcmk_strerror(rc));
             }
     }

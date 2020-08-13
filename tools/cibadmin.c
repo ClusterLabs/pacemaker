@@ -362,7 +362,7 @@ print_xml_output(xmlNode * xml)
     if (command_options & cib_xpath_address) {
         const char *id = crm_element_value(xml, XML_ATTR_ID);
 
-        if (safe_str_eq((const char *)xml->name, "xpath-query")) {
+        if (pcmk__str_eq((const char *)xml->name, "xpath-query", pcmk__str_casei)) {
             xmlNode *child = NULL;
 
             for (child = xml->children; child; child = child->next) {
@@ -598,7 +598,7 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_CONFIG);
     }
 
-    if (safe_str_eq(cib_action, "md5-sum")) {
+    if (pcmk__str_eq(cib_action, "md5-sum", pcmk__str_casei)) {
         char *digest = NULL;
 
         if (input == NULL) {
@@ -613,7 +613,7 @@ main(int argc, char **argv)
         free_xml(input);
         crm_exit(CRM_EX_OK);
 
-    } else if (safe_str_eq(cib_action, "md5-sum-versioned")) {
+    } else if (pcmk__str_eq(cib_action, "md5-sum-versioned", pcmk__str_casei)) {
         char *digest = NULL;
         const char *version = NULL;
 
@@ -657,7 +657,7 @@ main(int argc, char **argv)
         g_main_loop_run(mainloop);
 
     } else if ((rc == -pcmk_err_schema_unchanged)
-               && crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
+               && pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
         report_schema_unchanged();
 
     } else if (rc < 0) {
@@ -665,7 +665,7 @@ main(int argc, char **argv)
         fprintf(stderr, "Call failed: %s\n", pcmk_strerror(rc));
 
         if (rc == -pcmk_err_schema_validation) {
-            if (crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
+            if (pcmk__str_eq(cib_action, CIB_OP_UPGRADE, pcmk__str_none)) {
                 xmlNode *obj = NULL;
                 int version = 0, rc = 0;
 
@@ -704,7 +704,7 @@ do_work(xmlNode * input, int call_options, xmlNode ** output)
     /* construct the request */
     the_cib->call_timeout = message_timeout_ms;
     if (strcasecmp(CIB_OP_REPLACE, cib_action) == 0
-        && safe_str_eq(crm_element_name(input), XML_TAG_CIB)) {
+        && pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, input);
 
         if (status == NULL) {
@@ -751,7 +751,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
         print_xml_output(output);
 
-    } else if (safe_str_eq(cib_action, CIB_OP_QUERY) && output == NULL) {
+    } else if (pcmk__str_eq(cib_action, CIB_OP_QUERY, pcmk__str_casei) && output == NULL) {
         crm_err("Query returned no output");
         crm_log_xml_err(msg, "no output");
 

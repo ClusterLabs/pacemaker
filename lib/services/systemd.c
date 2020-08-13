@@ -236,7 +236,7 @@ systemd_mask_error(svc_action_t *op, const char *error)
        || strstr(error, "org.freedesktop.systemd1.LoadFailed")
        || strstr(error, "org.freedesktop.systemd1.NoSuchUnit")) {
 
-        if (safe_str_eq(op->action, "stop")) {
+        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
             crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
             op->rc = PCMK_OCF_OK;
             return TRUE;
@@ -723,7 +723,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
     CRM_ASSERT(unit);
 
-    if (safe_str_eq(op->action, "monitor") || safe_str_eq(method, "status")) {
+    if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) || pcmk__str_eq(method, "status", pcmk__str_casei)) {
         DBusPendingCall *pending = NULL;
         char *state;
 
@@ -832,7 +832,7 @@ systemd_unit_exec(svc_action_t * op)
     crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'",
               op->synchronous ? "" : "a", op->action, op->agent, op->rsc);
 
-    if (safe_str_eq(op->action, "meta-data")) {
+    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         // @TODO Implement an async meta-data call in executor API
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         op->rc = PCMK_OCF_OK;

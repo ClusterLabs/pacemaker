@@ -53,15 +53,12 @@ long long crm_parse_ll(const char *text, const char *default_text);
 int crm_parse_int(const char *text, const char *default_text);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-gboolean safe_str_neq(const char *a, const char *b);
 gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
 guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
 
-#  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 #  define crm_str_hash g_str_hash_traditional
 
 static inline char *
@@ -219,6 +216,15 @@ bool pcmk_str_is_minus_infinity(const char *s);
 
 //! \deprecated Use pcmk_get_ra_caps() instead
 bool crm_provider_required(const char *standard);
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean safe_str_neq(const char *a, const char *b);
+
+//! \deprecated Use pcmk__str_eq() instead
+#define safe_str_eq(a, b) pcmk__str_eq(a, b, pcmk__str_casei)
 
 #endif // PCMK__NO_COMPAT
 

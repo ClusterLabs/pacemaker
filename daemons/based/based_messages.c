@@ -104,7 +104,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     crm_trace("Processing \"%s\" event", op);
 
-    if (safe_str_eq(op, CIB_OP_ISMASTER)) {
+    if (pcmk__str_eq(op, CIB_OP_ISMASTER, pcmk__str_casei)) {
         if (cib_is_master == TRUE) {
             result = pcmk_ok;
         } else {
@@ -113,7 +113,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
         return result;
     }
 
-    if (safe_str_eq(op, CIB_OP_MASTER)) {
+    if (pcmk__str_eq(op, CIB_OP_MASTER, pcmk__str_casei)) {
         if (cib_is_master == FALSE) {
             crm_info("We are now in R/W mode");
             cib_is_master = TRUE;
@@ -373,7 +373,7 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
     const char *tag = crm_element_name(input);
     int rc =
         cib_process_replace(op, options, section, req, input, existing_cib, result_cib, answer);
-    if (rc == pcmk_ok && safe_str_eq(tag, XML_TAG_CIB)) {
+    if (rc == pcmk_ok && pcmk__str_eq(tag, XML_TAG_CIB, pcmk__str_casei)) {
         sync_in_progress = 0;
     }
     return rc;
@@ -446,13 +446,13 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
     xmlNode *update_section = NULL;
 
     crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
-    if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
+    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (safe_str_eq(XML_TAG_CIB, section)) {
+    } else if (pcmk__str_eq(XML_TAG_CIB, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (safe_str_eq(crm_element_name(input), XML_TAG_CIB)) {
+    } else if (pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         section = NULL;
     }
 

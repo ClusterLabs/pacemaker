@@ -346,12 +346,12 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_warn("Cannot route empty message");
         return TRUE;
 
-    } else if (safe_str_eq(task, CRM_OP_HELLO)) {
+    } else if (pcmk__str_eq(task, CRM_OP_HELLO, pcmk__str_casei)) {
         /* quietly ignore */
         crm_trace("No routing needed for hello message %s", ref);
         return TRUE;
 
-    } else if (safe_str_neq(type, T_CRM)) {
+    } else if (!pcmk__str_eq(type, T_CRM, pcmk__str_casei)) {
         crm_warn("Cannot route message %s: Type is '%s' not '" T_CRM "'",
                  ref, (type? type : "missing"));
         crm_log_xml_warn(msg, "[bad message type]");
@@ -375,8 +375,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = 0;
 
         } else if (is_for_crm) {
-            if (pcmk__str_any_of(task, CRM_OP_NODE_INFO,
-                                 PCMK__CONTROLD_CMD_NODES, NULL)) {
+            if (pcmk__strcase_any_of(task, CRM_OP_NODE_INFO,
+                                     PCMK__CONTROLD_CMD_NODES, NULL)) {
                 /* Node info requests do not specify a host, which is normally
                  * treated as "all hosts", because the whole point is that the
                  * client may not know the local node name. Always handle these
@@ -391,13 +391,13 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = 1;
         }
 
-    } else if (safe_str_eq(fsa_our_uname, host_to)) {
+    } else if (pcmk__str_eq(fsa_our_uname, host_to, pcmk__str_casei)) {
         is_local = 1;
-    } else if (is_for_crm && safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+    } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
-        if (safe_str_eq(mode, XML_TAG_CIB)) {
+        if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
             // Local delete of an offline node's resource history
             is_local = 1;
         }
@@ -412,8 +412,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             crm_trace("Route message %s locally as DC request", ref);
             return FALSE; // More to be done by caller
 
-        } else if (originated_locally && pcmk__str_none_of(sys_from, CRM_SYSTEM_PENGINE,
-                                                          CRM_SYSTEM_TENGINE, NULL)) {
+        } else if (originated_locally && !pcmk__strcase_any_of(sys_from, CRM_SYSTEM_PENGINE,
+                                                               CRM_SYSTEM_TENGINE, NULL)) {
 
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
@@ -528,7 +528,7 @@ controld_authorize_ipc_message(xmlNode *client_msg, pcmk__client_t *curr_client,
         goto rejected;
     }
 
-    if (safe_str_neq(CRM_OP_HELLO, op)) {
+    if (!pcmk__str_eq(CRM_OP_HELLO, op, pcmk__str_casei)) {
         // Only hello messages need to be authorized
         return true;
     }
@@ -572,10 +572,10 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
     CRM_CHECK(msg != NULL, return I_NULL);
 
     type = crm_element_value(msg, F_CRM_MSG_TYPE);
-    if (crm_str_eq(type, XML_ATTR_REQUEST, TRUE)) {
+    if (pcmk__str_eq(type, XML_ATTR_REQUEST, pcmk__str_none)) {
         return handle_request(msg, cause);
 
-    } else if (crm_str_eq(type, XML_ATTR_RESPONSE, TRUE)) {
+    } else if (pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_none)) {
         handle_response(msg);
         return I_NULL;
     }
@@ -914,7 +914,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
         return I_STOP;
     }
 
-    if (safe_str_eq(host_from, fsa_our_dc)) {
+    if (pcmk__str_eq(host_from, fsa_our_dc, pcmk__str_casei)) {
         // Must be logic error -- DC confirming its own unrequested shutdown
         crm_err("Shutting down controller immediately due to "
                 "unexpected shutdown confirmation");
@@ -1150,7 +1150,7 @@ handle_response(xmlNode *stored_msg)
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);
 
-        } else if (safe_str_eq(msg_ref, fsa_pe_ref)) {
+        } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_casei)) {
             ha_msg_input_t fsa_input;
 
             controld_stop_sched_timer();

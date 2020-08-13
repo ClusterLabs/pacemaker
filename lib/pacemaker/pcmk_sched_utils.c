@@ -35,11 +35,11 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         new_con->role_filter = RSC_ROLE_UNKNOWN;
 
 
-        if (discover_mode == NULL || safe_str_eq(discover_mode, "always")) {
+        if (pcmk__str_eq(discover_mode, "always", pcmk__str_null_matches | pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_always;
-        } else if (safe_str_eq(discover_mode, "never")) {
+        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_never;
-        } else if (safe_str_eq(discover_mode, "exclusive")) {
+        } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_exclusive;
             rsc->exclusive_discover = TRUE;
         } else {
@@ -192,11 +192,11 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
     crm_trace("%s (%d) == %s (%d) : weight",
               node1->details->uname, node1_weight, node2->details->uname, node2_weight);
 
-    if (safe_str_eq(nw->data_set->placement_strategy, "minimal")) {
+    if (pcmk__str_eq(nw->data_set->placement_strategy, "minimal", pcmk__str_casei)) {
         goto equal;
     }
 
-    if (safe_str_eq(nw->data_set->placement_strategy, "balanced")) {
+    if (pcmk__str_eq(nw->data_set->placement_strategy, "balanced", pcmk__str_casei)) {
         result = compare_capacity(node1, node2);
         if (result < 0) {
             crm_trace("%s > %s : capacity (%d)",
@@ -310,15 +310,15 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
             const char *interval_ms_s = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL_MS);
 
             crm_debug("Processing %s", op->uuid);
-            if(safe_str_eq(RSC_STOP, op->task)) {
+            if(pcmk__str_eq(RSC_STOP, op->task, pcmk__str_casei)) {
                 update_action_flags(op, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
 
-            } else if(safe_str_eq(RSC_START, op->task)) {
+            } else if(pcmk__str_eq(RSC_START, op->task, pcmk__str_casei)) {
                 update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
                 /* set_bit(rsc->flags, pe_rsc_block); */
 
-            } else if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-                if(safe_str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC))) {
+            } else if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
+                if(pcmk__str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC), pcmk__str_casei)) {
                     /* This is a recurring monitor for the stopped state, leave it alone */
 
                 } else {
@@ -556,7 +556,7 @@ append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
 
 #if 0
     if (level < get_crm_log_level()
-        && op->interval_ms == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
+        && op->interval_ms == 0 && pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
         char *digest_source = dump_xml_unformatted(args_xml);
 
         do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n",
@@ -613,7 +613,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     /* Record a successful reload as a start, and a failed reload as a monitor,
      * to make life easier for the scheduler when determining the current state.
      */
-    if (crm_str_eq(task, "reload", TRUE)) {
+    if (pcmk__str_eq(task, "reload", pcmk__str_none)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_START;
         } else {
@@ -622,7 +622,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
-    if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
+    if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 
@@ -720,8 +720,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    if (crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE, TRUE)
-        || crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
+    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */

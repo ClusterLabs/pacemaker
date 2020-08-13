@@ -187,7 +187,7 @@ initiate_action(crm_graph_t * graph, crm_action_t * action)
         task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
         CRM_CHECK(task != NULL, return FALSE);
 
-        if (safe_str_eq(task, CRM_OP_FENCE)) {
+        if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
             crm_trace("Executing STONITH-event: %s (%d)", id, action->id);
             return graph_fns->stonith(graph, action);
         }

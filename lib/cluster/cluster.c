@@ -301,7 +301,7 @@ get_cluster_type(void)
     if (cluster == NULL) {
 
 #if SUPPORT_COROSYNC
-    } else if (safe_str_eq(cluster, "corosync")) {
+    } else if (pcmk__str_eq(cluster, "corosync", pcmk__str_casei)) {
         cluster_type = pcmk_cluster_corosync;
 #endif
 

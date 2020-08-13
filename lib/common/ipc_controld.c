@@ -235,7 +235,7 @@ done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
 
     // Free any reply data that was allocated
-    if (safe_str_eq(value, PCMK__CONTROLD_CMD_NODES)) {
+    if (pcmk__str_eq(value, PCMK__CONTROLD_CMD_NODES, pcmk__str_casei)) {
         g_list_free_full(reply_data.data.nodes, free);
     }
 }
@@ -309,7 +309,7 @@ create_reprobe_message_data(const char *target_node, const char *router_node)
 
     msg_data = create_xml_node(NULL, "data_for_" CRM_OP_REPROBE);
     crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, target_node);
-    if ((router_node != NULL) && safe_str_neq(router_node, target_node)) {
+    if ((router_node != NULL) && !pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
         crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
     }
     return msg_data;
@@ -512,7 +512,7 @@ controller_resource_op(pcmk_ipc_api_t *api, const char *op,
     free(key);
 
     crm_xml_add(msg_data, XML_LRM_ATTR_TARGET, target_node);
-    if (safe_str_neq(router_node, target_node)) {
+    if (!pcmk__str_eq(router_node, target_node, pcmk__str_casei)) {
         crm_xml_add(msg_data, XML_LRM_ATTR_ROUTER_NODE, router_node);
     }
 

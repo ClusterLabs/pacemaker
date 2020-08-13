@@ -89,7 +89,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
         pe_node_t *a_node = (pe_node_t *) gIter->data;
 
         CRM_CHECK(a_node != NULL, return);
-        if (safe_str_eq(a_node->details->id, node->details->id)) {
+        if (pcmk__str_eq(a_node->details->id, node->details->id, pcmk__str_casei)) {
             return;
         }
     }
@@ -271,7 +271,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
         if (!pe_rsc_is_clone(uber_parent(rsc))) {
             match = FALSE;
 
-        } else if (!strcmp(id, rsc->id) || safe_str_eq(id, rid)) {
+        } else if (!strcmp(id, rsc->id) || pcmk__str_eq(id, rid, pcmk__str_casei)) {
             match = TRUE;
         }
 
@@ -397,23 +397,23 @@ native_pending_state(pe_resource_t * rsc)
 {
     const char *pending_state = NULL;
 
-    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_START)) {
+    if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_START, pcmk__str_casei)) {
         pending_state = "Starting";
 
-    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STOP)) {
+    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         pending_state = "Stopping";
 
-    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_MIGRATE)) {
+    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         pending_state = "Migrating";
 
-    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_MIGRATED)) {
+    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
        /* Work might be done in here. */
         pending_state = "Migrating";
 
-    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_PROMOTE)) {
+    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
         pending_state = "Promoting";
 
-    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_DEMOTE)) {
+    } else if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
         pending_state = "Demoting";
     }
 
@@ -425,7 +425,7 @@ native_pending_task(pe_resource_t * rsc)
 {
     const char *pending_task = NULL;
 
-    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STATUS)) {
+    if (pcmk__str_eq(rsc->pending_task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         pending_task = "Monitoring";
 
     /* Pending probes are not printed, even if pending
@@ -434,7 +434,7 @@ native_pending_task(pe_resource_t * rsc)
      * unpack.c:unpack_rsc_op().
      */
     /*
-    } else if (safe_str_eq(rsc->pending_task, "probe")) {
+    } else if (pcmk__str_eq(rsc->pending_task, "probe", pcmk__str_casei)) {
         pending_task = "Checking";
     */
     }

@@ -354,7 +354,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
         return -ENXIO;
     }
 
-    if (safe_str_neq(crm_element_value(reply, F_TYPE), T_ATTRD)
+    if (!pcmk__str_eq(crm_element_value(reply, F_TYPE), T_ATTRD, pcmk__str_casei)
         || (crm_element_value(reply, PCMK__XA_ATTR_VERSION) == NULL)
         || strcmp(reply_attr, attr_name)) {
             fprintf(stderr,
@@ -382,7 +382,7 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
 
     /* Iterate through reply's XML tags (a node tag for each host-value pair) */
     for (child = __xml_first_child(reply); child != NULL; child = __xml_next(child)) {
-        if (safe_str_neq((const char*)child->name, XML_CIB_TAG_NODE)) {
+        if (!pcmk__str_eq((const char *)child->name, XML_CIB_TAG_NODE, pcmk__str_casei)) {
             crm_warn("Ignoring unexpected %s tag in query reply", child->name);
         } else {
             reply_host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);

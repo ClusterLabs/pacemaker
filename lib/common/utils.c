@@ -68,13 +68,13 @@ char2score(const char *score)
     } else if (pcmk_str_is_infinity(score)) {
         score_f = CRM_SCORE_INFINITY;
 
-    } else if (safe_str_eq(score, "red")) {
+    } else if (pcmk__str_eq(score, "red", pcmk__str_casei)) {
         score_f = pcmk__score_red;
 
-    } else if (safe_str_eq(score, "yellow")) {
+    } else if (pcmk__str_eq(score, "yellow", pcmk__str_casei)) {
         score_f = pcmk__score_yellow;
 
-    } else if (safe_str_eq(score, "green")) {
+    } else if (pcmk__str_eq(score, "green", pcmk__str_casei)) {
         score_f = pcmk__score_green;
 
     } else {
@@ -607,10 +607,10 @@ pcmk_hostname()
 
 bool
 pcmk_str_is_infinity(const char *s) {
-    return crm_str_eq(s, CRM_INFINITY_S, TRUE) || crm_str_eq(s, CRM_PLUS_INFINITY_S, TRUE);
+    return pcmk__str_any_of(s, CRM_INFINITY_S, CRM_PLUS_INFINITY_S, NULL);
 }
 
 bool
 pcmk_str_is_minus_infinity(const char *s) {
-    return crm_str_eq(s, CRM_MINUS_INFINITY_S, TRUE);
+    return pcmk__str_eq(s, CRM_MINUS_INFINITY_S, pcmk__str_none);
 }

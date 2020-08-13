@@ -182,11 +182,11 @@ crm_add_logfile(const char *filename)
 
     if (filename == NULL) {
         return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, "none")) {
+    } else if(pcmk__str_eq(filename, "none", pcmk__str_casei)) {
         return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, "/dev/null")) {
+    } else if(pcmk__str_eq(filename, "/dev/null", pcmk__str_casei)) {
         return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, default_logfile)) {
+    } else if(pcmk__str_eq(filename, default_logfile, pcmk__str_casei)) {
         is_default = TRUE;
     }
 
@@ -646,7 +646,7 @@ crm_priority2int(const char *name)
     int lpc;
 
     for (lpc = 0; name != NULL && p_names[lpc].name != NULL; lpc++) {
-        if (crm_str_eq(p_names[lpc].name, name, TRUE)) {
+        if (pcmk__str_eq(p_names[lpc].name, name, pcmk__str_none)) {
             return p_names[lpc].priority;
         }
     }
@@ -769,7 +769,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         pcmk__set_env_option("logfacility", facility);
     }
 
-    if (safe_str_eq(facility, "none")) {
+    if (pcmk__str_eq(facility, "none", pcmk__str_casei)) {
         quiet = TRUE;
 
 
@@ -805,7 +805,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     crm_enable_stderr(to_stderr);
 
     /* Should we log to a file */
-    if (safe_str_eq("none", logfile)) {
+    if (pcmk__str_eq("none", logfile, pcmk__str_casei)) {
         /* No soup^Hlogs for you! */
     } else if(crm_is_daemon) {
         // Daemons always get a log file, unless explicitly set to "none"
@@ -833,7 +833,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     if (crm_is_daemon) {
         const char *user = getenv("USER");
 
-        if (user != NULL && pcmk__str_none_of(user, "root", CRM_DAEMON_USER, NULL)) {
+        if (user != NULL && !pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Not switching to corefile directory for %s", user);
             crm_is_daemon = FALSE;
         }
@@ -847,7 +847,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (pwent == NULL) {
             crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
 
-        } else if (pcmk__str_none_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
+        } else if (!pcmk__strcase_any_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
 
         } else if (chdir(base) < 0) {

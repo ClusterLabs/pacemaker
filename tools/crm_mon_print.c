@@ -60,7 +60,7 @@ static GListPtr
 build_uname_list(pe_working_set_t *data_set, const char *s) {
     GListPtr unames = NULL;
 
-    if (s == NULL || strcmp(s, "*") == 0) {
+    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         /* Nothing was given so return a list of all node names.  Or, '*' was
          * given.  This would normally fall into the pe__unames_with_tag branch
          * where it will return an empty list.  Catch it here instead.
@@ -92,7 +92,7 @@ static GListPtr
 build_rsc_list(pe_working_set_t *data_set, const char *s) {
     GListPtr resources = NULL;
 
-    if (s == NULL || strcmp(s, "*") == 0) {
+    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         resources = g_list_prepend(resources, strdup("*"));
     } else {
         pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
@@ -284,17 +284,17 @@ get_operation_list(xmlNode *rsc_entry) {
         int op_rc_i = crm_parse_int(op_rc, "0");
 
         /* Display 0-interval monitors as "probe" */
-        if (safe_str_eq(task, CRMD_ACTION_STATUS)
-            && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
+        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
 
         /* Ignore notifies and some probes */
-        if (safe_str_eq(task, CRMD_ACTION_NOTIFY) || (safe_str_eq(task, "probe") && (op_rc_i == 7))) {
+        if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei) || (pcmk__str_eq(task, "probe", pcmk__str_casei) && (op_rc_i == 7))) {
             continue;
         }
 
-        if (crm_str_eq((const char *) rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             op_list = g_list_append(op_list, rsc_op);
         }
     }
@@ -333,8 +333,8 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
         int op_rc_i = crm_parse_int(op_rc, "0");
 
         /* Display 0-interval monitors as "probe" */
-        if (safe_str_eq(task, CRMD_ACTION_STATUS)
-            && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
+        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
             task = "probe";
         }
 
@@ -387,7 +387,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
         const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
         pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
-        if (!crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
             continue;
         }
 
@@ -483,7 +483,7 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
             }
         }
 
-        if (safe_str_neq(type, "ping") && safe_str_neq(type, "pingd")) {
+        if (!pcmk__strcase_any_of(type, "ping", "pingd", NULL)) {
             return FALSE;
         }
 
@@ -494,7 +494,7 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
         }
 
         /* To identify the resource with the attribute name. */
-        if (safe_str_eq(name, attrname)) {
+        if (pcmk__str_eq(name, attrname, pcmk__str_casei)) {
             int host_list_num = 0;
             /* int value = crm_parse_int(attrvalue, "0"); */
             const char *hosts = g_hash_table_lookup(rsc->parameters, "host_list");
@@ -566,7 +566,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
          node_state = __xml_next_element(node_state)) {
         pe_node_t *node;
 
-        if (!crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+        if (!pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             continue;
         }
 

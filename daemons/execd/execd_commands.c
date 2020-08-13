@@ -204,7 +204,7 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
         snprintf(pid_str, 32, "%d", cmd->last_pid);
     }
 
-    if (safe_str_eq(cmd->action, "monitor")) {
+    if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         log_level = LOG_DEBUG;
     }
 #ifdef PCMK__TIME_USE_CGT
@@ -225,7 +225,7 @@ log_execute(lrmd_cmd_t * cmd)
 {
     int log_level = LOG_INFO;
 
-    if (safe_str_eq(cmd->action, "monitor")) {
+    if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         log_level = LOG_DEBUG;
     }
 
@@ -236,7 +236,7 @@ log_execute(lrmd_cmd_t * cmd)
 static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
-    if (safe_str_eq(action, "monitor") &&
+    if (pcmk__str_eq(action, "monitor", pcmk__str_casei) &&
         is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
         return "status";
     }
@@ -288,7 +288,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     cmd->params = xml2list(rsc_xml);
 
-    if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
+    if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block", pcmk__str_casei)) {
         crm_debug("Setting flag to leave pid group on timeout and "
                   "only kill action pid for " PCMK__OP_FMT,
                   cmd->rsc_id, cmd->action, cmd->interval_ms);
@@ -395,7 +395,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
         dup = gIter->data;
-        if (safe_str_eq(cmd->action, dup->action)
+        if (pcmk__str_eq(cmd->action, dup->action, pcmk__str_casei)
             && (cmd->interval_ms == dup->interval_ms)) {
             dup_pending = TRUE;
             goto merge_dup;
@@ -406,7 +406,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
      * and is in the interval loop. we can't just remove it in this case. */
     for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
         dup = gIter->data;
-        if (safe_str_eq(cmd->action, dup->action)
+        if (pcmk__str_eq(cmd->action, dup->action, pcmk__str_casei)
             && (cmd->interval_ms == dup->interval_ms)) {
             goto merge_dup;
         }
@@ -431,7 +431,7 @@ merge_dup:
     cmd->userdata_str = NULL;
     dup->call_id = cmd->call_id;
 
-    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         /* if we are waiting for the next interval, kick it off now */
         if (dup_pending == TRUE) {
             stop_recurring_timer(cmd);
@@ -467,7 +467,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* The controller expects the executor to automatically cancel
      * recurring operations before a resource stops.
      */
-    if (safe_str_eq(cmd->action, "stop")) {
+    if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
         cancel_all_recurring(rsc, NULL);
     }
 
@@ -725,9 +725,9 @@ stonith2uniform_rc(const char *action, int rc)
             /* This should be possible only for probes in practice, but
              * interpret for all actions to be safe.
              */
-            if (safe_str_eq(action, "monitor")) {
+            if (pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
                 rc = PCMK_OCF_NOT_RUNNING;
-            } else if (safe_str_eq(action, "stop")) {
+            } else if (pcmk__str_eq(action, "stop", pcmk__str_casei)) {
                 rc = PCMK_OCF_OK;
             } else {
                 rc = PCMK_OCF_NOT_INSTALLED;
@@ -780,16 +780,16 @@ nagios2uniform_rc(const char *action, int rc)
 static int
 get_uniform_rc(const char *standard, const char *action, int rc)
 {
-    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_OCF)) {
+    if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         return ocf2uniform_rc(rc);
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return stonith2uniform_rc(action, rc);
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         return rc;
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_UPSTART, pcmk__str_casei)) {
         return rc;
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
+    } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
         return nagios2uniform_rc(action, rc);
 #endif
     } else {
@@ -815,7 +815,7 @@ notify_one_client(gpointer key, gpointer value, gpointer user_data)
     pcmk__client_t *client = value;
     struct notify_new_client_data *data = user_data;
 
-    if (safe_str_neq(client->id, data->new_client->id)) {
+    if (!pcmk__str_eq(client->id, data->new_client->id, pcmk__str_casei)) {
         send_client_notify(key, (gpointer) client, (gpointer) data->notify);
     }
 }
@@ -913,16 +913,16 @@ action_complete(svc_action_t * action)
     cmd->lrmd_op_status = action->status;
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
-    if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE)) {
+    if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
         rclass = resources_find_service_class(rsc->type);
     } else if(rsc) {
         rclass = rsc->class;
     }
 
 #ifdef PCMK__TIME_USE_CGT
-    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)) {
+    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         if ((cmd->exec_rc == PCMK_OCF_OK)
-            && pcmk__str_any_of(cmd->action, "start", "stop", NULL)) {
+            && pcmk__strcase_any_of(cmd->action, "start", "stop", NULL)) {
             /* systemd returns from start and stop actions after the action
              * begins, not after it completes. We have to jump through a few
              * hoops so that we don't report 'complete' to the rest of pacemaker
@@ -939,7 +939,7 @@ action_complete(svc_action_t * action)
                 goagain = true;
 
             } else if ((cmd->exec_rc == PCMK_OCF_OK)
-                       && safe_str_eq(cmd->real_action, "stop")) {
+                       && pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
                 goagain = true;
 
             } else {
@@ -957,9 +957,9 @@ action_complete(svc_action_t * action)
                 if ((cmd->lrmd_op_status == PCMK_LRM_OP_DONE)
                     && (cmd->exec_rc == PCMK_OCF_NOT_RUNNING)) {
 
-                    if (safe_str_eq(cmd->real_action, "start")) {
+                    if (pcmk__str_eq(cmd->real_action, "start", pcmk__str_casei)) {
                         cmd->exec_rc = PCMK_OCF_UNKNOWN_ERROR;
-                    } else if (safe_str_eq(cmd->real_action, "stop")) {
+                    } else if (pcmk__str_eq(cmd->real_action, "stop", pcmk__str_casei)) {
                         cmd->exec_rc = PCMK_OCF_OK;
                     }
                 }
@@ -969,13 +969,13 @@ action_complete(svc_action_t * action)
 #endif
 
 #if SUPPORT_NAGIOS
-    if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)) {
-        if (safe_str_eq(cmd->action, "monitor") &&
+    if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
+        if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei) &&
             (cmd->interval_ms == 0) && cmd->exec_rc == PCMK_OCF_OK) {
             /* Successfully executed --version for the nagios plugin */
             cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
-        } else if (safe_str_eq(cmd->action, "start") && cmd->exec_rc != PCMK_OCF_OK) {
+        } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei) && cmd->exec_rc != PCMK_OCF_OK) {
 #ifdef PCMK__TIME_USE_CGT
             goagain = true;
 #endif
@@ -1109,9 +1109,9 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 
         // Certain successful actions change the known state of the resource
         if (rsc && (cmd->exec_rc == PCMK_OCF_OK)) {
-            if (safe_str_eq(cmd->action, "start")) {
+            if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
                 rsc->st_probe_rc = pcmk_ok; // maps to PCMK_OCF_OK
-            } else if (safe_str_eq(cmd->action, "stop")) {
+            } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
                 rsc->st_probe_rc = -ENODEV; // maps to PCMK_OCF_NOT_RUNNING
             }
         }
@@ -1151,7 +1151,7 @@ stonith_connection_failed(void)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
+        if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
             /* If we registered this fence device, we don't know whether the
              * fencer still has the registration or not. Cause future probes to
              * return PCMK_OCF_UNKNOWN_ERROR until the resource is stopped or
@@ -1295,16 +1295,16 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     if (!stonith_api) {
         rc = -ENOTCONN;
 
-    } else if (safe_str_eq(cmd->action, "start")) {
+    } else if (pcmk__str_eq(cmd->action, "start", pcmk__str_casei)) {
         rc = execd_stonith_start(stonith_api, rsc, cmd);
         if (rc == 0) {
             do_monitor = TRUE;
         }
 
-    } else if (safe_str_eq(cmd->action, "stop")) {
+    } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
         rc = execd_stonith_stop(stonith_api, rsc);
 
-    } else if (safe_str_eq(cmd->action, "monitor")) {
+    } else if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         if (cmd->interval_ms > 0) {
             do_monitor = TRUE;
         } else {
@@ -1337,8 +1337,8 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
 #if SUPPORT_NAGIOS
     /* Recurring operations are cancelled anyway for a stop operation */
-    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)
-        && safe_str_eq(cmd->action, "stop")) {
+    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)
+        && pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
 
         cmd->exec_rc = PCMK_OCF_OK;
         goto exec_done;
@@ -1428,7 +1428,7 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
 
     log_execute(cmd);
 
-    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         lrmd_rsc_execute_stonith(rsc, cmd);
     } else {
         lrmd_rsc_execute_service_lib(rsc, cmd);
@@ -1448,7 +1448,8 @@ free_rsc(gpointer data)
 {
     GListPtr gIter = NULL;
     lrmd_rsc_t *rsc = data;
-    int is_stonith = safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH);
+    int is_stonith = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                                  pcmk__str_casei);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
@@ -1538,8 +1539,8 @@ process_lrmd_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
     lrmd_rsc_t *dup = g_hash_table_lookup(rsc_list, rsc->rsc_id);
 
     if (dup &&
-        safe_str_eq(rsc->class, dup->class) &&
-        safe_str_eq(rsc->provider, dup->provider) && safe_str_eq(rsc->type, dup->type)) {
+        pcmk__str_eq(rsc->class, dup->class, pcmk__str_casei) &&
+        pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) && pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
         crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
         free_rsc(rsc);
@@ -1664,7 +1665,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
         lrmd_cmd_t *cmd = gIter->data;
 
-        if (safe_str_eq(cmd->action, action)
+        if (pcmk__str_eq(cmd->action, action, pcmk__str_casei)
             && (cmd->interval_ms == interval_ms)) {
 
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
@@ -1673,13 +1674,13 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         }
     }
 
-    if (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         /* The service library does not handle stonith operations.
          * We have to handle recurring stonith operations ourselves. */
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
             lrmd_cmd_t *cmd = gIter->data;
 
-            if (safe_str_eq(cmd->action, action)
+            if (pcmk__str_eq(cmd->action, action, pcmk__str_casei)
                 && (cmd->interval_ms == interval_ms)) {
 
                 cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
@@ -1731,7 +1732,7 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
             continue;
         }
 
-        if (client_id && safe_str_neq(cmd->client_id, client_id)) {
+        if (client_id && !pcmk__str_eq(cmd->client_id, client_id, pcmk__str_casei)) {
             continue;
         }
 
@@ -1834,46 +1835,46 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
-    if (crm_str_eq(op, CRM_OP_IPC_FWD, TRUE)) {
+    if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
 #ifdef SUPPORT_REMOTE
         ipc_proxy_forward_client(client, request);
 #endif
         do_reply = 1;
-    } else if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+    } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
         reply = process_lrmd_signon(client, request, call_id);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_REG, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
         rc = process_lrmd_rsc_register(client, id, request);
         do_notify = 1;
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_INFO, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_INFO, pcmk__str_none)) {
         reply = process_lrmd_get_rsc_info(request, call_id);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_UNREG, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
         rc = process_lrmd_rsc_unregister(client, id, request);
         /* don't notify anyone about failed un-registers */
         if (rc == pcmk_ok || rc == -EINPROGRESS) {
             do_notify = 1;
         }
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_EXEC, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
         rc = process_lrmd_rsc_exec(client, id, request);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_RSC_CANCEL, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_CANCEL, pcmk__str_none)) {
         rc = process_lrmd_rsc_cancel(client, id, request);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_POKE, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
         do_notify = 1;
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_CHECK, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
         xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
         const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
         CRM_LOG_ASSERT(data != NULL);
         pcmk__valid_sbd_timeout(timeout);
-    } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_ALERT_EXEC, pcmk__str_none)) {
         rc = process_lrmd_alert_exec(client, id, request);
         do_reply = 1;
-    } else if (crm_str_eq(op, LRMD_OP_GET_RECURRING, TRUE)) {
+    } else if (pcmk__str_eq(op, LRMD_OP_GET_RECURRING, pcmk__str_none)) {
         reply = process_lrmd_get_recurring(request, call_id);
         do_reply = 1;
     } else {

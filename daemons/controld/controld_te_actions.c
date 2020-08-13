@@ -43,7 +43,7 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
     const char *task = crm_element_value(pseudo->xml, XML_LRM_ATTR_TASK);
 
     /* send to peers as well? */
-    if (safe_str_eq(task, CRM_OP_MAINTENANCE_NODES)) {
+    if (pcmk__str_eq(task, CRM_OP_MAINTENANCE_NODES, pcmk__str_casei)) {
         GHashTableIter iter;
         crm_node_t *node = NULL;
 
@@ -51,7 +51,7 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             xmlNode *cmd = NULL;
 
-            if (safe_str_eq(fsa_our_uname, node->uname)) {
+            if (pcmk__str_eq(fsa_our_uname, node->uname, pcmk__str_casei)) {
                 continue;
             }
 
@@ -107,10 +107,10 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     if (!router_node) {
         router_node = on_node;
-        if (safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+        if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
             const char *mode = crm_element_value(action->xml, PCMK__XA_MODE);
 
-            if (safe_str_eq(mode, XML_TAG_CIB)) {
+            if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
                 router_node = fsa_our_uname;
             }
         }
@@ -120,7 +120,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
               crm_err("Corrupted command (id=%s) %s: no node", crm_str(id), crm_str(task));
               return FALSE);
 
-    if (safe_str_eq(router_node, fsa_our_uname)) {
+    if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
         is_local = TRUE;
     }
 
@@ -133,7 +133,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
              crm_str(id), (is_local? " locally" : ""),
              (no_wait? " without waiting" : ""), crm_str(task), on_node);
 
-    if (is_local && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+    if (is_local && pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         /* defer until everything else completes */
         crm_info("crm-event (%s) is a local shutdown", crm_str(id));
         graph->completion_action = tg_shutdown;
@@ -141,7 +141,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
         te_action_confirmed(action, graph);
         return TRUE;
 
-    } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
         crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
     }
@@ -308,7 +308,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
                                    get_target_rc(action), te_uuid);
     crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
-    if (safe_str_eq(router_node, fsa_our_uname)) {
+    if (pcmk__str_eq(router_node, fsa_our_uname, pcmk__str_casei)) {
         is_local = TRUE;
     }
 
@@ -451,8 +451,8 @@ te_update_job_count(crm_action_t * action, int offset)
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if ((target == NULL) && pcmk__str_any_of(task, CRMD_ACTION_MIGRATE,
-                                            CRMD_ACTION_MIGRATED, NULL)) {
+    if ((target == NULL) && pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE,
+                                                 CRMD_ACTION_MIGRATED, NULL)) {
 
         const char *t1 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         const char *t2 = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_TARGET);
@@ -498,7 +498,7 @@ te_should_perform_action_on(crm_graph_t * graph, crm_action_t * action, const ch
         return FALSE;
 
     } else if(graph->migration_limit > 0 && r->migrate_jobs >= graph->migration_limit) {
-        if (pcmk__str_any_of(task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
+        if (pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
             crm_trace("Peer %s is over their migration job limit of %d (%d): deferring %s",
                       target, graph->migration_limit, r->migrate_jobs, id);
             return FALSE;
@@ -527,8 +527,8 @@ te_should_perform_action(crm_graph_t * graph, crm_action_t * action)
      * the connection resources */
     target = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if ((target == NULL) && pcmk__str_any_of(task, CRMD_ACTION_MIGRATE,
-                                            CRMD_ACTION_MIGRATED, NULL)) {
+    if ((target == NULL) && pcmk__strcase_any_of(task, CRMD_ACTION_MIGRATE,
+                                                 CRMD_ACTION_MIGRATED, NULL)) {
         target = crm_meta_value(action->params, XML_LRM_ATTR_MIGRATE_SOURCE);
         if(te_should_perform_action_on(graph, action, target) == FALSE) {
             return FALSE;

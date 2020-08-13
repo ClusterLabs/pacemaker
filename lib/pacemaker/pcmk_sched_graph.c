@@ -423,7 +423,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
          || type & pe_order_implies_first
          || type & pe_order_restart)
         && first->rsc
-        && safe_str_eq(first->task, RSC_STOP)
+        && pcmk__str_eq(first->task, RSC_STOP, pcmk__str_casei)
         && is_not_set(first->rsc->flags, pe_rsc_managed)
         && is_set(first->rsc->flags, pe_rsc_block)
         && is_not_set(first->flags, pe_action_runnable)) {
@@ -456,7 +456,7 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
     for (; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (safe_str_neq(action->task, RSC_START)) {
+        if (!pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
             continue;
         }
         if (is_set(action->flags, pe_action_runnable)) {
@@ -474,7 +474,7 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
     GListPtr gIter = NULL;
     pe_resource_t *rsc = NULL;
 
-    if (is_not_set(action->flags, pe_action_runnable) && safe_str_eq(action->task, RSC_START)) {
+    if (is_not_set(action->flags, pe_action_runnable) && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
         rsc = uber_parent(action->rsc);
         if (rsc->parent) {
             /* For bundles, uber_parent() returns the clone/master, not the
@@ -555,14 +555,14 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         enum pe_action_flags then_flags = 0;
         enum pe_action_flags first_flags = 0;
 
-        if (first->rsc && first->rsc->variant == pe_group && safe_str_eq(first->task, RSC_START)) {
+        if (first->rsc && first->rsc->variant == pe_group && pcmk__str_eq(first->task, RSC_START, pcmk__str_casei)) {
             first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
             if (first_node) {
                 crm_trace("First: Found node %s for %s", first_node->details->uname, first->uuid);
             }
         }
 
-        if (then->rsc && then->rsc->variant == pe_group && safe_str_eq(then->task, RSC_START)) {
+        if (then->rsc && then->rsc->variant == pe_group && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
             then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
             if (then_node) {
                 crm_trace("Then: Found node %s for %s", then_node->details->uname, then->uuid);
@@ -725,7 +725,7 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
             pe_rsc_trace(action->rsc, "Skipping %s: node %s is in maintenance mode",
                          action->uuid, node->details->uname);
             continue;
-        } else if (safe_str_neq(action->task, RSC_STOP)) {
+        } else if (!pcmk__str_eq(action->task, RSC_STOP, pcmk__str_casei)) {
             continue;
         } else if (is_not_set(action->rsc->flags, pe_rsc_managed)
                    && is_not_set(action->rsc->flags, pe_rsc_block)) {
@@ -776,7 +776,7 @@ get_router_node(pe_action_t *action)
     bool partial_migration = FALSE;
     const char *task = action->task;
 
-    if (safe_str_eq(task, CRM_OP_FENCE)
+    if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)
         || !pe__is_guest_or_remote_node(action->node)) {
         return NULL;
     }
@@ -823,13 +823,13 @@ get_router_node(pe_action_t *action)
      *    moving to.
      */
 
-    if (safe_str_eq(task, "notify")) {
+    if (pcmk__str_eq(task, "notify", pcmk__str_casei)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 
     /* 1. before connection rsc moves. */
-    if (pcmk__str_any_of(task, "stop", "demote", "migrate_from", "migrate_to",
-                         NULL) && !partial_migration) {
+    if (pcmk__strcase_any_of(task, "stop", "demote", "migrate_from", "migrate_to",
+                             NULL) && !partial_migration) {
         router_node = began_on;
 
     /* 2. after connection rsc moves. */
@@ -944,25 +944,25 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
 {
     CRM_CHECK(xml && action && action->node && data_set, return);
 
-    if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
+    if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
 
         /* Shutdown makes the action's node down */
         xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
         add_node_to_xml_by_id(action->node->details->id, downed);
 
-    } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
 
         /* Fencing makes the action's node and any hosted guest nodes down */
         const char *fence = g_hash_table_lookup(action->meta, "stonith_action");
 
-        if (pcmk__str_any_of(fence, "off", "reboot", NULL)) {
+        if (pcmk__strcase_any_of(fence, "off", "reboot", NULL)) {
             xmlNode *downed = create_xml_node(xml, XML_GRAPH_TAG_DOWNED);
             add_node_to_xml_by_id(action->node->details->id, downed);
             pe_foreach_guest_node(data_set, action->node, add_node_to_xml, downed);
         }
 
     } else if (action->rsc && action->rsc->is_remote_node
-               && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
+               && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
 
         /* Stopping a remote connection resource makes connected node down,
          * unless it's part of a migration
@@ -973,8 +973,8 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
 
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
             input = ((pe_action_wrapper_t *) iter->data)->action;
-            if (input->rsc && safe_str_eq(action->rsc->id, input->rsc->id)
-               && safe_str_eq(input->task, CRMD_ACTION_MIGRATED)) {
+            if (input->rsc && pcmk__str_eq(action->rsc->id, input->rsc->id, pcmk__str_casei)
+                && pcmk__str_eq(input->task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
                 migrating = TRUE;
                 break;
             }
@@ -1021,32 +1021,32 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
         return NULL;
     }
 
-    if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+    if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
         /* All fences need node info; guest node fences are pseudo-events */
         action_xml = create_xml_node(NULL,
                                      is_set(action->flags, pe_action_pseudo)?
                                      XML_GRAPH_TAG_PSEUDO_EVENT :
                                      XML_GRAPH_TAG_CRM_EVENT);
 
-    } else if (safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
-    } else if (safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT, pcmk__str_casei)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
-    } else if (safe_str_eq(action->task, CRM_OP_LRM_REFRESH)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
-    } else if (safe_str_eq(action->task, CRM_OP_LRM_DELETE)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         // CIB-only clean-up for shutdown locks
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
         crm_xml_add(action_xml, PCMK__XA_MODE, XML_TAG_CIB);
 
-/* 	} else if(safe_str_eq(action->task, RSC_PROBED)) { */
+/* 	} else if(pcmk__str_eq(action->task, RSC_PROBED, pcmk__str_casei)) { */
 /* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
 
     } else if (is_set(action->flags, pe_action_pseudo)) {
-        if (safe_str_eq(action->task, CRM_OP_MAINTENANCE_NODES)) {
+        if (pcmk__str_eq(action->task, CRM_OP_MAINTENANCE_NODES, pcmk__str_casei)) {
             needs_maintenance_info = TRUE;
         }
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
@@ -1072,7 +1072,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             interval_ms = 0;
         }
 
-        if (safe_str_eq(action->task, RSC_NOTIFY)) {
+        if (pcmk__str_eq(action->task, RSC_NOTIFY, pcmk__str_casei)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
             const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
 
@@ -1176,7 +1176,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
              * and fall into the clause above instead
              */
             crm_xml_add(rsc_xml, XML_ATTR_ID, xml_id);
-            if (action->rsc->clone_name && safe_str_neq(xml_id, action->rsc->clone_name)) {
+            if (action->rsc->clone_name && !pcmk__str_eq(xml_id, action->rsc->clone_name, pcmk__str_casei)) {
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->clone_name);
             } else {
                 crm_xml_add(rsc_xml, XML_ATTR_ID_LONG, action->rsc->id);
@@ -1292,7 +1292,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             }
         }
 
-    } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei) && action->node) {
         /* Pass the node's attributes as meta-attributes.
          *
          * @TODO: Determine whether it is still necessary to do this. It was
@@ -1328,7 +1328,7 @@ should_dump_action(pe_action_t *action)
         return false;
 
     } else if (is_set(action->flags, pe_action_pseudo)
-               && safe_str_eq(action->task, CRM_OP_PROBED)) {
+               && pcmk__str_eq(action->task, CRM_OP_PROBED, pcmk__str_casei)) {
         GListPtr lpc = NULL;
 
         /* This is a horrible but convenient hack
@@ -1351,7 +1351,7 @@ should_dump_action(pe_action_t *action)
 
             if (is_not_set(wrapper->action->flags, pe_action_runnable)) {
                 /* Only interested in runnable operations */
-            } else if (safe_str_neq(wrapper->action->task, RSC_START)) {
+            } else if (!pcmk__str_eq(wrapper->action->task, RSC_START, pcmk__str_casei)) {
                 /* Only interested in start operations */
             } else if (is_set(wrapper->action->flags, pe_action_dumped)
                        || should_dump_action(wrapper->action)) {
@@ -1377,13 +1377,13 @@ should_dump_action(pe_action_t *action)
 
     // Monitors should be dumped even for unmanaged resources
     } else if (action->rsc && is_not_set(action->rsc->flags, pe_rsc_managed)
-               && safe_str_neq(action->task, RSC_STATUS)) {
+               && !pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)) {
 
         const char *interval_ms_s = g_hash_table_lookup(action->meta,
                                                         XML_LRM_ATTR_INTERVAL_MS);
 
         // Cancellation of recurring monitors should still be dumped
-        if ((interval_ms_s == NULL) || !strcmp(interval_ms_s, "0")) {
+        if (pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches)) {
             crm_trace("Ignoring action %s (%d): for unmanaged resource (%s)",
                       action->uuid, action->id, action->rsc->id);
             return false;
@@ -1391,7 +1391,7 @@ should_dump_action(pe_action_t *action)
     }
 
     if (is_set(action->flags, pe_action_pseudo) ||
-        pcmk__str_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN, NULL)) {
+        pcmk__strcase_any_of(action->task, CRM_OP_FENCE, CRM_OP_SHUTDOWN, NULL)) {
         /* skip the next checks */
         return true;
     }
@@ -1492,7 +1492,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 
     } else if (is_not_set(input->action->flags, pe_action_runnable)
                && (type == pe_order_none)
-               && safe_str_neq(input->action->uuid, CRM_OP_PROBED)) {
+               && !pcmk__str_eq(input->action->uuid, CRM_OP_PROBED, pcmk__str_casei)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional and input unrunnable",
                   action->uuid, action->id,
@@ -1545,7 +1545,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 
         // load orderings are relevant only if actions are for same node
 
-        if (action->rsc && safe_str_eq(action->task, RSC_MIGRATE)) {
+        if (action->rsc && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)) {
             pe_node_t *allocated = action->rsc->allocated_to;
 
             /* For load_stopped -> migrate_to orderings, we care about where it
@@ -1729,7 +1729,7 @@ pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input)
      * break the order "load_stopped_node2" -> "rscA_migrate_to node1".
      */
     if ((input->type == pe_order_load) && action->rsc
-        && safe_str_eq(action->task, RSC_MIGRATE)
+        && pcmk__str_eq(action->task, RSC_MIGRATE, pcmk__str_casei)
         && graph_has_loop(action, action, input)) {
         return true;
     }

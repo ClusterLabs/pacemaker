@@ -262,16 +262,16 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     value = pe_pref(data_set->config_hash, "no-quorum-policy");
 
-    if (safe_str_eq(value, "ignore")) {
+    if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
         data_set->no_quorum_policy = no_quorum_ignore;
 
-    } else if (safe_str_eq(value, "freeze")) {
+    } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
         data_set->no_quorum_policy = no_quorum_freeze;
 
-    } else if (safe_str_eq(value, "demote")) {
+    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         data_set->no_quorum_policy = no_quorum_demote;
 
-    } else if (safe_str_eq(value, "suicide")) {
+    } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
         if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
             int do_panic = 0;
 
@@ -416,10 +416,10 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->running_rsc = NULL;
     new_node->details->type = node_ping;
 
-    if (safe_str_eq(type, "remote")) {
+    if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = node_remote;
         set_bit(data_set->flags, pe_flag_have_remote_nodes);
-    } else if ((type == NULL) || safe_str_eq(type, "member")) {
+    } else if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
         new_node->details->type = node_member;
     }
 
@@ -459,7 +459,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
 
     for (attr_set = __xml_first_child_element(xml_obj); attr_set != NULL;
          attr_set = __xml_next_element(attr_set)) {
-        if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
+        if (!pcmk__str_eq((const char *)attr_set->name, XML_TAG_META_SETS, pcmk__str_casei)) {
             continue;
         }
 
@@ -468,17 +468,17 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
 
-            if (safe_str_eq(name, XML_RSC_ATTR_REMOTE_NODE)) {
+            if (pcmk__str_eq(name, XML_RSC_ATTR_REMOTE_NODE, pcmk__str_casei)) {
                 remote_name = value;
-            } else if (safe_str_eq(name, "remote-addr")) {
+            } else if (pcmk__str_eq(name, "remote-addr", pcmk__str_casei)) {
                 remote_server = value;
-            } else if (safe_str_eq(name, "remote-port")) {
+            } else if (pcmk__str_eq(name, "remote-port", pcmk__str_casei)) {
                 remote_port = value;
-            } else if (safe_str_eq(name, "remote-connect-timeout")) {
+            } else if (pcmk__str_eq(name, "remote-connect-timeout", pcmk__str_casei)) {
                 connect_timeout = value;
-            } else if (safe_str_eq(name, "remote-allow-migrate")) {
+            } else if (pcmk__str_eq(name, "remote-allow-migrate", pcmk__str_casei)) {
                 remote_allow_migrate=value;
-            } else if (safe_str_eq(name, XML_RSC_ATTR_MANAGED)) {
+            } else if (pcmk__str_eq(name, XML_RSC_ATTR_MANAGED, pcmk__str_casei)) {
                 is_managed = value;
             }
         }
@@ -545,7 +545,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child_element(xml_nodes); xml_obj != NULL;
          xml_obj = __xml_next_element(xml_obj)) {
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
             new_node = NULL;
 
             id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -608,7 +608,7 @@ setup_container(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     container_id = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_CONTAINER);
-    if (container_id && safe_str_neq(container_id, rsc->id)) {
+    if (container_id && !pcmk__str_eq(container_id, rsc->id, pcmk__str_casei)) {
         pe_resource_t *container = pe_find_resource(data_set->resources, container_id);
 
         if (container) {
@@ -654,7 +654,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         /* Check for guest nodes, which are defined by special meta-attributes
          * of a primitive of any type (for example, VirtualDomain or Xen).
          */
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
             /* This will add an ocf:pacemaker:remote primitive to the
              * configuration for the guest node's connection, to be unpacked
              * later.
@@ -672,7 +672,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         /* Check for guest nodes inside a group. Clones are currently not
          * supported as guest nodes.
          */
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, pcmk__str_none)) {
             xmlNode *xml_obj2 = NULL;
             for (xml_obj2 = __xml_first_child_element(xml_obj); xml_obj2 != NULL;
                  xml_obj2 = __xml_next_element(xml_obj2)) {
@@ -774,7 +774,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 
         pe_resource_t *new_rsc = NULL;
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, pcmk__str_none)) {
             const char *template_id = ID(xml_obj);
 
             if (template_id && g_hash_table_lookup_extended(data_set->template_rsc_sets,
@@ -836,7 +836,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = ID(xml_tag);
 
-        if (crm_str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, TRUE) == FALSE) {
+        if (!pcmk__str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, pcmk__str_none)) {
             continue;
         }
 
@@ -851,7 +851,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 
             const char *obj_ref = ID(xml_obj_ref);
 
-            if (crm_str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, TRUE) == FALSE) {
+            if (!pcmk__str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, pcmk__str_none)) {
                 continue;
             }
 
@@ -902,7 +902,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
         const char *prop_name = (const char *)xIter->name;
         const char *prop_value = crm_element_value(xml_ticket, prop_name);
 
-        if (crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
+        if (pcmk__str_eq(prop_name, XML_ATTR_ID, pcmk__str_none)) {
             continue;
         }
         g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
@@ -945,7 +945,7 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
     for (xml_obj = __xml_first_child_element(xml_tickets); xml_obj != NULL;
          xml_obj = __xml_next_element(xml_obj)) {
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, TRUE) == FALSE) {
+        if (!pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, pcmk__str_none)) {
             continue;
         }
         unpack_ticket_state(xml_obj, data_set);
@@ -961,7 +961,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     xmlNode *attrs = NULL;
     pe_resource_t *rsc = NULL;
 
-    if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+    if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
         return;
     }
 
@@ -1032,7 +1032,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
         pe_node_t *this_node = NULL;
         bool process = FALSE;
 
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+        if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             continue;
         }
 
@@ -1133,10 +1133,10 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     for (state = __xml_first_child_element(status); state != NULL;
          state = __xml_next_element(state)) {
 
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
+        if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
             unpack_tickets_state((xmlNode *) state, data_set);
 
-        } else if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
+        } else if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             xmlNode *attrs = NULL;
             const char *resource_discovery_enabled = NULL;
 
@@ -1257,8 +1257,8 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
     if (!crm_is_true(in_cluster)) {
         crm_trace("Node is down: in_cluster=%s", crm_str(in_cluster));
 
-    } else if (safe_str_eq(is_peer, ONLINESTATUS)) {
-        if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
+    } else if (pcmk__str_eq(is_peer, ONLINESTATUS, pcmk__str_casei)) {
+        if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
             online = TRUE;
         } else {
             crm_debug("Node is not ready to run resources: %s", join);
@@ -1315,7 +1315,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
               crm_str(join), crm_str(exp_state), do_terminate);
 
     online = crm_is_true(in_cluster);
-    crmd_online = safe_str_eq(is_peer, ONLINESTATUS);
+    crmd_online = pcmk__str_eq(is_peer, ONLINESTATUS, pcmk__str_casei);
     if (exp_state == NULL) {
         exp_state = CRMD_JOINSTATE_DOWN;
     }
@@ -1329,10 +1329,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (in_cluster == NULL) {
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster", FALSE);
 
-    } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
+    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_casei)) {
         pe_fence_node(data_set, this_node, "peer failed the pacemaker membership criteria", FALSE);
 
-    } else if (do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
+    } else if (do_terminate == FALSE && pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_casei)) {
 
         if (crm_is_true(in_cluster) || crmd_online) {
             crm_info("- Node %s is not ready to run resources", this_node->details->uname);
@@ -1343,7 +1343,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
             crm_trace("%s is down or still coming up", this_node->details->uname);
         }
 
-    } else if (do_terminate && safe_str_eq(join, CRMD_JOINSTATE_DOWN)
+    } else if (do_terminate && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_casei)
                && crm_is_true(in_cluster) == FALSE && !crmd_online) {
         crm_info("Node %s was just shot", this_node->details->uname);
         online = FALSE;
@@ -1359,10 +1359,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (do_terminate) {
         pe_fence_node(data_set, this_node, "termination was requested", FALSE);
 
-    } else if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
+    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
         crm_info("Node %s is active", this_node->details->uname);
 
-    } else if (pcmk__str_any_of(join, CRMD_JOINSTATE_PENDING, CRMD_JOINSTATE_DOWN, NULL)) {
+    } else if (pcmk__strcase_any_of(join, CRMD_JOINSTATE_PENDING, CRMD_JOINSTATE_DOWN, NULL)) {
         crm_info("Node %s is not ready to run resources", this_node->details->uname);
         this_node->details->standby = TRUE;
         this_node->details->pending = TRUE;
@@ -1460,7 +1460,7 @@ determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_
     if (pe__shutdown_requested(this_node)) {
         this_node->details->shutdown = TRUE;
 
-    } else if (safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
+    } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
         this_node->details->expected_up = TRUE;
     }
 
@@ -1842,8 +1842,8 @@ unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *
         }
     }
 
-    if (rsc && safe_str_neq(rsc_id, rsc->id)
-        && safe_str_neq(rsc_id, rsc->clone_name)) {
+    if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_casei)
+        && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_casei)) {
 
         free(rsc->clone_name);
         rsc->clone_name = strdup(rsc_id);
@@ -2168,7 +2168,7 @@ process_recurring(pe_node_t * node, pe_resource_t * rsc,
         }
 
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
-        if (safe_str_eq(status, "-1")) {
+        if (pcmk__str_eq(status, "-1", pcmk__str_casei)) {
             pe_rsc_trace(rsc, "Skipping %s/%s: status", id, node->details->uname);
             continue;
         }
@@ -2201,20 +2201,20 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 
-        if (safe_str_eq(task, CRMD_ACTION_STOP)
-            && safe_str_eq(status, "0")) {
+        if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)
+            && pcmk__str_eq(status, "0", pcmk__str_casei)) {
             *stop_index = counter;
 
-        } else if (pcmk__str_any_of(task, CRMD_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
+        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
             *start_index = counter;
 
-        } else if ((implied_monitor_start <= *stop_index) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        } else if ((implied_monitor_start <= *stop_index) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
             const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
 
-            if (safe_str_eq(rc, "0") || safe_str_eq(rc, "8")) {
+            if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
             }
-        } else if (pcmk__str_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {
+        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {
             implied_clone_start = counter;
         }
     }
@@ -2282,7 +2282,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
 
     for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
          rsc_op = __xml_next_element(rsc_op)) {
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             op_list = g_list_prepend(op_list, rsc_op);
         }
     }
@@ -2320,7 +2320,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-        if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
             migrate_op = rsc_op;
         }
 
@@ -2369,7 +2369,7 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
         const char *rsc_id;
         const char *container_id;
 
-        if (safe_str_neq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE)) {
+        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_casei)) {
             continue;
         }
 
@@ -2408,7 +2408,7 @@ unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_rsc_list,
     for (rsc_entry = __xml_first_child_element(lrm_rsc_list); rsc_entry != NULL;
          rsc_entry = __xml_next_element(rsc_entry)) {
 
-        if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
             pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
             if (!rsc) {
                 continue;
@@ -2463,12 +2463,12 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
                  resource);
 
     /* Need to check against transition_magic too? */
-    if (source && safe_str_eq(op, CRMD_ACTION_MIGRATE)) {
+    if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         offset +=
             snprintf(xpath + offset, STATUS_PATH_MAX - offset,
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_target='%s']", op,
                      source);
-    } else if (source && safe_str_eq(op, CRMD_ACTION_MIGRATED)) {
+    } else if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         offset +=
             snprintf(xpath + offset, STATUS_PATH_MAX - offset,
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_source='%s']", op,
@@ -2755,7 +2755,7 @@ record_failed_op(xmlNode *op, const pe_node_t *node,
         const char *key = crm_element_value(xIter, XML_LRM_ATTR_TASK_KEY);
         const char *uname = crm_element_value(xIter, XML_ATTR_UNAME);
 
-        if(safe_str_eq(op_key, key) && safe_str_eq(uname, node->details->uname)) {
+        if(pcmk__str_eq(op_key, key, pcmk__str_casei) && pcmk__str_eq(uname, node->details->uname, pcmk__str_casei)) {
             crm_trace("Skipping duplicate entry %s on %s", op_key, node->details->uname);
             return;
         }
@@ -3252,7 +3252,7 @@ should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
      */
     if (rsc->remote_reconnect_ms
         && is_set(data_set->flags, pe_flag_stonith_enabled)
-        && (interval_ms != 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        && (interval_ms != 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
 
         pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
 
@@ -3389,7 +3389,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
         }
     }
 
-    if (expired && (interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    if (expired && (interval_ms == 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         switch(rc) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
@@ -3444,12 +3444,12 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
     } else if (rc == PCMK_OCF_NOT_INSTALLED) {
         rsc->role = RSC_ROLE_STOPPED;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         if (last_failure) {
             const char *op_key = get_op_key(xml_op);
             const char *last_failure_key = get_op_key(last_failure);
 
-            if (safe_str_eq(op_key, last_failure_key)) {
+            if (pcmk__str_eq(op_key, last_failure_key, pcmk__str_casei)) {
                 clear_past_failure = TRUE;
             }
         }
@@ -3458,19 +3458,19 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
             set_active(rsc);
         }
 
-    } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STOPPED;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_MASTER;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
 
         if (*on_fail == action_fail_demote) {
             // Demote clears an error only if on-fail=demote
@@ -3478,11 +3478,11 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
         }
         rsc->role = RSC_ROLE_SLAVE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         unpack_migrate_to_success(rsc, node, xml_op, data_set);
 
     } else if (rsc->role < RSC_ROLE_STARTED) {
@@ -3850,7 +3850,7 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
 
     g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_ID),
                         strdup(node->details->id));
-    if (safe_str_eq(node->details->id, data_set->dc_uuid)) {
+    if (pcmk__str_eq(node->details->id, data_set->dc_uuid, pcmk__str_casei)) {
         data_set->dc_node = node;
         node->details->is_dc = TRUE;
         g_hash_table_insert(node->details->attrs,
@@ -3905,7 +3905,7 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
     for (rsc_op = __xml_first_child_element(rsc_entry);
          rsc_op != NULL; rsc_op = __xml_next_element(rsc_op)) {
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
             crm_xml_add(rsc_op, "resource", rsc);
             crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
@@ -3965,10 +3965,10 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
     for (node_state = __xml_first_child_element(status); node_state != NULL;
          node_state = __xml_next_element(node_state)) {
 
-        if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
 
-            if (node != NULL && safe_str_neq(uname, node)) {
+            if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
                 continue;
             }
 
@@ -3996,11 +3996,11 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
                 for (lrm_rsc = __xml_first_child_element(tmp); lrm_rsc != NULL;
                      lrm_rsc = __xml_next_element(lrm_rsc)) {
-                    if (crm_str_eq((const char *)lrm_rsc->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+                    if (pcmk__str_eq((const char *)lrm_rsc->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 
                         const char *rsc_id = crm_element_value(lrm_rsc, XML_ATTR_ID);
 
-                        if (rsc != NULL && safe_str_neq(rsc_id, rsc)) {
+                        if (rsc != NULL && !pcmk__str_eq(rsc_id, rsc, pcmk__str_casei)) {
                             continue;
                         }
 

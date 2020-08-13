@@ -515,7 +515,7 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
     options.validate_cmdline = TRUE;
     options.require_resource = FALSE;
 
-    if(safe_str_eq(option_name, "--provider") == TRUE) {
+    if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
         if (options.v_provider) {
            free(options.v_provider);
         }
@@ -532,9 +532,9 @@ agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 
 gboolean
 attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (crm_str_eq(option_name, "-m", TRUE) || crm_str_eq(option_name, "--meta", TRUE)) {
+    if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
         options.attr_set_type = XML_TAG_META_SETS;
-    } else if (crm_str_eq(option_name, "-z", TRUE) || crm_str_eq(option_name, "--utilization", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
         options.attr_set_type = XML_TAG_UTILIZATION;
     }
 
@@ -565,7 +565,7 @@ class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 
 gboolean
 cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (crm_str_eq(option_name, "-C", TRUE) || crm_str_eq(option_name, "--cleanup", TRUE)) {
+    if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
         options.rsc_cmd = 'C';
     } else {
         options.rsc_cmd = 'R';
@@ -622,25 +622,25 @@ fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (crm_str_eq(option_name, "-U", TRUE) || crm_str_eq(option_name, "--clear", TRUE)) {
+    if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'U';
-    } else if (crm_str_eq(option_name, "-B", TRUE) || crm_str_eq(option_name, "--ban", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'B';
-    } else if (crm_str_eq(option_name, "-M", TRUE) || crm_str_eq(option_name, "--move", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'M';
-    } else if (crm_str_eq(option_name, "-q", TRUE) || crm_str_eq(option_name, "--query-xml", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
         options.rsc_cmd = 'q';
-    } else if (crm_str_eq(option_name, "-w", TRUE) || crm_str_eq(option_name, "--query-xml-raw", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
         options.rsc_cmd = 'w';
-    } else if (crm_str_eq(option_name, "-W", TRUE) || crm_str_eq(option_name, "--locate", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'W';
-    } else if (crm_str_eq(option_name, "-A", TRUE) || crm_str_eq(option_name, "--stack", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
         options.rsc_cmd = 'A';
     } else {
@@ -653,7 +653,7 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (crm_str_eq(option_name, "-g", TRUE) || crm_str_eq(option_name, "--get-parameter", TRUE)) {
+    if (pcmk__str_any_of(option_name, "-g", "--get-parameter", NULL)) {
         options.rsc_cmd = 'g';
     } else {
         options.rsc_cmd = 'G';
@@ -670,13 +670,13 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 
 gboolean
 list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (crm_str_eq(option_name, "-c", TRUE) || crm_str_eq(option_name, "--list-cts", TRUE)) {
+    if (pcmk__str_any_of(option_name, "-c", "--list-cts", NULL)) {
         options.rsc_cmd = 'c';
-    } else if (crm_str_eq(option_name, "-L", TRUE) || crm_str_eq(option_name, "--list", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-L", "--list", NULL)) {
         options.rsc_cmd = 'L';
-    } else if (crm_str_eq(option_name, "-l", TRUE) || crm_str_eq(option_name, "--list-raw", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-l", "--list-raw", NULL)) {
         options.rsc_cmd = 'l';
-    } else if (crm_str_eq(option_name, "-O", TRUE) || crm_str_eq(option_name, "--list-operations", TRUE)) {
+    } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
         options.rsc_cmd = 'O';
     } else {
         options.rsc_cmd = 'o';
@@ -688,7 +688,7 @@ list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 
 gboolean
 set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (crm_str_eq(option_name, "-p", TRUE) || crm_str_eq(option_name, "--set-parameter", TRUE)) {
+    if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
         options.rsc_cmd = 'p';
     } else {
         options.rsc_cmd = 'd';
@@ -964,12 +964,12 @@ list_providers(const char *command, const char *spec, crm_exit_t *exit_code)
     lrmd_list_t *iter = NULL;
     lrmd_t *lrmd_conn = lrmd_api_new();
 
-    if (pcmk__str_any_of(command, "--list-ocf-providers",
-                        "--list-ocf-alternatives", NULL)) {
+    if (pcmk__strcase_any_of(command, "--list-ocf-providers",
+                             "--list-ocf-alternatives", NULL)) {
         rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, spec, &list);
         text = "OCF providers";
 
-    } else if (safe_str_eq("--list-standards", command)) {
+    } else if (pcmk__str_eq("--list-standards", command, pcmk__str_casei)) {
         rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
         text = "standards";
     }
@@ -1255,14 +1255,14 @@ validate_cmdline(crm_exit_t *exit_code)
                     "--resource cannot be used with --class, --agent, and --provider");
 
     // If --class, --agent, or --provider are given, --validate must also be given.
-    } else if (!safe_str_eq(options.rsc_long_cmd, "validate")) {
+    } else if (!pcmk__str_eq(options.rsc_long_cmd, "validate", pcmk__str_casei)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "--class, --agent, and --provider require --validate");
 
     // Not all of --class, --agent, and --provider need to be given.  Not all
     // classes support the concept of a provider.  Check that what we were given
     // is valid.
-    } else if (crm_str_eq(options.v_class, "stonith", TRUE)) {
+    } else if (pcmk__str_eq(options.v_class, "stonith", pcmk__str_none)) {
         if (options.v_provider != NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "stonith does not support providers");
@@ -1378,17 +1378,17 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (pcmk__str_any_of(options.extra_option, "--list-ocf-providers", "--list-ocf-alternatives",
-                         "--list-standards", NULL)) {
+    if (pcmk__strcase_any_of(options.extra_option, "--list-ocf-providers", "--list-ocf-alternatives",
+                             "--list-standards", NULL)) {
         rc = list_providers(options.extra_option, options.extra_arg, &exit_code);
         goto done;
-    } else if (safe_str_eq(options.extra_option, "--show-metadata")) {
+    } else if (pcmk__str_eq(options.extra_option, "--show-metadata", pcmk__str_casei)) {
         rc = show_metadata(options.extra_arg, &exit_code);
         goto done;
-    } else if (safe_str_eq(options.extra_option, "--list-agents")) {
+    } else if (pcmk__str_eq(options.extra_option, "--list-agents", pcmk__str_casei)) {
         rc = list_agents(options.extra_arg, &exit_code);
         goto done;
-    } else if (safe_str_eq(options.extra_option, "--option")) {
+    } else if (pcmk__str_eq(options.extra_option, "--option", pcmk__str_casei)) {
         rc = set_option(options.extra_arg);
         if (rc != pcmk_rc_ok) {
             goto done;
@@ -1571,7 +1571,7 @@ main(int argc, char **argv)
     } else if (options.rsc_cmd == 'l') {
         rc = list_raw();
 
-    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && safe_str_eq(options.rsc_long_cmd, "restart")) {
+    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && pcmk__str_eq(options.rsc_long_cmd, "restart", pcmk__str_casei)) {
         /* We don't pass data_set because rsc needs to stay valid for the entire
          * lifetime of cli_resource_restart(), but it will reset and update the
          * working set multiple times, so it needs to use its own copy.
@@ -1580,7 +1580,7 @@ main(int argc, char **argv)
                                   cib_conn, options.cib_options, options.promoted_role_only,
                                   options.force);
 
-    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && safe_str_eq(options.rsc_long_cmd, "wait")) {
+    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && pcmk__str_eq(options.rsc_long_cmd, "wait", pcmk__str_casei)) {
         rc = wait_till_stable(options.timeout_ms, cib_conn);
 
     } else if (options.rsc_cmd == 0 && options.rsc_long_cmd) {

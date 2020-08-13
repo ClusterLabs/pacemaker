@@ -68,7 +68,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     } else if (strcasecmp(op, CRM_OP_HELLO) == 0) {
         /* ignore */
 
-    } else if (safe_str_eq(crm_element_value(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)) {
+    } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE, pcmk__str_casei)) {
         /* ignore */
 
     } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
@@ -109,7 +109,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             process = FALSE;
             free(digest);
 
-        } else if (safe_str_eq(digest, last_digest)) {
+        } else if (pcmk__str_eq(digest, last_digest, pcmk__str_casei)) {
             crm_info("Input has not changed since last time, not saving to disk");
             is_repoke = TRUE;
             free(digest);
@@ -309,7 +309,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         pe_metadata();
         return CRM_EX_OK;
     }

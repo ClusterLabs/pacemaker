@@ -190,7 +190,7 @@ struct {
 static unsigned int
 find_section_bit(const char *name) {
     for (int i = 0; sections[i].name != NULL; i++) {
-        if (crm_str_eq(sections[i].name, name, FALSE)) {
+        if (pcmk__str_eq(sections[i].name, name, pcmk__str_casei)) {
             return sections[i].bit;
         }
     }
@@ -206,9 +206,9 @@ apply_exclude(const gchar *excludes, GError **error) {
     for (char **s = parts; *s != NULL; s++) {
         unsigned int bit = find_section_bit(*s);
 
-        if (crm_str_eq(*s, "all", TRUE)) {
+        if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
-        } else if (crm_str_eq(*s, "none", TRUE)) {
+        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (bit != 0) {
             show &= ~bit;
@@ -235,7 +235,7 @@ apply_include(const gchar *includes, GError **error) {
     for (char **s = parts; *s != NULL; s++) {
         unsigned int bit = find_section_bit(*s);
 
-        if (crm_str_eq(*s, "all", TRUE)) {
+        if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (pcmk__starts_with(*s, "bans")) {
             show |= mon_show_bans;
@@ -247,9 +247,9 @@ apply_include(const gchar *includes, GError **error) {
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);
             }
-        } else if (crm_str_eq(*s, "default", TRUE) || crm_str_eq(*s, "defaults", TRUE)) {
+        } else if (pcmk__str_any_of(*s, "default", "defaults", NULL)) {
             show |= default_includes(output_format);
-        } else if (crm_str_eq(*s, "none", TRUE)) {
+        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
             show = 0;
         } else if (bit != 0) {
             show |= bit;
@@ -1105,7 +1105,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
         return;
     }
 
-    if (safe_str_eq(args->output_ty, "html")) {
+    if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
         char *dest = NULL;
 
         if (args->output_dest != NULL) {
@@ -1114,9 +1114,9 @@ reconcile_output_format(pcmk__common_args_t *args) {
 
         retval = as_html_cb("h", dest, NULL, &err);
         free(dest);
-    } else if (safe_str_eq(args->output_ty, "text")) {
+    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_casei)) {
         retval = no_curses_cb("N", NULL, NULL, &err);
-    } else if (safe_str_eq(args->output_ty, "xml")) {
+    } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_casei)) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
         }
@@ -1251,7 +1251,7 @@ main(int argc, char **argv)
             }
             crm_enable_stderr(FALSE);
 
-            if ((args->output_dest == NULL || safe_str_eq(args->output_dest, "-")) && !options.external_agent) {
+            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches | pcmk__str_casei) && !options.external_agent) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
                 return clean_up(CRM_EX_USAGE);
             }
@@ -1543,11 +1543,11 @@ reduce_stonith_history(stonith_history_t *history)
             for (np = new; ; np = np->next) {
                 if ((hp->state == st_done) || (hp->state == st_failed)) {
                     /* action not in progress */
-                    if (safe_str_eq(hp->target, np->target) &&
-                        safe_str_eq(hp->action, np->action) &&
+                    if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
+                        pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
                         (hp->state == np->state) &&
                         ((hp->state == st_done) ||
-                         safe_str_eq(hp->delegate, np->delegate))) {
+                         pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
                             /* purge older hp */
                             stonith_history_free(hp);
                             break;
@@ -1662,7 +1662,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 
     node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 
-    while (n != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(n))) {
+    while (n != NULL && !pcmk__str_eq(XML_CIB_TAG_STATE, TYPE(n), pcmk__str_casei)) {
         n = n->parent;
     }
 

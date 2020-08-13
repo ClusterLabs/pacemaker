@@ -404,7 +404,7 @@ pcmk__valid_positive_number(const char *value)
 bool
 pcmk__valid_quorum(const char *value)
 {
-    return pcmk__str_any_of(value, "stop", "freeze", "ignore", "demote", "suicide", NULL);
+    return pcmk__strcase_any_of(value, "stop", "freeze", "ignore", "demote", "suicide", NULL);
 }
 
 bool
@@ -412,7 +412,7 @@ pcmk__valid_script(const char *value)
 {
     struct stat st;
 
-    if (safe_str_eq(value, "/dev/null")) {
+    if (pcmk__str_eq(value, "/dev/null", pcmk__str_casei)) {
         return true;
     }
 
@@ -539,7 +539,7 @@ pcmk__cluster_option(GHashTable *options, pcmk__cluster_option_t *option_list,
     const char *value = NULL;
 
     for (int lpc = 0; lpc < len; lpc++) {
-        if (safe_str_eq(name, option_list[lpc].name)) {
+        if (pcmk__str_eq(name, option_list[lpc].name, pcmk__str_casei)) {
             value = cluster_option_value(options, option_list[lpc].is_valid,
                                          option_list[lpc].name,
                                          option_list[lpc].alt_name,
