@@ -623,6 +623,18 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Find a string in a list of strings
+ *
+ * Search \p lst for \p s, taking case into account.  As a special case,
+ * if "*" is the only element of \p lst, the search is successful.
+ *
+ * \param[in]  lst  List to search
+ * \param[in]  s    String to search for
+ *
+ * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
+ */
 gboolean
 pcmk__str_in_list(GList *lst, const gchar *s)
 {
@@ -656,6 +668,19 @@ str_any_of(bool casei, const char *s, va_list args)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Is a string a member of a list of strings?
+ *
+ * \param[in]  s    String to search for in \p ...
+ * \param[in]  ...  Strings to compare \p s against.  The final string
+ *                  must be NULL.
+ *
+ * \note The comparison is done case-insensitively.  The function name is
+ *       meant to be reminiscent of strcasecmp.
+ *
+ * \return \c true if \p s is in \p ..., or \c false otherwise
+ */
 bool
 pcmk__strcase_any_of(const char *s, ...)
 {
@@ -668,6 +693,18 @@ pcmk__strcase_any_of(const char *s, ...)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Is a string a member of a list of strings?
+ *
+ * \param[in]  s    String to search for in \p ...
+ * \param[in]  ...  Strings to compare \p s against.  The final string
+ *                  must be NULL.
+ *
+ * \note The comparison is done taking case into account.
+ *
+ * \return \c true if \p s is in \p ..., or \c false otherwise
+ */
 bool
 pcmk__str_any_of(const char *s, ...)
 {
