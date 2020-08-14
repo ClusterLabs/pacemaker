@@ -612,10 +612,26 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         "stonith-watchdog-timeout", NULL, "time", NULL,
-        NULL, pcmk__valid_sbd_timeout,
+        "0", pcmk__valid_sbd_timeout,
         "How long to wait before we can assume nodes are safely down "
-            "when sbd is in use",
-        NULL
+            "when watchdog-based self-fencing via SBD is in use",
+        "If nonzero, along with `have-watchdog=true` automatically set by the "
+            "cluster, when fencing is required, watchdog-based self-fencing "
+            "will be performed via SBD without requiring a fencing resource "
+            "explicitly configured. "
+            "If `stonith-watchdog-timeout` is set to a positive value, unseen "
+            "nodes are assumed to self-fence within this much time. +WARNING:+ "
+            "It must be ensured that this value is larger than the "
+            "`SBD_WATCHDOG_TIMEOUT` environment variable on all nodes. "
+            "Pacemaker verifies the settings individually on all nodes and "
+            "prevents startup or shuts down if configured wrongly on the fly. "
+            "It's strongly recommended that `SBD_WATCHDOG_TIMEOUT` is set to "
+            "the same value on all nodes. "
+            "If `stonith-watchdog-timeout` is set to a negative value, and "
+            "`SBD_WATCHDOG_TIMEOUT` is set, twice that value will be used. "
+            "+WARNING:+ In this case, it's essential (currently not verified by "
+            "pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
+            "all nodes."
     },
     {
         "stonith-max-attempts", NULL, "integer", NULL,
