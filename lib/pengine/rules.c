@@ -965,12 +965,127 @@ pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_
     return accept;
 }
 
+/*!
+ * \internal
+ * \brief   Compare two values in a rule's node attribute expression
+ *
+ * \param[in]   l_val   Value on left-hand side of comparison
+ * \param[in]   r_val   Value on right-hand side of comparison
+ * \param[in]   type    How to interpret the values (allowed values:
+ *                      \c "string", \c "number", \c "version", \c NULL)
+ * \param[in]   op      Type of comparison
+ *
+ * \return  -1 if <tt>(l_val < r_val)</tt>,
+ *           0 if <tt>(l_val == r_val)</tt>,
+ *           1 if <tt>(l_val > r_val)</tt>
+ */
+static int
+compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
+                       const char *op)
+{
+    int cmp = 0;
+
+    if (l_val != NULL && r_val != NULL) {
+        if (type == NULL) {
+            if (pcmk__strcase_any_of(op, "lt", "lte", "gt", "gte", NULL)) {
+                type = "number";
+
+            } else {
+                type = "string";
+            }
+            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
+        }
+
+        if (pcmk__str_eq(type, "string", pcmk__str_casei)) {
+            cmp = strcasecmp(l_val, r_val);
+
+        } else if (pcmk__str_eq(type, "number", pcmk__str_casei)) {
+            int l_val_num = crm_parse_int(l_val, NULL);
+            int r_val_num = crm_parse_int(r_val, NULL);
+
+            if (l_val_num < r_val_num) {
+                cmp = -1;
+            } else if (l_val_num > r_val_num) {
+                cmp = 1;
+            } else {
+                cmp = 0;
+            }
+
+        } else if (pcmk__str_eq(type, "version", pcmk__str_casei)) {
+            cmp = compare_version(l_val, r_val);
+
+        }
+
+    } else if (l_val == NULL && r_val == NULL) {
+        cmp = 0;
+    } else if (r_val == NULL) {
+        cmp = 1;
+    } else {    // l_val == NULL && r_val != NULL
+        cmp = -1;
+    }
+
+    return cmp;
+}
+
+/*!
+ * \internal
+ * \brief   Check whether an attribute expression evaluates to \c true
+ *
+ * \param[in]   l_val   Value on left-hand side of comparison
+ * \param[in]   r_val   Value on right-hand side of comparison
+ * \param[in]   type    How to interpret the values (allowed values:
+ *                      \c "string", \c "number", \c "version", \c NULL)
+ * \param[in]   op      Type of comparison.
+ *
+ * \return  \c true if expression evaluates to \c true, \c false
+ *          otherwise
+ */
+static bool
+accept_attr_expr(const char *l_val, const char *r_val, const char *type,
+                 const char *op)
+{
+    int cmp;
+
+    if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
+        return (l_val != NULL);
+
+    } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
+        return (l_val == NULL);
+
+    }
+
+    cmp = compare_attr_expr_vals(l_val, r_val, type, op);
+
+    if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
+        return (cmp == 0);
+
+    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
+        return (cmp != 0);
+
+    } else if (l_val == NULL || r_val == NULL) {
+        // The comparison is meaningless from this point on
+        return false;
+
+    } else if (pcmk__str_eq(op, "lt", pcmk__str_casei)) {
+        return (cmp < 0);
+
+    } else if (pcmk__str_eq(op, "lte", pcmk__str_casei)) {
+        return (cmp <= 0);
+
+    } else if (pcmk__str_eq(op, "gt", pcmk__str_casei)) {
+        return (cmp > 0);
+
+    } else if (pcmk__str_eq(op, "gte", pcmk__str_casei)) {
+        return (cmp >= 0);
+    }
+
+    return false;   // Should never reach this point
+}
+
 gboolean
 pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 {
-    gboolean accept = FALSE;
     gboolean attr_allocated = FALSE;
-    int cmp = 0;
     const char *h_val = NULL;
     GHashTable *table = NULL;
 
@@ -1029,94 +1144,10 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
         attr = NULL;
     }
 
-    if (value != NULL && h_val != NULL) {
-        if (type == NULL) {
-            if (pcmk__strcase_any_of(op, "lt", "lte", "gt", "gte", NULL)) {
-                type = "number";
-
-            } else {
-                type = "string";
-            }
-            crm_trace("Defaulting to %s based comparison for '%s' op", type, op);
-        }
-
-        if (pcmk__str_eq(type, "string", pcmk__str_casei)) {
-            cmp = strcasecmp(h_val, value);
-
-        } else if (pcmk__str_eq(type, "number", pcmk__str_casei)) {
-            int h_val_f = crm_parse_int(h_val, NULL);
-            int value_f = crm_parse_int(value, NULL);
-
-            if (h_val_f < value_f) {
-                cmp = -1;
-            } else if (h_val_f > value_f) {
-                cmp = 1;
-            } else {
-                cmp = 0;
-            }
-
-        } else if (pcmk__str_eq(type, "version", pcmk__str_casei)) {
-            cmp = compare_version(h_val, value);
-
-        }
-
-    } else if (value == NULL && h_val == NULL) {
-        cmp = 0;
-    } else if (value == NULL) {
-        cmp = 1;
-    } else {
-        cmp = -1;
-    }
-
-    if (pcmk__str_eq(op, "defined", pcmk__str_casei)) {
-        if (h_val != NULL) {
-            accept = TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
-        if (h_val == NULL) {
-            accept = TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, "eq", pcmk__str_casei)) {
-        if ((h_val == value) || cmp == 0) {
-            accept = TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
-        if ((h_val == NULL && value != NULL)
-            || (h_val != NULL && value == NULL)
-            || cmp != 0) {
-            accept = TRUE;
-        }
-
-    } else if (value == NULL || h_val == NULL) {
-        // The comparison is meaningless from this point on
-        accept = FALSE;
-
-    } else if (pcmk__str_eq(op, "lt", pcmk__str_casei)) {
-        if (cmp < 0) {
-            accept = TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, "lte", pcmk__str_casei)) {
-        if (cmp <= 0) {
-            accept = TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, "gt", pcmk__str_casei)) {
-        if (cmp > 0) {
-            accept = TRUE;
-        }
-
-    } else if (pcmk__str_eq(op, "gte", pcmk__str_casei)) {
-        if (cmp >= 0) {
-            accept = TRUE;
-        }
-    }
-
-    return accept;
+    return accept_attr_expr(h_val, value, type, op);
 }
+
+
 
 int
 pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
