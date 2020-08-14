@@ -972,7 +972,8 @@ pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c "number", \c "version", \c NULL)
+ *                      \c "string", \c "integer", \c "number",
+ *                      \c "version", \c NULL)
  * \param[in]   op      Type of comparison
  *
  * \return  -1 if <tt>(l_val < r_val)</tt>,
@@ -988,7 +989,11 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
     if (l_val != NULL && r_val != NULL) {
         if (type == NULL) {
             if (pcmk__strcase_any_of(op, "lt", "lte", "gt", "gte", NULL)) {
-                type = "number";
+                if (pcmk__char_in_any_str('.', l_val, r_val, NULL)) {
+                    type = "number";
+                } else {
+                    type = "integer";
+                }
 
             } else {
                 type = "string";
@@ -999,7 +1004,7 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
         if (pcmk__str_eq(type, "string", pcmk__str_casei)) {
             cmp = strcasecmp(l_val, r_val);
 
-        } else if (pcmk__str_eq(type, "number", pcmk__str_casei)) {
+        } else if (pcmk__str_eq(type, "integer", pcmk__str_casei)) {
             long long l_val_num = crm_parse_ll(l_val, NULL);
             int rc1 = errno;
 
@@ -1018,6 +1023,28 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             } else {
                 crm_debug("Integer parse error. Comparing %s and %s as strings",
                           l_val, r_val);
+                cmp = compare_attr_expr_vals(l_val, r_val, "string", op);
+            }
+
+        } else if (pcmk__str_eq(type, "number", pcmk__str_casei)) {
+            double l_val_num;
+            double r_val_num;
+
+            int rc1 = pcmk__scan_double(l_val, &l_val_num, NULL, NULL);
+            int rc2 = pcmk__scan_double(r_val, &r_val_num, NULL, NULL);
+
+            if (rc1 == pcmk_rc_ok && rc2 == pcmk_rc_ok) {
+                if (l_val_num < r_val_num) {
+                    cmp = -1;
+                } else if (l_val_num > r_val_num) {
+                    cmp = 1;
+                } else {
+                    cmp = 0;
+                }
+
+            } else {
+                crm_debug("Floating-point parse error. Comparing %s and %s as "
+                          "strings", l_val, r_val);
                 cmp = compare_attr_expr_vals(l_val, r_val, "string", op);
             }
 
@@ -1044,7 +1071,8 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
  * \param[in]   l_val   Value on left-hand side of comparison
  * \param[in]   r_val   Value on right-hand side of comparison
  * \param[in]   type    How to interpret the values (allowed values:
- *                      \c "string", \c "number", \c "version", \c NULL)
+ *                      \c "string", \c "integer", \c "number",
+ *                      \c "version", \c NULL)
  * \param[in]   op      Type of comparison.
  *
  * \return  \c true if expression evaluates to \c true, \c false
