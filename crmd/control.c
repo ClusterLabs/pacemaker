@@ -965,9 +965,22 @@ pe_cluster_option crmd_opts[] = {
           "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\n"
           "Useful if your configuration is sensitive to the order in which ping updates arrive."
         },
-	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
-	  "How long to wait before we can assume nodes are safely down", NULL
-        },
+	{ "stonith-watchdog-timeout", NULL, "time", NULL, "0", &check_sbd_timeout,
+        "How long to wait before we can assume nodes are safely down "
+            "when watchdog-based self-fencing via SBD is in use",
+        "If positive, along with `have-watchdog=true` automatically set by the "
+            "cluster, when fencing is required, watchdog-based self-fencing "
+            "will be performed via SBD without requiring a fencing resource "
+            "explicitly configured. "
+            "If `stonith-watchdog-timeout` is set to a positive value, unseen "
+            "nodes are assumed to self-fence within this much time. +WARNING:+ "
+            "It must be ensured that this value is larger than the "
+            "`SBD_WATCHDOG_TIMEOUT` environment variable on all nodes. "
+            "Pacemaker verifies the settings individually on all nodes and "
+            "prevents startup or shuts down if configured wrongly on the fly. "
+            "It's strongly recommended that `SBD_WATCHDOG_TIMEOUT` is set to "
+            "the same value on all nodes. "
+       },
         { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
           "How many times stonith can fail before it will no longer be attempted on a target"
         },   
