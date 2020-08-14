@@ -131,7 +131,11 @@ static pcmk__cluster_option_t pe_opts[] = {
         "false", pcmk__valid_boolean,
         "Whether watchdog integration is enabled",
         "This is set automatically by the cluster according to whether SBD "
-            "is detected to be in use. User-configured values are ignored."
+            "is detected to be in use. User-configured values are ignored. "
+            "The value `true` is meaningful if diskless SBD is used and "
+            "`stonith-watchdog-timeout` is nonzero. In that case, if fencing "
+            "is required, watchdog-based self-fencing will be performed via "
+            "SBD without requiring a fencing resource explicitly configured."
     },
     {
         "concurrent-fencing", NULL, "boolean", NULL,
