@@ -1000,15 +1000,25 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             cmp = strcasecmp(l_val, r_val);
 
         } else if (pcmk__str_eq(type, "number", pcmk__str_casei)) {
-            int l_val_num = crm_parse_int(l_val, NULL);
-            int r_val_num = crm_parse_int(r_val, NULL);
+            long long l_val_num = crm_parse_ll(l_val, NULL);
+            int rc1 = errno;
 
-            if (l_val_num < r_val_num) {
-                cmp = -1;
-            } else if (l_val_num > r_val_num) {
-                cmp = 1;
+            long long r_val_num = crm_parse_ll(r_val, NULL);
+            int rc2 = errno;
+
+            if (rc1 == 0 && rc2 == 0) {
+                if (l_val_num < r_val_num) {
+                    cmp = -1;
+                } else if (l_val_num > r_val_num) {
+                    cmp = 1;
+                } else {
+                    cmp = 0;
+                }
+
             } else {
-                cmp = 0;
+                crm_debug("Integer parse error. Comparing %s and %s as strings",
+                          l_val, r_val);
+                cmp = compare_attr_expr_vals(l_val, r_val, "string", op);
             }
 
         } else if (pcmk__str_eq(type, "version", pcmk__str_casei)) {
