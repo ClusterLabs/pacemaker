@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,8 +26,6 @@ extern "C" {
 #  include <string.h>
 #  include <stdbool.h>
 #  include <sys/types.h>
-
-#  include <crm/common/strings_internal.h>
 
 #  ifndef OCF_ROOT_DIR
 #    define OCF_ROOT_DIR "/usr/lib/ocf"
@@ -404,11 +402,18 @@ gboolean services_alert_async(svc_action_t *action,
     services_get_ocf_exitcode(const char *action, int lsb_exitcode)
     {
         /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-        if (action && !pcmk__strcase_any_of(action, "status", "monitor", NULL)) {
-            if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
-                return PCMK_OCF_UNKNOWN_ERROR;
+        if (action) {
+            /* Note: This conditional is broken up into two parts so it's not flagged
+             * by coccinelle as something that could be condensed into a call to
+             * pcmk__str_any_of.  We can't use that here because it's an internal
+             * function and this is a public header.
+             */
+            if (strcmp(action, "status") && strcmp(action, "monitor")) {
+                if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
+                    return PCMK_OCF_UNKNOWN_ERROR;
+                }
+                return (enum ocf_exitcode)lsb_exitcode;
             }
-            return (enum ocf_exitcode)lsb_exitcode;
         }
 
         /* status has different return codes */
