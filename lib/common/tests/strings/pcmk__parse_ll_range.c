@@ -3,72 +3,88 @@
 #include <crm_internal.h>
 
 static void
-empty_input_string(void) {
+empty_input_string(void)
+{
     long long start, end;
 
-    g_assert(pcmk__parse_ll_range(NULL, &start, &end) == pcmk_rc_unknown_format);
-    g_assert(pcmk__parse_ll_range("", &start, &end) == pcmk_rc_unknown_format);
+    g_assert_cmpint(pcmk__parse_ll_range(NULL, &start, &end), ==,
+                    pcmk_rc_unknown_format);
+    g_assert_cmpint(pcmk__parse_ll_range("", &start, &end), ==,
+                    pcmk_rc_unknown_format);
 }
 
 static void
-missing_separator(void) {
+missing_separator(void)
+{
     long long start, end;
 
-    g_assert(pcmk__parse_ll_range("1234", &start, &end) == pcmk_rc_ok);
+    g_assert_cmpint(pcmk__parse_ll_range("1234", &start, &end), ==, pcmk_rc_ok);
     g_assert_cmpint(start, ==, 1234);
     g_assert_cmpint(end, ==, 1234);
 }
 
 static void
-only_separator(void) {
+only_separator(void)
+{
     long long start, end;
 
-    g_assert(pcmk__parse_ll_range("-", &start, &end) == pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, -1);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(pcmk__parse_ll_range("-", &start, &end), ==,
+                    pcmk_rc_unknown_format);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
-no_range_end(void) {
+no_range_end(void)
+{
     long long start, end;
 
-    g_assert(pcmk__parse_ll_range("2000-", &start, &end) == pcmk_rc_ok);
+    g_assert_cmpint(pcmk__parse_ll_range("2000-", &start, &end), ==,
+                    pcmk_rc_ok);
     g_assert_cmpint(start, ==, 2000);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
-no_range_start(void) {
+no_range_start(void)
+{
     long long start, end;
 
-    g_assert(pcmk__parse_ll_range("-2020", &start, &end) == pcmk_rc_ok);
-    g_assert_cmpint(start, ==, -1);
+    g_assert_cmpint(pcmk__parse_ll_range("-2020", &start, &end), ==,
+                    pcmk_rc_ok);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
     g_assert_cmpint(end, ==, 2020);
 }
 
 static void
-range_start_and_end(void) {
+range_start_and_end(void)
+{
     long long start, end;
 
-    g_assert(pcmk__parse_ll_range("2000-2020", &start, &end) == pcmk_rc_ok);
+    g_assert_cmpint(pcmk__parse_ll_range("2000-2020", &start, &end), ==,
+                    pcmk_rc_ok);
     g_assert_cmpint(start, ==, 2000);
     g_assert_cmpint(end, ==, 2020);
 }
 
 static void
-garbage(void) {
+garbage(void)
+{
     long long start, end;
 
-    g_assert(pcmk__parse_ll_range("2000x-", &start, &end) == pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, -1);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(pcmk__parse_ll_range("2000x-", &start, &end), ==,
+                    pcmk_rc_unknown_format);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 
-    g_assert(pcmk__parse_ll_range("-x2000", &start, &end) == pcmk_rc_unknown_format);
-    g_assert_cmpint(start, ==, -1);
-    g_assert_cmpint(end, ==, -1);
+    g_assert_cmpint(pcmk__parse_ll_range("-x2000", &start, &end), ==,
+                    pcmk_rc_unknown_format);
+    g_assert_cmpint(start, ==, PCMK__PARSE_INT_DEFAULT);
+    g_assert_cmpint(end, ==, PCMK__PARSE_INT_DEFAULT);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/common/strings/range/empty", empty_input_string);

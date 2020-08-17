@@ -1108,8 +1108,8 @@ Error performing operation: Node not found
 Current cluster status:
 Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	Stopped
- Fence	(stonith:fence_true):	Stopped
+ dummy	(ocf::pacemaker:Dummy):	 Stopped
+ Fence	(stonith:fence_true):	 Stopped
 
 Transition Summary:
  * Start      dummy   ( node1 )  
@@ -1124,8 +1124,8 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	Started node1
- Fence	(stonith:fence_true):	Started node1
+ dummy	(ocf::pacemaker:Dummy):	 Started node1
+ Fence	(stonith:fence_true):	 Started node1
 
 =#=#=#= Current cib after: Bring resources online =#=#=#=
 <cib epoch="20" num_updates="4" admin_epoch="1">
@@ -1816,8 +1816,8 @@ Error performing operation: Node not found
 Current cluster status:
 Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	Started node1
- Fence	(stonith:fence_true):	Started node1
+ dummy	(ocf::pacemaker:Dummy):	 Started node1
+ Fence	(stonith:fence_true):	 Started node1
 
 Performing requested modifications
  + Bringing node node2 online
@@ -1837,8 +1837,8 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	Started node1
- Fence	(stonith:fence_true):	Started node2
+ dummy	(ocf::pacemaker:Dummy):	 Started node1
+ Fence	(stonith:fence_true):	 Started node2
 
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
 <cib epoch="24" num_updates="8" admin_epoch="1">
@@ -2101,8 +2101,8 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
 Current cluster status:
 Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	Started node1
- Fence	(stonith:fence_true):	Started node2
+ dummy	(ocf::pacemaker:Dummy):	 Started node1
+ Fence	(stonith:fence_true):	 Started node2
 
 Transition Summary:
  * Move       dummy   ( node1 -> node3 )  
@@ -2114,8 +2114,8 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	Started node3
- Fence	(stonith:fence_true):	Started node2
+ dummy	(ocf::pacemaker:Dummy):	 Started node3
+ Fence	(stonith:fence_true):	 Started node2
 
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
 <cib epoch="26" num_updates="2" admin_epoch="1">

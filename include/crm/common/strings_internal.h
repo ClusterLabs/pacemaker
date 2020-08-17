@@ -14,6 +14,11 @@
 
 #include <glib.h>               // guint, GList, GHashTable
 
+/* internal constants for generic string functions (from strings.c) */
+
+#define PCMK__PARSE_INT_DEFAULT -1
+#define PCMK__PARSE_DBL_DEFAULT -1.0
+
 /* internal generic string functions (from strings.c) */
 
 enum pcmk__str_flags {
@@ -23,6 +28,8 @@ enum pcmk__str_flags {
     pcmk__str_regex         = 1 << 2
 };
 
+int pcmk__scan_double(const char *text, double *result,
+                      const char *default_text, char **end_text);
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
 bool pcmk__starts_with(const char *str, const char *prefix);
@@ -37,6 +44,7 @@ gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
+bool pcmk__char_in_any_str(int ch, ...) G_GNUC_NULL_TERMINATED;
 
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
 

@@ -18,7 +18,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <float.h>  // DBL_MIN
 #include <limits.h>
+#include <math.h>   // fabs()
 #include <bzlib.h>
 #include <sys/types.h>
 
@@ -40,12 +42,15 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
  * \param[out] result    If not NULL, where to store scanned value
  * \param[out] end_text  If not NULL, where to store pointer to just after value
  *
- * \return Standard Pacemaker return code (also set errno on error)
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
+ *         \c EINVAL on failed string conversion due to invalid input,
+ *         or \c EOVERFLOW on arithmetic overflow)
+ * \note Sets \c errno on error
  */
 static int
 scan_ll(const char *text, long long *result, char **end_text)
 {
-    long long local_result = -1;
+    long long local_result = PCMK__PARSE_INT_DEFAULT;
     char *local_end_text = NULL;
     int rc = pcmk_rc_ok;
 
@@ -57,25 +62,24 @@ scan_ll(const char *text, long long *result, char **end_text)
         local_result = strtoll(text, &local_end_text, 10);
 #endif
         if (errno == ERANGE) {
-            rc = errno;
+            rc = EOVERFLOW;
             crm_warn("Integer parsed from %s was clipped to %lld",
                      text, local_result);
 
         } else if (errno != 0) {
             rc = errno;
-            local_result = -1;
-            crm_err("Could not parse integer from %s (using -1 instead): %s",
-                    text, pcmk_rc_str(rc));
+            local_result = PCMK__PARSE_INT_DEFAULT;
+            crm_err("Could not parse integer from %s (using %d instead): %s",
+                    text, PCMK__PARSE_INT_DEFAULT, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             rc = EINVAL;
-            local_result = -1;
-            crm_err("Could not parse integer from %s (using -1 instead): "
-                    "No digits found", text);
+            local_result = PCMK__PARSE_INT_DEFAULT;
+            crm_err("Could not parse integer from %s (using %d instead): "
+                    "No digits found", text, PCMK__PARSE_INT_DEFAULT);
         }
 
-        if ((end_text == NULL) && (local_end_text != NULL)
-            && (local_end_text[0] != '\0')) {
+        if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
             crm_warn("Characters left over after parsing '%s': '%s'",
                      text, local_end_text);
         }
@@ -96,7 +100,8 @@ scan_ll(const char *text, long long *result, char **end_text)
  * \param[in] text          The string to parse
  * \param[in] default_text  Default string to parse if text is NULL
  *
- * \return Parsed value on success, -1 (and set errno) on error
+ * \return Parsed value on success, PCMK__PARSE_INT_DEFAULT (and set
+ *         errno) on error
  */
 long long
 crm_parse_ll(const char *text, const char *default_text)
@@ -108,7 +113,7 @@ crm_parse_ll(const char *text, const char *default_text)
         if (text == NULL) {
             crm_err("No default conversion value supplied");
             errno = EINVAL;
-            return -1;
+            return PCMK__PARSE_INT_DEFAULT;
         }
     }
     scan_ll(text, &result, NULL);
@@ -121,8 +126,9 @@ crm_parse_ll(const char *text, const char *default_text)
  * \param[in] text          The string to parse
  * \param[in] default_text  Default string to parse if text is NULL
  *
- * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to ERANGE)
- *         if parsed value is out of integer range, otherwise -1 (and set errno)
+ * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to
+ *         ERANGE) if parsed value is out of integer range, otherwise
+ *         PCMK__PARSE_INT_DEFAULT (and set errno)
  */
 int
 crm_parse_int(const char *text, const char *default_text)
@@ -147,6 +153,126 @@ crm_parse_int(const char *text, const char *default_text)
     }
 
     return (int) result;
+}
+
+/*!
+ * \internal
+ * \brief Scan a double-precision floating-point value from a string
+ *
+ * \param[in]      text         The string to parse
+ * \param[out]     result       Parsed value on success, or
+ *                              \c PCMK__PARSE_DBL_DEFAULT on error
+ * \param[in]      default_text Default string to parse if \p text is
+ *                              \c NULL
+ * \param[out]     end_text     If not \c NULL, where to store a pointer
+ *                              to the position immediately after the
+ *                              value
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
+ *         \c EINVAL on failed string conversion due to invalid input,
+ *         \c EOVERFLOW on arithmetic overflow, \c pcmk_rc_underflow
+ *         on arithmetic underflow, or \c errno from \c strtod() on
+ *         other parse errors)
+ */
+int
+pcmk__scan_double(const char *text, double *result, const char *default_text,
+                  char **end_text)
+{
+    int rc = pcmk_rc_ok;
+    char *local_end_text = NULL;
+
+    CRM_ASSERT(result != NULL);
+    *result = PCMK__PARSE_DBL_DEFAULT;
+
+    text = (text != NULL) ? text : default_text;
+
+    if (text == NULL) {
+        rc = EINVAL;
+        crm_debug("No text and no default conversion value supplied");
+
+    } else {
+        errno = 0;
+        *result = strtod(text, &local_end_text);
+
+        if (errno == ERANGE) {
+            /*
+             * Overflow: strtod() returns +/- HUGE_VAL and sets errno to
+             *           ERANGE
+             *
+             * Underflow: strtod() returns "a value whose magnitude is
+             *            no greater than the smallest normalized
+             *            positive" double. Whether ERANGE is set is
+             *            implementation-defined.
+             */
+            const char *over_under;
+
+            if (fabs(*result) > DBL_MIN) {
+                rc = EOVERFLOW;
+                over_under = "over";
+            } else {
+                rc = pcmk_rc_underflow;
+                over_under = "under";
+            }
+
+            crm_debug("Floating-point value parsed from '%s' would %sflow "
+                      "(using %g instead)", text, over_under, *result);
+
+        } else if (errno != 0) {
+            rc = errno;
+            // strtod() set *result = 0 on parse failure
+            *result = PCMK__PARSE_DBL_DEFAULT;
+
+            crm_debug("Could not parse floating-point value from '%s' (using "
+                      "%.1f instead): %s", text, PCMK__PARSE_DBL_DEFAULT,
+                      pcmk_rc_str(rc));
+
+        } else if (local_end_text == text) {
+            // errno == 0, but nothing was parsed
+            rc = EINVAL;
+            *result = PCMK__PARSE_DBL_DEFAULT;
+
+            crm_debug("Could not parse floating-point value from '%s' (using "
+                      "%.1f instead): No digits found", text,
+                      PCMK__PARSE_DBL_DEFAULT);
+
+        } else if (fabs(*result) <= DBL_MIN) {
+            /*
+             * errno == 0 and text was parsed, but value might have
+             * underflowed.
+             *
+             * ERANGE might not be set for underflow. Check magnitude
+             * of *result, but also make sure the input number is not
+             * actually zero (0 <= DBL_MIN is not underflow).
+             *
+             * This check must come last. A parse failure in strtod()
+             * also sets *result == 0, so a parse failure would match
+             * this test condition prematurely.
+             */
+            for (const char *p = text; p != local_end_text; p++) {
+                if (strchr("0.eE", *p) == NULL) {
+                    rc = pcmk_rc_underflow;
+                    crm_debug("Floating-point value parsed from '%s' would "
+                              "underflow (using %g instead)", text, *result);
+                    break;
+                }
+            }
+
+        } else {
+            crm_trace("Floating-point value parsed successfully from "
+                      "'%s': %g", text, *result);
+        }
+
+        if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
+            crm_debug("Characters left over after parsing '%s': '%s'",
+                      text, local_end_text);
+        }
+    }
+
+    if (end_text != NULL) {
+        *end_text = local_end_text;
+    }
+
+    return rc;
 }
 
 /*!
@@ -207,7 +333,8 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
  * \param[in] input  String with a number and units (optionally with whitespace
  *                   before and/or after the number)
  *
- * \return Milliseconds corresponding to string expression, or -1 on error
+ * \return Milliseconds corresponding to string expression, or
+ *         PCMK__PARSE_INT_DEFAULT on error
  */
 long long
 crm_get_msec(const char *input)
@@ -216,18 +343,18 @@ crm_get_msec(const char *input)
     const char *units;
     long long multiplier = 1000;
     long long divisor = 1;
-    long long msec = -1;
+    long long msec = PCMK__PARSE_INT_DEFAULT;
     size_t num_len = 0;
     char *end_text = NULL;
 
     if (input == NULL) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
 
     num_start = input + strspn(input, WHITESPACE);
     num_len = strspn(num_start, NUMCHARS);
     if (num_len < 1) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
     units = num_start + num_len;
     units += strspn(units, WHITESPACE);
@@ -248,7 +375,7 @@ crm_get_msec(const char *input)
         multiplier = 60 * 60 * 1000;
         divisor = 1;
     } else if ((*units != EOS) && (*units != '\n') && (*units != '\r')) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
 
     scan_ll(num_start, &msec, &end_text);
@@ -575,8 +702,8 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 
     CRM_ASSERT(start != NULL && end != NULL);
 
-    *start = -1;
-    *end = -1;
+    *start = PCMK__PARSE_INT_DEFAULT;
+    *end = PCMK__PARSE_INT_DEFAULT;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
     if (pcmk__str_empty(srcstring) || !strcmp(srcstring, "-")) {
@@ -610,7 +737,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
             }
         }
     } else if (*remainder && *remainder != '-') {
-        *start = -1;
+        *start = PCMK__PARSE_INT_DEFAULT;
         return pcmk_rc_unknown_format;
     } else {
         /* The input string contained only one number.  Set start and end
@@ -717,7 +844,45 @@ pcmk__str_any_of(const char *s, ...)
     return rc;
 }
 
-/*
+/*!
+ * \internal
+ * \brief Check whether a character is in any of a list of strings
+ *
+ * \param[in]   ch      Character (ASCII) to search for
+ * \param[in]   ...     Strings to search. Final argument must be
+ *                      \c NULL.
+ *
+ * \return  \c true if any of \p ... contain \p ch, \c false otherwise
+ * \note    \p ... must contain at least one argument (\c NULL).
+ */
+bool
+pcmk__char_in_any_str(int ch, ...)
+{
+    bool rc = false;
+    va_list ap;
+
+    /*
+     * Passing a char to va_start() can generate compiler warnings,
+     * so ch is declared as an int.
+     */
+    va_start(ap, ch);
+
+    while (1) {
+        const char *ele = va_arg(ap, const char *);
+
+        if (ele == NULL) {
+            break;
+        } else if (strchr(ele, ch) != NULL) {
+            rc = true;
+            break;
+        }
+    }
+
+    va_end(ap);
+    return rc;
+}
+
+/*!
  * \brief Sort strings, with numeric portions sorted numerically
  *
  * Sort two strings case-insensitively like strcasecmp(), but with any numeric
