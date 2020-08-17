@@ -27,8 +27,6 @@ extern "C" {
 #  include <stdbool.h>
 #  include <sys/types.h>
 
-#  include <crm/common/strings_internal.h>
-
 #  ifndef OCF_ROOT_DIR
 #    define OCF_ROOT_DIR "/usr/lib/ocf"
 #  endif
@@ -390,41 +388,6 @@ gboolean services_alert_async(svc_action_t *action,
             default:
                 return "unknown";
         }
-    }
-
-    /**
-     * \brief Get OCF equivalent of LSB exit code
-     *
-     * \param[in] action        LSB action that produced exit code
-     * \param[in] lsb_exitcode  Exit code of LSB action
-     *
-     * \return PCMK_OCF_* constant that corresponds to LSB exit code
-     */
-    static inline enum ocf_exitcode
-    services_get_ocf_exitcode(const char *action, int lsb_exitcode)
-    {
-        /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-        if (action && !pcmk__strcase_any_of(action, "status", "monitor", NULL)) {
-            if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
-                return PCMK_OCF_UNKNOWN_ERROR;
-            }
-            return (enum ocf_exitcode)lsb_exitcode;
-        }
-
-        /* status has different return codes */
-        switch (lsb_exitcode) {
-            case PCMK_LSB_STATUS_OK:
-                return PCMK_OCF_OK;
-            case PCMK_LSB_STATUS_NOT_INSTALLED:
-                return PCMK_OCF_NOT_INSTALLED;
-            case PCMK_LSB_STATUS_INSUFFICIENT_PRIV:
-                return PCMK_OCF_INSUFFICIENT_PRIV;
-            case PCMK_LSB_STATUS_VAR_PID:
-            case PCMK_LSB_STATUS_VAR_LOCK:
-            case PCMK_LSB_STATUS_NOT_RUNNING:
-                return PCMK_OCF_NOT_RUNNING;
-        }
-        return PCMK_OCF_UNKNOWN_ERROR;
     }
 
 #  ifdef __cplusplus
