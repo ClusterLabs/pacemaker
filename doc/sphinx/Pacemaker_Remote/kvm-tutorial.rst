@@ -1,3 +1,6 @@
+.. index::
+   single: guest node; walk-through
+
 Guest Node Walk-through
 -----------------------
 
@@ -245,6 +248,9 @@ guest. There are plenty of tutorials available elsewhere that do that.
 Just be sure to configure the guest with a hostname and a static IP address
 (as an example here, we will use guest1 and 192.168.122.10).
 
+.. index::
+   single: guest node; firewall
+
 Configure Firewall on Guest
 ___________________________
 
@@ -257,12 +263,12 @@ ___________________
 At this point, you should be able to ping and ssh into guests from hosts, and
 vice versa.
 
-Configure pacemaker_remote
-__________________________
+Configure pacemaker_remoted
+___________________________
 
-Install pacemaker_remote, and enable it to run at start-up. Here, we also
-install the pacemaker package; it is not required, but it contains the dummy
-resource agent that we will use later for testing.
+Install ``pacemaker_remoted``, and enable it to run at start-up. Here, we also
+install the ``pacemaker`` package; it is not required, but it contains the
+dummy resource agent that we will use later for testing.
 
 .. code-block:: none
 
@@ -277,7 +283,7 @@ Copy the authentication key from a host:
     # chgrp haclient /etc/pacemaker
     # scp root@example-host:/etc/pacemaker/authkey /etc/pacemaker
 
-Start pacemaker_remote, and verify the start was successful:
+Start ``pacemaker_remoted``, and verify the start was successful:
 
 .. code-block:: none
 
@@ -303,8 +309,8 @@ on port 3121. Here's a trick you can use. Connect using ssh from the host. The
 connection will get destroyed, but how it is destroyed tells you whether it
 worked or not.
 
-First add guest1 to the host machine's +/etc/hosts+ file if you haven't
-already. This is required unless you have DNS setup in a way where guest1's
+First add guest1 to the host machine's ``/etc/hosts`` file if you haven't
+already. This is required unless you have DNS setup in a way where **guest1**'s
 address can be discovered.
 
 .. code-block:: none
@@ -313,7 +319,7 @@ address can be discovered.
     192.168.122.10    guest1 
     END
 
-If running the ssh command on one of the cluster nodes results in this
+If running the ``ssh`` command on one of the cluster nodes results in this
 output before disconnecting, the connection works:
 
 .. code-block:: none
@@ -333,17 +339,19 @@ If you see one of these, the connection is not working:
     # ssh -p 3121 guest1
     ssh: connect to host guest1 port 3121: Connection refused
 
-Once you can successfully connect to the guest from the host, shutdown the guest.  Pacemaker will be managing the virtual machine from this point forward.
+Once you can successfully connect to the guest from the host, shutdown the
+guest. Pacemaker will be managing the virtual machine from this point forward.
 
 Integrate Guest into Cluster
 ############################
 
-Now the fun part, integrating the virtual machine you've just created into the cluster.  It is incredibly simple.
+Now the fun part, integrating the virtual machine you've just created into the
+cluster. It is incredibly simple.
 
 Start the Cluster
 _________________
 
-On the host, start pacemaker.
+On the host, start Pacemaker.
 
 .. code-block:: none
 
@@ -377,13 +385,14 @@ you just created from the output of this list.
     ----------------------------------------------------
      -     guest1                         shut off
 
-In my case I named it guest1. Dump the xml to a file somewhere on the host using the following command.
+In my case I named it **guest1**. Dump the XML to a file somewhere on the host
+using the following command.
 
 .. code-block:: none
 
     # virsh dumpxml guest1 > /etc/pacemaker/guest1.xml
 
-Now just register the resource with pacemaker and you're set!
+Now just register the resource with Pacemaker, and you're set!
 
 .. code-block:: none
 
@@ -392,7 +401,7 @@ Now just register the resource with pacemaker and you're set!
 
 .. NOTE::
 
-    This example puts the guest XML under /etc/pacemaker because the
+    This example puts the guest XML under ``/etc/pacemaker`` because the
     permissions and SELinux labeling should not need any changes.
     If you run into trouble with this or any step, try disabling SELinux
     with ``setenforce 0``. If it works after that, see SELinux documentation
@@ -401,7 +410,7 @@ Now just register the resource with pacemaker and you're set!
 .. NOTE::
 
     Pacemaker will automatically monitor pacemaker_remote connections for failure,
-    so it is not necessary to create a recurring monitor on the VirtualDomain
+    so it is not necessary to create a recurring monitor on the **VirtualDomain**
     resource.
 
 Once the **vm-guest1** resource is started you will see **guest1** appear in the

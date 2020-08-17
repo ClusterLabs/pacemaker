@@ -1,3 +1,7 @@
+.. index::
+   single: configuration
+   single: CIB
+
 Configuring Pacemaker
 ---------------------
 
@@ -71,6 +75,11 @@ See :ref:`crm_shadow` for a way to make a series of changes, then commit them
 all at once to the live cluster.
 
 
+.. index::
+   single: configuration; CIB properties
+   single: CIB; properties
+   single: CIB property
+
 Working with CIB Properties
 ###########################
 
@@ -97,12 +106,11 @@ A complete set of CIB properties will look something like this:
          update-client="crm_attribute" have-quorum="1" dc-uuid="1">
 
 
+.. index::
+   single: configuration; cluster options
+
 Querying and Setting Cluster Options
 ####################################
-
-.. index::
-   pair: cluster option; querying
-   pair: cluster option; setting
 
 Cluster options can be queried and modified using the ``crm_attribute`` tool.
 To get the current value of ``cluster-delay``, you can run:
@@ -168,14 +176,13 @@ action.  To determine which value is currently being used by the cluster, refer
 to the "Rules" chapter of *Pacemaker Explained*.
 
 
+.. index::
+   single: configuration; remote
+
 .. _remote_connection:
 
 Connecting from a Remote Machine
 ################################
-
-.. index::
-   pair: cluster; remote connection
-   pair: cluster; remote administration
 
 Provided Pacemaker is installed on a machine, it is possible to connect to the
 cluster even if the machine itself is not in the same cluster. To do this, one
@@ -184,38 +191,43 @@ when working on a cluster node.
 
 .. table:: **Environment Variables Used to Connect to Remote Instances of the CIB**
 
-   +----------------------+-----------+----------------------------------------------+
-   | Environment Variable | Default   | Description                                  |
-   +======================+===========+==============================================+
-   | CIB_user             | $USER     | The user to connect as. Needs to be          |
-   |                      |           | part of the ``haclient`` group on            |
-   |                      |           | the target host.                             |
-   |                      |           |                                              |
-   |                      |           | .. index::                                   |
-   |                      |           |    pair: environment variable; CIB_user      |
-   +----------------------+-----------+----------------------------------------------+
-   | CIB_passwd           |           | The user's password. Read from the           |
-   |                      |           | command line if unset.                       |
-   |                      |           |                                              |
-   |                      |           | .. index::                                   |
-   |                      |           |    pair: environment variable; CIB_passwd    |
-   +----------------------+-----------+----------------------------------------------+
-   | CIB_server           | localhost | The host to contact                          |
-   |                      |           |                                              |
-   |                      |           | .. index::                                   |
-   |                      |           |    pair: environment variable; CIB_server    |
-   +----------------------+-----------+----------------------------------------------+
-   | CIB_port             |           | The port on which to contact the server;     |
-   |                      |           | required.                                    |
-   |                      |           |                                              |
-   |                      |           | .. index::                                   |
-   |                      |           |    pair: environment variable; CIB_port      |
-   +----------------------+-----------+----------------------------------------------+
-   | CIB_encrypted        | TRUE      | Whether to encrypt network traffic           |
-   |                      |           |                                              |
-   |                      |           | .. index::                                   |
-   |                      |           |    pair: environment variable; CIB_encrypted |
-   +----------------------+-----------+----------------------------------------------+
+   +----------------------+-----------+------------------------------------------------+
+   | Environment Variable | Default   | Description                                    |
+   +======================+===========+================================================+
+   | CIB_user             | $USER     | .. index::                                     |
+   |                      |           |    single: CIB_user                            |
+   |                      |           |    single: environment variable; CIB_user      |
+   |                      |           |                                                |
+   |                      |           | The user to connect as. Needs to be            |
+   |                      |           | part of the ``haclient`` group on              |
+   |                      |           | the target host.                               |
+   +----------------------+-----------+------------------------------------------------+
+   | CIB_passwd           |           | .. index::                                     |
+   |                      |           |    single: CIB_passwd                          |
+   |                      |           |    single: environment variable; CIB_passwd    |
+   |                      |           |                                                |
+   |                      |           | The user's password. Read from the             |
+   |                      |           | command line if unset.                         |
+   +----------------------+-----------+------------------------------------------------+
+   | CIB_server           | localhost | .. index::                                     |
+   |                      |           |    single: CIB_server                          |
+   |                      |           |    single: environment variable; CIB_server    |
+   |                      |           |                                                |
+   |                      |           | The host to contact                            |
+   +----------------------+-----------+------------------------------------------------+
+   | CIB_port             |           | .. index::                                     |
+   |                      |           |    single: CIB_port                            |
+   |                      |           |    single: environment variable; CIB_port      |
+   |                      |           |                                                |
+   |                      |           | The port on which to contact the server;       |
+   |                      |           | required.                                      |
+   +----------------------+-----------+------------------------------------------------+
+   | CIB_encrypted        | TRUE      | .. index::                                     |
+   |                      |           |    single: CIB_encrypted                       |
+   |                      |           |    single: environment variable; CIB_encrypted |
+   |                      |           |                                                |
+   |                      |           | Whether to encrypt network traffic             |
+   +----------------------+-----------+------------------------------------------------+
 
 So, if **c001n01** is an active cluster node and is listening on port 1234
 for connections, and **someuser** is a member of the **haclient** group,
@@ -238,17 +250,19 @@ properties (i.e., those kept in the ``cib`` tag, like ``num_updates`` and
    +----------------------+-----------+------------------------------------------------------+
    | CIB Property         | Default   | Description                                          |
    +======================+===========+======================================================+
-   | remote-tls-port      |           | Listen for encrypted remote connections              |
-   |                      |           | on this port.                                        |
+   | remote-tls-port      |           | .. index::                                           |
+   |                      |           |    single: remote-tls-port                           |
+   |                      |           |    single: CIB property; remote-tls-port             |
    |                      |           |                                                      |
-   |                      |           | .. index::                                           |
-   |                      |           |    pair: remote connection option; remote-tls-port   |
+   |                      |           | Listen for encrypted remote connections              |
+   |                      |           | on this port.                                        |
    +----------------------+-----------+------------------------------------------------------+
-   | remote-clear-port    |           | Listen for plaintext remote connections              |
-   |                      |           | on this port.                                        |
+   | remote-clear-port    |           | .. index::                                           |
+   |                      |           |    single: remote-clear-port                         |
+   |                      |           |    single: CIB property; remote-clear-port           |
    |                      |           |                                                      |
-   |                      |           | .. index::                                           |
-   |                      |           |    pair: remote connection option; remote-clear-port |
+   |                      |           | Listen for plaintext remote connections              |
+   |                      |           | on this port.                                        |
    +----------------------+-----------+------------------------------------------------------+
 
 .. important::

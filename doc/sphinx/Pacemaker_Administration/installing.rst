@@ -1,6 +1,8 @@
 Installing Cluster Software
 ---------------------------
 
+.. index:: installation
+
 Installing the Software
 #######################
 
@@ -11,6 +13,9 @@ for details.
 
 Enabling Pacemaker
 ##################
+
+.. index::
+   pair: configuration; Corosync
 
 Enabling Pacemaker For Corosync version 2 and greater
 _____________________________________________________

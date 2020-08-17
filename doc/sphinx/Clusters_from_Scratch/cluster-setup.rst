@@ -53,6 +53,9 @@ and some other command-line tools that will make our lives easier:
 Configure the Cluster Software
 ##############################
 
+.. index::
+   single: firewall
+
 Allow cluster services through firewall
 _______________________________________
 

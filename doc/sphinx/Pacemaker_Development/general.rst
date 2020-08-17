@@ -1,10 +1,13 @@
+.. index::
+   single: guidelines; all languages
+
 General Guidelines for All Languages
 ------------------------------------
 
+.. index:: copyright
+
 Copyright
 #########
-
-.. index:: copyright
 
 When copyright notices are added to a file, they should look like this:
 

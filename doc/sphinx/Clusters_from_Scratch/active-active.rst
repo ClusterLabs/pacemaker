@@ -1,3 +1,6 @@
+.. index::
+   single: storage; active/active
+
 Convert Storage to Active/Active
 --------------------------------
 
@@ -6,6 +9,11 @@ required for your services is available, simultaneously, on both
 machines. Pacemaker makes no requirement on how this is achieved; you
 could use a SAN if you had one available, but since DRBD supports
 multiple Primaries, we can continue to use it here.
+
+.. index::
+   single: GFS2
+   single: DLM
+   single: filesystem; GFS2
 
 Install Cluster Filesystem Software
 ###################################
@@ -79,11 +87,9 @@ Activate our new configuration, and see how the cluster responds:
       pacemaker: active/disabled
       pcsd: active/enabled
 
+
 Create and Populate GFS2 Filesystem
 ###################################
-
-.. index::
-    single: GFS2_prep
 
 Before we do anything to the existing partition, we need to make sure it
 is unmounted. We do this by telling the cluster to stop the WebFS resource.
@@ -211,6 +217,10 @@ and ordering constraints for it:
     [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
     [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
     Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
+
+
+.. index::
+   pair: filesystem; clone
 
 Clone the Filesystem Resource
 #############################

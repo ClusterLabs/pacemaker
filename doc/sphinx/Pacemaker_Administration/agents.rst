@@ -1,8 +1,12 @@
+.. index::
+   single: resource agent
+
 Resource Agents
 ---------------
 
-Resource Agent Actions
-######################
+
+Action Completion
+#################
 
 If one resource depends on another resource via constraints, the cluster will
 interpret an expected result as sufficient to continue with dependent actions.
@@ -12,13 +16,19 @@ resource agent stop returns before the service has fully released all its
 claims on system resources. At a minimum, the start or stop should not return
 before a status command would return the expected (started or stopped) result.
 
+
+.. index::
+   single: OCF resource agent
+   single: resource agent; OCF
+
 OCF Resource Agents
 ###################
 
+.. index::
+   single: OCF resource agent; location
+
 Location of Custom Scripts
 __________________________
-
-.. index:: OCF resource agents
 
 OCF Resource Agents are found in ``/usr/lib/ocf/resource.d/$PROVIDER``
 
@@ -34,6 +44,10 @@ resource named big-app, you would create a resource agent called
 
    <primitive id="custom-app" class="ocf" provider="big-corp" type="big-app"/>
 
+
+.. index::
+   single: OCF resource agent; action
+
 Actions
 _______
 
@@ -44,52 +58,52 @@ All OCF resource agents are required to implement the following actions.
    +--------------+-------------+------------------------------------------------+
    | Action       | Description | Instructions                                   |
    +==============+=============+================================================+
-   | start        | Start the   | Return 0 on success and an appropriate         |
-   |              | resource    | error code otherwise. Must not report          |
+   | start        | Start the   | .. index::                                     |
+   |              | resource    |    single: OCF resource agent; start           |
+   |              |             |    single: start action                        |
+   |              |             |                                                |
+   |              |             | Return 0 on success and an appropriate         |
+   |              |             | error code otherwise. Must not report          |
    |              |             | success until the resource is fully            |
    |              |             | active.                                        |
-   |              |             |                                                |
-   |              |             | .. index::                                     |
-   |              |             |    pair: start; OCF action                     |
-   |              |             |    pair: start; action                         |
    +--------------+-------------+------------------------------------------------+
-   | stop         | Stop the    | Return 0 on success and an appropriate         |
-   |              | resource    | error code otherwise. Must not report          |
+   | stop         | Stop the    | .. index::                                     |
+   |              | resource    |    single: OCF resource agent; stop            |
+   |              |             |    single: stop action                         |
+   |              |             |                                                |
+   |              |             | Return 0 on success and an appropriate         |
+   |              |             | error code otherwise. Must not report          |
    |              |             | success until the resource is fully            |
    |              |             | stopped.                                       |
-   |              |             |                                                |
-   |              |             | .. index::                                     |
-   |              |             |    pair: stop; OCF action                      |
-   |              |             |    pair: stop; action                          |
    +--------------+-------------+------------------------------------------------+
-   | monitor      | Check the   | Exit 0 if the resource is running, 7           |
-   |              | resource's  | if it is stopped, and any other OCF            |
-   |              | state       | exit code if it is failed. NOTE: The           |
+   | monitor      | Check the   | .. index::                                     |
+   |              | resource's  |    single: OCF resource agent; monitor         |
+   |              | state       |    single: monitor action                      |
+   |              |             |                                                |
+   |              |             | Exit 0 if the resource is running, 7           |
+   |              |             | if it is stopped, and any other OCF            |
+   |              |             | exit code if it is failed. NOTE: The           |
    |              |             | monitor script should test the state           |
    |              |             | of the resource on the local machine           |
    |              |             | only.                                          |
-   |              |             |                                                |
-   |              |             | .. index::                                     |
-   |              |             |    pair: monitor; OCF action                   |
-   |              |             |    pair: monitor; action                       |
    +--------------+-------------+------------------------------------------------+
-   | meta-data    | Describe    | Provide information about this                 |
-   |              | the         | resource in the XML format defined by          |
-   |              | resource    | the OCF standard. Exit with 0. NOTE:           |
+   | meta-data    | Describe    | .. index::                                     |
+   |              | the         |    single: OCF resource agent; meta-data       |
+   |              | resource    |    single: meta-data action                    |
+   |              |             |                                                |
+   |              |             | Provide information about this                 |
+   |              |             | resource in the XML format defined by          |
+   |              |             | the OCF standard. Exit with 0. NOTE:           |
    |              |             | This is *not* required to be performed         |
    |              |             | as root.                                       |
-   |              |             |                                                |
-   |              |             | .. index::                                     |
-   |              |             |    pair: meta-data; OCF action                 |
-   |              |             |    pair: meta-data; action                     |
    +--------------+-------------+------------------------------------------------+
-   | validate-all | Verify the  | Return 0 if parameters are valid, 2 if         |
-   |              | supplied    | not valid, and 6 if resource is not            |
-   |              | parameters  | configured.                                    |
+   | validate-all | Verify the  | .. index::                                     |
+   |              | supplied    |    single: OCF resource agent; validate-all    |
+   |              | parameters  |    single: validate-all action                 |
    |              |             |                                                |
-   |              |             | .. index::                                     |
-   |              |             |    pair: validate-all; OCF action              |
-   |              |             |    pair: validate-all; action                  |
+   |              |             | Return 0 if parameters are valid, 2 if         |
+   |              |             | not valid, and 6 if resource is not            |
+   |              |             | configured.                                    |
    +--------------+-------------+------------------------------------------------+
 
 Additional requirements (not part of the OCF specification) are placed on
@@ -100,31 +114,31 @@ agents that will be used for advanced concepts such as clone resources.
    +--------------+-------------+------------------------------------------------+
    | Action       | Description | Instructions                                   |
    +==============+=============+================================================+
-   | promote      | Promote the | Return 0 on success                            |
-   |              | local       |                                                |
-   |              | instance of | .. index::                                     |
-   |              | a promotable|    pair: promote; OCF action                   |
-   |              | clone       |    pair: promote; action                       |
+   | promote      | Promote the | .. index::                                     |
+   |              | local       |    single: OCF resource agent; promote         |
+   |              | instance of |    single: promote action                      |
+   |              | a promotable|                                                |
+   |              | clone       | Return 0 on success                            |
    |              | resource to |                                                |
    |              | the master  |                                                |
    |              | (primary)   |                                                |
    |              | state.      |                                                |
    +--------------+-------------+------------------------------------------------+
-   | demote       | Demote the  | Return 0 on success                            |
-   |              | local       |                                                |
-   |              | instance of | .. index::                                     |
-   |              | a promotable|    pair: demote; OCF action                    |
-   |              | clone       |    pair: demote; action                        |
+   | demote       | Demote the  | .. index::                                     |
+   |              | local       |    single: OCF resource agent; demote          |
+   |              | instance of |    single: demote action                       |
+   |              | a promotable|                                                |
+   |              | clone       | Return 0 on success                            |
    |              | resource to |                                                |
    |              | the slave   |                                                |
    |              | (secondary) |                                                |
    |              | state.      |                                                |
    +--------------+-------------+------------------------------------------------+
-   | notify       | Used by the | Must not fail. Must exit with 0                |
-   |              | cluster to  |                                                |
-   |              | send        | .. index::                                     |
-   |              | the agent   |    pair: notify; OCF action                    |
-   |              | pre- and    |    pair: notify; action                        |
+   | notify       | Used by the | .. index::                                     |
+   |              | cluster to  |    single: OCF resource agent; notify          |
+   |              | send        |    single: notify action                       |
+   |              | the agent   |                                                |
+   |              | pre- and    | Must not fail. Must exit with 0                |
    |              | post-       |                                                |
    |              | notification|                                                |
    |              | events      |                                                |
@@ -144,7 +158,9 @@ to recover a resource locally.
    If you create a new OCF resource agent, use `ocf-tester` to verify that the
    agent complies with the OCF standard properly.
 
-.. index:: ocf-tester
+
+.. index::
+   single: OCF resource agent; return code
 
 How are OCF Return Codes Interpreted?
 _____________________________________
@@ -158,29 +174,29 @@ There are three types of failure recovery:
 
 .. table:: **Types of recovery performed by the cluster**
 
-   +-------+------------------------------+--------------------------------------+
-   | Type  | Description                  | Action Taken by the Cluster          |
-   +=======+==============================+======================================+
-   | soft  | A transient error occurred   | Restart the resource or move it to a |
-   |       |                              | new location                         |
-   |       | .. index::                   |                                      |
-   |       |    pair: soft; OCF error     |                                      |
-   +-------+------------------------------+--------------------------------------+
-   | hard  | A non-transient error that   | Move the resource elsewhere and      |
-   |       | may be specific to the       | prevent it from being retried on the |
-   |       | current node                 | current node                         |
-   |       |                              |                                      |
-   |       | .. index::                   |                                      |
-   |       |    pair: hard; OCF error     |                                      |
-   +-------+------------------------------+--------------------------------------+
-   | fatal | A non-transient error that   | Stop the resource and prevent it     |
-   |       | will be common to all        | from being started on any cluster    |
-   |       | cluster nodes (e.g. a bad    | node                                 |
-   |       | configuration was specified) |                                      |
-   |       |                              |                                      |
-   |       | .. index::                   |                                      |
-   |       |    pair: fatal; OCF error    |                                      |
-   +-------+------------------------------+--------------------------------------+
+   +-------+--------------------------------------------+--------------------------------------+
+   | Type  | Description                                | Action Taken by the Cluster          |
+   +=======+============================================+======================================+
+   | soft  | .. index::                                 | Restart the resource or move it to a |
+   |       |    single: OCF resource agent; soft error  | new location                         |
+   |       |                                            |                                      |
+   |       | A transient error occurred                 |                                      |
+   +-------+--------------------------------------------+--------------------------------------+
+   | hard  | .. index::                                 | Move the resource elsewhere and      |
+   |       |    single: OCF resource agent; hard error  | prevent it from being retried on the |
+   |       |                                            | current node                         |
+   |       | A non-transient error that                 |                                      |
+   |       | may be specific to the                     |                                      |
+   |       | current node                               |                                      |
+   +-------+--------------------------------------------+--------------------------------------+
+   | fatal | .. index::                                 | Stop the resource and prevent it     |
+   |       |    single: OCF resource agent; fatal error | from being started on any cluster    |
+   |       |                                            | node                                 |
+   |       | A non-transient error that                 |                                      |
+   |       | will be common to all                      |                                      |
+   |       | cluster nodes (e.g. a bad                  |                                      |
+   |       | configuration was specified)               |                                      |
+   +-------+--------------------------------------------+--------------------------------------+
 
 .. _ocf_return_codes:
 
@@ -194,90 +210,94 @@ considered to have failed, if 0 was not the expected return value.
 
 .. table:: **OCF Exit Codes and their Recovery Types**
 
-   +-------+-----------------------+---------------------------------------------+----------+
-   | Exit  | OCF Alias             | Description                                 | Recovery |
-   | Code  |                       |                                             |          |
-   +=======+=======================+=============================================+==========+
-   | 0     | OCF_SUCCESS           | Success. The command completed successfully.| soft     |
-   |       |                       | This is the expected result for all start,  |          |
-   |       |                       | stop, promote and demote commands.          |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_SUCCESS           |          |
-   |       |                       |    pair: return code; 0                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 1     | OCF_ERR_GENERIC       | Generic "there was a problem"               | soft     |
-   |       |                       | error code.                                 |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_ERR_GENERIC       |          |
-   |       |                       |    pair: return code; 1                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 2     | OCF_ERR_ARGS          | The resource's configuration is not valid on| hard     |
-   |       |                       | this machine. E.g. it refers to a location  |          |
-   |       |                       | not found on the node.                      |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |     pair: return code; OCF_ERR_ARGS         |          |
-   |       |                       |     pair: return code; 2                    |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 3     | OCF_ERR_UNIMPLEMENTED | The requested action is not                 | hard     |
-   |       |                       | implemented.                                |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_ERR_UNIMPLEMENTED |          |
-   |       |                       |    pair: return code; 3                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 4     | OCF_ERR_PERM          | The resource agent does not have            | hard     |
-   |       |                       | sufficient privileges to complete the task. |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_ERR_PERM          |          |
-   |       |                       |    pair: return code; 4                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 5     | OCF_ERR_INSTALLED     | The tools required by the resource are      | hard     |
-   |       |                       | not installed on this machine.              |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_ERR_INSTALLED     |          |
-   |       |                       |    pair: return code; 5                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 6     | OCF_ERR_CONFIGURED    | The resource's configuration is invalid.    | fatal    |
-   |       |                       | E.g. required parameters are missing.       |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_ERR_CONFIGURED    |          |
-   |       |                       |    pair: return code; 6                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 7     | OCF_NOT_RUNNING       | The resource is safely stopped. The cluster | N/A      |
-   |       |                       | will not attempt to stop a resource that    |          |
-   |       |                       | returns this for any action.                |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_NOT_RUNNING       |          |
-   |       |                       |    pair: return code; 7                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 8     | OCF_RUNNING_MASTER    | The resource is running in                  | soft     |
-   |       |                       | master mode.                                |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_RUNNING_MASTER    |          |
-   |       |                       |    pair: return code; 8                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | 9     | OCF_FAILED_MASTER     | The resource is in master mode but has      | soft     |
-   |       |                       | failed. The resource will be demoted,       |          |
-   |       |                       | stopped and then started (and possibly      |          |
-   |       |                       | promoted) again.                            |          |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; OCF_FAILED_MASTER     |          |
-   |       |                       |    pair: return code; 9                     |          |
-   +-------+-----------------------+---------------------------------------------+----------+
-   | other | *none*                | Custom error code.                          | soft     |
-   |       |                       |                                             |          |
-   |       |                       | .. index::                                  |          |
-   |       |                       |    pair: return code; other                 |          |
-   +-------+-----------------------+---------------------------------------------+----------+
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | Exit  | OCF Alias             | Description                                       | Recovery |
+   | Code  |                       |                                                   |          |
+   +=======+=======================+===================================================+==========+
+   | 0     | OCF_SUCCESS           | .. index::                                        | soft     |
+   |       |                       |    single: OCF_SUCCESS                            |          |
+   |       |                       |    single: OCF return code; OCF_SUCCESS           |          |
+   |       |                       |    pair: OCF return code; 0                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | Success. The command completed successfully.      |          |
+   |       |                       | This is the expected result for all start,        |          |
+   |       |                       | stop, promote and demote commands.                |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 1     | OCF_ERR_GENERIC       | .. index::                                        | soft     |
+   |       |                       |    single: OCF_ERR_GENERIC                        |          |
+   |       |                       |    single: OCF return code; OCF_ERR_GENERIC       |          |
+   |       |                       |    pair: OCF return code; 1                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | Generic "there was a problem" error code.         |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 2     | OCF_ERR_ARGS          | .. index::                                        | hard     |
+   |       |                       |     single: OCF_ERR_ARGS                          |          |
+   |       |                       |     single: OCF return code; OCF_ERR_ARGS         |          |
+   |       |                       |     pair: OCF return code; 2                      |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource's configuration is not valid on      |          |
+   |       |                       | this machine. E.g. it refers to a location        |          |
+   |       |                       | not found on the node.                            |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 3     | OCF_ERR_UNIMPLEMENTED | .. index::                                        | hard     |
+   |       |                       |    single: OCF_ERR_UNIMPLEMENTED                  |          |
+   |       |                       |    single: OCF return code; OCF_ERR_UNIMPLEMENTED |          |
+   |       |                       |    pair: OCF return code; 3                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | The requested action is not implemented.          |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 4     | OCF_ERR_PERM          | .. index::                                        | hard     |
+   |       |                       |    single: OCF_ERR_PERM                           |          |
+   |       |                       |    single: OCF return code; OCF_ERR_PERM          |          |
+   |       |                       |    pair: OCF return code; 4                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource agent does not have                  |          |
+   |       |                       | sufficient privileges to complete the task.       |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 5     | OCF_ERR_INSTALLED     | .. index::                                        | hard     |
+   |       |                       |    single: OCF_ERR_INSTALLED                      |          |
+   |       |                       |    single: OCF return code; OCF_ERR_INSTALLED     |          |
+   |       |                       |    pair: OCF return code; 5                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | The tools required by the resource are            |          |
+   |       |                       | not installed on this machine.                    |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 6     | OCF_ERR_CONFIGURED    | .. index::                                        | fatal    |
+   |       |                       |    single: OCF_ERR_CONFIGURED                     |          |
+   |       |                       |    single: OCF return code; OCF_ERR_CONFIGURED    |          |
+   |       |                       |    pair: OCF return code; 6                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource's configuration is invalid.          |          |
+   |       |                       | E.g. required parameters are missing.             |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 7     | OCF_NOT_RUNNING       | .. index::                                        | N/A      |
+   |       |                       |    single: OCF_NOT_RUNNING                        |          |
+   |       |                       |    single: OCF return code; OCF_NOT_RUNNING       |          |
+   |       |                       |    pair: OCF return code; 7                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource is safely stopped. The cluster       |          |
+   |       |                       | will not attempt to stop a resource that          |          |
+   |       |                       | returns this for any action.                      |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 8     | OCF_RUNNING_MASTER    | .. index::                                        | soft     |
+   |       |                       |    single: OCF_RUNNING_MASTER                     |          |
+   |       |                       |    single: OCF return code; OCF_RUNNING_MASTER    |          |
+   |       |                       |    pair: OCF return code; 8                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource is running in the master role.       |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | 9     | OCF_FAILED_MASTER     | .. index::                                        | soft     |
+   |       |                       |    single: OCF_FAILED_MASTER                      |          |
+   |       |                       |    single: OCF return code; OCF_FAILED_MASTER     |          |
+   |       |                       |    pair: OCF return code; 9                       |          |
+   |       |                       |                                                   |          |
+   |       |                       | The resource is in the master role but has        |          |
+   |       |                       | failed. The resource will be demoted,             |          |
+   |       |                       | stopped and then started (and possibly            |          |
+   |       |                       | promoted) again.                                  |          |
+   +-------+-----------------------+---------------------------------------------------+----------+
+   | other | *none*                | Custom error code.                                | soft     |
+   +-------+-----------------------+---------------------------------------------------+----------+
 
 Exceptions to the recovery handling described above:
 
@@ -289,6 +309,11 @@ Exceptions to the recovery handling described above:
 * Recurring actions that return ``OCF_ERR_UNIMPLEMENTED``
   do not cause any type of recovery.
 
+
+.. index::
+   single: resource agent; LSB
+   single: LSB resource agent
+   single: init script
 
 LSB Resource Agents (Init Scripts)
 ##################################

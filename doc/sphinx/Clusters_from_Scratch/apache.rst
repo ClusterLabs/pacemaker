@@ -1,8 +1,8 @@
-Add Apache HTTP Server as a Cluster Service
--------------------------------------------
-
 .. index::
     single: Apache HTTP Server
+
+Add Apache HTTP Server as a Cluster Service
+-------------------------------------------
 
 Now that we have a basic but functional active/passive two-node cluster,
 we're ready to add some real services. We're going to start with
@@ -48,11 +48,12 @@ on both nodes:
      </html>
     END
 
-Enable the Apache status URL
-############################
 
 .. index::
-    pair: Apache HTTP Server; /server-status
+    single: Apache HTTP Server; status URL
+
+Enable the Apache status URL
+############################
 
 In order to monitor the health of your Apache instance, and recover it if
 it fails, the resource agent used by Pacemaker assumes the server-status
@@ -73,11 +74,12 @@ URL is available. On both nodes, enable the URL with:
     enabled or may be configurable in a different location. If you are using
     a version of Apache HTTP Server less than 2.4, the syntax will be different.
 
-Configure the Cluster
-#####################
 
 .. index::
-    pair: Apache HTTP Server; Apache resource configuration
+    pair: Apache HTTP Server; resource
+
+Configure the Cluster
+#####################
 
 At this point, Apache is ready to go, and all that needs to be done is to
 add it to the cluster. Let's call the resource WebSite. We need to use
@@ -154,6 +156,10 @@ IP address!
     If you see **Not Found** or **Forbidden** in the output, then this is likely the
     problem.  Ensure that the **<Location /server-status>** block is correct.
 
+.. index::
+    single: constraint; colocation
+    single: colocation constraint
+
 Ensure Resources Run on the Same Host
 #####################################
 
@@ -213,6 +219,11 @@ active anywhere, WebSite will not be permitted to run.
       pacemaker: active/disabled
       pcsd: active/enabled
 
+
+.. index::
+    single: constraint; ordering
+    single: ordering constraint
+
 Ensure Resources Start and Stop in Order
 ########################################
 
@@ -244,6 +255,11 @@ recovery of WebSite.
     Colocation Constraints:
       WebSite with ClusterIP (score:INFINITY)
     Ticket Constraints:
+
+
+.. index::
+    single: constraint; location
+    single: location constraint
 
 Prefer One Node Over Another
 ############################
@@ -321,6 +337,10 @@ To see the current placement scores, you can use a tool called crm_simulate.
     native_color: WebSite allocation score on pcmk-2: 100
 
     Transition Summary:
+
+
+.. index::
+   single: resource; moving manually
 
 Move Resources Manually
 #######################

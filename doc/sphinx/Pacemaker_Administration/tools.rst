@@ -1,5 +1,10 @@
+.. index:: command-line tool
+
 Using Pacemaker Command-Line Tools
 ----------------------------------
+
+.. index::
+   single: command-line tool; output format
 
 .. _cmdline_output:
 
@@ -36,13 +41,14 @@ For instance:
      --html-title=TITLE                Page title
      --text-fancy                      Use more highly formatted output
 
+.. index::
+   single: crm_mon
+   single: command-line tool; crm_mon
+
 .. _crm_mon:
 
 Monitor a Cluster with crm_mon
 ##############################
-
-.. index::
-   pair: command-line tool; crm_mon
 
 The ``crm_mon`` utility displays the current state of an active cluster. It can
 show the cluster status organized by node or by resource, and can be used in
@@ -100,13 +106,13 @@ made. The cluster elects a node to be DC as needed. The only significance of
 the choice of DC to an administrator is the fact that its logs will have the
 most information about why decisions were made.
 
-.. _crm_mon_css:
-
-Styling crm_mon output
-______________________
-
 .. index::
    pair: crm_mon; CSS
+
+.. _crm_mon_css:
+
+Styling crm_mon HTML output
+___________________________
 
 Various parts of ``crm_mon``'s HTML output have a CSS class associated with
 them. Not everything does, but some of the most interesting portions do. In
@@ -144,13 +150,14 @@ to ``crm_mon``. The link is added after the default stylesheet, so your
 changes take precedence. You don't need to duplicate the entire default.
 Only include what you want to change.
 
+.. index::
+   single: cibadmin
+   single: command-line tool; cibadmin
+
 .. _cibadmin:
 
 Edit the CIB XML with cibadmin
 ##############################
-
-.. index::
-   pair: command-line tool; cibadmin
 
 The most flexible tool for modifying the configuration is Pacemaker's
 ``cibadmin`` command.  With ``cibadmin``, you can query, add, remove, update
@@ -221,13 +228,14 @@ See the cibadmin man page for more options.
    changes and refuse to use the configuration.
 
 
+.. index::
+   single: crm_shadow
+   single: command-line tool; crm_shadow
+
 .. _crm_shadow:
 
 Batch Configuration Changes with crm_shadow
 ###########################################
-
-.. index::
-   pair: command-line tool; crm_shadow
 
 Often, it is desirable to preview the effects of a series of configuration
 changes before updating the live configuration all at once. For this purpose,
@@ -301,13 +309,14 @@ See the next section, :ref:`crm_simulate`, for how to test your changes before
 committing them to the live cluster.
 
 
+.. index::
+   single: crm_simulate
+   single: command-line tool; crm_simulate
+
 .. _crm_simulate:
 
 Simulate Cluster Activity with crm_simulate
 ###########################################
-
-.. index::
-   pair: command-line tool; crm_simulate
 
 The command-line tool `crm_simulate` shows the results of the same logic
 the cluster itself uses to respond to a particular cluster configuration and
@@ -469,12 +478,14 @@ you can use ``crm_simulate`` to see how the cluster will react to the changes.
 
 .. _crm_attribute:
 
+.. index::
+   single: attrd_updater
+   single: command-line tool; attrd_updater
+   single: crm_attribute
+   single: command-line tool; crm_attribute
+
 Manage Node Attributes, Cluster Options and Defaults with crm_attribute and attrd_updater
 #########################################################################################
-
-.. index::
-   pair: command-line tool; attrd_updater
-   pair: command-line tool; crm_attribute
 
 ``crm_attribute`` and ``attrd_updater`` are confusingly similar tools with subtle
 differences.
@@ -525,18 +536,24 @@ However a transient node attribute is set, it is synchronized between the CIB
 and the attribute manager, on all nodes.
 
 
+.. index::
+   single: crm_failcount
+   single: command-line tool; crm_failcount
+   single: crm_node
+   single: command-line tool; crm_node
+   single: crm_report
+   single: command-line tool; crm_report
+   single: crm_standby
+   single: command-line tool; crm_standby
+   single: crm_verify
+   single: command-line tool; crm_verify
+   single: stonith_admin
+   single: command-line tool; stonith_admin
+
 Other Commonly Used Tools
 #########################
 
 Other command-line tools include:
-
-.. index::
-   pair: command-line tool; crm_failcount
-   pair: command-line tool; crm_node
-   pair: command-line tool; crm_report
-   pair: command-line tool; crm_standby
-   pair: command-line tool; crm_verify
-   pair: command-line tool; stonith_admin
 
 * ``crm_failcount``: query or delete resource fail counts
 * ``crm_node``: manage cluster nodes

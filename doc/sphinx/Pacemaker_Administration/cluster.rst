@@ -1,3 +1,6 @@
+.. index::
+   single: cluster layer
+
 The Cluster Layer
 -----------------
 
@@ -11,14 +14,18 @@ Pacemaker utilizes an underlying cluster layer for two purposes:
 
 Currently, only Corosync 2 and later is supported for this layer.
 
+.. index::
+   single: cluster layer; Corosync
+   single: Corosync
+
 Managing Nodes in a Corosync-Based Cluster
 ##########################################
 
+.. index::
+   pair: Corosync; add cluster node
+
 Adding a New Corosync Node
 __________________________
-
-.. index::
-   pair: corosync; add cluster node
 
 To add a new node:
 
@@ -30,11 +37,11 @@ To add a new node:
    "Invalid digest" appears from Corosync, the keys are not consistent between
    the machines.
 
+.. index::
+   pair: Corosync; remove cluster node
+
 Removing a Corosync Node
 ________________________
-
-.. index::
-   pair: corosync; remove cluster node
 
 Because the messaging and membership layers are the authoritative
 source for cluster nodes, deleting them from the CIB is not a complete
@@ -51,11 +58,11 @@ node (**pcmk-1** in the example below).
 
       # crm_node -R pcmk-1
 
+.. index::
+   pair: Corosync; replace cluster node
+
 Replacing a Corosync Node
 _________________________
-
-.. index::
-   pair: corosync; replace cluster node
 
 To replace an existing cluster node:
 
