@@ -248,11 +248,10 @@ Fencing
    
    |pcmk_reboot_timeout
    |time
-   |60s
+   |120s
    |'Advanced use only.' Specify an alternate timeout to use for `reboot` actions
-   instead of the value of +stonith-timeout+. Some devices need much more or less
-   time to complete than normal. Use this to specify an alternate, device-specific
-   timeout.
+   instead of the default. Some devices need much more or less time to complete
+   than normal. Use this to specify an alternate, device-specific timeout.
     indexterm:[pcmk_reboot_timeout,Fencing]
     indexterm:[Fencing,Property,pcmk_reboot_timeout]
     indexterm:[stonith-timeout,Fencing]
@@ -280,11 +279,10 @@ Fencing
    
    |pcmk_off_timeout
    |time
-   |60s
+   |120s
    |'Advanced use only.' Specify an alternate timeout to use for `off` actions
-   instead of the value of +stonith-timeout+. Some devices need much more or less
-   time to complete than normal. Use this to specify an alternate, device-specific
-   timeout.
+   instead of the default. Some devices need much more or less time to complete
+   than normal. Use this to specify an alternate, device-specific timeout.
     indexterm:[pcmk_off_timeout,Fencing]
     indexterm:[Fencing,Property,pcmk_off_timeout]
     indexterm:[stonith-timeout,Fencing]
@@ -312,11 +310,10 @@ Fencing
    
    |pcmk_list_timeout
    |time
-   |60s
+   |120s
    |'Advanced use only.' Specify an alternate timeout to use for `list` actions
-   instead of the value of +stonith-timeout+. Some devices need much more or less
-   time to complete than normal. Use this to specify an alternate, device-specific
-   timeout.
+   instead of the default. Some devices need much more or less time to complete
+   than normal. Use this to specify an alternate, device-specific timeout.
     indexterm:[pcmk_list_timeout,Fencing]
     indexterm:[Fencing,Property,pcmk_list_timeout]
    
@@ -342,11 +339,10 @@ Fencing
    
    |pcmk_monitor_timeout
    |time
-   |60s
+   |20s
    |'Advanced use only.' Specify an alternate timeout to use for `monitor` actions
-   instead of the value of +stonith-timeout+. Some devices need much more or less
-   time to complete than normal. Use this to specify an alternate, device-specific
-   timeout.
+   instead of the default. Some devices need much more or less time to complete
+   than normal. Use this to specify an alternate, device-specific timeout.
     indexterm:[pcmk_monitor_timeout,Fencing]
     indexterm:[Fencing,Property,pcmk_monitor_timeout]
    
@@ -372,11 +368,10 @@ Fencing
    
    |pcmk_status_timeout
    |time
-   |60s
+   |120s
    |'Advanced use only.' Specify an alternate timeout to use for `status` actions
-   instead of the value of +stonith-timeout+. Some devices need much more or less
-   time to complete than normal. Use this to specify an alternate, device-specific
-   timeout.
+   instead of the default. Some devices need much more or less time to complete
+   than normal. Use this to specify an alternate, device-specific timeout.
     indexterm:[pcmk_status_timeout,Fencing]
     indexterm:[Fencing,Property,pcmk_status_timeout]
    
