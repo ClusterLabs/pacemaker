@@ -1934,6 +1934,9 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     const char *op_timeout = NULL;
     GHashTable *params = NULL;
 
+    xmlNode *primitive = NULL;
+    const char *class = NULL;
+
     const char *transition = NULL;
 
     CRM_ASSERT(rsc_id && operation);
@@ -1973,6 +1976,21 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     if (pcmk__guint_from_hash(params, CRM_META "_" XML_LRM_ATTR_INTERVAL_MS, 0,
                               &(op->interval_ms)) != pcmk_rc_ok) {
         op->interval_ms = 0;
+    }
+
+    /* Use pcmk_monitor_timeout instead of meta timeout for stonith
+       recurring monitor, if set */
+    primitive = find_xml_node(rsc_op, XML_CIB_TAG_RESOURCE, FALSE);
+    class = crm_element_value(primitive, XML_AGENT_ATTR_CLASS);
+
+    if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
+            && pcmk__str_eq(operation, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && (op->interval_ms > 0)) {
+
+        op_timeout = g_hash_table_lookup(params, "pcmk_monitor_timeout");
+        if (op_timeout != NULL) {
+            op->timeout = crm_get_msec(op_timeout);
+        }
     }
 
 #if ENABLE_VERSIONED_ATTRS
