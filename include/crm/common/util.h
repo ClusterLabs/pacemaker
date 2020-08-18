@@ -218,14 +218,14 @@ bool pcmk_str_is_minus_infinity(const char *s);
 //! \deprecated Use pcmk_get_ra_caps() instead
 bool crm_provider_required(const char *standard);
 
-//! \deprecated Use pcmk__str_eq() instead
+//! \deprecated Use strcmp or strcasecmp instead
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 
-//! \deprecated Use pcmk__str_eq() instead
+//! \deprecated Use strcmp instead
 gboolean safe_str_neq(const char *a, const char *b);
 
-//! \deprecated Use pcmk__str_eq() instead
-#define safe_str_eq(a, b) pcmk__str_eq(a, b, pcmk__str_casei)
+//! \deprecated Use strcasecmp instead
+#define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
 #endif // PCMK__NO_COMPAT
 
