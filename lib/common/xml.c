@@ -2936,6 +2936,7 @@ pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
 }
 
 // Deprecated functions kept only for backward API compatibility
+
 xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
 
 xmlNode *

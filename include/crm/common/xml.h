@@ -144,8 +144,6 @@ xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
 gboolean can_prune_leaf(xmlNode * xml_node);
 
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
-
 /*
  * Searching & Modifying
  */
@@ -301,6 +299,8 @@ void crm_destroy_xml(gpointer data);
  */
 
 xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
+
+gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 
 #endif
 

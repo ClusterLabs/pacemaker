@@ -1655,6 +1655,14 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     return diff;
 }
 
+// Deprecated functions kept only for backward API compatibility
+
+gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
+
+/*!
+ * \deprecated Use xml_apply_patchset() instead
+ * \note This function will be removed in a future version of Pacemaker.
+ */
 gboolean
 apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 {
