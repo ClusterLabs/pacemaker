@@ -33,41 +33,6 @@
 /* Assorted convenience functions */
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 
-static inline long long
-crm_clear_bit(const char *function, int line, const char *target, long long word, long long bit)
-{
-    long long rc = (word & ~bit);
-
-    if (rc == word) {
-        /* Unchanged */
-    } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s cleared by %s:%d", bit, target, function, line);
-    } else {
-        crm_trace("Bit 0x%.8llx cleared by %s:%d", bit, function, line);
-    }
-
-    return rc;
-}
-
-static inline long long
-crm_set_bit(const char *function, int line, const char *target, long long word, long long bit)
-{
-    long long rc = (word | bit);
-
-    if (rc == word) {
-        /* Unchanged */
-    } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s set by %s:%d", bit, target, function, line);
-    } else {
-        crm_trace("Bit 0x%.8llx set by %s:%d", bit, function, line);
-    }
-
-    return rc;
-}
-
-#  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, __LINE__, NULL, word, bit)
-#  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, __LINE__, NULL, word, bit)
-
 void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 pid_t pcmk_locate_sbd(void);

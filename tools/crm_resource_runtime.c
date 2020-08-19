@@ -370,12 +370,12 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
                     pe_resource_t *r = (pe_resource_t *) lpc->data;
 
-                    clear_bit(r->flags, pe_rsc_allocating);
+                    pe__clear_resource_flags(r, pe_rsc_allocating);
                 }
             }
 
             crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
-            set_bit(rsc->flags, pe_rsc_allocating);
+            pe__set_resource_flags(rsc, pe_rsc_allocating);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
                 rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
                 pe_resource_t *peer = cons->rsc_lh;
@@ -1337,8 +1337,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
         rc = ENOMEM;
         goto done;
     }
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     rc = update_dataset(cib, data_set, FALSE);
     if(rc != pcmk_rc_ok) {
         fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
@@ -1643,8 +1642,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
     if (data_set == NULL) {
         return ENOMEM;
     }
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     do {
 

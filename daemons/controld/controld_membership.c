@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,7 +66,7 @@ post_cache_update(int instance)
     crm_debug("Updated cache after membership event %d.", instance);
 
     g_hash_table_foreach(crm_peer_cache, reap_dead_nodes, NULL);
-    set_bit(fsa_input_register, R_MEMBERSHIP);
+    controld_set_fsa_input_flags(R_MEMBERSHIP);
 
     if (AM_I_DC) {
         populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
@@ -77,7 +77,8 @@ post_cache_update(int instance)
      * If we lost nodes, we should re-check the election status
      * Safe to call outside of an election
      */
-    register_fsa_action(A_ELECTION_CHECK);
+    controld_set_fsa_action_flags(A_ELECTION_CHECK);
+    trigger_fsa();
 
     /* Membership changed, remind everyone we're here.
      * This will aid detection of duplicate DCs

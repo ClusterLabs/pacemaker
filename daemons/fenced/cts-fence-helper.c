@@ -88,7 +88,7 @@ static pcmk__cli_option_t long_options[] = {
 
 static stonith_t *st = NULL;
 static struct pollfd pollfd;
-static int st_opts = st_opt_sync_call;
+static const int st_opts = st_opt_sync_call;
 static int expected_notifications = 0;
 static int verbose = 0;
 

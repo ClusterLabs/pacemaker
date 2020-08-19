@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>         // uint32_t, uint64_t
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
@@ -66,7 +67,7 @@ static void lrmd_tls_connection_destroy(gpointer userdata);
 #endif
 
 typedef struct lrmd_private_s {
-    enum pcmk__client_type type;
+    uint64_t type;
     char *token;
     mainloop_io_t *source;
 
@@ -435,11 +436,11 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     switch (native->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             return crm_ipc_ready(native->ipc);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             if (native->pending_notify) {
                 return 1;
             } else {
@@ -472,7 +473,7 @@ lrmd_dispatch(lrmd_t * lrmd)
 
     private = lrmd->lrmd_private;
     switch (private->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             while (crm_ipc_ready(private->ipc)) {
                 if (crm_ipc_read(private->ipc) > 0) {
                     const char *msg = crm_ipc_buffer(private->ipc);
@@ -482,7 +483,7 @@ lrmd_dispatch(lrmd_t * lrmd)
             }
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             lrmd_tls_dispatch(lrmd);
             break;
 #endif
@@ -755,11 +756,11 @@ lrmd_send_xml(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     switch (native->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             rc = crm_ipc_send(native->ipc, msg, crm_ipc_client_response, timeout, reply);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             rc = lrmd_tls_send_recv(lrmd, msg, timeout, reply);
             break;
 #endif
@@ -777,11 +778,11 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     switch (native->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             rc = crm_ipc_send(native->ipc, msg, crm_ipc_flags_none, 0, NULL);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             rc = lrmd_tls_send(lrmd, msg);
             if (rc == pcmk_ok) {
                 /* we don't want to wait around for the reply, but
@@ -804,10 +805,10 @@ lrmd_api_is_connected(lrmd_t * lrmd)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     switch (native->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             return crm_ipc_connected(native->ipc);
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             return lrmd_tls_connected(lrmd);
 #endif
         default:
@@ -914,7 +915,7 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
 
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
-                           (native->type == PCMK__CLIENT_IPC));
+                           (native->type == pcmk__client_ipc));
     free_xml(data);
 
     return rc < 0 ? rc : pcmk_ok;
@@ -934,7 +935,7 @@ remote_proxy_check(lrmd_t * lrmd, GHashTable *hash)
     crm_xml_add(data, F_LRMD_WATCHDOG, value);
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
-                           (native->type == PCMK__CLIENT_IPC));
+                           (native->type == pcmk__client_ipc));
     free_xml(data);
 
     return rc < 0 ? rc : pcmk_ok;
@@ -1353,11 +1354,11 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     switch (native->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             rc = lrmd_ipc_connect(lrmd, fd);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             rc = lrmd_tls_connect(lrmd, fd);
             break;
 #endif
@@ -1381,7 +1382,7 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
     CRM_CHECK(native && native->callback, return -1);
 
     switch (native->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             /* fake async connection with ipc.  it should be fast
              * enough that we gain very little from async */
             rc = lrmd_api_connect(lrmd, name, NULL);
@@ -1390,7 +1391,7 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             }
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             rc = lrmd_tls_connect_async(lrmd, timeout);
             if (rc) {
                 /* connection failed, report rc now */
@@ -1470,11 +1471,11 @@ lrmd_api_disconnect(lrmd_t * lrmd)
              pcmk__client_type_str(native->type),
              (native->remote_nodename? native->remote_nodename : "local"));
     switch (native->type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             lrmd_ipc_disconnect(lrmd);
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             lrmd_tls_disconnect(lrmd);
             break;
 #endif
@@ -2024,7 +2025,7 @@ lrmd_api_new(void)
     pvt->remote = calloc(1, sizeof(pcmk__remote_t));
     new_lrmd->cmds = calloc(1, sizeof(lrmd_api_operations_t));
 
-    pvt->type = PCMK__CLIENT_IPC;
+    pvt->type = pcmk__client_ipc;
     new_lrmd->lrmd_private = pvt;
 
     new_lrmd->cmds->connect = lrmd_api_connect;
@@ -2061,7 +2062,7 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
         return NULL;
     }
 
-    native->type = PCMK__CLIENT_TLS;
+    native->type = pcmk__client_tls;
     native->remote_nodename = nodename ? strdup(nodename) : strdup(server);
     native->server = server ? strdup(server) : strdup(nodename);
     native->port = port;

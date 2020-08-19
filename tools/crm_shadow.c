@@ -26,6 +26,7 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 
 static int command_options = cib_sync_call;
 static cib_t *real_cib = NULL;
@@ -323,7 +324,8 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'f':
-                command_options |= cib_quorum_override;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_quorum_override);
                 force_flag = 1;
                 break;
             case 'b':

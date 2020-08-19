@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+#include <stdint.h>         // uint64_t
 #include <sys/types.h>
 
 #include <crm/msg_xml.h>
@@ -86,15 +87,15 @@ pcmk__valid_ipc_header(const pcmk__ipc_header_t *header)
 }
 
 const char *
-pcmk__client_type_str(enum pcmk__client_type client_type)
+pcmk__client_type_str(uint64_t client_type)
 {
     switch (client_type) {
-        case PCMK__CLIENT_IPC:
+        case pcmk__client_ipc:
             return "IPC";
-        case PCMK__CLIENT_TCP:
+        case pcmk__client_tcp:
             return "TCP";
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             return "TLS";
 #endif
         default:

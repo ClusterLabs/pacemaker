@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 #include <stdlib.h>
+#include <stdint.h>     // uint32_t, uint64_t, UINT64_C()
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>  /* U64T ~ PRIu64 */
@@ -160,7 +161,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
     } else if (pcmk__str_eq(op, T_CIB_NOTIFY, pcmk__str_none)) {
         /* Update the notify filters for this client */
         int on_off = 0;
-        long long bit = 0;
+        uint64_t bit = UINT64_C(0);
         const char *type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);
 
         crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
@@ -184,10 +185,12 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
             bit = cib_notify_replace;
         }
 
-        if (on_off) {
-            set_bit(cib_client->options, bit);
-        } else {
-            clear_bit(cib_client->options, bit);
+        if (bit != 0) {
+            if (on_off) {
+                pcmk__set_client_flags(cib_client, bit);
+            } else {
+                pcmk__clear_client_flags(cib_client, bit);
+            }
         }
 
         if (flags & crm_ipc_client_response) {
@@ -237,13 +240,13 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         } else {
             cib_client->name = strdup(value);
             if (crm_is_daemon_name(value)) {
-                set_bit(cib_client->options, cib_is_daemon);
+                pcmk__set_client_flags(cib_client, cib_is_daemon);
             }
         }
     }
 
     /* Allow cluster daemons more leeway before being evicted */
-    if (is_set(cib_client->options, cib_is_daemon)) {
+    if (is_set(cib_client->flags, cib_is_daemon)) {
         const char *qmax = cib_config_lookup("cluster-ipc-limit");
 
         if (pcmk__set_client_queue_max(cib_client, qmax)) {
@@ -394,8 +397,8 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
                   call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
     }
 
-    switch (client_obj->kind) {
-        case PCMK__CLIENT_IPC:
+    switch (PCMK__CLIENT_TYPE(client_obj)) {
+        case pcmk__client_ipc:
             {
                 int rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
                                             (sync_reply? crm_ipc_flags_none
@@ -409,13 +412,15 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
             }
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
 #endif
-        case PCMK__CLIENT_TCP:
+        case pcmk__client_tcp:
             pcmk__remote_send_xml(client_obj->remote, notify_src);
             break;
         default:
-            crm_err("Unknown transport %d for %s", client_obj->kind, client_obj->name);
+            crm_err("Unknown transport for %s " CRM_XS " flags=0x%llx",
+                    pcmk__client_name(client_obj),
+                    (unsigned long long) client_obj->flags);
     }
 }
 
@@ -925,7 +930,9 @@ cib_process_request(xmlNode *request, gboolean force_synchronous,
 
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     if (force_synchronous) {
-        call_options |= cib_sync_call;
+        cib__set_call_options(call_options,
+                              (client_name? client_name : "client"),
+                              cib_sync_call);
     }
 
     if (host != NULL && strlen(host) == 0) {
@@ -1202,7 +1209,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if (global_update) {
         /* legacy code */
         manage_counters = FALSE;
-        call_options |= cib_force_diff;
+        cib__set_call_options(call_options, "call", cib_force_diff);
         crm_trace("Global update detected");
 
         CRM_CHECK(call_type == 3 || call_type == 4, crm_err("Call type: %d", call_type);
@@ -1219,9 +1226,9 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
         if (is_not_set(call_options, cib_dryrun) && pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
             /* Copying large CIBs accounts for a huge percentage of our CIB usage */
-            call_options |= cib_zero_copy;
+            cib__set_call_options(call_options, "call", cib_zero_copy);
         } else {
-            clear_bit(call_options, cib_zero_copy);
+            cib__clear_call_options(call_options, "call", cib_zero_copy);
         }
 
         /* result_cib must not be modified after cib_perform_op() returns */

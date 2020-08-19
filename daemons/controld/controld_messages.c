@@ -58,7 +58,7 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
 int
 register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                       void *data, long long with_actions,
+                       void *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
     unsigned old_len = g_list_length(fsa_message_queue);
@@ -85,7 +85,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         }
 
         if (data == NULL) {
-            fsa_actions |= with_actions;
+            controld_set_fsa_action_flags(with_actions);
             fsa_dump_actions(with_actions, "Restored");
             return 0;
         }
@@ -111,7 +111,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
-        crm_trace("Adding actions %.16llx to input", with_actions);
+        crm_trace("Adding actions %.16llx to input",
+                  (unsigned long long) with_actions);
     }
 
     if (data != NULL) {
@@ -897,7 +898,7 @@ verify_feature_set(xmlNode *msg)
                 CRM_FEATURE_SET, dc_version);
 
         // Nothing is likely to improve without administrator involvement
-        set_bit(fsa_input_register, R_STAYDOWN);
+        controld_set_fsa_input_flags(R_STAYDOWN);
         crmd_exit(CRM_EX_FATAL);
     }
 }
@@ -954,7 +955,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
         } else {
             crm_err("Shutting down controller after unexpected "
                     "shutdown request from %s", host_from);
-            set_bit(fsa_input_register, R_STAYDOWN);
+            controld_set_fsa_input_flags(R_STAYDOWN);
         }
         return I_STOP;
     }

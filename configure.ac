@@ -2014,6 +2014,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-cluster.pc                            \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
+                lib/common/tests/flags/Makefile                     \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
                 lib/cluster/Makefile                                \

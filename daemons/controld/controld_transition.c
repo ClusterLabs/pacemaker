@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,7 +53,7 @@ do_te_control(long long action,
                                                     te_update_diff);
         }
 
-        clear_bit(fsa_input_register, R_TE_CONNECTED);
+        controld_clear_fsa_input_flags(R_TE_CONNECTED);
         crm_info("Transitioner is now inactive");
     }
 
@@ -105,7 +105,7 @@ do_te_control(long long action,
         /* create a blank one */
         crm_debug("Transitioner is now active");
         transition_graph = create_blank_graph();
-        set_bit(fsa_input_register, R_TE_CONNECTED);
+        controld_set_fsa_input_flags(R_TE_CONNECTED);
     }
 }
 

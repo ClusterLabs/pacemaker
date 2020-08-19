@@ -28,6 +28,7 @@
 #include <crm/cluster.h>
 
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/common/attrd_internal.h>
 #include <sys/utsname.h>
 
@@ -326,7 +327,8 @@ main(int argc, char **argv)
                 break;
             case '!':
                 crm_warn("Inhibiting notifications for this update");
-                cib_opts |= cib_inhibit_notify;
+                cib__set_call_options(cib_opts, crm_system_name,
+                                      cib_inhibit_notify);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);

@@ -63,7 +63,7 @@ do_cib_control(long long action,
         }
 
         crm_info("Disconnecting from the CIB manager");
-        clear_bit(fsa_input_register, R_CIB_CONNECTED);
+        controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
 
@@ -109,7 +109,7 @@ do_cib_control(long long action,
             crm_err("Could not set CIB notification callback (update)");
 
         } else {
-            set_bit(fsa_input_register, R_CIB_CONNECTED);
+            controld_set_fsa_input_flags(R_CIB_CONNECTED);
             cib_retries = 0;
         }
 
@@ -144,7 +144,7 @@ int crmd_cib_smart_opt()
 
     if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
         crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
-        call_opt |= cib_scope_local;
+        cib__set_call_options(call_opt, "update", cib_scope_local);
     }
     return call_opt;
 }
@@ -249,7 +249,8 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     } else {
         int call_id;
 
-        options |= cib_quorum_override|cib_xpath|cib_multiple;
+        cib__set_call_options(options, "node state deletion",
+                              cib_quorum_override|cib_xpath|cib_multiple);
         call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);

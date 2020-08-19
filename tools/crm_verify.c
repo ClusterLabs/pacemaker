@@ -279,8 +279,7 @@ main(int argc, char **argv)
         crm_perror(LOG_CRIT, "Unable to allocate working set");
         goto done;
     }
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     if (cib_object == NULL) {
     } else if (status != NULL || USE_LIVE_CIB) {

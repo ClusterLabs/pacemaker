@@ -1187,11 +1187,11 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
     header = iov[0].iov_base;
-    header->flags |= flags;
+    pcmk__set_ipc_flags(header->flags, client->name, flags);
 
     if(is_set(flags, crm_ipc_proxied)) {
         /* Don't look for a synchronous response */
-        clear_bit(flags, crm_ipc_client_response);
+        pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
     }
 
     if(header->size_compressed) {

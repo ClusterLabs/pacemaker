@@ -222,7 +222,7 @@ main(int argc, char **argv)
                 query_all = TRUE;
                 break;
             case 'p':
-                set_bit(attr_options, pcmk__node_attr_private);
+                pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_private);
                 break;
             case 'q':
                 break;
@@ -314,7 +314,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
         crm_perror(LOG_ERR, "Connection to cluster attribute manager failed");
         rc = -ENOTCONN;
     } else {
-        rc = crm_ipc_send(ipc, query, crm_ipc_flags_none|crm_ipc_client_response, 0, reply);
+        rc = crm_ipc_send(ipc, query, crm_ipc_client_response, 0, reply);
         if (rc > 0) {
             rc = pcmk_ok;
         }

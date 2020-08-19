@@ -144,7 +144,8 @@ do_cl_join_offer_respond(long long action,
     fsa_register_cib_callback(query_call_id, FALSE, strdup(join_id), join_query_callback);
     crm_trace("Registered join query callback: %d", query_call_id);
 
-    register_fsa_action(A_DC_TIMER_STOP);
+    controld_set_fsa_action_flags(A_DC_TIMER_STOP);
+    trigger_fsa();
 }
 
 void

@@ -319,7 +319,7 @@ cib_remote_listen(gpointer data)
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        new_client->kind = PCMK__CLIENT_TLS;
+        pcmk__set_client_flags(new_client, pcmk__client_tls);
 
         /* create gnutls session for the server socket */
         new_client->remote->tls_session = pcmk__new_tls_session(csock,
@@ -332,7 +332,7 @@ cib_remote_listen(gpointer data)
         }
 #endif
     } else {
-        new_client->kind = PCMK__CLIENT_TCP;
+        pcmk__set_client_flags(new_client, pcmk__client_tcp);
         new_client->remote->tcp_socket = csock;
     }
 
@@ -365,12 +365,12 @@ cib_remote_connection_destroy(gpointer user_data)
     num_clients--;
     crm_trace("Num unfree'd clients: %d", num_clients);
 
-    switch (client->kind) {
-        case PCMK__CLIENT_TCP:
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_tcp:
             csock = client->remote->tcp_socket;
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             if (client->remote->tls_session) {
                 void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
 
@@ -385,7 +385,9 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
 #endif
         default:
-            crm_warn("Unexpected client type %d", client->kind);
+            crm_warn("Unknown transport for %s " CRM_XS " flags=0x%llx",
+                     pcmk__client_name(client),
+                     (unsigned long long) client->flags);
     }
 
     if (csock > 0) {
@@ -469,11 +471,12 @@ cib_remote_msg(gpointer data)
     int rc;
     int timeout = client->remote->authenticated ? -1 : 1000;
 
-    crm_trace("%s callback",
-              (client->kind == PCMK__CLIENT_TCP)? "clear-text" : "secure");
+    crm_trace("Remote %s message received for %s",
+              pcmk__client_type_str(PCMK__CLIENT_TYPE(client)),
+              pcmk__client_name(client));
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    if ((client->kind == PCMK__CLIENT_TLS)
+    if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
         && !(client->remote->tls_handshake_complete)) {
 
         int rc = pcmk__read_handshake_data(client);

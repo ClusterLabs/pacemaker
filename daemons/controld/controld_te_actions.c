@@ -612,7 +612,8 @@ notify_crmd(crm_graph_t * graph)
                 }
 
             } else if (fsa_state == S_POLICY_ENGINE) {
-                register_fsa_action(A_PE_INVOKE);
+                controld_set_fsa_action_flags(A_PE_INVOKE);
+                trigger_fsa();
             }
             break;
 
@@ -631,7 +632,7 @@ notify_crmd(crm_graph_t * graph)
 
     graph->abort_reason = NULL;
     graph->completion_action = tg_done;
-    clear_bit(fsa_input_register, R_IN_TRANSITION);
+    controld_clear_fsa_input_flags(R_IN_TRANSITION);
 
     if (event != I_NULL) {
         register_fsa_input(C_FSA_INTERNAL, event, NULL);

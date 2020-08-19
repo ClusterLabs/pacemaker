@@ -124,9 +124,9 @@ update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char
     enum pe_action_flags last = action->flags;
 
     if (clear) {
-        action->flags = crm_clear_bit(source, line, action->uuid, action->flags, flags);
+        pe__clear_action_flags_as(source, line, action, flags);
     } else {
-        action->flags = crm_set_bit(source, line, action->uuid, action->flags, flags);
+        pe__set_action_flags_as(source, line, action, flags);
     }
 
     if (last != action->flags) {
@@ -134,7 +134,7 @@ update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char
         changed = TRUE;
         /* Useful for tracking down _who_ changed a specific flag */
         /* CRM_ASSERT(calls != 534); */
-        clear_bit(flags, pe_action_clear);
+        pe__clear_raw_action_flags(flags, "action update", pe_action_clear);
         crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x, %lu, %s)",
                   action->uuid, action->node ? action->node->details->uname : "[none]",
                   clear ? "un-" : "", flags, last, action->flags, calls, source);
@@ -181,7 +181,7 @@ check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
     if (force_restart) {
         /* make sure the restart happens */
         stop_action(rsc, node, FALSE);
-        set_bit(rsc->flags, pe_rsc_start_pending);
+        pe__set_resource_flags(rsc, pe_rsc_start_pending);
         delete_resource = TRUE;
 
     } else if (changed) {
@@ -316,7 +316,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 #else
             /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
             op = custom_action(rsc, key, task, active_node, TRUE, TRUE, data_set);
-            set_bit(op->flags, pe_action_reschedule);
+            pe__set_action_flags(op, pe_action_reschedule);
 #endif
 
         } else if (digest_restart) {
@@ -1817,7 +1817,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
     if (lh_action && lh_action->rsc == rsc && is_set(lh_action->flags, pe_action_dangle)) {
         pe_rsc_trace(rsc, "Detected dangling operation %s -> %s", lh_action->uuid,
                      order->rh_action_task);
-        clear_bit(type, pe_order_implies_then);
+        pe__clear_order_flags(type, pe_order_implies_then);
     }
 
     gIter = rh_actions;
@@ -2130,7 +2130,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
             if (state == remote_state_failed) {
                 /* Force recovery, by making this action required */
-                order_opts |= pe_order_implies_then;
+                pe__set_order_flags(order_opts, pe_order_implies_then);
             }
 
             /* Ensure connection is up before running this action */
@@ -2415,11 +2415,12 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
 
         // Preserve the order options for future filtering
         if (is_set(order->type, pe_order_apply_first_non_migratable)) {
-            set_bit(order_type, pe_order_apply_first_non_migratable);
+            pe__set_order_flags(order_type,
+                                pe_order_apply_first_non_migratable);
         }
 
         if (is_set(order->type, pe_order_same_node)) {
-            set_bit(order_type, pe_order_same_node);
+            pe__set_order_flags(order_type, pe_order_same_node);
         }
 
         // Keep the order types for future filtering
@@ -2495,7 +2496,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
         return;
     }
 
-    pe_set_action_bit(after, pe_action_tracking);
+    pe__set_action_flags(after, pe_action_tracking);
 
     crm_trace("Processing based on %s %s -> %s %s",
               probe->uuid,
@@ -2610,7 +2611,7 @@ static void clear_actions_tracking_flag(pe_working_set_t * data_set)
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (is_set(action->flags, pe_action_tracking)) {
-            pe_clear_action_bit(action, pe_action_tracking);
+            pe__clear_action_flags(action, pe_action_tracking);
         }
     }
 }

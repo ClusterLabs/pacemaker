@@ -292,7 +292,11 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
         crm_debug("Setting flag to leave pid group on timeout and "
                   "only kill action pid for " PCMK__OP_FMT,
                   cmd->rsc_id, cmd->action, cmd->interval_ms);
-        cmd->service_flags |= SVC_ACTION_LEAVE_GROUP;
+        cmd->service_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,
+                                                LOG_TRACE, "Action",
+                                                cmd->action, 0,
+                                                SVC_ACTION_LEAVE_GROUP,
+                                                "SVC_ACTION_LEAVE_GROUP");
     }
     return cmd;
 }

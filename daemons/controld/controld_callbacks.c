@@ -63,7 +63,7 @@ crmd_ha_msg_filter(xmlNode * msg)
     route_message(C_HA_MESSAGE, msg);
 
   done:
-    trigger_fsa(fsa_source);
+    trigger_fsa();
 }
 
 /*!
@@ -111,7 +111,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
      * cluster node, indicate that we have it.
      */
     if (!is_remote) {
-        set_bit(fsa_input_register, R_PEER_DATA);
+        controld_set_fsa_input_flags(R_PEER_DATA);
     }
 
     if (node->uname == NULL) {
@@ -308,7 +308,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         free_xml(update);
     }
 
-    trigger_fsa(fsa_source);
+    trigger_fsa();
 }
 
 void
@@ -317,7 +317,7 @@ crmd_cib_connection_destroy(gpointer user_data)
     CRM_CHECK(user_data == fsa_cib_conn,;);
 
     crm_trace("Invoked");
-    trigger_fsa(fsa_source);
+    trigger_fsa();
     fsa_cib_conn->state = cib_disconnected;
 
     if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
@@ -328,7 +328,7 @@ crmd_cib_connection_destroy(gpointer user_data)
     // @TODO This should trigger a reconnect, not a shutdown
     crm_crit("Lost connection to the CIB manager, shutting down");
     register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-    clear_bit(fsa_input_register, R_CIB_CONNECTED);
+    controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
     return;
 }

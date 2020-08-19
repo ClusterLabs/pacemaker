@@ -55,7 +55,7 @@ do_ha_control(long long action,
         crm_cluster_disconnect(cluster);
         crm_info("Disconnected from the cluster");
 
-        set_bit(fsa_input_register, R_HA_DISCONNECTED);
+        controld_set_fsa_input_flags(R_HA_DISCONNECTED);
     }
 
     if (action & A_HA_CONNECT) {
@@ -79,13 +79,13 @@ do_ha_control(long long action,
         }
 
         if (registered == FALSE) {
-            set_bit(fsa_input_register, R_HA_DISCONNECTED);
+            controld_set_fsa_input_flags(R_HA_DISCONNECTED);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
         }
 
         populate_cib_nodes(node_update_none, __FUNCTION__);
-        clear_bit(fsa_input_register, R_HA_DISCONNECTED);
+        controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
         crm_info("Connected to the cluster");
     }
 
@@ -101,7 +101,7 @@ do_shutdown(long long action,
             enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     /* just in case */
-    set_bit(fsa_input_register, R_SHUTDOWN);
+    controld_set_fsa_input_flags(R_SHUTDOWN);
     controld_disconnect_fencer(FALSE);
 }
 
@@ -114,12 +114,12 @@ do_shutdown_req(long long action,
 {
     xmlNode *msg = NULL;
 
-    set_bit(fsa_input_register, R_SHUTDOWN);
+    controld_set_fsa_input_flags(R_SHUTDOWN);
+    //controld_set_fsa_input_flags(R_STAYDOWN);
     crm_info("Sending shutdown request to all peers (DC is %s)",
              (fsa_our_dc? fsa_our_dc : "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-/* 	set_bit(fsa_input_register, R_STAYDOWN); */
     if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
@@ -171,7 +171,7 @@ crmd_exit(crm_exit_t exit_code)
               exit_code, crm_exit_str(exit_code));
 
     /* Suppress secondary errors resulting from us disconnecting everything */
-    set_bit(fsa_input_register, R_HA_DISCONNECTED);
+    controld_set_fsa_input_flags(R_HA_DISCONNECTED);
 
 /* Close all IPC servers and clients to ensure any and all shared memory files are cleaned up */
 
@@ -215,7 +215,7 @@ crmd_exit(crm_exit_t exit_code)
         delete_fsa_input(fsa_data);
     }
 
-    clear_bit(fsa_input_register, R_MEMBERSHIP);
+    controld_clear_fsa_input_flags(R_MEMBERSHIP);
     g_list_free(fsa_message_queue); fsa_message_queue = NULL;
 
     metadata_cache_fini();
@@ -228,7 +228,7 @@ crmd_exit(crm_exit_t exit_code)
     fsa_cib_conn->cmds->signoff(fsa_cib_conn);
 
     verify_stopped(fsa_state, LOG_WARNING);
-    clear_bit(fsa_input_register, R_LRM_CONNECTED);
+    controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
     /* This basically will not work, since mainloop has a reference to it */
@@ -391,7 +391,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
         route_message(C_IPC_MESSAGE, msg);
     }
 
-    trigger_fsa(fsa_source);
+    trigger_fsa();
     free_xml(msg);
     return 0;
 }
@@ -407,7 +407,7 @@ crmd_ipc_closed(qb_ipcs_connection_t * c)
                   c, client);
         free(client->userdata);
         pcmk__free_client(client);
-        trigger_fsa(fsa_source);
+        trigger_fsa();
     }
     return 0;
 }
@@ -489,7 +489,7 @@ do_started(long long action,
     }
     controld_trigger_fencer_connect();
 
-    clear_bit(fsa_input_register, R_STARTING);
+    controld_clear_fsa_input_flags(R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 }
 
@@ -499,7 +499,7 @@ do_recover(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    set_bit(fsa_input_register, R_IN_RECOVERY);
+    controld_set_fsa_input_flags(R_IN_RECOVERY);
     crm_warn("Fast-tracking shutdown in response to errors");
 
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
@@ -674,7 +674,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
-            set_bit(fsa_input_register, R_STAYDOWN);
+            controld_set_fsa_input_flags(R_STAYDOWN);
         }
         goto bail;
     }
@@ -756,7 +756,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     crmd_unpack_alerts(alerts);
 
-    set_bit(fsa_input_register, R_READ_CONFIG);
+    controld_set_fsa_input_flags(R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);
     mainloop_set_trigger(fsa_source);
 
@@ -803,7 +803,7 @@ crm_shutdown(int nsig)
         return;
     }
 
-    set_bit(fsa_input_register, R_SHUTDOWN);
+    controld_set_fsa_input_flags(R_SHUTDOWN);
     register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
     if (shutdown_escalation_timer->period_ms == 0) {

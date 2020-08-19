@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/fencing/internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -654,7 +655,7 @@ controld_trigger_fencer_connect()
                                                  te_connect_stonith,
                                                  GINT_TO_POINTER(TRUE));
     }
-    set_bit(fsa_input_register, R_ST_REQUIRED);
+    controld_set_fsa_input_flags(R_ST_REQUIRED);
     mainloop_set_trigger(stonith_reconnect);
 }
 
@@ -663,7 +664,7 @@ controld_disconnect_fencer(bool destroy)
 {
     if (stonith_api) {
         // Prevent fencer connection from coming up again
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
+        controld_clear_fsa_input_flags(R_ST_REQUIRED);
 
         if (stonith_api->state != stonith_disconnected) {
             stonith_api->cmds->disconnect(stonith_api);
@@ -807,6 +808,20 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     return;
 }
 
+static int
+fence_with_delay(const char *target, const char *type, const char *delay)
+{
+    uint32_t options = st_opt_none; // Group of enum stonith_call_options
+    int timeout_sec = (int) (transition_graph->stonith_timeout / 1000);
+
+    if (crmd_join_phase_count(crm_join_confirmed) == 1) {
+        stonith__set_call_options(options, target, st_opt_allow_suicide);
+    }
+    return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
+                                               type, timeout_sec, 0,
+                                               crm_atoi(delay, "0"));
+}
+
 gboolean
 te_fence_node(crm_graph_t *graph, crm_action_t *action)
 {
@@ -818,7 +833,6 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     char *transition_key = NULL;
     const char *priority_delay = NULL;
     gboolean invalid_action = FALSE;
-    enum stonith_call_options options = st_opt_none;
 
     id = ID(action->xml);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -846,14 +860,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
 
-    if (crmd_join_phase_count(crm_join_confirmed) == 1) {
-        options |= st_opt_allow_suicide;
-    }
-
-    rc = stonith_api->cmds->fence_with_delay(stonith_api, options, target, type,
-                                             (int) (transition_graph->stonith_timeout / 1000),
-                                             0, crm_atoi(priority_delay, "0"));
-
+    rc = fence_with_delay(target, type, priority_delay);
     transition_key = pcmk__transition_key(transition_graph->id, action->id, 0,
                                           te_uuid),
     stonith_api->cmds->register_callback(stonith_api, rc,

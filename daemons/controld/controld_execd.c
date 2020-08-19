@@ -53,7 +53,7 @@ lrm_connection_destroy(void)
     if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Connection to executor failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-        clear_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_clear_fsa_input_flags(R_LRM_CONNECTED);
 
     } else {
         crm_info("Disconnected from executor");
@@ -342,7 +342,7 @@ do_lrm_control(long long action,
             }
         }
 
-        clear_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_clear_fsa_input_flags(R_LRM_CONNECTED);
         crm_info("Disconnecting from the executor");
         lrm_state_disconnect(lrm_state);
         lrm_state_reset_tables(lrm_state, FALSE);
@@ -376,7 +376,7 @@ do_lrm_control(long long action,
             return;
         }
 
-        set_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_set_fsa_input_flags(R_LRM_CONNECTED);
         crm_info("Connection to the executor established");
     }
 
@@ -1145,7 +1145,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
 
     if (pending) {
         if (remove && is_not_set(pending->flags, active_op_remove)) {
-            set_bit(pending->flags, active_op_remove);
+            controld_set_active_op_flags(pending, active_op_remove);
             crm_debug("Scheduling %s for removal", key);
         }
 
@@ -1154,7 +1154,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
             free(local_key);
             return FALSE;
         }
-        set_bit(pending->flags, active_op_cancelled);
+        controld_set_active_op_flags(pending, active_op_cancelled);
 
     } else {
         crm_info("No pending op found for %s", key);
@@ -2129,7 +2129,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
         }
     }
 
-    set_bit(fsa_input_register, R_SENT_RSC_STOP);
+    controld_set_fsa_input_flags(R_SENT_RSC_STOP);
     g_list_free(lrm_state_list); lrm_state_list = NULL;
     return res;
 }
@@ -2391,7 +2391,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 
     if (call_id == last_resource_update) {
         last_resource_update = 0;
-        trigger_fsa(fsa_source);
+        trigger_fsa();
     }
 }
 

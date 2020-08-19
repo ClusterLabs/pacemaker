@@ -11,6 +11,7 @@
 
 #include <sys/param.h>
 #include <stdio.h>
+#include <stdint.h>                 // uint64_t
 #include <string.h>
 #include <time.h>
 
@@ -35,8 +36,8 @@ char *fsa_our_uname = NULL;
 char *fsa_cluster_name = NULL;
 
 gboolean do_fsa_stall = FALSE;
-long long fsa_input_register = 0;
-long long fsa_actions = A_NOTHING;
+uint64_t fsa_input_register = 0;
+uint64_t fsa_actions = A_NOTHING;
 enum crmd_fsa_state fsa_state = S_STARTING;
 
 extern uint highest_born_on;
@@ -45,9 +46,9 @@ extern uint num_join_invites;
 #define DOT_PREFIX "actions:trace: "
 #define do_dot_log(fmt, args...)     crm_trace( fmt, ##args)
 
-long long do_state_transition(long long actions,
-                              enum crmd_fsa_state cur_state,
-                              enum crmd_fsa_state next_state, fsa_data_t * msg_data);
+static void do_state_transition(enum crmd_fsa_state cur_state,
+                                enum crmd_fsa_state next_state,
+                                fsa_data_t *msg_data);
 
 void s_crmd_fsa_actions(fsa_data_t * fsa_data);
 void log_fsa_input(fsa_data_t * stored_msg);
@@ -104,12 +105,12 @@ do_fsa_action(fsa_data_t * fsa_data, long long an_action,
                                 enum crmd_fsa_state cur_state,
                                 enum crmd_fsa_input cur_input, fsa_data_t * msg_data))
 {
-    fsa_actions &= ~an_action;
+    controld_clear_fsa_action_flags(an_action);
     crm_trace(DOT_PREFIX "\t// %s", fsa_action2string(an_action));
     function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
 }
 
-static long long startup_actions =
+static const uint64_t startup_actions =
     A_STARTUP | A_CIB_START | A_LRM_CONNECT | A_HA_CONNECT | A_READCONFIG |
     A_STARTED | A_CL_JOIN_QUERY;
 
@@ -158,8 +159,8 @@ enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
     fsa_data_t *fsa_data = NULL;
-    long long register_copy = fsa_input_register;
-    long long new_actions = A_NOTHING;
+    uint64_t register_copy = fsa_input_register;
+    uint64_t new_actions = A_NOTHING;
     enum crmd_fsa_state last_state;
 
     crm_trace("FSA invoked with Cause: %s\tState: %s",
@@ -189,12 +190,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         log_fsa_input(fsa_data);
 
         /* add any actions back to the queue */
-        fsa_actions |= fsa_data->actions;
+        controld_set_fsa_action_flags(fsa_data->actions);
         fsa_dump_actions(fsa_data->actions, "Restored actions");
 
         /* get the next batch of actions */
         new_actions = crmd_fsa_actions[fsa_data->fsa_input][fsa_state];
-        fsa_actions |= new_actions;
+        controld_set_fsa_action_flags(new_actions);
         fsa_dump_actions(new_actions, "New actions");
 
         if (fsa_data->fsa_input != I_NULL && fsa_data->fsa_input != I_ROUTER) {
@@ -223,7 +224,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          * Remove certain actions during shutdown
          */
         if (fsa_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
-            clear_bit(fsa_actions, startup_actions);
+            controld_clear_fsa_action_flags(startup_actions);
         }
 
         /*
@@ -231,7 +232,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          * Allows actions to be added or removed when entering a state
          */
         if (last_state != fsa_state) {
-            fsa_actions = do_state_transition(fsa_actions, last_state, fsa_state, fsa_data);
+            do_state_transition(last_state, fsa_state, fsa_data);
         } else {
             do_dot_log(DOT_PREFIX "\t// FSA input: State=%s \tCause=%s"
                        " \tInput=%s \tOrigin=%s() \tid=%d",
@@ -249,14 +250,16 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     if ((fsa_message_queue != NULL) || (fsa_actions != A_NOTHING)
         || do_fsa_stall) {
         crm_debug("Exiting the FSA: queue=%d, fsa_actions=0x%llx, stalled=%s",
-                  g_list_length(fsa_message_queue), fsa_actions, do_fsa_stall ? "true" : "false");
+                  g_list_length(fsa_message_queue),
+                  (unsigned long long) fsa_actions,
+                  (do_fsa_stall? "true" : "false"));
     } else {
         crm_trace("Exiting the FSA");
     }
 
     /* cleanup inputs? */
     if (register_copy != fsa_input_register) {
-        long long same = register_copy & fsa_input_register;
+        uint64_t same = register_copy & fsa_input_register;
 
         fsa_dump_inputs(LOG_DEBUG, "Added", fsa_input_register ^ same);
         fsa_dump_inputs(LOG_DEBUG, "Removed", register_copy ^ same);
@@ -435,7 +438,8 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             /* Error checking and reporting */
         } else {
             crm_err("Action %s not supported "CRM_XS" 0x%llx",
-                    fsa_action2string(fsa_actions), fsa_actions);
+                    fsa_action2string(fsa_actions),
+                    (unsigned long long) fsa_actions);
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL, __FUNCTION__);
         }
     }
@@ -500,15 +504,16 @@ check_join_counts(fsa_data_t *msg_data)
     }
 }
 
-long long
-do_state_transition(long long actions,
-                    enum crmd_fsa_state cur_state,
-                    enum crmd_fsa_state next_state, fsa_data_t * msg_data)
+static void
+do_state_transition(enum crmd_fsa_state cur_state,
+                    enum crmd_fsa_state next_state, fsa_data_t *msg_data)
 {
     int level = LOG_INFO;
     int count = 0;
-    long long tmp = actions;
     gboolean clear_recovery_bit = TRUE;
+#if 0
+    uint64_t original_fsa_actions = fsa_actions;
+#endif
 
     enum crmd_fsa_cause cause = msg_data->fsa_cause;
     enum crmd_fsa_input current_input = msg_data->fsa_input;
@@ -544,23 +549,23 @@ do_state_transition(long long actions,
     }
 #if 0
     if ((fsa_input_register & R_SHUTDOWN)) {
-        set_bit(tmp, A_DC_TIMER_STOP);
+        controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     }
 #endif
     if (next_state == S_INTEGRATION) {
-        set_bit(tmp, A_INTEGRATE_TIMER_START);
+        controld_set_fsa_action_flags(A_INTEGRATE_TIMER_START);
     } else {
-        set_bit(tmp, A_INTEGRATE_TIMER_STOP);
+        controld_set_fsa_action_flags(A_INTEGRATE_TIMER_STOP);
     }
 
     if (next_state == S_FINALIZE_JOIN) {
-        set_bit(tmp, A_FINALIZE_TIMER_START);
+        controld_set_fsa_action_flags(A_FINALIZE_TIMER_START);
     } else {
-        set_bit(tmp, A_FINALIZE_TIMER_STOP);
+        controld_set_fsa_action_flags(A_FINALIZE_TIMER_STOP);
     }
 
     if (next_state != S_PENDING) {
-        set_bit(tmp, A_DC_TIMER_STOP);
+        controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     }
     if (next_state != S_ELECTION) {
         highest_born_on = 0;
@@ -587,7 +592,7 @@ do_state_transition(long long actions,
 
             if (is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
-                set_bit(tmp, A_SHUTDOWN_REQ);
+                controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
             CRM_LOG_ASSERT(fsa_our_dc != NULL);
             if (fsa_our_dc == NULL) {
@@ -629,14 +634,14 @@ do_state_transition(long long actions,
         case S_STOPPING:
         case S_TERMINATE:
             /* possibly redundant */
-            set_bit(fsa_input_register, R_SHUTDOWN);
+            controld_set_fsa_input_flags(R_SHUTDOWN);
             break;
 
         case S_IDLE:
             CRM_LOG_ASSERT(AM_I_DC);
             if (is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we are the DC");
-                set_bit(tmp, A_SHUTDOWN_REQ);
+                controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
             controld_start_recheck_timer();
             break;
@@ -646,15 +651,14 @@ do_state_transition(long long actions,
     }
 
     if (clear_recovery_bit && next_state != S_PENDING) {
-        tmp &= ~A_RECOVER;
+        controld_clear_fsa_action_flags(A_RECOVER);
     } else if (clear_recovery_bit == FALSE) {
-        tmp |= A_RECOVER;
+        controld_set_fsa_action_flags(A_RECOVER);
     }
 
-    if (tmp != actions) {
-        /* fsa_dump_actions(actions ^ tmp, "New actions"); */
-        actions = tmp;
+#if 0
+    if (original_fsa_actions != fsa_actions) {
+        fsa_dump_actions(original_fsa_actions ^ fsa_actions, "New actions");
     }
-
-    return actions;
+#endif
 }

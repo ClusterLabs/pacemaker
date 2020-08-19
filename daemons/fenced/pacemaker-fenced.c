@@ -260,7 +260,7 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
     }
 }
 
-long long
+uint64_t
 get_stonith_flag(const char *name)
 {
     if (pcmk__str_eq(name, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
@@ -301,7 +301,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (client->options & get_stonith_flag(type)) {
+    if (is_set(client->flags, get_stonith_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
                                     crm_ipc_server_event|crm_ipc_server_error);
 
@@ -696,8 +696,8 @@ cib_devices_update(void)
     CRM_ASSERT(fenced_data_set != NULL);
     fenced_data_set->input = local_cib;
     fenced_data_set->now = crm_time_new(NULL);
-    fenced_data_set->flags |= pe_flag_quick_location;
     fenced_data_set->localhost = stonith_our_uname;
+    pe__set_working_set_flags(fenced_data_set, pe_flag_quick_location);
 
     cluster_status(fenced_data_set);
     pcmk__schedule_actions(fenced_data_set, NULL, NULL);
@@ -1464,8 +1464,8 @@ main(int argc, char **argv)
 
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
-    set_bit(fenced_data_set->flags, pe_flag_no_counts);
-    set_bit(fenced_data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(fenced_data_set,
+                              pe_flag_no_counts|pe_flag_no_compat);
 
     if (stand_alone == FALSE) {
 

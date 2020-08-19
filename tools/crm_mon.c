@@ -1963,7 +1963,7 @@ mon_refresh_display(gpointer user_data)
         mon_data_set = pe_new_working_set();
         CRM_ASSERT(mon_data_set != NULL);
     }
-    set_bit(mon_data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
 
     mon_data_set->input = cib_copy;
     cluster_status(mon_data_set);

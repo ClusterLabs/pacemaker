@@ -59,43 +59,50 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     }
 
     type = crm_element_value(update->msg, F_SUBTYPE);
-
     CRM_LOG_ASSERT(type != NULL);
-    if (is_set(client->options, cib_notify_diff) && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+
+    if (is_set(client->flags, cib_notify_diff)
+        && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_replace)
+    } else if (is_set(client->flags, cib_notify_replace)
                && pcmk__str_eq(type, T_CIB_REPLACE_NOTIFY, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_confirm)
+    } else if (is_set(client->flags, cib_notify_confirm)
                && pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_pre) && pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
+    } else if (is_set(client->flags, cib_notify_pre)
+               && pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_post) && pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
+    } else if (is_set(client->flags, cib_notify_post)
+               && pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
+
         do_send = TRUE;
     }
 
     if (do_send) {
-        switch (client->kind) {
-            case PCMK__CLIENT_IPC:
+        switch (PCMK__CLIENT_TYPE(client)) {
+            case pcmk__client_ipc:
                 if (pcmk__ipc_send_iov(client, update->iov,
                                        crm_ipc_server_event) != pcmk_rc_ok) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
                 break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-            case PCMK__CLIENT_TLS:
+            case pcmk__client_tls:
 #endif
-            case PCMK__CLIENT_TCP:
+            case pcmk__client_tcp:
                 crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
                 pcmk__remote_send_xml(client->remote, update->msg);
                 break;
             default:
-                crm_err("Unknown transport %d for %s", client->kind, client->name);
+                crm_err("Unknown transport for %s " CRM_XS " flags=0x%llx",
+                        pcmk__client_name(client),
+                        (unsigned long long) client->flags);
         }
     }
     return FALSE;

@@ -19,7 +19,7 @@
 #include <pcmki/pcmki_output.h>
 #include <pcmki/pcmki_fence.h>
 
-static int st_opts = st_opt_sync_call | st_opt_allow_suicide;
+static const int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 
 static GMainLoop *mainloop = NULL;
 
@@ -174,6 +174,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
                     bool broadcast, bool cleanup) {
     stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = pcmk_rc_ok;
+    int opts = 0;
 
     if (!quiet) {
         if (cleanup) {
@@ -185,9 +186,15 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
         }
     }
 
-    rc = st->cmds->history(st, st_opts | (cleanup ? st_opt_cleanup : 0) |
-                           (broadcast ? st_opt_broadcast : 0),
-                           pcmk__str_eq(target, "*", pcmk__str_casei) ? NULL : target,
+    stonith__set_call_options(opts, target, st_opts);
+    if (cleanup) {
+        stonith__set_call_options(opts, target, st_opt_cleanup);
+    }
+    if (broadcast) {
+        stonith__set_call_options(opts, target, st_opt_broadcast);
+    }
+    rc = st->cmds->history(st, opts,
+                           pcmk__str_eq(target, "*", pcmk__str_none)? NULL : target,
                            &history, timeout/1000);
 
     if (cleanup) {

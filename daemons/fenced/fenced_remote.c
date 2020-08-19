@@ -826,7 +826,7 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
         return empty_ok? pcmk_rc_ok : ENODEV;
     }
 
-    set_bit(op->call_options, st_opt_topology);
+    stonith__set_call_options(op->call_options, op->id, st_opt_topology);
 
     /* This is a new level, so undo any remapping left over from previous */
     undo_op_remap(op);
@@ -1063,7 +1063,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
         crm_node_t *node = crm_find_known_peer_full(nodeid, NULL, CRM_GET_PEER_ANY);
 
         /* Ensure the conversion only happens once */
-        op->call_options &= ~st_opt_cs_nodeid;
+        stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);
 
         if (node && node->uname) {
             free(op->target);

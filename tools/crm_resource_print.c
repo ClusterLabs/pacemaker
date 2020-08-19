@@ -218,7 +218,7 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
         return;
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
 

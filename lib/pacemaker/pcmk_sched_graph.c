@@ -47,8 +47,8 @@ get_action_flags(pe_action_t * action, pe_node_t * node)
              */
             if (is_not_set(clone_flags, pe_action_runnable)
                 && is_set(flags, pe_action_runnable)) {
-                pe_rsc_trace(action->rsc, "Fixing up runnable flag for %s", action->uuid);
-                set_bit(clone_flags, pe_action_runnable);
+                pe__set_raw_action_flags(clone_flags, action->rsc->id,
+                                         pe_action_runnable);
             }
             flags = clone_flags;
         }
@@ -195,12 +195,13 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
          * like any other 'pe_order_implies_then'
          */
 
-        clear_bit(type, pe_order_implies_then_on_node);
-        set_bit(type, pe_order_implies_then);
+        pe__clear_order_flags(type, pe_order_implies_then_on_node);
+        pe__set_order_flags(type, pe_order_implies_then);
         node = first->node;
     }
 
-    clear_bit(first_flags, pe_action_pseudo);
+    pe__clear_raw_action_flags(first_flags, "first action update",
+                               pe_action_pseudo);
 
     if (type & pe_order_implies_then) {
         processed = TRUE;
@@ -211,7 +212,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
 
         } else if (is_set(first_flags, pe_action_optional) == FALSE) {
             if (update_action_flags(then, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__)) {
-                changed |= pe_graph_updated_then;
+                pe__set_graph_flags(changed, first, pe_graph_updated_then);
             }
         }
         if (changed) {
@@ -247,7 +248,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
                          first->uuid, is_set(first_flags, pe_action_optional),
                          then->uuid, is_set(then_flags, pe_action_optional));
             if (update_action_flags(first, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
-                changed |= pe_graph_updated_first;
+                pe__set_graph_flags(changed, first, pe_graph_updated_first);
             }
         }
 
@@ -294,7 +295,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
              * of "before" runnable actions... mark then as runnable */
             if (then->runnable_before >= then->required_runnable_before) {
                 if (update_action_flags(then, pe_action_runnable, __FUNCTION__, __LINE__)) {
-                    changed |= pe_graph_updated_then;
+                    pe__set_graph_flags(changed, first, pe_graph_updated_then);
                 }
             }
         }
@@ -339,7 +340,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         } else if (is_set(first_flags, pe_action_runnable) == FALSE) {
             pe_rsc_trace(then->rsc, "then unrunnable: %s then %s", first->uuid, then->uuid);
             if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
-                 changed |= pe_graph_updated_then;
+                pe__set_graph_flags(changed, first, pe_graph_updated_then);
             }
         }
         if (changed) {
@@ -429,7 +430,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         && is_not_set(first->flags, pe_action_runnable)) {
 
         if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
-            changed |= pe_graph_updated_then;
+            pe__set_graph_flags(changed, first, pe_graph_updated_then);
         }
 
         if (changed) {
@@ -535,7 +536,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         if (then->required_runnable_before == 0) {
             then->required_runnable_before = 1;
         }
-        pe_clear_action_bit(then, pe_action_runnable);
+        pe__clear_action_flags(then, pe_action_runnable);
         /* We are relying on the pe_order_one_or_more clause of
          * graph_update_action(), called as part of the:
          *
@@ -579,7 +580,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             continue;
         }
 
-        clear_bit(changed, pe_graph_updated_first);
+        pe__clear_graph_flags(changed, then, pe_graph_updated_first);
 
         if (first->rsc && is_set(other->type, pe_order_then_cancels_first)
             && is_not_set(then->flags, pe_action_optional)) {
@@ -587,9 +588,9 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             /* 'then' is required, so we must abandon 'first'
              * (e.g. a required stop cancels any reload).
              */
-            set_bit(other->action->flags, pe_action_optional);
+            pe__set_action_flags(other->action, pe_action_optional);
             if (!strcmp(first->task, CRMD_ACTION_RELOAD)) {
-                clear_bit(first->rsc->flags, pe_rsc_reload);
+                pe__clear_resource_flags(first->rsc, pe_rsc_reload);
             }
         }
 
@@ -643,13 +644,14 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             /* This was the first time 'first' and 'then' were associated,
              * start again to get the new actions_before list
              */
-            changed |= (pe_graph_updated_then | pe_graph_disable);
+            pe__set_graph_flags(changed, then,
+                                pe_graph_updated_then|pe_graph_disable);
         }
 
         if (changed & pe_graph_disable) {
             crm_trace("Disabled constraint %s -> %s in favor of %s -> %s",
                       other->action->uuid, then->uuid, first->uuid, then->uuid);
-            clear_bit(changed, pe_graph_disable);
+            pe__clear_graph_flags(changed, then, pe_graph_disable);
             other->type = pe_order_none;
         }
 
@@ -674,9 +676,9 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
 
     if (is_set(then->flags, pe_action_requires_any)) {
         if (last_flags != then->flags) {
-            changed |= pe_graph_updated_then;
+            pe__set_graph_flags(changed, then, pe_graph_updated_then);
         } else {
-            clear_bit(changed, pe_graph_updated_then);
+            pe__clear_graph_flags(changed, then, pe_graph_updated_then);
         }
     }
 
@@ -738,7 +740,7 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
 
         pe_rsc_trace(action->rsc, "Ordering %s before shutdown on %s", action->uuid,
                      node->details->uname);
-        pe_clear_action_bit(action, pe_action_optional);
+        pe__clear_action_flags(action, pe_action_optional);
         custom_action_order(action->rsc, NULL, action,
                             NULL, strdup(CRM_OP_SHUTDOWN), shutdown_op,
                             pe_order_optional | pe_order_runnable_left, data_set);
@@ -922,7 +924,7 @@ add_maintenance_update(pe_working_set_t *data_set)
     if (add_maintenance_nodes(NULL, data_set)) {
         crm_trace("adding maintenance state update pseudo action");
         action = get_pseudo_op(CRM_OP_MAINTENANCE_NODES, data_set);
-        set_bit(action->flags, pe_action_print_always);
+        pe__set_action_flags(action, pe_action_print_always);
     }
 }
 
@@ -1479,9 +1481,9 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
         return true;
     }
 
-    type &= ~pe_order_implies_first_printed;
-    type &= ~pe_order_implies_then_printed;
-    type &= ~pe_order_optional;
+    pe__clear_order_flags(type, pe_order_implies_first_printed
+                                |pe_order_implies_then_printed
+                                |pe_order_optional);
 
     if (input->type == pe_order_none) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
@@ -1667,7 +1669,7 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
         return true;
     }
 
-    set_bit(input->action->flags, pe_action_tracking);
+    pe__set_action_flags(input->action, pe_action_tracking);
 
     crm_trace("Checking inputs of action %s@%s input %s@%s (0x%.6x)"
               "for graph loop with %s@%s ",
@@ -1692,7 +1694,7 @@ graph_has_loop(pe_action_t *init_action, pe_action_t *action,
     }
 
 done:
-    pe_clear_action_bit(input->action, pe_action_tracking);
+    pe__clear_action_flags(input->action, pe_action_tracking);
 
     if (!has_loop) {
         crm_trace("No input loop found in %s@%s -> %s@%s (0x%.6x)",
@@ -1806,14 +1808,14 @@ graph_element_from_action(pe_action_t *action, pe_working_set_t *data_set)
      */
     if (is_not_set(action->flags, pe_action_dedup)) {
         deduplicate_inputs(action);
-        set_bit(action->flags, pe_action_dedup);
+        pe__set_action_flags(action, pe_action_dedup);
     }
 
     if (should_dump_action(action) == FALSE) {
         return;
     }
 
-    set_bit(action->flags, pe_action_dumped);
+    pe__set_action_flags(action, pe_action_dumped);
 
     syn = create_xml_node(data_set->graph, "synapse");
     set = create_xml_node(syn, "action_set");

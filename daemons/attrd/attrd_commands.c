@@ -1278,7 +1278,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
             /* Older attrd versions don't know about the cib_mixed_update
              * flag so make sure it goes to the local cib which does
              */
-            flags |= cib_mixed_update|cib_scope_local;
+            cib__set_call_options(flags, crm_system_name,
+                                  cib_mixed_update|cib_scope_local);
         }
     }
 

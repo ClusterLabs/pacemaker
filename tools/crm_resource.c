@@ -24,6 +24,7 @@
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/common/ipc_controld.h>
+#include <crm/cib/internal.h>
 
 #define SUMMARY "crm_resource - perform tasks related to Pacemaker cluster resources"
 
@@ -1035,7 +1036,7 @@ list_stacks_and_constraints(pe_resource_t *rsc)
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *r = (pe_resource_t *) lpc->data;
 
-        clear_bit(r->flags, pe_rsc_allocating);
+        pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
     cli_resource_print_colocation(rsc, TRUE, options.rsc_cmd == 'A', 1);
@@ -1046,7 +1047,7 @@ list_stacks_and_constraints(pe_resource_t *rsc)
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *r = (pe_resource_t *) lpc->data;
 
-        clear_bit(r->flags, pe_rsc_allocating);
+        pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
     cli_resource_print_colocation(rsc, FALSE, options.rsc_cmd == 'A', 1);
@@ -1075,15 +1076,11 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
         return rc;
     }
 
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
-
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     rc = update_working_set_xml(data_set, cib_xml_copy);
-    if (rc != pcmk_rc_ok) {
-        return rc;
+    if (rc == pcmk_rc_ok) {
+        cluster_status(data_set);
     }
-
-    cluster_status(data_set);
     return rc;
 }
 
@@ -1496,7 +1493,8 @@ main(int argc, char **argv)
 
     if (options.force) {
         crm_debug("Forcing...");
-        options.cib_options |= cib_quorum_override;
+        cib__set_call_options(options.cib_options, crm_system_name,
+                              cib_quorum_override);
     }
 
     if (options.require_resource && !options.rsc_id) {

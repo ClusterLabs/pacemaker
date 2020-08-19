@@ -114,7 +114,7 @@ valid_network(pe__bundle_variant_data_t *data)
         if(data->nreplicas_per_host > 1) {
             pe_err("Specifying the 'control-port' for %s requires 'replicas-per-host=1'", data->prefix);
             data->nreplicas_per_host = 1;
-            /* @TODO to be sure: clear_bit(rsc->flags, pe_rsc_unique); */
+            // @TODO to be sure: pe__clear_resource_flags(rsc, pe_rsc_unique);
         }
         return TRUE;
     }
@@ -887,7 +887,7 @@ create_container(pe_resource_t *parent, pe__bundle_variant_data_t *data,
          * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
-        set_bit(replica->remote->flags, pe_rsc_allow_remote_remotes);
+        pe__set_resource_flags(replica->remote, pe_rsc_allow_remote_remotes);
     }
 
     return TRUE;
@@ -1021,6 +1021,12 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
     return node->details->uname;
 }
 
+#define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
+        flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,       \
+                                   "Bundle mount", ID(mount_xml), flags,    \
+                                   (flags_to_set), #flags_to_set);          \
+    } while (0)
+
 gboolean
 pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
@@ -1090,7 +1096,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         bundle_data->nreplicas_per_host = 1;
     }
     if (bundle_data->nreplicas_per_host == 1) {
-        clear_bit(rsc->flags, pe_rsc_unique);
+        pe__clear_resource_flags(rsc, pe_rsc_unique);
     }
 
     bundle_data->container_command = crm_element_value_copy(xml_obj, "run-command");
@@ -1146,7 +1152,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         if (source == NULL) {
             source = crm_element_value(xml_child, "source-dir-root");
-            set_bit(flags, pe__bundle_mount_subdir);
+            pe__set_bundle_mount_flags(xml_child, flags,
+                                       pe__bundle_mount_subdir);
         }
 
         if (source && target) {
@@ -1290,7 +1297,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
             // Ensure the child's notify gets set based on the underlying primitive's value
             if (is_set(replica->child->flags, pe_rsc_notify)) {
-                set_bit(bundle_data->child->flags, pe_rsc_notify);
+                pe__set_resource_flags(bundle_data->child, pe_rsc_notify);
             }
 
             offset += allocate_ip(bundle_data, replica, buffer+offset,

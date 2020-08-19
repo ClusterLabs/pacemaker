@@ -87,8 +87,7 @@ start_join_round(void)
         free_xml(max_generation_xml);
         max_generation_xml = NULL;
     }
-    clear_bit(fsa_input_register, R_HAVE_CIB);
-    clear_bit(fsa_input_register, R_CIB_ASKED);
+    controld_clear_fsa_input_flags(R_HAVE_CIB|R_CIB_ASKED);
 }
 
 /*!
@@ -433,9 +432,9 @@ do_dc_join_finalize(long long action,
         return;
     }
 
-    clear_bit(fsa_input_register, R_HAVE_CIB);
+    controld_clear_fsa_input_flags(R_HAVE_CIB);
     if (pcmk__str_eq(max_generation_from, fsa_our_uname, pcmk__str_null_matches | pcmk__str_casei)) {
-        set_bit(fsa_input_register, R_HAVE_CIB);
+        controld_set_fsa_input_flags(R_HAVE_CIB);
     }
 
     if (is_set(fsa_input_register, R_IN_TRANSITION)) {
@@ -449,7 +448,7 @@ do_dc_join_finalize(long long action,
     if (max_generation_from && is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
         /* ask for the agreed best CIB */
         sync_from = strdup(max_generation_from);
-        set_bit(fsa_input_register, R_CIB_ASKED);
+        controld_set_fsa_input_flags(R_CIB_ASKED);
         crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
                    current_join_id, count_integrated,
                    pcmk__plural_s(count_integrated), sync_from);
@@ -473,7 +472,7 @@ void
 finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     CRM_LOG_ASSERT(-EPERM != rc);
-    clear_bit(fsa_input_register, R_CIB_ASKED);
+    controld_clear_fsa_input_flags(R_CIB_ASKED);
     if (rc != pcmk_ok) {
         do_crm_log(((rc == -pcmk_err_old_data)? LOG_WARNING : LOG_ERR),
                    "Could not sync CIB from %s in join-%d: %s",
@@ -490,8 +489,8 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
                   current_join_id, fsa_state2string(fsa_state));
 
     } else {
-        set_bit(fsa_input_register, R_HAVE_CIB);
-        clear_bit(fsa_input_register, R_CIB_ASKED);
+        controld_set_fsa_input_flags(R_HAVE_CIB);
+        controld_clear_fsa_input_flags(R_CIB_ASKED);
 
         /* make sure dc_uuid is re-set to us */
         if (check_join_state(fsa_state, __FUNCTION__) == FALSE) {

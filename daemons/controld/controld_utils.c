@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdlib.h>
+#include <stdint.h>                 // uint64_t
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -529,7 +530,7 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
 }
 
 void
-fsa_dump_actions(long long action, const char *text)
+fsa_dump_actions(uint64_t action, const char *text)
 {
     if (is_set(action, A_READCONFIG)) {
         crm_trace("Action %.16llx (A_READCONFIG) %s", A_READCONFIG, text);
@@ -717,7 +718,8 @@ update_dc(xmlNode * msg)
                 crm_warn("New DC %s is not %s", welcome_from, fsa_our_dc);
             }
 
-            register_fsa_action(A_CL_JOIN_QUERY | A_DC_TIMER_START);
+            controld_set_fsa_action_flags(A_CL_JOIN_QUERY | A_DC_TIMER_START);
+            trigger_fsa();
             return FALSE;
         }
     }

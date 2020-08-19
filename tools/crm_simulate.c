@@ -627,7 +627,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
                 );
         }
 
-        set_bit(action->flags, pe_action_dumped);
+        pe__set_action_flags(action, pe_action_dumped);
         crm_trace("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]",
                 action_name, style, color, font);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
@@ -936,7 +936,7 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__RC_ERROR, rc, "Could not allocate working set");
         goto done;
     }
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_compat);
 
     if (options.test_dir != NULL) {
         profile_all(options.test_dir, options.repeat, data_set, options.use_date);
@@ -969,9 +969,9 @@ main(int argc, char **argv)
     data_set->input = input;
     get_date(data_set, true, options.use_date);
     if(options.xml_file) {
-        set_bit(data_set->flags, pe_flag_sanitized);
+        pe__set_working_set_flags(data_set, pe_flag_sanitized);
     }
-    set_bit(data_set->flags, pe_flag_stdout);
+    pe__set_working_set_flags(data_set, pe_flag_stdout);
     cluster_status(data_set);
 
     if (quiet == FALSE) {
@@ -1014,9 +1014,9 @@ main(int argc, char **argv)
         get_date(data_set, true, options.use_date);
 
         if(options.xml_file) {
-            set_bit(data_set->flags, pe_flag_sanitized);
+            pe__set_working_set_flags(data_set, pe_flag_sanitized);
         }
-        set_bit(data_set->flags, pe_flag_stdout);
+        pe__set_working_set_flags(data_set, pe_flag_stdout);
         cluster_status(data_set);
     }
 
@@ -1080,7 +1080,7 @@ main(int argc, char **argv)
             get_date(data_set, true, options.use_date);
 
             quiet_log("\nRevised cluster status:\n");
-            set_bit(data_set->flags, pe_flag_stdout);
+            pe__set_working_set_flags(data_set, pe_flag_stdout);
             cluster_status(data_set);
             print_cluster_status(data_set, 0);
         }

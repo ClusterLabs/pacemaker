@@ -105,7 +105,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
     }
 
     if (rsc->variant == pe_native && node->details->maintenance) {
-        clear_bit(rsc->flags, pe_rsc_managed);
+        pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
@@ -143,8 +143,8 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
             case recovery_stop_start:
                 break;
             case recovery_block:
-                clear_bit(rsc->flags, pe_rsc_managed);
-                set_bit(rsc->flags, pe_rsc_block);
+                pe__clear_resource_flags(rsc, pe_rsc_managed);
+                pe__set_resource_flags(rsc, pe_rsc_block);
 
                 /* If the resource belongs to a group or bundle configured with
                  * multiple-active=block, block the entire entity.
@@ -157,8 +157,8 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                     for (; gIter != NULL; gIter = gIter->next) {
                         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-                        clear_bit(child->flags, pe_rsc_managed);
-                        set_bit(child->flags, pe_rsc_block);
+                        pe__clear_resource_flags(child, pe_rsc_managed);
+                        pe__set_resource_flags(child, pe_rsc_block);
                     }
                 }
                 break;
@@ -179,7 +179,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
 static void
 recursive_clear_unique(pe_resource_t *rsc)
 {
-    clear_bit(rsc->flags, pe_rsc_unique);
+    pe__clear_resource_flags(rsc, pe_rsc_unique);
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
 
     for (GList *child = rsc->children; child != NULL; child = child->next) {

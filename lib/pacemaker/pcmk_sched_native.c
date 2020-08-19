@@ -72,6 +72,12 @@ static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
     /* Master  */ { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp      , },
 };
 
+#define clear_node_weights_flags(nw_flags, nw_rsc, flags_to_clear) do {     \
+        flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,     \
+                                     "Node weight", (nw_rsc)->id, (flags),  \
+                                     (flags_to_clear), #flags_to_clear);    \
+    } while (0)
+
 static gboolean
 native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * data_set)
 {
@@ -358,7 +364,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         pe_rsc_info(rsc, "%s: Breaking dependency loop at %s", rhs, rsc->id);
         return nodes;
     }
-    set_bit(rsc->flags, pe_rsc_merging);
+    pe__set_resource_flags(rsc, pe_rsc_merging);
 
     if (is_set(flags, pe_weights_init)) {
         if (is_nonempty_group(rsc)) {
@@ -373,7 +379,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         } else {
             work = pcmk__copy_node_table(rsc->allowed_nodes);
         }
-        clear_bit(flags, pe_weights_init);
+        clear_node_weights_flags(flags, rsc, pe_weights_init);
 
     } else if (is_nonempty_group(rsc)) {
         /* The first member of the group will recursively incorporate any
@@ -453,7 +459,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
                     rhs, rsc->id);
         g_hash_table_destroy(work);
-        clear_bit(rsc->flags, pe_rsc_merging);
+        pe__clear_resource_flags(rsc, pe_rsc_merging);
         return nodes;
     }
 
@@ -474,7 +480,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
         g_hash_table_destroy(nodes);
     }
 
-    clear_bit(rsc->flags, pe_rsc_merging);
+    pe__clear_resource_flags(rsc, pe_rsc_merging);
     return work;
 }
 
@@ -515,7 +521,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         return NULL;
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
@@ -584,7 +590,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
     if (is_set(data_set->flags, pe_flag_stonith_enabled)
         && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
-        clear_bit(rsc->flags, pe_rsc_managed);
+        pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
     if (is_not_set(rsc->flags, pe_rsc_managed)) {
@@ -627,7 +633,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      rsc->allocated_to->details->uname);
     }
 
-    clear_bit(rsc->flags, pe_rsc_allocating);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating);
 
     if (rsc->is_remote_node) {
         pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
@@ -1131,14 +1137,14 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
 
     if ((migrate_to && migrate_from) || (migrate_from && partial)) {
 
-        set_bit(start->flags, pe_action_migrate_runnable);
-        set_bit(stop->flags, pe_action_migrate_runnable);
+        pe__set_action_flags(start, pe_action_migrate_runnable);
+        pe__set_action_flags(stop, pe_action_migrate_runnable);
 
         update_action_flags(start, pe_action_pseudo, __FUNCTION__, __LINE__);       /* easier than trying to delete it from the graph */
 
         /* order probes before migrations */
         if (partial) {
-            set_bit(migrate_from->flags, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
             migrate_from->needs = start->needs;
 
             custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
@@ -1146,8 +1152,8 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
                                 NULL, pe_order_optional, data_set);
 
         } else {
-            set_bit(migrate_from->flags, pe_action_migrate_runnable);
-            set_bit(migrate_to->flags, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_from, pe_action_migrate_runnable);
+            pe__set_action_flags(migrate_to, pe_action_migrate_runnable);
             migrate_to->needs = start->needs;
 
             custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_STATUS, 0), NULL,
@@ -1234,7 +1240,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         pe_action_t *stop = stop_action(rsc, dangling_source, FALSE);
 
-        set_bit(stop->flags, pe_action_dangle);
+        pe__set_action_flags(stop, pe_action_dangle);
         pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s",
                      rsc->id, dangling_source->details->uname);
 
@@ -1298,7 +1304,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     if (is_set(rsc->flags, pe_rsc_start_pending)) {
         start = start_action(rsc, chosen, TRUE);
-        set_bit(start->flags, pe_action_print_always);
+        pe__set_action_flags(start, pe_action_print_always);
     }
 
     if (current && chosen && current->details != chosen->details) {
@@ -2003,8 +2009,8 @@ rsc_ticket_constraint(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_work
                     return;
                 }
                 if (rsc_lh->running_on != NULL) {
-                    clear_bit(rsc_lh->flags, pe_rsc_managed);
-                    set_bit(rsc_lh->flags, pe_rsc_block);
+                    pe__clear_resource_flags(rsc_lh, pe_rsc_managed);
+                    pe__set_resource_flags(rsc_lh, pe_rsc_block);
                 }
                 break;
         }
@@ -2202,7 +2208,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if ((first->flags & pe_action_runnable) == FALSE) {
             pe_action_implies(then, first, pe_action_migrate_runnable);
-            pe_clear_action_bit(then, pe_action_pseudo);
+            pe__clear_action_flags(then, pe_action_pseudo);
             pe_rsc_trace(then->rsc, "Unset pseudo on %s because %s is not runnable", then->uuid, first->uuid);
         }
 
@@ -2234,7 +2240,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (then_flags != then->flags) {
-        changed |= pe_graph_updated_then;
+        pe__set_graph_flags(changed, first, pe_graph_updated_then);
         pe_rsc_trace(then->rsc,
                      "Then: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
                      then->uuid, then->node ? then->node->details->uname : "[none]", then->flags,
@@ -2247,7 +2253,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (first_flags != first->flags) {
-        changed |= pe_graph_updated_first;
+        pe__set_graph_flags(changed, first, pe_graph_updated_first);
         pe_rsc_trace(first->rsc,
                      "First: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
                      first->uuid, first->node ? first->node->details->uname : "[none]",
@@ -3083,7 +3089,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         /* Prevent the start from occurring if rsc isn't active, but
          * don't cause it to stop if it was active already
          */
-        flags |= pe_order_runnable_left;
+        pe__set_order_flags(flags, pe_order_runnable_left);
     }
 
     custom_action_order(rsc, NULL, probe,
@@ -3418,7 +3424,7 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
     }
 
     pe_rsc_trace(rsc, "Processing %s", rsc->id);
-    set_bit(rsc->flags, pe_rsc_reload);
+    pe__set_resource_flags(rsc, pe_rsc_reload);
 
     reload = custom_action(
         rsc, reload_key(rsc), CRMD_ACTION_RELOAD, node, FALSE, TRUE, data_set);

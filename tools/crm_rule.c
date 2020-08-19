@@ -320,8 +320,7 @@ main(int argc, char **argv)
         exit_code = crm_errno2exit(ENOMEM);
         goto bail;
     }
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     data_set->input = input;
     data_set->now = rule_date;

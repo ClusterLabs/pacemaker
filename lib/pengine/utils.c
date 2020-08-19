@@ -526,14 +526,14 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
         if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
             // Resource history deletion for a node can be done on the DC
-            pe_set_action_bit(action, pe_action_dc);
+            pe__set_action_flags(action, pe_action_dc);
         }
 
-        pe_set_action_bit(action, pe_action_runnable);
+        pe__set_action_flags(action, pe_action_runnable);
         if (optional) {
-            pe_set_action_bit(action, pe_action_optional);
+            pe__set_action_flags(action, pe_action_optional);
         } else {
-            pe_clear_action_bit(action, pe_action_optional);
+            pe__clear_action_flags(action, pe_action_optional);
         }
 
         action->extra = crm_str_table_new();
@@ -567,7 +567,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
     if (!optional && is_set(action->flags, pe_action_optional)) {
         pe_rsc_trace(rsc, "Unset optional on action %d", action->id);
-        pe_clear_action_bit(action, pe_action_optional);
+        pe__clear_action_flags(action, pe_action_optional);
     }
 
     if (rsc != NULL) {
@@ -590,7 +590,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                 .op_data = NULL
             };
 
-            pe_set_action_bit(action, pe_action_have_node_attrs);
+            pe__set_action_flags(action, pe_action_have_node_attrs);
             pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
                                        &rule_data, action->extra, NULL,
                                        FALSE, data_set);
@@ -601,21 +601,21 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
         } else if (action->node == NULL) {
             pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe__clear_action_flags(action, pe_action_runnable);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta,
                                           XML_LRM_ATTR_INTERVAL_MS) == NULL) {
             crm_debug("Action %s (unmanaged)", action->uuid);
             pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
-            pe_set_action_bit(action, pe_action_optional);
-/*   			action->runnable = FALSE; */
+            pe__set_action_flags(action, pe_action_optional);
+            //pe__clear_action_flags(action, pe_action_runnable);
 
         } else if (is_not_set(action->flags, pe_action_dc)
                    && !(action->node->details->online)
                    && (!pe__is_guest_node(action->node)
                        || action->node->details->remote_requires_reset)) {
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe__clear_action_flags(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
                        action->uuid, action->node->details->uname);
             if (is_set(action->rsc->flags, pe_rsc_managed)
@@ -626,7 +626,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
 
         } else if (is_not_set(action->flags, pe_action_dc)
                    && action->node->details->pending) {
-            pe_clear_action_bit(action, pe_action_runnable);
+            pe__clear_action_flags(action, pe_action_runnable);
             do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
                        action->uuid, action->node->details->uname);
 
@@ -640,11 +640,11 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                  * exception: an action cannot be completed if it is on a guest
                  * node whose host is unclean and cannot be fenced.
                  */
-                pe_clear_action_bit(action, pe_action_runnable);
+                pe__clear_action_flags(action, pe_action_runnable);
                 crm_debug("%s\t%s (cancelled : host cannot be fenced)",
                           action->node->details->uname, action->uuid);
             } else {
-                pe_set_action_bit(action, pe_action_runnable);
+                pe__set_action_flags(action, pe_action_runnable);
             }
 #if 0
             /*
@@ -670,18 +670,18 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         } else if(is_not_set(action->flags, pe_action_runnable)) {
             pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
             //pe_action_set_reason(action, NULL, TRUE);
-            pe_set_action_bit(action, pe_action_runnable);
+            pe__set_action_flags(action, pe_action_runnable);
         }
 
         if (save_action) {
             switch (a_task) {
                 case stop_rsc:
-                    set_bit(rsc->flags, pe_rsc_stopping);
+                    pe__set_resource_flags(rsc, pe_rsc_stopping);
                     break;
                 case start_rsc:
-                    clear_bit(rsc->flags, pe_rsc_starting);
+                    pe__clear_resource_flags(rsc, pe_rsc_starting);
                     if (is_set(action->flags, pe_action_runnable)) {
-                        set_bit(rsc->flags, pe_rsc_starting);
+                        pe__set_resource_flags(rsc, pe_rsc_starting);
                     }
                     break;
                 default:
@@ -1907,15 +1907,9 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = rh_action;
     wrapper->type = order;
-
     list = lh_action->actions_after;
     list = g_list_prepend(list, wrapper);
     lh_action->actions_after = list;
-
-    wrapper = NULL;
-
-/* 	order |= pe_order_implies_then; */
-/* 	order ^= pe_order_implies_then; */
 
     wrapper = calloc(1, sizeof(pe_action_wrapper_t));
     wrapper->action = lh_action;
@@ -1936,8 +1930,7 @@ get_pseudo_op(const char *name, pe_working_set_t * data_set)
     }
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
 
     return op;
@@ -2337,28 +2330,20 @@ const char *rsc_printable_id(pe_resource_t *rsc)
 }
 
 void
-clear_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
+pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 {
-    GListPtr gIter = rsc->children;
-
-    clear_bit(rsc->flags, flag);
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        clear_bit_recursive(child_rsc, flag);
+    pe__clear_resource_flags(rsc, flags);
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe__clear_resource_flags_recursive((pe_resource_t *) gIter->data, flags);
     }
 }
 
 void
-set_bit_recursive(pe_resource_t * rsc, unsigned long long flag)
+pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 {
-    GListPtr gIter = rsc->children;
-
-    set_bit(rsc->flags, flag);
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        set_bit_recursive(child_rsc, flag);
+    pe__set_resource_flags(rsc, flags);
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe__set_resource_flags_recursive((pe_resource_t *) gIter->data, flags);
     }
 }
 
@@ -2655,13 +2640,13 @@ void pe_action_set_flag_reason(const char *function, long line,
 
     if(unset) {
         if(is_set(action->flags, flags)) {
-            action->flags = crm_clear_bit(function, line, action->uuid, action->flags, flags);
+            pe__clear_action_flags_as(function, line, action, flags);
             update = TRUE;
         }
 
     } else {
         if(is_not_set(action->flags, flags)) {
-            action->flags = crm_set_bit(function, line, action->uuid, action->flags, flags);
+            pe__set_action_flags_as(function, line, action, flags);
             update = TRUE;
         }
     }

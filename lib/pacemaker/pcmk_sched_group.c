@@ -37,11 +37,11 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     if (group_data->first_child == NULL) {
         // Nothing to allocate
-        clear_bit(rsc->flags, pe_rsc_provisional);
+        pe__clear_resource_flags(rsc, pe_rsc_provisional);
         return NULL;
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     rsc->role = group_data->first_child->role;
 
     group_data->first_child->rsc_cons =
@@ -67,8 +67,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     rsc->next_role = group_data->first_child->next_role;
-    clear_bit(rsc->flags, pe_rsc_allocating);
-    clear_bit(rsc->flags, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
 
     if (group_data->colocated) {
         return group_node;
@@ -95,34 +94,32 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     op = start_action(rsc, NULL, TRUE /* !group_data->child_starting */ );
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, started_key(rsc),
                        RSC_STARTED, NULL, TRUE /* !group_data->child_starting */ , TRUE, data_set);
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, stopped_key(rsc),
                        RSC_STOPPED, NULL, TRUE /* !group_data->child_stopping */ , TRUE, data_set);
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
     if (crm_is_true(value)) {
         op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+
         op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
         op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+
         op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
 }
 
@@ -188,7 +185,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         if (last_rsc == NULL) {
             if (group_data->ordered) {
-                stop |= pe_order_optional;
+                pe__set_order_flags(stop, pe_order_optional);
                 stopped = pe_order_implies_then;
             }
 
@@ -397,22 +394,25 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
                 && is_set(child_flags, pe_action_optional) == FALSE) {
                 pe_rsc_trace(action->rsc, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
-                clear_bit(flags, pe_action_optional);
-                pe_clear_action_bit(action, pe_action_optional);
+                pe__clear_raw_action_flags(flags, "group action",
+                                           pe_action_optional);
+                pe__clear_action_flags(action, pe_action_optional);
             }
             if (!pcmk__str_eq(task_s, action->task, pcmk__str_casei)
                 && is_set(flags, pe_action_runnable)
                 && is_set(child_flags, pe_action_runnable) == FALSE) {
                 pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,
                              child_action->uuid);
-                clear_bit(flags, pe_action_runnable);
-                pe_clear_action_bit(action, pe_action_runnable);
+                pe__clear_raw_action_flags(flags, "group action",
+                                           pe_action_runnable);
+                pe__clear_action_flags(action, pe_action_runnable);
             }
 
         } else if (task != stop_rsc && task != action_demote) {
             pe_rsc_trace(action->rsc, "%s is not runnable because of %s (not found in %s)",
                          action->uuid, task_s, child->id);
-            clear_bit(flags, pe_action_runnable);
+            pe__clear_raw_action_flags(flags, "group action",
+                                       pe_action_runnable);
         }
     }
 
@@ -504,7 +504,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
         return nodes;
     }
 
-    set_bit(rsc->flags, pe_rsc_merging);
+    pe__set_resource_flags(rsc, pe_rsc_merging);
 
     nodes =
         group_data->first_child->cmds->merge_weights(group_data->first_child, rhs, nodes, attr,
@@ -522,7 +522,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
                                            flags);
     }
 
-    clear_bit(rsc->flags, pe_rsc_merging);
+    pe__clear_resource_flags(rsc, pe_rsc_merging);
     return nodes;
 }
 
