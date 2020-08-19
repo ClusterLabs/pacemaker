@@ -843,7 +843,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
                                                               GINT_TO_POINTER(st_failed));
 
         if (hp) {
-            CHECK_RC(rc, out->message(out, "failed-fencing-history", hp, unames,
+            CHECK_RC(rc, out->message(out, "failed-fencing-history", stonith_history, unames,
                                       is_set(mon_ops, mon_op_fence_full_history),
                                       rc == pcmk_rc_ok));
         }
@@ -1043,7 +1043,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                                                               GINT_TO_POINTER(st_failed));
 
         if (hp) {
-            out->message(out, "failed-fencing-history", hp, unames,
+            out->message(out, "failed-fencing-history", stonith_history, unames,
                          is_set(mon_ops, mon_op_fence_full_history), FALSE);
         }
     }
