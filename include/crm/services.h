@@ -402,18 +402,11 @@ gboolean services_alert_async(svc_action_t *action,
     services_get_ocf_exitcode(const char *action, int lsb_exitcode)
     {
         /* For non-status actions, LSB and OCF share error code meaning <= 7 */
-        if (action) {
-            /* Note: This conditional is broken up into two parts so it's not flagged
-             * by coccinelle as something that could be condensed into a call to
-             * pcmk__str_any_of.  We can't use that here because it's an internal
-             * function and this is a public header.
-             */
-            if (strcmp(action, "status") && strcmp(action, "monitor")) {
-                if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
-                    return PCMK_OCF_UNKNOWN_ERROR;
-                }
-                return (enum ocf_exitcode)lsb_exitcode;
+        if (action && strcmp(action, "status") && strcmp(action, "monitor")) {
+            if ((lsb_exitcode < 0) || (lsb_exitcode > PCMK_LSB_NOT_RUNNING)) {
+                return PCMK_OCF_UNKNOWN_ERROR;
             }
+            return (enum ocf_exitcode)lsb_exitcode;
         }
 
         /* status has different return codes */
