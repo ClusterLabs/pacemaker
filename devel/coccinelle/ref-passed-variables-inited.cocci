@@ -22,6 +22,8 @@
  * that variable at all, lest it would touch it at all.
  */
 
+virtual internal
+
 @ref_passed_variables_inited exists@
 identifier f_init, f_consume, var;
 type T;

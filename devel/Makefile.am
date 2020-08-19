@@ -39,15 +39,24 @@ COCCI_FILES ?= coccinelle/string-any-of.cocci \
 			   coccinelle/string-empty.cocci \
 			   coccinelle/string-null-matches.cocci
 
+# Any file in this list is allowed to use any of the pcmk__ internal functions.
+# Coccinelle can use any transformation that depends on "internal" to rewrite
+# code to use the internal functions.
+MAY_USE_INTERNAL_FILES = $(shell find .. -path "../lib/*.c" -o -path "../tools/*.c" -o -path "../daemons/*.c" -o -path '../include/pcmki/*h' -o -name '*internal.h')
+
+# And then any file in this list is public API, which may not use internal
+# functions.  Thus, only those transformations that do not depend on "internal"
+# may be applied.
+OTHER_FILES = $(shell find ../include -name '*h' -a \! -name '*internal.h' -a \! -path '../include/pcmki/*')
+
 cocci:
-	for f in $(COCCI_FILES); do \
-	  for d in daemons include lib tools; do \
-	    test $$d = "include" \
-	      && spatch $(_SPATCH_FLAGS) --include-headers --local-includes \
-	         --preprocess --sp-file $$f --dir ../$$d \
-		  || spatch $(_SPATCH_FLAGS) --local-includes \
-			 --preprocess --sp-file $$f --dir ../$$d; \
-		done; \
+	for cf in $(COCCI_FILES); do \
+		for f in $(MAY_USE_INTERNAL_FILES); do \
+			spatch $(_SPATCH_FLAGS) -D internal --very-quiet --local-includes --preprocess --sp-file $$cf $$f; \
+		done ; \
+		for f in $(OTHER_FILES); do \
+			spatch $(_SPATCH_FLAGS) --very-quiet --local-includes --preprocess --sp-file $$cf $$f; \
+		done ; \
 	done
 
 cocci-inplace:

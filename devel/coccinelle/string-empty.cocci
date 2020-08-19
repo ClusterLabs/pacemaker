@@ -13,7 +13,9 @@
  * found, it's easy enough to add another block here.
  */
 
-@ string_empty @
+virtual internal
+
+@ string_empty depends on internal @
 identifier I;
 @@
 (
