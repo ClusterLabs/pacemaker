@@ -238,3 +238,30 @@ pcmk__verify_digest(xmlNode *input, const char *expected)
     free(calculated);
     return passed;
 }
+
+/*!
+ * \internal
+ * \brief Check whether an XML attribute should be excluded from CIB digests
+ *
+ * \param[in] name  XML attribute name
+ *
+ * \return true if XML attribute should be excluded from CIB digest calculation
+ */
+bool
+pcmk__xa_filterable(const char *name)
+{
+    static const char *filter[] = {
+        XML_ATTR_ORIGIN,
+        XML_CIB_ATTR_WRITTEN,
+        XML_ATTR_UPDATE_ORIG,
+        XML_ATTR_UPDATE_CLIENT,
+        XML_ATTR_UPDATE_USER,
+    };
+
+    for (int i = 0; i < DIMOF(filter); i++) {
+        if (strcmp(name, filter[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}

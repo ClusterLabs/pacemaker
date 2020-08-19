@@ -43,26 +43,11 @@
  */
 #define PCMK__XML_PARSE_OPTS    (XML_PARSE_NOBLANKS | XML_PARSE_RECOVER)
 
-typedef struct {
-    int found;
-    const char *string;
-} filter_t;
-
 typedef struct xml_deleted_obj_s {
         char *path;
         int position;
 } xml_deleted_obj_t;
 
-/* *INDENT-OFF* */
-
-static filter_t filter[] = {
-    { 0, XML_ATTR_ORIGIN },
-    { 0, XML_CIB_ATTR_WRITTEN },
-    { 0, XML_ATTR_UPDATE_ORIG },
-    { 0, XML_ATTR_UPDATE_CLIENT },
-    { 0, XML_ATTR_UPDATE_USER },
-};
-/* *INDENT-ON* */
 
 static xmlNode *subtract_xml_comment(xmlNode * parent, xmlNode * left, xmlNode * right, gboolean * changed);
 static xmlNode *find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact);
@@ -3060,27 +3045,10 @@ log_data_element(int log_level, const char *file, const char *function, int line
 static void
 dump_filtered_xml(xmlNode * data, int options, char **buffer, int *offset, int *max)
 {
-    int lpc;
     xmlAttrPtr xIter = NULL;
-    static int filter_len = DIMOF(filter);
-
-    for (lpc = 0; options && lpc < filter_len; lpc++) {
-        filter[lpc].found = FALSE;
-    }
 
     for (xIter = pcmk__first_xml_attr(data); xIter != NULL; xIter = xIter->next) {
-        bool skip = FALSE;
-        const char *p_name = (const char *)xIter->name;
-
-        for (lpc = 0; skip == FALSE && lpc < filter_len; lpc++) {
-            if (filter[lpc].found == FALSE && strcmp(p_name, filter[lpc].string) == 0) {
-                filter[lpc].found = TRUE;
-                skip = TRUE;
-                break;
-            }
-        }
-
-        if (skip == FALSE) {
+        if (!pcmk__xa_filterable((const char *) (xIter->name))) {
             dump_xml_attr(xIter, options, buffer, offset, max);
         }
     }
@@ -3984,7 +3952,6 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
                     gboolean full, gboolean * changed, const char *marker)
 {
     gboolean dummy = FALSE;
-    gboolean skip = FALSE;
     xmlNode *diff = NULL;
     xmlNode *right_child = NULL;
     xmlNode *left_child = NULL;
@@ -3994,9 +3961,6 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
     const char *name = NULL;
     const char *value = NULL;
     const char *right_val = NULL;
-
-    int lpc = 0;
-    static int filter_len = DIMOF(filter);
 
     if (changed == NULL) {
         changed = &dummy;
@@ -4037,11 +4001,6 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
     /* Avoiding creating the full heirarchy would save even more work here */
     diff = create_xml_node(parent, name);
-
-    /* Reset filter */
-    for (lpc = 0; lpc < filter_len; lpc++) {
-        filter[lpc].found = FALSE;
-    }
 
     /* changes to child objects */
     for (left_child = __xml_first_child(left); left_child != NULL;
@@ -4084,16 +4043,7 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
             continue;
         }
 
-        skip = FALSE;
-        for (lpc = 0; skip == FALSE && lpc < filter_len; lpc++) {
-            if (filter[lpc].found == FALSE && strcmp(prop_name, filter[lpc].string) == 0) {
-                filter[lpc].found = TRUE;
-                skip = TRUE;
-                break;
-            }
-        }
-
-        if (skip) {
+        if (pcmk__xa_filterable(prop_name)) {
             continue;
         }
 

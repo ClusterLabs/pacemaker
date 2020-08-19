@@ -103,6 +103,9 @@ void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
 G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);
 
+G_GNUC_INTERNAL
+bool pcmk__xa_filterable(const char *name);
+
 static inline xmlAttr *
 pcmk__first_xml_attr(const xmlNode *xml)
 {
