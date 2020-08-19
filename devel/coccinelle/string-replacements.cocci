@@ -13,43 +13,45 @@
  * found, it's easy enough to add another block here.
  */
 
-@ safe_str_neq_replacement @
+virtual internal
+
+@ safe_str_neq_replacement depends on internal @
 expression E1, E2;
 @@
 - safe_str_neq(E1, E2)
 + !pcmk__str_eq(E1, E2, pcmk__str_casei)
 
-@ safe_str_eq_replacement_1 @
+@ safe_str_eq_replacement_1 depends on internal @
 expression E1, E2;
 @@
 - safe_str_eq(E1, E2)
 + pcmk__str_eq(E1, E2, pcmk__str_casei)
 
-@ safe_str_eq_replacement_2 @
+@ safe_str_eq_replacement_2 depends on internal @
 expression E1, E2;
 @@
 - safe_str_eq(E1, E2) == FALSE
 + !pcmk__str_eq(E1, E2, pcmk__str_casei)
 
-@ crm_str_eq_replacement_1 @
+@ crm_str_eq_replacement_1 depends on internal @
 expression E1, E2;
 @@
 - crm_str_eq(E1, E2, TRUE)
 + pcmk__str_eq(E1, E2, pcmk__str_none)
 
-@ crm_str_eq_replacement_2 @
+@ crm_str_eq_replacement_2 depends on internal @
 expression E1, E2;
 @@
 - crm_str_eq(E1, E2, FALSE)
 + pcmk__str_eq(E1, E2, pcmk__str_casei)
 
-@ crm_str_eq_replacement_3 @
+@ crm_str_eq_replacement_3 depends on internal @
 expression E1, E2;
 @@
 - crm_str_eq(E1, E2, TRUE) == FALSE
 + !pcmk__str_eq(E1, E2, pcmk__str_none)
 
-@ crm_str_eq_replacement_4 @
+@ crm_str_eq_replacement_4 depends on internal @
 expression E1, E2;
 @@
 - crm_str_eq(E1, E2, FALSE) == FALSE
