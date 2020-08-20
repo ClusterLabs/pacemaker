@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/lrmd.h>       // lrmd_event_data_t
+#include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 
 pe__location_t *
@@ -670,7 +671,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
   again:
-    xml_op = find_entity(parent, XML_LRM_TAG_RSC_OP, op_id);
+    xml_op = pcmk__xe_match(parent, XML_LRM_TAG_RSC_OP, XML_ATTR_ID, op_id);
     if (xml_op == NULL) {
         xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
     }

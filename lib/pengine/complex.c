@@ -12,6 +12,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
@@ -255,7 +256,8 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
         return FALSE;
     }
 
-    template = find_entity(cib_resources, XML_CIB_TAG_RSC_TEMPLATE, template_ref);
+    template = pcmk__xe_match(cib_resources, XML_CIB_TAG_RSC_TEMPLATE,
+                              XML_ATTR_ID, template_ref);
     if (template == NULL) {
         pe_err("No template named '%s'", template_ref);
         return FALSE;

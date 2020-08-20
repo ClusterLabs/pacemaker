@@ -24,6 +24,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
@@ -400,7 +401,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         target = find_xml_node(parent, object_name, FALSE);
 
     } else {
-        target = find_entity(parent, object_name, object_id);
+        target = pcmk__xe_match(parent, object_name, XML_ATTR_ID, object_id);
     }
 
     if (target == NULL) {
@@ -495,7 +496,8 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
         equiv_node = find_xml_node(parent, object_name, FALSE);
 
     } else {
-        equiv_node = find_entity(parent, object_name, object_id);
+        equiv_node = pcmk__xe_match(parent, object_name, XML_ATTR_ID,
+                                    object_id);
     }
 
     if (result != pcmk_ok) {

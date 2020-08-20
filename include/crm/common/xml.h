@@ -151,8 +151,6 @@ gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
  */
 xmlNode *find_xml_node(xmlNode * cib, const char *node_path, gboolean must_find);
 
-xmlNode *find_entity(xmlNode * parent, const char *node_name, const char *id);
-
 void xml_remove_prop(xmlNode * obj, const char *name);
 
 gboolean replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update,
@@ -340,6 +338,15 @@ void crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \brief xmlNode destructor which can be used in glib collections
  */
 void crm_destroy_xml(gpointer data);
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h in a future release.
+ */
+
+xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
+
+#endif
 
 #ifdef __cplusplus
 }

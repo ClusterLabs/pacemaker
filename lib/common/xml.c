@@ -1014,9 +1014,16 @@ static xmlNode *
 find_element(xmlNode *haystack, xmlNode *needle, gboolean exact)
 {
     CRM_CHECK(needle != NULL, return NULL);
-    return (needle->type == XML_COMMENT_NODE)?
-           find_xml_comment(haystack, needle, exact)
-           : find_entity(haystack, crm_element_name(needle), ID(needle));
+
+    if (needle->type == XML_COMMENT_NODE) {
+        return find_xml_comment(haystack, needle, exact);
+
+    } else {
+        const char *id = ID(needle);
+        const char *attr = (id == NULL)? NULL : XML_ATTR_ID;
+
+        return pcmk__xe_match(haystack, crm_element_name(needle), attr, id);
+    }
 }
 
 // Apply the removals section of an v1 patchset to an XML node
@@ -1809,43 +1816,45 @@ find_xml_node(xmlNode * root, const char *search_path, gboolean must_find)
     return NULL;
 }
 
-/* As the name suggests, the perfect match is required for both node
-   name and fully specified attribute, otherwise, when attribute not
-   specified, the outcome is the first node matching on the name. */
-static xmlNode *
-find_entity_by_attr_or_just_name(xmlNode *parent, const char *node_name,
-                                 const char *attr_n, const char *attr_v)
-{
-    xmlNode *child;
+#define attr_matches(c, n, v) pcmk__str_eq(crm_element_value((c), (n)), \
+                                           (v), pcmk__str_none)
 
+/*!
+ * \internal
+ * \brief Find first XML child element matching given criteria
+ *
+ * \param[in] parent     XML element to search
+ * \param[in] node_name  If not NULL, only match children of this type
+ * \param[in] attr_n     If not NULL, only match children with an attribute
+ *                       of this name and a value of \p attr_v
+ * \param[in] attr_v     If \p attr_n and this are not NULL, only match children
+ *                       with an attribute named \p attr_n and this value
+ *
+ * \return Matching XML child element, or NULL if none found
+ */
+xmlNode *
+pcmk__xe_match(xmlNode *parent, const char *node_name,
+               const char *attr_n, const char *attr_v)
+{
     /* ensure attr_v specified when attr_n is */
     CRM_CHECK(attr_n == NULL || attr_v != NULL, return NULL);
 
-    for (child = __xml_first_child(parent); child != NULL; child = __xml_next(child)) {
-        /* XXX uncertain if the first check is strictly necessary here */
-        if (pcmk__str_eq(node_name, (const char *)child->name, pcmk__str_null_matches)) {
-            if (attr_n == NULL
-                    || pcmk__str_eq(crm_element_value(child, attr_n), attr_v, pcmk__str_none)) {
-                return child;
-            }
+    for (xmlNode *child = __xml_first_child(parent); child != NULL;
+         child = __xml_next(child)) {
+        if (pcmk__str_eq(node_name, (const char *) (child->name),
+                         pcmk__str_null_matches)
+            && ((attr_n == NULL) || attr_matches(child, attr_n, attr_v))) {
+            return child;
         }
     }
-
-    crm_trace("node <%s%s%s%s%s> not found in %s", crm_str(node_name),
-              attr_n ? " " : "",
-              attr_n ? attr_n : "",
-              attr_n ? "=" : "",
-              attr_n ? attr_v : "",
+    crm_trace("XML child node <%s%s%s%s%s> not found in %s",
+              (node_name? node_name : "(any)"),
+              (attr_n? " " : ""),
+              (attr_n? attr_n : ""),
+              (attr_n? "=" : ""),
+              (attr_n? attr_v : ""),
               crm_element_name(parent));
-
     return NULL;
-}
-
-xmlNode *
-find_entity(xmlNode *parent, const char *node_name, const char *id)
-{
-    return find_entity_by_attr_or_just_name(parent, node_name,
-                                            (id == NULL) ? id : XML_ATTR_ID, id);
 }
 
 void
@@ -4170,8 +4179,8 @@ add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, bool as_diff)
     CRM_CHECK(target != NULL || parent != NULL, return);
 
     if (target == NULL) {
-        target = find_entity_by_attr_or_just_name(parent, object_name,
-                                                  object_href, object_href_val);
+        target = pcmk__xe_match(parent, object_name,
+                                object_href, object_href_val);
     }
 
     if (target == NULL) {
@@ -4576,4 +4585,14 @@ pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
     free(base);
 
     return ret;
+}
+
+// Deprecated functions kept only for backward API compatibility
+xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
+
+xmlNode *
+find_entity(xmlNode *parent, const char *node_name, const char *id)
+{
+    return pcmk__xe_match(parent, node_name,
+                          ((id == NULL)? id : XML_ATTR_ID), id);
 }

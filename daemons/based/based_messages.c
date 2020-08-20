@@ -25,6 +25,7 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/ipc_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <pacemaker-based.h>
@@ -406,7 +407,8 @@ delete_cib_object(xmlNode * parent, xmlNode * delete_spec)
         equiv_node = find_xml_node(parent, object_name, FALSE);
 
     } else {
-        equiv_node = find_entity(parent, object_name, object_id);
+        equiv_node = pcmk__xe_match(parent, object_name, XML_ATTR_ID,
+                                    object_id);
     }
 
     if (result != pcmk_ok) {
