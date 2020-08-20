@@ -16,6 +16,8 @@ any_set(void) {
     g_assert(pcmk_any_flags_set(0x00f, 0x001) == true);
     g_assert(pcmk_any_flags_set(0x00f, 0x010) == false);
     g_assert(pcmk_any_flags_set(0x00f, 0x011) == true);
+    g_assert(pcmk_any_flags_set(0x000, 0x000) == false);
+    g_assert(pcmk_any_flags_set(0x00f, 0x000) == false);
 }
 
 int

@@ -166,7 +166,8 @@ void crm_abort(const char *file, const char *function, int line,
  * \param[in] flag_group        The flag group being examined
  * \param[in] flags_to_check    Which flags in flag_group should be checked
  *
- * \return true if any of flags_to_check are set in flag_group
+ * \return true if \p flags_to_check is nonzero and any of its flags are set in
+ *         \p flag_group, or false otherwise
  */
 static inline bool
 pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
@@ -180,7 +181,8 @@ pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
  * \param[in] flag_group        The flag group being examined
  * \param[in] flags_to_check    Which flags in flag_group should be checked
  *
- * \return true if all of flags_to_check are set in flag_group
+ * \return true if \p flags_to_check is zero or all of its flags are set in
+ *         \p flag_group, or false otherwise
  */
 static inline bool
 pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)

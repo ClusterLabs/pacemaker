@@ -15,6 +15,8 @@ all_set(void) {
     g_assert(pcmk_all_flags_set(0x00f, 0x003) == true);
     g_assert(pcmk_all_flags_set(0x00f, 0x010) == false);
     g_assert(pcmk_all_flags_set(0x00f, 0x011) == false);
+    g_assert(pcmk_all_flags_set(0x000, 0x000) == true);
+    g_assert(pcmk_all_flags_set(0x00f, 0x000) == true);
 }
 
 static void
