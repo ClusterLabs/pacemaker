@@ -204,9 +204,9 @@ pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
     crm_xml_add(update, PCMK__XA_ATTR_NODE_NAME, host);
     crm_xml_add(update, PCMK__XA_ATTR_SET, set);
     crm_xml_add_int(update, PCMK__XA_ATTR_IS_REMOTE,
-                    is_set(options, pcmk__node_attr_remote));
+                    pcmk_is_set(options, pcmk__node_attr_remote));
     crm_xml_add_int(update, PCMK__XA_ATTR_IS_PRIVATE,
-                    is_set(options, pcmk__node_attr_private));
+                    pcmk_is_set(options, pcmk__node_attr_private));
 
     rc = send_attrd_op(ipc, update);
 
@@ -254,7 +254,7 @@ pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
     crm_xml_add(clear_op, PCMK__XA_ATTR_OPERATION, operation);
     crm_xml_add(clear_op, PCMK__XA_ATTR_INTERVAL, interval_spec);
     crm_xml_add_int(clear_op, PCMK__XA_ATTR_IS_REMOTE,
-                    is_set(options, pcmk__node_attr_remote));
+                    pcmk_is_set(options, pcmk__node_attr_remote));
 
     rc = send_attrd_op(ipc, clear_op);
     free_xml(clear_op);

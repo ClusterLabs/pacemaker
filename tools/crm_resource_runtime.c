@@ -54,7 +54,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
 
     /* The anonymous clone children's common ID is supplied */
     } else if (pe_rsc_is_clone(parent)
-               && is_not_set(rsc->flags, pe_rsc_unique)
+               && !pcmk_is_set(rsc->flags, pe_rsc_unique)
                && rsc->clone_name
                && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
@@ -381,7 +381,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 pe_resource_t *peer = cons->rsc_lh;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
-                if (cons->score > 0 && is_not_set(peer->flags, pe_rsc_allocating)) {
+                if (cons->score > 0 && !pcmk_is_set(peer->flags, pe_rsc_allocating)) {
                     /* Don't get into colocation loops */
                     crm_debug("Setting %s=%s for dependent resource %s", attr_name, attr_value, peer->id);
                     cli_resource_update_attribute(peer, peer->id, NULL, attr_set_type,
@@ -560,7 +560,7 @@ rsc_fail_name(pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
-    return is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
+    return pcmk_is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
 }
 
 // \return Standard Pacemaker return code
@@ -889,7 +889,7 @@ cli_resource_check(cib_t * cib_conn, pe_resource_t *rsc)
                    parent->id);
             printed = true;
 
-        } else if (is_set(parent->flags, pe_rsc_promotable)
+        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable)
                    && (role == RSC_ROLE_SLAVE)) {
             printf("\n  * Configuration specifies '%s' should not be promoted\n",
                    parent->id);
@@ -1546,13 +1546,9 @@ done:
 
 static inline bool action_is_pending(pe_action_t *action)
 {
-    if(is_set(action->flags, pe_action_optional)) {
-        return false;
-    } else if(is_set(action->flags, pe_action_runnable) == FALSE) {
-        return false;
-    } else if(is_set(action->flags, pe_action_pseudo)) {
-        return false;
-    } else if(pcmk__str_eq("notify", action->task, pcmk__str_casei)) {
+    if (pcmk_any_flags_set(action->flags, pe_action_optional|pe_action_pseudo)
+        || !pcmk_is_set(action->flags, pe_action_runnable)
+        || pcmk__str_eq("notify", action->task, pcmk__str_casei)) {
         return false;
     }
     return true;
@@ -1920,10 +1916,10 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
         return pcmk_rc_node_unknown;
     }
 
-    if (promoted_role_only && is_not_set(rsc->flags, pe_rsc_promotable)) {
+    if (promoted_role_only && !pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         pe_resource_t *p = uber_parent(rsc);
 
-        if (is_set(p->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(p->flags, pe_rsc_promotable)) {
             CMD_ERR("Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
@@ -1936,7 +1932,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
     current = pe__find_active_requires(rsc, &count);
 
-    if (is_set(rsc->flags, pe_rsc_promotable)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         GListPtr iter = NULL;
         unsigned int master_count = 0;
         pe_node_t *master_node = NULL;

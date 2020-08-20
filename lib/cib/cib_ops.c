@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -583,8 +585,9 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         originator = crm_element_value(req, F_ORIG);
     }
 
-    crm_trace("Processing \"%s\" event from %s %s",
-              op, originator, is_set(options, cib_force_diff)?"(global update)":"");
+    crm_trace("Processing \"%s\" event from %s%s",
+              op, originator,
+              (pcmk_is_set(options, cib_force_diff)? " (global update)" : ""));
 
     free_xml(*result_cib);
     *result_cib = copy_xml(existing_cib);

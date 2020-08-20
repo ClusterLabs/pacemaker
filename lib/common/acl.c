@@ -226,13 +226,13 @@ __xml_acl_parse_entry(xmlNode *acl_top, xmlNode *acl_entry, GList *acls)
 static const char *
 __xml_acl_to_text(enum xml_private_flags flags)
 {
-    if (is_set(flags, xpf_acl_deny)) {
+    if (pcmk_is_set(flags, xpf_acl_deny)) {
         return "deny";
 
-    } else if (is_set(flags, xpf_acl_write) || is_set(flags, xpf_acl_create)) {
+    } else if (pcmk_any_flags_set(flags, xpf_acl_write|xpf_acl_create)) {
         return "read/write";
 
-    } else if (is_set(flags, xpf_acl_read)) {
+    } else if (pcmk_is_set(flags, xpf_acl_read)) {
         return "read";
     }
     return "none";
@@ -267,10 +267,9 @@ pcmk__apply_acl(xmlNode *xml)
                       __xml_acl_to_text(acl->mode), path, acl->xpath);
 
 #ifdef SUSE_ACL_COMPAT
-            if (is_not_set(p->flags, acl->mode)
-                && (is_set(p->flags, xpf_acl_read)
-                    || is_set(p->flags, xpf_acl_write)
-                    || is_set(p->flags, xpf_acl_deny))) {
+            if (!pcmk_is_set(p->flags, acl->mode)
+                && pcmk_any_flags_set(p->flags,
+                                      xpf_acl_read|xpf_acl_write|xpf_acl_deny)) {
                 pcmk__config_warn("Configuration element %s is matched by "
                                   "multiple ACL rules, only the first applies "
                                   "('%s' wins over '%s')",
@@ -347,22 +346,18 @@ static inline bool
 __xml_acl_mode_test(enum xml_private_flags allowed,
                     enum xml_private_flags requested)
 {
-    if (is_set(allowed, xpf_acl_deny)) {
+    if (pcmk_is_set(allowed, xpf_acl_deny)) {
         return FALSE;
 
-    } else if (is_set(allowed, requested)) {
+    } else if (pcmk_all_flags_set(allowed, requested)) {
         return TRUE;
 
-    } else if (is_set(requested, xpf_acl_read)
-               && is_set(allowed, xpf_acl_write)) {
+    } else if (pcmk_is_set(requested, xpf_acl_read)
+               && pcmk_is_set(allowed, xpf_acl_write)) {
         return TRUE;
 
-    } else if (is_set(requested, xpf_acl_create)
-               && is_set(allowed, xpf_acl_write)) {
-        return TRUE;
-
-    } else if (is_set(requested, xpf_acl_create)
-               && is_set(allowed, xpf_created)) {
+    } else if (pcmk_is_set(requested, xpf_acl_create)
+               && pcmk_any_flags_set(allowed, xpf_acl_write|xpf_created)) {
         return TRUE;
     }
     return FALSE;
@@ -552,7 +547,7 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 {
     xml_private_t *p = xml->_private;
 
-    if (is_set(p->flags, xpf_created)) {
+    if (pcmk_is_set(p->flags, xpf_created)) {
         if (implicitly_allowed(xml)) {
             crm_trace("Creation of <%s> scaffolding with id=\"%s\""
                       " is implicitly allowed",
@@ -588,7 +583,7 @@ xml_acl_denied(xmlNode *xml)
     if (xml && xml->doc && xml->doc->_private){
         xml_private_t *p = xml->doc->_private;
 
-        return is_set(p->flags, xpf_acl_denied);
+        return pcmk_is_set(p->flags, xpf_acl_denied);
     }
     return FALSE;
 }
@@ -612,7 +607,7 @@ xml_acl_enabled(xmlNode *xml)
     if (xml && xml->doc && xml->doc->_private){
         xml_private_t *p = xml->doc->_private;
 
-        return is_set(p->flags, xpf_acl_enabled);
+        return pcmk_is_set(p->flags, xpf_acl_enabled);
     }
     return FALSE;
 }
@@ -664,7 +659,7 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
             if (__xml_acl_mode_test(p->flags, mode)) {
                 return TRUE;
 
-            } else if (is_set(p->flags, xpf_acl_deny)) {
+            } else if (pcmk_is_set(p->flags, xpf_acl_deny)) {
                 crm_trace("%sACL denies user '%s' %s access to %s",
                           (parent != xml) ? "Parent " : "", docp->user,
                           __xml_acl_to_text(mode), buffer);

@@ -1503,7 +1503,8 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     if (!class || !type || !rsc_id) {
         return -EINVAL;
     }
-    if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider) && !provider) {
+    if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
+        && (provider == NULL)) {
         return -EINVAL;
     }
 
@@ -1606,7 +1607,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     if (!class || !type) {
         free_xml(output);
         return NULL;
-    } else if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
+    } else if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
                && !provider) {
         free_xml(output);
         return NULL;

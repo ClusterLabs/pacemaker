@@ -226,7 +226,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         return 0;
     }
 
-    if (is_set(call_options, cib_sync_call)) {
+    if (pcmk_is_set(call_options, cib_sync_call)) {
         CRM_LOG_ASSERT(flags & crm_ipc_client_response);
         CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
         cib_client->request_id = id;    /* Reply only to the last one */
@@ -246,7 +246,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     }
 
     /* Allow cluster daemons more leeway before being evicted */
-    if (is_set(cib_client->flags, cib_is_daemon)) {
+    if (pcmk_is_set(cib_client->flags, cib_is_daemon)) {
         const char *qmax = cib_config_lookup("cluster-ipc-limit");
 
         if (pcmk__set_client_queue_max(cib_client, qmax)) {
@@ -1224,7 +1224,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
             manage_counters = FALSE;
         }
 
-        if (is_not_set(call_options, cib_dryrun) && pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+        if (!pcmk_is_set(call_options, cib_dryrun)
+            && pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
             /* Copying large CIBs accounts for a huge percentage of our CIB usage */
             cib__set_call_options(call_options, "call", cib_zero_copy);
         } else {
@@ -1258,13 +1259,13 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         }
     }
 
-    if (rc == pcmk_ok && is_not_set(call_options, cib_dryrun)) {
+    if (rc == pcmk_ok && !pcmk_is_set(call_options, cib_dryrun)) {
         crm_trace("Activating %s->%s%s%s",
                   crm_element_value(current_cib, XML_ATTR_NUMUPDATES),
                   crm_element_value(result_cib, XML_ATTR_NUMUPDATES),
-                  (is_set(call_options, cib_zero_copy)? " zero-copy" : ""),
+                  (pcmk_is_set(call_options, cib_zero_copy)? " zero-copy" : ""),
                   (config_changed? " changed" : ""));
-        if(is_not_set(call_options, cib_zero_copy)) {
+        if (!pcmk_is_set(call_options, cib_zero_copy)) {
             rc = activateCibXml(result_cib, config_changed, op);
             crm_trace("Activated %s (%d)",
                       crm_element_value(current_cib, XML_ATTR_NUMUPDATES), rc);
@@ -1299,7 +1300,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         mainloop_timer_start(digest_timer);
 
     } else if (rc == -pcmk_err_schema_validation) {
-        CRM_ASSERT(is_not_set(call_options, cib_zero_copy));
+        CRM_ASSERT(!pcmk_is_set(call_options, cib_zero_copy));
 
         if (output != NULL) {
             crm_log_xml_info(output, "cib:output");
@@ -1309,8 +1310,10 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
         output = result_cib;
 
     } else {
-        crm_trace("Not activating %d %d %s", rc, is_set(call_options, cib_dryrun), crm_element_value(result_cib, XML_ATTR_NUMUPDATES));
-        if(is_not_set(call_options, cib_zero_copy)) {
+        crm_trace("Not activating %d %d %s", rc,
+                  pcmk_is_set(call_options, cib_dryrun),
+                  crm_element_value(result_cib, XML_ATTR_NUMUPDATES));
+        if (!pcmk_is_set(call_options, cib_zero_copy)) {
             free_xml(result_cib);
         }
     }
@@ -1318,7 +1321,8 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     if ((call_options & (cib_inhibit_notify|cib_dryrun)) == 0) {
         const char *client = crm_element_value(request, F_CIB_CLIENTNAME);
 
-        crm_trace("Sending notifications %d", is_set(call_options, cib_dryrun));
+        crm_trace("Sending notifications %d",
+                  pcmk_is_set(call_options, cib_dryrun));
         cib_diff_notify(call_options, client, call_id, op, input, rc, *cib_diff);
     }
 

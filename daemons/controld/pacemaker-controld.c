@@ -158,7 +158,7 @@ crmd_init(void)
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
         g_main_loop_run(crmd_mainloop);
-        if (is_set(fsa_input_register, R_STAYDOWN)) {
+        if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
             exit_code = CRM_EX_FATAL;
         }

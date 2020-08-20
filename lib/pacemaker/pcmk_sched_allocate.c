@@ -120,7 +120,7 @@ update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char
 {
     static unsigned long calls = 0;
     gboolean changed = FALSE;
-    gboolean clear = is_set(flags, pe_action_clear);
+    gboolean clear = pcmk_is_set(flags, pe_action_clear);
     enum pe_action_flags last = action->flags;
 
     if (clear) {
@@ -240,7 +240,8 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
         pe_rsc_trace(rsc, "Checking parameters for %s", key);
         op_match = find_rsc_op_entry(rsc, key);
 
-        if (op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
+        if ((op_match == NULL)
+            && pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)) {
             CancelXmlOp(rsc, xml_op, active_node, "orphan", data_set);
             free(key);
             return TRUE;
@@ -270,7 +271,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 
     digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
 
-    if(is_set(data_set->flags, pe_flag_sanitized)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_sanitized)) {
         digest_secure = crm_element_value(xml_op, XML_LRM_ATTR_SECURE_DIGEST);
     }
 
@@ -278,7 +279,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
        && digest_secure
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
-        if (is_set(data_set->flags, pe_flag_stdout)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
             printf("Only 'private' parameters to " PCMK__OP_FMT
                    " on %s changed: %s\n",
                    rsc->id, task, interval_ms, active_node->details->uname,
@@ -402,11 +403,11 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
 
     CRM_CHECK(node != NULL, return);
 
-    if (is_set(rsc->flags, pe_rsc_orphan)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         pe_resource_t *parent = uber_parent(rsc);
         if(parent == NULL
            || pe_rsc_is_clone(parent) == FALSE
-           || is_set(parent->flags, pe_rsc_unique)) {
+           || pcmk_is_set(parent->flags, pe_rsc_unique)) {
             pe_rsc_trace(rsc, "Skipping param check for %s and deleting: orphan", rsc->id);
             DeleteRsc(rsc, node, FALSE, data_set);
         } else {
@@ -458,7 +459,7 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
         crm_element_value_ms(rsc_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
         if ((interval_ms > 0) &&
-            (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
+            (pcmk_is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
             // Maintenance mode cancels recurring operations
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
@@ -577,7 +578,8 @@ check_actions(pe_working_set_t * data_set)
             }
 
             crm_trace("Processing node %s", node->details->uname);
-            if (node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (node->details->online
+                || pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 xmlNode *rsc_entry = NULL;
 
                 for (rsc_entry = __xml_first_child_element(lrm_rscs);
@@ -656,7 +658,7 @@ check_migration_threshold(pe_resource_t *rsc, pe_node_t *node,
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         return;
     }
 
@@ -673,7 +675,7 @@ check_migration_threshold(pe_resource_t *rsc, pe_node_t *node,
 
     /* If failed resource has a parent, we'll force the parent away */
     failed = rsc;
-    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         failed = uber_parent(rsc);
     }
 
@@ -702,14 +704,15 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
         return;
     }
 
-    if (is_set(rsc->flags, pe_rsc_managed)
+    if (pcmk_is_set(rsc->flags, pe_rsc_managed)
         && rsc->stickiness != 0 && pcmk__list_of_1(rsc->running_on)) {
         pe_node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
         pe_node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
         if (current == NULL) {
 
-        } else if (match != NULL || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+        } else if ((match != NULL)
+                   || pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
             pe_resource_t *sticky_rsc = rsc;
 
             resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
@@ -885,7 +888,7 @@ stage0(pe_working_set_t * data_set)
         return FALSE;
     }
 
-    if (is_set(data_set->flags, pe_flag_have_status) == FALSE) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
         crm_trace("Calculating status");
         cluster_status(data_set);
     }
@@ -1074,13 +1077,13 @@ stage2(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
             apply_shutdown_lock((pe_resource_t *) gIter->data, data_set);
         }
     }
 
-    if (is_not_set(data_set->flags, pe_flag_no_compat)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
         // @COMPAT API backward compatibility
         for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
@@ -1280,7 +1283,7 @@ allocate_resources(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
 
-    if (is_set(data_set->flags, pe_flag_have_remote_nodes)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         /* Allocate remote connection resources first (which will also allocate
          * any colocation dependencies). If the connection is migrating, always
          * prefer the partial migration target.
@@ -1406,7 +1409,7 @@ stage5(pe_working_set_t * data_set)
     pe__foreach_param_check(data_set, check_params);
     pe__free_param_checks(data_set);
 
-    if (is_set(data_set->flags, pe_flag_startup_probes)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
         crm_trace("Calculating needed probes");
         /* This code probably needs optimization
          * ptest -x with 100 nodes, 100 clones and clone-max=100:
@@ -1446,14 +1449,14 @@ stage5(pe_working_set_t * data_set)
     }
 
     crm_trace("Handle orphans");
-    if (is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
             /* There's no need to recurse into rsc->children because those
              * should just be unallocated clone instances.
              */
-            if (is_set(rsc->flags, pe_rsc_orphan)) {
+            if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
                 cleanup_orphans(rsc, data_set);
             }
         }
@@ -1476,7 +1479,7 @@ is_managed(const pe_resource_t * rsc)
 {
     GListPtr gIter = rsc->children;
 
-    if (is_set(rsc->flags, pe_rsc_managed)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         return TRUE;
     }
 
@@ -1551,7 +1554,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      * it is restarted, so we always order pseudo-fencing after stop, not start
      * (even though start might be closer to what is done for a real reboot).
      */
-    if(stop && is_set(stop->flags, pe_action_pseudo)) {
+    if ((stop != NULL) && pcmk_is_set(stop->flags, pe_action_pseudo)) {
         pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE, NULL, FALSE, data_set);
         crm_info("Implying guest node %s is down (action %d) after %s fencing",
                  node->details->uname, stonith_op->id, stop->node->details->uname);
@@ -1654,7 +1657,7 @@ stage6(pe_working_set_t * data_set)
 
             } else {
 
-                if (is_not_set(data_set->flags, pe_flag_concurrent_fencing)
+                if (!pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)
                     && (stonith_ops != NULL)) {
                     /* Concurrent fencing is disabled, so order each non-DC
                      * fencing in a chain. If there is any DC fencing or
@@ -1693,11 +1696,11 @@ stage6(pe_working_set_t * data_set)
     }
 
     if (integrity_lost) {
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
+        if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
             pe_err("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
 
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE) {
+        } else if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
             crm_notice("Cannot fence unclean nodes until quorum is"
                        " attained (or no-quorum-policy is set to ignore)");
         }
@@ -1725,7 +1728,7 @@ stage6(pe_working_set_t * data_set)
 
         // Order any non-DC fencing before any DC fencing or shutdown
 
-        if (is_set(data_set->flags, pe_flag_concurrent_fencing)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)) {
             /* With concurrent fencing, order each non-DC fencing action
              * separately before any DC fencing or shutdown.
              */
@@ -1814,7 +1817,9 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
         return;
     }
 
-    if (lh_action && lh_action->rsc == rsc && is_set(lh_action->flags, pe_action_dangle)) {
+    if ((lh_action != NULL) && (lh_action->rsc == rsc)
+        && pcmk_is_set(lh_action->flags, pe_action_dangle)) {
+
         pe_rsc_trace(rsc, "Detected dangling operation %s -> %s", lh_action->uuid,
                      order->rh_action_task);
         pe__clear_order_flags(type, pe_order_implies_then);
@@ -1943,15 +1948,15 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
     container = remote_rsc->container;
     CRM_ASSERT(container);
 
-    if(is_set(container->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(container->flags, pe_rsc_failed)) {
         pe_fence_node(data_set, action->node, "container failed", FALSE);
     }
 
     crm_trace("Order %s action %s relative to %s%s for %s%s",
               action->task, action->uuid,
-              is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
               remote_rsc->id,
-              is_set(container->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(container->flags, pe_rsc_failed)? "failed " : "",
               container->id);
 
     if (pcmk__strcase_any_of(action->task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
@@ -1975,7 +1980,7 @@ apply_container_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
         case stop_rsc:
         case action_demote:
-            if (is_set(container->flags, pe_rsc_failed)) {
+            if (pcmk_is_set(container->flags, pe_rsc_failed)) {
                 /* When the container representing a guest node fails, any stop
                  * or demote actions for resources running on the guest node
                  * are implied by the container stopping. This is similar to
@@ -2042,7 +2047,7 @@ get_remote_node_state(pe_node_t *node)
             return remote_state_failed;
         }
 
-        if (is_not_set(remote_rsc->flags, pe_rsc_failed)) {
+        if (!pcmk_is_set(remote_rsc->flags, pe_rsc_failed)) {
             /* Connection resource is cleanly stopped */
             return remote_state_stopped;
         }
@@ -2113,7 +2118,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
-              is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
+              pcmk_is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
               remote_rsc->id, state2text(state));
 
     if (pcmk__strcase_any_of(action->task, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
@@ -2223,7 +2228,7 @@ apply_remote_ordering(pe_action_t *action, pe_working_set_t *data_set)
 static void
 apply_remote_node_ordering(pe_working_set_t *data_set)
 {
-    if (is_set(data_set->flags, pe_flag_have_remote_nodes) == FALSE) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         return;
     }
 
@@ -2270,7 +2275,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
          * real actions and vice versa later in update_actions() at the end of
          * stage7().
          */
-        if (is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             continue;
         }
 
@@ -2414,12 +2419,12 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
         }
 
         // Preserve the order options for future filtering
-        if (is_set(order->type, pe_order_apply_first_non_migratable)) {
+        if (pcmk_is_set(order->type, pe_order_apply_first_non_migratable)) {
             pe__set_order_flags(order_type,
                                 pe_order_apply_first_non_migratable);
         }
 
-        if (is_set(order->type, pe_order_same_node)) {
+        if (pcmk_is_set(order->type, pe_order_same_node)) {
             pe__set_order_flags(order_type, pe_order_same_node);
         }
 
@@ -2488,7 +2493,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
 
     if (after == NULL
         // Avoid running into any possible loop
-        || is_set(after->flags, pe_action_tracking)) {
+        || pcmk_is_set(after->flags, pe_action_tracking)) {
         return;
     }
 
@@ -2526,7 +2531,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
                 pe_action_t *then = (pe_action_t *) gIter->data;
 
                 // Skip any pseudo action which for example is implied by fencing
-                if (is_set(then->flags, pe_action_pseudo)) {
+                if (pcmk_is_set(then->flags, pe_action_pseudo)) {
                     continue;
                 }
 
@@ -2564,7 +2569,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
          * loops...
          */
 
-        if (is_not_set(after_wrapper->type, pe_order_implies_then)) {
+        if (!pcmk_is_set(after_wrapper->type, pe_order_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
              * pe_order_implies_first_printed | pe_order_runnable_left
@@ -2610,7 +2615,7 @@ static void clear_actions_tracking_flag(pe_working_set_t * data_set)
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (is_set(action->flags, pe_action_tracking)) {
+        if (pcmk_is_set(action->flags, pe_action_tracking)) {
             pe__clear_action_flags(action, pe_action_tracking);
         }
     }
@@ -2916,7 +2921,7 @@ stage8(pe_working_set_t * data_set)
 
     crm_xml_add(data_set->graph, "failed-stop-offset", "INFINITY");
 
-    if (is_set(data_set->flags, pe_flag_start_failure_fatal)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_start_failure_fatal)) {
         crm_xml_add(data_set->graph, "failed-start-offset", "INFINITY");
     } else {
         crm_xml_add(data_set->graph, "failed-start-offset", "1");
@@ -2977,22 +2982,22 @@ stage8(pe_working_set_t * data_set)
         if (action->rsc
             && action->node
             && action->node->details->shutdown
-            && is_not_set(action->rsc->flags, pe_rsc_maintenance)
-            && is_not_set(action->flags, pe_action_optional)
-            && is_not_set(action->flags, pe_action_runnable)
+            && !pcmk_is_set(action->rsc->flags, pe_rsc_maintenance)
+            && !pcmk_any_flags_set(action->flags,
+                                   pe_action_optional|pe_action_runnable)
             && pcmk__str_eq(action->task, RSC_STOP, pcmk__str_none)
             ) {
             /* Eventually we should just ignore the 'fence' case
              * But for now it's the best way to detect (in CTS) when
              * CIB resource updates are being lost
              */
-            if (is_set(data_set->flags, pe_flag_have_quorum)
+            if (pcmk_is_set(data_set->flags, pe_flag_have_quorum)
                 || data_set->no_quorum_policy == no_quorum_ignore) {
                 crm_crit("Cannot %s node '%s' because of %s:%s%s (%s)",
                          action->node->details->unclean ? "fence" : "shut down",
                          action->node->details->uname, action->rsc->id,
-                         is_not_set(action->rsc->flags, pe_rsc_managed) ? " unmanaged" : " blocked",
-                         is_set(action->rsc->flags, pe_rsc_failed) ? " failed" : "",
+                         pcmk_is_set(action->rsc->flags, pe_rsc_managed)? " blocked" : " unmanaged",
+                         pcmk_is_set(action->rsc->flags, pe_rsc_failed)? " failed" : "",
                          action->uuid);
             }
         }
@@ -3018,7 +3023,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
 
         if (action->rsc != NULL) {
             continue;
-        } else if (is_set(action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
             continue;
         }
 

@@ -237,7 +237,7 @@ static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
     if (pcmk__str_eq(action, "monitor", pcmk__str_casei) &&
-        is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
+        pcmk_is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
         return "status";
     }
     return action;
@@ -511,7 +511,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
         crm_trace("Skipping notification to client without name");
         return;
     }
-    if (is_set(client->flags, pcmk__client_to_proxy)) {
+    if (pcmk_is_set(client->flags, pcmk__client_to_proxy)) {
         /* We only want to notify clients of the executor IPC API. If we are
          * running as Pacemaker Remote, we may have clients proxied to other
          * IPC services in the cluster, so skip those.

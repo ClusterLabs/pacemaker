@@ -90,7 +90,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
 
     process_utilization(rsc, &prefer, data_set);
 
-    if (is_not_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to ? TRUE : FALSE;
     }
 
@@ -360,13 +360,13 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
     GHashTable *work = NULL;
 
     // Avoid infinite recursion
-    if (is_set(rsc->flags, pe_rsc_merging)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "%s: Breaking dependency loop at %s", rhs, rsc->id);
         return nodes;
     }
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
-    if (is_set(flags, pe_weights_init)) {
+    if (pcmk_is_set(flags, pe_weights_init)) {
         if (is_nonempty_group(rsc)) {
             GList *last = g_list_last(rsc->children);
             pe_resource_t *last_rsc = last->data;
@@ -403,14 +403,14 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                      rhs, rsc->id, factor);
         work = pcmk__copy_node_table(nodes);
         add_node_scores_matching_attr(work, rsc, attr, factor,
-                                      is_set(flags, pe_weights_positive));
+                                      pcmk_is_set(flags, pe_weights_positive));
     }
 
     if (can_run_any(work)) {
         GListPtr gIter = NULL;
         int multiplier = (factor < 0)? -1 : 1;
 
-        if (is_set(flags, pe_weights_forward)) {
+        if (pcmk_is_set(flags, pe_weights_forward)) {
             gIter = rsc->rsc_cons;
             pe_rsc_trace(rsc,
                          "Checking additional %d optional '%s with' constraints",
@@ -439,7 +439,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                 continue;
             }
 
-            if (is_set(flags, pe_weights_forward)) {
+            if (pcmk_is_set(flags, pe_weights_forward)) {
                 other = constraint->rsc_rh;
             } else {
                 other = constraint->rsc_lh;
@@ -455,7 +455,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
             pe__show_node_weights(true, NULL, rhs, work);
         }
 
-    } else if (is_set(flags, pe_weights_rollback)) {
+    } else if (pcmk_is_set(flags, pe_weights_rollback)) {
         pe_rsc_info(rsc, "%s: Rolling back optional scores from %s",
                     rhs, rsc->id);
         g_hash_table_destroy(work);
@@ -464,7 +464,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
     }
 
 
-    if (is_set(flags, pe_weights_positive)) {
+    if (pcmk_is_set(flags, pe_weights_positive)) {
         pe_node_t *node = NULL;
         GHashTableIter iter;
 
@@ -495,8 +495,8 @@ node_has_been_unfenced(pe_node_t *node)
 static inline bool
 is_unfence_device(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    return is_set(rsc->flags, pe_rsc_fence_device)
-           && is_set(data_set->flags, pe_flag_enable_unfencing);
+    return pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+           && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing);
 }
 
 pe_node_t *
@@ -505,18 +505,18 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 {
     GListPtr gIter = NULL;
 
-    if (rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
+    if (rsc->parent && !pcmk_is_set(rsc->parent->flags, pe_rsc_allocating)) {
         /* never allocate children on their own */
         pe_rsc_debug(rsc, "Escalating allocation of %s to its parent: %s", rsc->id,
                      rsc->parent->id);
         rsc->parent->cmds->allocate(rsc->parent, prefer, data_set);
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
     }
 
-    if (is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
         pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
     }
@@ -580,7 +580,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         resource_location(rsc, NULL, -INFINITY, XML_RSC_ATTR_TARGET_ROLE, data_set);
 
     } else if(rsc->next_role > rsc->role
-              && is_set(data_set->flags, pe_flag_have_quorum) == FALSE
+              && !pcmk_is_set(data_set->flags, pe_flag_have_quorum)
               && data_set->no_quorum_policy == no_quorum_freeze) {
         crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                    rsc->id, role2text(rsc->role), role2text(rsc->next_role));
@@ -588,12 +588,12 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
-    if (is_set(data_set->flags, pe_flag_stonith_enabled)
-        && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
+    if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
+        && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         const char *reason = NULL;
         pe_node_t *assign_to = NULL;
 
@@ -603,7 +603,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             reason = "inactive";
         } else if (rsc->role == RSC_ROLE_MASTER) {
             reason = "master";
-        } else if (is_set(rsc->flags, pe_rsc_failed)) {
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             reason = "failed";
         } else {
             reason = "active";
@@ -612,17 +612,17 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                     (assign_to? assign_to->details->uname : "no node"), reason);
         native_assign_node(rsc, NULL, assign_to, TRUE);
 
-    } else if (is_set(data_set->flags, pe_flag_stop_everything)) {
+    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
         native_assign_node(rsc, NULL, NULL, TRUE);
 
-    } else if (is_set(rsc->flags, pe_rsc_provisional)
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
                && native_choose_node(rsc, prefer, data_set)) {
         pe_rsc_trace(rsc, "Allocated resource %s to %s", rsc->id,
                      rsc->allocated_to->details->uname);
 
     } else if (rsc->allocated_to == NULL) {
-        if (is_not_set(rsc->flags, pe_rsc_orphan)) {
+        if (!pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
             pe_rsc_info(rsc, "Resource %s cannot run anywhere", rsc->id);
         } else if (rsc->running_on != NULL) {
             pe_rsc_info(rsc, "Stopping orphan resource %s", rsc->id);
@@ -760,8 +760,8 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                  ID(operation), rsc->id, role2text(rsc->next_role), node_uname);
 
     if (start != NULL) {
-        pe_rsc_trace(rsc, "Marking %s %s due to %s",
-                     key, is_set(start->flags, pe_action_optional) ? "optional" : "mandatory",
+        pe_rsc_trace(rsc, "Marking %s %s due to %s", key,
+                     pcmk_is_set(start->flags, pe_action_optional)? "optional" : "mandatory",
                      start->uuid);
         is_optional = (rsc->cmds->action_flags(start, NULL) & pe_action_optional);
     } else {
@@ -781,7 +781,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         for (gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;
 
-            if (is_set(op->flags, pe_action_reschedule)) {
+            if (pcmk_is_set(op->flags, pe_action_reschedule)) {
                 is_optional = FALSE;
                 break;
             }
@@ -841,7 +841,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         pe_rsc_trace(rsc, "%s\t   %s (optional)", node_uname, mon->uuid);
     }
 
-    if (start == NULL || is_set(start->flags, pe_action_runnable) == FALSE) {
+    if ((start == NULL) || !pcmk_is_set(start->flags, pe_action_runnable)) {
         pe_rsc_debug(rsc, "%s\t   %s (cancelled : start un-runnable)",
                      node_uname, mon->uuid);
         update_action_flags(mon, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
@@ -851,7 +851,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                      node_uname, mon->uuid);
         update_action_flags(mon, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
 
-    } else if (is_set(mon->flags, pe_action_optional) == FALSE) {
+    } else if (!pcmk_is_set(mon->flags, pe_action_optional)) {
         pe_rsc_info(rsc, " Start recurring %s (%us) for %s on %s",
                     mon->task, interval_ms / 1000, rsc->id, node_uname);
     }
@@ -863,7 +863,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         free(running_master);
     }
 
-    if (node == NULL || is_set(rsc->flags, pe_rsc_managed)) {
+    if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         custom_action_order(rsc, start_key(rsc), NULL,
                             NULL, strdup(key), mon,
                             pe_order_implies_then | pe_order_runnable_left, data_set);
@@ -888,7 +888,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 static void
 Recurring(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working_set_t * data_set)
 {
-    if (is_not_set(rsc->flags, pe_rsc_maintenance) &&
+    if (!pcmk_is_set(rsc->flags, pe_rsc_maintenance) &&
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
@@ -951,7 +951,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     }
 
     // @TODO add support
-    if (is_set(rsc->flags, pe_rsc_unique) == FALSE) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         crm_notice("Ignoring %s (recurring monitors for Stopped role are "
                    "not supported for anonymous clones)",
                    ID(operation));
@@ -1022,7 +1022,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         add_hash_param(stopped_mon->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
         free(rc_inactive);
 
-        if (is_set(rsc->flags, pe_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             GList *probes = pe__resource_actions(rsc, stop_node, RSC_STATUS,
                                                  FALSE);
             GListPtr pIter = NULL;
@@ -1046,17 +1046,17 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         for (local_gIter = stop_ops; local_gIter != NULL; local_gIter = local_gIter->next) {
             pe_action_t *stop = (pe_action_t *) local_gIter->data;
 
-            if (is_set(stop->flags, pe_action_optional) == FALSE) {
+            if (!pcmk_is_set(stop->flags, pe_action_optional)) {
                 stop_is_optional = FALSE;
             }
 
-            if (is_set(stop->flags, pe_action_runnable) == FALSE) {
+            if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
                 crm_debug("%s\t   %s (cancelled : stop un-runnable)",
                           crm_str(stop_node_uname), stopped_mon->uuid);
                 update_action_flags(stopped_mon, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
             }
 
-            if (is_set(rsc->flags, pe_rsc_managed)) {
+            if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                 custom_action_order(rsc, stop_key(rsc), stop,
                                     NULL, strdup(key), stopped_mon,
                                     pe_order_implies_then | pe_order_runnable_left, data_set);
@@ -1069,13 +1069,13 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         }
 
         if (is_optional == FALSE && probe_is_optional && stop_is_optional
-            && is_set(rsc->flags, pe_rsc_managed) == FALSE) {
+            && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             pe_rsc_trace(rsc, "Marking %s optional on %s due to unmanaged",
                          key, crm_str(stop_node_uname));
             update_action_flags(stopped_mon, pe_action_optional, __FUNCTION__, __LINE__);
         }
 
-        if (is_set(stopped_mon->flags, pe_action_optional)) {
+        if (pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
             pe_rsc_trace(rsc, "%s\t   %s (optional)", crm_str(stop_node_uname), stopped_mon->uuid);
         }
 
@@ -1085,8 +1085,8 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             update_action_flags(stopped_mon, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
         }
 
-        if (is_set(stopped_mon->flags, pe_action_runnable)
-            && is_set(stopped_mon->flags, pe_action_optional) == FALSE) {
+        if (pcmk_is_set(stopped_mon->flags, pe_action_runnable)
+            && !pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
             crm_notice(" Start recurring %s (%us) for %s on %s", stopped_mon->task,
                        interval_ms / 1000, rsc->id, crm_str(stop_node_uname));
         }
@@ -1098,7 +1098,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 static void
 Recurring_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node, pe_working_set_t * data_set)
 {
-    if (is_not_set(rsc->flags, pe_rsc_maintenance) && 
+    if (!pcmk_is_set(rsc->flags, pe_rsc_maintenance) &&
         (node == NULL || node->details->maintenance == FALSE)) {
         xmlNode *operation = NULL;
 
@@ -1210,7 +1210,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     gboolean need_stop = FALSE;
     bool need_promote = FALSE;
     gboolean is_moving = FALSE;
-    gboolean allow_migrate = is_set(rsc->flags, pe_rsc_allow_migrate) ? TRUE : FALSE;
+    gboolean allow_migrate = pcmk_is_set(rsc->flags, pe_rsc_allow_migrate)? TRUE : FALSE;
 
     GListPtr gIter = NULL;
     unsigned int num_all_active = 0;
@@ -1244,7 +1244,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s",
                      rsc->id, dangling_source->details->uname);
 
-        if (is_set(data_set->flags, pe_flag_remove_after_stop)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)) {
             DeleteRsc(rsc, dangling_source, FALSE, data_set);
         }
     }
@@ -1263,7 +1263,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                      rsc->partial_migration_target->details->id,
                      rsc->partial_migration_source->details->id);
 
-    } else if (is_not_set(rsc->flags, pe_rsc_needs_fencing)) {
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)) {
         /* If a resource has "requires" set to nothing or quorum, don't consider
          * it active on unclean nodes (similar to how all resources behave when
          * stonith-enabled is false). We can start such resources elsewhere
@@ -1302,7 +1302,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         allow_migrate = FALSE;
     }
 
-    if (is_set(rsc->flags, pe_rsc_start_pending)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
         start = start_action(rsc, chosen, TRUE);
         pe__set_action_flags(start, pe_action_print_always);
     }
@@ -1312,8 +1312,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         is_moving = TRUE;
         need_stop = TRUE;
 
-    } else if (is_set(rsc->flags, pe_rsc_failed)) {
-        if (is_set(rsc->flags, pe_rsc_stop)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_stop)) {
             need_stop = TRUE;
             pe_rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {
@@ -1323,14 +1323,14 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
             }
         }
 
-    } else if (is_set(rsc->flags, pe_rsc_block)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
         pe_rsc_trace(rsc, "Block %s", rsc->id);
         need_stop = TRUE;
 
     } else if (rsc->role > RSC_ROLE_STARTED && current != NULL && chosen != NULL) {
         /* Recovery of a promoted resource */
         start = start_action(rsc, chosen, TRUE);
-        if (is_set(start->flags, pe_action_optional) == FALSE) {
+        if (!pcmk_is_set(start->flags, pe_action_optional)) {
             pe_rsc_trace(rsc, "Forced start %s", rsc->id);
             need_stop = TRUE;
         }
@@ -1354,7 +1354,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
 
-    while (rsc->role <= rsc->next_role && role != rsc->role && is_not_set(rsc->flags, pe_rsc_block)) {
+    while ((rsc->role <= rsc->next_role) && (role != rsc->role)
+           && !pcmk_is_set(rsc->flags, pe_rsc_block)) {
         bool required = need_stop;
 
         next_role = rsc_state_matrix[role][rsc->role];
@@ -1381,10 +1382,11 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         role = next_role;
     }
 
-    if(is_set(rsc->flags, pe_rsc_block)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
         pe_rsc_trace(rsc, "No monitor additional ops for blocked resource");
 
-    } else if (rsc->next_role != RSC_ROLE_STOPPED || is_set(rsc->flags, pe_rsc_managed) == FALSE) {
+    } else if ((rsc->next_role != RSC_ROLE_STOPPED)
+               || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc, "Monitor ops for active resource");
         start = start_action(rsc, chosen, TRUE);
         Recurring(rsc, start, chosen, data_set);
@@ -1401,12 +1403,11 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Not allowing partial migration to continue. %s", rsc->id);
         allow_migrate = FALSE;
 
-    } else if (is_moving == FALSE ||
-               is_not_set(rsc->flags, pe_rsc_managed) ||
-               is_set(rsc->flags, pe_rsc_failed) ||
-               is_set(rsc->flags, pe_rsc_start_pending) ||
-               (current && current->details->unclean) ||
-               rsc->next_role < RSC_ROLE_STARTED) {
+    } else if (!is_moving || !pcmk_is_set(rsc->flags, pe_rsc_managed)
+               || pcmk_any_flags_set(rsc->flags,
+                                     pe_rsc_failed|pe_rsc_start_pending)
+               || (current && current->details->unclean)
+               || rsc->next_role < RSC_ROLE_STARTED) {
 
         allow_migrate = FALSE;
     }
@@ -1452,7 +1453,7 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
         allowed_nodes = g_hash_table_get_values(rsc->allowed_nodes);
     }
 
-    if (is_set(data_set->flags, pe_flag_stdout)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
         allowed_nodes = g_list_sort(allowed_nodes, sort_node_uname);
     }
     return allowed_nodes;
@@ -1468,7 +1469,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     bool check_unfencing = FALSE;
     bool check_utilization = FALSE;
 
-    if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc,
                      "Skipping native constraints for unmanaged resource: %s",
                      rsc->id);
@@ -1478,9 +1479,9 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     top = uber_parent(rsc);
 
     // Whether resource requires unfencing
-    check_unfencing = is_not_set(rsc->flags, pe_rsc_fence_device)
-                      && is_set(data_set->flags, pe_flag_enable_unfencing)
-                      && is_set(rsc->flags, pe_rsc_needs_unfencing);
+    check_unfencing = !pcmk_is_set(rsc->flags, pe_rsc_fence_device)
+                      && pcmk_is_set(data_set->flags, pe_flag_enable_unfencing)
+                      && pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing);
 
     // Whether a non-default placement strategy is used
     check_utilization = (g_hash_table_size(rsc->utilization) > 0)
@@ -1494,7 +1495,9 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                         data_set);
 
     // Promotable ordering: demote before stop, start before promote
-    if (is_set(top->flags, pe_rsc_promotable) || (rsc->role > RSC_ROLE_SLAVE)) {
+    if (pcmk_is_set(top->flags, pe_rsc_promotable)
+        || (rsc->role > RSC_ROLE_SLAVE)) {
+
         custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
                             pe_order_implies_first_master, data_set);
@@ -1605,7 +1608,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
              * to avoid nesting remotes. However, allow bundles to run on remote
              * nodes.
              */
-            if (is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+            if (!pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 rsc_avoids_remote_nodes(rsc->container);
             }
 
@@ -1666,7 +1669,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                 pcmk__op_key(rsc->container->id, RSC_STOP, 0),
                                 NULL, pe_order_implies_first, data_set);
 
-            if (is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+            if (pcmk_is_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
                 score = 10000;    /* Highly preferred but not essential */
             } else {
                 score = INFINITY; /* Force them to run on the same host */
@@ -1676,7 +1679,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if (rsc->is_remote_node || is_set(rsc->flags, pe_rsc_fence_device)) {
+    if (rsc->is_remote_node || pcmk_is_set(rsc->flags, pe_rsc_fence_device)) {
         /* don't allow remote nodes to run stonith devices
          * or remote connection resources.*/
         rsc_avoids_remote_nodes(rsc);
@@ -1716,20 +1719,20 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
     }
 
     /* rh side must be allocated before we can process constraint */
-    if (preview == FALSE && is_set(rsc_rh->flags, pe_rsc_provisional)) {
+    if (!preview && pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return influence_nothing;
     }
 
     if ((constraint->role_lh >= RSC_ROLE_SLAVE) &&
-        rsc_lh->parent && is_set(rsc_lh->parent->flags, pe_rsc_promotable)
-        && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
+        rsc_lh->parent && pcmk_is_set(rsc_lh->parent->flags, pe_rsc_promotable)
+        && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
 
         /* LH and RH resources have already been allocated, place the correct
          * priority on LH rsc for the given promotable clone resource role */
         return influence_rsc_priority;
     }
 
-    if (preview == FALSE && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
+    if (!preview && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
         // Log an error if we violated a mandatory colocation constraint
         const pe_node_t *rh_node = rsc_rh->allocated_to;
 
@@ -2064,17 +2067,17 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
     // We need to update the action in two cases:
 
     // ... if 'then' is required
-    if (is_set(filter, pe_action_optional)
-        && is_not_set(then->flags, pe_action_optional)) {
+    if (pcmk_is_set(filter, pe_action_optional)
+        && !pcmk_is_set(then->flags, pe_action_optional)) {
         reason = "restart";
     }
 
     /* ... if 'then' is unrunnable start of managed resource (if a resource
      * should restart but can't start, we still want to stop)
      */
-    if (is_set(filter, pe_action_runnable)
-        && is_not_set(then->flags, pe_action_runnable)
-        && is_set(then->rsc->flags, pe_rsc_managed)
+    if (pcmk_is_set(filter, pe_action_runnable)
+        && !pcmk_is_set(then->flags, pe_action_runnable)
+        && pcmk_is_set(then->rsc->flags, pe_rsc_managed)
         && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
         reason = "stop";
     }
@@ -2087,23 +2090,23 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
                  first->uuid, then->uuid, reason);
 
     // Make 'first' required if it is runnable
-    if (is_set(first->flags, pe_action_runnable)) {
+    if (pcmk_is_set(first->flags, pe_action_runnable)) {
         pe_action_implies(first, then, pe_action_optional);
     }
 
     // Make 'first' required if 'then' is required
-    if (is_not_set(then->flags, pe_action_optional)) {
+    if (!pcmk_is_set(then->flags, pe_action_optional)) {
         pe_action_implies(first, then, pe_action_optional);
     }
 
     // Make 'first' unmigratable if 'then' is unmigratable
-    if (is_not_set(then->flags, pe_action_migrate_runnable)) {
+    if (!pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
         pe_action_implies(first, then, pe_action_migrate_runnable);
     }
 
     // Make 'then' unrunnable if 'first' is required but unrunnable
-    if (is_not_set(first->flags, pe_action_optional)
-        && is_not_set(first->flags, pe_action_runnable)) {
+    if (!pcmk_is_set(first->flags, pe_action_optional)
+        && !pcmk_is_set(first->flags, pe_action_runnable)) {
         pe_action_implies(then, first, pe_action_runnable);
     }
 }
@@ -2133,7 +2136,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
              * then is already stopped, there is nothing to be done when non-symmetrical.  */
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
                    && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)
-                   && is_set(then->flags, pe_action_optional)
+                   && pcmk_is_set(then->flags, pe_action_optional)
                    && then->node
                    && pcmk__list_of_1(then_rsc->running_on)
                    && then->node->details == ((pe_node_t *) then_rsc->running_on->data)->details) {
@@ -2155,15 +2158,16 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if (type & pe_order_implies_first) {
-        if (is_set(filter, pe_action_optional) && is_not_set(flags /* Should be then_flags? */, pe_action_optional)) {
-            // Needs is_set(first_flags, pe_action_optional) too?
+        if (pcmk_is_set(filter, pe_action_optional)
+            && !pcmk_is_set(flags /* Should be then_flags? */, pe_action_optional)) {
+            // Needs pcmk_is_set(first_flags, pe_action_optional) too?
             pe_rsc_trace(first->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
             pe_action_implies(first, then, pe_action_optional);
         }
 
-        if (is_set(flags, pe_action_migrate_runnable) &&
-            is_set(then->flags, pe_action_migrate_runnable) == FALSE &&
-            is_set(then->flags, pe_action_optional) == FALSE) {
+        if (pcmk_is_set(flags, pe_action_migrate_runnable) &&
+            !pcmk_is_set(then->flags, pe_action_migrate_runnable) &&
+            !pcmk_is_set(then->flags, pe_action_optional)) {
 
             pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s",
                          first->uuid, then->uuid);
@@ -2177,8 +2181,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
             then->rsc && (then->rsc->role == RSC_ROLE_MASTER)) {
             pe_action_implies(first, then, pe_action_optional);
 
-            if (is_set(first->flags, pe_action_migrate_runnable) &&
-                is_set(then->flags, pe_action_migrate_runnable) == FALSE) {
+            if (pcmk_is_set(first->flags, pe_action_migrate_runnable) &&
+                !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
 
                 pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s", first->uuid, then->uuid);
                 pe_action_implies(first, then, pe_action_migrate_runnable);
@@ -2188,7 +2192,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if ((type & pe_order_implies_first_migratable)
-        && is_set(filter, pe_action_optional)) {
+        && pcmk_is_set(filter, pe_action_optional)) {
 
         if (((then->flags & pe_action_migrate_runnable) == FALSE) ||
             ((then->flags & pe_action_runnable) == FALSE)) {
@@ -2204,7 +2208,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     }
 
     if ((type & pe_order_pseudo_left)
-        && is_set(filter, pe_action_optional)) {
+        && pcmk_is_set(filter, pe_action_optional)) {
 
         if ((first->flags & pe_action_runnable) == FALSE) {
             pe_action_implies(then, first, pe_action_migrate_runnable);
@@ -2214,28 +2218,28 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
     }
 
-    if (is_set(type, pe_order_runnable_left)
-        && is_set(filter, pe_action_runnable)
-        && is_set(then->flags, pe_action_runnable)
-        && is_set(flags, pe_action_runnable) == FALSE) {
+    if (pcmk_is_set(type, pe_order_runnable_left)
+        && pcmk_is_set(filter, pe_action_runnable)
+        && pcmk_is_set(then->flags, pe_action_runnable)
+        && !pcmk_is_set(flags, pe_action_runnable)) {
         pe_rsc_trace(then->rsc, "Unset runnable on %s because of %s", then->uuid, first->uuid);
         pe_action_implies(then, first, pe_action_runnable);
         pe_action_implies(then, first, pe_action_migrate_runnable);
     }
 
-    if (is_set(type, pe_order_implies_then)
-        && is_set(filter, pe_action_optional)
-        && is_set(then->flags, pe_action_optional)
-        && is_set(flags, pe_action_optional) == FALSE) {
+    if (pcmk_is_set(type, pe_order_implies_then)
+        && pcmk_is_set(filter, pe_action_optional)
+        && pcmk_is_set(then->flags, pe_action_optional)
+        && !pcmk_is_set(flags, pe_action_optional)) {
 
         /* in this case, treat migrate_runnable as if first is optional */
-        if (is_set(first->flags, pe_action_migrate_runnable) == FALSE) {
+        if (!pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
            pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", then->uuid, first->uuid);
            pe_action_implies(then, first, pe_action_optional);
         }
     }
 
-    if (is_set(type, pe_order_restart)) {
+    if (pcmk_is_set(type, pe_order_restart)) {
         handle_restart_ordering(first, then, filter);
     }
 
@@ -2369,9 +2373,9 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         } else if(stop == NULL) {                                       \
             crm_err("%s:%d: No stop action exists for %s", __FUNCTION__, lineno, rsc->id); \
             CRM_ASSERT(stop != NULL);                                   \
-        } else if(is_set(stop->flags, pe_action_optional)) { \
+        } else if (pcmk_is_set(stop->flags, pe_action_optional)) {      \
             crm_err("%s:%d: Action %s is still optional", __FUNCTION__, lineno, stop->uuid); \
-            CRM_ASSERT(is_not_set(stop->flags, pe_action_optional));    \
+            CRM_ASSERT(!pcmk_is_set(stop->flags, pe_action_optional)); \
         }                                                               \
     } while(0)
 
@@ -2458,13 +2462,13 @@ LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *
         detail_width = len;
     }
 
-    if(source->reason && is_not_set(action->flags, pe_action_runnable)) {
+    if(source->reason && !pcmk_is_set(action->flags, pe_action_runnable)) {
         reason = crm_strdup_printf(" due to %s (blocked)", source->reason);
 
     } else if(source->reason) {
         reason = crm_strdup_printf(" due to %s", source->reason);
 
-    } else if(is_not_set(action->flags, pe_action_runnable)) {
+    } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
         reason = strdup(" blocked");
 
     } else {
@@ -2526,16 +2530,16 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         }
     }
 
-    if (current == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
+    if ((current == NULL) && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         /* Don't log stopped orphans */
         return;
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_managed)
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
         || (current == NULL && next == NULL)) {
         pe_rsc_info(rsc, "Leave   %s\t(%s%s)",
-                    rsc->id, role2text(rsc->role), is_not_set(rsc->flags,
-                                                              pe_rsc_managed) ? " unmanaged" : "");
+                    rsc->id, role2text(rsc->role),
+                    !pcmk_is_set(rsc->flags, pe_rsc_managed)? " unmanaged" : "");
         return;
     }
 
@@ -2549,7 +2553,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         g_list_free(possible_matches);
     }
 
-    if ((start == NULL) || is_not_set(start->flags, pe_action_runnable)) {
+    if ((start == NULL) || !pcmk_is_set(start->flags, pe_action_runnable)) {
         start_node = NULL;
     } else {
         start_node = current;
@@ -2582,17 +2586,18 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
         CRM_CHECK(next != NULL,);
         if (next == NULL) {
-        } else if (migrate_op && is_set(migrate_op->flags, pe_action_runnable) && current) {
+        } else if ((migrate_op != NULL) && (current != NULL)
+                   && pcmk_is_set(migrate_op->flags, pe_action_runnable)) {
             LogAction("Migrate", rsc, current, next, start, NULL, terminal);
 
-        } else if (is_set(rsc->flags, pe_rsc_reload)) {
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
             LogAction("Reload", rsc, current, next, start, NULL, terminal);
 
 
-        } else if (start == NULL || is_set(start->flags, pe_action_optional)) {
+        } else if (start == NULL || pcmk_is_set(start->flags, pe_action_optional)) {
             if ((demote != NULL) && (promote != NULL)
-                && is_not_set(demote->flags, pe_action_optional)
-                && is_not_set(promote->flags, pe_action_optional)) {
+                && !pcmk_is_set(demote->flags, pe_action_optional)
+                && !pcmk_is_set(promote->flags, pe_action_optional)) {
                 LogAction("Re-promote", rsc, current, next, promote, demote,
                           terminal);
             } else {
@@ -2600,16 +2605,16 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                             role2text(rsc->role), next->details->uname);
             }
 
-        } else if (is_not_set(start->flags, pe_action_runnable)) {
+        } else if (!pcmk_is_set(start->flags, pe_action_runnable)) {
             LogAction("Stop", rsc, current, NULL, stop,
                       (stop && stop->reason)? stop : start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
-            LogAction(is_set(rsc->flags, pe_rsc_failed) ? "Recover" : "Move",
+            LogAction(pcmk_is_set(rsc->flags, pe_rsc_failed)? "Recover" : "Move",
                       rsc, current, next, stop, NULL, terminal);
 
-        } else if (is_set(rsc->flags, pe_rsc_failed)) {
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             LogAction("Recover", rsc, current, NULL, stop, NULL, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
@@ -2624,7 +2629,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     if(stop
        && (rsc->next_role == RSC_ROLE_STOPPED
-           || (start && is_not_set(start->flags, pe_action_runnable)))) {
+           || (start && !pcmk_is_set(start->flags, pe_action_runnable)))) {
 
         GListPtr gIter = NULL;
 
@@ -2649,8 +2654,8 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
         free(key);
 
-    } else if (stop && is_set(rsc->flags, pe_rsc_failed)
-               && is_set(rsc->flags, pe_rsc_stop)) {
+    } else if ((stop != NULL)
+               && pcmk_all_flags_set(rsc->flags, pe_rsc_failed|pe_rsc_stop)) {
         /* 'stop' may be NULL if the failure was ignored */
         LogAction("Recover", rsc, current, next, stop, start, terminal);
         STOP_SANITY_ASSERT(__LINE__);
@@ -2659,10 +2664,10 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         LogAction("Move", rsc, current, next, stop, NULL, terminal);
         STOP_SANITY_ASSERT(__LINE__);
 
-    } else if (is_set(rsc->flags, pe_rsc_reload)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
         LogAction("Reload", rsc, current, next, start, NULL, terminal);
 
-    } else if (stop != NULL && is_not_set(stop->flags, pe_action_optional)) {
+    } else if (stop != NULL && !pcmk_is_set(stop->flags, pe_action_optional)) {
         LogAction("Restart", rsc, current, next, start, NULL, terminal);
         STOP_SANITY_ASSERT(__LINE__);
 
@@ -2709,15 +2714,15 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
             pe_action_set_reason(stop, "node availability", TRUE);
         }
 
-        if (is_not_set(rsc->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             update_action_flags(stop, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
         }
 
-        if (is_set(data_set->flags, pe_flag_remove_after_stop)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)) {
             DeleteRsc(rsc, current, optional, data_set);
         }
 
-        if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             pe_action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, FALSE, data_set);
 
             order_actions(stop, unfence, pe_order_implies_first);
@@ -2742,7 +2747,7 @@ order_after_unfencing(pe_resource_t *rsc, pe_node_t *node, pe_action_t *action,
      * information to even probe or start unless the node is first unfenced.
      */
     if (is_unfence_device(rsc, data_set)
-        || is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+        || pcmk_is_set(rsc->flags, pe_rsc_needs_unfencing)) {
 
         /* Start with an optional ordering. Requiring unfencing would result in
          * the node being unfenced, and all its resources being stopped,
@@ -2774,7 +2779,7 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
 
     order_after_unfencing(rsc, next, start, pe_order_implies_then, data_set);
 
-    if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
+    if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
         update_action_flags(start, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
     }
 
@@ -2798,7 +2803,7 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         pe_action_t *start = (pe_action_t *) gIter->data;
 
-        if (is_set(start->flags, pe_action_runnable) == FALSE) {
+        if (!pcmk_is_set(start->flags, pe_action_runnable)) {
             runnable = FALSE;
         }
     }
@@ -2861,7 +2866,7 @@ NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_
 gboolean
 DeleteRsc(pe_resource_t * rsc, pe_node_t * node, gboolean optional, pe_working_set_t * data_set)
 {
-    if (is_set(rsc->flags, pe_rsc_failed)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         pe_rsc_trace(rsc, "Resource %s not deleted from %s: failed", rsc->id, node->details->uname);
         return FALSE;
 
@@ -2908,7 +2913,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     CRM_CHECK(node != NULL, return FALSE);
-    if (force == FALSE && is_not_set(data_set->flags, pe_flag_startup_probes)) {
+    if (!force && !pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return FALSE;
     }
@@ -2953,7 +2958,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         return FALSE;
     }
 
-    if (is_set(rsc->flags, pe_rsc_orphan)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         pe_rsc_trace(rsc, "Skipping orphan: %s", rsc->id);
         return FALSE;
     }
@@ -3037,7 +3042,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
              */
         } else if(node->details->remote_requires_reset
                   || node->details->unclean
-                  || is_set(remote->flags, pe_rsc_failed)
+                  || pcmk_is_set(remote->flags, pe_rsc_failed)
                   || remote->next_role == RSC_ROLE_STOPPED
                   || (remote->allocated_to
                       && pe_find_node(remote->running_on, remote->allocated_to->details->uname) == NULL)
@@ -3077,7 +3082,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     }
 
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
-              is_set(probe->flags, pe_action_runnable), rsc->running_on);
+              pcmk_is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
     if (is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
         top = rsc;
@@ -3085,7 +3090,8 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
     }
 
-    if(is_not_set(probe->flags, pe_action_runnable) && rsc->running_on == NULL) {
+    if (!pcmk_is_set(probe->flags, pe_action_runnable)
+        && (rsc->running_on == NULL)) {
         /* Prevent the start from occurring if rsc isn't active, but
          * don't cause it to stop if it was active already
          */
@@ -3219,7 +3225,9 @@ native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_workin
      * ordered after fencing, even if the resource does not require fencing,
      * because guest node "fencing" is actually just a resource stop.
      */
-    if (is_set(rsc->flags, pe_rsc_needs_fencing) || pe__is_guest_node(target)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)
+        || pe__is_guest_node(target)) {
+
         order_implicit = true;
     }
 
@@ -3256,7 +3264,7 @@ native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_workin
             order_actions(stonith_op, parent_stop, pe_order_preserve);
         }
 
-        if (is_set(rsc->flags, pe_rsc_failed)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
                        rsc->id, (order_implicit? "after" : "because"),
                        target->details->uname);
@@ -3266,7 +3274,7 @@ native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_workin
                      target->details->uname);
         }
 
-        if (is_set(rsc->flags, pe_rsc_notify)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_notify)) {
             /* Create a second notification that will be delivered
              *   immediately after the node is fenced
              *
@@ -3331,9 +3339,9 @@ native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_workin
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (action->node->details->online == FALSE || action->node->details->unclean == TRUE
-            || is_set(rsc->flags, pe_rsc_failed)) {
+            || pcmk_is_set(rsc->flags, pe_rsc_failed)) {
 
-            if (is_set(rsc->flags, pe_rsc_failed)) {
+            if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
                 pe_rsc_info(rsc,
                             "Demote of failed resource %s is implicit after %s is fenced",
                             rsc->id, target->details->uname);
@@ -3372,7 +3380,7 @@ rsc_stonith_ordering(pe_resource_t * rsc, pe_action_t * stonith_op, pe_working_s
             rsc_stonith_ordering(child_rsc, stonith_op, data_set);
         }
 
-    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc, "Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 
     } else {
@@ -3399,18 +3407,18 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
         /* Complex resource with no children */
         return;
 
-    } else if (is_not_set(rsc->flags, pe_rsc_managed)) {
+    } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         pe_rsc_trace(rsc, "%s: unmanaged", rsc->id);
         return;
 
-    } else if (is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         /* We don't need to specify any particular actions here, normal failure
          * recovery will apply.
          */
         pe_rsc_trace(rsc, "%s: preventing reload because failed", rsc->id);
         return;
 
-    } else if (is_set(rsc->flags, pe_rsc_start_pending)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
         /* If a resource's configuration changed while a start was pending,
          * force a full restart.
          */

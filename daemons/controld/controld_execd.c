@@ -50,7 +50,7 @@ static int do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
 static void
 lrm_connection_destroy(void)
 {
-    if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
+    if (pcmk_is_set(fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Connection to executor failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -403,7 +403,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         log_level = LOG_ERR;
         when = "shutdown";
 
-    } else if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         when = "shutdown... waiting";
     }
 
@@ -432,7 +432,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         do_crm_log(log_level, "%d pending executor operation%s at %s",
                    counter, pcmk__plural_s(counter), when);
 
-        if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+        if ((cur_state == S_TERMINATE)
+            || !pcmk_is_set(fsa_input_register, R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
             while (g_hash_table_iter_next(&gIter, (gpointer*)&key, (gpointer*)&pending)) {
                 do_crm_log(log_level, "Pending action: %s (%s)", key, pending->op_key);
@@ -448,7 +449,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         return rc;
     }
 
-    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         /* At this point we're not waiting, we're just shutting down */
         when = "shutdown";
     }
@@ -509,7 +510,7 @@ build_parameter_list(const lrmd_event_data_t *op,
         "user",
     };
 
-    if (is_not_set(metadata->ra_flags, ra_uses_private)
+    if (!pcmk_is_set(metadata->ra_flags, ra_uses_private)
         && (param_type == ra_param_private)) {
 
         max = DIMOF(secure_terms);
@@ -519,7 +520,7 @@ build_parameter_list(const lrmd_event_data_t *op,
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
         bool accept = FALSE;
 
-        if (is_set(param->rap_flags, param_type)) {
+        if (pcmk_is_set(param->rap_flags, param_type)) {
             accept = TRUE;
 
         } else if (max) {
@@ -574,7 +575,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    if (is_set(metadata->ra_flags, ra_supports_reload)) {
+    if (pcmk_is_set(metadata->ra_flags, ra_supports_reload)) {
         restart = create_xml_node(NULL, XML_TAG_PARAMS);
         /* Add any parameters with unique="1" to the "op-force-restart" list.
          *
@@ -1144,12 +1145,12 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     pending = g_hash_table_lookup(lrm_state->pending_ops, key);
 
     if (pending) {
-        if (remove && is_not_set(pending->flags, active_op_remove)) {
+        if (remove && !pcmk_is_set(pending->flags, active_op_remove)) {
             controld_set_active_op_flags(pending, active_op_remove);
             crm_debug("Scheduling %s for removal", key);
         }
 
-        if (is_set(pending->flags, active_op_cancelled)) {
+        if (pcmk_is_set(pending->flags, active_op_cancelled)) {
             crm_debug("Operation %s already cancelled", key);
             free(local_key);
             return FALSE;
@@ -1983,7 +1984,7 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     primitive = find_xml_node(rsc_op, XML_CIB_TAG_RESOURCE, FALSE);
     class = crm_element_value(primitive, XML_AGENT_ATTR_CLASS);
 
-    if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
+    if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
             && pcmk__str_eq(operation, CRMD_ACTION_STATUS, pcmk__str_casei)
             && (op->interval_ms > 0)) {
 
@@ -2273,7 +2274,9 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
                transition, rsc->id, operation, op->interval_ms);
 
-    if (is_set(fsa_input_register, R_SHUTDOWN) && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)
+        && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
+
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
         send_nack = TRUE;
 
@@ -2287,7 +2290,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     if(send_nack) {
         crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
                    operation, rsc->id, fsa_state2string(fsa_state),
-                   is_set(fsa_input_register, R_SHUTDOWN)?"true":"false");
+                   pcmk__btoa(pcmk_is_set(fsa_input_register, R_SHUTDOWN)));
 
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
         op->op_status = PCMK_LRM_OP_INVALID;
@@ -2726,7 +2729,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         crm_err("Recurring operation %s was cancelled without transition information",
                 op_key);
 
-    } else if (is_set(pending->flags, active_op_remove)) {
+    } else if (pcmk_is_set(pending->flags, active_op_remove)) {
         /* This recurring operation was cancelled (by us) and pending, and we
          * have been waiting for it to finish.
          */
@@ -2798,7 +2801,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                      crm_action_str(op->op_type, op->interval_ms),
                      op->rsc_id, node_name,
                      services_lrm_status_str(op->op_status),
-                     op->call_id, op_key, (removed? "true" : "false"));
+                     op->call_id, op_key, pcmk__btoa(removed));
             break;
 
         case PCMK_LRM_OP_DONE:
@@ -2807,8 +2810,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                        crm_action_str(op->op_type, op->interval_ms),
                        op->rsc_id, node_name,
                        services_ocf_exitcode_str(op->rc), op->rc,
-                       op->call_id, op_key, (removed? "true" : "false"),
-                       update_id);
+                       op->call_id, op_key, pcmk__btoa(removed), update_id);
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
@@ -2826,7 +2828,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                     crm_action_str(op->op_type, op->interval_ms),
                     op->rsc_id, node_name,
                     services_lrm_status_str(op->op_status), op->call_id, op_key,
-                    (removed? "true" : "false"), op->op_status, update_id);
+                    pcmk__btoa(removed), op->op_status, update_id);
     }
 
     if (op->output) {

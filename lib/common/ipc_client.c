@@ -1189,7 +1189,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     header = iov[0].iov_base;
     pcmk__set_ipc_flags(header->flags, client->name, flags);
 
-    if(is_set(flags, crm_ipc_proxied)) {
+    if (pcmk_is_set(flags, crm_ipc_proxied)) {
         /* Don't look for a synchronous response */
         pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
     }
@@ -1207,7 +1207,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
               client->name, header->qb.id, header->qb.size, ms_timeout);
 
-    if (ms_timeout > 0 || is_not_set(flags, crm_ipc_client_response)) {
+    if ((ms_timeout > 0) || !pcmk_is_set(flags, crm_ipc_client_response)) {
 
         time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
 
@@ -1226,7 +1226,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         if (qb_rc <= 0) {
             goto send_cleanup;
 
-        } else if (is_not_set(flags, crm_ipc_client_response)) {
+        } else if (!pcmk_is_set(flags, crm_ipc_client_response)) {
             crm_trace("Not waiting for reply to %s IPC request %d",
                       client->name, header->qb.id);
             goto send_cleanup;

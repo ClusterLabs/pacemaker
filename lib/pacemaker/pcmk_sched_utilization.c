@@ -166,7 +166,7 @@ have_enough_capacity(pe_node_t * node, const char * rsc_id, GHashTable * utiliza
 static void
 native_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc)
 {
-    if(is_set(rsc->flags, pe_rsc_provisional) == FALSE) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
     }
 
@@ -177,7 +177,7 @@ static void
 add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
                     GListPtr all_rscs, pe_resource_t * orig_rsc)
 {
-    if(is_set(rsc->flags, pe_rsc_provisional) == FALSE) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
     }
 
@@ -247,7 +247,7 @@ sum_unallocated_utilization(pe_resource_t * rsc, GListPtr colocated_rscs)
     for (gIter = all_rscs; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *listed_rsc = (pe_resource_t *) gIter->data;
 
-        if(is_set(listed_rsc->flags, pe_rsc_provisional) == FALSE) {
+        if (!pcmk_is_set(listed_rsc->flags, pe_rsc_provisional)) {
             continue;
         }
 
@@ -453,7 +453,7 @@ group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            if (is_set(child_rsc->flags, pe_rsc_provisional) &&
+            if (pcmk_is_set(child_rsc->flags, pe_rsc_provisional) &&
                 g_list_find(all_rscs, child_rsc) == FALSE) {
                 native_add_unallocated_utilization(all_utilization, child_rsc);
             }
@@ -461,7 +461,7 @@ group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * 
 
     } else {
         if (group_data->first_child &&
-            is_set(group_data->first_child->flags, pe_rsc_provisional) &&
+            pcmk_is_set(group_data->first_child->flags, pe_rsc_provisional) &&
             g_list_find(all_rscs, group_data->first_child) == FALSE) {
             native_add_unallocated_utilization(all_utilization, group_data->first_child);
         }

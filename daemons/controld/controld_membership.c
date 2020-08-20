@@ -136,7 +136,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
     node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
 
-    if (is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, crm_remote_node)) {
         crm_xml_add(node_state, XML_NODE_IS_REMOTE, XML_BOOLEAN_TRUE);
     }
 
@@ -155,10 +155,10 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
                             pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei));
     }
 
-    if (!is_set(node->flags, crm_remote_node)) {
+    if (!pcmk_is_set(node->flags, crm_remote_node)) {
         if (flags & node_update_peer) {
             value = OFFLINESTATUS;
-            if (is_set(node->processes, crm_get_cluster_proc())) {
+            if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
                 value = ONLINESTATUS;
             }
             crm_xml_add(node_state, XML_NODE_IS_PEER, value);
@@ -302,7 +302,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     xmlNode *node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
 
 #if SUPPORT_COROSYNC
-    if (is_not_set(flags, node_update_quick) && is_corosync_cluster()) {
+    if (!pcmk_is_set(flags, node_update_quick) && is_corosync_cluster()) {
         from_hashtable = corosync_initialize_nodelist(NULL, FALSE, node_list);
     }
 #endif
@@ -409,7 +409,8 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_xml_add(update, XML_ATTR_DC_UUID, fsa_our_uuid);
 
         fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
-        crm_debug("Updating quorum status to %s (call=%d)", quorum ? "true" : "false", call_id);
+        crm_debug("Updating quorum status to %s (call=%d)",
+                  pcmk__btoa(quorum), call_id);
         fsa_register_cib_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
         free_xml(update);
 

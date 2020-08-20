@@ -61,24 +61,24 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     type = crm_element_value(update->msg, F_SUBTYPE);
     CRM_LOG_ASSERT(type != NULL);
 
-    if (is_set(client->flags, cib_notify_diff)
+    if (pcmk_is_set(client->flags, cib_notify_diff)
         && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
 
         do_send = TRUE;
 
-    } else if (is_set(client->flags, cib_notify_replace)
+    } else if (pcmk_is_set(client->flags, cib_notify_replace)
                && pcmk__str_eq(type, T_CIB_REPLACE_NOTIFY, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->flags, cib_notify_confirm)
+    } else if (pcmk_is_set(client->flags, cib_notify_confirm)
                && pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->flags, cib_notify_pre)
+    } else if (pcmk_is_set(client->flags, cib_notify_pre)
                && pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->flags, cib_notify_post)
+    } else if (pcmk_is_set(client->flags, cib_notify_post)
                && pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
 
         do_send = TRUE;

@@ -263,7 +263,7 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
         rc = pcmk_rc_ok;
     }
@@ -336,7 +336,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->message(out, "maint-mode");
         rc = pcmk_rc_ok;
     }
@@ -479,7 +479,7 @@ pe__ban_xml(pcmk__output_t *out, va_list args) {
     xmlSetProp(node, (pcmkXmlStr) "node", (pcmkXmlStr) pe_node->details->uname);
     xmlSetProp(node, (pcmkXmlStr) "weight", (pcmkXmlStr) weight_s);
     xmlSetProp(node, (pcmkXmlStr) "master_only",
-               (pcmkXmlStr) (location->role_filter == RSC_ROLE_MASTER ? "true" : "false"));
+               (pcmkXmlStr) pcmk__btoa(location->role_filter == RSC_ROLE_MASTER));
 
     free(weight_s);
     return pcmk_rc_ok;
@@ -679,7 +679,8 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
         xmlSetProp(node, (pcmkXmlStr) "version", (pcmkXmlStr) (dc_version_s ? dc_version_s : ""));
         xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) dc->details->uname);
         xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) dc->details->id);
-        xmlSetProp(node, (pcmkXmlStr) "with_quorum", (pcmkXmlStr) (crm_is_true(quorum) ? "true" : "false"));
+        xmlSetProp(node, (pcmkXmlStr) "with_quorum",
+                   (pcmkXmlStr) pcmk__btoa(crm_is_true(quorum)));
     } else {
         xmlSetProp(node, (pcmkXmlStr) "present", (pcmkXmlStr) "false");
     }
@@ -702,10 +703,10 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
     out->list_item(out, NULL, "Cluster is %s",
-                   is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
@@ -730,7 +731,7 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
             break;
     }
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
@@ -749,7 +750,7 @@ int
 pe__cluster_options_log(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
         return pcmk_rc_ok;
     } else {
@@ -763,10 +764,10 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     out->list_item(out, NULL, "STONITH of failed nodes %s",
-                   is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+                   pcmk_is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
     out->list_item(out, NULL, "Cluster is %s",
-                   is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
+                   pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster) ? "symmetric" : "asymmetric");
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
@@ -801,9 +802,9 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     xmlSetProp(node, (pcmkXmlStr) "stonith-enabled",
-               (pcmkXmlStr) (is_set(data_set->flags, pe_flag_stonith_enabled) ? "true" : "false"));
+               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)));
     xmlSetProp(node, (pcmkXmlStr) "symmetric-cluster",
-               (pcmkXmlStr) (is_set(data_set->flags, pe_flag_symmetric_cluster) ? "true" : "false"));
+               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)));
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
@@ -828,7 +829,7 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
     }
 
     xmlSetProp(node, (pcmkXmlStr) "maintenance-mode",
-               (pcmkXmlStr) (is_set(data_set->flags, pe_flag_maintenance_mode) ? "true" : "false"));
+               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)));
 
     return pcmk_rc_ok;
 }
@@ -1167,15 +1168,15 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
         pe__name_and_nvpairs_xml(out, true, "node", 13,
                                  "name", node->details->uname,
                                  "id", node->details->id,
-                                 "online", node->details->online ? "true" : "false",
-                                 "standby", node->details->standby ? "true" : "false",
-                                 "standby_onfail", node->details->standby_onfail ? "true" : "false",
-                                 "maintenance", node->details->maintenance ? "true" : "false",
-                                 "pending", node->details->pending ? "true" : "false",
-                                 "unclean", node->details->unclean ? "true" : "false",
-                                 "shutdown", node->details->shutdown ? "true" : "false",
-                                 "expected_up", node->details->expected_up ? "true" : "false",
-                                 "is_dc", node->details->is_dc ? "true" : "false",
+                                 "online", pcmk__btoa(node->details->online),
+                                 "standby", pcmk__btoa(node->details->standby),
+                                 "standby_onfail", pcmk__btoa(node->details->standby_onfail),
+                                 "maintenance", pcmk__btoa(node->details->maintenance),
+                                 "pending", pcmk__btoa(node->details->pending),
+                                 "unclean", pcmk__btoa(node->details->unclean),
+                                 "shutdown", pcmk__btoa(node->details->shutdown),
+                                 "expected_up", pcmk__btoa(node->details->expected_up),
+                                 "is_dc", pcmk__btoa(node->details->is_dc),
                                  "resources_running", length_s,
                                  "type", node_type);
 
@@ -1672,7 +1673,8 @@ pe__ticket_xml(pcmk__output_t *out, va_list args) {
     node = pcmk__output_create_xml_node(out, "ticket");
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) ticket->id);
     xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) (ticket->granted ? "granted" : "revoked"));
-    xmlSetProp(node, (pcmkXmlStr) "standby", (pcmkXmlStr) (ticket->standby ? "true" : "false"));
+    xmlSetProp(node, (pcmkXmlStr) "standby",
+               (pcmkXmlStr) pcmk__btoa(ticket->standby));
 
     if (ticket->last_granted > -1) {
         xmlSetProp(node, (pcmkXmlStr) "last-granted",

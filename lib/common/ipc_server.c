@@ -362,7 +362,7 @@ pcmk__free_client(pcmk__client_t *c)
 bool
 pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 {
-    if (is_set(client->flags, pcmk__client_privileged)) {
+    if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
         long long qmax_int;
 
         errno = 0;
@@ -416,7 +416,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         *flags = header->flags;
     }
 
-    if (is_set(header->flags, crm_ipc_proxied)) {
+    if (pcmk_is_set(header->flags, crm_ipc_proxied)) {
         /* Mark this client as being the endpoint of a proxy connection.
          * Proxy connections responses are sent on the event channel, to avoid
          * blocking the controller serving as proxy.
@@ -684,7 +684,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
     if (c->flags & pcmk__client_proxied) {
         /* _ALL_ replies to proxied connections need to be sent as events */
-        if (is_not_set(flags, crm_ipc_server_event)) {
+        if (!pcmk_is_set(flags, crm_ipc_server_event)) {
             /* The proxied flag lets us know this was originally meant to be a
              * response, even though we're sending it over the event channel.
              */

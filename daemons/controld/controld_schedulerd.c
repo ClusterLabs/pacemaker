@@ -84,7 +84,7 @@ pe_ipc_destroy(gpointer user_data)
     // If we aren't connected to the scheduler, we can't expect a reply
     controld_expect_sched_reply(NULL);
 
-    if (is_set(fsa_input_register, R_PE_REQUIRED)) {
+    if (pcmk_is_set(fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
@@ -201,7 +201,7 @@ do_pe_control(long long action,
         pe_subsystem_free();
     }
     if ((action & A_PE_START)
-        && (is_not_set(fsa_input_register, R_PE_CONNECTED))) {
+        && !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
 
         if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
@@ -310,8 +310,8 @@ do_pe_invoke(long long action,
         return;
     }
 
-    if (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
+        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_err("Cannot shut down gracefully without the scheduler");
             register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
@@ -329,7 +329,7 @@ do_pe_invoke(long long action,
                    fsa_state2string(cur_state));
         return;
     }
-    if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
+    if (!pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
         crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
         /* start the join from scratch */
@@ -416,7 +416,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_trace("Skipping superseded CIB query: %d (current=%d)", call_id, fsa_pe_query);
         return;
 
-    } else if (AM_I_DC == FALSE || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
+    } else if (!AM_I_DC || !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
         crm_debug("No need to invoke the scheduler anymore");
         return;
 
@@ -448,7 +448,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
     crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 
-    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, watchdog?"true":"false");
+    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
     if (ever_had_quorum && crm_have_quorum == FALSE) {
         crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);

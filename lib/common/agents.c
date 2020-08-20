@@ -114,7 +114,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
     *standard = strndup(spec, colon - spec);
     spec = colon + 1;
 
-    if (is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
+    if (pcmk_is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
         colon = strchr(spec, ':');
         if ((colon == NULL) || (colon == spec)) {
             free(*standard);
@@ -148,5 +148,5 @@ bool crm_provider_required(const char *standard);
 bool
 crm_provider_required(const char *standard)
 {
-    return is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+    return pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }

@@ -186,7 +186,8 @@ resources_action_create(const char *name, const char *standard,
     }
     ra_caps = pcmk_get_ra_caps(standard);
 
-    if (is_set(ra_caps, pcmk_ra_cap_provider) && pcmk__str_empty(provider)) {
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
+        && pcmk__str_empty(provider)) {
         crm_err("Cannot create operation for %s without provider", name);
         goto return_error;
     }
@@ -216,17 +217,19 @@ resources_action_create(const char *name, const char *standard,
     op->flags = flags;
     op->id = pcmk__op_key(name, action, interval_ms);
 
-    if (is_set(ra_caps, pcmk_ra_cap_status) && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
+        && pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+
         op->action = strdup("status");
     } else {
         op->action = strdup(action);
     }
 
-    if (is_set(ra_caps, pcmk_ra_cap_provider)) {
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
         op->provider = strdup(provider);
     }
 
-    if (is_set(ra_caps, pcmk_ra_cap_params)) {
+    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
         op->params = params;
         params = NULL; // so we don't free them in this function
     }
@@ -756,7 +759,7 @@ services_action_async_fork_notify(svc_action_t * op,
         g_hash_table_replace(recurring_actions, op->id, op);
     }
 
-    if (is_not_set(op->flags, SVC_ACTION_NON_BLOCKED)
+    if (!pcmk_is_set(op->flags, SVC_ACTION_NON_BLOCKED)
         && op->rsc && is_op_blocked(op->rsc)) {
         blocked_ops = g_list_append(blocked_ops, op);
         return TRUE;
@@ -954,7 +957,7 @@ resources_list_standards(void)
 GList *
 resources_list_providers(const char *standard)
 {
-    if (is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
+    if (pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
         return resources_os_list_ocf_providers();
     }
 
@@ -1040,7 +1043,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 
     rc = FALSE;
 
-    has_providers = is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+    has_providers = pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
     if (has_providers == TRUE && provider != NULL) {
         providers = resources_list_providers(standard);
         for (iter = providers; iter != NULL; iter = iter->next) {

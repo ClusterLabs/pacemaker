@@ -284,7 +284,7 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
         return NULL;
 
-    } else if (is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
+    } else if (pcmk_is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
                 && (rprovider == NULL)) {
         fprintf(stderr, "Please specify the provider for resource %s\n", resource);
         return NULL;

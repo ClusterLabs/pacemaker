@@ -258,10 +258,11 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             uint32_t device_flags = 0;
 
             stonith__device_parameter_flags(&device_flags, agent, metadata);
-            if (is_set(device_flags, st_device_supports_parameter_port)) {
+            if (pcmk_is_set(device_flags, st_device_supports_parameter_port)) {
                 host_arg = "port";
 
-            } else if (is_set(device_flags, st_device_supports_parameter_plug)) {
+            } else if (pcmk_is_set(device_flags,
+                                   st_device_supports_parameter_plug)) {
                 host_arg = "plug";
             }
         }

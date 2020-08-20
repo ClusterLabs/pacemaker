@@ -40,7 +40,7 @@ crm_update_peer_join(const char *source, crm_node_t * node, enum crm_join_phase 
     CRM_CHECK(node != NULL, return);
 
     /* Remote nodes do not participate in joins */
-    if (is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, crm_remote_node)) {
         return;
     }
 
@@ -110,7 +110,7 @@ create_dc_message(const char *join_op, const char *host_to)
      * joining node from fencing the old DC if it becomes the new DC.
      */
     crm_xml_add_boolean(msg, F_CRM_DC_LEAVING,
-                        is_set(fsa_input_register, R_SHUTDOWN));
+                        pcmk_is_set(fsa_input_register, R_SHUTDOWN));
     return msg;
 }
 
@@ -437,7 +437,7 @@ do_dc_join_finalize(long long action,
         controld_set_fsa_input_flags(R_HAVE_CIB);
     }
 
-    if (is_set(fsa_input_register, R_IN_TRANSITION)) {
+    if (pcmk_is_set(fsa_input_register, R_IN_TRANSITION)) {
         crm_warn("Delaying join-%d finalization while transition in progress",
                  current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
@@ -445,7 +445,7 @@ do_dc_join_finalize(long long action,
         return;
     }
 
-    if (max_generation_from && is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
+    if (max_generation_from && !pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
         /* ask for the agreed best CIB */
         sync_from = strdup(max_generation_from);
         controld_set_fsa_input_flags(R_CIB_ASKED);
@@ -690,7 +690,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         }
 
     } else if (cur_state == S_FINALIZE_JOIN) {
-        if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
+        if (!pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
             crm_debug("join-%d: Delaying finalization until we have CIB "
                       CRM_XS " state=%s for=%s",
                       current_join_id, fsa_state2string(cur_state), source);

@@ -146,11 +146,11 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
         entry->flags = flags;
         crm_debug("Alert %s receives events: attributes:%s%s%s%s",
                   entry->id,
-                  (is_set(flags, pcmk__alert_attribute)?
+                  (pcmk_is_set(flags, pcmk__alert_attribute)?
                    (entry->select_attribute_name? "some" : "all") : "none"),
-                  (is_set(flags, pcmk__alert_fencing)? " fencing" : ""),
-                  (is_set(flags, pcmk__alert_node)? " nodes" : ""),
-                  (is_set(flags, pcmk__alert_resource)? " resources" : ""));
+                  (pcmk_is_set(flags, pcmk__alert_fencing)? " fencing" : ""),
+                  (pcmk_is_set(flags, pcmk__alert_node)? " nodes" : ""),
+                  (pcmk_is_set(flags, pcmk__alert_resource)? " resources" : ""));
     }
 }
 
