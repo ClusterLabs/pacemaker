@@ -24,6 +24,7 @@
 
 static gboolean legacy_xml = FALSE;
 static gboolean simple_list = FALSE;
+static gboolean substitute = FALSE;
 
 GOptionEntry pcmk__xml_output_entries[] = {
     { "xml-legacy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
@@ -32,8 +33,34 @@ GOptionEntry pcmk__xml_output_entries[] = {
     { "xml-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
       NULL,
       NULL },
+    { "xml-substitute", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &substitute,
+      NULL,
+      NULL },
 
     { NULL }
+};
+
+typedef struct subst_s {
+    const char *from;
+    const char *to;
+} subst_t;
+
+static subst_t substitutions[] = {
+    { "Attributes",                     "attributes" },
+    { "Active Resources",               "resources" },
+    { "Full List of Resources",         "resources" },
+    { "Inactive Resources",             "resources" },
+    { "Cluster Summary",                "summary" },
+    { "Failed Resource Actions",        "failures" },
+    { "Fencing History",                "fence_history" },
+    { "Migration Summary",              "node_history" },
+    { "Operations",                     "node_history" },
+    { "Negative Location Constraints",  "bans" },
+    { "Node Attributes",                "node_attributes" },
+    { "Resources",                      "resources" },
+    { "Tickets",                        "tickets" },
+
+    { NULL, NULL }
 };
 
 typedef struct private_data_s {
@@ -257,6 +284,7 @@ static void
 xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
                const char *format, ...) {
     va_list ap;
+    const char *name = NULL;
     char *buf = NULL;
     int len;
 
@@ -265,13 +293,26 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
+    if (substitute) {
+        for (subst_t *s = substitutions; s->from != NULL; s++) {
+            if (!strcmp(s->from, buf)) {
+                name = s->to;
+                break;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        name = buf;
+    }
+
     if (legacy_xml || simple_list) {
-        pcmk__output_xml_create_parent(out, buf);
+        pcmk__output_xml_create_parent(out, name);
     } else {
         xmlNodePtr list_node = NULL;
 
         list_node = pcmk__output_xml_create_parent(out, "list");
-        xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) buf);
+        xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
     }
 
     free(buf);
