@@ -286,10 +286,14 @@ Cluster Resources
    </primitive>
    -------
    =====
+
+.. _resource_options:
+
+Resource Options
+################
    
-   [[s-resource-options]]
-   == Resource Options ==
-   
+.. Convert_to_RST_2:
+
    Resources have two types of options: 'meta-attributes' and 'instance attributes'.
    Meta-attributes apply to any type of resource, while instance attributes
    are specific to each resource agent.
@@ -344,7 +348,13 @@ Cluster Resources
     not be run. Allowed values: +true+, +false+
     indexterm:[maintenance,Resource Option]
     indexterm:[Resource,Option,maintenance]
-   
+
+.. _resource-stickiness:
+
+   placeholder
+
+.. Convert_to_RST_3:
+
    |resource-stickiness
    |1 for individual clone instances, 0 for all other resources
    |A score that will be added to the current node when a resource is already
@@ -627,10 +637,14 @@ Cluster Resources
    Pacemaker identifies operations by a combination of name and interval, so this
    combination must be unique for each resource. That is, you should not configure
    two operations for the same resource with the same name and interval.
-   
-   [[s-operation-properties]]
-   === Operation Properties ===
-   
+
+.. _operation_properties:
+
+Operation Properties
+____________________
+
+.. Convert_to_RST_4:
+
    Operation properties may be specified directly in the +op+ element as
    XML attributes, or in a separate +meta_attributes+ block as +nvpair+ elements.
    XML attributes take precedence over +nvpair+ elements if both are specified.

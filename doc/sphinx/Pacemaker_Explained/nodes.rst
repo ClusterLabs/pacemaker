@@ -18,8 +18,12 @@ Cluster Nodes
    this information automatically from the communications and membership
    data.
    
-   [[s-node-name]]
-   == Where Pacemaker Gets the Node Name ==
+.. _node_name:
+
+Where Pacemaker Gets the Node Name
+##################################
+   
+.. Convert_to_RST_2:
    
    Traditionally, Pacemaker required nodes to be referred to by the value
    returned by `uname -n`.  This can be problematic for services that
@@ -40,9 +44,13 @@ Cluster Nodes
    available to display the name used by the node with the corosync
    *nodeid* of pass:[<replaceable>number</replaceable>], for example: `crm_node --name-for-id 2`.
    
-   [[s-node-attributes]]
-   == Node Attributes ==
+.. _node_attributes:
+
+Node Attributes
+###############
    
+.. Convert_to_RST_3:
+
    indexterm:[Node,attribute]
    Pacemaker allows node-specific values to be specified using 'node attributes'.
    A node attribute has a name, and may have a distinct value for each node.

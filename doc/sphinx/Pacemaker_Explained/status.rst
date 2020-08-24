@@ -111,7 +111,7 @@ node is healthy or is in a failed state and needs to be fenced.
 Transient Node Attributes
 #########################
    
-Like regular :ref:`Node Attributes`, the name/value
+Like regular :ref:`node_attributes`, the name/value
 pairs listed in the ``transient_attributes`` section help to describe the
 node.  However they are forgotten by the cluster when the node goes offline.
 This can be useful, for instance, when you want a node to be in standby mode
