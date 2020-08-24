@@ -335,9 +335,12 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     va_end(ap);
 
     item_node = pcmk__output_create_xml_text_node(out, "item", buf);
-    free(buf);
 
-    xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+    if (name != NULL) {
+        xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+    }
+
+    free(buf);
 }
 
 static void
