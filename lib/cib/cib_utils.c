@@ -381,7 +381,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
     }
 
-    xml_log_changes(LOG_TRACE, __FUNCTION__, scratch);
+    xml_log_changes(LOG_TRACE, __func__, scratch);
     xml_accept_changes(scratch);
 
     if (diff_cs == NULL) {
@@ -391,7 +391,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     if(local_diff) {
         patchset_process_digest(local_diff, current_cib, scratch, with_digest);
 
-        xml_log_patchset(LOG_INFO, __FUNCTION__, local_diff);
+        xml_log_patchset(LOG_INFO, __func__, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
 

@@ -106,7 +106,7 @@ build_attribute_xml(
     xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
     gboolean is_private, const char *peer, uint32_t peerid, const char *value, gboolean is_force_write)
 {
-    xmlNode *xml = create_xml_node(parent, __FUNCTION__);
+    xmlNode *xml = create_xml_node(parent, __func__);
 
     crm_xml_add(xml, PCMK__XA_ATTR_NAME, name);
     crm_xml_add(xml, PCMK__XA_ATTR_SET, set);
@@ -397,7 +397,7 @@ attrd_client_refresh(void)
  */
 static xmlNode *build_query_reply(const char *attr, const char *host)
 {
-    xmlNode *reply = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *reply = create_xml_node(NULL, __func__);
     attribute_t *a;
 
     if (reply == NULL) {
@@ -555,7 +555,7 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 void
 attrd_broadcast_protocol()
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, crm_system_name);
@@ -637,7 +637,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
 
     attribute_t *a = NULL;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *sync = create_xml_node(NULL, __func__);
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
@@ -737,7 +737,7 @@ attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
     GHashTableIter vIter;
     attribute_t *a;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *sync = create_xml_node(NULL, __func__);
     gboolean build = FALSE;    
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
@@ -861,7 +861,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
         && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
 
-        xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+        xmlNode *sync = create_xml_node(NULL, __func__);
 
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    attr, host, v->current, value, peer->uname);
@@ -1289,7 +1289,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                  a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
     }
     if (cib_updates) {
-        crm_log_xml_trace(xml_top, __FUNCTION__);
+        crm_log_xml_trace(xml_top, __func__);
 
         a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                                     flags, a->user);

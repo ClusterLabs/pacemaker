@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,8 @@
 #ifndef PCMKI_STONITH_H
 #  define PCMKI_STONITH_H
 
-#  include <crm/common/output.h>
 #  include <crm/stonith-ng.h>
+#  include <crm/common/output_internal.h>
 
 /*!
  * \brief Perform a STONITH action.

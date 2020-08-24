@@ -56,13 +56,13 @@ typedef struct xml_private_s {
 } xml_private_t;
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
-        (xml_priv)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,      \
+        (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
             LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
             (flags_to_set), #flags_to_set);                                 \
     } while (0)
 
 #define pcmk__clear_xml_flags(xml_priv, flags_to_clear) do {                \
-        (xml_priv)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,    \
+        (xml_priv)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
             LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
@@ -224,5 +224,20 @@ pcmk__ipc_methods_t *pcmk__controld_api_methods(void);
 
 G_GNUC_INTERNAL
 pcmk__ipc_methods_t *pcmk__pacemakerd_api_methods(void);
+
+
+/*
+ * Logging
+ */
+
+/* This says whether the current application is a Pacemaker daemon or not,
+ * and is used to change default logging settings such as whether to log to
+ * stderr, etc., as well as a few other details such as whether blackbox signal
+ * handling is enabled.
+ *
+ * It is set when logging is initialized, and does not need to be set directly.
+ */
+G_GNUC_INTERNAL
+extern bool pcmk__is_daemon;
 
 #endif  // CRMCOMMON_PRIVATE__H

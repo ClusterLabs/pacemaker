@@ -12,44 +12,52 @@
 #  include <string.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote_internal.h>
-#  include <crm/common/output.h>
 #  include <crm/common/internal.h>
+#  include <crm/common/output_internal.h>
 
 #  define pe_rsc_info(rsc, fmt, args...)  crm_log_tag(LOG_INFO,  rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_debug(rsc, fmt, args...) crm_log_tag(LOG_DEBUG, rsc ? rsc->id : "<NULL>", fmt, ##args)
 #  define pe_rsc_trace(rsc, fmt, args...) crm_log_tag(LOG_TRACE, rsc ? rsc->id : "<NULL>", fmt, ##args)
 
-#  define pe_err(fmt...) { was_processing_error = TRUE; crm_config_error = TRUE; crm_err(fmt); }
-#  define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
+#  define pe_err(fmt...) do {           \
+        was_processing_error = TRUE;    \
+        pcmk__config_err(fmt);          \
+    } while (0)
+
+#  define pe_warn(fmt...) do {          \
+        was_processing_warning = TRUE;  \
+        pcmk__config_warn(fmt);         \
+    } while (0)
+
 #  define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #  define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
 #define pe__set_working_set_flags(working_set, flags_to_set) do {           \
-        (working_set)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,   \
+        (working_set)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
             LOG_TRACE, "Working set", crm_system_name,                      \
             (working_set)->flags, (flags_to_set), #flags_to_set);           \
     } while (0)
 
 #define pe__clear_working_set_flags(working_set, flags_to_clear) do {       \
-        (working_set)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, \
+        (working_set)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
             LOG_TRACE, "Working set", crm_system_name,                      \
             (working_set)->flags, (flags_to_clear), #flags_to_clear);       \
     } while (0)
 
 #define pe__set_resource_flags(resource, flags_to_set) do {                 \
-        (resource)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,      \
+        (resource)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
             LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
             (flags_to_set), #flags_to_set);                                 \
     } while (0)
 
 #define pe__clear_resource_flags(resource, flags_to_clear) do {             \
-        (resource)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,    \
+        (resource)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
             LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
 
 #define pe__set_action_flags(action, flags_to_set) do {                     \
-        (action)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,        \
+        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,            \
                                              LOG_TRACE,                     \
                                              "Action", (action)->uuid,      \
                                              (action)->flags,               \
@@ -58,7 +66,7 @@
     } while (0)
 
 #define pe__clear_action_flags(action, flags_to_clear) do {                 \
-        (action)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,      \
+        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
                                                LOG_TRACE,                   \
                                                "Action", (action)->uuid,    \
                                                (action)->flags,             \
@@ -67,14 +75,14 @@
     } while (0)
 
 #define pe__set_raw_action_flags(action_flags, action_name, flags_to_set) do { \
-        action_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,           \
+        action_flags = pcmk__set_flags_as(__func__, __LINE__,               \
                                           LOG_TRACE, "Action", action_name, \
                                           (action_flags),                   \
                                           (flags_to_set), #flags_to_set);   \
     } while (0)
 
 #define pe__clear_raw_action_flags(action_flags, action_name, flags_to_clear) do { \
-        action_flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,         \
+        action_flags = pcmk__clear_flags_as(__func__, __LINE__,             \
                                             LOG_TRACE,                      \
                                             "Action", action_name,          \
                                             (action_flags),                 \
@@ -101,28 +109,28 @@
     } while (0)
 
 #define pe__set_order_flags(order_flags, flags_to_set) do {                 \
-        order_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+        order_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                          "Ordering", "constraint",          \
                                          order_flags, (flags_to_set),       \
                                          #flags_to_set);                    \
     } while (0)
 
 #define pe__clear_order_flags(order_flags, flags_to_clear) do {               \
-        order_flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+        order_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                            "Ordering", "constraint",          \
                                            order_flags, (flags_to_clear),     \
                                            #flags_to_clear);                  \
     } while (0)
 
 #define pe__set_graph_flags(graph_flags, gr_action, flags_to_set) do {      \
-        graph_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,            \
+        graph_flags = pcmk__set_flags_as(__func__, __LINE__,                \
                                          LOG_TRACE, "Graph",                \
                                          (gr_action)->uuid, graph_flags,    \
                                          (flags_to_set), #flags_to_set);    \
     } while (0)
 
 #define pe__clear_graph_flags(graph_flags, gr_action, flags_to_clear) do {     \
-        graph_flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,             \
+        graph_flags = pcmk__clear_flags_as(__func__, __LINE__,                 \
                                            LOG_TRACE, "Graph",                 \
                                            (gr_action)->uuid, graph_flags,     \
                                            (flags_to_clear), #flags_to_clear); \
@@ -149,7 +157,7 @@ extern uint32_t pe_wo;
             } else {                            \
                 pe_warn(fmt);                   \
             }                                   \
-            pe_wo = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,   \
+            pe_wo = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,       \
                                       "Warn-once", "logging", pe_wo,        \
                                       (pe_wo_bit), #pe_wo_bit);             \
         }                                       \
@@ -382,7 +390,7 @@ void pe__show_node_weights_as(const char *file, const char *function,
                               const char *comment, GHashTable *nodes);
 
 #define pe__show_node_weights(level, rsc, text, nodes)              \
-        pe__show_node_weights_as(__FILE__, __FUNCTION__, __LINE__,  \
+        pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
                                  (level), (rsc), (text), (nodes))
 
 /* Sorting functions */
@@ -523,8 +531,12 @@ void trigger_unfencing(
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
 void pe_action_set_flag_reason(const char *function, long line, pe_action_t *action, pe_action_t *reason, const char *text, enum pe_action_flags flags, bool overwrite);
 
-#define pe_action_required(action, reason, text) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, text, pe_action_optional, FALSE)
-#define pe_action_implies(action, reason, flag) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, NULL, flag, FALSE)
+#define pe_action_required(action, reason, text)    \
+    pe_action_set_flag_reason(__func__, __LINE__, action, reason, text, \
+                              pe_action_optional, FALSE)
+#define pe_action_implies(action, reason, flag)     \
+    pe_action_set_flag_reason(__func__, __LINE__, action, reason, NULL, \
+                              flag, FALSE)
 
 void pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);

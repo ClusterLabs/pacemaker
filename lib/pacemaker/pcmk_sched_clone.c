@@ -668,7 +668,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                                                     (pe_weights_rollback | pe_weights_positive));
     }
 
-    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
@@ -891,7 +891,7 @@ clone_create_pseudo_actions(
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
-        update_action_flags(started, pe_action_runnable, __FUNCTION__, __LINE__);
+        update_action_flags(started, pe_action_runnable, __func__, __LINE__);
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
@@ -903,7 +903,8 @@ clone_create_pseudo_actions(
     stopped = create_pseudo_resource_op(rsc, RSC_STOPPED, !child_stopping, TRUE, data_set);
     stopped->priority = INFINITY;
     if (allow_dependent_migrations) {
-        update_action_flags(stop, pe_action_migrate_runnable, __FUNCTION__, __LINE__);
+        update_action_flags(stop, pe_action_migrate_runnable, __func__,
+                            __LINE__);
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {
@@ -1202,7 +1203,7 @@ clone_child_action(pe_action_t * action)
 }
 
 #define pe__clear_action_summary_flags(flags, action, flag) do {        \
-        flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+        flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                      "Action summary", action->rsc->id, \
                                      flags, flag, #flag);               \
     } while (0)

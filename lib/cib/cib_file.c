@@ -37,7 +37,7 @@ typedef struct cib_file_opaque_s {
 } cib_file_opaque_t;
 
 #define cib_set_file_flags(cibfile, flags_to_set) do {                  \
-        (cibfile)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,   \
+        (cibfile)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
                                               LOG_TRACE, "CIB file",    \
                                               cibfile->filename,        \
                                               (cibfile)->flags,         \
@@ -46,7 +46,7 @@ typedef struct cib_file_opaque_s {
     } while (0)
 
 #define cib_clear_file_flags(cibfile, flags_to_clear) do {              \
-        (cibfile)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, \
+        (cibfile)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
                                                 LOG_TRACE, "CIB file",  \
                                                 cibfile->filename,      \
                                                 (cibfile)->flags,       \

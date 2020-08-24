@@ -297,7 +297,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
     xmlNode *query;
 
     /* Build the query XML */
-    query = create_xml_node(NULL, __FUNCTION__);
+    query = create_xml_node(NULL, __func__);
     if (query == NULL) {
         return -ENOMEM;
     }

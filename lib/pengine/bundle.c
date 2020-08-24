@@ -1022,7 +1022,7 @@ pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
 }
 
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
-        flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,       \
+        flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
                                    "Bundle mount", ID(mount_xml), flags,    \
                                    (flags_to_set), #flags_to_set);          \
     } while (0)

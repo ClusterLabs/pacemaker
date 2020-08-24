@@ -42,7 +42,7 @@ stonith_send_broadcast_history(xmlNode *history,
                                const char *target)
 {
     xmlNode *bcast = create_xml_node(NULL, "stonith_command");
-    xmlNode *data = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *data = create_xml_node(NULL, __func__);
 
     if (target) {
         crm_xml_add(data, F_STONITH_TARGET, target);

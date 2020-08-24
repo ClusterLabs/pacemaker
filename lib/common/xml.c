@@ -97,7 +97,7 @@ pcmk__tracking_xml_changes(xmlNode *xml, bool lazy)
         } else if(rc >= ((max) - (offset))) {                           \
             char *tmp = NULL;                                           \
             (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
-            tmp = realloc_safe((buffer), (max));                        \
+            tmp = pcmk__realloc((buffer), (max));                       \
             CRM_ASSERT(tmp);                                            \
             (buffer) = tmp;                                             \
         } else {                                                        \
@@ -114,7 +114,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 
         if ((*buffer) == NULL || spaces >= ((*max) - (*offset))) {
             (*max) = QB_MAX(CHUNK_SIZE, (*max) * 2);
-            (*buffer) = realloc_safe((*buffer), (*max));
+            (*buffer) = pcmk__realloc((*buffer), (*max));
         }
         memset((*buffer) + (*offset), ' ', spaces);
         (*offset) += spaces;
@@ -1685,7 +1685,7 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    xml_log_patchset(LOG_TRACE, __FUNCTION__, patchset);
+    xml_log_patchset(LOG_TRACE, __func__, patchset);
 
     crm_element_value_int(patchset, "format", &format);
     if(check_version) {
@@ -2192,7 +2192,7 @@ string2xml(const char *input)
     }
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
+        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
         /*
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
@@ -2237,7 +2237,7 @@ stdin2xml(void)
     xmlNode *xml_obj = NULL;
 
     do {
-        xml_buffer = realloc_safe(xml_buffer, data_length + XML_BUFFER_SIZE);
+        xml_buffer = pcmk__realloc(xml_buffer, data_length + XML_BUFFER_SIZE);
         read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
         data_length += read_chars;
     } while (read_chars == XML_BUFFER_SIZE);
@@ -2282,10 +2282,10 @@ decompress_file(const char *filename)
     }
 
     rc = BZ_OK;
-    // cppcheck seems not to understand the abort-logic in realloc_safe
+    // cppcheck seems not to understand the abort-logic in pcmk__realloc
     // cppcheck-suppress memleak
     while (rc == BZ_OK) {
-        buffer = realloc_safe(buffer, XML_BUFFER_SIZE + length + 1);
+        buffer = pcmk__realloc(buffer, XML_BUFFER_SIZE + length + 1);
         read_len = BZ2_bzRead(&rc, bz_file, buffer + length, XML_BUFFER_SIZE);
 
         crm_trace("Read %ld bytes from file: %d", (long)read_len, rc);
@@ -2384,7 +2384,7 @@ filename2xml(const char *filename)
 
     last_error = xmlCtxtGetLastError(ctxt);
     if (last_error && last_error->code != XML_ERR_OK) {
-        /* crm_abort(__FILE__,__FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
+        /* crm_abort(__FILE__,__func__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
         /*
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
          * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
@@ -2612,7 +2612,7 @@ crm_xml_escape_shuffle(char *text, int start, int *length, const char *replace)
     int offset = strlen(replace) - 1;   /* We have space for 1 char already */
 
     *length += offset;
-    text = realloc_safe(text, *length);
+    text = pcmk__realloc(text, *length);
 
     for (lpc = (*length) - 1; lpc > (start + offset); lpc--) {
         text[lpc] = text[lpc - offset];
@@ -4234,7 +4234,7 @@ find_xml_children(xmlNode ** children, xmlNode * root,
 
     } else {
         if (*children == NULL) {
-            *children = create_xml_node(NULL, __FUNCTION__);
+            *children = create_xml_node(NULL, __func__);
         }
         add_node_copy(*children, root);
         match_found = 1;
@@ -4415,7 +4415,7 @@ crm_xml_init(void)
     if(init) {
         init = FALSE;
         /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * realloc_safe()s and it can take upwards of 18 seconds (yes, seconds)
+         * pcmk__realloc()s and it can take upwards of 18 seconds (yes, seconds)
          * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
          * less than 1 second.
          */

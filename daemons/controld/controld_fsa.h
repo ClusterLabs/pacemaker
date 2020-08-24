@@ -465,7 +465,7 @@ extern uint64_t fsa_input_register;
 extern uint64_t fsa_actions;
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                     \
-        fsa_input_register = pcmk__set_flags_as(__FUNCTION__, __LINE__,     \
+        fsa_input_register = pcmk__set_flags_as(__func__, __LINE__,         \
                                                 LOG_TRACE,                  \
                                                 "FSA input", "controller",  \
                                                 fsa_input_register,         \
@@ -474,7 +474,7 @@ extern uint64_t fsa_actions;
     } while (0)
 
 #define controld_clear_fsa_input_flags(flags_to_clear) do {                 \
-        fsa_input_register = pcmk__clear_flags_as(__FUNCTION__, __LINE__,   \
+        fsa_input_register = pcmk__clear_flags_as(__func__, __LINE__,       \
                                                   LOG_TRACE,                \
                                                   "FSA input", "controller",\
                                                   fsa_input_register,       \
@@ -483,7 +483,7 @@ extern uint64_t fsa_actions;
     } while (0)
 
 #define controld_set_fsa_action_flags(flags_to_set) do {                    \
-        fsa_actions = pcmk__set_flags_as(__FUNCTION__, __LINE__,            \
+        fsa_actions = pcmk__set_flags_as(__func__, __LINE__,                \
                                          LOG_DEBUG,                         \
                                          "FSA action", "controller",        \
                                          fsa_actions, (flags_to_set),       \
@@ -491,7 +491,7 @@ extern uint64_t fsa_actions;
     } while (0)
 
 #define controld_clear_fsa_action_flags(flags_to_clear) do {                \
-        fsa_actions = pcmk__clear_flags_as(__FUNCTION__, __LINE__,          \
+        fsa_actions = pcmk__clear_flags_as(__func__, __LINE__,              \
                                            LOG_DEBUG,                       \
                                            "FSA action", "controller",      \
                                            fsa_actions, (flags_to_clear),   \

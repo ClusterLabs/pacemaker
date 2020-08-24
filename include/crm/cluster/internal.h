@@ -13,14 +13,14 @@
 #  include <crm/cluster.h>
 
 #define pcmk__set_peer_flags(peer, flags_to_set) do {                         \
-        (peer)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+        (peer)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                            "Peer", (peer)->uname,             \
                                            (peer)->flags, (flags_to_set),     \
                                            #flags_to_set);                    \
     } while (0)
 
 #define pcmk__clear_peer_flags(peer, flags_to_clear) do {                     \
-        (peer)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,          \
+        (peer)->flags = pcmk__clear_flags_as(__func__, __LINE__,              \
                                              LOG_TRACE,                       \
                                              "Peer", (peer)->uname,           \
                                              (peer)->flags, (flags_to_clear), \

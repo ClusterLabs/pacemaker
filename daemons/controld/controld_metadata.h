@@ -32,13 +32,13 @@ struct ra_metadata_s {
 };
 
 #define controld_set_ra_flags(ra_md, ra_key, flags_to_set) do {             \
-        (ra_md)->ra_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,      \
+        (ra_md)->ra_flags = pcmk__set_flags_as(__func__, __LINE__,          \
             LOG_TRACE, "Resource agent", ra_key,                            \
             (ra_md)->ra_flags, (flags_to_set), #flags_to_set);              \
     } while (0)
 
 #define controld_set_ra_param_flags(ra_param, flags_to_set) do {            \
-        (ra_param)->rap_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,  \
+        (ra_param)->rap_flags = pcmk__set_flags_as(__func__, __LINE__,      \
             LOG_TRACE, "Resource agent parameter", (ra_param)->rap_name,    \
             (ra_param)->rap_flags, (flags_to_set), #flags_to_set);          \
     } while (0)

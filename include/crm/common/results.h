@@ -41,7 +41,7 @@ extern "C" {
 
 #  define CRM_ASSERT(expr) do {                                              \
         if(__unlikely((expr) == FALSE)) {                                    \
-            crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+            crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
             abort(); /* Redundant but it makes static analyzers happy */     \
         }                                                                    \
     } while(0)

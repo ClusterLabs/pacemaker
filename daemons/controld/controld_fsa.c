@@ -137,12 +137,12 @@ do_log(long long action, enum crmd_fsa_cause cause,
     if (msg_data->data_type == fsa_dt_ha_msg) {
         ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
 
-        crm_log_xml_debug(input->msg, __FUNCTION__);
+        crm_log_xml_debug(input->msg, __func__);
 
     } else if (msg_data->data_type == fsa_dt_xml) {
         xmlNode *input = fsa_typed_data(msg_data->data_type);
 
-        crm_log_xml_debug(input, __FUNCTION__);
+        crm_log_xml_debug(input, __func__);
 
     } else if (msg_data->data_type == fsa_dt_lrm) {
         lrmd_event_data_t *input = fsa_typed_data(msg_data->data_type);
@@ -174,7 +174,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data = calloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
         fsa_data->fsa_cause = C_FSA_INTERNAL;
-        fsa_data->origin = __FUNCTION__;
+        fsa_data->origin = __func__;
         fsa_data->data_type = fsa_dt_none;
         fsa_message_queue = g_list_append(fsa_message_queue, fsa_data);
         fsa_data = NULL;
@@ -439,7 +439,8 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             crm_err("Action %s not supported "CRM_XS" 0x%llx",
                     fsa_action2string(fsa_actions),
                     (unsigned long long) fsa_actions);
-            register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL, __FUNCTION__);
+            register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,
+                                   __func__);
         }
     }
 }
@@ -456,7 +457,8 @@ log_fsa_input(fsa_data_t * stored_msg)
         crm_trace("FSA processing input from %s", stored_msg->origin);
 
     } else {
-        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg, __FUNCTION__);
+        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg,
+                                                      __func__);
 
         crm_trace("FSA processing XML message from %s", stored_msg->origin);
         crm_log_xml_trace(ha_input->xml, "FSA message data");
@@ -574,7 +576,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
-        populate_cib_nodes(node_update_quick|node_update_all, __FUNCTION__);
+        populate_cib_nodes(node_update_quick|node_update_all, __func__);
     }
 
     switch (next_state) {

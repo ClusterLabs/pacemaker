@@ -294,7 +294,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
         key = pcmk__op_key(rsc->id, task, interval_ms);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
         required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
-        pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
+        pe_action_set_flag_reason(__func__, __LINE__, required, NULL,
                                   "resource definition change", pe_action_optional, TRUE);
 
         trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
@@ -335,7 +335,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
              * Recurring ops will be detected independently
              */
             required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
-            pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
+            pe_action_set_flag_reason(__func__, __LINE__, required, NULL,
                                       "resource definition change", pe_action_optional, TRUE);
         }
     }
@@ -1548,7 +1548,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", FALSE, data_set);
     update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
-                        __FUNCTION__, __LINE__);
+                        __func__, __LINE__);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
      * it is restarted, so we always order pseudo-fencing after stop, not start
@@ -1833,7 +1833,8 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
             order_actions(lh_action, rh_action_iter, type);
 
         } else if (type & pe_order_implies_then) {
-            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
+            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear,
+                                __func__, __LINE__);
             crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
         } else {
             crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);
@@ -2893,7 +2894,7 @@ pcmk__log_transition_summary(const char *filename)
         crm_notice("Calculated transition %d, saving inputs in %s",
                    transition_id, filename);
     }
-    if (crm_config_error) {
+    if (pcmk__config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
     }

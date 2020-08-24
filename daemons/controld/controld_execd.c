@@ -381,7 +381,8 @@ do_lrm_control(long long action,
     }
 
     if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action), __FUNCTION__);
+        crm_err("Unexpected action %s in %s", fsa_action2string(action),
+                __func__);
     }
 }
 
@@ -538,7 +539,7 @@ build_parameter_list(const lrmd_event_data_t *op,
             crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
 
             len += strlen(param->rap_name) + 2; // include spaces around
-            list = realloc_safe(list, len + 1); // include null terminator
+            list = pcmk__realloc(list, len + 1); // include null terminator
 
             // spaces before and after make parsing simpler
             sprintf(list + start, " %s ", param->rap_name);
@@ -794,10 +795,13 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
                 crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
             }
         }
-        build_operation_update(xml_rsc, &(entry->rsc), entry->failed, lrm_state->node_name, __FUNCTION__);
-        build_operation_update(xml_rsc, &(entry->rsc), entry->last, lrm_state->node_name, __FUNCTION__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->failed, lrm_state->node_name,
+                               __func__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->last, lrm_state->node_name,
+                               __func__);
         for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIter->next) {
-            build_operation_update(xml_rsc, &(entry->rsc), gIter->data, lrm_state->node_name, __FUNCTION__);
+            build_operation_update(xml_rsc, &(entry->rsc), gIter->data, lrm_state->node_name,
+                                   __func__);
         }
     }
 
@@ -816,7 +820,7 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     CRM_CHECK(peer != NULL, return NULL);
 
     xml_state = create_node_state_update(peer, update_flags, NULL,
-                                         __FUNCTION__);
+                                         __func__);
     if (xml_state == NULL) {
         return NULL;
     }
@@ -2088,7 +2092,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     peer = crm_get_peer(0, fsa_our_uname);
     update = create_node_state_update(peer, node_update_none, NULL,
-                                      __FUNCTION__);
+                                      __func__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
@@ -2097,7 +2101,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, fsa_our_uname, __FUNCTION__);
+    build_operation_update(iter, rsc, op, fsa_our_uname, __func__);
     reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "[direct ACK]");
@@ -2457,7 +2461,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
 
     crm_xml_add(iter, XML_ATTR_UUID,  uuid);
     crm_xml_add(iter, XML_ATTR_UNAME, node_name);
-    crm_xml_add(iter, XML_ATTR_ORIGIN, __FUNCTION__);
+    crm_xml_add(iter, XML_ATTR_ORIGIN, __func__);
 
     iter = create_xml_node(iter, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, uuid);
@@ -2466,7 +2470,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, node_name, __FUNCTION__);
+    build_operation_update(iter, rsc, op, node_name, __func__);
 
     if (rsc) {
         const char *container = NULL;
@@ -2499,7 +2503,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
         goto cleanup;
     }
 
-    crm_log_xml_trace(update, __FUNCTION__);
+    crm_log_xml_trace(update, __func__);
 
     /* make it an asynchronous call and be done with it
      *

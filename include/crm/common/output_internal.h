@@ -29,6 +29,12 @@ extern "C" {
 
 #  define PCMK__API_VERSION "2.2"
 
+#if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
+#  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
+#else
+#  define PCMK__OUTPUT_ARGS(ARGS...)
+#endif
+
 typedef struct pcmk__output_s pcmk__output_t;
 
 /*!

@@ -656,13 +656,16 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             action->runnable = TRUE;
 #endif
         } else if (quorum_policy == no_quorum_stop) {
-            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "no quorum", pe_action_runnable, TRUE);
+            pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
+                                      "no quorum", pe_action_runnable, TRUE);
             crm_debug("%s\t%s (cancelled : quorum)", action->node->details->uname, action->uuid);
 
         } else if (quorum_policy == no_quorum_freeze) {
             pe_rsc_trace(rsc, "Check resource is already active: %s %s %s %s", rsc->id, action->uuid, role2text(rsc->next_role), role2text(rsc->role));
             if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
-                pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "quorum freeze", pe_action_runnable, TRUE);
+                pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
+                                          "quorum freeze", pe_action_runnable,
+                                          TRUE);
                 pe_rsc_debug(rsc, "%s\t%s (cancelled : quorum freeze)",
                              action->node->details->uname, action->uuid);
             }

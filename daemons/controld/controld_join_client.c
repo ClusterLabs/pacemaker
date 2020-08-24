@@ -37,7 +37,7 @@ update_dc_expected(xmlNode *msg)
     if (fsa_our_dc && crm_is_true(crm_element_value(msg, F_CRM_DC_LEAVING))) {
         crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
 
-        crm_update_peer_expected(__FUNCTION__, dc_node, CRMD_JOINSTATE_DOWN);
+        crm_update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
     }
 }
 
@@ -165,7 +165,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     if(rc != pcmk_ok || output == NULL) {
         crm_err("Could not retrieve version details for join-%s: %s (%d)",
                 join_id, pcmk_strerror(rc), rc);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
 
     } else if (fsa_our_dc == NULL) {
         crm_debug("Membership is in flux, not continuing join-%s", join_id);
@@ -298,7 +298,8 @@ do_cl_join_finalize_respond(long long action,
         free_xml(reply);
 
         if (AM_I_DC == FALSE) {
-            register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
+            register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE,
+                                   __func__);
         }
 
         free_xml(tmp1);

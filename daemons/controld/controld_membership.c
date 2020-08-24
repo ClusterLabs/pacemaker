@@ -33,7 +33,7 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *node = value;
 
     if (crm_is_peer_active(node) == FALSE) {
-        crm_update_peer_join(__FUNCTION__, node, crm_join_none);
+        crm_update_peer_join(__func__, node, crm_join_none);
 
         if(node && node->uname) {
             if (pcmk__str_eq(fsa_our_uname, node->uname, pcmk__str_casei)) {
@@ -47,7 +47,7 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
         }
 
         if (fsa_state == S_INTEGRATION || fsa_state == S_FINALIZE_JOIN) {
-            check_join_state(fsa_state, __FUNCTION__);
+            check_join_state(fsa_state, __func__);
         }
         if(node && node->uuid) {
             fail_incompletable_actions(transition_graph, node->uuid);
@@ -70,7 +70,7 @@ post_cache_update(int instance)
 
     if (AM_I_DC) {
         populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
-                           node_update_expected, __FUNCTION__);
+                           node_update_expected, __func__);
     }
 
     /*
@@ -396,7 +396,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     ever_had_quorum |= quorum;
 
     if(ever_had_quorum && quorum == FALSE && no_quorum_suicide_escalation) {
-        pcmk_panic(__FUNCTION__);
+        pcmk__panic(__func__);
     }
 
     if (AM_I_DC && (force_update || fsa_has_quorum != quorum)) {

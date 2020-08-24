@@ -101,7 +101,7 @@ expand_node_list(GListPtr list, char **uname, char **metal)
             existing_len = strlen(node_list);
         }
 //            crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
-        node_list = realloc_safe(node_list, len + existing_len);
+        node_list = pcmk__realloc(node_list, len + existing_len);
         sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
 
         if(metal) {
@@ -120,7 +120,7 @@ expand_node_list(GListPtr list, char **uname, char **metal)
                 continue;
             }
             len = 2 + strlen(node->details->uname);
-            metal_list = realloc_safe(metal_list, len + existing_len);
+            metal_list = pcmk__realloc(metal_list, len + existing_len);
             sprintf(metal_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
         }
     }
@@ -192,7 +192,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
             }
 
             crm_trace("Adding %s (%dc) at offset %d", rsc_id, len - 2, existing_len);
-            *rsc_list = realloc_safe(*rsc_list, len + existing_len);
+            *rsc_list = pcmk__realloc(*rsc_list, len + existing_len);
             sprintf(*rsc_list + existing_len, "%s%s", existing_len == 0 ? "":" ", rsc_id);
         }
 
@@ -209,7 +209,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
             }
 
             crm_trace("Adding %s (%dc) at offset %d", uname, len - 2, existing_len);
-            *node_list = realloc_safe(*node_list, len + existing_len);
+            *node_list = pcmk__realloc(*node_list, len + existing_len);
             sprintf(*node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", uname);
         }
     }
@@ -347,8 +347,9 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
                           pcmk_is_set(start->flags, pe_action_optional),
                           TRUE, data_set);
 
-        update_action_flags(n_data->pre, pe_action_pseudo, __FUNCTION__, __LINE__);
-        update_action_flags(n_data->pre, pe_action_runnable, __FUNCTION__, __LINE__);
+        update_action_flags(n_data->pre, pe_action_pseudo, __func__, __LINE__);
+        update_action_flags(n_data->pre, pe_action_runnable, __func__,
+                            __LINE__);
 
         add_hash_param(n_data->pre->meta, "notify_type", "pre");
         add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
@@ -362,8 +363,10 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
                                          pcmk_is_set(start->flags, pe_action_optional),
                                          TRUE, data_set);
 
-        update_action_flags(n_data->pre_done, pe_action_pseudo, __FUNCTION__, __LINE__);
-        update_action_flags(n_data->pre_done, pe_action_runnable, __FUNCTION__, __LINE__);
+        update_action_flags(n_data->pre_done, pe_action_pseudo, __func__,
+                            __LINE__);
+        update_action_flags(n_data->pre_done, pe_action_runnable, __func__,
+                            __LINE__);
 
         add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
         add_hash_param(n_data->pre_done->meta, "notify_operation", n_data->action);
@@ -383,11 +386,14 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
                                      TRUE, data_set);
 
         n_data->post->priority = INFINITY;
-        update_action_flags(n_data->post, pe_action_pseudo, __FUNCTION__, __LINE__);
+        update_action_flags(n_data->post, pe_action_pseudo, __func__,
+                            __LINE__);
         if (pcmk_is_set(end->flags, pe_action_runnable)) {
-            update_action_flags(n_data->post, pe_action_runnable, __FUNCTION__, __LINE__);
+            update_action_flags(n_data->post, pe_action_runnable, __func__,
+                                __LINE__);
         } else {
-            update_action_flags(n_data->post, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
+            update_action_flags(n_data->post, pe_action_runnable | pe_action_clear,
+                                __func__, __LINE__);
         }
 
         add_hash_param(n_data->post->meta, "notify_type", "post");
@@ -403,11 +409,14 @@ create_notification_boundaries(pe_resource_t * rsc, const char *action, pe_actio
                                           TRUE, data_set);
 
         n_data->post_done->priority = INFINITY;
-        update_action_flags(n_data->post_done, pe_action_pseudo, __FUNCTION__, __LINE__);
+        update_action_flags(n_data->post_done, pe_action_pseudo, __func__,
+                            __LINE__);
         if (pcmk_is_set(end->flags, pe_action_runnable)) {
-            update_action_flags(n_data->post_done, pe_action_runnable, __FUNCTION__, __LINE__);
+            update_action_flags(n_data->post_done, pe_action_runnable,
+                                __func__, __LINE__);
         } else {
-            update_action_flags(n_data->post_done, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
+            update_action_flags(n_data->post_done, pe_action_runnable | pe_action_clear,
+                                __func__, __LINE__);
         }
 
         add_hash_param(n_data->post_done->meta, "notify_type", "post");
@@ -642,13 +651,17 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
     add_notify_env_free(n_data, "notify_all_uname", node_list);
 
     if (required && n_data->pre) {
-        update_action_flags(n_data->pre, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
-        update_action_flags(n_data->pre_done, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
+        update_action_flags(n_data->pre, pe_action_optional | pe_action_clear,
+                            __func__, __LINE__);
+        update_action_flags(n_data->pre_done, pe_action_optional | pe_action_clear,
+                            __func__, __LINE__);
     }
 
     if (required && n_data->post) {
-        update_action_flags(n_data->post, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
-        update_action_flags(n_data->post_done, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
+        update_action_flags(n_data->post, pe_action_optional | pe_action_clear,
+                            __func__, __LINE__);
+        update_action_flags(n_data->post_done, pe_action_optional | pe_action_clear,
+                            __func__, __LINE__);
     }
     return required;
 }

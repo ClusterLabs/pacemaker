@@ -372,11 +372,11 @@ stonith_device_execute(stonith_device_t * device)
 
     if(pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT, pcmk__str_casei)) {
         if(pcmk__str_eq(cmd->action, "reboot", pcmk__str_casei)) {
-            pcmk_panic(__FUNCTION__);
+            pcmk__panic(__func__);
             goto done;
 
         } else if(pcmk__str_eq(cmd->action, "off", pcmk__str_casei)) {
-            pcmk_panic(__FUNCTION__);
+            pcmk__panic(__func__);
             goto done;
 
         } else {
@@ -1670,7 +1670,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                       check_type, dev->id, search->host, search->action);
 
-            schedule_internal_command(__FUNCTION__, dev, "list", NULL,
+            schedule_internal_command(__func__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
 
             /* we'll respond to this search request async in the cb */
@@ -1684,7 +1684,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
     } else if (pcmk__str_eq(check_type, "status", pcmk__str_casei)) {
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
                   check_type, dev->id, search->host, search->action);
-        schedule_internal_command(__FUNCTION__, dev, "status", search->host,
+        schedule_internal_command(__func__, dev, "status", search->host,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
         return;
@@ -1900,7 +1900,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     GListPtr lpc = NULL;
 
     /* Pack the results into XML */
-    list = create_xml_node(NULL, __FUNCTION__);
+    list = create_xml_node(NULL, __func__);
     crm_xml_add(list, F_STONITH_TARGET, query->target);
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         stonith_device_t *device = g_hash_table_lookup(device_list, lpc->data);
@@ -2345,7 +2345,7 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
 
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
-    crm_xml_add(reply, "st_origin", __FUNCTION__);
+    crm_xml_add(reply, "st_origin", __func__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
     crm_xml_add(reply, "st_output", output);
     crm_xml_add_int(reply, F_STONITH_RC, rc);
@@ -2395,7 +2395,7 @@ stonith_construct_async_reply(async_command_t * cmd, const char *output, xmlNode
     crm_trace("Creating a basic reply");
     reply = create_xml_node(NULL, T_STONITH_REPLY);
 
-    crm_xml_add(reply, "st_origin", __FUNCTION__);
+    crm_xml_add(reply, "st_origin", __func__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
 
     crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);

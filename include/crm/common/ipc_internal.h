@@ -160,28 +160,28 @@ struct pcmk__client_s {
 };
 
 #define pcmk__set_client_flags(client, flags_to_set) do {               \
-        (client)->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,    \
+        (client)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
             LOG_TRACE,                                                  \
             "Client", ((client)->name? (client)->name : "client"),      \
             (client)->flags, (flags_to_set), #flags_to_set);            \
     } while (0)
 
 #define pcmk__clear_client_flags(client, flags_to_clear) do {           \
-        (client)->flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__,  \
+        (client)->flags = pcmk__clear_flags_as(__func__, __LINE__,      \
             LOG_TRACE,                                                  \
             "Client", ((client)->name? (client)->name : "client"),      \
             (client)->flags, (flags_to_clear), #flags_to_clear);        \
     } while (0)
 
 #define pcmk__set_ipc_flags(ipc_flags, ipc_name, flags_to_set) do {         \
-        ipc_flags = pcmk__set_flags_as(__FUNCTION__, __LINE__, LOG_TRACE,   \
+        ipc_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,       \
                                        "IPC", (ipc_name),                   \
                                        (ipc_flags), (flags_to_set),         \
                                        #flags_to_set);                      \
     } while (0)
 
 #define pcmk__clear_ipc_flags(ipc_flags, ipc_name, flags_to_clear) do {     \
-        ipc_flags = pcmk__clear_flags_as(__FUNCTION__, __LINE__, LOG_TRACE, \
+        ipc_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                          "IPC", (ipc_name),                 \
                                          (ipc_flags), (flags_to_clear),     \
                                          #flags_to_clear);                  \
@@ -207,7 +207,7 @@ bool pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 void pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
                            uint32_t request, uint32_t flags, const char *tag);
 #define pcmk__ipc_send_ack(c, req, flags, tag) \
-    pcmk__ipc_send_ack_as(__FUNCTION__, __LINE__, (c), (req), (flags), (tag))
+    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag))
 
 int pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
                           uint32_t max_send_size,

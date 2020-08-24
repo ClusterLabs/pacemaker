@@ -7,10 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <libxml/tree.h>
+
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/internal.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/strings_internal.h>
 #include <libxml/tree.h>
 

@@ -11,6 +11,7 @@
 
 #include <crm/crm.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -87,8 +88,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         gboolean is_repoke = FALSE;
         gboolean process = TRUE;
 
-        crm_config_error = FALSE;
-        crm_config_warning = FALSE;
+        pcmk__config_error = false;
+        pcmk__config_warning = false;
 
         was_processing_error = FALSE;
         was_processing_warning = FALSE;
@@ -159,8 +160,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
         crm_xml_add_int(reply, "graph-errors", was_processing_error);
         crm_xml_add_int(reply, "graph-warnings", was_processing_warning);
-        crm_xml_add_int(reply, "config-errors", crm_config_error);
-        crm_xml_add_int(reply, "config-warnings", crm_config_warning);
+        crm_xml_add_int(reply, "config-errors", pcmk__config_error);
+        crm_xml_add_int(reply, "config-warnings", pcmk__config_warning);
 
         if (pcmk__ipc_send_xml(sender, 0, reply,
                                crm_ipc_server_event) != pcmk_rc_ok) {

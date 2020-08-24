@@ -319,7 +319,7 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
     }
 
     dbus_message_iter_init(reply, &args);
-    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __FUNCTION__, __LINE__)) {
+    if(!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY, __func__, __LINE__)) {
         crm_err("Invalid reply from %s for %s", data->target, data->object);
         goto cleanup;
     }
@@ -331,7 +331,7 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
         DBusBasicValue name;
         DBusBasicValue value;
 
-        if(!pcmk_dbus_type_check(reply, &dict, DBUS_TYPE_DICT_ENTRY, __FUNCTION__, __LINE__)) {
+        if(!pcmk_dbus_type_check(reply, &dict, DBUS_TYPE_DICT_ENTRY, __func__, __LINE__)) {
             dbus_message_iter_next (&dict);
             continue;
         }
@@ -350,7 +350,7 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
                     break;
                 case DBUS_TYPE_VARIANT:
                     dbus_message_iter_recurse(&sv, &v);
-                    if(pcmk_dbus_type_check(reply, &v, DBUS_TYPE_STRING, __FUNCTION__, __LINE__)) {
+                    if(pcmk_dbus_type_check(reply, &v, DBUS_TYPE_STRING, __func__, __LINE__)) {
                         dbus_message_iter_get_basic(&v, &value);
 
                         crm_trace("Property %s[%s] is '%s'", data->object, name.str, value.str);
@@ -368,7 +368,8 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
                     }
                     break;
                 default:
-                    pcmk_dbus_type_check(reply, &sv, DBUS_TYPE_STRING, __FUNCTION__, __LINE__);
+                    pcmk_dbus_type_check(reply, &sv, DBUS_TYPE_STRING,
+                                         __func__, __LINE__);
             }
             dbus_message_iter_next (&sv);
         }

@@ -9,7 +9,7 @@
 
 #include <glib.h>
 
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/curses_internal.h>
 #include <crm/pengine/pe_types.h>
 #include <crm/stonith-ng.h>

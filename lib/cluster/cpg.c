@@ -456,7 +456,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
                      left_list[i].nodeid, left_list[i].pid,
                      cpgreason2str(left_list[i].reason));
             if (peer) {
-                crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg,
+                crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                      OFFLINESTATUS);
             }
         } else if (left_list[i].nodeid == local_nodeid) {
@@ -497,7 +497,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
         /* If the caller left auto-reaping enabled, this will also update the
          * state to member.
          */
-        peer = crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+        peer = crm_update_peer_proc(__func__, peer, crm_proc_cpg,
+                                    ONLINESTATUS);
 
         if (peer && peer->state && strcmp(peer->state, CRM_NODE_MEMBER)) {
             /* The node is a CPG member, but we currently think it's not a
@@ -517,7 +518,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
                 // If it persists for more than a minute, update the state
                 crm_warn("Node %u is member of group %s but was believed offline",
                          member_list[i].nodeid, groupName->value);
-                crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0);
+                crm_update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
             }
         }
 
@@ -543,7 +544,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     uint32_t id = 0;
     crm_node_t *peer = NULL;
     cpg_handle_t handle = 0;
-    const char *message_name = pcmk_message_name(crm_system_name);
+    const char *message_name = pcmk__message_name(crm_system_name);
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
@@ -626,7 +627,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     }
 
     peer = crm_get_peer(id, NULL);
-    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+    crm_update_peer_proc(__func__, peer, crm_proc_cpg, ONLINESTATUS);
     return TRUE;
 }
 
@@ -722,7 +723,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     msg->header.size = sizeof(AIS_Message) + msg->size;
 
     if (msg->size < CRM_BZ2_THRESHOLD) {
-        msg = realloc_safe(msg, msg->header.size);
+        msg = pcmk__realloc(msg, msg->header.size);
         memcpy(msg->data, data, msg->size);
 
     } else {
@@ -734,16 +735,16 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
                            &compressed, &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(AIS_Message) + new_size;
-            msg = realloc_safe(msg, msg->header.size);
+            msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
 
             msg->is_compressed = TRUE;
             msg->compressed_size = new_size;
 
         } else {
-            // cppcheck seems not to understand the abort logic in realloc_safe
+            // cppcheck seems not to understand the abort logic in pcmk__realloc
             // cppcheck-suppress memleak
-            msg = realloc_safe(msg, msg->header.size);
+            msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, data, msg->size);
         }
 
@@ -777,7 +778,7 @@ text2msg_type(const char *text)
     int type = crm_msg_none;
 
     CRM_CHECK(text != NULL, return type);
-    text = pcmk_message_name(text);
+    text = pcmk__message_name(text);
     if (pcmk__str_eq(text, "ais", pcmk__str_casei)) {
         type = crm_msg_ais;
     } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_casei)) {

@@ -212,7 +212,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
                 pe_order_implies_then, data_set);
 
         } else if (!pcmk_is_set(first_flags, pe_action_optional)) {
-            if (update_action_flags(then, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__)) {
+            if (update_action_flags(then, pe_action_optional | pe_action_clear, __func__, __LINE__)) {
                 pe__set_graph_flags(changed, first, pe_graph_updated_then);
             }
         }
@@ -248,7 +248,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
             pe_rsc_trace(first->rsc, "first unrunnable: %s (%d) then %s (%d)",
                          first->uuid, pcmk_is_set(first_flags, pe_action_optional),
                          then->uuid, pcmk_is_set(then_flags, pe_action_optional));
-            if (update_action_flags(first, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
+            if (update_action_flags(first, pe_action_runnable | pe_action_clear, __func__, __LINE__)) {
                 pe__set_graph_flags(changed, first, pe_graph_updated_first);
             }
         }
@@ -295,7 +295,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
             /* if the runnable before count for then exceeds the required number
              * of "before" runnable actions... mark then as runnable */
             if (then->runnable_before >= then->required_runnable_before) {
-                if (update_action_flags(then, pe_action_runnable, __FUNCTION__, __LINE__)) {
+                if (update_action_flags(then, pe_action_runnable, __func__, __LINE__)) {
                     pe__set_graph_flags(changed, first, pe_graph_updated_then);
                 }
             }
@@ -342,7 +342,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
 
         } else if (!pcmk_is_set(first_flags, pe_action_runnable)) {
             pe_rsc_trace(then->rsc, "then unrunnable: %s then %s", first->uuid, then->uuid);
-            if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
+            if (update_action_flags(then, pe_action_runnable | pe_action_clear, __func__, __LINE__)) {
                 pe__set_graph_flags(changed, first, pe_graph_updated_then);
             }
         }
@@ -414,7 +414,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         && (first_flags & pe_action_optional) == 0) {
         processed = TRUE;
         crm_trace("%s implies %s printed", first->uuid, then->uuid);
-        update_action_flags(then, pe_action_print_always, __FUNCTION__, __LINE__);  /* don't care about changed */
+        update_action_flags(then, pe_action_print_always, __func__, __LINE__);  /* don't care about changed */
     }
 
     if (pcmk_is_set(type, pe_order_implies_first_printed)
@@ -422,7 +422,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
 
         processed = TRUE;
         crm_trace("%s implies %s printed", then->uuid, first->uuid);
-        update_action_flags(first, pe_action_print_always, __FUNCTION__, __LINE__); /* don't care about changed */
+        update_action_flags(first, pe_action_print_always, __func__, __LINE__); /* don't care about changed */
     }
 
     if ((type & pe_order_implies_then
@@ -434,7 +434,7 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         && pcmk_is_set(first->rsc->flags, pe_rsc_block)
         && !pcmk_is_set(first->flags, pe_action_runnable)) {
 
-        if (update_action_flags(then, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__)) {
+        if (update_action_flags(then, pe_action_runnable | pe_action_clear, __func__, __LINE__)) {
             pe__set_graph_flags(changed, first, pe_graph_updated_then);
         }
 
@@ -466,7 +466,8 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
             continue;
         }
         if (pcmk_is_set(action->flags, pe_action_runnable)) {
-            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, reason_text, pe_action_runnable, FALSE);
+            pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
+                                      reason_text, pe_action_runnable, FALSE);
             update_colo_start_chain(action, data_set);
             update_action(action, data_set);
         }

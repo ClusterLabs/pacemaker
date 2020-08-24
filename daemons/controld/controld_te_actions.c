@@ -143,7 +143,7 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
-        crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
+        crm_update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
     }
 
     cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);
@@ -248,7 +248,7 @@ controld_record_action_timeout(crm_action_t *action)
                                          target_rc, te_uuid);
 
     xml_op = pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc,
-                                      target, __FUNCTION__, LOG_INFO);
+                                      target, __func__, LOG_INFO);
     lrmd_free_event(op);
 
     crm_log_xml_trace(xml_op, "Action timeout");
@@ -338,7 +338,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
             .fsa_input = I_NULL,
             .fsa_cause = C_FSA_INTERNAL,
             .actions = A_LRM_INVOKE,
-            .origin = __FUNCTION__,
+            .origin = __func__,
         };
 
         do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);

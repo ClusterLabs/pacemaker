@@ -84,13 +84,14 @@ do_ha_control(long long action,
             return;
         }
 
-        populate_cib_nodes(node_update_none, __FUNCTION__);
+        populate_cib_nodes(node_update_none, __func__);
         controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
         crm_info("Connected to the cluster");
     }
 
     if (action & ~(A_HA_CONNECT | A_HA_DISCONNECT)) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action), __FUNCTION__);
+        crm_err("Unexpected action %s in %s", fsa_action2string(action),
+                __func__);
     }
 }
 
@@ -728,7 +729,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");
-    if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk_locate_sbd()) {
+    if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
 
@@ -773,7 +774,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crmd_unpack_alerts(alerts);
 
     controld_set_fsa_input_flags(R_READ_CONFIG);
-    crm_trace("Triggering FSA: %s", __FUNCTION__);
+    crm_trace("Triggering FSA: %s", __func__);
     mainloop_set_trigger(fsa_source);
 
     g_hash_table_destroy(config_hash);

@@ -65,9 +65,14 @@ crm_extended_logging(int t, int e)
 #endif
 
 extern unsigned int crm_log_level;
-extern gboolean crm_config_error;
-extern gboolean crm_config_warning;
 extern unsigned int crm_trace_nonlog;
+
+/* These are set when a configuration issue is found, and turn on extra messages
+ * at the end of processing. They are set via wrapper functions and do not need
+ * to be set directly.
+ */
+extern bool pcmk__config_error;
+extern bool pcmk__config_warning;
 
 enum xml_log_options
 {
@@ -104,7 +109,8 @@ void crm_log_output_fn(const char *file, const char *function, int line, int lev
                        const char *prefix, const char *output);
 
 // Log a block of text line by line
-#  define crm_log_output(level, prefix, output) crm_log_output_fn(__FILE__, __FUNCTION__, __LINE__, level, prefix, output)
+#define crm_log_output(level, prefix, output)   \
+    crm_log_output_fn(__FILE__, __func__, __LINE__, level, prefix, output)
 
 gboolean crm_add_logfile(const char *filename);
 
@@ -194,9 +200,11 @@ unsigned int get_crm_log_level(void);
         if(__unlikely((expr) == FALSE)) {				\
             static struct qb_log_callsite *core_cs = NULL;              \
             if(core_cs == NULL) {                                       \
-                core_cs = qb_log_callsite_get(__func__, __FILE__, "log-assert", LOG_TRACE, __LINE__, 0); \
+                core_cs = qb_log_callsite_get(__func__, __FILE__,       \
+                                              "log-assert", LOG_TRACE,  \
+                                              __LINE__, 0);             \
             }                                                           \
-            crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr,   \
+            crm_abort(__FILE__, __func__, __LINE__, #expr,              \
                       core_cs?core_cs->targets:FALSE, TRUE);            \
         }                                                               \
     } while(0)
@@ -204,16 +212,18 @@ unsigned int get_crm_log_level(void);
 /* 'failure_action' MUST NOT be 'continue' as it will apply to the
  * macro's do-while loop
  */
-#  define CRM_CHECK(expr, failure_action) do {				\
-	if(__unlikely((expr) == FALSE)) {				\
+#  define CRM_CHECK(expr, failure_action) do {				            \
+	    if (__unlikely((expr) == FALSE)) {				                \
             static struct qb_log_callsite *core_cs = NULL;              \
-            if(core_cs == NULL) {                                       \
-                core_cs = qb_log_callsite_get(__func__, __FILE__, "check-assert", LOG_TRACE, __LINE__, 0); \
+            if (core_cs == NULL) {                                      \
+                core_cs = qb_log_callsite_get(__func__, __FILE__,       \
+                                              "check-assert",           \
+                                              LOG_TRACE, __LINE__, 0);  \
             }                                                           \
-	    crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr,	\
-		      core_cs?core_cs->targets:FALSE, TRUE);            \
-	    failure_action;						\
-	}								\
+	        crm_abort(__FILE__, __func__, __LINE__, #expr,	            \
+		        (core_cs? core_cs->targets: FALSE), TRUE);              \
+	        failure_action;						                        \
+	    }								                                \
     } while(0)
 
 /*!
@@ -237,7 +247,7 @@ unsigned int get_crm_log_level(void);
                                         "xml-blob", (level), __LINE__, 0);  \
                 }                                                           \
                 if (crm_is_callsite_active(xml_cs, (level), 0)) {           \
-                    log_data_element((level), __FILE__, __FUNCTION__,       \
+                    log_data_element((level), __FILE__, __func__,           \
                          __LINE__, text, xml, 1, xml_log_option_formatted); \
                 }                                                           \
             }                                                               \

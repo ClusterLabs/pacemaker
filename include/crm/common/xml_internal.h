@@ -77,7 +77,7 @@
 #define CRM_XML_LOG_BASE(priority, dechunk, postemit, prefix, fmt, ap)          \
 do {                                                                            \
     if (!(dechunk) && (prefix) == NULL) {  /* quick pass */                     \
-        qb_log_from_external_source_va(__FUNCTION__, __FILE__, (fmt),           \
+        qb_log_from_external_source_va(__func__, __FILE__, (fmt),               \
                                        (priority), __LINE__, 0, (ap));          \
         (void) (postemit);                                                      \
     } else {                                                                    \
@@ -98,13 +98,13 @@ do {                                                                            
                 CXLB_buf[CXLB_len - 1] = '\0';                                  \
             }                                                                   \
             if (CXLB_buffer) {                                                  \
-                qb_log_from_external_source(__FUNCTION__, __FILE__, "%s%s%s",   \
+                qb_log_from_external_source(__func__, __FILE__, "%s%s%s",       \
                                             CXLB_priority, __LINE__, 0,         \
                                             (prefix) != NULL ? (prefix) : "",   \
                                             CXLB_buffer, CXLB_buf);             \
                 free(CXLB_buffer);                                              \
             } else {                                                            \
-                qb_log_from_external_source(__FUNCTION__, __FILE__, "%s%s",     \
+                qb_log_from_external_source(__func__, __FILE__, "%s%s",         \
                                             (priority), __LINE__, 0,            \
                                             (prefix) != NULL ? (prefix) : "",   \
                                             CXLB_buf);                          \

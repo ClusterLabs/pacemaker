@@ -47,7 +47,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     CRM_CHECK(diff != NULL, return);
 
-    xml_log_patchset(LOG_TRACE, __FUNCTION__, diff);
+    xml_log_patchset(LOG_TRACE, __func__, diff);
     if (cib_config_changed(NULL, NULL, &diff)) {
         abort_transition(INFINITY, tg_restart, "Non-status change", diff);
         goto bail;              /* configuration changed */

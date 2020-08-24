@@ -43,7 +43,7 @@ crmd_ha_msg_filter(xmlNode * msg)
                     level = LOG_WARNING;
                     new_input.msg = msg;
                     register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, &new_input,
-                                           __FUNCTION__);
+                                           __func__);
                 }
 
                 do_crm_log(level, "Another DC detected: %s (op=%s)", from, op);
@@ -250,7 +250,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 if (!is_remote) {
                     flags |= node_update_join | node_update_expected;
                     crmd_peer_down(node, FALSE);
-                    check_join_state(fsa_state, __FUNCTION__);
+                    check_join_state(fsa_state, __func__);
                 }
                 if (alive >= 0) {
                     crm_info("%s of peer %s is in progress " CRM_XS " action=%d",
@@ -274,8 +274,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             crm_warn("Stonith/shutdown of node %s was not expected",
                      node->uname);
             if (!is_remote) {
-                crm_update_peer_join(__FUNCTION__, node, crm_join_none);
-                check_join_state(fsa_state, __FUNCTION__);
+                crm_update_peer_join(__func__, node, crm_join_none);
+                check_join_state(fsa_state, __func__);
             }
             abort_transition(INFINITY, tg_restart, "Node failure", NULL);
             fail_incompletable_actions(transition_graph, node->uuid);
@@ -299,7 +299,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         }
 
         /* Update the CIB node state */
-        update = create_node_state_update(node, flags, NULL, __FUNCTION__);
+        update = create_node_state_update(node, flags, NULL, __func__);
         if (update == NULL) {
             crm_debug("Node state update not yet possible for %s", node->uname);
         } else {

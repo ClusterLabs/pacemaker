@@ -30,12 +30,7 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
-/* Assorted convenience functions */
-void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
-
 void strip_text_nodes(xmlNode * xml);
-void pcmk_panic(const char *origin);
-pid_t pcmk_locate_sbd(void);
 
 
 /*
@@ -96,30 +91,8 @@ pid_t pcmk_locate_sbd(void);
 #define PCMK__ENV_PHYSICAL_HOST         "physical_host"
 
 
-static inline void *
-realloc_safe(void *ptr, size_t size)
-{
-    void *new_ptr;
-
-    // realloc(p, 0) can replace free(p) but this wrapper can't
-    CRM_ASSERT(size > 0);
-
-    new_ptr = realloc(ptr, size);
-    if (new_ptr == NULL) {
-        free(ptr);
-        abort();
-    }
-    return new_ptr;
-}
-
 const char *crm_xml_add_last_written(xmlNode *xml_node);
 void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
 void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
-
-#if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
-#  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
-#else
-#  define PCMK__OUTPUT_ARGS(ARGS...)
-#endif
 
 #endif                          /* CRM_INTERNAL__H */

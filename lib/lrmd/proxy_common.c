@@ -180,8 +180,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     proxy->session_id = strdup(session_id);
     proxy->lrm = lrmd;
 
-    if (!strcmp(pcmk_message_name(crm_system_name), CRM_SYSTEM_CRMD)
-        && !strcmp(pcmk_message_name(channel), CRM_SYSTEM_CRMD)) {
+    if (!strcmp(pcmk__message_name(crm_system_name), CRM_SYSTEM_CRMD)
+        && !strcmp(pcmk__message_name(channel), CRM_SYSTEM_CRMD)) {
         // The controller doesn't need to connect to itself
         proxy->is_local = TRUE;
 
@@ -272,7 +272,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
 
                 /* Send a n'ack so the caller doesn't block */
-                crm_xml_add(op_reply, "function", __FUNCTION__);
+                crm_xml_add(op_reply, "function", __func__);
                 crm_xml_add_int(op_reply, "line", __LINE__);
                 crm_xml_add_int(op_reply, "rc", rc);
                 remote_proxy_relay_response(proxy, op_reply, msg_id);

@@ -97,13 +97,27 @@ pcmk__open_devnull(int flags)
 
 /* internal logging utilities */
 
+/*!
+ * \internal
+ * \brief Log a configuration error
+ *
+ * \param[in] fmt   printf(3)-style format string
+ * \param[in] ...   Arguments for format string
+ */
 #  define pcmk__config_err(fmt...) do {     \
-        crm_config_error = TRUE;            \
+        pcmk__config_error = true;          \
         crm_err(fmt);                       \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Log a configuration warning
+ *
+ * \param[in] fmt   printf(3)-style format string
+ * \param[in] ...   Arguments for format string
+ */
 #  define pcmk__config_warn(fmt...) do {    \
-        crm_config_warning = TRUE;          \
+        pcmk__config_warning = true;        \
         crm_warn(fmt);                      \
     } while (0)
 
@@ -264,11 +278,42 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 // miscellaneous utilities (from utils.c)
 
-const char *pcmk_message_name(const char *name);
+const char *pcmk__message_name(const char *name);
+void pcmk__daemonize(const char *name, const char *pidfile);
+void pcmk__panic(const char *origin);
+pid_t pcmk__locate_sbd(void);
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;
 extern int pcmk__score_yellow;
+
+/*!
+ * \internal
+ * \brief Resize a dynamically allocated memory block
+ *
+ * \param[in] ptr   Memory block to resize (or NULL to allocate new memory)
+ * \param[in] size  New size of memory block in bytes (must be > 0)
+ *
+ * \return Pointer to resized memory block
+ *
+ * \note This asserts on error, so the result is guaranteed to be non-NULL
+ *       (which is the main advantage of this over directly using realloc()).
+ */
+static inline void *
+pcmk__realloc(void *ptr, size_t size)
+{
+    void *new_ptr;
+
+    // realloc(p, 0) can replace free(p) but this wrapper can't
+    CRM_ASSERT(size > 0);
+
+    new_ptr = realloc(ptr, size);
+    if (new_ptr == NULL) {
+        free(ptr);
+        abort();
+    }
+    return new_ptr;
+}
 
 
 /* Error domains for use with g_set_error (from results.c) */

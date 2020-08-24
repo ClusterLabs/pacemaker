@@ -136,7 +136,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
 
     if (!strcmp(op, CRM_OP_REGISTER)) {
         if (flags & crm_ipc_client_response) {
-            xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
+            xmlNode *ack = create_xml_node(NULL, __func__);
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
             crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
             pcmk__ipc_send_xml(cib_client, id, ack, flags);

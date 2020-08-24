@@ -288,7 +288,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace namespace,
 #endif
 
     crm_xml_add(data, XML_ATTR_ID, id);
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, "agent", agent);
     if ((namespace != st_namespace_any) && (namespace != st_namespace_invalid)) {
         crm_xml_add(data, "namespace", stonith_namespace2text(namespace));
@@ -328,7 +328,7 @@ stonith_api_remove_device(stonith_t * st, int call_options, const char *name)
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, XML_ATTR_ID, name);
     rc = stonith_send_command(st, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
     free_xml(data);
@@ -347,7 +347,7 @@ stonith_api_remove_level_full(stonith_t *st, int options,
     CRM_CHECK(node || pattern || (attr && value), return -EINVAL);
 
     data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
 
     if (node) {
         crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
@@ -403,7 +403,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
     CRM_CHECK(data, return NULL);
 
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, XML_ATTR_ID, level);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
 
@@ -418,7 +418,7 @@ create_level_registration_xml(const char *node, const char *pattern,
         crm_xml_add(data, XML_ATTR_STONITH_TARGET_VALUE, value);
     }
 
-    // cppcheck seems not to understand the abort logic behind realloc_safe
+    // cppcheck seems not to understand the abort logic behind pcmk__realloc
     // cppcheck-suppress memleak
     for (; device_list; device_list = device_list->next) {
 
@@ -428,7 +428,7 @@ create_level_registration_xml(const char *node, const char *pattern,
         }
 
         crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
-        list = realloc_safe(list, len + adding + 1);       /* +1 EOS */
+        list = pcmk__realloc(list, len + adding + 1);       /* +1 EOS */
         if (list == NULL) {
             crm_perror(LOG_CRIT, "Could not create device list");
             free_xml(data);
@@ -819,7 +819,7 @@ internal_stonith_action_execute(stonith_action_t * action)
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;
     svc_action->cb_data = (void *) action;
-    svc_action->flags = pcmk__set_flags_as(__FUNCTION__, __LINE__,
+    svc_action->flags = pcmk__set_flags_as(__func__, __LINE__,
                                            LOG_TRACE, "Action",
                                            svc_action->id, svc_action->flags,
                                            SVC_ACTION_NON_BLOCKED,
@@ -990,7 +990,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
     CRM_CHECK(devices != NULL, return -EINVAL);
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_TARGET, target);
     crm_xml_add(data, F_STONITH_ACTION, "off");
     rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
@@ -1034,7 +1034,7 @@ stonith_api_call(stonith_t * stonith,
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, F_STONITH_TARGET, victim);
@@ -1091,7 +1091,7 @@ stonith_api_fence_with_delay(stonith_t * stonith, int call_options, const char *
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, __FUNCTION__);
+    data = create_xml_node(NULL, __func__);
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
@@ -1131,7 +1131,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
     *history = NULL;
 
     if (node) {
-        data = create_xml_node(NULL, __FUNCTION__);
+        data = create_xml_node(NULL, __func__);
         crm_xml_add(data, F_STONITH_TARGET, node);
     }
 
@@ -1570,7 +1570,7 @@ static int
 stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 {
     int rc = pcmk_ok;
-    xmlNode *notify_msg = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *notify_msg = create_xml_node(NULL, __func__);
     stonith_private_t *native = stonith->st_private;
 
     if (stonith->state != stonith_disconnected) {
@@ -2260,7 +2260,7 @@ stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
 }
 
 #define api_log_open() openlog("stonith-api", LOG_CONS | LOG_NDELAY | LOG_PID, LOG_DAEMON)
-#define api_log(level, fmt, args...) syslog(level, "%s: "fmt, __FUNCTION__, args)
+#define api_log(level, fmt, args...) syslog(level, "%s: "fmt, __func__, args)
 
 int
 stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)

@@ -778,7 +778,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
         char xpath[STATUS_PATH_MAX];
         xmlNode *cib_node = modify_node(fake_cib, target, FALSE);
 
-        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __FUNCTION__);
+        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
         CRM_ASSERT(cib_node != NULL);
 
         rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,

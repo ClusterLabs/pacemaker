@@ -27,7 +27,7 @@
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/cmdline_internal.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>

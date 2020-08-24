@@ -1,5 +1,5 @@
 /*
- * Copyright 2001-2018 the Pacemaker project contributors
+ * Copyright 2001-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -172,17 +172,6 @@ typedef union
 
 #  ifndef EKEYREJECTED
 #    define EKEYREJECTED 200
-#  endif
-
-/*
- * Some compilers (eg. Sun studio) do not define __FUNCTION__
- */
-#  ifdef __SUNPRO_C
-#    define __FUNCTION__ __func__
-#  endif
-
-#  ifdef __MY_UNKNOWN_C
-#    define __FUNCTION__ "__FUNCTION__"
 #  endif
 
 #endif                          /* PORTABILITY_H */

@@ -57,21 +57,21 @@ create_long_opts(pcmk__cli_option_t *long_options)
      * This dummy entry allows us to differentiate between the two in
      * pcmk__next_cli_option() and exit with the correct error code.
      */
-    long_opts = realloc_safe(long_opts, (index + 1) * sizeof(struct option));
+    long_opts = pcmk__realloc(long_opts, (index + 1) * sizeof(struct option));
     long_opts[index].name = "__dummmy__";
     long_opts[index].has_arg = 0;
     long_opts[index].flag = 0;
     long_opts[index].val = '_';
     index++;
 
-    // cppcheck seems not to understand the abort-logic in realloc_safe
+    // cppcheck seems not to understand the abort-logic in pcmk__realloc
     // cppcheck-suppress memleak
     for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
         if (long_options[lpc].name[0] == '-') {
             continue;
         }
 
-        long_opts = realloc_safe(long_opts, (index + 1) * sizeof(struct option));
+        long_opts = pcmk__realloc(long_opts, (index + 1) * sizeof(struct option));
         /*fprintf(stderr, "Creating %d %s = %c\n", index,
          * long_options[lpc].name, long_options[lpc].val);      */
         long_opts[index].name = long_options[lpc].name;
@@ -82,7 +82,7 @@ create_long_opts(pcmk__cli_option_t *long_options)
     }
 
     /* Now create the list terminator */
-    long_opts = realloc_safe(long_opts, (index + 1) * sizeof(struct option));
+    long_opts = pcmk__realloc(long_opts, (index + 1) * sizeof(struct option));
     long_opts[index].name = NULL;
     long_opts[index].has_arg = 0;
     long_opts[index].flag = 0;
@@ -115,7 +115,8 @@ pcmk__set_cli_options(const char *short_options, const char *app_usage,
 
         for (lpc = 0; long_options[lpc].name != NULL; lpc++) {
             if (long_options[lpc].val && long_options[lpc].val != '-' && long_options[lpc].val < UCHAR_MAX) {
-                local_short_options = realloc_safe(local_short_options, opt_string_len + 4);
+                local_short_options = pcmk__realloc(local_short_options,
+                                                    opt_string_len + 4);
                 local_short_options[opt_string_len++] = long_options[lpc].val;
                 /* getopt(3) says: Two colons mean an option takes an optional arg; */
                 if (long_options[lpc].has_arg == optional_argument) {

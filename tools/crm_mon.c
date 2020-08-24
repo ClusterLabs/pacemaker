@@ -34,7 +34,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 
@@ -1269,7 +1269,7 @@ main(int argc, char **argv)
                  */
                 cib_delete(cib);
                 cib = NULL;
-                crm_make_daemon(crm_system_name, TRUE, options.pid_file);
+                pcmk__daemonize(crm_system_name, options.pid_file);
                 cib = cib_new();
                 if (cib == NULL) {
                     rc = -EINVAL;

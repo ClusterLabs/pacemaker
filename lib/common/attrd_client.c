@@ -30,7 +30,7 @@
 static xmlNode *
 create_attrd_op(const char *user_name)
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));

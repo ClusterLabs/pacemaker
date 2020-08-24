@@ -285,7 +285,7 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         if (rc > 0) {
             buf[rc] = 0;
             crm_trace("Got %d chars: %.80s", rc, buf);
-            data = realloc_safe(data, len + rc + 1);
+            data = pcmk__realloc(data, len + rc + 1);
             len += sprintf(data + len, "%s", buf);
 
         } else if (errno != EINTR) {
