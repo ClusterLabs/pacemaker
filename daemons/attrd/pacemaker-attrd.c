@@ -409,7 +409,7 @@ main(int argc, char **argv)
      * This allows us to assume the CIB is connected whenever we process a
      * cluster or IPC message (which also avoids start-up race conditions).
      */
-    if (attrd_cib_connect(10) != pcmk_ok) {
+    if (attrd_cib_connect(30) != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
         goto done;
     }
