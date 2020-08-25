@@ -1257,8 +1257,9 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
-                     cib_t *cib, int cib_options, gboolean promoted_role_only, gboolean force)
+cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_lifetime,
+                     int timeout_ms, cib_t *cib, int cib_options,
+                     gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1332,7 +1333,8 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
         BE_QUIET = TRUE;
-        rc = cli_resource_ban(rsc_id, host, NULL, cib, cib_options, promoted_role_only);
+        rc = cli_resource_ban(rsc_id, host, move_lifetime, NULL, cib,
+                              cib_options, promoted_role_only);
 
     } else {
         /* Stop the resource by setting target-role to Stopped.
@@ -1883,8 +1885,9 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 // \return Standard Pacemaker return code
 int
 cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                  cib_t *cib, int cib_options, pe_working_set_t *data_set,
-                  gboolean promoted_role_only, gboolean force)
+                  const char *move_lifetime, cib_t *cib, int cib_options,
+                  pe_working_set_t *data_set, gboolean promoted_role_only,
+                  gboolean force)
 {
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
@@ -1960,8 +1963,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
                        cib_options, TRUE, force);
 
     /* Record an explicit preference for 'dest' */
-    rc = cli_resource_prefer(rsc_id, dest->details->uname, cib, cib_options,
-                             promoted_role_only);
+    rc = cli_resource_prefer(rsc_id, dest->details->uname, move_lifetime,
+                             cib, cib_options, promoted_role_only);
 
     crm_trace("%s%s now prefers node %s%s",
               rsc->id, promoted_role_only?" (master)":"", dest->details->uname, force?"(forced)":"");
@@ -1972,8 +1975,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     if(force && (cur_is_dest == FALSE)) {
         /* Ban the original location if possible */
         if(current) {
-            (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib,
-                                   cib_options, promoted_role_only);
+            (void)cli_resource_ban(rsc_id, current->details->uname, move_lifetime,
+                                   NULL, cib, cib_options, promoted_role_only);
 
         } else if(count > 1) {
             CMD_ERR("Resource '%s' is currently %s in %d locations. "
