@@ -9,6 +9,7 @@
 
 #include <crm_resource.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/lists_internal.h>
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
@@ -887,7 +888,7 @@ clear_constraints(xmlNodePtr *cib_xml_copy)
         cluster_status(data_set);
 
         after = build_constraint_list(data_set->input);
-        remaining = subtract_lists(before, after, (GCompareFunc) strcmp);
+        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
 
         for (ele = remaining; ele != NULL; ele = ele->next) {
             printf("Removing constraint: %s\n", (char *) ele->data);
