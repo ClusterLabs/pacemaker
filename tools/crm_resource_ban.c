@@ -88,7 +88,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
 
-    if (BE_QUIET == FALSE) {
+    if (!out->is_quiet(out)) {
         CMD_ERR("WARNING: Creating rsc_location constraint '%s'"
                 " with a score of -INFINITY for resource %s"
                 " on %s.", ID(location), rsc_id, host);

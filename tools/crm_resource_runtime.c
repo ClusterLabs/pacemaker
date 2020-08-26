@@ -22,7 +22,7 @@ do_find_resource(pcmk__output_t *out, const char *rsc, pe_resource_t * the_rsc,
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         pe_node_t *node = (pe_node_t *) lpc->data;
 
-        if (BE_QUIET) {
+        if (out->is_quiet(out)) {
             fprintf(stdout, "%s\n", node->details->uname);
         } else {
             const char *state = "";
@@ -36,7 +36,7 @@ do_find_resource(pcmk__output_t *out, const char *rsc, pe_resource_t * the_rsc,
         found++;
     }
 
-    if (BE_QUIET == FALSE && found == 0) {
+    if (!out->is_quiet(out) && found == 0) {
         fprintf(stderr, "resource %s is NOT running\n", rsc);
     }
 
@@ -220,7 +220,7 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
         if(rc != pcmk_rc_ok) {
             rsc = rsc->parent;
-            if (BE_QUIET == FALSE) {
+            if (!out->is_quiet(out)) {
                 printf("Performing %s of '%s' on '%s', the parent of '%s'\n", cmd, attr_name, rsc->id, rsc_id);
             }
         }
@@ -235,7 +235,7 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
             if(rc == pcmk_rc_ok) {
                 rsc = child;
-                if (BE_QUIET == FALSE) {
+                if (!out->is_quiet(out)) {
                     printf("A value for '%s' already exists in child '%s', performing %s on that instead of '%s'\n", attr_name, lookup_id, cmd, rsc_id);
                 }
             }
@@ -282,7 +282,7 @@ cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
             rc = find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
-            if (rc == pcmk_rc_ok && BE_QUIET == FALSE) {
+            if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
                 printf("WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)\n",
                        uber_parent(rsc)->id, attr_name, local_attr_id);
                 printf("         Delete '%s' first or use the force option to override\n",
@@ -359,7 +359,7 @@ cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
         rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
         rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_rc_ok && BE_QUIET == FALSE) {
+        if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
             printf("Set '%s' option: id=%s%s%s%s%s value=%s\n", lookup_id, local_attr_id,
                    attr_set ? " set=" : "", attr_set ? attr_set : "",
                    attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
@@ -466,7 +466,7 @@ cli_resource_delete_attribute(pcmk__output_t *out, pe_resource_t *rsc,
         rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
         rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_rc_ok && BE_QUIET == FALSE) {
+        if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
             printf("Deleted '%s' option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
                    attr_set ? " set=" : "", attr_set ? attr_set : "",
                    attr_name ? " name=" : "", attr_name ? attr_name : "");
@@ -1349,7 +1349,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
-        BE_QUIET = TRUE;
+        out->quiet = true;
         rc = cli_resource_ban(out, rsc_id, host, move_lifetime, NULL, cib,
                               cib_options, promoted_role_only);
 
@@ -1631,7 +1631,7 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
     int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
     time_t expire_time = time(NULL) + timeout_s;
     time_t time_diff;
-    bool printed_version_warning = BE_QUIET; // i.e. don't print if quiet
+    bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {

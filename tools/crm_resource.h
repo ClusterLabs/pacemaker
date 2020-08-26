@@ -22,8 +22,6 @@
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
 
-extern bool BE_QUIET;
-
 /* ban */
 int cli_resource_prefer(pcmk__output_t *out, const char *rsc_id, const char *host,
                         const char *move_lifetime, cib_t * cib_conn, int cib_options,

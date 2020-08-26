@@ -152,7 +152,6 @@ gboolean restart_cb(const gchar *option_name, const gchar *optarg,
 gboolean wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
-bool BE_QUIET = FALSE;
 static crm_exit_t exit_code = CRM_EX_OK;
 static pcmk__output_t *out = NULL;
 
@@ -639,7 +638,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
-        if (BE_QUIET == FALSE) {
+        if (!out->is_quiet(out)) {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
                         "Standard %s does not support parameters\n", optarg);
         }
@@ -991,7 +990,7 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
     rc = cli_resource_delete(out, controld_api, options.host_uname, rsc, options.operation,
                              options.interval_spec, TRUE, data_set, options.force);
 
-    if ((rc == pcmk_rc_ok) && !BE_QUIET) {
+    if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
         cli_resource_check(out, cib_conn, rsc);
     }
@@ -1011,7 +1010,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
     pe_node_t *dest = NULL;
     int rc = pcmk_rc_ok;
 
-    if (BE_QUIET == FALSE) {
+    if (!out->is_quiet(out)) {
         before = build_constraint_list(data_set->input);
     }
 
@@ -1024,7 +1023,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
         dest = pe_find_node(data_set->nodes, options.host_uname);
         if (dest == NULL) {
             rc = pcmk_rc_node_unknown;
-            if (BE_QUIET == FALSE) {
+            if (!out->is_quiet(out)) {
                 g_list_free(before);
             }
             return rc;
@@ -1037,7 +1036,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
                                 cib_conn, options.cib_options, TRUE, options.force);
     }
 
-    if (BE_QUIET == FALSE) {
+    if (!out->is_quiet(out)) {
         rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_scope_local | cib_sync_call);
         rc = pcmk_legacy2rc(rc);
 
@@ -1321,7 +1320,7 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
     rc = cli_resource_delete(out, controld_api, options.host_uname, rsc, NULL,
                              0, FALSE, data_set, options.force);
 
-    if ((rc == pcmk_rc_ok) && !BE_QUIET) {
+    if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
         // Show any reasons why resource might stay stopped
         cli_resource_check(out, cib_conn, rsc);
     }
@@ -1550,7 +1549,7 @@ main(int argc, char **argv)
     }
 
     options.resource_verbose = args->verbosity;
-    BE_QUIET = args->quiet;
+    out->quiet = args->quiet;
 
     crm_log_args(argc, argv);
 
