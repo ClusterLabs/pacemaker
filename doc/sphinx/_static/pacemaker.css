@@ -113,3 +113,19 @@ pre {
 .download {
     font-family: "Open Sans", sans-serif;
 }
+
+/* The pyramid theme uses an exclamation point for "note", and nothing (not
+ * even a background shade) for "important", and it supplies a light bulb icon
+ * but doesn't use it. Rearrange that a bit: use the light bulb for note, and
+ * the exclamation point (with the usual shading) for important.
+ */
+div.note {
+    background: #e1ecfe url(dialog-topic.png) no-repeat 10px 8px;
+}
+div.important {
+    border: 2px solid #7a9eec;
+    border-right-style: none;
+    border-left-style: none;
+    padding: 10px 20px 10px 60px;
+    background: #e1ecfe url(dialog-note.png) no-repeat 10px 8px;
+}
