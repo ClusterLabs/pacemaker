@@ -12,7 +12,7 @@
 #define XPATH_MAX 1024
 
 static char *
-parse_cli_lifetime(const char *move_lifetime)
+parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 {
     char *later_s = NULL;
     crm_time_t *now = NULL;
@@ -58,9 +58,9 @@ parse_cli_lifetime(const char *move_lifetime)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime,
-                 GListPtr allnodes, cib_t * cib_conn, int cib_options,
-                 gboolean promoted_role_only)
+cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
+                 const char *move_lifetime, GListPtr allnodes, cib_t * cib_conn,
+                 int cib_options, gboolean promoted_role_only)
 {
     char *later_s = NULL;
     int rc = pcmk_rc_ok;
@@ -72,13 +72,13 @@ cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime
         for(; n && rc == pcmk_rc_ok; n = n->next) {
             pe_node_t *target = n->data;
 
-            rc = cli_resource_ban(rsc_id, target->details->uname, move_lifetime,
+            rc = cli_resource_ban(out, rsc_id, target->details->uname, move_lifetime,
                                   NULL, cib_conn, cib_options, promoted_role_only);
         }
         return rc;
     }
 
-    later_s = parse_cli_lifetime(move_lifetime);
+    later_s = parse_cli_lifetime(out, move_lifetime);
     if(move_lifetime && later_s == NULL) {
         return EINVAL;
     }
@@ -143,10 +143,11 @@ cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime
 
 // \return Standard Pacemaker return code
 int
-cli_resource_prefer(const char *rsc_id, const char *host, const char *move_lifetime,
-                    cib_t * cib_conn, int cib_options, gboolean promoted_role_only)
+cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
+                    const char *move_lifetime, cib_t * cib_conn, int cib_options,
+                    gboolean promoted_role_only)
 {
-    char *later_s = parse_cli_lifetime(move_lifetime);
+    char *later_s = parse_cli_lifetime(out, move_lifetime);
     int rc = pcmk_rc_ok;
     xmlNode *location = NULL;
     xmlNode *fragment = NULL;

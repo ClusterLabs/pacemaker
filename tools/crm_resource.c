@@ -918,7 +918,8 @@ why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 }
 
 static int
-ban_or_move(pe_resource_t *rsc, const char *move_lifetime, crm_exit_t *exit_code)
+ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
+            crm_exit_t *exit_code)
 {
     int rc = pcmk_rc_ok;
     pe_node_t *current = NULL;
@@ -929,7 +930,7 @@ ban_or_move(pe_resource_t *rsc, const char *move_lifetime, crm_exit_t *exit_code
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(options.rsc_id, current->details->uname, move_lifetime, NULL,
+        rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime, NULL,
                               cib_conn, options.cib_options, options.promoted_role_only);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
@@ -948,7 +949,7 @@ ban_or_move(pe_resource_t *rsc, const char *move_lifetime, crm_exit_t *exit_code
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(options.rsc_id, current->details->uname, move_lifetime, NULL,
+            rc = cli_resource_ban(out, options.rsc_id, current->details->uname, move_lifetime, NULL,
                                   cib_conn, options.cib_options, options.promoted_role_only);
 
         } else {
@@ -977,7 +978,7 @@ ban_or_move(pe_resource_t *rsc, const char *move_lifetime, crm_exit_t *exit_code
 }
 
 static void
-cleanup(pe_resource_t *rsc)
+cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
@@ -987,12 +988,12 @@ cleanup(pe_resource_t *rsc)
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc, options.operation,
+    rc = cli_resource_delete(out, controld_api, options.host_uname, rsc, options.operation,
                              options.interval_spec, TRUE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !BE_QUIET) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(cib_conn, rsc);
+        cli_resource_check(out, cib_conn, rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -1001,7 +1002,7 @@ cleanup(pe_resource_t *rsc)
 }
 
 static int
-clear_constraints(xmlNodePtr *cib_xml_copy)
+clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 {
     GListPtr before = NULL;
     GListPtr after = NULL;
@@ -1089,7 +1090,7 @@ delete()
 }
 
 static int
-list_agents(const char *agent_spec, crm_exit_t *exit_code)
+list_agents(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
 {
     int rc = pcmk_rc_ok;
     lrmd_list_t *list = NULL;
@@ -1126,7 +1127,7 @@ list_agents(const char *agent_spec, crm_exit_t *exit_code)
 }
 
 static int
-list_providers(const char *agent_spec, crm_exit_t *exit_code)
+list_providers(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
 {
     int rc;
     const char *text = NULL;
@@ -1177,7 +1178,7 @@ list_providers(const char *agent_spec, crm_exit_t *exit_code)
 }
 
 static int
-list_raw()
+list_raw(pcmk__output_t *out)
 {
     int rc = pcmk_rc_ok;
     int found = 0;
@@ -1187,7 +1188,7 @@ list_raw()
         pe_resource_t *rsc = (pe_resource_t *) lpc->data;
 
         found++;
-        cli_resource_print_raw(rsc);
+        cli_resource_print_raw(out, rsc);
     }
 
     if (found == 0) {
@@ -1199,7 +1200,7 @@ list_raw()
 }
 
 static void
-list_stacks_and_constraints(pe_resource_t *rsc, bool recursive)
+list_stacks_and_constraints(pcmk__output_t *out, pe_resource_t *rsc, bool recursive)
 {
     GListPtr lpc = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
@@ -1216,10 +1217,10 @@ list_stacks_and_constraints(pe_resource_t *rsc, bool recursive)
         pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
-    cli_resource_print_colocation(rsc, TRUE, recursive, 1);
+    cli_resource_print_colocation(out, rsc, TRUE, recursive, 1);
 
     fprintf(stdout, "* %s\n", rsc->id);
-    cli_resource_print_location(rsc, NULL);
+    cli_resource_print_location(out, rsc, NULL);
 
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *r = (pe_resource_t *) lpc->data;
@@ -1227,7 +1228,7 @@ list_stacks_and_constraints(pe_resource_t *rsc, bool recursive)
         pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
-    cli_resource_print_colocation(rsc, FALSE, recursive, 1);
+    cli_resource_print_colocation(out, rsc, FALSE, recursive, 1);
 }
 
 static int
@@ -1262,7 +1263,7 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
 }
 
 static int
-refresh()
+refresh(pcmk__output_t *out)
 {
     int rc = pcmk_rc_ok;
     const char *router_node = options.host_uname;
@@ -1307,7 +1308,7 @@ refresh()
 }
 
 static void
-refresh_resource(pe_resource_t *rsc)
+refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 {
     int rc = pcmk_rc_ok;
 
@@ -1317,12 +1318,12 @@ refresh_resource(pe_resource_t *rsc)
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL, 0, FALSE,
-                             data_set, options.force);
+    rc = cli_resource_delete(out, controld_api, options.host_uname, rsc, NULL,
+                             0, FALSE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !BE_QUIET) {
         // Show any reasons why resource might stay stopped
-        cli_resource_check(cib_conn, rsc);
+        cli_resource_check(out, cib_conn, rsc);
     }
 
     if (rc == pcmk_rc_ok) {
@@ -1364,7 +1365,7 @@ set_property()
 }
 
 static int
-show_metadata(const char *agent_spec, crm_exit_t *exit_code)
+show_metadata(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
 {
     int rc = pcmk_rc_ok;
     char *standard = NULL;
@@ -1438,7 +1439,7 @@ validate_cmdline(crm_exit_t *exit_code)
         if (options.validate_options == NULL) {
             options.validate_options = crm_str_table_new();
         }
-        *exit_code = cli_resource_execute_from_params("test", options.v_class, options.v_provider, options.v_agent,
+        *exit_code = cli_resource_execute_from_params(out, "test", options.v_class, options.v_provider, options.v_agent,
                                                       "validate-all", options.validate_options,
                                                       options.override_params, options.timeout_ms,
                                                       options.resource_verbose, options.force);
@@ -1737,25 +1738,25 @@ main(int argc, char **argv)
     switch (options.rsc_cmd) {
         case cmd_list_resources:
             rc = pcmk_rc_ok;
-            cli_resource_print_list(data_set, FALSE);
+            cli_resource_print_list(out, data_set, FALSE);
             break;
 
         case cmd_list_instances:
-            rc = list_raw();
+            rc = list_raw(out);
             break;
 
         case cmd_list_standards:
         case cmd_list_providers:
         case cmd_list_alternatives:
-            rc = list_providers(options.agent_spec, &exit_code);
+            rc = list_providers(out, options.agent_spec, &exit_code);
             break;
 
         case cmd_list_agents:
-            rc = list_agents(options.agent_spec, &exit_code);
+            rc = list_agents(out, options.agent_spec, &exit_code);
             break;
 
         case cmd_metadata:
-            rc = show_metadata(options.agent_spec, &exit_code);
+            rc = show_metadata(out, options.agent_spec, &exit_code);
             break;
 
         case cmd_restart:
@@ -1764,7 +1765,7 @@ main(int argc, char **argv)
              * update the working set multiple times, so it needs to use its own
              * copy.
              */
-            rc = cli_resource_restart(rsc, options.host_uname,
+            rc = cli_resource_restart(out, rsc, options.host_uname,
                                       options.move_lifetime, options.timeout_ms,
                                       cib_conn, options.cib_options,
                                       options.promoted_role_only,
@@ -1772,11 +1773,11 @@ main(int argc, char **argv)
             break;
 
         case cmd_wait:
-            rc = wait_till_stable(options.timeout_ms, cib_conn);
+            rc = wait_till_stable(out, options.timeout_ms, cib_conn);
             break;
 
         case cmd_execute_agent:
-            exit_code = cli_resource_execute(rsc, options.rsc_id,
+            exit_code = cli_resource_execute(out, rsc, options.rsc_id,
                                              options.operation,
                                              options.override_params,
                                              options.timeout_ms, cib_conn,
@@ -1785,11 +1786,11 @@ main(int argc, char **argv)
             break;
 
         case cmd_colocations:
-            list_stacks_and_constraints(rsc, false);
+            list_stacks_and_constraints(out, rsc, false);
             break;
 
         case cmd_colocations_deep:
-            list_stacks_and_constraints(rsc, true);
+            list_stacks_and_constraints(out, rsc, true);
             break;
 
         case cmd_cts:
@@ -1798,13 +1799,13 @@ main(int argc, char **argv)
                  lpc = lpc->next) {
 
                 rsc = (pe_resource_t *) lpc->data;
-                cli_resource_print_cts(rsc);
+                cli_resource_print_cts(out, rsc);
             }
-            cli_resource_print_cts_constraints(data_set);
+            cli_resource_print_cts_constraints(out, data_set);
             break;
 
         case cmd_fail:
-            rc = cli_resource_fail(controld_api, options.host_uname,
+            rc = cli_resource_fail(out, controld_api, options.host_uname,
                                    options.rsc_id, data_set);
             if (rc == pcmk_rc_ok) {
                 start_mainloop(controld_api);
@@ -1812,28 +1813,28 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_active_ops:
-            rc = cli_resource_print_operations(options.rsc_id,
+            rc = cli_resource_print_operations(out, options.rsc_id,
                                                options.host_uname, TRUE,
                                                data_set);
             break;
 
         case cmd_list_all_ops:
-            rc = cli_resource_print_operations(options.rsc_id,
+            rc = cli_resource_print_operations(out, options.rsc_id,
                                                options.host_uname, FALSE,
                                                data_set);
             break;
 
         case cmd_locate:
-            cli_resource_search(rsc, options.rsc_id, data_set);
+            cli_resource_search(out, rsc, options.rsc_id, data_set);
             rc = pcmk_rc_ok;
             break;
 
         case cmd_query_xml:
-            rc = cli_resource_print(rsc, data_set, TRUE);
+            rc = cli_resource_print(out, rsc, data_set, TRUE);
             break;
 
         case cmd_query_raw_xml:
-            rc = cli_resource_print(rsc, data_set, FALSE);
+            rc = cli_resource_print(out, rsc, data_set, FALSE);
             break;
 
         case cmd_why:
@@ -1847,20 +1848,20 @@ main(int argc, char **argv)
                         goto done;
                     }
                 }
-                cli_resource_why(cib_conn, data_set->resources, rsc, dest);
+                cli_resource_why(out, cib_conn, data_set->resources, rsc, dest);
                 rc = pcmk_rc_ok;
             }
             break;
 
         case cmd_clear:
-            rc = clear_constraints(&cib_xml_copy);
+            rc = clear_constraints(out, &cib_xml_copy);
             break;
 
         case cmd_move:
             if (options.host_uname == NULL) {
-                rc = ban_or_move(rsc, options.move_lifetime, &exit_code);
+                rc = ban_or_move(out, rsc, options.move_lifetime, &exit_code);
             } else {
-                rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
+                rc = cli_resource_move(out, rsc, options.rsc_id, options.host_uname,
                                        options.move_lifetime, cib_conn,
                                        options.cib_options, data_set,
                                        options.promoted_role_only,
@@ -1870,7 +1871,7 @@ main(int argc, char **argv)
 
         case cmd_ban:
             if (options.host_uname == NULL) {
-                rc = ban_or_move(rsc, options.move_lifetime, &exit_code);
+                rc = ban_or_move(out, rsc, options.move_lifetime, &exit_code);
             } else {
                 pe_node_t *dest = pe_find_node(data_set->nodes,
                                                options.host_uname);
@@ -1879,7 +1880,7 @@ main(int argc, char **argv)
                     rc = pcmk_rc_node_unknown;
                     goto done;
                 }
-                rc = cli_resource_ban(options.rsc_id, dest->details->uname,
+                rc = cli_resource_ban(out, options.rsc_id, dest->details->uname,
                                       options.move_lifetime, NULL, cib_conn,
                                       options.cib_options,
                                       options.promoted_role_only);
@@ -1887,7 +1888,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_get_property:
-            rc = cli_resource_print_property(rsc, options.prop_name, data_set);
+            rc = cli_resource_print_property(out, rsc, options.prop_name, data_set);
             break;
 
         case cmd_set_property:
@@ -1895,7 +1896,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_get_param:
-            rc = cli_resource_print_attribute(rsc, options.prop_name,
+            rc = cli_resource_print_attribute(out, rsc, options.prop_name,
                                               options.attr_set_type, data_set);
             break;
 
@@ -1908,7 +1909,7 @@ main(int argc, char **argv)
             }
 
             /* coverity[var_deref_model] False positive */
-            rc = cli_resource_update_attribute(rsc, options.rsc_id,
+            rc = cli_resource_update_attribute(out, rsc, options.rsc_id,
                                                options.prop_set,
                                                options.attr_set_type,
                                                options.prop_id,
@@ -1921,7 +1922,7 @@ main(int argc, char **argv)
 
         case cmd_delete_param:
             /* coverity[var_deref_model] False positive */
-            rc = cli_resource_delete_attribute(rsc, options.rsc_id,
+            rc = cli_resource_delete_attribute(out, rsc, options.rsc_id,
                                                options.prop_set,
                                                options.attr_set_type,
                                                options.prop_id,
@@ -1932,22 +1933,22 @@ main(int argc, char **argv)
 
         case cmd_cleanup:
             if (rsc == NULL) {
-                rc = cli_cleanup_all(controld_api, options.host_uname,
+                rc = cli_cleanup_all(out, controld_api, options.host_uname,
                                      options.operation, options.interval_spec,
                                      data_set);
                 if (rc == pcmk_rc_ok) {
                     start_mainloop(controld_api);
                 }
             } else {
-                cleanup(rsc);
+                cleanup(out, rsc);
             }
             break;
 
         case cmd_refresh:
             if (rsc == NULL) {
-                rc = refresh();
+                rc = refresh(out);
             } else {
-                refresh_resource(rsc);
+                refresh_resource(out, rsc);
             }
             break;
 

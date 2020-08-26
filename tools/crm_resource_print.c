@@ -12,7 +12,7 @@
 
 #define cons_string(x) x?x:"NA"
 void
-cli_resource_print_cts_constraints(pe_working_set_t * data_set)
+cli_resource_print_cts_constraints(pcmk__output_t *out, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
     xmlNode *lifetime = NULL;
@@ -49,7 +49,7 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
 }
 
 void
-cli_resource_print_cts(pe_resource_t * rsc)
+cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
 {
     GListPtr lpc = NULL;
     const char *host = NULL;
@@ -78,13 +78,13 @@ cli_resource_print_cts(pe_resource_t * rsc)
     for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *child = (pe_resource_t *) lpc->data;
 
-        cli_resource_print_cts(child);
+        cli_resource_print_cts(out, child);
     }
 }
 
 
 void
-cli_resource_print_raw(pe_resource_t * rsc)
+cli_resource_print_raw(pcmk__output_t *out, pe_resource_t * rsc)
 {
     GListPtr lpc = NULL;
     GListPtr children = rsc->children;
@@ -96,13 +96,13 @@ cli_resource_print_raw(pe_resource_t * rsc)
     for (lpc = children; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *child = (pe_resource_t *) lpc->data;
 
-        cli_resource_print_raw(child);
+        cli_resource_print_raw(out, child);
     }
 }
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_list(pe_working_set_t * data_set, bool raw)
+cli_resource_print_list(pcmk__output_t *out, pe_working_set_t * data_set, bool raw)
 {
     int found = 0;
 
@@ -130,8 +130,9 @@ cli_resource_print_list(pe_working_set_t * data_set, bool raw)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool active,
-                         pe_working_set_t * data_set)
+cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
+                              const char *host_uname, bool active,
+                              pe_working_set_t * data_set)
 {
     pe_resource_t *rsc = NULL;
     int opts = pe_print_printf | pe_print_rsconly | pe_print_suppres_nl | pe_print_pending;
@@ -172,7 +173,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
 }
 
 void
-cli_resource_print_location(pe_resource_t * rsc, const char *prefix)
+cli_resource_print_location(pcmk__output_t *out, pe_resource_t * rsc, const char *prefix)
 {
     GListPtr lpc = NULL;
     GListPtr list = rsc->rsc_location;
@@ -199,7 +200,8 @@ cli_resource_print_location(pe_resource_t * rsc, const char *prefix)
 }
 
 void
-cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursive, int offset)
+cli_resource_print_colocation(pcmk__output_t *out, pe_resource_t * rsc,
+                              bool dependents, bool recursive, int offset)
 {
     char *prefix = NULL;
     GListPtr lpc = NULL;
@@ -239,7 +241,7 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
         }
 
         if (dependents && recursive) {
-            cli_resource_print_colocation(peer, dependents, recursive, offset + 1);
+            cli_resource_print_colocation(out, peer, dependents, recursive, offset + 1);
         }
 
         score = score2char(cons->score);
@@ -251,11 +253,11 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
             fprintf(stdout, "%s%-*s (score=%s, id=%s)\n", prefix, 80 - (4 * offset),
                     peer->id, score, cons->id);
         }
-        cli_resource_print_location(peer, prefix);
+        cli_resource_print_location(out, peer, prefix);
         free(score);
 
         if (!dependents && recursive) {
-            cli_resource_print_colocation(peer, dependents, recursive, offset + 1);
+            cli_resource_print_colocation(out, peer, dependents, recursive, offset + 1);
         }
     }
     free(prefix);
@@ -263,7 +265,8 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
+cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc,
+                   pe_working_set_t *data_set, bool expanded)
 {
     char *rsc_xml = NULL;
     int opts = pe_print_printf | pe_print_pending;
@@ -279,8 +282,8 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, const char *attr_set_type,
-                             pe_working_set_t * data_set)
+cli_resource_print_attribute(pcmk__output_t *out, pe_resource_t *rsc, const char *attr,
+                             const char *attr_set_type, pe_working_set_t * data_set)
 {
     int rc = ENXIO;
     unsigned int count = 0;
@@ -324,7 +327,8 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, const char *a
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_property(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_property(pcmk__output_t *out, pe_resource_t *rsc,
+                            const char *attr, pe_working_set_t * data_set)
 {
     const char *value = crm_element_value(rsc->xml, attr);
 
