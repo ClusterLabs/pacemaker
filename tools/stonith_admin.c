@@ -498,6 +498,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    out->quiet = args->quiet;
+
     st = stonith_api_new();
     if (st == NULL) {
         rc = -ENOMEM;
@@ -595,8 +597,8 @@ main(int argc, char **argv)
             break;
 
         case 'H':
-            rc = pcmk__fence_history(out, st, target, options.timeout*1000, args->quiet,
-                                       args->verbosity, options.broadcast, options.cleanup);
+            rc = pcmk__fence_history(out, st, target, options.timeout*1000, args->verbosity,
+                                     options.broadcast, options.cleanup);
             break;
 
         case 'K':

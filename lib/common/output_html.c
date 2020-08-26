@@ -363,6 +363,11 @@ html_end_list(pcmk__output_t *out) {
     }
 }
 
+static bool
+html_is_quiet(pcmk__output_t *out) {
+    return false;
+}
+
 pcmk__output_t *
 pcmk__mk_html_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -373,7 +378,6 @@ pcmk__mk_html_output(char **argv) {
 
     retval->fmt_name = "html";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = false;
 
     retval->init = html_init;
     retval->free_priv = html_free_priv;
@@ -393,6 +397,8 @@ pcmk__mk_html_output(char **argv) {
     retval->list_item = html_list_item;
     retval->increment_list = html_increment_list;
     retval->end_list = html_end_list;
+
+    retval->is_quiet = html_is_quiet;
 
     return retval;
 }

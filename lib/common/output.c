@@ -66,6 +66,8 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
         }
     }
 
+    (*out)->quiet = false;
+
     (*out)->messages = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
 
     if ((*out)->init(*out) == false) {

@@ -49,7 +49,6 @@ int pcmk__fence_action(stonith_t *st, const char *target, const char *action,
  * \param[in]     st        A connection to the STONITH API.
  * \param[in]     target    The node to get history for.
  * \param[in]     timeout   How long to wait for the operation to complete (in ms).
- * \param[in]     quiet     Suppress most output.
  * \param[in]     verbose   Include additional output.
  * \param[in]     broadcast Gather fencing history from all nodes.
  * \param[in]     cleanup   Clean up fencing history after listing.
@@ -57,8 +56,8 @@ int pcmk__fence_action(stonith_t *st, const char *target, const char *action,
  * \return Standard Pacemaker return code
  */
 int pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
-                        unsigned int timeout, bool quiet, int verbose,
-                        bool broadcast, bool cleanup);
+                        unsigned int timeout, int verbose, bool broadcast,
+                        bool cleanup);
 
 /**
  * \brief List all installed STONITH agents.

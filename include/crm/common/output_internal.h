@@ -173,21 +173,22 @@ struct pcmk__output_s {
     const char *fmt_name;
 
     /*!
+     * \brief Should this formatter supress most output?
+     *
+     * \note This setting is not respected by all formatters.  In general,
+     *       machine-readable output formats will not support this while
+     *       user-oriented formats will.  Callers should use is_quiet()
+     *       to test whether to print or not.
+     */
+    bool quiet;
+
+    /*!
      * \brief A copy of the request that generated this output.
      *
      * In the case of command line usage, this would be the command line
      * arguments.  For other use cases, it could be different.
      */
     gchar *request;
-
-    /*!
-     * \brief Does this formatter support a special quiet mode?
-     *
-     * In this mode, most output can be supressed but some information is still
-     * displayed to an interactive user.  In general, machine-readable output
-     * formats will not support this while user-oriented formats will.
-     */
-    bool supports_quiet;
 
     /*!
      * \brief Where output should be written.
@@ -239,7 +240,7 @@ struct pcmk__output_s {
      *
      * \param[in,out] out The output functions structure.
      */
-    void (*free_priv)(pcmk__output_t *out);
+    void (*free_priv) (pcmk__output_t *out);
 
     /*!
      * \internal
@@ -446,6 +447,19 @@ struct pcmk__output_s {
      * \param[in,out] out The output functions structure.
      */
     void (*end_list) (pcmk__output_t *out);
+
+    /*!
+     * \internal
+     * \brief Should anything be printed to the user?
+     *
+     * \note This takes into account both the \p quiet value as well as the
+     *       current formatter.
+     *
+     * \param[in] out The output functions structure.
+     *
+     * \return true if output should be supressed, false otherwise.
+     */
+    bool (*is_quiet) (pcmk__output_t *out);
 };
 
 /*!

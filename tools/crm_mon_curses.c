@@ -242,6 +242,11 @@ curses_end_list(pcmk__output_t *out) {
     free(node);
 }
 
+static bool
+curses_is_quiet(pcmk__output_t *out) {
+    return out->quiet;
+}
+
 pcmk__output_t *
 crm_mon_mk_curses_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -252,7 +257,6 @@ crm_mon_mk_curses_output(char **argv) {
 
     retval->fmt_name = "console";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = true;
 
     retval->init = curses_init;
     retval->free_priv = curses_free_priv;
@@ -272,6 +276,8 @@ crm_mon_mk_curses_output(char **argv) {
     retval->list_item = curses_list_item;
     retval->increment_list = curses_increment_list;
     retval->end_list = curses_end_list;
+
+    retval->is_quiet = curses_is_quiet;
 
     return retval;
 }

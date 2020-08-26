@@ -239,6 +239,11 @@ text_end_list(pcmk__output_t *out) {
     free(node);
 }
 
+static bool
+text_is_quiet(pcmk__output_t *out) {
+    return out->quiet;
+}
+
 pcmk__output_t *
 pcmk__mk_text_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -249,7 +254,6 @@ pcmk__mk_text_output(char **argv) {
 
     retval->fmt_name = "text";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = true;
 
     retval->init = text_init;
     retval->free_priv = text_free_priv;
@@ -269,6 +273,8 @@ pcmk__mk_text_output(char **argv) {
     retval->list_item = text_list_item;
     retval->increment_list = text_increment_list;
     retval->end_list = text_end_list;
+
+    retval->is_quiet = text_is_quiet;
 
     return retval;
 }
