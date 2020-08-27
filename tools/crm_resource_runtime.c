@@ -134,12 +134,12 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         xmlNode *child = NULL;
 
         rc = EINVAL;
-        printf("Multiple attributes match name=%s\n", attr_name);
+        out->info(out, "Multiple attributes match name=%s", attr_name);
 
         for (child = pcmk__xml_first_child(xml_search); child != NULL;
              child = pcmk__xml_next(child)) {
-            printf("  Value: %s \t(id=%s)\n",
-                   crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+            out->info(out, "  Value: %s \t(id=%s)",
+                      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
 
         out->spacer(out);
@@ -223,7 +223,8 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
         if(rc != pcmk_rc_ok) {
             rsc = rsc->parent;
             if (!out->is_quiet(out)) {
-                printf("Performing %s of '%s' on '%s', the parent of '%s'\n", cmd, attr_name, rsc->id, rsc_id);
+                out->info(out, "Performing %s of '%s' on '%s', the parent of '%s'",
+                          cmd, attr_name, rsc->id, rsc_id);
             }
         }
         return g_list_append(result, rsc);
@@ -238,7 +239,8 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
             if(rc == pcmk_rc_ok) {
                 rsc = child;
                 if (!out->is_quiet(out)) {
-                    printf("A value for '%s' already exists in child '%s', performing %s on that instead of '%s'\n", attr_name, lookup_id, cmd, rsc_id);
+                    out->info(out, "A value for '%s' already exists in child '%s', performing %s on that instead of '%s'",
+                              attr_name, lookup_id, cmd, rsc_id);
                 }
             }
 
@@ -272,11 +274,9 @@ cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
     GList/*<pe_resource_t*>*/ *resources = NULL;
     const char *common_attr_id = attr_id;
 
-    if(attr_id == NULL
-       && force == FALSE
-       && find_resource_attr(
-           out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
-        printf("\n");
+    if (attr_id == NULL && force == FALSE) {
+        find_resource_attr (out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
+                            NULL, NULL, attr_name, NULL);
     }
 
     if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
@@ -285,10 +285,10 @@ cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
             if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
-                printf("WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)\n",
-                       uber_parent(rsc)->id, attr_name, local_attr_id);
-                printf("         Delete '%s' first or use the force option to override\n",
-                       local_attr_id);
+                out->err(out, "WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)",
+                         uber_parent(rsc)->id, attr_name, local_attr_id);
+                out->err(out, "         Delete '%s' first or use the force option to override",
+                         local_attr_id);
             }
             free(local_attr_id);
             if (rc == pcmk_rc_ok) {
@@ -362,9 +362,9 @@ cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
         rc = pcmk_legacy2rc(rc);
 
         if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
-            printf("Set '%s' option: id=%s%s%s%s%s value=%s\n", lookup_id, local_attr_id,
-                   attr_set ? " set=" : "", attr_set ? attr_set : "",
-                   attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
+            out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s", lookup_id, local_attr_id,
+                      attr_set ? " set=" : "", attr_set ? attr_set : "",
+                      attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
         }
 
         free_xml(xml_top);
@@ -421,11 +421,9 @@ cli_resource_delete_attribute(pcmk__output_t *out, pe_resource_t *rsc,
     int rc = pcmk_rc_ok;
     GList/*<pe_resource_t*>*/ *resources = NULL;
 
-    if(attr_id == NULL
-       && force == FALSE
-       && find_resource_attr(
-           out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
-        printf("\n");
+    if (attr_id == NULL && force == FALSE) {
+        find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
+                           NULL, NULL, attr_name, NULL);
     }
 
     if(pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
@@ -469,9 +467,9 @@ cli_resource_delete_attribute(pcmk__output_t *out, pe_resource_t *rsc,
         rc = pcmk_legacy2rc(rc);
 
         if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
-            printf("Deleted '%s' option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
-                   attr_set ? " set=" : "", attr_set ? attr_set : "",
-                   attr_name ? " name=" : "", attr_name ? attr_name : "");
+            out->info(out, "Deleted '%s' option: id=%s%s%s%s%s", lookup_id, local_attr_id,
+                      attr_set ? " set=" : "", attr_set ? attr_set : "",
+                      attr_name ? " name=" : "", attr_name ? attr_name : "");
         }
 
         free(lookup_id);
@@ -497,11 +495,11 @@ send_lrm_rsc_op(pcmk__output_t *out, pcmk_ipc_api_t *controld_api, bool do_fail_
     pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     if (rsc == NULL) {
-        CMD_ERR("Resource %s not found", rsc_id);
+        out->err(out, "Resource %s not found", rsc_id);
         return ENXIO;
 
     } else if (rsc->variant != pe_native) {
-        CMD_ERR("We can only process primitive resources, not %s", rsc_id);
+        out->err(out, "We can only process primitive resources, not %s", rsc_id);
         return EINVAL;
     }
 
@@ -509,25 +507,25 @@ send_lrm_rsc_op(pcmk__output_t *out, pcmk_ipc_api_t *controld_api, bool do_fail_
     rsc_provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
     rsc_type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
-        CMD_ERR("Resource %s does not have a class and type", rsc_id);
+        out->err(out, "Resource %s does not have a class and type", rsc_id);
         return EINVAL;
     }
 
     if (host_uname == NULL) {
-        CMD_ERR("Please specify a node name");
+        out->err(out, "Please specify a node name");
         return EINVAL;
 
     } else {
         pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node == NULL) {
-            CMD_ERR("Node %s not found", host_uname);
+            out->err(out, "Node %s not found", host_uname);
             return pcmk_rc_node_unknown;
         }
 
         if (!(node->details->online)) {
             if (do_fail_resource) {
-                CMD_ERR("Node %s is not online", host_uname);
+                out->err(out, "Node %s is not online", host_uname);
                 return ENOTCONN;
             } else {
                 cib_only = true;
@@ -536,8 +534,8 @@ send_lrm_rsc_op(pcmk__output_t *out, pcmk_ipc_api_t *controld_api, bool do_fail_
         if (!cib_only && pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
             if (node == NULL) {
-                CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
-                        host_uname);
+                out->err(out, "No cluster connection to Pacemaker Remote node %s detected",
+                         host_uname);
                 return ENOTCONN;
             }
             router_node = node->details->uname;
@@ -779,27 +777,27 @@ cli_resource_delete(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     node = pe_find_node(data_set->nodes, host_uname);
 
     if (node == NULL) {
-        printf("Unable to clean up %s because node %s not found\n",
-               rsc->id, host_uname);
+        out->err(out, "Unable to clean up %s because node %s not found",
+                 rsc->id, host_uname);
         return ENODEV;
     }
 
     if (!node->details->rsc_discovery_enabled) {
-        printf("Unable to clean up %s because resource discovery disabled on %s\n",
-               rsc->id, host_uname);
+        out->err(out, "Unable to clean up %s because resource discovery disabled on %s",
+                 rsc->id, host_uname);
         return EOPNOTSUPP;
     }
 
     if (controld_api == NULL) {
-        printf("Dry run: skipping clean-up of %s on %s due to CIB_file\n",
-               rsc->id, host_uname);
+        out->err(out, "Dry run: skipping clean-up of %s on %s due to CIB_file",
+                 rsc->id, host_uname);
         return pcmk_rc_ok;
     }
 
     rc = clear_rsc_fail_attrs(rsc, operation, interval_spec, node);
     if (rc != pcmk_rc_ok) {
-        printf("Unable to clean up %s failures on %s: %s\n",
-                rsc->id, host_uname, pcmk_rc_str(rc));
+        out->err(out, "Unable to clean up %s failures on %s: %s",
+                 rsc->id, host_uname, pcmk_rc_str(rc));
         return rc;
     }
 
@@ -810,10 +808,10 @@ cli_resource_delete(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         rc = clear_rsc_history(out, controld_api, host_uname, rsc->id, data_set);
     }
     if (rc != pcmk_rc_ok) {
-        printf("Cleaned %s failures on %s, but unable to clean history: %s\n",
-               rsc->id, host_uname, pcmk_strerror(rc));
+        out->err(out, "Cleaned %s failures on %s, but unable to clean history: %s",
+                 rsc->id, host_uname, pcmk_strerror(rc));
     } else {
-        printf("Cleaned up %s on %s\n", rsc->id, host_uname);
+        out->info(out, "Cleaned up %s on %s", rsc->id, host_uname);
     }
     return rc;
 }
@@ -829,8 +827,8 @@ cli_cleanup_all(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     const char *display_name = node_name? node_name : "all nodes";
 
     if (controld_api == NULL) {
-        printf("Dry run: skipping clean-up of %s due to CIB_file\n",
-               display_name);
+        out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
+                  display_name);
         return rc;
     }
 
@@ -838,7 +836,7 @@ cli_cleanup_all(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         pe_node_t *node = pe_find_node(data_set->nodes, node_name);
 
         if (node == NULL) {
-            CMD_ERR("Unknown node: %s", node_name);
+            out->err(out, "Unknown node: %s", node_name);
             return ENXIO;
         }
         if (pe__is_guest_or_remote_node(node)) {
@@ -849,8 +847,8 @@ cli_cleanup_all(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     rc = pcmk__node_attr_request_clear(NULL, node_name, NULL, operation,
                                        interval_spec, NULL, attr_options);
     if (rc != pcmk_rc_ok) {
-        printf("Unable to clean up all failures on %s: %s\n",
-                display_name, pcmk_rc_str(rc));
+        out->err(out, "Unable to clean up all failures on %s: %s",
+                 display_name, pcmk_rc_str(rc));
         return rc;
     }
 
@@ -858,8 +856,8 @@ cli_cleanup_all(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
         rc = clear_rsc_failures(out, controld_api, node_name, NULL,
                                 operation, interval_spec, data_set);
         if (rc != pcmk_rc_ok) {
-            printf("Cleaned all resource failures on %s, but unable to clean history: %s\n",
-                   node_name, pcmk_strerror(rc));
+            out->err(out, "Cleaned all resource failures on %s, but unable to clean history: %s",
+                     node_name, pcmk_strerror(rc));
             return rc;
         }
     } else {
@@ -869,14 +867,14 @@ cli_cleanup_all(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
             rc = clear_rsc_failures(out, controld_api, node->details->uname, NULL,
                                     operation, interval_spec, data_set);
             if (rc != pcmk_rc_ok) {
-                printf("Cleaned all resource failures on all nodes, but unable to clean history: %s\n",
-                       pcmk_strerror(rc));
+                out->err(out, "Cleaned all resource failures on all nodes, but unable to clean history: %s",
+                         pcmk_strerror(rc));
                 return rc;
             }
         }
     }
 
-    printf("Cleaned up all resources on %s\n", display_name);
+    out->info(out, "Cleaned up all resources on %s", display_name);
     return rc;
 }
 
@@ -1074,7 +1072,7 @@ static void display_list(pcmk__output_t *out, GList *items, const char *tag)
     GList *item = NULL;
 
     for (item = items; item != NULL; item = item->next) {
-        fprintf(stdout, "%s%s\n", tag, (const char *)item->data);
+        out->info(out, "%s%s", tag, (const char *)item->data);
     }
 }
 
@@ -1127,12 +1125,12 @@ update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not obtain the current CIB: %s (%d)\n", pcmk_strerror(rc), rc);
+        out->err(out, "Could not obtain the current CIB: %s (%d)", pcmk_strerror(rc), rc);
         return rc;
     }
     rc = update_working_set_xml(data_set, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not upgrade the current CIB XML\n");
+        out->err(out, "Could not upgrade the current CIB XML");
         free_xml(cib_xml_copy);
         return rc;
     }
@@ -1162,7 +1160,7 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
         shadow_file = get_shadow_file(pid);
 
         if (shadow_cib == NULL) {
-            fprintf(stderr, "Could not create shadow cib: '%s'\n", pid);
+            out->err(out, "Could not create shadow cib: '%s'", pid);
             rc = ENXIO;
             goto cleanup;
         }
@@ -1170,7 +1168,7 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
         rc = write_xml_file(data_set->input, shadow_file, FALSE);
 
         if (rc < 0) {
-            fprintf(stderr, "Could not populate shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
+            out->err(out, "Could not populate shadow cib: %s (%d)", pcmk_strerror(rc), rc);
             goto cleanup;
         }
 
@@ -1178,7 +1176,7 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            fprintf(stderr, "Could not connect to shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
+            out->err(out, "Could not connect to shadow cib: %s (%d)", pcmk_strerror(rc), rc);
             goto cleanup;
         }
 
@@ -1301,9 +1299,9 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     if(resource_is_running_on(rsc, host) == FALSE) {
         const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
         if(host) {
-            printf("%s is not running on %s and so cannot be restarted\n", id, host);
+            out->err(out, "%s is not running on %s and so cannot be restarted", id, host);
         } else {
-            printf("%s is not running anywhere and so cannot be restarted\n", id);
+            out->err(out, "%s is not running anywhere and so cannot be restarted", id);
         }
         return ENXIO;
     }
@@ -1340,7 +1338,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
     rc = update_dataset(out, cib, data_set, FALSE);
     if(rc != pcmk_rc_ok) {
-        fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
+        out->err(out, "Could not get new resource list: %s (%d)", pcmk_strerror(rc), rc);
         goto done;
     }
 
@@ -1371,7 +1369,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                                            data_set, force);
     }
     if(rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
         if (current_active) {
             g_list_free_full(current_active, free);
         }
@@ -1383,7 +1381,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
     rc = update_dataset(out, cib, data_set, TRUE);
     if(rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not determine which resources would be stopped\n");
+        out->err(out, "Could not determine which resources would be stopped");
         goto failure;
     }
 
@@ -1391,7 +1389,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     dump_list(target_active, "Target");
 
     list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
-    fprintf(stdout, "Waiting for %d resources to stop:\n", g_list_length(list_delta));
+    out->info(out, "Waiting for %d resources to stop:", g_list_length(list_delta));
     display_list(out, list_delta, " * ");
 
     step_timeout_s = timeout / sleep_interval;
@@ -1410,7 +1408,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
             }
             rc = update_dataset(out, cib, data_set, FALSE);
             if(rc != pcmk_rc_ok) {
-                fprintf(stderr, "Could not determine which resources were stopped\n");
+                out->err(out, "Could not determine which resources were stopped");
                 goto failure;
             }
 
@@ -1427,7 +1425,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
-            fprintf(stderr, "Could not complete shutdown of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
+            out->info(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
             display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
@@ -1452,7 +1450,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
 
     if(rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not unset target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        out->err(out, "Could not unset target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
         goto done;
     }
 
@@ -1461,7 +1459,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     }
     target_active = restart_target_active;
     list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
-    fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
+    out->info(out, "Waiting for %d resources to start again:", g_list_length(list_delta));
     display_list(out, list_delta, " * ");
 
     step_timeout_s = timeout / sleep_interval;
@@ -1482,7 +1480,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
             rc = update_dataset(out, cib, data_set, FALSE);
             if(rc != pcmk_rc_ok) {
-                fprintf(stderr, "Could not determine which resources were started\n");
+                out->err(out, "Could not determine which resources were started");
                 goto failure;
             }
 
@@ -1502,7 +1500,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
         if(before == g_list_length(list_delta)) {
             /* aborted during start phase, print the contents of list_delta */
-            fprintf(stdout, "Could not complete restart of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
+            out->info(out, "Could not complete restart of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
             display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
@@ -1578,29 +1576,23 @@ actions_are_pending(GListPtr actions)
     return FALSE;
 }
 
-/*!
- * \internal
- * \brief Print pending actions to stderr
- *
- * \param[in] actions   List of actions to check
- *
- * \return void
- */
 static void
 print_pending_actions(pcmk__output_t *out, GListPtr actions)
 {
     GListPtr action;
 
-    fprintf(stderr, "Pending actions:\n");
+    out->info(out, "Pending actions:");
     for (action = actions; action != NULL; action = action->next) {
         pe_action_t *a = (pe_action_t *) action->data;
 
-        if (action_is_pending(a)) {
-            fprintf(stderr, "\tAction %d: %s", a->id, a->uuid);
-            if (a->node) {
-                fprintf(stderr, "\ton %s", a->node->details->uname);
-            }
-            fprintf(stderr, "\n");
+        if (!action_is_pending(a)) {
+            continue;
+        }
+
+        if (a->node) {
+            out->info(out, "\tAction %d: %s\ton %s", a->id, a->uuid, a->node->details->uname);
+        } else {
+            out->info(out, "\tAction %d: %s", a->id, a->uuid);
         }
     }
 }
@@ -1678,8 +1670,8 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
                                                          "dc-version");
 
             if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
-                printf("warning: wait option may not work properly in "
-                       "mixed-version cluster\n");
+                out->info(out, "warning: wait option may not work properly in "
+                          "mixed-version cluster");
                 printed_version_warning = TRUE;
             }
         }
@@ -1702,8 +1694,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     svc_action_t *op = NULL;
 
     if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        CMD_ERR("Sorry, the %s option doesn't support %s resources yet",
-                action, rsc_class);
+        out->err(out, "Sorry, the %s option doesn't support %s resources yet",
+                 action, rsc_class);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
@@ -1765,8 +1757,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            printf("Overriding the cluster configuration for '%s' with '%s' = '%s'\n",
-                   rsc_name, name, value);
+            out->info(out, "Overriding the cluster configuration for '%s' with '%s' = '%s'",
+                      rsc_name, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }
@@ -1775,13 +1767,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         exit_code = op->rc;
 
         if (op->status == PCMK_LRM_OP_DONE) {
-            printf("Operation %s for %s (%s:%s:%s) returned: '%s' (%d)\n",
-                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                   services_ocf_exitcode_str(op->rc), op->rc);
+            out->info(out, "Operation %s for %s (%s:%s:%s) returned: '%s' (%d)",
+                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
+                      services_ocf_exitcode_str(op->rc), op->rc);
         } else {
-            printf("Operation %s for %s (%s:%s:%s) failed: '%s' (%d)\n",
-                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                   services_lrm_status_str(op->status), op->status);
+            out->info(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
+                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
+                      services_lrm_status_str(op->status), op->status);
         }
 
         /* hide output for validate-all if not in verbose */
@@ -1833,11 +1825,11 @@ cli_resource_execute(pcmk__output_t *out, pe_resource_t *rsc,
         if(pe_rsc_is_clone(rsc)) {
             int rc = cli_resource_search(out, rsc, requested_name, data_set);
             if(rc > 0 && force == FALSE) {
-                CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
-                        action, rsc->id);
-                CMD_ERR("Try setting target-role=Stopped first or specifying "
-                        "the force option");
-                crm_exit(CRM_EX_UNSAFE);
+                out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
+                         action, rsc->id);
+                out->err(out, "Try setting target-role=Stopped first or specifying "
+                         "the force option");
+                return CRM_EX_UNSAFE;
             }
         }
 
@@ -1851,9 +1843,8 @@ cli_resource_execute(pcmk__output_t *out, pe_resource_t *rsc,
     }
 
     if(rsc->variant == pe_group) {
-        CMD_ERR("Sorry, the %s option doesn't support group resources",
-                rsc_action);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+        out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
+        return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -1895,12 +1886,12 @@ cli_resource_move(pcmk__output_t *out, pe_resource_t *rsc, const char *rsc_id,
         pe_resource_t *p = uber_parent(rsc);
 
         if (pcmk_is_set(p->flags, pe_rsc_promotable)) {
-            CMD_ERR("Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
+            out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
 
         } else {
-            CMD_ERR("Ignoring master option: %s is not promotable", rsc_id);
+            out->info(out, "Ignoring master option: %s is not promotable", rsc_id);
             promoted_role_only = FALSE;
         }
     }
@@ -1971,13 +1962,13 @@ cli_resource_move(pcmk__output_t *out, pe_resource_t *rsc, const char *rsc_id,
                                    NULL, cib, cib_options, promoted_role_only);
 
         } else if(count > 1) {
-            CMD_ERR("Resource '%s' is currently %s in %d locations. "
-                    "One may now move to %s",
-                    rsc_id, (promoted_role_only? "promoted" : "active"),
-                    count, dest->details->uname);
-            CMD_ERR("To prevent '%s' from being %s at a specific location, "
-                    "specify a node.",
-                    rsc_id, (promoted_role_only? "promoted" : "active"));
+            out->info(out, "Resource '%s' is currently %s in %d locations. "
+                      "One may now move to %s",
+                      rsc_id, (promoted_role_only? "promoted" : "active"),
+                      count, dest->details->uname);
+            out->info(out, "To prevent '%s' from being %s at a specific location, "
+                      "specify a node.",
+                      rsc_id, (promoted_role_only? "promoted" : "active"));
 
         } else {
             crm_trace("Not banning %s from its current location: not active", rsc_id);

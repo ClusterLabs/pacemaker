@@ -238,7 +238,7 @@ resource_ipc_timeout(gpointer data)
     }
 
     g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_TIMEOUT,
-                "\nAborting because no messages received in %d seconds", MESSAGE_TIMEOUT_S);
+                "Aborting because no messages received in %d seconds", MESSAGE_TIMEOUT_S);
 
     quit_main_loop(CRM_EX_TIMEOUT);
     return FALSE;
@@ -258,18 +258,19 @@ controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
 
         case pcmk_ipc_event_reply:
             if (status != CRM_EX_OK) {
-                fprintf(stderr, "\nError: bad reply from controller: %s\n",
-                        crm_exit_str(status));
+                out->err(out, "Error: bad reply from controller: %s",
+                         crm_exit_str(status));
                 pcmk_disconnect_ipc(api);
                 quit_main_loop(status);
             } else {
-                fprintf(stderr, ".");
                 if ((pcmk_controld_api_replies_expected(api) == 0)
                     && mainloop && g_main_loop_is_running(mainloop)) {
-                    fprintf(stderr, " OK\n");
+                    out->info(out, "... got reply (done)");
                     crm_debug("Got all the replies we expected");
                     pcmk_disconnect_ipc(api);
                     quit_main_loop(CRM_EX_OK);
+                } else {
+                    out->info(out, "... got reply");
                 }
             }
             break;
@@ -285,8 +286,8 @@ start_mainloop(pcmk_ipc_api_t *capi)
     unsigned int count = pcmk_controld_api_replies_expected(capi);
 
     if (count > 0) {
-        fprintf(stderr, "Waiting for %d %s from the controller",
-                count, pcmk__plural_alt(count, "reply", "replies"));
+        out->info(out, "Waiting for %d %s from the controller",
+                  count, pcmk__plural_alt(count, "reply", "replies"));
         exit_code = CRM_EX_DISCONNECT; // For unexpected disconnects
         mainloop = g_main_loop_new(NULL, FALSE);
         g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
@@ -1055,7 +1056,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
         remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
 
         for (ele = remaining; ele != NULL; ele = ele->next) {
-            printf("Removing constraint: %s\n", (char *) ele->data);
+            out->info(out, "Removing constraint: %s", (char *) ele->data);
         }
 
         g_list_free(before);
@@ -1281,8 +1282,8 @@ refresh(pcmk__output_t *out)
     }
 
     if (controld_api == NULL) {
-        printf("Dry run: skipping clean-up of %s due to CIB_file\n",
-               options.host_uname? options.host_uname : "all nodes");
+        out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
+                  options.host_uname? options.host_uname : "all nodes");
         rc = pcmk_rc_ok;
         return rc;
     }
@@ -1724,7 +1725,8 @@ main(int argc, char **argv)
     if (options.require_crmd) {
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (rc != pcmk_rc_ok) {
-            CMD_ERR("Error connecting to the controller: %s", pcmk_rc_str(rc));
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Error connecting to the controller: %s", pcmk_rc_str(rc));
             goto done;
         }
         pcmk_register_ipc_callback(controld_api, controller_event_callback,

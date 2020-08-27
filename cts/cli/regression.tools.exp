@@ -3223,10 +3223,10 @@ Migration will take effect until:
 =#=#=#= End test: Try to move a resource previously moved with a lifetime - OK (0) =#=#=#=
 * Passed: crm_resource   - Try to move a resource previously moved with a lifetime
 =#=#=#= Begin test: Ban dummy from node1 for a short time =#=#=#=
+Migration will take effect until:
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
-Migration will take effect until:
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
 <cib epoch="53" num_updates="0" admin_epoch="1">
   <configuration>
