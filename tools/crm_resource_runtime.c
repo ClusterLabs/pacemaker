@@ -142,6 +142,8 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
                    crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
 
+        out->spacer(out);
+
     } else if(value) {
         const char *tmp = crm_element_value(xml_search, attr);
 
