@@ -126,10 +126,14 @@ Cluster-Wide Configuration
    events. Maintained by the cluster.
    
    |=========================================================
+
+.. _cluster_options:
+
+Cluster Options
+###############
    
-   [[s-cluster-options]]
-   == Cluster Options ==
-   
+.. Convert_to_RST_2:
+
    Cluster options, as you might expect, control how the cluster behaves
    when confronted with certain situations.
    
