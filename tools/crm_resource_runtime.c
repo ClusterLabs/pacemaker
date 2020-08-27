@@ -23,21 +23,21 @@ do_find_resource(pcmk__output_t *out, const char *rsc, pe_resource_t * the_rsc,
         pe_node_t *node = (pe_node_t *) lpc->data;
 
         if (out->is_quiet(out)) {
-            fprintf(stdout, "%s\n", node->details->uname);
+            out->info(out, "%s", node->details->uname);
         } else {
             const char *state = "";
 
             if (!pe_rsc_is_clone(the_rsc) && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
                 state = "Master";
             }
-            fprintf(stdout, "resource %s is running on: %s %s\n", rsc, node->details->uname, state);
+            out->info(out, "resource %s is running on: %s %s", rsc, node->details->uname, state);
         }
 
         found++;
     }
 
     if (!out->is_quiet(out) && found == 0) {
-        fprintf(stderr, "resource %s is NOT running\n", rsc);
+        out->err(out, "resource %s is NOT running", rsc);
     }
 
     return found;
