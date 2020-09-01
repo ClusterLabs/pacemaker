@@ -54,11 +54,13 @@
           <op id="dummy-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
         </operations>
       </primitive>
-      <primitive class="ocf" id="inactive-dummy" provider="pacemaker" type="Dummy">
-        <meta_attributes id="inactive-dummy.meta">
-          <nvpair id="inactive-dummy.meta.target" name="target-role" value="stopped"/>
+      <group id="inactive-group">
+        <meta_attributes id="inactive-group-meta_attributes">
+          <nvpair id="inactive-group-meta_attributes-target-role" name="target-role" value="stopped"/>
         </meta_attributes>
-      </primitive>
+        <primitive class="ocf" id="inactive-dummy-1" provider="pacemaker" type="Dummy"/>
+        <primitive class="ocf" id="inactive-dummy-2" provider="pacemaker" type="Dummy"/>
+      </group>
       <master id="inactive-clone-master">
         <primitive class="ocf" id="inactive-clone" provider="pacemaker" type="Stateful">
           <operations>
@@ -115,7 +117,7 @@
         <obj_ref id="1"/>
       </tag>
       <tag id="inactive-rscs">
-        <obj_ref id="inactive-dummy"/>
+        <obj_ref id="inactive-group"/>
         <obj_ref id="inactive-clone"/>
       </tag>
       <tag id="fencing-rscs">
