@@ -59,7 +59,7 @@ Active Resources:
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
-    <group id="inactive-group" number_resources="2">
+    <group id="inactive-group" number_resources="2" disabled="true">
       <resource id="inactive-dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dummy-2" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
@@ -83,7 +83,7 @@ Active Resources:
         <resource id="httpd-bundle-2" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </replica>
     </bundle>
-    <group id="exim-group" number_resources="2">
+    <group id="exim-group" number_resources="2" disabled="false">
       <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
@@ -92,23 +92,23 @@ Active Resources:
       </resource>
     </group>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:0" number_resources="1">
+      <group id="mysql-group:0" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:2" number_resources="1">
+      <group id="mysql-group:2" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:3" number_resources="1">
+      <group id="mysql-group:3" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:4" number_resources="1">
+      <group id="mysql-group:4" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
@@ -219,7 +219,7 @@ Active Resources:
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
-    <group id="inactive-group" number_resources="2">
+    <group id="inactive-group" number_resources="2" disabled="true">
       <resource id="inactive-dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dummy-2" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
@@ -243,7 +243,7 @@ Active Resources:
         <resource id="httpd-bundle-2" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </replica>
     </bundle>
-    <group id="exim-group" number_resources="2">
+    <group id="exim-group" number_resources="2" disabled="false">
       <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
@@ -252,23 +252,23 @@ Active Resources:
       </resource>
     </group>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:0" number_resources="1">
+      <group id="mysql-group:0" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:2" number_resources="1">
+      <group id="mysql-group:2" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:3" number_resources="1">
+      <group id="mysql-group:3" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:4" number_resources="1">
+      <group id="mysql-group:4" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
@@ -708,7 +708,7 @@ Negative Location Constraints:
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
-    <group id="inactive-group" number_resources="2">
+    <group id="inactive-group" number_resources="2" disabled="true">
       <resource id="inactive-dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dummy-2" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
@@ -733,23 +733,23 @@ Negative Location Constraints:
       </replica>
     </bundle>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:0" number_resources="1">
+      <group id="mysql-group:0" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:2" number_resources="1">
+      <group id="mysql-group:2" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:3" number_resources="1">
+      <group id="mysql-group:3" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:4" number_resources="1">
+      <group id="mysql-group:4" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
@@ -878,7 +878,7 @@ Negative Location Constraints:
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
-    <group id="inactive-group" number_resources="2">
+    <group id="inactive-group" number_resources="2" disabled="true">
       <resource id="inactive-dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dummy-2" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
@@ -903,18 +903,18 @@ Negative Location Constraints:
       </replica>
     </bundle>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:2" number_resources="1">
+      <group id="mysql-group:2" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:3" number_resources="1">
+      <group id="mysql-group:3" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:4" number_resources="1">
+      <group id="mysql-group:4" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
@@ -1024,7 +1024,7 @@ Negative Location Constraints:
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
-    <group id="inactive-group" number_resources="2">
+    <group id="inactive-group" number_resources="2" disabled="true">
       <resource id="inactive-dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dummy-2" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
@@ -1048,7 +1048,7 @@ Negative Location Constraints:
         <resource id="httpd-bundle-2" resource_agent="ocf::pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </replica>
     </bundle>
-    <group id="exim-group" number_resources="2">
+    <group id="exim-group" number_resources="2" disabled="false">
       <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
@@ -1057,18 +1057,18 @@ Negative Location Constraints:
       </resource>
     </group>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:0" number_resources="1">
+      <group id="mysql-group:0" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:2" number_resources="1">
+      <group id="mysql-group:2" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:3" number_resources="1">
+      <group id="mysql-group:3" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:4" number_resources="1">
+      <group id="mysql-group:4" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
@@ -1210,7 +1210,7 @@ Active Resources:
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dhcpd" resource_agent="lsb:dhcpd" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
-    <group id="inactive-group" number_resources="2">
+    <group id="inactive-group" number_resources="2" disabled="true">
       <resource id="inactive-dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dummy-2" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
@@ -1261,7 +1261,7 @@ Full List of Resources:
   * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
   * Clone Set: inactive-clone [inactive-dhcpd]:
     * Stopped (disabled): [ cluster01 cluster02 ]
-  * Resource Group: inactive-group:
+  * Resource Group: inactive-group (disabled):
     * inactive-dummy-1	(ocf::pacemaker:Dummy):	 Stopped (disabled)
     * inactive-dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled)
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -1293,7 +1293,7 @@ Full List of Resources:
   * dummy	(ocf::pacemaker:Dummy):	 Started cluster02
   * Clone Set: inactive-clone [inactive-dhcpd]:
     * Stopped (disabled): [ cluster02 ]
-  * Resource Group: inactive-group:
+  * Resource Group: inactive-group (disabled):
     * inactive-dummy-1	(ocf::pacemaker:Dummy):	 Stopped (disabled)
     * inactive-dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled)
   * Container bundle set: httpd-bundle [pcmk:http]:
@@ -1431,7 +1431,7 @@ Operations:
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
-    <group id="exim-group" number_resources="2">
+    <group id="exim-group" number_resources="2" disabled="false">
       <resource id="Public-IP" resource_agent="ocf::heartbeat:IPaddr" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
@@ -1511,7 +1511,7 @@ Operations:
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
-    <group id="exim-group" number_resources="2">
+    <group id="exim-group" number_resources="2" disabled="false">
       <resource id="Email" resource_agent="lsb:exim" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
@@ -1865,7 +1865,7 @@ Node List:
 Full List of Resources:
   * Clone Set: inactive-clone [inactive-dhcpd]:
     * Stopped (disabled): [ cluster01 cluster02 ]
-  * Resource Group: inactive-group:
+  * Resource Group: inactive-group (disabled):
     * inactive-dummy-1	(ocf::pacemaker:Dummy):	 Stopped (disabled)
     * inactive-dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Basic text output with inactive resources, filtered by tag - OK (0) =#=#=#=
@@ -2335,23 +2335,23 @@ Operations:
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:0" number_resources="1">
+      <group id="mysql-group:0" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:2" number_resources="1">
+      <group id="mysql-group:2" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:3" number_resources="1">
+      <group id="mysql-group:3" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:4" number_resources="1">
+      <group id="mysql-group:4" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
@@ -2438,7 +2438,7 @@ Operations:
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
@@ -2535,23 +2535,23 @@ Operations:
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:0" number_resources="1">
+      <group id="mysql-group:0" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster02" id="2" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
       </group>
-      <group id="mysql-group:2" number_resources="1">
+      <group id="mysql-group:2" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:3" number_resources="1">
+      <group id="mysql-group:3" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
-      <group id="mysql-group:4" number_resources="1">
+      <group id="mysql-group:4" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
@@ -2638,7 +2638,7 @@ Operations:
   </nodes>
   <resources>
     <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" failed="false" failure_ignored="false">
-      <group id="mysql-group:1" number_resources="1">
+      <group id="mysql-group:1" number_resources="1" disabled="false">
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
           <node name="cluster01" id="1" cached="true"/>
         </resource>
@@ -2752,7 +2752,7 @@ Active Resources:
         </resource>
       </replica>
     </bundle>
-    <group id="partially-active-group" number_resources="2">
+    <group id="partially-active-group" number_resources="2" disabled="false">
       <resource id="dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
