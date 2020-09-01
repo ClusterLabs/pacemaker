@@ -68,6 +68,13 @@ typedef struct xml_private_s {
     } while (0)
 
 G_GNUC_INTERNAL
+void pcmk__xml2text(xmlNode *data, int options, char **buffer, int *offset,
+                    int *max, int depth);
+
+G_GNUC_INTERNAL
+void pcmk__buffer_add_char(char **buffer, int *offset, int *max, char c);
+
+G_GNUC_INTERNAL
 void pcmk__set_xml_doc_flag(xmlNode *xml, enum xml_private_flags flag);
 
 G_GNUC_INTERNAL
@@ -95,6 +102,9 @@ void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_attr_dirty(xmlAttr *a);
+
+G_GNUC_INTERNAL
+bool pcmk__xa_filterable(const char *name);
 
 static inline xmlAttr *
 pcmk__first_xml_attr(const xmlNode *xml)

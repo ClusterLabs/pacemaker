@@ -16,6 +16,7 @@
 #include <crm/common/xml.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -375,17 +376,20 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         crm_trace("Creating %s-%s for %s=%s",
                   CIB_OPTIONS_FIRST, attr_name, attr_name, attr_value);
 
-        configuration = find_entity(xml, XML_CIB_TAG_CONFIGURATION, NULL);
+        configuration = pcmk__xe_match(xml, XML_CIB_TAG_CONFIGURATION, NULL,
+                                       NULL);
         if (configuration == NULL) {
             configuration = create_xml_node(xml, XML_CIB_TAG_CONFIGURATION);
         }
 
-        crm_config = find_entity(configuration, XML_CIB_TAG_CRMCONFIG, NULL);
+        crm_config = pcmk__xe_match(configuration, XML_CIB_TAG_CRMCONFIG, NULL,
+                                    NULL);
         if (crm_config == NULL) {
             crm_config = create_xml_node(configuration, XML_CIB_TAG_CRMCONFIG);
         }
 
-        cluster_property_set = find_entity(crm_config, XML_CIB_TAG_PROPSET, NULL);
+        cluster_property_set = pcmk__xe_match(crm_config, XML_CIB_TAG_PROPSET,
+                                              NULL, NULL);
         if (cluster_property_set == NULL) {
             cluster_property_set = create_xml_node(crm_config, XML_CIB_TAG_PROPSET);
             crm_xml_add(cluster_property_set, XML_ATTR_ID, CIB_OPTIONS_FIRST);

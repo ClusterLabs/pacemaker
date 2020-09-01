@@ -30,8 +30,6 @@
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
 
-void strip_text_nodes(xmlNode * xml);
-
 
 /*
  * XML attribute names used only by internal code
@@ -90,9 +88,5 @@ void strip_text_nodes(xmlNode * xml);
 
 #define PCMK__ENV_PHYSICAL_HOST         "physical_host"
 
-
-const char *crm_xml_add_last_written(xmlNode *xml_node);
-void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
-void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
 
 #endif                          /* CRM_INTERNAL__H */

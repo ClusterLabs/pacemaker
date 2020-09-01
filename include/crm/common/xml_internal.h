@@ -1,24 +1,14 @@
 /*
- * Copyright 2017-2018 the Pacemaker project contributors
+ * Copyright 2017-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef CRM_COMMON_XML_INTERNAL__H
-#  define CRM_COMMON_XML_INTERNAL__H
+
+#ifndef PCMK__XML_INTERNAL__H
+#  define PCMK__XML_INTERNAL__H
 
 /*
  * Internal-only wrappers for and extensions to libxml2 (libxslt)
@@ -74,7 +64,7 @@
  * \param[in] fmt      Format string as with printf-like functions
  * \param[in] ap       Variable argument list to supplement \p fmt format string
  */
-#define CRM_XML_LOG_BASE(priority, dechunk, postemit, prefix, fmt, ap)          \
+#define PCMK__XML_LOG_BASE(priority, dechunk, postemit, prefix, fmt, ap)        \
 do {                                                                            \
     if (!(dechunk) && (prefix) == NULL) {  /* quick pass */                     \
         qb_log_from_external_source_va(__func__, __FILE__, (fmt),               \
@@ -140,6 +130,12 @@ enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_base_xslt,
 };
 
+void pcmk__strip_xml_text(xmlNode *xml);
+const char *pcmk__xe_add_last_written(xmlNode *xe);
+
+xmlNode *pcmk__xe_match(xmlNode *parent, const char *node_name,
+                        const char *attr_n, const char *attr_v);
+
 /*!
  * \internal
  * \brief Get the root directory to scan XML artefacts of given kind for
@@ -163,4 +159,4 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns);
 char *pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns,
                               const char *filespec);
 
-#endif
+#endif // PCMK__XML_INTERNAL__H

@@ -27,7 +27,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
+#include <crm/common/xml_internal.h>  /* PCMK__XML_LOG_BASE */
 
 typedef struct {
     unsigned char v[2];
@@ -79,7 +79,7 @@ xml_log(int priority, const char *fmt, ...)
     va_start(ap, fmt);
     if (silent_logging == FALSE) {
         /* XXX should not this enable dechunking as well? */
-        CRM_XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
+        PCMK__XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
     }
     va_end(ap);
 }
@@ -872,7 +872,7 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
             vfprintf(stderr, fmt, ap);
         }
     } else {
-        CRM_XML_LOG_BASE(msg_log_level, TRUE, 0, "CIB upgrade: ", fmt, ap);
+        PCMK__XML_LOG_BASE(msg_log_level, TRUE, 0, "CIB upgrade: ", fmt, ap);
     }
 
     va_end(aq);
