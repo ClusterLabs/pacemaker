@@ -69,13 +69,13 @@ scan_ll(const char *text, long long *result, char **end_text)
         } else if (errno != 0) {
             rc = errno;
             local_result = PCMK__PARSE_INT_DEFAULT;
-            crm_err("Could not parse integer from %s (using %d instead): %s",
+            crm_warn("Could not parse integer from %s (using %d instead): %s",
                     text, PCMK__PARSE_INT_DEFAULT, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             rc = EINVAL;
             local_result = PCMK__PARSE_INT_DEFAULT;
-            crm_err("Could not parse integer from %s (using %d instead): "
+            crm_warn("Could not parse integer from %s (using %d instead): "
                     "No digits found", text, PCMK__PARSE_INT_DEFAULT);
         }
 
