@@ -2679,7 +2679,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 11 resource instances configured
+  * 13 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2692,6 +2692,9 @@ Active Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
+  * Resource Group: partially-active-group:
+    * dummy-1	(ocf::pacemaker:Dummy):	 Started cluster02
+    * dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
@@ -2702,12 +2705,12 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="4"/>
-    <resources_configured number="11" disabled="0" blocked="0"/>
+    <resources_configured number="13" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="5" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="3" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="4" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
   </nodes>
@@ -2749,6 +2752,12 @@ Active Resources:
         </resource>
       </replica>
     </bundle>
+    <group id="partially-active-group" number_resources="2">
+      <resource id="dummy-1" resource_agent="ocf::pacemaker:Dummy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="dummy-2" resource_agent="ocf::pacemaker:Dummy" role="Stopped" target_role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </group>
   </resources>
   <node_attributes>
     <node name="cluster01">
@@ -2771,6 +2780,9 @@ Active Resources:
       <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
         <operation_history call="3" task="monitor" interval="30000ms" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
+      </resource_history>
+      <resource_history id="dummy-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" exec-time="0ms" queue-time="0ms" rc="0" rc_text="ok"/>
       </resource_history>
     </node>
     <node name="cluster01">
@@ -2812,7 +2824,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 11 resource instances configured
+  * 13 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2826,6 +2838,9 @@ Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
+  * Resource Group: partially-active-group:
+    * dummy-1	(ocf::pacemaker:Dummy):	 Started cluster02
+    * dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources
 =#=#=#= Begin test: Complete brief text output, with inactive resources =#=#=#=
@@ -2835,7 +2850,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 11 resource instances configured
+  * 13 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2849,6 +2864,8 @@ Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
+  * Resource Group: partially-active-group:
+    *  1/2	(ocf::pacemaker:Dummy):	Active cluster02
 
 Node Attributes:
   * Node: cluster01:
@@ -2867,6 +2884,8 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
+    * dummy-1: migration-threshold=1000000:
+      * (2) start
   * Node: cluster01:
     * Fencing: migration-threshold=1000000:
       * (15) start
@@ -2895,7 +2914,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 11 resource instances configured
+  * 13 resource instances configured (1 DISABLED)
 
 Node List:
   * Node cluster01: online:
@@ -2909,6 +2928,7 @@ Node List:
     * Resources:
       *  1	(ocf::heartbeat:IPaddr2):	Active 
       *  1	(ocf::heartbeat:docker):	Active 
+      *  1	(ocf::pacemaker:Dummy):	Active 
       *  1	(ocf::pacemaker:remote):	Active 
   * GuestNode httpd-bundle-0@cluster02: online:
     * Resources:
@@ -2921,6 +2941,8 @@ Inactive Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
+  * Resource Group: partially-active-group:
+    *  1/2	(ocf::pacemaker:Dummy):	Active cluster02
 
 Node Attributes:
   * Node: cluster01:
@@ -2939,6 +2961,8 @@ Operations:
     * httpd-bundle-0: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="30000ms"
+    * dummy-1: migration-threshold=1000000:
+      * (2) start
   * Node: cluster01:
     * Fencing: migration-threshold=1000000:
       * (15) start
@@ -2967,7 +2991,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 4 nodes configured
-  * 11 resource instances configured
+  * 13 resource instances configured (1 DISABLED)
 
 Node List:
   * Online: [ cluster01 ]
@@ -2988,7 +3012,7 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="4"/>
-    <resources_configured number="11" disabled="0" blocked="0"/>
+    <resources_configured number="13" disabled="1" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
   </summary>
   <nodes>
