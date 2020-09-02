@@ -1227,29 +1227,27 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     CRM_ASSERT(rsc);
     chosen = rsc->allocated_to;
-    if (chosen != NULL && rsc->next_role == RSC_ROLE_UNKNOWN) {
-        rsc->next_role = RSC_ROLE_STARTED;
-        pe_rsc_trace(rsc, "Fixed next_role: unknown -> %s", role2text(rsc->next_role));
-
-    } else if (rsc->next_role == RSC_ROLE_UNKNOWN) {
-        rsc->next_role = RSC_ROLE_STOPPED;
-        pe_rsc_trace(rsc, "Fixed next_role: unknown -> %s", role2text(rsc->next_role));
+    next_role = rsc->next_role;
+    if (next_role == RSC_ROLE_UNKNOWN) {
+        rsc->next_role = (chosen == NULL)? RSC_ROLE_STOPPED : RSC_ROLE_STARTED;
     }
-
-    pe_rsc_trace(rsc, "Processing state transition for %s %p: %s->%s", rsc->id, rsc,
-                 role2text(rsc->role), role2text(rsc->next_role));
+    pe_rsc_trace(rsc, "Creating all actions for %s transition from %s to %s (%s) on %s",
+                 rsc->id, role2text(rsc->role), role2text(rsc->next_role),
+                 ((next_role == RSC_ROLE_UNKNOWN)? "implicit" : "explicit"),
+                 ((chosen == NULL)? "no node" : chosen->details->uname));
 
     current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
     for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
         pe_node_t *dangling_source = (pe_node_t *) gIter->data;
 
-        pe_action_t *stop = stop_action(rsc, dangling_source, FALSE);
+        pe_action_t *stop = NULL;
 
-        pe__set_action_flags(stop, pe_action_dangle);
-        pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s",
+        pe_rsc_trace(rsc, "Creating stop action %s cleanup for %s on %s due to dangling migration",
+                     (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)? "and" : "without"),
                      rsc->id, dangling_source->details->uname);
-
+        stop = stop_action(rsc, dangling_source, FALSE);
+        pe__set_action_flags(stop, pe_action_dangle);
         if (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)) {
             DeleteRsc(rsc, dangling_source, FALSE, data_set);
         }
@@ -1264,8 +1262,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
          * migration. Attempt to continue the migration instead of recovering
          * by stopping the resource everywhere and starting it on a single node.
          */
-        pe_rsc_trace(rsc,
-                     "Will attempt to continue with a partial migration to target %s from %s",
+        pe_rsc_trace(rsc, "Will attempt to continue with partial migration "
+                     "to target %s from %s",
                      rsc->partial_migration_target->details->id,
                      rsc->partial_migration_source->details->id);
 
@@ -1285,9 +1283,10 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     if (multiply_active) {
         if (rsc->partial_migration_target && rsc->partial_migration_source) {
             // Migration was in progress, but we've chosen a different target
-            crm_notice("Resource %s can no longer migrate to %s. Stopping on %s too",
-                       rsc->id, rsc->partial_migration_target->details->uname,
-                       rsc->partial_migration_source->details->uname);
+            crm_notice("Resource %s can no longer migrate from %s to %s "
+                       "(will stop on both nodes)",
+                       rsc->id, rsc->partial_migration_source->details->uname,
+                       rsc->partial_migration_target->details->uname);
 
         } else {
             // Resource was incorrectly multiply active
@@ -1309,12 +1308,16 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
+        pe_rsc_trace(rsc, "Creating start action for %s to represent already pending start",
+                     rsc->id);
         start = start_action(rsc, chosen, TRUE);
         pe__set_action_flags(start, pe_action_print_always);
     }
 
     if (current && chosen && current->details != chosen->details) {
-        pe_rsc_trace(rsc, "Moving %s", rsc->id);
+        pe_rsc_trace(rsc, "Moving %s from %s to %s",
+                     rsc->id, crm_str(current->details->uname),
+                     crm_str(chosen->details->uname));
         is_moving = TRUE;
         need_stop = TRUE;
 
@@ -1330,20 +1333,19 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         }
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
-        pe_rsc_trace(rsc, "Block %s", rsc->id);
+        pe_rsc_trace(rsc, "Blocking further actions on %s", rsc->id);
         need_stop = TRUE;
 
     } else if (rsc->role > RSC_ROLE_STARTED && current != NULL && chosen != NULL) {
-        /* Recovery of a promoted resource */
+        pe_rsc_trace(rsc, "Creating start action for promoted resource %s",
+                     rsc->id);
         start = start_action(rsc, chosen, TRUE);
         if (!pcmk_is_set(start->flags, pe_action_optional)) {
-            pe_rsc_trace(rsc, "Forced start %s", rsc->id);
+            // Recovery of a promoted resource
+            pe_rsc_trace(rsc, "%s restart is required for recovery", rsc->id);
             need_stop = TRUE;
         }
     }
-
-    pe_rsc_trace(rsc, "Creating actions for %s: %s->%s", rsc->id,
-                 role2text(rsc->role), role2text(rsc->next_role));
 
     /* Create any additional actions required when bringing resource down and
      * back up to same level.
@@ -1351,8 +1353,9 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     role = rsc->role;
     while (role != RSC_ROLE_STOPPED) {
         next_role = rsc_state_matrix[role][RSC_ROLE_STOPPED];
-        pe_rsc_trace(rsc, "Down: Executing: %s->%s (%s)%s", role2text(role), role2text(next_role),
-                     rsc->id, need_stop ? " required" : "");
+        pe_rsc_trace(rsc, "Creating %s action to take %s down from %s to %s",
+                     (need_stop? "required" : "optional"), rsc->id,
+                     role2text(role), role2text(next_role));
         if (rsc_action_matrix[role][next_role] (rsc, current, !need_stop, data_set) == FALSE) {
             break;
         }
@@ -1368,8 +1371,9 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         if ((next_role == RSC_ROLE_MASTER) && need_promote) {
             required = true;
         }
-        pe_rsc_trace(rsc, "Up:   Executing: %s->%s (%s)%s", role2text(role), role2text(next_role),
-                     rsc->id, (required? " required" : ""));
+        pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
+                     (required? "required" : "optional"), rsc->id,
+                     role2text(role), role2text(next_role));
         if (rsc_action_matrix[role][next_role](rsc, chosen, !required,
                                                data_set) == FALSE) {
             break;
@@ -1381,7 +1385,9 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     /* Required steps from this role to the next */
     while (role != rsc->next_role) {
         next_role = rsc_state_matrix[role][rsc->next_role];
-        pe_rsc_trace(rsc, "Role: Executing: %s->%s = (%s on %s)", role2text(role), role2text(next_role), rsc->id, chosen?chosen->details->uname:"NA");
+        pe_rsc_trace(rsc, "Creating action to take %s from %s to %s (ending at %s)",
+                     rsc->id, role2text(role), role2text(next_role),
+                     role2text(rsc->next_role));
         if (rsc_action_matrix[role][next_role] (rsc, chosen, FALSE, data_set) == FALSE) {
             break;
         }
@@ -1389,16 +1395,21 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_block)) {
-        pe_rsc_trace(rsc, "No monitor additional ops for blocked resource");
+        pe_rsc_trace(rsc, "Not creating recurring monitors for blocked resource %s",
+                     rsc->id);
 
     } else if ((rsc->next_role != RSC_ROLE_STOPPED)
                || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        pe_rsc_trace(rsc, "Monitor ops for active resource");
+        pe_rsc_trace(rsc, "Creating recurring monitors for %s resource %s",
+                     ((rsc->next_role == RSC_ROLE_STOPPED)? "unmanaged" : "active"),
+                     rsc->id);
         start = start_action(rsc, chosen, TRUE);
         Recurring(rsc, start, chosen, data_set);
         Recurring_Stopped(rsc, start, chosen, data_set);
+
     } else {
-        pe_rsc_trace(rsc, "Monitor ops for inactive resource");
+        pe_rsc_trace(rsc, "Creating recurring monitors for inactive resource %s",
+                     rsc->id);
         Recurring_Stopped(rsc, NULL, NULL, data_set);
     }
 
@@ -1406,7 +1417,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
      * of the partial migration no longer matches the chosen target.
      * A full stop/start is required */
     if (rsc->partial_migration_target && (chosen == NULL || rsc->partial_migration_target->details != chosen->details)) {
-        pe_rsc_trace(rsc, "Not allowing partial migration to continue. %s", rsc->id);
+        pe_rsc_trace(rsc, "Not allowing partial migration of %s to continue",
+                     rsc->id);
         allow_migrate = FALSE;
 
     } else if (!is_moving || !pcmk_is_set(rsc->flags, pe_rsc_managed)
