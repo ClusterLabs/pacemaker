@@ -89,7 +89,7 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_HTML,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
-    CRM_MON_SUPPORTED_FORMAT_XML,
+    PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
 
@@ -1082,13 +1082,13 @@ add_output_args(void) {
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &err, "%s --xml-simple-list", g_get_prgname())) {
+        if (!pcmk__force_args(context, &err, "%s --xml-simple-list --xml-substitute", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &err, "%s --xml-legacy", g_get_prgname())) {
+        if (!pcmk__force_args(context, &err, "%s --xml-legacy --xml-substitute", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }

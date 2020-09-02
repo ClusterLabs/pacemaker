@@ -221,6 +221,11 @@ log_info(pcmk__output_t *out, const char *format, ...) {
     free(buffer);
 }
 
+static bool
+log_is_quiet(pcmk__output_t *out) {
+    return false;
+}
+
 pcmk__output_t *
 pcmk__mk_log_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -231,7 +236,6 @@ pcmk__mk_log_output(char **argv) {
 
     retval->fmt_name = "log";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = false;
 
     retval->init = log_init;
     retval->free_priv = log_free_priv;
@@ -250,6 +254,8 @@ pcmk__mk_log_output(char **argv) {
     retval->begin_list = log_begin_list;
     retval->list_item = log_list_item;
     retval->end_list = log_end_list;
+
+    retval->is_quiet = log_is_quiet;
 
     return retval;
 }

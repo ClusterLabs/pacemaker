@@ -90,6 +90,11 @@ none_end_list(pcmk__output_t *out) {
     /* This function intentionally left blank */
 }
 
+static bool
+none_is_quiet(pcmk__output_t *out) {
+    return out->quiet;
+}
+
 pcmk__output_t *
 pcmk__mk_none_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -100,7 +105,6 @@ pcmk__mk_none_output(char **argv) {
 
     retval->fmt_name = "none";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = true;
 
     retval->init = none_init;
     retval->free_priv = none_free_priv;
@@ -120,6 +124,8 @@ pcmk__mk_none_output(char **argv) {
     retval->list_item = none_list_item;
     retval->increment_list = none_increment_list;
     retval->end_list = none_end_list;
+
+    retval->is_quiet = none_is_quiet;
 
     return retval;
 }

@@ -171,13 +171,13 @@ pcmk_fence_action(stonith_t *st, const char *target, const char *action,
 
 int
 pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
-                    unsigned int timeout, bool quiet, int verbose,
-                    bool broadcast, bool cleanup) {
+                    unsigned int timeout, int verbose, bool broadcast,
+                    bool cleanup) {
     stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = pcmk_rc_ok;
     int opts = 0;
 
-    if (!quiet) {
+    if (!out->is_quiet(out)) {
         if (cleanup) {
             out->info(out, "cleaning up fencing-history%s%s",
                       target ? " for node " : "", target ? target : "");
@@ -212,7 +212,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
             latest = hp;
         }
 
-        if (quiet || !verbose) {
+        if (out->is_quiet(out) || !verbose) {
             continue;
         }
 
@@ -221,7 +221,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     }
 
     if (latest) {
-        if (quiet && out->supports_quiet) {
+        if (out->is_quiet(out)) {
             out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
             out->message(out, "stonith-event", latest, 0, FALSE);
@@ -247,8 +247,9 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int ti
         return rc;
     }
 
-    rc = pcmk__fence_history(out, st, target, timeout, quiet, verbose,
-                             broadcast, cleanup);
+    out->quiet = quiet;
+
+    rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast, cleanup);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }

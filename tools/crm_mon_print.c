@@ -27,12 +27,6 @@
 
 #include "crm_mon.h"
 
-static void print_resources_heading(pcmk__output_t *out, unsigned int mon_ops);
-static void print_resources_closing(pcmk__output_t *out, unsigned int mon_ops);
-static int print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
-                           unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
-                           gboolean print_summary, GListPtr only_node, GListPtr only_rsc,
-                           gboolean print_spacer);
 static int print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
                              pe_node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
                              GListPtr op_list);
@@ -119,150 +113,6 @@ build_rsc_list(pe_working_set_t *data_set, const char *s) {
     }
 
     return resources;
-}
-
-/*!
- * \internal
- * \brief Print resources section heading appropriate to options
- *
- * \param[in] out     The output functions structure.
- * \param[in] mon_ops Bitmask of mon_op_*.
- */
-static void
-print_resources_heading(pcmk__output_t *out, unsigned int mon_ops)
-{
-    const char *heading;
-
-    if (pcmk_is_set(mon_ops, mon_op_group_by_node)) {
-
-        /* Active resources have already been printed by node */
-        heading = pcmk_is_set(mon_ops, mon_op_inactive_resources)? "Inactive Resources" : NULL;
-
-    } else if (pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-        heading = "Full List of Resources";
-
-    } else {
-        heading = "Active Resources";
-    }
-
-    /* Print section heading */
-    out->begin_list(out, NULL, NULL, "%s", heading);
-}
-
-/*!
- * \internal
- * \brief Print whatever resource section closing is appropriate
- *
- * \param[in] out     The output functions structure.
- * \param[in] mon_ops Bitmask of mon_op_*.
- */
-static void
-print_resources_closing(pcmk__output_t *out, unsigned int mon_ops)
-{
-    const char *heading;
-
-    /* What type of resources we did or did not display */
-    if (pcmk_is_set(mon_ops, mon_op_group_by_node)) {
-        heading = "inactive ";
-    } else if (pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-        heading = "";
-    } else {
-        heading = "active ";
-    }
-
-    out->list_item(out, NULL, "No %sresources", heading);
-}
-
-/*!
- * \internal
- * \brief Print whatever resource section(s) are appropriate
- *
- * \param[in] out           The output functions structure.
- * \param[in] data_set      Cluster state to display.
- * \param[in] print_opts    Bitmask of pe_print_*.
- * \param[in] mon_ops       Bitmask of mon_op_*.
- * \param[in] brief_output  Whether to display full or brief output.
- * \param[in] print_summary Whether to display a failure summary.
- */
-static int
-print_resources(pcmk__output_t *out, pe_working_set_t *data_set,
-                unsigned int print_opts, unsigned int mon_ops, gboolean brief_output,
-                gboolean print_summary, GListPtr only_node, GListPtr only_rsc,
-                gboolean print_spacer)
-{
-    GListPtr rsc_iter;
-    int rc = pcmk_rc_no_output;
-
-    /* If we already showed active resources by node, and
-     * we're not showing inactive resources, we have nothing to do
-     */
-    if (pcmk_is_set(mon_ops, mon_op_group_by_node)
-        && !pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-        return rc;
-    }
-
-    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-
-    print_resources_heading(out, mon_ops);
-
-    /* If we haven't already printed resources grouped by node,
-     * and brief output was requested, print resource summary */
-    if (brief_output && !pcmk_is_set(mon_ops, mon_op_group_by_node)) {
-        GListPtr rscs = pe__filter_rsc_list(data_set->resources, only_rsc);
-
-        pe__rscs_brief_output(out, rscs, print_opts,
-                              pcmk_is_set(mon_ops, mon_op_inactive_resources));
-        g_list_free(rscs);
-    }
-
-    /* For each resource, display it if appropriate */
-    for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
-        int x;
-
-        /* Complex resources may have some sub-resources active and some inactive */
-        gboolean is_active = rsc->fns->active(rsc, TRUE);
-        gboolean partially_active = rsc->fns->active(rsc, FALSE);
-
-        /* Skip inactive orphans (deleted but still in CIB) */
-        if (pcmk_is_set(rsc->flags, pe_rsc_orphan) && !is_active) {
-            continue;
-
-        /* Skip active resources if we already displayed them by node */
-        } else if (pcmk_is_set(mon_ops, mon_op_group_by_node)) {
-            if (is_active) {
-                continue;
-            }
-
-        /* Skip primitives already counted in a brief summary */
-        } else if (brief_output && (rsc->variant == pe_native)) {
-            continue;
-
-        /* Skip resources that aren't at least partially active,
-         * unless we're displaying inactive resources
-         */
-        } else if (!partially_active
-                   && !pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-            continue;
-
-        } else if (partially_active && !pe__rsc_running_on_any_node_in_list(rsc, only_node)) {
-            continue;
-        }
-
-        /* Print this resource */
-        x = out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc,
-                         only_node, only_rsc);
-        if (x == pcmk_rc_ok) {
-            rc = pcmk_rc_ok;
-        }
-    }
-
-    if (print_summary && rc != pcmk_rc_ok) {
-        print_resources_closing(out, mon_ops);
-    }
-
-    out->end_list(out);
-    return pcmk_rc_ok;
 }
 
 static int
@@ -822,10 +672,11 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print resources section, if needed */
     if (pcmk_is_set(show, mon_show_resources)) {
-        CHECK_RC(rc, print_resources(out, data_set, print_opts, mon_ops,
-                                     pcmk_is_set(mon_ops, mon_op_print_brief),
-                                     TRUE, unames, resources,
-                                     (rc == pcmk_rc_ok)));
+        CHECK_RC(rc, out->message(out, "resource-list", data_set, print_opts,
+                                  pcmk_is_set(mon_ops, mon_op_group_by_node),
+                                  pcmk_is_set(mon_ops, mon_op_inactive_resources),
+                                  pcmk_is_set(mon_ops, mon_op_print_brief), TRUE, unames,
+                                  resources, rc == pcmk_rc_ok));
     }
 
     /* print Node Attributes section if requested */
@@ -946,8 +797,10 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print resources section, if needed */
     if (pcmk_is_set(show, mon_show_resources)) {
-        print_resources(out, data_set, print_opts, mon_ops, FALSE, FALSE,
-                        unames, resources, FALSE);
+        out->message(out, "resource-list", data_set, print_opts,
+                     pcmk_is_set(mon_ops, mon_op_group_by_node),
+                     pcmk_is_set(mon_ops, mon_op_inactive_resources),
+                     FALSE, FALSE, unames, resources, FALSE);
     }
 
     /* print Node Attributes section if requested */
@@ -1040,9 +893,11 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print resources section, if needed */
     if (pcmk_is_set(show, mon_show_resources)) {
-        print_resources(out, data_set, print_opts, mon_ops,
-                        pcmk_is_set(mon_ops, mon_op_print_brief), TRUE, unames,
-                        resources, FALSE);
+        out->message(out, "resource-list", data_set, print_opts,
+                     pcmk_is_set(mon_ops, mon_op_group_by_node),
+                     pcmk_is_set(mon_ops, mon_op_inactive_resources),
+                     pcmk_is_set(mon_ops, mon_op_print_brief), TRUE, unames,
+                     resources, FALSE);
     }
 
     /* print Node Attributes section if requested */

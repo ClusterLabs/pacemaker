@@ -11,17 +11,15 @@
 
 #define XPATH_MAX 1024
 
-char *move_lifetime = NULL;
-
 static char *
-parse_cli_lifetime(const char *input)
+parse_cli_lifetime(const char *move_lifetime)
 {
     char *later_s = NULL;
     crm_time_t *now = NULL;
     crm_time_t *later = NULL;
     crm_time_t *duration = NULL;
 
-    if (input == NULL) {
+    if (move_lifetime == NULL) {
         return NULL;
     }
 
@@ -60,8 +58,9 @@ parse_cli_lifetime(const char *input)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
-                 int cib_options, gboolean promoted_role_only)
+cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime,
+                 GListPtr allnodes, cib_t * cib_conn, int cib_options,
+                 gboolean promoted_role_only)
 {
     char *later_s = NULL;
     int rc = pcmk_rc_ok;
@@ -73,8 +72,8 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         for(; n && rc == pcmk_rc_ok; n = n->next) {
             pe_node_t *target = n->data;
 
-            rc = cli_resource_ban(rsc_id, target->details->uname, NULL, cib_conn,
-                                  cib_options, promoted_role_only);
+            rc = cli_resource_ban(rsc_id, target->details->uname, move_lifetime,
+                                  NULL, cib_conn, cib_options, promoted_role_only);
         }
         return rc;
     }
@@ -144,8 +143,8 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
 
 // \return Standard Pacemaker return code
 int
-cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn,
-                    int cib_options, gboolean promoted_role_only)
+cli_resource_prefer(const char *rsc_id, const char *host, const char *move_lifetime,
+                    cib_t * cib_conn, int cib_options, gboolean promoted_role_only)
 {
     char *later_s = parse_cli_lifetime(move_lifetime);
     int rc = pcmk_rc_ok;

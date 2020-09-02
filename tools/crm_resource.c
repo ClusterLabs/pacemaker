@@ -9,6 +9,7 @@
 
 #include <crm_resource.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/lists_internal.h>
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
@@ -38,6 +39,7 @@ struct {
     gboolean force;
     char *host_uname;
     char *interval_spec;
+    char *move_lifetime;
     char *operation;
     GHashTable *override_params;
     char *prop_id;
@@ -383,7 +385,7 @@ static GOptionEntry location_entries[] = {
       "Modifies the --clear argument to remove constraints with\n"
       INDENT "expired lifetimes.",
       NULL },
-    { "lifetime", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &move_lifetime,
+    { "lifetime", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.move_lifetime,
       "Lifespan (as ISO 8601 duration) of created constraints (with\n"
       INDENT "-B, -M) see https://en.wikipedia.org/wiki/ISO_8601#Durations)",
       "TIMESPEC" },
@@ -756,7 +758,7 @@ why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 }
 
 static int
-ban_or_move(pe_resource_t *rsc, crm_exit_t *exit_code)
+ban_or_move(pe_resource_t *rsc, const char *move_lifetime, crm_exit_t *exit_code)
 {
     int rc = pcmk_rc_ok;
     pe_node_t *current = NULL;
@@ -765,7 +767,7 @@ ban_or_move(pe_resource_t *rsc, crm_exit_t *exit_code)
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
-        rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL,
+        rc = cli_resource_ban(options.rsc_id, current->details->uname, move_lifetime, NULL,
                               cib_conn, options.cib_options, options.promoted_role_only);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
@@ -784,7 +786,7 @@ ban_or_move(pe_resource_t *rsc, crm_exit_t *exit_code)
         }
 
         if(count == 1 && current) {
-            rc = cli_resource_ban(options.rsc_id, current->details->uname, NULL,
+            rc = cli_resource_ban(options.rsc_id, current->details->uname, move_lifetime, NULL,
                                   cib_conn, options.cib_options, options.promoted_role_only);
 
         } else {
@@ -887,7 +889,7 @@ clear_constraints(xmlNodePtr *cib_xml_copy)
         cluster_status(data_set);
 
         after = build_constraint_list(data_set->input);
-        remaining = subtract_lists(before, after, (GCompareFunc) strcmp);
+        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
 
         for (ele = remaining; ele != NULL; ele = ele->next) {
             printf("Removing constraint: %s\n", (char *) ele->data);
@@ -1574,9 +1576,9 @@ main(int argc, char **argv)
          * lifetime of cli_resource_restart(), but it will reset and update the
          * working set multiple times, so it needs to use its own copy.
          */
-        rc = cli_resource_restart(rsc, options.host_uname, options.timeout_ms,
-                                  cib_conn, options.cib_options, options.promoted_role_only,
-                                  options.force);
+        rc = cli_resource_restart(rsc, options.host_uname, options.move_lifetime,
+                                  options.timeout_ms, cib_conn, options.cib_options,
+                                  options.promoted_role_only, options.force);
 
     } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && pcmk__str_eq(options.rsc_long_cmd, "wait", pcmk__str_casei)) {
         rc = wait_till_stable(options.timeout_ms, cib_conn);
@@ -1641,9 +1643,9 @@ main(int argc, char **argv)
         rc = clear_constraints(&cib_xml_copy);
 
     } else if (options.rsc_cmd == 'M' && options.host_uname) {
-        rc = cli_resource_move(rsc, options.rsc_id, options.host_uname, cib_conn,
-                               options.cib_options, data_set, options.promoted_role_only,
-                               options.force);
+        rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
+                               options.move_lifetime, cib_conn, options.cib_options,
+                               data_set, options.promoted_role_only, options.force);
 
     } else if (options.rsc_cmd == 'B' && options.host_uname) {
         pe_node_t *dest = pe_find_node(data_set->nodes, options.host_uname);
@@ -1652,11 +1654,11 @@ main(int argc, char **argv)
             rc = pcmk_rc_node_unknown;
             goto done;
         }
-        rc = cli_resource_ban(options.rsc_id, dest->details->uname, NULL,
-                              cib_conn, options.cib_options, options.promoted_role_only);
+        rc = cli_resource_ban(options.rsc_id, dest->details->uname, options.move_lifetime,
+                              NULL, cib_conn, options.cib_options, options.promoted_role_only);
 
     } else if (options.rsc_cmd == 'B' || options.rsc_cmd == 'M') {
-        rc = ban_or_move(rsc, &exit_code);
+        rc = ban_or_move(rsc, options.move_lifetime, &exit_code);
 
     } else if (options.rsc_cmd == 'G') {
         rc = cli_resource_print_property(rsc, options.prop_name, data_set);
@@ -1737,6 +1739,7 @@ done:
     free(options.extra_option);
     free(options.host_uname);
     free(options.interval_spec);
+    free(options.move_lifetime);
     free(options.operation);
     free(options.prop_id);
     free(options.prop_name);

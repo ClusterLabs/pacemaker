@@ -24,13 +24,12 @@
 
 extern bool BE_QUIET;
 
-extern char *move_lifetime;
-
 /* ban */
-int cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn,
-                        int cib_options, gboolean promoted_role_only);
-int cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes,
-                     cib_t * cib_conn, int cib_options, gboolean promoted_role_only);
+int cli_resource_prefer(const char *rsc_id, const char *host, const char *move_lifetime,
+                        cib_t * cib_conn, int cib_options, gboolean promoted_role_only);
+int cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime,
+                     GListPtr allnodes, cib_t * cib_conn, int cib_options,
+                     gboolean promoted_role_only);
 int cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes,
                        cib_t * cib_conn, int cib_options, bool clear_ban_constraints, gboolean force);
 int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
@@ -67,13 +66,13 @@ int cli_resource_delete(pcmk_ipc_api_t *controld_api,
 int cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
                     const char *operation, const char *interval_spec,
                     pe_working_set_t *data_set);
-int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
-                         cib_t *cib, int cib_options, gboolean promoted_role_only,
-                         gboolean force);
+int cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_lifetime,
+                         int timeout_ms, cib_t *cib, int cib_options,
+                         gboolean promoted_role_only, gboolean force);
 int cli_resource_move(pe_resource_t *rsc, const char *rsc_id,
-                      const char *host_name, cib_t *cib, int cib_options,
-                      pe_working_set_t *data_set, gboolean promoted_role_only,
-                      gboolean force);
+                      const char *host_name, const char *move_lifetime,
+                      cib_t *cib, int cib_options, pe_working_set_t *data_set,
+                      gboolean promoted_role_only, gboolean force);
 crm_exit_t cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
                                             const char *rsc_prov, const char *rsc_type,
                                             const char *rsc_action, GHashTable *params,
@@ -93,8 +92,6 @@ int cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name, cib_t *cib,
                                   int cib_options, pe_working_set_t *data_set, gboolean force);
-
-GList* subtract_lists(GList *from, GList *items, GCompareFunc cmp);
 
 int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(int timeout_ms, cib_t * cib);

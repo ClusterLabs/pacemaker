@@ -1621,6 +1621,106 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("resource-list", "pe_working_set_t *", "unsigned int", "gboolean",
+                  "gboolean", "gboolean", "gboolean", "GListPtr", "GListPtr", "gboolean")
+int
+pe__resource_list(pcmk__output_t *out, va_list args)
+{
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean group_by_node = va_arg(args, gboolean);
+    gboolean inactive_resources = va_arg(args, gboolean);
+    gboolean brief_output = va_arg(args, gboolean);
+    gboolean print_summary = va_arg(args, gboolean);
+    GListPtr only_node = va_arg(args, GListPtr);
+    GListPtr only_rsc = va_arg(args, GListPtr);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    GListPtr rsc_iter;
+    int rc = pcmk_rc_no_output;
+
+    /* If we already showed active resources by node, and
+     * we're not showing inactive resources, we have nothing to do
+     */
+    if (group_by_node && !inactive_resources) {
+        return rc;
+    }
+
+    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+
+    if (group_by_node) {
+        /* Active resources have already been printed by node */
+        out->begin_list(out, NULL, NULL, "Inactive Resources");
+    } else if (inactive_resources) {
+        out->begin_list(out, NULL, NULL, "Full List of Resources");
+    } else {
+        out->begin_list(out, NULL, NULL, "Active Resources");
+    }
+
+    /* If we haven't already printed resources grouped by node,
+     * and brief output was requested, print resource summary */
+    if (brief_output && !group_by_node) {
+        GListPtr rscs = pe__filter_rsc_list(data_set->resources, only_rsc);
+
+        pe__rscs_brief_output(out, rscs, print_opts, inactive_resources);
+        g_list_free(rscs);
+    }
+
+    /* For each resource, display it if appropriate */
+    for (rsc_iter = data_set->resources; rsc_iter != NULL; rsc_iter = rsc_iter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) rsc_iter->data;
+        int x;
+
+        /* Complex resources may have some sub-resources active and some inactive */
+        gboolean is_active = rsc->fns->active(rsc, TRUE);
+        gboolean partially_active = rsc->fns->active(rsc, FALSE);
+
+        /* Skip inactive orphans (deleted but still in CIB) */
+        if (pcmk_is_set(rsc->flags, pe_rsc_orphan) && !is_active) {
+            continue;
+
+        /* Skip active resources if we already displayed them by node */
+        } else if (group_by_node) {
+            if (is_active) {
+                continue;
+            }
+
+        /* Skip primitives already counted in a brief summary */
+        } else if (brief_output && (rsc->variant == pe_native)) {
+            continue;
+
+        /* Skip resources that aren't at least partially active,
+         * unless we're displaying inactive resources
+         */
+        } else if (!partially_active && !inactive_resources) {
+            continue;
+
+        } else if (partially_active && !pe__rsc_running_on_any_node_in_list(rsc, only_node)) {
+            continue;
+        }
+
+        /* Print this resource */
+        x = out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc,
+                         only_node, only_rsc);
+        if (x == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
+    }
+
+    if (print_summary && rc != pcmk_rc_ok) {
+        if (group_by_node) {
+            out->list_item(out, NULL, "No inactive resources");
+        } else if (inactive_resources) {
+            out->list_item(out, NULL, "No resources");
+        } else {
+            out->list_item(out, NULL, "No active resources");
+        }
+    }
+
+    out->end_list(out);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("ticket", "pe_ticket_t *")
 int
 pe__ticket_html(pcmk__output_t *out, va_list args) {
@@ -1752,10 +1852,9 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
     { "primitive", "log",  pe__resource_text },
-    { "resource-history", "html", pe__resource_history_text },
-    { "resource-history", "log", pe__resource_history_text },
-    { "resource-history", "text", pe__resource_history_text },
+    { "resource-history", "default", pe__resource_history_text },
     { "resource-history", "xml", pe__resource_history_xml },
+    { "resource-list", "default", pe__resource_list },
     { "ticket", "html", pe__ticket_html },
     { "ticket", "log", pe__ticket_text },
     { "ticket", "text", pe__ticket_text },
