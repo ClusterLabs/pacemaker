@@ -293,6 +293,8 @@ int pe__bundle_text(pcmk__output_t *out, va_list args);
 int pe__node_html(pcmk__output_t *out, va_list args);
 int pe__node_text(pcmk__output_t *out, va_list args);
 int pe__node_xml(pcmk__output_t *out, va_list args);
+int pe__node_and_op(pcmk__output_t *out, va_list args);
+int pe__node_and_op_xml(pcmk__output_t *out, va_list args);
 int pe__node_attribute_html(pcmk__output_t *out, va_list args);
 int pe__node_attribute_text(pcmk__output_t *out, va_list args);
 int pe__node_attribute_xml(pcmk__output_t *out, va_list args);

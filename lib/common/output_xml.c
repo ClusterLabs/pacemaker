@@ -61,6 +61,7 @@ static subst_t substitutions[] = {
     { "Negative Location Constraints",  "bans" },
     { "Node Attributes",                "node_attributes" },
     { "Resource Config",                "resource_config" },
+    { "Resource Operations",            "operations" },
 
     { NULL, NULL }
 };
