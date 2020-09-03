@@ -570,16 +570,20 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  * \return Newly allocated string description of resource
  * \note Caller must free the result with g_free().
  */
-static gchar *
-native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                     long options, const char *target_role, bool show_nodes)
+gchar *
+pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
+                           long options, const char *target_role, bool show_nodes)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-    char *retval = NULL;
+    gchar *retval = NULL;
     GString *outstr = NULL;
     bool have_flags = false;
+
+    if (rsc->variant != pe_native) {
+        return NULL;
+    }
 
     CRM_CHECK(name != NULL, name = "unknown");
     CRM_CHECK(kind != NULL, kind = "unknown");
@@ -758,8 +762,8 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
     }
 
     {
-        gchar *s = native_output_string(rsc, name, node, options, target_role,
-                                        true);
+        gchar *s = pcmk__native_output_string(rsc, name, node, options,
+                                              target_role, true);
 
         list_node = pcmk__output_create_html_node(out, "li", NULL, NULL, NULL);
         pcmk_create_html_node(list_node, "span", NULL, cl, s);
@@ -826,8 +830,8 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
     }
 
     {
-        gchar *s = native_output_string(rsc, name, node, options, target_role,
-                                        true);
+        gchar *s = pcmk__native_output_string(rsc, name, node, options,
+                                              target_role, true);
 
         out->list_item(out, NULL, "%s", s);
         g_free(s);
@@ -923,8 +927,8 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
     }
 
     {
-        gchar *resource_s = native_output_string(rsc, name, node, options,
-                                                 target_role, false);
+        gchar *resource_s = pcmk__native_output_string(rsc, name, node, options,
+                                                       target_role, false);
         status_print("%s%s", (pre_text? pre_text : ""), resource_s);
         g_free(resource_s);
     }
