@@ -160,6 +160,14 @@ static void apply_master_location(resource_t *child, GListPtr location_constrain
 }
 
 static node_t *
+guest_location(pe_node_t *guest_node)
+{
+    pe_resource_t *guest = guest_node->details->remote_rsc->container;
+
+    return guest->fns->location(guest, NULL, FALSE);
+}
+
+static node_t *
 can_be_master(resource_t * rsc)
 {
     node_t *node = NULL;
@@ -207,6 +215,15 @@ can_be_master(resource_t * rsc)
 
     } else if (can_run_resources(node) == FALSE) {
         crm_trace("Node can't run any resources: %s", node->details->uname);
+        return NULL;
+
+    /* @TODO It's possible this check should be done in can_run_resources()
+     * instead. We should investigate all its callers to figure out whether that
+     * would be a good idea.
+     */
+    } else if (is_container_remote_node(node) && (guest_location(node) == NULL)) {
+        pe_rsc_trace(rsc, "%s cannot be promoted: guest %s not allocated",
+                     rsc->id, node->details->remote_rsc->container->id);
         return NULL;
     }
 
