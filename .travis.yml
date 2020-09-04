@@ -18,11 +18,8 @@ matrix:
       env:      MAINT_EXTRA=0
       arch:     amd64
     - compiler: gcc
-      env:      MAINT_EXTRA=1
-      arch:     ppc64le 
-    - compiler: gcc 
       env:      MAINT_EXTRA=0
-      arch:     ppc64le 
+      arch:     ppc64le  
 
 cache:
   directories:
@@ -109,4 +106,3 @@ branches:
     - master
     - "1.1"
     - "2.0"
-    - ppc64le
