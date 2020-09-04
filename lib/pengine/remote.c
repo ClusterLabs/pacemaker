@@ -13,55 +13,38 @@
 #include <crm/pengine/internal.h>
 #include <glib.h>
 
-gboolean
-pe__resource_is_remote_conn(pe_resource_t *rsc, pe_working_set_t *data_set)
+bool
+pe__resource_is_remote_conn(const pe_resource_t *rsc,
+                            const pe_working_set_t *data_set)
 {
-    pe_node_t *node;
-
-    if (rsc == NULL) {
-        return FALSE;
-    } else if (rsc->is_remote_node == FALSE) {
-        return FALSE;
-    }
-
-    node = pe_find_node(data_set->nodes, rsc->id);
-    if (node == NULL) {
-        return FALSE;
-    }
-
-    return pe__is_remote_node(node);
+    return (rsc != NULL) && rsc->is_remote_node
+           && pe__is_remote_node(pe_find_node(data_set->nodes, rsc->id));
 }
 
-gboolean
-pe__is_remote_node(pe_node_t *node)
+bool
+pe__is_remote_node(const pe_node_t *node)
 {
-    if (pe__is_guest_or_remote_node(node)
-        && ((node->details->remote_rsc == NULL)
-            || (node->details->remote_rsc->container == NULL))) {
-        return TRUE;
-    }
-    return FALSE;
+    return (node != NULL) && (node->details->type == node_remote)
+           && ((node->details->remote_rsc == NULL)
+               || (node->details->remote_rsc->container == NULL));
 }
 
-gboolean
-pe__is_guest_node(pe_node_t *node)
+bool
+pe__is_guest_node(const pe_node_t *node)
 {
-    if (pe__is_guest_or_remote_node(node)
-        && node->details->remote_rsc
-        && node->details->remote_rsc->container) {
-        return TRUE;
-    }
-    return FALSE;
+    return (node != NULL) && (node->details->type == node_remote)
+           && (node->details->remote_rsc != NULL)
+           && (node->details->remote_rsc->container != NULL);
 }
 
-gboolean
-pe__is_guest_or_remote_node(pe_node_t *node)
+bool
+pe__is_guest_or_remote_node(const pe_node_t *node)
 {
     return (node != NULL) && (node->details->type == node_remote);
 }
 
 bool
-pe__is_bundle_node(pe_node_t *node)
+pe__is_bundle_node(const pe_node_t *node)
 {
     return pe__is_guest_node(node)
            && pe_rsc_is_bundled(node->details->remote_rsc);
@@ -97,18 +80,31 @@ pe__resource_contains_guest_node(const pe_working_set_t *data_set,
     return NULL;
 }
 
-gboolean
+bool
 xml_contains_remote_node(xmlNode *xml)
 {
-    const char *class = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
-    const char *provider = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
-    const char *agent = crm_element_value(xml, XML_ATTR_TYPE);
+    const char *value = NULL;
 
-    if (pcmk__str_eq(agent, "remote", pcmk__str_casei) && pcmk__str_eq(provider, "pacemaker", pcmk__str_casei)
-        && pcmk__str_eq(class, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
-        return TRUE;
+    if (xml == NULL) {
+        return false;
     }
-    return FALSE;
+
+    value = crm_element_value(xml, XML_ATTR_TYPE);
+    if (!pcmk__str_eq(value, "remote", pcmk__str_casei)) {
+        return false;
+    }
+
+    value = crm_element_value(xml, XML_AGENT_ATTR_CLASS);
+    if (!pcmk__str_eq(value, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
+        return false;
+    }
+
+    value = crm_element_value(xml, XML_AGENT_ATTR_PROVIDER);
+    if (!pcmk__str_eq(value, "pacemaker", pcmk__str_casei)) {
+        return false;
+    }
+
+    return true;
 }
 
 /*!

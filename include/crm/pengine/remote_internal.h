@@ -18,12 +18,13 @@ extern "C" {
 #include <libxml/tree.h>            // xmlNode
 #include <crm/pengine/status.h>
 
-gboolean xml_contains_remote_node(xmlNode *xml);
-gboolean pe__is_remote_node(pe_node_t *node);
-gboolean pe__is_guest_node(pe_node_t *node);
-gboolean pe__is_guest_or_remote_node(pe_node_t *node);
-bool pe__is_bundle_node(pe_node_t *node);
-gboolean pe__resource_is_remote_conn(pe_resource_t *rsc, pe_working_set_t *data_set);
+bool xml_contains_remote_node(xmlNode *xml);
+bool pe__is_remote_node(const pe_node_t *node);
+bool pe__is_guest_node(const pe_node_t *node);
+bool pe__is_guest_or_remote_node(const pe_node_t *node);
+bool pe__is_bundle_node(const pe_node_t *node);
+bool pe__resource_is_remote_conn(const pe_resource_t *rsc,
+                                 const pe_working_set_t *data_set);
 pe_resource_t *pe__resource_contains_guest_node(const pe_working_set_t *data_set,
                                                 const pe_resource_t *rsc);
 void pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
