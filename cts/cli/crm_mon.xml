@@ -54,6 +54,12 @@
           <op id="dummy-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
         </operations>
       </primitive>
+      <clone id="inactive-clone">
+        <meta_attributes id="inactive-clone-meta_attributes">
+          <nvpair id="inactive-clone-meta_attributes-target-role" name="target-role" value="stopped"/>
+        </meta_attributes>
+        <primitive id="inactive-dhcpd" class="lsb" type="dhcpd"/>
+      </clone>
       <group id="inactive-group">
         <meta_attributes id="inactive-group-meta_attributes">
           <nvpair id="inactive-group-meta_attributes-target-role" name="target-role" value="stopped"/>
@@ -61,14 +67,6 @@
         <primitive class="ocf" id="inactive-dummy-1" provider="pacemaker" type="Dummy"/>
         <primitive class="ocf" id="inactive-dummy-2" provider="pacemaker" type="Dummy"/>
       </group>
-      <master id="inactive-clone-master">
-        <primitive class="ocf" id="inactive-clone" provider="pacemaker" type="Stateful">
-          <operations>
-            <op id="inactive-clone-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="inactive-clone-monitor-interval-11" interval="11" name="monitor" role="Slave" timeout="20"/>
-          </operations>
-        </primitive>
-      </master>
       <bundle id="httpd-bundle">
         <docker image="pcmk:http" replicas="3"/>
         <network ip-range-start="192.168.122.131" host-netmask="24" host-interface="eth0">
