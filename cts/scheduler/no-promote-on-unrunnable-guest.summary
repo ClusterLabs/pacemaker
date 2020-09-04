@@ -1,0 +1,113 @@
+Using the original execution date of: 2020-05-14 10:49:31Z
+
+Current cluster status:
+Online: [ controller-0 controller-1 controller-2 ]
+GuestOnline: [ galera-bundle-0:galera-bundle-podman-0 galera-bundle-1:galera-bundle-podman-1 galera-bundle-2:galera-bundle-podman-2 ovn-dbs-bundle-0:ovn-dbs-bundle-podman-0 ovn-dbs-bundle-1:ovn-dbs-bundle-podman-1 ovn-dbs-bundle-2:ovn-dbs-bundle-podman-2 rabbitmq-bundle-0:rabbitmq-bundle-podman-0 rabbitmq-bundle-1:rabbitmq-bundle-podman-1 rabbitmq-bundle-2:rabbitmq-bundle-podman-2 redis-bundle-0:redis-bundle-podman-0 redis-bundle-1:redis-bundle-podman-1 redis-bundle-2:redis-bundle-podman-2 ]
+
+ Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]
+   galera-bundle-0	(ocf::heartbeat:galera):	 Master controller-0
+   galera-bundle-1	(ocf::heartbeat:galera):	 Master controller-1
+   galera-bundle-2	(ocf::heartbeat:galera):	 Master controller-2
+ Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-0
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-2
+ Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]
+   redis-bundle-0	(ocf::heartbeat:redis):	 Master controller-0
+   redis-bundle-1	(ocf::heartbeat:redis):	 Slave controller-1
+   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-2
+ Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]
+   ovn-dbs-bundle-0	(ocf::ovn:ovndb-servers):	 Slave controller-0
+   ovn-dbs-bundle-1	(ocf::ovn:ovndb-servers):	 Slave controller-1
+   ovn-dbs-bundle-2	(ocf::ovn:ovndb-servers):	 Slave controller-2
+ stonith-fence_ipmilan-5254005e097a	(stonith:fence_ipmilan):	 Started controller-0
+ stonith-fence_ipmilan-525400afe30e	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400985679	(stonith:fence_ipmilan):	 Started controller-1
+ Container bundle: openstack-cinder-volume [cluster.common.tag/rhosp16-openstack-cinder-volume:pcmklatest]
+   openstack-cinder-volume-podman-0	(ocf::heartbeat:podman):	 Started controller-0
+
+Transition Summary:
+ * Stop       ovn-dbs-bundle-podman-0                (                     controller-0 )   due to node availability
+ * Stop       ovn-dbs-bundle-0                       (                     controller-0 )   due to unrunnable ovn-dbs-bundle-podman-0 start
+ * Stop       ovndb_servers:0                        (           Slave ovn-dbs-bundle-0 )   due to unrunnable ovn-dbs-bundle-podman-0 start
+ * Promote    ovndb_servers:1                        ( Slave -> Master ovn-dbs-bundle-1 )  
+ * Restart    stonith-fence_ipmilan-5254005e097a     (                     controller-0 )   due to resource definition change
+ * Restart    stonith-fence_ipmilan-525400afe30e     (                     controller-2 )   due to resource definition change
+ * Restart    stonith-fence_ipmilan-525400985679     (                     controller-1 )   due to resource definition change
+
+Executing cluster transition:
+ * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-1
+ * Pseudo action:   ovn-dbs-bundle-master_pre_notify_stop_0
+ * Resource action: stonith-fence_ipmilan-5254005e097a stop on controller-0
+ * Resource action: stonith-fence_ipmilan-5254005e097a start on controller-0
+ * Resource action: stonith-fence_ipmilan-5254005e097a monitor=60000 on controller-0
+ * Resource action: stonith-fence_ipmilan-525400afe30e stop on controller-2
+ * Resource action: stonith-fence_ipmilan-525400afe30e start on controller-2
+ * Resource action: stonith-fence_ipmilan-525400afe30e monitor=60000 on controller-2
+ * Resource action: stonith-fence_ipmilan-525400985679 stop on controller-1
+ * Resource action: stonith-fence_ipmilan-525400985679 start on controller-1
+ * Resource action: stonith-fence_ipmilan-525400985679 monitor=60000 on controller-1
+ * Pseudo action:   ovn-dbs-bundle_stop_0
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+ * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_stop_0
+ * Pseudo action:   ovn-dbs-bundle-master_stop_0
+ * Resource action: ovndb_servers   stop on ovn-dbs-bundle-0
+ * Pseudo action:   ovn-dbs-bundle-master_stopped_0
+ * Resource action: ovn-dbs-bundle-0 stop on controller-0
+ * Pseudo action:   ovn-dbs-bundle-master_post_notify_stopped_0
+ * Resource action: ovn-dbs-bundle-podman-0 stop on controller-0
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+ * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_stopped_0
+ * Pseudo action:   ovn-dbs-bundle-master_pre_notify_start_0
+ * Pseudo action:   ovn-dbs-bundle_stopped_0
+ * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_start_0
+ * Pseudo action:   ovn-dbs-bundle-master_start_0
+ * Pseudo action:   ovn-dbs-bundle-master_running_0
+ * Pseudo action:   ovn-dbs-bundle-master_post_notify_running_0
+ * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_running_0
+ * Pseudo action:   ovn-dbs-bundle_running_0
+ * Pseudo action:   ovn-dbs-bundle-master_pre_notify_promote_0
+ * Pseudo action:   ovn-dbs-bundle_promote_0
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+ * Pseudo action:   ovn-dbs-bundle-master_confirmed-pre_notify_promote_0
+ * Pseudo action:   ovn-dbs-bundle-master_promote_0
+ * Resource action: ovndb_servers   promote on ovn-dbs-bundle-1
+ * Pseudo action:   ovn-dbs-bundle-master_promoted_0
+ * Pseudo action:   ovn-dbs-bundle-master_post_notify_promoted_0
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1
+ * Resource action: ovndb_servers   notify on ovn-dbs-bundle-2
+ * Pseudo action:   ovn-dbs-bundle-master_confirmed-post_notify_promoted_0
+ * Pseudo action:   ovn-dbs-bundle_promoted_0
+ * Resource action: ovndb_servers   monitor=10000 on ovn-dbs-bundle-1
+Using the original execution date of: 2020-05-14 10:49:31Z
+
+Revised cluster status:
+Online: [ controller-0 controller-1 controller-2 ]
+GuestOnline: [ galera-bundle-0:galera-bundle-podman-0 galera-bundle-1:galera-bundle-podman-1 galera-bundle-2:galera-bundle-podman-2 ovn-dbs-bundle-1:ovn-dbs-bundle-podman-1 ovn-dbs-bundle-2:ovn-dbs-bundle-podman-2 rabbitmq-bundle-0:rabbitmq-bundle-podman-0 rabbitmq-bundle-1:rabbitmq-bundle-podman-1 rabbitmq-bundle-2:rabbitmq-bundle-podman-2 redis-bundle-0:redis-bundle-podman-0 redis-bundle-1:redis-bundle-podman-1 redis-bundle-2:redis-bundle-podman-2 ]
+
+ Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]
+   galera-bundle-0	(ocf::heartbeat:galera):	 Master controller-0
+   galera-bundle-1	(ocf::heartbeat:galera):	 Master controller-1
+   galera-bundle-2	(ocf::heartbeat:galera):	 Master controller-2
+ Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-0
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-2
+ Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]
+   redis-bundle-0	(ocf::heartbeat:redis):	 Master controller-0
+   redis-bundle-1	(ocf::heartbeat:redis):	 Slave controller-1
+   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-2
+ Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]
+   ovn-dbs-bundle-0	(ocf::ovn:ovndb-servers):	 Stopped
+   ovn-dbs-bundle-1	(ocf::ovn:ovndb-servers):	 Master controller-1
+   ovn-dbs-bundle-2	(ocf::ovn:ovndb-servers):	 Slave controller-2
+ stonith-fence_ipmilan-5254005e097a	(stonith:fence_ipmilan):	 Started controller-0
+ stonith-fence_ipmilan-525400afe30e	(stonith:fence_ipmilan):	 Started controller-2
+ stonith-fence_ipmilan-525400985679	(stonith:fence_ipmilan):	 Started controller-1
+ Container bundle: openstack-cinder-volume [cluster.common.tag/rhosp16-openstack-cinder-volume:pcmklatest]
+   openstack-cinder-volume-podman-0	(ocf::heartbeat:podman):	 Started controller-0
+
