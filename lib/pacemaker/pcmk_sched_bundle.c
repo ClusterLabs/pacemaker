@@ -868,8 +868,6 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     pe__bundle_variant_data_t *bundle_data = NULL;
     get_bundle_variant_data(bundle_data, rsc);
 
-    pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
-
     native_rsc_location(rsc, constraint);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;

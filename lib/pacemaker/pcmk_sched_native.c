@@ -2291,32 +2291,29 @@ void
 native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = NULL;
-    GHashTableIter iter;
-    pe_node_t *node = NULL;
+    bool need_role = false;
 
-    if (constraint == NULL) {
-        pe_err("Constraint is NULL");
-        return;
+    CRM_CHECK((constraint != NULL) && (rsc != NULL), return);
 
-    } else if (rsc == NULL) {
-        pe_err("LHS of rsc_to_node (%s) is NULL", constraint->id);
-        return;
-    }
-
-    pe_rsc_trace(rsc, "Applying %s (%s) to %s", constraint->id,
-                 role2text(constraint->role_filter), rsc->id);
-
-    /* take "lifetime" into account */
-    if (constraint->role_filter > RSC_ROLE_UNKNOWN && constraint->role_filter != rsc->next_role) {
-        pe_rsc_debug(rsc, "Constraint (%s) is not active (role : %s vs. %s)",
-                     constraint->id, role2text(constraint->role_filter), role2text(rsc->next_role));
+    // If a role was specified, ensure constraint is applicable
+    need_role = (constraint->role_filter > RSC_ROLE_UNKNOWN);
+    if (need_role && (constraint->role_filter != rsc->next_role)) {
+        pe_rsc_trace(rsc,
+                     "Not applying %s to %s because role will be %s not %s",
+                     constraint->id, rsc->id, role2text(rsc->next_role),
+                     role2text(constraint->role_filter));
         return;
     }
 
     if (constraint->node_list_rh == NULL) {
-        pe_rsc_trace(rsc, "RHS of constraint %s is NULL", constraint->id);
+        pe_rsc_trace(rsc, "Not applying %s to %s because no nodes match",
+                     constraint->id, rsc->id);
         return;
     }
+
+    pe_rsc_trace(rsc, "Applying %s%s%s to %s", constraint->id,
+                 (need_role? " for role " : ""),
+                 (need_role? role2text(constraint->role_filter) : ""), rsc->id);
 
     for (gIter = constraint->node_list_rh; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -2325,16 +2322,15 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
         other_node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
         if (other_node != NULL) {
-            pe_rsc_trace(rsc, "%s + %s: %d + %d",
-                         node->details->uname,
-                         other_node->details->uname, node->weight, other_node->weight);
+            pe_rsc_trace(rsc, "* + %d on %s",
+                         node->weight, node->details->uname);
             other_node->weight = pe__add_scores(other_node->weight,
                                                 node->weight);
 
         } else {
+            pe_rsc_trace(rsc, "* = %d on %s",
+                         node->weight, node->details->uname);
             other_node = pe__copy_node(node);
-
-            pe_rsc_trace(rsc, "%s: %d (insert %d)", other_node->details->uname, other_node->weight, constraint->discover_mode);
             g_hash_table_insert(rsc->allowed_nodes, (gpointer) other_node->details->id, other_node);
         }
 
@@ -2345,11 +2341,6 @@ native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
             /* exclusive > never > always... always is default */
             other_node->rsc_discover_mode = constraint->discover_mode;
         }
-    }
-
-    g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        pe_rsc_trace(rsc, "%s + %s : %d", rsc->id, node->details->uname, node->weight);
     }
 }
 
