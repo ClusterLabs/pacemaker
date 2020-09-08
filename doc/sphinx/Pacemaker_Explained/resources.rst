@@ -1,3 +1,5 @@
+.. _resource:
+
 Cluster Resources
 -----------------
 
@@ -363,7 +365,14 @@ Resource Options
     state.
     indexterm:[resource-stickiness,Resource Option]
     indexterm:[Resource,Option,resource-stickiness]
-   
+
+
+.. _requires:
+
+   placeholder
+
+.. Convert_to_RST_4:
+
    |requires
    |+quorum+ for resources with a +class+ of +stonith+,
     otherwise +unfencing+ if unfencing is active in the cluster,
@@ -605,8 +614,15 @@ Resource Options
    </resource-agent>
    -------
    =====
-   
-   == Resource Operations ==
+
+
+.. _operation:
+
+Resource Operations
+###################
+
+
+.. Convert_to_RST_5:
    
    indexterm:[Resource,Action]
    
@@ -643,7 +659,7 @@ Resource Options
 Operation Properties
 ____________________
 
-.. Convert_to_RST_4:
+.. Convert_to_RST_6:
 
    Operation properties may be specified directly in the +op+ element as
    XML attributes, or in a separate +meta_attributes+ block as +nvpair+ elements.

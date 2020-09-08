@@ -35,9 +35,15 @@ Advanced Configuration
    [source,XML]
    <op id="my-weekly-action" name="custom-action" interval="P7D" interval-origin="2009-W01-1"/> 
    =====
-   
-   [[s-failure-handling]]
-   == Handling Resource Failure ==
+
+
+.. _failure-handling:
+
+Handling Resource Failure
+#########################
+
+
+.. Convert_to_RST_2:
    
    By default, Pacemaker will attempt to recover failed resources by restarting
    them. However, failure recovery is highly configurable.
@@ -459,9 +465,15 @@ Advanced Configuration
    </rsc_location>
    -------
    =====
-   
-   [[s-migrating-resources]]
-   === Migrating Resources ===
+
+
+.. _live-migration:
+
+Migrating Resources
+___________________
+
+
+.. Convert_to_RST_3:
    
    Normally, when the cluster needs to move a resource, it fully restarts
    the resource (i.e. stops the resource on the current node
@@ -520,9 +532,14 @@ Advanced Configuration
    
    Also, if a migratable resource depends on a non-migratable resource, and both
    need to be moved, the migratable resource will be restarted.
+
+
+.. _node-health:
+
+Tracking Node Health
+####################
    
-   [[s-node-health]]
-   == Tracking Node Health ==
+.. Convert_to_RST_4:
    
    A node may be functioning adequately as far as cluster membership is concerned,
    and yet be "unhealthy" in some respect that makes it an undesirable location

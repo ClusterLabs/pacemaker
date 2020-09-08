@@ -1,9 +1,9 @@
+.. _utilization:
+
 Utilization and Placement Strategy
 ----------------------------------
 
 .. Convert_to_RST:
-   
-   [[s-utilization]]
    
    Pacemaker decides where to place a resource according to the resource
    allocation scores on every node. The resource will be allocated to the
