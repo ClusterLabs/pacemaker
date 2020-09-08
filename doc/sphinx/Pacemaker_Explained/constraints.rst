@@ -43,8 +43,15 @@ Resource Constraints
    store the metric as a node attribute, and query the attribute when computing
    the score (possibly as part of a custom resource agent).
    ======
-   
-   == Deciding Which Nodes a Resource Can Run On ==
+
+
+.. _location-constraint:
+
+Deciding Which Nodes a Resource Can Run On
+##########################################
+
+
+.. Convert_to_RST_2:
    
    indexterm:[Constraint,Location Constraint]
    'Location constraints' tell the cluster which nodes a resource can run on.
