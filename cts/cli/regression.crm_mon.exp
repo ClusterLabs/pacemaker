@@ -3076,3 +3076,43 @@ Full List of Resources:
 </pacemaker-result>
 =#=#=#= End test: Text output of partially active resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, filtered by node
+=#=#=#= Begin test: Text output of all resources with maintenance-mode enabled =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 27 resource instances configured (4 DISABLED)
+
+              *** Resource management is DISABLED ***
+  The cluster will not attempt to start, stop or recover services
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+
+Full List of Resources:
+  * Clone Set: ping-clone [ping] (unmanaged):
+    * ping	(ocf::pacemaker:ping):	 Started cluster02 (unmanaged)
+    * ping	(ocf::pacemaker:ping):	 Started cluster01 (unmanaged)
+  * Fencing	(stonith:fence_xvm):	 Started cluster01 (unmanaged)
+  * dummy	(ocf::pacemaker:Dummy):	 Started cluster02 (unmanaged)
+  * Clone Set: inactive-clone [inactive-dhcpd] (unmanaged) (disabled):
+    * Stopped (disabled): [ cluster01 cluster02 ]
+  * Resource Group: inactive-group (unmanaged) (disabled):
+    * inactive-dummy-1	(ocf::pacemaker:Dummy):	 Stopped (disabled, unmanaged)
+    * inactive-dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled, unmanaged)
+  * Container bundle set: httpd-bundle [pcmk:http] (unmanaged):
+    * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Stopped (unmanaged)
+    * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped (unmanaged)
+    * httpd-bundle-2 (192.168.122.133)	(ocf::heartbeat:apache):	 Stopped (unmanaged)
+  * Resource Group: exim-group (unmanaged):
+    * Public-IP	(ocf::heartbeat:IPaddr):	 Started cluster02 (unmanaged)
+    * Email	(lsb:exim):	 Started cluster02 (unmanaged)
+  * Clone Set: mysql-clone-group [mysql-group] (unmanaged):
+    * Resource Group: mysql-group:0 (unmanaged):
+      * mysql-proxy	(lsb:mysql-proxy):	 Started cluster02 (unmanaged)
+    * Resource Group: mysql-group:1 (unmanaged):
+      * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01 (unmanaged)
+=#=#=#= End test: Text output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of all resources with maintenance-mode enabled
