@@ -263,8 +263,7 @@ pe__cluster_summary(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        out->message(out, "maint-mode");
+    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
         rc = pcmk_rc_ok;
     }
 
@@ -336,8 +335,7 @@ pe__cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        out->message(out, "maint-mode");
+    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
         rc = pcmk_rc_ok;
     }
 
@@ -688,13 +686,24 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode")
+PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long")
 int
 pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
-    fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
-    fprintf(out->dest, "\n  The cluster will not attempt to start, stop or recover services");
-    fprintf(out->dest, "\n");
-    return pcmk_rc_ok;
+    unsigned long long flags = va_arg(args, unsigned long long);
+
+    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+        fprintf(out->dest, "\n              *** Resource management is DISABLED ***");
+        fprintf(out->dest, "\n  The cluster will not attempt to start, stop or recover services");
+        fprintf(out->dest, "\n");
+        return pcmk_rc_ok;
+    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+        fprintf(out->dest, "\n    *** Resource management is DISABLED ***");
+        fprintf(out->dest, "\n  The cluster will keep all resources stopped");
+        fprintf(out->dest, "\n");
+        return pcmk_rc_ok;
+    } else {
+        return pcmk_rc_no_output;
+    }
 }
 
 PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
@@ -738,6 +747,13 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
         pcmk_create_html_node(node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(node, "span", NULL, NULL,
                               " (the cluster will not attempt to start, stop, or recover services)");
+    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+        xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
+
+        pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
+        pcmk_create_html_node(node, "span", NULL, "bold", "STOPPED");
+        pcmk_create_html_node(node, "span", NULL, NULL,
+                              " (the cluster will keep all resources stopped)");
     } else {
         out->list_item(out, NULL, "Resource management: enabled");
     }
@@ -752,6 +768,9 @@ pe__cluster_options_log(pcmk__output_t *out, va_list args) {
 
     if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
         out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
+        return pcmk_rc_ok;
+    } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
+        out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
         return pcmk_rc_ok;
     } else {
         return pcmk_rc_no_output;
@@ -830,6 +849,8 @@ pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
 
     xmlSetProp(node, (pcmkXmlStr) "maintenance-mode",
                (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)));
+    xmlSetProp(node, (pcmkXmlStr) "stop-all-resources",
+               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)));
 
     return pcmk_rc_ok;
 }
@@ -1827,10 +1848,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
     { "group", "log",  pe__group_text },
-    /* maint-mode only exists for text and log.  Other formatters output it as
-     * part of the cluster-options handler.
-     */
-    { "maint-mode", "log", pe__cluster_maint_mode_text },
     { "maint-mode", "text", pe__cluster_maint_mode_text },
     { "node", "html", pe__node_html },
     { "node", "log", pe__node_text },

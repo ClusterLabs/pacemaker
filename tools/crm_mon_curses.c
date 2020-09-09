@@ -359,15 +359,29 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode")
+PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long")
 static int
 cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
-    printw("\n              *** Resource management is DISABLED ***");
-    printw("\n  The cluster will not attempt to start, stop or recover services");
-    printw("\n");
+    unsigned long long flags = va_arg(args, unsigned long long);
+    int rc;
+
+    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+        printw("\n              *** Resource management is DISABLED ***");
+        printw("\n  The cluster will not attempt to start, stop or recover services");
+        printw("\n");
+        rc = pcmk_rc_ok;
+    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+        printw("\n    *** Resource management is DISABLED ***");
+        printw("\n  The cluster will keep all resources stopped");
+        printw("\n");
+        rc = pcmk_rc_ok;
+    } else {
+        rc = pcmk_rc_no_output;
+    }
+
     clrtoeol();
     refresh();
-    return pcmk_rc_ok;
+    return rc;
 }
 
 static pcmk__message_entry_t fmt_functions[] = {

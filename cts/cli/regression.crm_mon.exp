@@ -31,7 +31,7 @@ Active Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -198,7 +198,7 @@ Active Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -668,7 +668,7 @@ Negative Location Constraints:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member">
@@ -860,7 +860,7 @@ Negative Location Constraints:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1006,7 +1006,7 @@ Negative Location Constraints:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
@@ -1145,7 +1145,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1202,7 +1202,7 @@ Active Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes/>
   <resources>
@@ -1345,7 +1345,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1421,7 +1421,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1501,7 +1501,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1580,7 +1580,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1669,7 +1669,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1758,7 +1758,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1826,7 +1826,7 @@ Active Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1898,7 +1898,7 @@ Full List of Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -1970,7 +1970,7 @@ Full List of Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2027,7 +2027,7 @@ Full List of Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2084,7 +2084,7 @@ Full List of Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2145,7 +2145,7 @@ Full List of Resources:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2233,7 +2233,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2324,7 +2324,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2427,7 +2427,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2524,7 +2524,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2627,7 +2627,7 @@ Operations:
     <last_change time=""/>
     <nodes_configured number="5"/>
     <resources_configured number="27" disabled="4" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
@@ -2706,7 +2706,7 @@ Active Resources:
     <last_change time=""/>
     <nodes_configured number="4"/>
     <resources_configured number="13" disabled="1" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="5" type="member"/>
@@ -3013,7 +3013,7 @@ Full List of Resources:
     <last_change time=""/>
     <nodes_configured number="4"/>
     <resources_configured number="13" disabled="1" blocked="0"/>
-    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false"/>
+    <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
     <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="5" type="member"/>
