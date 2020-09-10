@@ -494,19 +494,19 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         }
 
         action = g_list_nth_data(possible_matches, 0);
-        pe_rsc_trace(rsc, "Found existing action %d (%s) for %s (%s) on %s",
-                     action->id, action->uuid,
-                     (rsc? rsc->id : "no resource"), task,
+        pe_rsc_trace(rsc, "Found action %d: %s for %s (%s) on %s",
+                     action->id, task, (rsc? rsc->id : "no resource"),
+                     action->uuid,
                      (on_node? on_node->details->uname : "no node"));
         g_list_free(possible_matches);
     }
 
     if (action == NULL) {
         if (save_action) {
-            pe_rsc_trace(rsc, "Creating %s action %d: %s for %s (%s) on %s",
-                         (optional? "optional" : "mandatory"),
-                         data_set->action_id, key,
-                         (rsc? rsc->id : "no resource"), task,
+            pe_rsc_trace(rsc, "Creating action %d (%s): %s for %s (%s) on %s",
+                         data_set->action_id,
+                         (optional? "optional" : "required"),
+                         task, (rsc? rsc->id : "no resource"), key,
                          (on_node? on_node->details->uname : "no node"));
         }
 
@@ -517,7 +517,6 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             action->id = 0;
         }
         action->rsc = rsc;
-        CRM_ASSERT(task != NULL);
         action->task = strdup(task);
         if (on_node) {
             action->node = pe__copy_node(on_node);
@@ -559,14 +558,9 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                 rsc->actions = g_list_prepend(rsc->actions, action);
             }
         }
-
-        if (save_action) {
-            pe_rsc_trace(rsc, "Action %d created", action->id);
-        }
     }
 
     if (!optional && pcmk_is_set(action->flags, pe_action_optional)) {
-        pe_rsc_trace(rsc, "Unset optional on action %d", action->id);
         pe__clear_action_flags(action, pe_action_optional);
     }
 
@@ -600,14 +594,15 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             /* leave untouched */
 
         } else if (action->node == NULL) {
-            pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
+            pe_rsc_trace(rsc, "%s is unrunnable (unallocated)",
+                         action->uuid);
             pe__clear_action_flags(action, pe_action_runnable);
 
         } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta,
                                           XML_LRM_ATTR_INTERVAL_MS) == NULL) {
-            crm_debug("Action %s (unmanaged)", action->uuid);
-            pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
+            pe_rsc_debug(rsc, "%s on %s is optional (%s is unmanaged)",
+                         action->uuid, action->node->details->uname, rsc->id);
             pe__set_action_flags(action, pe_action_optional);
             //pe__clear_action_flags(action, pe_action_runnable);
 
@@ -616,7 +611,8 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                    && (!pe__is_guest_node(action->node)
                        || action->node->details->remote_requires_reset)) {
             pe__clear_action_flags(action, pe_action_runnable);
-            do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
+            do_crm_log(warn_level,
+                       "%s on %s is unrunnable (node is offline)",
                        action->uuid, action->node->details->uname);
             if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
                 && save_action && a_task == stop_rsc
@@ -627,11 +623,11 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         } else if (!pcmk_is_set(action->flags, pe_action_dc)
                    && action->node->details->pending) {
             pe__clear_action_flags(action, pe_action_runnable);
-            do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
+            do_crm_log(warn_level,
+                       "Action %s on %s is unrunnable (node is pending)",
                        action->uuid, action->node->details->uname);
 
         } else if (action->needs == rsc_req_nothing) {
-            pe_rsc_trace(rsc, "Action %s does not require anything", action->uuid);
             pe_action_set_reason(action, NULL, TRUE);
             if (pe__is_guest_node(action->node)
                 && !pe_can_fence(data_set, action->node)) {
@@ -640,10 +636,13 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                  * exception: an action cannot be completed if it is on a guest
                  * node whose host is unclean and cannot be fenced.
                  */
+                pe_rsc_debug(rsc, "%s on %s is unrunnable "
+                             "(node's host cannot be fenced)",
+                             action->uuid, action->node->details->uname);
                 pe__clear_action_flags(action, pe_action_runnable);
-                crm_debug("%s\t%s (cancelled : host cannot be fenced)",
-                          action->node->details->uname, action->uuid);
             } else {
+                pe_rsc_trace(rsc, "%s on %s does not require fencing or quorum",
+                             action->uuid, action->node->details->uname);
                 pe__set_action_flags(action, pe_action_runnable);
             }
 #if 0
@@ -656,22 +655,21 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             action->runnable = TRUE;
 #endif
         } else if (quorum_policy == no_quorum_stop) {
+            pe_rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
+                         action->uuid, action->node->details->uname);
             pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
                                       "no quorum", pe_action_runnable, TRUE);
-            crm_debug("%s\t%s (cancelled : quorum)", action->node->details->uname, action->uuid);
 
         } else if (quorum_policy == no_quorum_freeze) {
-            pe_rsc_trace(rsc, "Check resource is already active: %s %s %s %s", rsc->id, action->uuid, role2text(rsc->next_role), role2text(rsc->role));
             if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
+                pe_rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
+                             action->uuid, action->node->details->uname);
                 pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
                                           "quorum freeze", pe_action_runnable,
                                           TRUE);
-                pe_rsc_debug(rsc, "%s\t%s (cancelled : quorum freeze)",
-                             action->node->details->uname, action->uuid);
             }
 
-        } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
-            pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
+        } else {
             //pe_action_set_reason(action, NULL, TRUE);
             pe__set_action_flags(action, pe_action_runnable);
         }
@@ -1121,22 +1119,21 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 
     if (!pcmk__strcase_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
-        value = "nothing (not start/promote)";
+        value = "nothing (not start or promote)";
 
     } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
         action->needs = rsc_req_stonith;
-        value = "fencing (resource)";
+        value = "fencing";
 
     } else if (pcmk_is_set(action->rsc->flags, pe_rsc_needs_quorum)) {
         action->needs = rsc_req_quorum;
-        value = "quorum (resource)";
+        value = "quorum";
 
     } else {
         action->needs = rsc_req_nothing;
-        value = "nothing (resource)";
+        value = "nothing";
     }
-
-    pe_rsc_trace(action->rsc, "\tAction %s requires: %s", action->uuid, value);
+    pe_rsc_trace(action->rsc, "%s requires %s", action->uuid, value);
 
     value = unpack_operation_on_fail(action);
 
@@ -1251,7 +1248,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
         value = "restart (and possibly migrate) (default)";
     }
 
-    pe_rsc_trace(action->rsc, "\t%s failure handling: %s", action->task, value);
+    pe_rsc_trace(action->rsc, "%s failure handling: %s",
+                 action->uuid, value);
 
     value = NULL;
     if (xml_obj != NULL) {
@@ -1272,8 +1270,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
             action->fail_role = RSC_ROLE_STARTED;
         }
     }
-    pe_rsc_trace(action->rsc, "\t%s failure results in: %s", action->task,
-                 role2text(action->fail_role));
+    pe_rsc_trace(action->rsc, "%s failure results in: %s",
+                 action->uuid, role2text(action->fail_role));
 
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_START_DELAY);
     if (value) {

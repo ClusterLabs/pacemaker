@@ -78,7 +78,6 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
         local_interval_ms += ch;
         offset--;
     }
-    crm_trace("Operation key '%s' has interval %ums", key, local_interval_ms);
     if (interval_ms) {
         *interval_ms = local_interval_ms;
     }
@@ -97,7 +96,6 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 
     mutable_key_ptr = mutable_key + offset + 1;
 
-    crm_trace("  Action: %s", mutable_key_ptr);
     if (op_type) {
         *op_type = strdup(mutable_key_ptr);
     }
@@ -115,7 +113,10 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
         notify[0] = 0;
     }
 
-    crm_trace("  Resource: %s", mutable_key);
+    // @TODO We don't really need this trace if we add good unit tests for this
+    crm_trace("Parsed %s into resource %s, action %s, interval %ums",
+              key, mutable_key, mutable_key_ptr, local_interval_ms);
+
     if (rsc_id) {
         *rsc_id = mutable_key;
     } else {

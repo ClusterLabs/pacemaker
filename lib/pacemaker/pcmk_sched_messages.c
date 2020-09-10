@@ -104,7 +104,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
         log_resource_details(data_set);
     }
 
-    crm_trace("Applying placement constraints");
+    crm_trace("Applying location constraints");
     stage2(data_set);
 
     if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {

@@ -474,17 +474,19 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
 
             if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
                 if (old_value) {
-                    crm_trace("Removing value for %s (%s)", name, value);
+                    crm_trace("Letting %s default (removing explicit value \"%s\")",
+                              name, value);
                     g_hash_table_remove(hash, name);
                 }
                 continue;
 
             } else if (old_value == NULL) {
-                crm_trace("Setting attribute: %s = %s", name, value);
+                crm_trace("Setting %s=\"%s\"", name, value);
                 g_hash_table_insert(hash, strdup(name), strdup(value));
 
             } else if (overwrite) {
-                crm_debug("Overwriting value of %s: %s -> %s", name, old_value, value);
+                crm_trace("Setting %s=\"%s\" (overwriting old value \"%s\")",
+                          name, value, old_value);
                 g_hash_table_replace(hash, strdup(name), strdup(value));
             }
         }
@@ -578,7 +580,9 @@ unpack_attr_set(gpointer data, gpointer user_data)
     }
 #endif
 
-    crm_trace("Adding attributes from %s", pair->name);
+    crm_trace("Adding attributes from %s (score %d) %s overwrite",
+              pair->name, pair->score,
+              (unpack_data->overwrite? "with" : "without"));
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
 }
 
@@ -617,11 +621,8 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
     xmlNode *attr_set = NULL;
 
     if (xml_obj == NULL) {
-        crm_trace("No instance attributes");
         return NULL;
     }
-
-    crm_trace("Checking for attributes");
     for (attr_set = __xml_first_child_element(xml_obj); attr_set != NULL;
          attr_set = __xml_next_element(attr_set)) {
 

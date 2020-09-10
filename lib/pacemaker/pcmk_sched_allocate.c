@@ -1095,7 +1095,6 @@ stage2(pe_working_set_t * data_set)
         }
     }
 
-    crm_trace("Applying placement constraints");
     apply_placement_constraints(data_set);
 
     gIter = data_set->nodes;
