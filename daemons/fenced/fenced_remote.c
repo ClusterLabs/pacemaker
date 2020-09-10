@@ -1626,17 +1626,17 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         }
 
         if (op->state == st_query) {
-           crm_info("No peers (out of %d) have devices capable of fencing "
-                    "(%s) %s for client %s " CRM_XS " state=%d",
-                    op->replies, op->action, op->target, op->client_name,
-                    op->state);
+            crm_info("No peers (out of %d) have devices capable of fencing "
+                     "(%s) %s for client %s " CRM_XS " state=%d",
+                     op->replies, op->action, op->target, op->client_name,
+                     op->state);
 
             rc = -ENODEV;
         } else {
-           crm_info("No peers (out of %d) are capable of fencing (%s) %s "
-                    "for client %s " CRM_XS " state=%d",
-                    op->replies, op->action, op->target, op->client_name,
-                    op->state);
+            crm_info("No peers (out of %d) are capable of fencing (%s) %s "
+                     "for client %s " CRM_XS " state=%d",
+                     op->replies, op->action, op->target, op->client_name,
+                     op->state);
         }
 
         op->state = st_failed;
