@@ -75,7 +75,7 @@ typedef struct st_query_result_s {
 
 GHashTable *stonith_remote_op_list = NULL;
 
-void call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer);
+void call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc);
 static void remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup);
 extern xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                                   int call_options);
@@ -591,7 +591,7 @@ remote_op_timeout_one(gpointer userdata)
 
     crm_notice("Peer's '%s' action targeting %s for client %s timed out " CRM_XS
                " id=%s", op->action, op->target, op->client_name, op->id);
-    call_remote_stonith(op, NULL);
+    call_remote_stonith(op, NULL, pcmk_ok);
     return FALSE;
 }
 
@@ -644,7 +644,7 @@ remote_op_query_timeout(gpointer data)
     } else if (op->query_results) {
         crm_debug("Query %s targeting %s complete (state=%d)",
                   op->id, op->target, op->state);
-        call_remote_stonith(op, NULL);
+        call_remote_stonith(op, NULL, pcmk_ok);
     } else {
         crm_debug("Query %s targeting %s timed out (state=%d)",
                   op->id, op->target, op->state);
@@ -1483,7 +1483,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
             op->delay = 0;
         }
 
-        call_remote_stonith(op, NULL);
+        call_remote_stonith(op, NULL, pcmk_ok);
     } else {
         /* We're done with all devices and phases, so finalize operation */
         crm_trace("Marking complex fencing op targeting %s as complete",
@@ -1494,7 +1494,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
 }
 
 void
-call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
+call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
 {
     const char *device = NULL;
     int timeout = op->base_timeout;
@@ -1610,7 +1610,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         remote_op_timeout(op);
 
     } else if(op->replies >= op->replies_expected || op->replies >= fencing_active_peers()) {
-        int rc = -EHOSTUNREACH;
+//        int rc = -EHOSTUNREACH;
 
         /* if the operation never left the query state,
          * but we have all the expected replies, then no devices
@@ -1633,6 +1633,10 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
 
             rc = -ENODEV;
         } else {
+            if (pcmk_is_set(op->call_options, st_opt_topology)) {
+                rc = -EHOSTUNREACH;
+            } 
+
             crm_info("No peers (out of %d) are capable of fencing (%s) %s "
                      "for client %s " CRM_XS " state=%d",
                      op->replies, op->action, op->target, op->client_name,
@@ -1929,12 +1933,12 @@ process_remote_stonith_query(xmlNode * msg)
         if (op->state == st_query && all_topology_devices_found(op)) {
             /* All the query results are in for the topology, start the fencing ops. */
             crm_trace("All topology devices found");
-            call_remote_stonith(op, result);
+            call_remote_stonith(op, result, pcmk_ok);
 
         } else if (have_all_replies) {
             crm_info("All topology query replies have arrived, continuing (%d expected/%d received) ",
                      replies_expected, op->replies);
-            call_remote_stonith(op, NULL);
+            call_remote_stonith(op, NULL, pcmk_ok);
         }
 
     } else if (op->state == st_query) {
@@ -1945,12 +1949,12 @@ process_remote_stonith_query(xmlNode * msg)
         if (result && (host_is_target == FALSE) && nverified) {
             /* we have a verified device living on a peer that is not the target */
             crm_trace("Found %d verified devices", nverified);
-            call_remote_stonith(op, result);
+            call_remote_stonith(op, result, pcmk_ok);
 
         } else if (have_all_replies) {
             crm_info("All query replies have arrived, continuing (%d expected/%d received) ",
                      replies_expected, op->replies);
-            call_remote_stonith(op, NULL);
+            call_remote_stonith(op, NULL, pcmk_ok);
 
         } else {
             crm_trace("Waiting for more peer results before launching fencing operation");
@@ -2097,7 +2101,7 @@ process_remote_stonith_exec(xmlNode * msg)
     /* Retry on failure */
     crm_trace("Next for %s on behalf of %s@%s (rc was %d)", op->target, op->originator,
               op->client_name, rc);
-    call_remote_stonith(op, NULL);
+    call_remote_stonith(op, NULL, rc);
     return rc;
 }
 
