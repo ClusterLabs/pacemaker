@@ -79,6 +79,8 @@ gboolean cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpoin
 gboolean delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean extra_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean option_cb(const gchar *option_name, const gchar *optarg,
+                   gpointer data, GError **error);
 gboolean fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -453,7 +455,7 @@ static GOptionEntry validate_entries[] = {
       "The vendor that supplies the resource agent (for example,\n"
       INDENT "heartbeat). Use with --class, --agent, --option, and --validate.",
       "PROVIDER" },
-    { "option", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, extra_cb,
+    { "option", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, option_cb,
       "Specify a device configuration parameter as NAME=VALUE (may be\n"
       INDENT "specified multiple times). Use with --validate and without the\n"
       INDENT "-r option.",
@@ -613,6 +615,23 @@ extra_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
         options.extra_arg = strdup(optarg);
     }
 
+    return TRUE;
+}
+
+gboolean
+option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+          GError **error)
+{
+    char *name = NULL;
+    char *value = NULL;
+
+    if (pcmk_scan_nvpair(optarg, &name, &value) != 2) {
+        return FALSE;
+    }
+    if (options.validate_options == NULL) {
+        options.validate_options = crm_str_table_new();
+    }
+    g_hash_table_replace(options.validate_options, name, value);
     return TRUE;
 }
 
@@ -1156,30 +1175,6 @@ refresh_resource(pe_resource_t *rsc)
 }
 
 static int
-set_option(const char *arg)
-{
-    int rc = pcmk_rc_ok;
-    char *name = NULL;
-    char *value = NULL;
-
-    crm_info("Scanning: --option %s", arg);
-    rc = pcmk_scan_nvpair(arg, &name, &value);
-
-    if (rc != 2) {
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Invalid option: --option %s: %s", arg, pcmk_strerror(rc));
-    } else {
-        crm_info("Got: '%s'='%s'", name, value);
-        if (options.validate_options == NULL) {
-            options.validate_options = crm_str_table_new();
-        }
-        g_hash_table_replace(options.validate_options, name, value);
-    }
-
-    return rc;
-}
-
-static int
 set_property()
 {
     int rc = pcmk_rc_ok;
@@ -1393,11 +1388,6 @@ main(int argc, char **argv)
     } else if (pcmk__str_eq(options.extra_option, "--list-agents", pcmk__str_casei)) {
         rc = list_agents(options.extra_arg, &exit_code);
         goto done;
-    } else if (pcmk__str_eq(options.extra_option, "--option", pcmk__str_casei)) {
-        rc = set_option(options.extra_arg);
-        if (rc != pcmk_rc_ok) {
-            goto done;
-        }
     }
 
     for (int i = 0; i < args->verbosity; i++) {
