@@ -37,15 +37,15 @@ struct {
     char *extra_option;
     int find_flags;             /* Flags to use when searching for resource */
     gboolean force;
-    char *host_uname;
-    char *interval_spec;
-    char *move_lifetime;
-    char *operation;
+    gchar *host_uname;
+    gchar *interval_spec;
+    gchar *move_lifetime;
+    gchar *operation;
     GHashTable *override_params;
-    char *prop_id;
+    gchar *prop_id;
     char *prop_name;
-    char *prop_set;
-    char *prop_value;
+    gchar *prop_set;
+    gchar *prop_value;
     gboolean recursive;
     gchar **remainder;
     gboolean require_crmd;          /* whether command requires controller connection */
@@ -53,9 +53,9 @@ struct {
     gboolean require_resource;      /* whether command requires that resource be specified */
     int resource_verbose;
     char rsc_cmd;
-    char *rsc_id;
+    gchar *rsc_id;
     char *rsc_long_cmd;
-    char *rsc_type;
+    gchar *rsc_type;
     gboolean promoted_role_only;
     int timeout_ms;
     char *v_agent;
@@ -63,7 +63,7 @@ struct {
     char *v_provider;
     gboolean validate_cmdline;      /* whether we are just validating based on command line options */
     GHashTable *validate_options;
-    char *xml_file;
+    gchar *xml_file;
 } options = {
     .attr_set_type = XML_TAG_ATTR_SETS,
     .cib_options = cib_sync_call,
@@ -1737,27 +1737,22 @@ done:
 
     free(options.extra_arg);
     free(options.extra_option);
-    free(options.host_uname);
-    free(options.interval_spec);
-    free(options.move_lifetime);
-    free(options.operation);
-    free(options.prop_id);
+    g_free(options.host_uname);
+    g_free(options.interval_spec);
+    g_free(options.move_lifetime);
+    g_free(options.operation);
+    g_free(options.prop_id);
     free(options.prop_name);
-    free(options.prop_set);
-    free(options.prop_value);
-    free(options.rsc_id);
+    g_free(options.prop_set);
+    g_free(options.prop_value);
+    g_free(options.rsc_id);
     free(options.rsc_long_cmd);
-    free(options.rsc_type);
+    g_free(options.rsc_type);
     free(options.v_agent);
     free(options.v_class);
     free(options.v_provider);
-    free(options.xml_file);
-
-    if (options.remainder) {
-        for (gchar **s = options.remainder; *s; s++) {
-            g_free(*s);
-        }
-    }
+    g_free(options.xml_file);
+    g_strfreev(options.remainder);
 
     if (options.override_params != NULL) {
         g_hash_table_destroy(options.override_params);
