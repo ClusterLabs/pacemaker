@@ -29,12 +29,46 @@
 
 #define SUMMARY "crm_resource - perform tasks related to Pacemaker cluster resources"
 
+enum rsc_command {
+    cmd_none = 0,           // No command option given (yet)
+    cmd_ban,
+    cmd_cleanup,
+    cmd_clear,
+    cmd_colocations,
+    cmd_colocations_deep,
+    cmd_cts,
+    cmd_delete,
+    cmd_delete_param,
+    cmd_execute_agent,
+    cmd_fail,
+    cmd_get_param,
+    cmd_get_property,
+    cmd_list_active_ops,
+    cmd_list_agents,
+    cmd_list_all_ops,
+    cmd_list_alternatives,
+    cmd_list_instances,
+    cmd_list_providers,
+    cmd_list_resources,
+    cmd_list_standards,
+    cmd_locate,
+    cmd_metadata,
+    cmd_move,
+    cmd_query_raw_xml,
+    cmd_query_xml,
+    cmd_refresh,
+    cmd_restart,
+    cmd_set_param,
+    cmd_set_property,
+    cmd_wait,
+    cmd_why,
+};
+
 struct {
+    enum rsc_command rsc_cmd;   // The crm_resource command to perform
     const char *attr_set_type;
     int cib_options;
     gboolean clear_expired;
-    char *extra_arg;
-    char *extra_option;
     int find_flags;             /* Flags to use when searching for resource */
     gboolean force;
     gchar *host_uname;
@@ -48,16 +82,16 @@ struct {
     gchar *prop_value;
     gboolean recursive;
     gchar **remainder;
+    gboolean require_cib;           // Whether command requires CIB connection
     gboolean require_crmd;          /* whether command requires controller connection */
     gboolean require_dataset;       /* whether command requires populated dataset instance */
     gboolean require_resource;      /* whether command requires that resource be specified */
     int resource_verbose;
-    char rsc_cmd;
     gchar *rsc_id;
-    char *rsc_long_cmd;
     gchar *rsc_type;
     gboolean promoted_role_only;
     int timeout_ms;
+    char *agent_spec;               // Standard and/or provider and/or agent
     char *v_agent;
     char *v_class;
     char *v_provider;
@@ -67,10 +101,24 @@ struct {
 } options = {
     .attr_set_type = XML_TAG_ATTR_SETS,
     .cib_options = cib_sync_call,
+    .require_cib = TRUE,
     .require_dataset = TRUE,
     .require_resource = TRUE,
-    .rsc_cmd = 'L'
 };
+
+#if 0
+// @COMPAT @TODO enable this at next backward compatibility break
+#define SET_COMMAND(cmd) do {                                               \
+        if (options.rsc_cmd != cmd_none) {                                  \
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,             \
+                        "Only one command option may be specified");        \
+            return FALSE;                                                   \
+        }                                                                   \
+        options.rsc_cmd = (cmd);                                            \
+    } while (0)
+#else
+#define SET_COMMAND(cmd) do { options.rsc_cmd = (cmd); } while (0)
+#endif
 
 gboolean agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -78,7 +126,16 @@ gboolean class_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 gboolean cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean extra_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean list_agents_cb(const gchar *option_name, const gchar *optarg,
+                        gpointer data, GError **error);
+gboolean list_providers_cb(const gchar *option_name, const gchar *optarg,
+                           gpointer data, GError **error);
+gboolean list_standards_cb(const gchar *option_name, const gchar *optarg,
+                           gpointer data, GError **error);
+gboolean list_alternatives_cb(const gchar *option_name, const gchar *optarg,
+                              gpointer data, GError **error);
+gboolean metadata_cb(const gchar *option_name, const gchar *optarg,
+                     gpointer data, GError **error);
 gboolean option_cb(const gchar *option_name, const gchar *optarg,
                    gpointer data, GError **error);
 gboolean fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -88,7 +145,10 @@ gboolean list_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 gboolean set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean validate_restart_force_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
+                              gpointer data, GError **error);
+gboolean restart_cb(const gchar *option_name, const gchar *optarg,
+                    gpointer data, GError **error);
 gboolean wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
@@ -263,19 +323,24 @@ static GOptionEntry query_entries[] = {
       "List all resource operations, optionally filtered by\n"
       INDENT "--resource and/or --node",
       NULL },
-    { "list-standards", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, extra_cb,
+    { "list-standards", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      list_standards_cb,
       "List supported standards",
       NULL },
-    { "list-ocf-providers", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, extra_cb,
+    { "list-ocf-providers", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      list_providers_cb,
       "List all available OCF providers",
       NULL },
-    { "list-agents", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, extra_cb,
+    { "list-agents", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+      list_agents_cb,
       "List all agents available for the named standard and/or provider",
       "STD/PROV" },
-    { "list-ocf-alternatives", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, extra_cb,
+    { "list-ocf-alternatives", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+      list_alternatives_cb,
       "List all available providers for the named OCF agent",
       "AGENT" },
-    { "show-metadata", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, extra_cb,
+    { "show-metadata", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+      metadata_cb,
       "Show the metadata for the named class:provider:agent",
       "SPEC" },
     { "query-xml", 'q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
@@ -296,7 +361,8 @@ static GOptionEntry query_entries[] = {
       "Show node(s) currently running resource",
       NULL },
     { "stack", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
-      "Display the prerequisites and dependents of a resource",
+      "Display the (co)location constraints that apply to a resource\n"
+      INDENT "and the resources is it colocated with",
       NULL },
     { "constraints", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Display the (co)location constraints that apply to a resource",
@@ -310,7 +376,8 @@ static GOptionEntry query_entries[] = {
 };
 
 static GOptionEntry command_entries[] = {
-    { "validate", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, validate_restart_force_cb,
+    { "validate", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      validate_or_force_cb,
       "Validate resource configuration by calling agent's validate-all\n"
       INDENT "action. The configuration may be specified either by giving an\n"
       INDENT "existing resource name with -r, or by specifying --class,\n"
@@ -406,35 +473,40 @@ static GOptionEntry advanced_entries[] = {
     { "fail", 'F', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, fail_cb,
       "(Advanced) Tell the cluster this resource has failed",
       NULL },
-    { "restart", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, validate_restart_force_cb,
+    { "restart", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, restart_cb,
       "(Advanced) Tell the cluster to restart this resource and\n"
       INDENT "anything that depends on it",
       NULL },
     { "wait", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, wait_cb,
       "(Advanced) Wait until the cluster settles into a stable state",
       NULL },
-    { "force-demote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, validate_restart_force_cb,
+    { "force-demote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      validate_or_force_cb,
       "(Advanced) Bypass the cluster and demote a resource on the local\n"
       INDENT "node. Unless --force is specified, this will refuse to do so if\n"
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
-    { "force-stop", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, validate_restart_force_cb,
+    { "force-stop", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      validate_or_force_cb,
       "(Advanced) Bypass the cluster and stop a resource on the local node",
       NULL },
-    { "force-start", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, validate_restart_force_cb,
+    { "force-start", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      validate_or_force_cb,
       "(Advanced) Bypass the cluster and start a resource on the local\n"
       INDENT "node. Unless --force is specified, this will refuse to do so if\n"
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
-    { "force-promote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, validate_restart_force_cb,
+    { "force-promote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      validate_or_force_cb,
       "(Advanced) Bypass the cluster and promote a resource on the local\n"
       INDENT "node. Unless --force is specified, this will refuse to do so if\n"
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
-    { "force-check", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, validate_restart_force_cb,
+    { "force-check", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      validate_or_force_cb,
       "(Advanced) Bypass the cluster and check the state of a resource on\n"
       INDENT "the local node",
       NULL },
@@ -571,9 +643,9 @@ class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
 gboolean
 cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-C", "--cleanup", NULL)) {
-        options.rsc_cmd = 'C';
+        SET_COMMAND(cmd_cleanup);
     } else {
-        options.rsc_cmd = 'R';
+        SET_COMMAND(cmd_refresh);
     }
 
     options.require_resource = FALSE;
@@ -587,7 +659,7 @@ cleanup_refresh_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.require_dataset = FALSE;
-    options.rsc_cmd = 'D';
+    SET_COMMAND(cmd_delete);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -599,22 +671,67 @@ expired_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     return TRUE;
 }
 
+static void
+get_agent_spec(const gchar *optarg)
+{
+    options.require_cib = FALSE;
+    options.require_dataset = FALSE;
+    options.require_resource = FALSE;
+    if (options.agent_spec != NULL) {
+        free(options.agent_spec);
+        options.agent_spec = NULL;
+    }
+    if (optarg != NULL) {
+        options.agent_spec = strdup(optarg);
+    }
+}
+
 gboolean
-extra_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.extra_option) {
-        free(options.extra_option);
-    }
+list_agents_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+               GError **error)
+{
+    SET_COMMAND(cmd_list_agents);
+    get_agent_spec(optarg);
+    return TRUE;
+}
 
-    if (options.extra_arg) {
-        free(options.extra_arg);
-    }
+gboolean
+list_providers_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                  GError **error)
+{
+    SET_COMMAND(cmd_list_providers);
+    get_agent_spec(optarg);
+    return TRUE;
+}
 
-    options.extra_option = strdup(option_name);
+gboolean
+list_standards_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+                  GError **error)
+{
+    SET_COMMAND(cmd_list_standards);
+    options.require_cib = FALSE;
+    options.require_dataset = FALSE;
+    options.require_resource = FALSE;
+    return TRUE;
+}
 
-    if (optarg) {
-        options.extra_arg = strdup(optarg);
-    }
+gboolean
+list_alternatives_cb(const gchar *option_name, const gchar *optarg,
+                     gpointer data, GError **error)
+{
+    SET_COMMAND(cmd_list_alternatives);
+    options.require_cib = FALSE;
+    options.require_dataset = FALSE;
+    options.require_resource = FALSE;
+    return TRUE;
+}
 
+gboolean
+metadata_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+            GError **error)
+{
+    SET_COMMAND(cmd_metadata);
+    get_agent_spec(optarg);
     return TRUE;
 }
 
@@ -638,7 +755,7 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.require_crmd = TRUE;
-    options.rsc_cmd = 'F';
+    SET_COMMAND(cmd_fail);
     return TRUE;
 }
 
@@ -646,28 +763,28 @@ gboolean
 flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-U", "--clear", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
-        options.rsc_cmd = 'U';
+        SET_COMMAND(cmd_clear);
     } else if (pcmk__str_any_of(option_name, "-B", "--ban", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
-        options.rsc_cmd = 'B';
+        SET_COMMAND(cmd_ban);
     } else if (pcmk__str_any_of(option_name, "-M", "--move", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
-        options.rsc_cmd = 'M';
+        SET_COMMAND(cmd_move);
     } else if (pcmk__str_any_of(option_name, "-q", "--query-xml", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
-        options.rsc_cmd = 'q';
+        SET_COMMAND(cmd_query_xml);
     } else if (pcmk__str_any_of(option_name, "-w", "--query-xml-raw", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_any;
-        options.rsc_cmd = 'w';
+        SET_COMMAND(cmd_query_raw_xml);
     } else if (pcmk__str_any_of(option_name, "-W", "--locate", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
-        options.rsc_cmd = 'W';
+        SET_COMMAND(cmd_locate);
     } else if (pcmk__str_any_of(option_name, "-A", "--stack", NULL)) {
         options.find_flags = pe_find_renamed|pe_find_anon;
-        options.rsc_cmd = 'A';
+        SET_COMMAND(cmd_colocations_deep);
     } else {
         options.find_flags = pe_find_renamed|pe_find_anon;
-        options.rsc_cmd = 'a';
+        SET_COMMAND(cmd_colocations);
     }
 
     return TRUE;
@@ -676,9 +793,9 @@ flag_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-g", "--get-parameter", NULL)) {
-        options.rsc_cmd = 'g';
+        SET_COMMAND(cmd_get_param);
     } else {
-        options.rsc_cmd = 'G';
+        SET_COMMAND(cmd_get_property);
     }
 
     if (options.prop_name) {
@@ -693,15 +810,15 @@ get_param_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 gboolean
 list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-c", "--list-cts", NULL)) {
-        options.rsc_cmd = 'c';
+        SET_COMMAND(cmd_cts);
     } else if (pcmk__str_any_of(option_name, "-L", "--list", NULL)) {
-        options.rsc_cmd = 'L';
+        SET_COMMAND(cmd_list_resources);
     } else if (pcmk__str_any_of(option_name, "-l", "--list-raw", NULL)) {
-        options.rsc_cmd = 'l';
+        SET_COMMAND(cmd_list_instances);
     } else if (pcmk__str_any_of(option_name, "-O", "--list-operations", NULL)) {
-        options.rsc_cmd = 'O';
+        SET_COMMAND(cmd_list_active_ops);
     } else {
-        options.rsc_cmd = 'o';
+        SET_COMMAND(cmd_list_all_ops);
     }
 
     options.require_resource = FALSE;
@@ -711,9 +828,9 @@ list_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 set_delete_param_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "-p", "--set-parameter", NULL)) {
-        options.rsc_cmd = 'p';
+        SET_COMMAND(cmd_set_param);
     } else {
-        options.rsc_cmd = 'd';
+        SET_COMMAND(cmd_delete_param);
     }
 
     if (options.prop_name) {
@@ -734,7 +851,7 @@ set_prop_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     }
 
     options.prop_name = strdup(optarg);
-    options.rsc_cmd = 'S';
+    SET_COMMAND(cmd_set_property);
     options.find_flags = pe_find_renamed|pe_find_any;
     return TRUE;
 }
@@ -746,23 +863,31 @@ timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 }
 
 gboolean
-validate_restart_force_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.rsc_cmd = 0;
-    if (options.rsc_long_cmd) {
-        free(options.rsc_long_cmd);
+validate_or_force_cb(const gchar *option_name, const gchar *optarg,
+                     gpointer data, GError **error)
+{
+    SET_COMMAND(cmd_execute_agent);
+    if (options.operation) {
+        g_free(options.operation);
     }
-    options.rsc_long_cmd = strdup(option_name+2);
+    options.operation = g_strdup(option_name + 2); // skip "--"
+    options.find_flags = pe_find_renamed|pe_find_anon;
+    options.override_params = crm_str_table_new();
+    return TRUE;
+}
+
+gboolean
+restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+           GError **error)
+{
+    SET_COMMAND(cmd_restart);
     options.find_flags = pe_find_renamed|pe_find_anon;
     return TRUE;
 }
 
 gboolean
 wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.rsc_cmd = 0;
-    if (options.rsc_long_cmd) {
-        free(options.rsc_long_cmd);
-    }
-    options.rsc_long_cmd = strdup("wait");
+    SET_COMMAND(cmd_wait);
     options.require_resource = FALSE;
     options.require_dataset = FALSE;
     return TRUE;
@@ -771,7 +896,7 @@ wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
 gboolean
 why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.require_resource = FALSE;
-    options.rsc_cmd = 'Y';
+    SET_COMMAND(cmd_why);
     options.find_flags = pe_find_renamed|pe_find_anon;
     return TRUE;
 }
@@ -946,18 +1071,18 @@ delete()
 }
 
 static int
-list_agents(const char *spec, crm_exit_t *exit_code)
+list_agents(const char *agent_spec, crm_exit_t *exit_code)
 {
     int rc = pcmk_rc_ok;
     lrmd_list_t *list = NULL;
     lrmd_list_t *iter = NULL;
-    char *provider = strchr (spec, ':');
+    char *provider = strchr(agent_spec, ':');
     lrmd_t *lrmd_conn = lrmd_api_new();
 
     if (provider) {
         *provider++ = 0;
     }
-    rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, spec, provider);
+    rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, agent_spec, provider);
 
     if (rc > 0) {
         for (iter = list; iter != NULL; iter = iter->next) {
@@ -968,9 +1093,14 @@ list_agents(const char *spec, crm_exit_t *exit_code)
     } else {
         *exit_code = CRM_EX_NOSUCH;
         rc = pcmk_rc_error;
-        g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
-                    "No agents found for standard=%s, provider=%s",
-                    spec, (provider? provider : "*"));
+        if (provider == NULL) {
+            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+                        "No agents found for standard '%s'", agent_spec);
+        } else {
+            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+                        "No agents found for standard '%s' and provider '%s'",
+                        agent_spec, provider);
+        }
     }
 
     lrmd_api_delete(lrmd_conn);
@@ -978,22 +1108,30 @@ list_agents(const char *spec, crm_exit_t *exit_code)
 }
 
 static int
-list_providers(const char *command, const char *spec, crm_exit_t *exit_code)
+list_providers(const char *agent_spec, crm_exit_t *exit_code)
 {
-    int rc = pcmk_rc_ok;
+    int rc;
     const char *text = NULL;
     lrmd_list_t *list = NULL;
     lrmd_list_t *iter = NULL;
     lrmd_t *lrmd_conn = lrmd_api_new();
 
-    if (pcmk__strcase_any_of(command, "--list-ocf-providers",
-                             "--list-ocf-alternatives", NULL)) {
-        rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, spec, &list);
-        text = "OCF providers";
-
-    } else if (pcmk__str_eq("--list-standards", command, pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
-        text = "standards";
+    switch (options.rsc_cmd) {
+        case cmd_list_standards:
+            rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
+            text = "standards";
+            break;
+        case cmd_list_providers:
+        case cmd_list_alternatives:
+            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec,
+                                                     &list);
+            text = "OCF providers";
+            break;
+        default:
+            *exit_code = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code, "Bug");
+            lrmd_api_delete(lrmd_conn);
+            return pcmk_rc_error;
     }
 
     if (rc > 0) {
@@ -1003,11 +1141,11 @@ list_providers(const char *command, const char *spec, crm_exit_t *exit_code)
         lrmd_list_freeall(list);
         rc = pcmk_rc_ok;
 
-    } else if (spec) {
+    } else if (agent_spec != NULL) {
         *exit_code = CRM_EX_NOSUCH;
         rc = pcmk_rc_error;
         g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
-                    "No %s found for %s", text, spec);
+                    "No %s found for %s", text, agent_spec);
 
     } else {
         *exit_code = CRM_EX_NOSUCH;
@@ -1043,7 +1181,7 @@ list_raw()
 }
 
 static void
-list_stacks_and_constraints(pe_resource_t *rsc)
+list_stacks_and_constraints(pe_resource_t *rsc, bool recursive)
 {
     GListPtr lpc = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
@@ -1060,7 +1198,7 @@ list_stacks_and_constraints(pe_resource_t *rsc)
         pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
-    cli_resource_print_colocation(rsc, TRUE, options.rsc_cmd == 'A', 1);
+    cli_resource_print_colocation(rsc, TRUE, recursive, 1);
 
     fprintf(stdout, "* %s\n", rsc->id);
     cli_resource_print_location(rsc, NULL);
@@ -1071,7 +1209,7 @@ list_stacks_and_constraints(pe_resource_t *rsc)
         pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
-    cli_resource_print_colocation(rsc, FALSE, options.rsc_cmd == 'A', 1);
+    cli_resource_print_colocation(rsc, FALSE, recursive, 1);
 }
 
 static int
@@ -1208,7 +1346,7 @@ set_property()
 }
 
 static int
-show_metadata(const char *spec, crm_exit_t *exit_code)
+show_metadata(const char *agent_spec, crm_exit_t *exit_code)
 {
     int rc = pcmk_rc_ok;
     char *standard = NULL;
@@ -1217,7 +1355,7 @@ show_metadata(const char *spec, crm_exit_t *exit_code)
     char *metadata = NULL;
     lrmd_t *lrmd_conn = lrmd_api_new();
 
-    rc = crm_parse_agent_spec(spec, &standard, &provider, &type);
+    rc = crm_parse_agent_spec(agent_spec, &standard, &provider, &type);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
@@ -1231,12 +1369,13 @@ show_metadata(const char *spec, crm_exit_t *exit_code)
         } else {
             *exit_code = crm_errno2exit(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
-                        "Metadata query for %s failed: %s", spec, pcmk_rc_str(rc));
+                        "Metadata query for %s failed: %s",
+                        agent_spec, pcmk_rc_str(rc));
         }
     } else {
         rc = ENXIO;
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "'%s' is not a valid agent specification", spec);
+                    "'%s' is not a valid agent specification", agent_spec);
     }
 
     lrmd_api_delete(lrmd_conn);
@@ -1252,7 +1391,7 @@ validate_cmdline(crm_exit_t *exit_code)
                     "--resource cannot be used with --class, --agent, and --provider");
 
     // If --class, --agent, or --provider are given, --validate must also be given.
-    } else if (!pcmk__str_eq(options.rsc_long_cmd, "validate", pcmk__str_casei)) {
+    } else if (options.rsc_cmd != cmd_execute_agent) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "--class, --agent, and --provider require --validate");
 
@@ -1378,18 +1517,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (pcmk__strcase_any_of(options.extra_option, "--list-ocf-providers", "--list-ocf-alternatives",
-                             "--list-standards", NULL)) {
-        rc = list_providers(options.extra_option, options.extra_arg, &exit_code);
-        goto done;
-    } else if (pcmk__str_eq(options.extra_option, "--show-metadata", pcmk__str_casei)) {
-        rc = show_metadata(options.extra_arg, &exit_code);
-        goto done;
-    } else if (pcmk__str_eq(options.extra_option, "--list-agents", pcmk__str_casei)) {
-        rc = list_agents(options.extra_arg, &exit_code);
-        goto done;
-    }
-
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
     }
@@ -1403,20 +1530,20 @@ main(int argc, char **argv)
         crm_trace("Option host => %s", options.host_uname);
     }
 
-    // Catch the case where the user didn't specify a command
-    if (options.rsc_cmd == 'L') {
+    // If the user didn't explicitly specify a command, list resources
+    if (options.rsc_cmd == cmd_none) {
+        options.rsc_cmd = cmd_list_resources;
         options.require_resource = FALSE;
     }
 
     // --expired without --clear/-U doesn't make sense
-    if (options.clear_expired && options.rsc_cmd != 'U') {
+    if (options.clear_expired && (options.rsc_cmd != cmd_clear)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--expired requires --clear or -U");
         goto done;
     }
 
-    if (options.remainder && options.rsc_cmd == 0 && options.rsc_long_cmd) {
-        options.override_params = crm_str_table_new();
-
+    if ((options.remainder != NULL) && (options.override_params != NULL)) {
+        // Commands that use positional arguments will create override_params
         for (gchar **s = options.remainder; *s; s++) {
             char *name = calloc(1, strlen(*s));
             char *value = calloc(1, strlen(*s));
@@ -1427,14 +1554,15 @@ main(int argc, char **argv)
 
             } else {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                            "Error parsing '%s' as a name=value pair for --%s", argv[optind], options.rsc_long_cmd);
+                            "Error parsing '%s' as a name=value pair",
+                            argv[optind]);
                 free(value);
                 free(name);
                 goto done;
             }
         }
 
-    } else if (options.remainder && options.rsc_cmd == 0) {
+    } else if (options.remainder != NULL) {
         gchar **strv = NULL;
         gchar *msg = NULL;
         int i = 1;
@@ -1509,20 +1637,22 @@ main(int argc, char **argv)
         options.require_dataset = TRUE;
     }
 
-    // Establish a connection to the CIB
-    cib_conn = cib_new();
-    if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
-        rc = pcmk_rc_error;
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_DISCONNECT,
-                    "Could not create CIB connection");
-        goto done;
-    }
-    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-    rc = pcmk_legacy2rc(rc);
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not connect to the CIB: %s", pcmk_rc_str(rc));
-        goto done;
+    // Establish a connection to the CIB if needed
+    if (options.require_cib) {
+        cib_conn = cib_new();
+        if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
+            rc = pcmk_rc_error;
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_DISCONNECT,
+                        "Could not create CIB connection");
+            goto done;
+        }
+        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+        rc = pcmk_legacy2rc(rc);
+        if (rc != pcmk_rc_ok) {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Could not connect to the CIB: %s", pcmk_rc_str(rc));
+            goto done;
+        }
     }
 
     /* Populate working set from XML file if specified or CIB query otherwise */
@@ -1562,154 +1692,231 @@ main(int argc, char **argv)
         }
     }
 
-    /* Handle rsc_cmd appropriately */
-    if (options.rsc_cmd == 'L') {
-        rc = pcmk_rc_ok;
-        cli_resource_print_list(data_set, FALSE);
-
-    } else if (options.rsc_cmd == 'l') {
-        rc = list_raw();
-
-    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && pcmk__str_eq(options.rsc_long_cmd, "restart", pcmk__str_casei)) {
-        /* We don't pass data_set because rsc needs to stay valid for the entire
-         * lifetime of cli_resource_restart(), but it will reset and update the
-         * working set multiple times, so it needs to use its own copy.
-         */
-        rc = cli_resource_restart(rsc, options.host_uname, options.move_lifetime,
-                                  options.timeout_ms, cib_conn, options.cib_options,
-                                  options.promoted_role_only, options.force);
-
-    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd && pcmk__str_eq(options.rsc_long_cmd, "wait", pcmk__str_casei)) {
-        rc = wait_till_stable(options.timeout_ms, cib_conn);
-
-    } else if (options.rsc_cmd == 0 && options.rsc_long_cmd) {
-        // validate, force-(stop|start|demote|promote|check)
-        exit_code = cli_resource_execute(rsc, options.rsc_id, options.rsc_long_cmd, options.override_params,
-                                         options.timeout_ms, cib_conn, data_set, options.resource_verbose,
-                                         options.force);
-
-    } else if (options.rsc_cmd == 'A' || options.rsc_cmd == 'a') {
-        list_stacks_and_constraints(rsc);
-
-    } else if (options.rsc_cmd == 'c') {
-        GListPtr lpc = NULL;
-
-        rc = pcmk_rc_ok;
-        for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-            rsc = (pe_resource_t *) lpc->data;
-            cli_resource_print_cts(rsc);
-        }
-        cli_resource_print_cts_constraints(data_set);
-
-    } else if (options.rsc_cmd == 'F') {
-        rc = cli_resource_fail(controld_api, options.host_uname, options.rsc_id, data_set);
-        if (rc == pcmk_rc_ok) {
-            start_mainloop(controld_api);
-        }
-
-    } else if (options.rsc_cmd == 'O') {
-        rc = cli_resource_print_operations(options.rsc_id, options.host_uname, TRUE, data_set);
-
-    } else if (options.rsc_cmd == 'o') {
-        rc = cli_resource_print_operations(options.rsc_id, options.host_uname, FALSE, data_set);
-
-    } else if (options.rsc_cmd == 'W') {
-        rc = cli_resource_search(rsc, options.rsc_id, data_set);
-        if (rc >= 0) {
+    switch (options.rsc_cmd) {
+        case cmd_list_resources:
             rc = pcmk_rc_ok;
-        }
+            cli_resource_print_list(data_set, FALSE);
+            break;
 
-    } else if (options.rsc_cmd == 'q') {
-        rc = cli_resource_print(rsc, data_set, TRUE);
+        case cmd_list_instances:
+            rc = list_raw();
+            break;
 
-    } else if (options.rsc_cmd == 'w') {
-        rc = cli_resource_print(rsc, data_set, FALSE);
+        case cmd_list_standards:
+        case cmd_list_providers:
+        case cmd_list_alternatives:
+            rc = list_providers(options.agent_spec, &exit_code);
+            break;
 
-    } else if (options.rsc_cmd == 'Y') {
-        pe_node_t *dest = NULL;
+        case cmd_list_agents:
+            rc = list_agents(options.agent_spec, &exit_code);
+            break;
 
-        if (options.host_uname) {
-            dest = pe_find_node(data_set->nodes, options.host_uname);
-            if (dest == NULL) {
-                rc = pcmk_rc_node_unknown;
+        case cmd_metadata:
+            rc = show_metadata(options.agent_spec, &exit_code);
+            break;
+
+        case cmd_restart:
+            /* We don't pass data_set because rsc needs to stay valid for the
+             * entire lifetime of cli_resource_restart(), but it will reset and
+             * update the working set multiple times, so it needs to use its own
+             * copy.
+             */
+            rc = cli_resource_restart(rsc, options.host_uname,
+                                      options.move_lifetime, options.timeout_ms,
+                                      cib_conn, options.cib_options,
+                                      options.promoted_role_only,
+                                      options.force);
+            break;
+
+        case cmd_wait:
+            rc = wait_till_stable(options.timeout_ms, cib_conn);
+            break;
+
+        case cmd_execute_agent:
+            exit_code = cli_resource_execute(rsc, options.rsc_id,
+                                             options.operation,
+                                             options.override_params,
+                                             options.timeout_ms, cib_conn,
+                                             data_set, options.resource_verbose,
+                                             options.force);
+            break;
+
+        case cmd_colocations:
+            list_stacks_and_constraints(rsc, false);
+            break;
+
+        case cmd_colocations_deep:
+            list_stacks_and_constraints(rsc, true);
+            break;
+
+        case cmd_cts:
+            rc = pcmk_rc_ok;
+            for (GList *lpc = data_set->resources; lpc != NULL;
+                 lpc = lpc->next) {
+
+                rsc = (pe_resource_t *) lpc->data;
+                cli_resource_print_cts(rsc);
+            }
+            cli_resource_print_cts_constraints(data_set);
+            break;
+
+        case cmd_fail:
+            rc = cli_resource_fail(controld_api, options.host_uname,
+                                   options.rsc_id, data_set);
+            if (rc == pcmk_rc_ok) {
+                start_mainloop(controld_api);
+            }
+            break;
+
+        case cmd_list_active_ops:
+            rc = cli_resource_print_operations(options.rsc_id,
+                                               options.host_uname, TRUE,
+                                               data_set);
+            break;
+
+        case cmd_list_all_ops:
+            rc = cli_resource_print_operations(options.rsc_id,
+                                               options.host_uname, FALSE,
+                                               data_set);
+            break;
+
+        case cmd_locate:
+            cli_resource_search(rsc, options.rsc_id, data_set);
+            rc = pcmk_rc_ok;
+            break;
+
+        case cmd_query_xml:
+            rc = cli_resource_print(rsc, data_set, TRUE);
+            break;
+
+        case cmd_query_raw_xml:
+            rc = cli_resource_print(rsc, data_set, FALSE);
+            break;
+
+        case cmd_why:
+            {
+                pe_node_t *dest = NULL;
+
+                if (options.host_uname) {
+                    dest = pe_find_node(data_set->nodes, options.host_uname);
+                    if (dest == NULL) {
+                        rc = pcmk_rc_node_unknown;
+                        goto done;
+                    }
+                }
+                cli_resource_why(cib_conn, data_set->resources, rsc, dest);
+                rc = pcmk_rc_ok;
+            }
+            break;
+
+        case cmd_clear:
+            rc = clear_constraints(&cib_xml_copy);
+            break;
+
+        case cmd_move:
+            if (options.host_uname == NULL) {
+                rc = ban_or_move(rsc, options.move_lifetime, &exit_code);
+            } else {
+                rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
+                                       options.move_lifetime, cib_conn,
+                                       options.cib_options, data_set,
+                                       options.promoted_role_only,
+                                       options.force);
+            }
+            break;
+
+        case cmd_ban:
+            if (options.host_uname == NULL) {
+                rc = ban_or_move(rsc, options.move_lifetime, &exit_code);
+            } else {
+                pe_node_t *dest = pe_find_node(data_set->nodes,
+                                               options.host_uname);
+
+                if (dest == NULL) {
+                    rc = pcmk_rc_node_unknown;
+                    goto done;
+                }
+                rc = cli_resource_ban(options.rsc_id, dest->details->uname,
+                                      options.move_lifetime, NULL, cib_conn,
+                                      options.cib_options,
+                                      options.promoted_role_only);
+            }
+            break;
+
+        case cmd_get_property:
+            rc = cli_resource_print_property(rsc, options.prop_name, data_set);
+            break;
+
+        case cmd_set_property:
+            rc = set_property();
+            break;
+
+        case cmd_get_param:
+            rc = cli_resource_print_attribute(rsc, options.prop_name,
+                                              options.attr_set_type, data_set);
+            break;
+
+        case cmd_set_param:
+            if (pcmk__str_empty(options.prop_value)) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "You need to supply a value with the -v option");
+                rc = EINVAL;
                 goto done;
             }
-        }
-        cli_resource_why(cib_conn, data_set->resources, rsc, dest);
-        rc = pcmk_rc_ok;
 
-    } else if (options.rsc_cmd == 'U') {
-        rc = clear_constraints(&cib_xml_copy);
+            /* coverity[var_deref_model] False positive */
+            rc = cli_resource_update_attribute(rsc, options.rsc_id,
+                                               options.prop_set,
+                                               options.attr_set_type,
+                                               options.prop_id,
+                                               options.prop_name,
+                                               options.prop_value,
+                                               options.recursive, cib_conn,
+                                               options.cib_options, data_set,
+                                               options.force);
+            break;
 
-    } else if (options.rsc_cmd == 'M' && options.host_uname) {
-        rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
-                               options.move_lifetime, cib_conn, options.cib_options,
-                               data_set, options.promoted_role_only, options.force);
+        case cmd_delete_param:
+            /* coverity[var_deref_model] False positive */
+            rc = cli_resource_delete_attribute(rsc, options.rsc_id,
+                                               options.prop_set,
+                                               options.attr_set_type,
+                                               options.prop_id,
+                                               options.prop_name, cib_conn,
+                                               options.cib_options, data_set,
+                                               options.force);
+            break;
 
-    } else if (options.rsc_cmd == 'B' && options.host_uname) {
-        pe_node_t *dest = pe_find_node(data_set->nodes, options.host_uname);
+        case cmd_cleanup:
+            if (rsc == NULL) {
+                rc = cli_cleanup_all(controld_api, options.host_uname,
+                                     options.operation, options.interval_spec,
+                                     data_set);
+                if (rc == pcmk_rc_ok) {
+                    start_mainloop(controld_api);
+                }
+            } else {
+                cleanup(rsc);
+            }
+            break;
 
-        if (dest == NULL) {
-            rc = pcmk_rc_node_unknown;
-            goto done;
-        }
-        rc = cli_resource_ban(options.rsc_id, dest->details->uname, options.move_lifetime,
-                              NULL, cib_conn, options.cib_options, options.promoted_role_only);
+        case cmd_refresh:
+            if (rsc == NULL) {
+                rc = refresh();
+            } else {
+                refresh_resource(rsc);
+            }
+            break;
 
-    } else if (options.rsc_cmd == 'B' || options.rsc_cmd == 'M') {
-        rc = ban_or_move(rsc, options.move_lifetime, &exit_code);
+        case cmd_delete:
+            rc = delete();
+            break;
 
-    } else if (options.rsc_cmd == 'G') {
-        rc = cli_resource_print_property(rsc, options.prop_name, data_set);
-
-    } else if (options.rsc_cmd == 'S') {
-        rc = set_property();
-
-    } else if (options.rsc_cmd == 'g') {
-        rc = cli_resource_print_attribute(rsc, options.prop_name, options.attr_set_type, data_set);
-
-    } else if (options.rsc_cmd == 'p') {
-        if (pcmk__str_empty(options.prop_value)) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "You need to supply a value with the -v option");
-            rc = EINVAL;
-            goto done;
-        }
-
-        /* coverity[var_deref_model] False positive */
-        rc = cli_resource_update_attribute(rsc, options.rsc_id, options.prop_set, options.attr_set_type,
-                                           options.prop_id, options.prop_name, options.prop_value,
-                                           options.recursive, cib_conn, options.cib_options, data_set,
-                                           options.force);
-
-    } else if (options.rsc_cmd == 'd') {
-        /* coverity[var_deref_model] False positive */
-        rc = cli_resource_delete_attribute(rsc, options.rsc_id, options.prop_set, options.attr_set_type,
-                                           options.prop_id, options.prop_name, cib_conn,
-                                           options.cib_options, data_set, options.force);
-
-    } else if ((options.rsc_cmd == 'C') && rsc) {
-        cleanup(rsc);
-
-    } else if (options.rsc_cmd == 'C') {
-        rc = cli_cleanup_all(controld_api, options.host_uname, options.operation, options.interval_spec,
-                             data_set);
-        if (rc == pcmk_rc_ok) {
-            start_mainloop(controld_api);
-        }
-
-    } else if ((options.rsc_cmd == 'R') && rsc) {
-        refresh_resource(rsc);
-
-    } else if (options.rsc_cmd == 'R') {
-        rc = refresh();
-
-    } else if (options.rsc_cmd == 'D') {
-        rc = delete();
-
-    } else {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Unknown command: %c", options.rsc_cmd);
+        default:
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_SOFTWARE,
+                        "Unimplemented command: %d", (int) options.rsc_cmd);
+            break;
     }
 
 done:
@@ -1734,8 +1941,6 @@ done:
         }
     }
 
-    free(options.extra_arg);
-    free(options.extra_option);
     g_free(options.host_uname);
     g_free(options.interval_spec);
     g_free(options.move_lifetime);
@@ -1745,8 +1950,8 @@ done:
     g_free(options.prop_set);
     g_free(options.prop_value);
     g_free(options.rsc_id);
-    free(options.rsc_long_cmd);
     g_free(options.rsc_type);
+    free(options.agent_spec);
     free(options.v_agent);
     free(options.v_class);
     free(options.v_provider);
