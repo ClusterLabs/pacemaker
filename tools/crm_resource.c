@@ -1170,6 +1170,9 @@ set_option(const char *arg)
                     "Invalid option: --option %s: %s", arg, pcmk_strerror(rc));
     } else {
         crm_info("Got: '%s'='%s'", name, value);
+        if (options.validate_options == NULL) {
+            options.validate_options = crm_str_table_new();
+        }
         g_hash_table_replace(options.validate_options, name, value);
     }
 
@@ -1280,6 +1283,9 @@ validate_cmdline(crm_exit_t *exit_code)
     }
 
     if (error == NULL) {
+        if (options.validate_options == NULL) {
+            options.validate_options = crm_str_table_new();
+        }
         *exit_code = cli_resource_execute_from_params("test", options.v_class, options.v_provider, options.v_agent,
                                                       "validate-all", options.validate_options,
                                                       options.override_params, options.timeout_ms,
@@ -1401,7 +1407,6 @@ main(int argc, char **argv)
     options.resource_verbose = args->verbosity;
     BE_QUIET = args->quiet;
 
-    options.validate_options = crm_str_table_new();
     crm_log_args(argc, argv);
 
     if (options.host_uname) {
@@ -1486,6 +1491,10 @@ main(int argc, char **argv)
     if (options.validate_cmdline) {
         validate_cmdline(&exit_code);
         goto done;
+    } else if (options.validate_options != NULL) {
+        // @COMPAT @TODO error out here when we can break backward compatibility
+        g_hash_table_destroy(options.validate_options);
+        options.validate_options = NULL;
     }
 
     if (error != NULL) {
