@@ -208,9 +208,10 @@ pe__group_xml(pcmk__output_t *out, va_list args)
         }
 
         if (rc == pcmk_rc_no_output) {
-            rc = pe__name_and_nvpairs_xml(out, true, "group", 3
+            rc = pe__name_and_nvpairs_xml(out, true, "group", 4
                                           , "id", rsc->id
                                           , "number_resources", count
+                                          , "managed", pe__rsc_bool_str(rsc, pe_rsc_managed)
                                           , "disabled", pe__resource_is_disabled(rsc) ? "true" : "false");
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
@@ -250,7 +251,8 @@ pe__group_html(pcmk__output_t *out, va_list args)
         GListPtr rscs = pe__filter_rsc_list(rsc->children, only_rsc);
 
         if (rscs != NULL) {
-            out->begin_list(out, NULL, NULL, "Resource Group: %s%s", rsc->id,
+            out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s", rsc->id,
+                            pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
                             pe__resource_is_disabled(rsc) ? " (disabled)" : "");
 
             pe__rscs_brief_output(out, rscs, options, TRUE);
@@ -267,7 +269,8 @@ pe__group_html(pcmk__output_t *out, va_list args)
                 continue;
             }
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s", rsc->id,
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s%s", rsc->id,
+                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
                                      pe__resource_is_disabled(rsc) ? " (disabled)" : "");
 
             out->message(out, crm_map_element_name(child_rsc->xml), options,
@@ -303,7 +306,8 @@ pe__group_text(pcmk__output_t *out, va_list args)
         GListPtr rscs = pe__filter_rsc_list(rsc->children, only_rsc);
 
         if (rscs != NULL) {
-            out->begin_list(out, NULL, NULL, "Resource Group: %s%s", rsc->id,
+            out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s", rsc->id,
+                            pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
                             pe__resource_is_disabled(rsc) ? " (disabled)" : "");
 
             pe__rscs_brief_output(out, rscs, options, TRUE);
@@ -320,7 +324,8 @@ pe__group_text(pcmk__output_t *out, va_list args)
                 continue;
             }
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s", rsc->id,
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s%s", rsc->id,
+                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
                                      pe__resource_is_disabled(rsc) ? " (disabled)" : "");
 
             out->message(out, crm_map_element_name(child_rsc->xml), options,
