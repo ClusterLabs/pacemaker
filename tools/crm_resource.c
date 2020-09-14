@@ -40,6 +40,7 @@ enum rsc_command {
     cmd_cts,
     cmd_delete,
     cmd_delete_param,
+    cmd_digests,
     cmd_execute_agent,
     cmd_fail,
     cmd_get_param,
@@ -157,6 +158,8 @@ gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
                               gpointer data, GError **error);
 gboolean restart_cb(const gchar *option_name, const gchar *optarg,
+                    gpointer data, GError **error);
+gboolean digests_cb(const gchar *option_name, const gchar *optarg,
                     gpointer data, GError **error);
 gboolean wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -506,6 +509,14 @@ static GOptionEntry advanced_entries[] = {
       NULL },
     { "wait", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, wait_cb,
       "(Advanced) Wait until the cluster settles into a stable state",
+      NULL },
+    { "digests", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, digests_cb,
+      "(Advanced) Show parameter hashes that Pacemaker uses to detect\n"
+      INDENT "configuration changes (only accurate if there is resource\n"
+      INDENT "history on the specified node). Required: --resource, --node.\n"
+      INDENT "Optional: any NAME=VALUE parameters will be used to override\n"
+      INDENT "the configuration (to see what the hash would be with those\n"
+      INDENT "changes).",
       NULL },
     { "force-demote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
       validate_or_force_cb,
@@ -893,7 +904,9 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
     }
     options.operation = g_strdup(option_name + 2); // skip "--"
     options.find_flags = pe_find_renamed|pe_find_anon;
-    options.override_params = crm_str_table_new();
+    if (options.override_params == NULL) {
+        options.override_params = crm_str_table_new();
+    }
     return TRUE;
 }
 
@@ -903,6 +916,20 @@ restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 {
     SET_COMMAND(cmd_restart);
     options.find_flags = pe_find_renamed|pe_find_anon;
+    return TRUE;
+}
+
+gboolean
+digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+           GError **error)
+{
+    SET_COMMAND(cmd_digests);
+    options.find_flags = pe_find_renamed|pe_find_anon;
+    if (options.override_params == NULL) {
+        options.override_params = crm_str_table_new();
+    }
+    options.require_node = TRUE;
+    options.require_dataset = TRUE;
     return TRUE;
 }
 
@@ -1816,6 +1843,16 @@ main(int argc, char **argv)
                     options.operation, options.override_params,
                     options.timeout_ms, cib_conn, data_set,
                     args->verbosity, options.force);
+            }
+            break;
+
+        case cmd_digests:
+            node = pe_find_node(data_set->nodes, options.host_uname);
+            if (node == NULL) {
+                rc = pcmk_rc_node_unknown;
+            } else {
+                rc = pcmk__resource_digests(out, rsc, node,
+                                            options.override_params, data_set);
             }
             break;
 
