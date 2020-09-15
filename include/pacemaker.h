@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,8 +20,11 @@ extern "C" {
  * \ingroup pacemaker
  */
 
-#  include <crm/stonith-ng.h>
+#  include <glib.h>
 #  include <libxml/tree.h>
+#  include <crm/pengine/pe_types.h>
+
+#  include <crm/stonith-ng.h>
 
 /*!
  * \brief Get controller status
@@ -54,6 +57,21 @@ int pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
  * \return Standard Pacemaker return code
  */
 int pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms);
+
+/*!
+ * \brief Calculate and output resource operation digests
+ *
+ * \param[out] xml        Where to store XML with result
+ * \param[in]  rsc        Resource to calculate digests for
+ * \param[in]  node       Node whose operation history should be used
+ * \param[in]  overrides  Hash table of configuration parameters to override
+ * \param[in]  data_set   Cluster working set (with status)
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
+                          pe_node_t *node, GHashTable *overrides,
+                          pe_working_set_t *data_set);
 
 #ifdef BUILD_PUBLIC_LIBPACEMAKER
 

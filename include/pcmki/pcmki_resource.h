@@ -9,6 +9,13 @@
 #ifndef PCMKI_RESOURCE__H
 #define PCMKI_RESOURCE__H
 
+#include <glib.h>
+
 #include <crm/common/output_internal.h>
+#include <crm/pengine/pe_types.h>
+
+int pcmk__resource_digests(pcmk__output_t *out, pe_resource_t *rsc,
+                           pe_node_t *node, GHashTable *overrides,
+                           pe_working_set_t *data_set);
 
 #endif /* PCMK_RESOURCE__H */

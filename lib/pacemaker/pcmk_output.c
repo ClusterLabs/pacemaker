@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 #include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
+#include <crm/pengine/internal.h>
 #include <libxml/tree.h>
 #include <pacemaker-internal.h>
 
@@ -539,6 +540,108 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("digests", "pe_resource_t *", "pe_node_t *", "const char *",
+                  "guint", "op_digest_cache_t *")
+static int
+digests_text(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    const char *task = va_arg(args, const char *);
+    guint interval_ms = va_arg(args, guint);
+    op_digest_cache_t *digests = va_arg(args, op_digest_cache_t *);
+
+    char *action_desc = NULL;
+    const char *rsc_desc = "unknown resource";
+    const char *node_desc = "unknown node";
+
+    if (interval_ms != 0) {
+        action_desc = crm_strdup_printf("%ums-interval %s action", interval_ms,
+                                        ((task == NULL)? "unknown" : task));
+    } else if (pcmk__str_eq(task, "monitor", pcmk__str_none)) {
+        action_desc = strdup("probe action");
+    } else {
+        action_desc = crm_strdup_printf("%s action",
+                                        ((task == NULL)? "unknown" : task));
+    }
+    if ((rsc != NULL) && (rsc->id != NULL)) {
+        rsc_desc = rsc->id;
+    }
+    if ((node != NULL) && (node->details->uname != NULL)) {
+        node_desc = node->details->uname;
+    }
+    out->begin_list(out, NULL, NULL, "Digests for %s %s on %s",
+                    rsc_desc, action_desc, node_desc);
+    free(action_desc);
+
+    if (digests == NULL) {
+        out->list_item(out, NULL, "none");
+        out->end_list(out);
+        return pcmk_rc_ok;
+    }
+    if (digests->digest_all_calc != NULL) {
+        out->list_item(out, NULL, "%s (all parameters)",
+                       digests->digest_all_calc);
+    }
+    if (digests->digest_secure_calc != NULL) {
+        out->list_item(out, NULL, "%s (non-private parameters)",
+                       digests->digest_secure_calc);
+    }
+    if (digests->digest_restart_calc != NULL) {
+        out->list_item(out, NULL, "%s (non-reloadable parameters)",
+                       digests->digest_restart_calc);
+    }
+    out->end_list(out);
+    return pcmk_rc_ok;
+}
+
+static void
+add_digest_xml(xmlNode *parent, const char *type, const char *digest,
+               xmlNode *digest_source)
+{
+    if (digest != NULL) {
+        xmlNodePtr digest_xml = create_xml_node(parent, "digest");
+
+        crm_xml_add(digest_xml, "type", ((type == NULL)? "unspecified" : type));
+        crm_xml_add(digest_xml, "hash", digest);
+        if (digest_source != NULL) {
+            add_node_copy(digest_xml, digest_source);
+        }
+    }
+}
+
+PCMK__OUTPUT_ARGS("digests", "pe_resource_t *", "pe_node_t *", "const char *",
+                  "guint", "op_digest_cache_t *")
+static int
+digests_xml(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    const char *task = va_arg(args, const char *);
+    guint interval_ms = va_arg(args, guint);
+    op_digest_cache_t *digests = va_arg(args, op_digest_cache_t *);
+
+    char *interval_s = crm_strdup_printf("%ums", interval_ms);
+    xmlNode *xml = NULL;
+
+    xml = pcmk__output_create_xml_node(out, "digests",
+                                       "resource", crm_str(rsc->id),
+                                       "node", crm_str(node->details->uname),
+                                       "task", crm_str(task),
+                                       "interval", interval_s,
+                                       NULL);
+    free(interval_s);
+    if (digests != NULL) {
+        add_digest_xml(xml, "all", digests->digest_all_calc,
+                       digests->params_all);
+        add_digest_xml(xml, "nonprivate", digests->digest_secure_calc,
+                       digests->params_secure);
+        add_digest_xml(xml, "nonreloadable", digests->digest_restart_calc,
+                       digests->params_restart);
+    }
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "rsc-is-colocated-with-list", "default", rsc_is_colocated_with_list },
     { "rsc-is-colocated-with-list", "xml", rsc_is_colocated_with_list_xml },
@@ -557,6 +660,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "crmadmin-node-list", "default", crmadmin_node_list },
     { "crmadmin-node", "default", crmadmin_node_text },
     { "crmadmin-node", "xml", crmadmin_node_xml },
+    { "digests", "default", digests_text },
+    { "digests", "xml", digests_xml },
 
     { NULL, NULL, NULL }
 };
