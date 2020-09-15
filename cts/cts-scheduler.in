@@ -1013,6 +1013,8 @@ TESTS = [
         [ "rsc-defaults", "Test rsc_defaults conditional expressions" ],
         [ "rsc-defaults-2", "Test rsc_defaults conditional expressions without type" ],
     ],
+    [   [ "stop-all-resources", "Test stop-all-resources=true "],
+    ],
     
     # @TODO: If pacemaker implements versioned attributes, uncomment these tests
     #[

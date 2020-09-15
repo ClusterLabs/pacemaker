@@ -605,11 +605,12 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         if (!printed_header) {
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, "clone", 7,
+            rc = pe__name_and_nvpairs_xml(out, true, "clone", 8,
                     "id", rsc->id,
                     "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
+                    "disabled", pe__resource_is_disabled(rsc) ? "true" : "false",
                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
                     "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
                     "target_role", configured_role_str(rsc));
@@ -657,11 +658,12 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
                        (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
 
-    out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
+    out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s%s",
                     rsc->id, ID(clone_data->xml_obj_child),
                     pcmk_is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                    pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                    pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
+                    pe__resource_is_disabled(rsc) ? " (disabled)" : "");
     rc = pcmk_rc_ok;
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -887,11 +889,12 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
                        (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
 
-    out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s",
+    out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s%s",
                     rsc->id, ID(clone_data->xml_obj_child),
                     pcmk_is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
                     pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                    pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
+                    pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
+                    pe__resource_is_disabled(rsc) ? " (disabled)" : "");
     rc = pcmk_rc_ok;
 
     for (; gIter != NULL; gIter = gIter->next) {

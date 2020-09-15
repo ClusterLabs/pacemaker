@@ -54,19 +54,19 @@
           <op id="dummy-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
         </operations>
       </primitive>
-      <primitive class="ocf" id="inactive-dummy" provider="pacemaker" type="Dummy">
-        <meta_attributes id="inactive-dummy.meta">
-          <nvpair id="inactive-dummy.meta.target" name="target-role" value="stopped"/>
+      <clone id="inactive-clone">
+        <meta_attributes id="inactive-clone-meta_attributes">
+          <nvpair id="inactive-clone-meta_attributes-target-role" name="target-role" value="stopped"/>
         </meta_attributes>
-      </primitive>
-      <master id="inactive-clone-master">
-        <primitive class="ocf" id="inactive-clone" provider="pacemaker" type="Stateful">
-          <operations>
-            <op id="inactive-clone-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="inactive-clone-monitor-interval-11" interval="11" name="monitor" role="Slave" timeout="20"/>
-          </operations>
-        </primitive>
-      </master>
+        <primitive id="inactive-dhcpd" class="lsb" type="dhcpd"/>
+      </clone>
+      <group id="inactive-group">
+        <meta_attributes id="inactive-group-meta_attributes">
+          <nvpair id="inactive-group-meta_attributes-target-role" name="target-role" value="stopped"/>
+        </meta_attributes>
+        <primitive class="ocf" id="inactive-dummy-1" provider="pacemaker" type="Dummy"/>
+        <primitive class="ocf" id="inactive-dummy-2" provider="pacemaker" type="Dummy"/>
+      </group>
       <bundle id="httpd-bundle">
         <docker image="pcmk:http" replicas="3"/>
         <network ip-range-start="192.168.122.131" host-netmask="24" host-interface="eth0">
@@ -115,7 +115,7 @@
         <obj_ref id="1"/>
       </tag>
       <tag id="inactive-rscs">
-        <obj_ref id="inactive-dummy"/>
+        <obj_ref id="inactive-group"/>
         <obj_ref id="inactive-clone"/>
       </tag>
       <tag id="fencing-rscs">

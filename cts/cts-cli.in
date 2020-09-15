@@ -97,6 +97,7 @@ function test_assert() {
 }
 
 function test_crm_mon() {
+    local TMPXML
     export CIB_file="$test_home/cli/crm_mon.xml"
 
     desc="Basic text output"
@@ -372,6 +373,16 @@ function test_crm_mon() {
     cmd="crm_mon -1 --output-as=xml --node=cluster01"
     test_assert $CRM_EX_OK 0
 
+    unset CIB_file
+
+    export CIB_file=$(mktemp ${TMPDIR:-/tmp}/cts-cli.crm_mon.xml.XXXXXXXXXX)
+    sed -e '/maintenance-mode/ s/false/true/' "$test_home/cli/crm_mon.xml" > $CIB_file
+
+    desc="Text output of all resources with maintenance-mode enabled"
+    cmd="crm_mon -1 -r"
+    test_assert $CRM_EX_OK 0
+
+    rm -r "$CIB_file"
     unset CIB_file
 }
 
