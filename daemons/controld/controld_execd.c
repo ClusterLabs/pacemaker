@@ -1802,7 +1802,8 @@ do_lrm_invoke(long long action,
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);
 
-    } else if (pcmk__strcase_any_of(CRM_OP_REPROBE, operation, crm_op, NULL)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_casei)
+               || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_casei)) {
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
                           is_remote_node);
 
