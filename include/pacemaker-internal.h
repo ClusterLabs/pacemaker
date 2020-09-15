@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #  include <pcmki/pcmki_cluster_queries.h>
 #  include <pcmki/pcmki_fence.h>
 #  include <pcmki/pcmki_output.h>
+#  include <pcmki/pcmki_resource.h>
 #  include <pcmki/pcmki_sched_allocate.h>
 #  include <pcmki/pcmki_sched_notif.h>
 #  include <pcmki/pcmki_sched_utils.h>
