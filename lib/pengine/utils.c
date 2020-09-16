@@ -2123,7 +2123,12 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
         data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
         if (calc_secure) {
-            data->params_secure = copy_xml(data->params_all);
+            /* The controller doesn't create a digest of *all* non-sensitive
+             * parameters, only those listed in resource agent meta-data. The
+             * equivalent here is rsc->parameters.
+             */
+            data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
+            g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
             if(secure_list) {
                 filter_parameters(data->params_secure, secure_list, FALSE);
             }
