@@ -1,10 +1,13 @@
 Advanced Resource Types
 -----------------------
 
+.. _group-resources:
+
+Groups - A Syntactic Shortcut
+=============================
+
 .. Convert_to_RST:
    
-   [[group-resources]]
-   == Groups - A Syntactic Shortcut ==
    indexterm:[Group Resources]
    indexterm:[Resource,Groups]
    
@@ -159,9 +162,13 @@ Advanced Resource Types
    other instance, whether running on the same node or a different node. As an
    example, a cloned IP address can use special kernel functionality such that
    each instance handles a subset of requests for the same IP address.
-   
-   [[s-resource-promotable]]
-   === Promotable clones ===
+
+.. _s-resource-promotable:
+
+Promotable clones
+_________________
+
+.. Convert_to_RST:
    
    indexterm:[Promotable Clone Resources]
    indexterm:[Resource,Promotable]
