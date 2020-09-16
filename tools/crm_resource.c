@@ -74,6 +74,7 @@ struct {
     gboolean require_crmd;        // Whether command requires controller IPC
     gboolean require_dataset;     // Whether command requires populated data set
     gboolean require_resource;    // Whether command requires resource specified
+    gboolean require_node;        // Whether command requires node specified
     int find_flags;               // Flags to use when searching for resource
 
     // Command-line option values
@@ -774,6 +775,7 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.require_crmd = TRUE;
+    options.require_node = TRUE;
     SET_COMMAND(cmd_fail);
     return TRUE;
 }
@@ -1483,8 +1485,12 @@ main(int argc, char **argv)
 {
     xmlNode *cib_xml_copy = NULL;
     pe_resource_t *rsc = NULL;
-
+    pe_node_t *node = NULL;
     int rc = pcmk_rc_ok;
+
+    /*
+     * Parse command line arguments
+     */
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     GOptionContext *context = NULL;
@@ -1502,6 +1508,10 @@ main(int argc, char **argv)
         goto done;
     }
 
+    /*
+     * Set verbosity
+     */
+
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
     }
@@ -1518,9 +1528,9 @@ main(int argc, char **argv)
 
     crm_log_args(argc, argv);
 
-    if (options.host_uname) {
-        crm_trace("Option host => %s", options.host_uname);
-    }
+    /*
+     * Validate option combinations
+     */
 
     // If the user didn't explicitly specify a command, list resources
     if (options.rsc_cmd == cmd_none) {
@@ -1634,28 +1644,40 @@ main(int argc, char **argv)
          * the values and set error if they don't make sense.
          */
         validate_cmdline_config();
+        if (error != NULL) {
+            exit_code = CRM_EX_USAGE;
+            goto done;
+        }
+
     } else if (options.cmdline_params != NULL) {
         // @COMPAT @TODO error out here when we can break backward compatibility
         g_hash_table_destroy(options.cmdline_params);
         options.cmdline_params = NULL;
     }
 
-    if (error != NULL) {
+    if (options.require_resource && (options.rsc_id == NULL)) {
+        rc = ENXIO;
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Must supply a resource id with -r");
         goto done;
     }
+    if (options.require_node && (options.host_uname == NULL)) {
+        rc = ENXIO;
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Must supply a node name with -N");
+        goto done;
+    }
+
+    /*
+     * Set up necessary connections
+     */
 
     if (options.force) {
         crm_debug("Forcing...");
         cib__set_call_options(options.cib_options, crm_system_name,
                               cib_quorum_override);
-    }
-
-    if (options.require_resource && !options.rsc_id) {
-        rc = ENXIO;
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Must supply a resource id with -r");
-        goto done;
     }
 
     if (options.find_flags && options.rsc_id) {
@@ -1700,6 +1722,11 @@ main(int argc, char **argv)
         }
     }
 
+    // If user supplied a node name, check whether it exists
+    if ((options.host_uname != NULL) && (data_set != NULL)) {
+        node = pe_find_node(data_set->nodes, options.host_uname);
+    }
+
     // Establish a connection to the controller if needed
     if (options.require_crmd) {
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
@@ -1717,6 +1744,10 @@ main(int argc, char **argv)
             goto done;
         }
     }
+
+    /*
+     * Handle requested command
+     */
 
     switch (options.rsc_cmd) {
         case cmd_list_resources: {
@@ -1844,18 +1875,11 @@ main(int argc, char **argv)
             break;
 
         case cmd_why:
-            {
-                pe_node_t *dest = NULL;
-
-                if (options.host_uname) {
-                    dest = pe_find_node(data_set->nodes, options.host_uname);
-                    if (dest == NULL) {
-                        rc = pcmk_rc_node_unknown;
-                        goto done;
-                    }
-                }
-                out->message(out, "resource-reasons-list", cib_conn, data_set->resources, rsc, dest);
-                rc = pcmk_rc_ok;
+            if ((options.host_uname != NULL) && (node == NULL)) {
+                rc = pcmk_rc_node_unknown;
+            } else {
+                rc = out->message(out, "resource-reasons-list", cib_conn,
+                                  data_set->resources, rsc, node);
             }
             break;
 
@@ -1878,15 +1902,10 @@ main(int argc, char **argv)
         case cmd_ban:
             if (options.host_uname == NULL) {
                 rc = ban_or_move(out, rsc, options.move_lifetime, &exit_code);
+            } else if (node == NULL) {
+                rc = pcmk_rc_node_unknown;
             } else {
-                pe_node_t *dest = pe_find_node(data_set->nodes,
-                                               options.host_uname);
-
-                if (dest == NULL) {
-                    rc = pcmk_rc_node_unknown;
-                    goto done;
-                }
-                rc = cli_resource_ban(out, options.rsc_id, dest->details->uname,
+                rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
                                       options.move_lifetime, NULL, cib_conn,
                                       options.cib_options,
                                       options.promoted_role_only);
@@ -2001,6 +2020,10 @@ main(int argc, char **argv)
                         "Unimplemented command: %d", (int) options.rsc_cmd);
             break;
     }
+
+    /*
+     * Clean up and exit
+     */
 
 done:
     if (rc != pcmk_rc_ok) {
