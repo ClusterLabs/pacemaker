@@ -2066,9 +2066,9 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
         const char *ra_version = NULL;
 #endif
 
-        const char *op_version;
+        const char *op_version = NULL;
         const char *restart_list = NULL;
-        const char *secure_list = " passwd password ";
+        const char *secure_list = NULL;
 
         data = calloc(1, sizeof(op_digest_cache_t));
         CRM_ASSERT(data != NULL);
@@ -2102,6 +2102,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
 #endif
 
         } else {
+            secure_list = " passwd password user ";
             op_version = CRM_FEATURE_SET;
         }
 
