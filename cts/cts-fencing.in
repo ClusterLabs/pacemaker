@@ -1168,7 +1168,7 @@ class Tests(object):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -F %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("For stonith action (off) for victim %s, adding nodeid" % (our_uname))
+        test.add_stonith_log_pattern("as nodeid with fence action 'off' targeting %s" % (our_uname))
 
         ### verify nodeid is _NOT_ supplied when nodeid is not in the metadata parameters
         test = self.new_test("cpg_do_not_supply_nodeid",

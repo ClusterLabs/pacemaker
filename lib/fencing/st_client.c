@@ -15,6 +15,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <libgen.h>
+#include <inttypes.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -457,39 +458,20 @@ stonith_api_register_level(stonith_t * st, int options, const char *node, int le
 }
 
 static void
-append_arg(const char *key, const char *value, GHashTable **args)
-{
-    CRM_CHECK(key != NULL, return);
-    CRM_CHECK(value != NULL, return);
-    CRM_CHECK(args != NULL, return);
-
-    if (strstr(key, "pcmk_")) {
-        return;
-    } else if (strstr(key, CRM_META)) {
-        return;
-    } else if (pcmk__str_eq(key, "crm_feature_set", pcmk__str_casei)) {
-        return;
-    }
-
-    if (!*args) {
-        *args = crm_str_table_new();
-    }
-
-    CRM_CHECK(*args != NULL, return);
-    crm_trace("Appending: %s=%s", key, value);
-    g_hash_table_replace(*args, strdup(key), strdup(value));
-}
-
-static void
 append_config_arg(gpointer key, gpointer value, gpointer user_data)
 {
-    /* The fencer will filter action out when it registers the device,
-     * but ignore it here just in case any other library callers
-     * fail to do so.
+    /* The fencer will filter "action" out when it registers the device,
+     * but ignore it here in case any external API users don't.
      */
-    if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)) {
-        append_arg(key, value, user_data);
-        return;
+    if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)
+        && (strstr(key, "pcmk_") == NULL)
+        && (strstr(key, CRM_META) == NULL)
+        && !pcmk__str_eq(key, "crm_feature_set", pcmk__str_casei)) {
+
+        crm_trace("Passing %s=%s with fence action",
+                  (const char *) key, (const char *) (value? value : ""));
+        g_hash_table_insert((GHashTable *) user_data,
+                            strdup(key), strdup(value? value : ""));
     }
 }
 
@@ -498,76 +480,84 @@ make_args(const char *agent, const char *action, const char *victim,
           uint32_t victim_nodeid, GHashTable * device_args,
           GHashTable * port_map, const char *host_arg)
 {
-    char buffer[512];
     GHashTable *arg_list = NULL;
     const char *value = NULL;
 
     CRM_CHECK(action != NULL, return NULL);
 
-    snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
+    arg_list = crm_str_table_new();
+
+    // Add action to arguments (using an alias if requested)
     if (device_args) {
+        char buffer[512];
+
+        snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
         value = g_hash_table_lookup(device_args, buffer);
-    }
-    if (value) {
-        crm_debug("Substituting action '%s' for requested operation '%s'", value, action);
-        action = value;
-    }
-
-    append_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
-    if (victim && device_args) {
-        const char *alias = victim;
-        const char *param = g_hash_table_lookup(device_args,
-                                                PCMK_STONITH_HOST_ARGUMENT);
-
-        if (port_map && g_hash_table_lookup(port_map, victim)) {
-            alias = g_hash_table_lookup(port_map, victim);
+        if (value) {
+            crm_debug("Substituting '%s' for fence action %s targeting %s",
+                      value, action, victim);
+            action = value;
         }
+    }
+    g_hash_table_insert(arg_list, strdup(STONITH_ATTR_ACTION_OP),
+                        strdup(action));
 
-        /* Always supply the node's name, too:
+    /* If this is a fencing operation against another node, add more standard
+     * arguments.
+     */
+    if (victim && device_args) {
+        const char *param = NULL;
+
+        /* Always pass the target's name, per
          * https://github.com/ClusterLabs/fence-agents/blob/master/doc/FenceAgentAPI.md
          */
-        append_arg("nodename", victim, &arg_list);
+        g_hash_table_insert(arg_list, strdup("nodename"), strdup(victim));
+
+        // If the target's node ID was specified, pass it, too
         if (victim_nodeid) {
-            char nodeid_str[33] = { 0, };
-            if (snprintf(nodeid_str, 33, "%u", (unsigned int)victim_nodeid)) {
-                crm_info("For stonith action (%s) for victim %s, adding nodeid (%s) to parameters",
-                         action, victim, nodeid_str);
-                append_arg("nodeid", nodeid_str, &arg_list);
-            }
+            char *nodeid = crm_strdup_printf("%" PRIu32, victim_nodeid);
+
+            // cts-fencing looks for this log message
+            crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
+                     nodeid, action, victim);
+            g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
         }
 
-        /* Check if we need to supply the victim in any other form */
-        if(pcmk__str_eq(agent, "fence_legacy", pcmk__str_casei)) {
-            value = agent;
+        // Check whether target must be specified in some other way
+        param = g_hash_table_lookup(device_args, PCMK_STONITH_HOST_ARGUMENT);
+        if (!pcmk__str_eq(agent, "fence_legacy", pcmk__str_none)
+            && !pcmk__str_eq(param, "none", pcmk__str_casei)) {
 
-        } else if (param == NULL) {
-            // By default, `port` is added
-            if (host_arg == NULL) {
-                param = "port";
-
-            } else {
-                param = host_arg;
+            if (param == NULL) {
+                /* Use the caller's default for pcmk_host_argument, or "port" if
+                 * none was given
+                 */
+                param = (host_arg == NULL)? "port" : host_arg;
             }
-
             value = g_hash_table_lookup(device_args, param);
 
-        } else if (pcmk__str_eq(param, "none", pcmk__str_casei)) {
-            value = param;      /* Nothing more to do */
+            if (pcmk__str_eq(value, "dynamic",
+                             pcmk__str_casei|pcmk__str_null_matches)) {
+                /* If the host argument was "dynamic" or not explicitly specified,
+                 * add it with the target
+                 */
+                const char *alias = NULL;
 
-        } else {
-            value = g_hash_table_lookup(device_args, param);
-        }
-
-        /* Don't overwrite explictly set values for $param */
-        if (pcmk__str_eq(value, "dynamic", pcmk__str_null_matches | pcmk__str_casei)) {
-            crm_debug("Performing '%s' action targeting '%s' as '%s=%s'", action, victim, param,
-                      alias);
-            append_arg(param, alias, &arg_list);
+                if (port_map) {
+                    alias = g_hash_table_lookup(port_map, victim);
+                }
+                if (alias == NULL) {
+                    alias = victim;
+                }
+                crm_debug("Passing %s='%s' with fence action %s targeting %s",
+                          param, alias, action, victim);
+                g_hash_table_insert(arg_list, strdup(param), strdup(alias));
+            }
         }
     }
 
     if (device_args) {
-        g_hash_table_foreach(device_args, append_config_arg, &arg_list);
+        g_hash_table_foreach(device_args, append_config_arg, arg_list);
     }
 
     return arg_list;
