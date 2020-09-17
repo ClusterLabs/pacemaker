@@ -26,6 +26,7 @@
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
+#include <crm/common/agents.h>
 #include <crm/common/xml.h>
 
 #include <crm/common/mainloop.h>
@@ -184,7 +185,8 @@ run_fence_failure_test(void)
 {
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "false_1_node1=1,2 false_1_node2=3,4");
     params = stonith_key_value_add(params, "mode", "fail");
 
     single_test(st->
@@ -208,7 +210,8 @@ run_fence_failure_rollover_test(void)
 {
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "false_1_node1=1,2 false_1_node2=3,4");
     params = stonith_key_value_add(params, "mode", "fail");
 
     single_test(st->
@@ -216,7 +219,8 @@ run_fence_failure_rollover_test(void)
                 "Register device1 for rollover test", 1, 0);
     stonith_key_value_freeall(params, 1, 1);
     params = NULL;
-    params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "false_1_node1=1,2 false_1_node2=3,4");
     params = stonith_key_value_add(params, "mode", "pass");
 
     single_test(st->
@@ -244,7 +248,8 @@ run_standard_test(void)
 {
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "false_1_node1=1,2 false_1_node2=3,4");
     params = stonith_key_value_add(params, "mode", "pass");
     params = stonith_key_value_add(params, "mock_dynamic_hosts", "false_1_node1 false_1_node2");
 
@@ -320,7 +325,8 @@ standard_dev_test(void)
         crm_exit(CRM_EX_DISCONNECT);
     }
 
-    params = stonith_key_value_add(params, "pcmk_host_map", "some-host=pcmk-7 true_1_node1=3,4");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "some-host=pcmk-7 true_1_node1=3,4");
 
     rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_xvm", params);
     crm_debug("Register: %d", rc);
@@ -498,19 +504,22 @@ test_register_async_devices(int check_event)
     char buf[16] = { 0, };
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, "pcmk_host_map", "false_1_node1=1,2");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "false_1_node1=1,2");
     params = stonith_key_value_add(params, "mode", "fail");
     st->cmds->register_device(st, st_opts, "false_1", "stonith-ng", "fence_dummy", params);
     stonith_key_value_freeall(params, 1, 1);
 
     params = NULL;
-    params = stonith_key_value_add(params, "pcmk_host_map", "true_1_node1=1,2");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "true_1_node1=1,2");
     params = stonith_key_value_add(params, "mode", "pass");
     st->cmds->register_device(st, st_opts, "true_1", "stonith-ng", "fence_dummy", params);
     stonith_key_value_freeall(params, 1, 1);
 
     params = NULL;
-    params = stonith_key_value_add(params, "pcmk_host_map", "custom_timeout_node1=1,2");
+    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                   "custom_timeout_node1=1,2");
     params = stonith_key_value_add(params, "mode", "fail");
     params = stonith_key_value_add(params, "delay", "1000");
     snprintf(buf, sizeof(buf) - 1, "%d", MAINLOOP_DEFAULT_TIMEOUT + CUSTOM_TIMEOUT_ADDITION);

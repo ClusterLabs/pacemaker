@@ -152,14 +152,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define T_STONITH_TIMEOUT_VALUE "st-async-timeout-value"
 #  define T_STONITH_NOTIFY    "st_notify"
 
-#  define STONITH_ATTR_HOSTARG   "pcmk_host_argument"
-#  define STONITH_ATTR_HOSTMAP   "pcmk_host_map"
-#  define STONITH_ATTR_HOSTLIST  "pcmk_host_list"
-#  define STONITH_ATTR_HOSTCHECK "pcmk_host_check"
-#  define STONITH_ATTR_DELAY_MAX "pcmk_delay_max"
-#  define STONITH_ATTR_DELAY_BASE   "pcmk_delay_base"
-#  define STONITH_ATTR_ACTION_LIMIT "pcmk_action_limit"
-
 #  define STONITH_ATTR_ACTION_OP   "action"
 
 #  define STONITH_OP_EXEC        "st_execute"

@@ -208,7 +208,6 @@ extern "C" {
 #  define XML_RSC_ATTR_FAIL_TIMEOUT	"failure-timeout"
 #  define XML_RSC_ATTR_MULTIPLE		"multiple-active"
 #  define XML_RSC_ATTR_REQUIRES		"requires"
-#  define XML_RSC_ATTR_PROVIDES		"provides"
 #  define XML_RSC_ATTR_CONTAINER	"container"
 #  define XML_RSC_ATTR_INTERNAL_RSC	"internal_rsc"
 #  define XML_RSC_ATTR_MAINTENANCE	"maintenance"
@@ -424,6 +423,17 @@ extern "C" {
 
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)
 #  define TYPE(x) crm_element_name(x)
+
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h in a future release.
+ */
+
+//! \deprecated Use PCMK_STONITH_PROVIDES instead
+#  define XML_RSC_ATTR_PROVIDES		"provides"
+
+#endif
 
 #ifdef __cplusplus
 }

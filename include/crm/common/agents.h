@@ -23,6 +23,19 @@ extern "C" {
 #include <stdint.h>       // uint32_t
 #include <stdbool.h>
 
+/* Special stonith-class agent parameters interpreted directly by Pacemaker
+ * (not including the pcmk_ACTION_{action,retries,timeout} parameters)
+ */
+#define PCMK_STONITH_ACTION_LIMIT       "pcmk_action_limit"
+#define PCMK_STONITH_DELAY_BASE         "pcmk_delay_base"
+#define PCMK_STONITH_DELAY_MAX          "pcmk_delay_max"
+#define PCMK_STONITH_HOST_ARGUMENT      "pcmk_host_argument"
+#define PCMK_STONITH_HOST_CHECK         "pcmk_host_check"
+#define PCMK_STONITH_HOST_LIST          "pcmk_host_list"
+#define PCMK_STONITH_HOST_MAP           "pcmk_host_map"
+#define PCMK_STONITH_PROVIDES           "provides"
+#define PCMK_STONITH_STONITH_TIMEOUT    "stonith-timeout"
+
 // Capabilities supported by a resource agent standard
 enum pcmk_ra_caps {
     pcmk_ra_cap_none         = 0,

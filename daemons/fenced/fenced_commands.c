@@ -128,7 +128,7 @@ get_action_delay_max(stonith_device_t * device, const char * action)
         return 0;
     }
 
-    value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_MAX);
+    value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_MAX);
     if (value) {
        delay_max = crm_parse_interval_spec(value) / 1000;
     }
@@ -146,7 +146,7 @@ get_action_delay_base(stonith_device_t * device, const char * action)
         return 0;
     }
 
-    value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_BASE);
+    value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
     if (value) {
        delay_base = crm_parse_interval_spec(value) / 1000;
     }
@@ -269,7 +269,7 @@ get_action_limit(stonith_device_t * device)
     const char *value = NULL;
     int action_limit = 1;
 
-    value = g_hash_table_lookup(device->params, STONITH_ATTR_ACTION_LIMIT);
+    value = g_hash_table_lookup(device->params, PCMK_STONITH_ACTION_LIMIT);
     if (value) {
        action_limit = crm_parse_int(value, "1");
        if (action_limit == 0) {
@@ -897,12 +897,12 @@ build_device_from_xml(xmlNode * msg)
     device->namespace = crm_element_value_copy(dev, "namespace");
     device->params = xml2device_params(device->id, dev);
 
-    value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTLIST);
+    value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_LIST);
     if (value) {
         device->targets = stonith__parse_targets(value);
     }
 
-    value = g_hash_table_lookup(device->params, STONITH_ATTR_HOSTMAP);
+    value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_MAP);
     device->aliases = build_port_aliases(value, &(device->targets));
 
     device->agent_metadata = get_agent_metadata(device->agent);
@@ -942,13 +942,13 @@ target_list_type(stonith_device_t * dev)
 {
     const char *check_type = NULL;
 
-    check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
+    check_type = g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK);
 
     if (check_type == NULL) {
 
-        if (g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTLIST)) {
+        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST)) {
             check_type = "static-list";
-        } else if (g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)) {
+        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
             check_type = "static-list";
         } else if (pcmk_is_set(dev->flags, st_device_supports_list)) {
             check_type = "dynamic-list";
@@ -1067,7 +1067,8 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
     if (rc != 0 && !dev->targets) {
         crm_notice("Disabling port list queries for %s (%d): %s", dev->id, rc, output);
         /* Fall back to status */
-        g_hash_table_replace(dev->params, strdup(STONITH_ATTR_HOSTCHECK), strdup("status"));
+        g_hash_table_replace(dev->params,
+                             strdup(PCMK_STONITH_HOST_CHECK), strdup("status"));
 
         g_list_free_full(dev->targets, free);
         dev->targets = NULL;
@@ -1658,7 +1659,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
         if (string_in_list(dev->targets, host)) {
             can = TRUE;
-        } else if (g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTMAP)
+        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
                    && g_hash_table_lookup(dev->aliases, host)) {
             can = TRUE;
         }
@@ -1689,8 +1690,8 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
         /* we'll respond to this search request async in the cb */
         return;
     } else {
-        crm_err("Invalid value for " STONITH_ATTR_HOSTCHECK ": %s", check_type);
-        check_type = "Invalid " STONITH_ATTR_HOSTCHECK;
+        crm_err("Invalid value for " PCMK_STONITH_HOST_CHECK ": %s", check_type);
+        check_type = "Invalid " PCMK_STONITH_HOST_CHECK;
     }
 
     if (pcmk__str_eq(host, alias, pcmk__str_casei)) {

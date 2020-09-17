@@ -2362,7 +2362,8 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
 {
     for (GListPtr gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *candidate = gIter->data;
-        const char *provides = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_PROVIDES);
+        const char *provides = g_hash_table_lookup(candidate->meta,
+                                                   PCMK_STONITH_PROVIDES);
         const char *requires = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_REQUIRES);
 
         if(candidate->children) {

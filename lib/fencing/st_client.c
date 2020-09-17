@@ -516,7 +516,8 @@ make_args(const char *agent, const char *action, const char *victim,
     append_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
     if (victim && device_args) {
         const char *alias = victim;
-        const char *param = g_hash_table_lookup(device_args, STONITH_ATTR_HOSTARG);
+        const char *param = g_hash_table_lookup(device_args,
+                                                PCMK_STONITH_HOST_ARGUMENT);
 
         if (port_map && g_hash_table_lookup(port_map, victim)) {
             alias = g_hash_table_lookup(port_map, victim);
@@ -2046,14 +2047,15 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
-        if (pcmk__str_eq(params->key, STONITH_ATTR_HOSTARG, pcmk__str_casei)) {
+        if (pcmk__str_eq(params->key, PCMK_STONITH_HOST_ARGUMENT,
+                         pcmk__str_casei)) {
             host_arg = params->value;
         }
 
         // Strip out Pacemaker-implemented parameters
         if (!pcmk__starts_with(params->key, "pcmk_")
-                && strcmp(params->key, "provides")
-                && strcmp(params->key, "stonith-timeout")) {
+                && strcmp(params->key, PCMK_STONITH_PROVIDES)
+                && strcmp(params->key, PCMK_STONITH_STONITH_TIMEOUT)) {
             g_hash_table_insert(params_table, strdup(params->key),
                                 strdup(params->value));
         }
