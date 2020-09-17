@@ -2124,6 +2124,9 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
         data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
         if (calc_secure) {
+            const char *class = crm_element_value(rsc->xml,
+                                                  XML_AGENT_ATTR_CLASS);
+
             /* The controller doesn't create a digest of *all* non-sensitive
              * parameters, only those listed in resource agent meta-data. The
              * equivalent here is rsc->parameters.
@@ -2132,6 +2135,23 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
             g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
             if(secure_list) {
                 filter_parameters(data->params_secure, secure_list, FALSE);
+            }
+            if (pcmk_is_set(pcmk_get_ra_caps(class),
+                            pcmk_ra_cap_fence_params)) {
+                /* For stonith resources, Pacemaker adds special parameters,
+                 * but these are not listed in fence agent meta-data, so the
+                 * controller will not hash them. That means we have to filter
+                 * them out before calculating our hash for comparison.
+                 */
+                for (xmlAttrPtr iter = data->params_secure->properties;
+                     iter != NULL; ) {
+                    const char *prop_name = (const char *) iter->name;
+
+                    iter = iter->next; // Grab next now in case we remove current
+                    if (pcmk_stonith_param(prop_name)) {
+                        xml_remove_prop(data->params_secure, prop_name);
+                    }
+                }
             }
             data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
         }
