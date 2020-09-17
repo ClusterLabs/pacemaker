@@ -462,9 +462,11 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
 {
     /* The fencer will filter "action" out when it registers the device,
      * but ignore it here in case any external API users don't.
+     *
+     * Also filter out parameters handled directly by Pacemaker.
      */
     if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)
-        && (strstr(key, "pcmk_") == NULL)
+        && !pcmk_stonith_param(key)
         && (strstr(key, CRM_META) == NULL)
         && !pcmk__str_eq(key, "crm_feature_set", pcmk__str_casei)) {
 
