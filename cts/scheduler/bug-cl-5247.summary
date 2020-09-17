@@ -17,21 +17,19 @@ GuestOnline: [ pgsr01:prmDB1 ]
      Masters: [ pgsr01 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]
 
+Only 'private' parameters to prmStonith1-2_start_0 on bl460g8n4 changed: 0:0;24:3:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910
+Only 'private' parameters to prmStonith1-2_monitor_3600000 on bl460g8n4 changed: 0:0;12:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910
+Only 'private' parameters to prmStonith2-2_start_0 on bl460g8n3 changed: 0:0;30:3:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910
+Only 'private' parameters to prmStonith2-2_monitor_3600000 on bl460g8n3 changed: 0:0;19:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910
 Transition Summary:
  * Fence (off) pgsr02 (resource: prmDB2) 'guest is unclean'
  * Stop       prmDB2            (        bl460g8n4 )   due to node availability
- * Restart    prmStonith1-2     (        bl460g8n4 )   due to resource definition change
- * Restart    prmStonith2-2     (        bl460g8n3 )   due to resource definition change
  * Recover    vip-master        ( pgsr02 -> pgsr01 )  
  * Recover    vip-rep           ( pgsr02 -> pgsr01 )  
  * Stop       pgsql:0           (    Master pgsr02 )   due to node availability
  * Stop       pgsr02            (        bl460g8n4 )   due to node availability
 
 Executing cluster transition:
- * Pseudo action:   grpStonith1_stop_0
- * Resource action: prmStonith1-2   stop on bl460g8n4
- * Pseudo action:   grpStonith2_stop_0
- * Resource action: prmStonith2-2   stop on bl460g8n3
  * Resource action: vip-master      monitor on pgsr01
  * Resource action: vip-rep         monitor on pgsr01
  * Pseudo action:   msPostgresql_pre_notify_demote_0
@@ -39,23 +37,13 @@ Executing cluster transition:
  * Resource action: pgsr02          stop on bl460g8n4
  * Resource action: pgsr02          monitor on bl460g8n3
  * Resource action: prmDB2          stop on bl460g8n4
- * Pseudo action:   grpStonith1_stopped_0
- * Pseudo action:   grpStonith1_start_0
- * Pseudo action:   grpStonith2_stopped_0
- * Pseudo action:   grpStonith2_start_0
  * Resource action: pgsql           notify on pgsr01
  * Pseudo action:   msPostgresql_confirmed-pre_notify_demote_0
  * Pseudo action:   msPostgresql_demote_0
  * Pseudo action:   stonith-pgsr02-off on pgsr02
- * Resource action: prmStonith1-2   start on bl460g8n4
- * Resource action: prmStonith1-2   monitor=3600000 on bl460g8n4
- * Resource action: prmStonith2-2   start on bl460g8n3
- * Resource action: prmStonith2-2   monitor=3600000 on bl460g8n3
  * Pseudo action:   pgsql_post_notify_stop_0
  * Pseudo action:   pgsql_demote_0
  * Pseudo action:   msPostgresql_demoted_0
- * Pseudo action:   grpStonith1_running_0
- * Pseudo action:   grpStonith2_running_0
  * Pseudo action:   msPostgresql_post_notify_demoted_0
  * Resource action: pgsql           notify on pgsr01
  * Pseudo action:   msPostgresql_confirmed-post_notify_demoted_0
