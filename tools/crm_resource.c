@@ -1378,7 +1378,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code
         rc = pcmk_legacy2rc(rc);
 
         if (metadata) {
-            printf("%s\n", metadata);
+            out->output_xml(out, "metadata", metadata);
         } else {
             *exit_code = crm_errno2exit(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
@@ -1904,17 +1904,47 @@ main(int argc, char **argv)
             break;
 
         case cmd_get_property:
-            rc = cli_resource_print_property(out, rsc, options.prop_name, data_set);
+            rc = out->message(out, "property", rsc, options.prop_name);
+            if (rc == pcmk_rc_no_output) {
+                rc = ENXIO;
+            }
+
             break;
 
         case cmd_set_property:
             rc = set_property();
             break;
 
-        case cmd_get_param:
-            rc = cli_resource_print_attribute(out, rsc, options.prop_name,
-                                              options.attr_set_type, data_set);
+        case cmd_get_param: {
+            unsigned int count = 0;
+            GHashTable *params = NULL;
+            pe_node_t *current = pe__find_active_on(rsc, &count, NULL);
+
+            if (count > 1) {
+                out->err(out, "%s is active on more than one node,"
+                         " returning the default value for %s", rsc->id, crm_str(options.prop_name));
+                current = NULL;
+            }
+
+            params = crm_str_table_new();
+
+            if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
+                get_rsc_attributes(params, rsc, current, data_set);
+
+            } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
+                /* No need to redirect to the parent */
+                get_meta_attributes(params, rsc, current, data_set);
+
+            } else {
+                pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
+                                           NULL, FALSE, data_set);
+            }
+
+            crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
+            rc = out->message(out, "attribute", rsc, options.prop_name, params);
+            g_hash_table_destroy(params);
             break;
+        }
 
         case cmd_set_param:
             if (pcmk__str_empty(options.prop_value)) {

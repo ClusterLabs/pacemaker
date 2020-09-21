@@ -235,63 +235,74 @@ cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc,
     return pcmk_rc_ok;
 }
 
-// \return Standard Pacemaker return code
-int
-cli_resource_print_attribute(pcmk__output_t *out, pe_resource_t *rsc, const char *attr,
-                             const char *attr_set_type, pe_working_set_t * data_set)
-{
-    int rc = ENXIO;
-    unsigned int count = 0;
-    GHashTable *params = NULL;
-    const char *value = NULL;
-    pe_node_t *current = pe__find_active_on(rsc, &count, NULL);
+PCMK__OUTPUT_ARGS("attribute", "pe_resource_t *", "char *", "GHashTable *")
+static int
+attribute_default(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    char *attr = va_arg(args, char *);
+    GHashTable *params = va_arg(args, GHashTable *);
 
-    if (count > 1) {
-        CMD_ERR("%s is active on more than one node,"
-                " returning the default value for %s", rsc->id, crm_str(attr));
-        current = NULL;
-    }
+    const char *value = g_hash_table_lookup(params, attr);
 
-    params = crm_str_table_new();
-
-    if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
-        get_rsc_attributes(params, rsc, current, data_set);
-
-    } else if (pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
-        /* No need to redirect to the parent */
-        get_meta_attributes(params, rsc, current, data_set);
-
-    } else {
-        pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
-                                   NULL, FALSE, data_set);
-    }
-
-    crm_debug("Looking up %s in %s", attr, rsc->id);
-    value = g_hash_table_lookup(params, attr);
     if (value != NULL) {
-        fprintf(stdout, "%s\n", value);
-        rc = pcmk_rc_ok;
-
+        out->begin_list(out, NULL, NULL, "Attributes");
+        out->list_item(out, attr, "%s", value);
+        out->end_list(out);
     } else {
-        CMD_ERR("Attribute '%s' not found for '%s'", attr, rsc->id);
+        out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
     }
 
-    g_hash_table_destroy(params);
-    return rc;
+    return pcmk_rc_ok;
 }
 
-// \return Standard Pacemaker return code
-int
-cli_resource_print_property(pcmk__output_t *out, pe_resource_t *rsc,
-                            const char *attr, pe_working_set_t * data_set)
-{
+PCMK__OUTPUT_ARGS("attribute", "pe_resource_t *", "char *", "GHashTable *")
+static int
+attribute_text(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    char *attr = va_arg(args, char *);
+    GHashTable *params = va_arg(args, GHashTable *);
+
+    const char *value = g_hash_table_lookup(params, attr);
+
+    if (value != NULL) {
+        out->info(out, "%s", value);
+    } else {
+        out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("property", "pe_resource_t *", "char *")
+static int
+property_default(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    char *attr = va_arg(args, char *);
+
     const char *value = crm_element_value(rsc->xml, attr);
 
     if (value != NULL) {
-        fprintf(stdout, "%s\n", value);
-        return pcmk_rc_ok;
+        out->begin_list(out, NULL, NULL, "Properties");
+        out->list_item(out, attr, "%s", value);
+        out->end_list(out);
     }
-    return ENXIO;
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("property", "pe_resource_t *", "char *")
+static int
+property_text(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    char *attr = va_arg(args, char *);
+
+    const char *value = crm_element_value(rsc->xml, attr);
+
+    if (value != NULL) {
+        out->info(out, "%s", value);
+    }
+
+    return pcmk_rc_ok;
 }
 
 static void
@@ -328,6 +339,10 @@ resource_names(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "attribute", "default", attribute_default },
+    { "attribute", "text", attribute_text },
+    { "property", "default", property_default },
+    { "property", "text", property_text },
     { "resource-names-list", "default", resource_names },
 
     { NULL, NULL, NULL }
