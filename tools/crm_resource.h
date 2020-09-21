@@ -46,7 +46,6 @@ void cli_resource_print_colocation(pcmk__output_t *out, pe_resource_t * rsc,
 
 int cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc, pe_working_set_t *data_set,
                        bool expanded);
-int cli_resource_print_list(pcmk__output_t *out, pe_working_set_t * data_set, bool raw);
 int cli_resource_print_attribute(pcmk__output_t *out, pe_resource_t *rsc,
                                  const char *attr, const char *attr_set_type,
                                  pe_working_set_t *data_set);

@@ -85,34 +85,6 @@ cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_list(pcmk__output_t *out, pe_working_set_t * data_set, bool raw)
-{
-    int found = 0;
-
-    GListPtr lpc = NULL;
-    int opts = pe_print_printf | pe_print_rsconly | pe_print_pending;
-
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-
-        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)
-            && rsc->fns->active(rsc, TRUE) == FALSE) {
-            continue;
-        }
-        rsc->fns->print(rsc, NULL, opts, stdout);
-        found++;
-    }
-
-    if (found == 0) {
-        printf("NO resources configured\n");
-        return ENXIO;
-    }
-
-    return pcmk_rc_ok;
-}
-
-// \return Standard Pacemaker return code
-int
 cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
                               const char *host_uname, bool active,
                               pe_working_set_t * data_set)

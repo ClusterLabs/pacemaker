@@ -926,7 +926,8 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 =#=#=#= End test: Create a resource attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Create a resource attribute
 =#=#=#= Begin test: List the configured resources =#=#=#=
- dummy	(ocf::pacemaker:Dummy):	 Stopped
+Full List of Resources:
+  * dummy	(ocf::pacemaker:Dummy):	 Stopped
 =#=#=#= Current cib after: List the configured resources =#=#=#=
 <cib epoch="19" num_updates="0" admin_epoch="1">
   <configuration>

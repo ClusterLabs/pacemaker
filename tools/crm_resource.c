@@ -1610,8 +1610,13 @@ main(int argc, char **argv)
         } else {
             pcmk__force_args(context, &error, "%s --xml-substitute", g_get_prgname());
         }
+    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
+        if (options.rsc_cmd == cmd_list_resources) {
+            pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
+        }
     }
 
+    pe__register_messages(out);
     crm_resource_register_messages(out);
 
     if (args->version) {
@@ -1715,10 +1720,19 @@ main(int argc, char **argv)
     }
 
     switch (options.rsc_cmd) {
-        case cmd_list_resources:
-            rc = pcmk_rc_ok;
-            cli_resource_print_list(out, data_set, FALSE);
+        case cmd_list_resources: {
+            GListPtr all = NULL;
+            all = g_list_prepend(all, strdup("*"));
+            rc = out->message(out, "resource-list", data_set,
+                              pe_print_rsconly | pe_print_pending,
+                              FALSE, TRUE, FALSE, TRUE, all, all, FALSE);
+            g_list_free_full(all, free);
+
+            if (rc == pcmk_rc_no_output) {
+                rc = ENXIO;
+            }
             break;
+        }
 
         case cmd_list_instances:
             rc = out->message(out, "resource-names-list", data_set->resources);
