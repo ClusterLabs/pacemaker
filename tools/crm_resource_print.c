@@ -9,6 +9,7 @@
 
 #include <crm_resource.h>
 #include <crm/common/xml_internal.h>
+#include <crm/common/output_internal.h>
 
 #define cons_string(x) x?x:"NA"
 void
@@ -79,24 +80,6 @@ cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
         pe_resource_t *child = (pe_resource_t *) lpc->data;
 
         cli_resource_print_cts(out, child);
-    }
-}
-
-
-void
-cli_resource_print_raw(pcmk__output_t *out, pe_resource_t * rsc)
-{
-    GListPtr lpc = NULL;
-    GListPtr children = rsc->children;
-
-    if (children == NULL) {
-        printf("%s\n", rsc->id);
-    }
-
-    for (lpc = children; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *child = (pe_resource_t *) lpc->data;
-
-        cli_resource_print_raw(out, child);
     }
 }
 
@@ -337,4 +320,48 @@ cli_resource_print_property(pcmk__output_t *out, pe_resource_t *rsc,
         return pcmk_rc_ok;
     }
     return ENXIO;
+}
+
+static void
+add_resource_name(pcmk__output_t *out, pe_resource_t *rsc) {
+    if (rsc->children == NULL) {
+        out->list_item(out, "resource", "%s", rsc->id);
+    } else {
+        for (GListPtr lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
+            pe_resource_t *child = (pe_resource_t *) lpc->data;
+            add_resource_name(out, child);
+        }
+    }
+}
+
+PCMK__OUTPUT_ARGS("resource-names-list", "GListPtr")
+static int
+resource_names(pcmk__output_t *out, va_list args) {
+    GListPtr resources = va_arg(args, GListPtr);
+
+    if (resources == NULL) {
+        out->err(out, "NO resources configured\n");
+        return pcmk_rc_no_output;
+    }
+
+    out->begin_list(out, NULL, NULL, "Resource Names");
+
+    for (GListPtr lpc = resources; lpc != NULL; lpc = lpc->next) {
+        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+        add_resource_name(out, rsc);
+    }
+
+    out->end_list(out);
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "resource-names-list", "default", resource_names },
+
+    { NULL, NULL, NULL }
+};
+
+void
+crm_resource_register_messages(pcmk__output_t *out) {
+    pcmk__register_messages(out, fmt_functions);
 }

@@ -14,6 +14,7 @@
 #include <crm/services.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/output_internal.h>
 
 #include <crm/cib.h>
 #include <crm/common/attrd_internal.h>
@@ -105,3 +106,5 @@ int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib);
 void cli_resource_why(pcmk__output_t *out, cib_t *cib_conn, GListPtr resources,
                       pe_resource_t *rsc, pe_node_t *node);
+
+void crm_resource_register_messages(pcmk__output_t *out);

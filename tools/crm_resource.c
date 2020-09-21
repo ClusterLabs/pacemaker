@@ -1176,28 +1176,6 @@ list_providers(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_cod
     return rc;
 }
 
-static int
-list_raw(pcmk__output_t *out)
-{
-    int rc = pcmk_rc_ok;
-    int found = 0;
-    GListPtr lpc = NULL;
-
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-
-        found++;
-        cli_resource_print_raw(out, rsc);
-    }
-
-    if (found == 0) {
-        printf("NO resources configured\n");
-        rc = ENXIO;
-    }
-
-    return rc;
-}
-
 static void
 list_stacks_and_constraints(pcmk__output_t *out, pe_resource_t *rsc, bool recursive)
 {
@@ -1634,6 +1612,8 @@ main(int argc, char **argv)
         }
     }
 
+    crm_resource_register_messages(out);
+
     if (args->version) {
         out->version(out, false);
         goto done;
@@ -1741,7 +1721,12 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_instances:
-            rc = list_raw(out);
+            rc = out->message(out, "resource-names-list", data_set->resources);
+
+            if (rc != pcmk_rc_ok) {
+                rc = ENXIO;
+            }
+
             break;
 
         case cmd_list_standards:
