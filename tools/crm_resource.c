@@ -8,6 +8,7 @@
  */
 
 #include <crm_resource.h>
+#include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/lists_internal.h>
 #include <pacemaker-internal.h>
@@ -1092,25 +1093,24 @@ static int
 list_agents(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
 {
     int rc = pcmk_rc_ok;
-    lrmd_list_t *list = NULL;
-    lrmd_list_t *iter = NULL;
     char *provider = strchr(agent_spec, ':');
     lrmd_t *lrmd_conn = lrmd_api_new();
+    lrmd_list_t *list = NULL;
 
     if (provider) {
         *provider++ = 0;
     }
+
     rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, agent_spec, provider);
 
     if (rc > 0) {
-        for (iter = list; iter != NULL; iter = iter->next) {
-            printf("%s\n", iter->val);
-        }
-        lrmd_list_freeall(list);
-        rc = pcmk_rc_ok;
+        rc = out->message(out, "agents-list", list, agent_spec, provider);
     } else {
-        *exit_code = CRM_EX_NOSUCH;
         rc = pcmk_rc_error;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        *exit_code = CRM_EX_NOSUCH;
         if (provider == NULL) {
             g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
                         "No agents found for standard '%s'", agent_spec);
@@ -1130,19 +1130,41 @@ list_providers(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_cod
 {
     int rc;
     const char *text = NULL;
-    lrmd_list_t *list = NULL;
-    lrmd_list_t *iter = NULL;
     lrmd_t *lrmd_conn = lrmd_api_new();
+    lrmd_list_t *list = NULL;
 
     switch (options.rsc_cmd) {
+        case cmd_list_alternatives:
+            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
+
+            if (rc > 0) {
+                rc = out->message(out, "alternatives-list", list, agent_spec);
+            } else {
+                rc = pcmk_rc_error;
+            }
+
+            text = "OCF providers";
+            break;
         case cmd_list_standards:
             rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
+
+            if (rc > 0) {
+                rc = out->message(out, "standards-list", list);
+            } else {
+                rc = pcmk_rc_error;
+            }
+
             text = "standards";
             break;
         case cmd_list_providers:
-        case cmd_list_alternatives:
-            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec,
-                                                     &list);
+            rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
+
+            if (rc > 0) {
+                rc = out->message(out, "providers-list", list, agent_spec);
+            } else {
+                rc = pcmk_rc_error;
+            }
+
             text = "OCF providers";
             break;
         default:
@@ -1152,24 +1174,19 @@ list_providers(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_cod
             return pcmk_rc_error;
     }
 
-    if (rc > 0) {
-        for (iter = list; iter != NULL; iter = iter->next) {
-            printf("%s\n", iter->val);
+    if (rc != pcmk_rc_ok) {
+        if (agent_spec != NULL) {
+            *exit_code = CRM_EX_NOSUCH;
+            rc = pcmk_rc_error;
+            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+                        "No %s found for %s", text, agent_spec);
+
+        } else {
+            *exit_code = CRM_EX_NOSUCH;
+            rc = pcmk_rc_error;
+            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+                        "No %s found", text);
         }
-        lrmd_list_freeall(list);
-        rc = pcmk_rc_ok;
-
-    } else if (agent_spec != NULL) {
-        *exit_code = CRM_EX_NOSUCH;
-        rc = pcmk_rc_error;
-        g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
-                    "No %s found for %s", text, agent_spec);
-
-    } else {
-        *exit_code = CRM_EX_NOSUCH;
-        rc = pcmk_rc_error;
-        g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
-                    "No %s found", text);
     }
 
     lrmd_api_delete(lrmd_conn);
@@ -1618,6 +1635,7 @@ main(int argc, char **argv)
 
     pe__register_messages(out);
     crm_resource_register_messages(out);
+    lrmd__register_messages(out);
 
     if (args->version) {
         out->version(out, false);
