@@ -221,6 +221,12 @@ dummy_monitor() {
             return $OCF_ERR_GENERIC
             ;;
 
+            40)
+            # monitor level that returns error code from state file
+            rc=$(cat ${OCF_RESKEY_state})
+            [ -n "$rc" ] && ocf_exit_reason "CPU ejected. Observed leaving the Kronosnet galaxy at $rc times the speed of light." && return $rc
+            ;;
+
             *)
             ;;
         esac
