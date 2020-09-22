@@ -55,6 +55,15 @@ typedef enum mon_output_format_e {
     mon_output_cgi
 } mon_output_format_t;
 
+typedef struct {
+    bool is_error;
+
+    union {
+        stonith_history_t *history;
+        const char *error_msg;
+    } data;
+} mon_stonith_history_t;
+
 #define mon_show_stack          (1 << 0)
 #define mon_show_dc             (1 << 1)
 #define mon_show_times          (1 << 2)
@@ -95,15 +104,15 @@ typedef enum mon_output_format_e {
 #define mon_op_default              (mon_op_print_pending | mon_op_fence_history | mon_op_fence_connect)
 
 void print_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                  stonith_history_t *stonith_history, unsigned int mon_ops,
+                  mon_stonith_history_t *history, unsigned int mon_ops,
                   unsigned int show, char *prefix, char *only_node,
                   char *only_rsc);
 void print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                      crm_exit_t history_rc, stonith_history_t *stonith_history,
+                      crm_exit_t history_rc, mon_stonith_history_t *history,
                       unsigned int mon_ops, unsigned int show, char *prefix,
                       char *only_node, char *only_rsc);
 int print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                      stonith_history_t *stonith_history, unsigned int mon_ops,
+                      mon_stonith_history_t *history, unsigned int mon_ops,
                       unsigned int show, char *prefix, char *only_node,
                       char *only_rsc);
 

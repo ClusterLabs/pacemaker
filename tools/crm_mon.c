@@ -1456,7 +1456,7 @@ main(int argc, char **argv)
  */
 static void
 print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
-                    stonith_history_t *history, unsigned int mon_ops)
+                    mon_stonith_history_t *history, unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
     int nodes_online = 0;
@@ -1930,8 +1930,11 @@ static gboolean
 mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
-    stonith_history_t *stonith_history = NULL;
+    mon_stonith_history_t history;
     int history_rc = 0;
+
+    history.is_error = false;
+    history.data.history = NULL;
 
     last_refresh = time(NULL);
 
@@ -1948,17 +1951,17 @@ mon_refresh_display(gpointer user_data)
      */
     while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
-            history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120);
+            history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &(history.data.history), 120);
 
             if (history_rc != 0) {
                 out->err(out, "Critical: Unable to get stonith-history");
                 mon_cib_connection_destroy_error(NULL);
             } else {
-                stonith_history = stonith__sort_history(stonith_history);
+                history.data.history = stonith__sort_history(history.data.history);
                 if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
                     && (output_format != mon_output_xml)) {
 
-                    stonith_history = reduce_stonith_history(stonith_history);
+                    history.data.history = reduce_stonith_history(history.data.history);
                 }
                 break; /* all other cases are errors */
             }
@@ -1991,7 +1994,7 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(out, mon_data_set, stonith_history, options.mon_ops,
+            if (print_html_status(out, mon_data_set, &history, options.mon_ops,
                                   show, options.neg_location_prefix,
                                   options.only_node, options.only_rsc) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
@@ -2003,13 +2006,13 @@ mon_refresh_display(gpointer user_data)
         case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(out, mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, options.mon_ops, show,
+                             &history, options.mon_ops, show,
                              options.neg_location_prefix, options.only_node,
                              options.only_rsc);
             break;
 
         case mon_output_monitor:
-            print_simple_status(out, mon_data_set, stonith_history, options.mon_ops);
+            print_simple_status(out, mon_data_set, &history, options.mon_ops);
             if (pcmk_is_set(options.mon_ops, mon_op_has_warnings)) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
@@ -2022,14 +2025,14 @@ mon_refresh_display(gpointer user_data)
              */
 #if CURSES_ENABLED
             blank_screen();
-            print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
+            print_status(out, mon_data_set, &history, options.mon_ops, show,
                          options.neg_location_prefix, options.only_node, options.only_rsc);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
-            print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
+            print_status(out, mon_data_set, &history, options.mon_ops, show,
                          options.neg_location_prefix, options.only_node, options.only_rsc);
             break;
 
@@ -2042,8 +2045,10 @@ mon_refresh_display(gpointer user_data)
         out->reset(out);
     }
 
-    stonith_history_free(stonith_history);
-    stonith_history = NULL;
+    if (!history.is_error) {
+        stonith_history_free(history.data.history);
+    }
+
     pe_reset_working_set(mon_data_set);
     return TRUE;
 }
