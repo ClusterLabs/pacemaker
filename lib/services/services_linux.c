@@ -372,7 +372,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
     char buffer[500];
 
-    snprintf(buffer, sizeof(buffer), "OCF_RESKEY_%s", (char *)key);
+    snprintf(buffer, sizeof(buffer), strcmp(key, "OCF_CHECK_LEVEL") != 0 ? "OCF_RESKEY_%s" : "%s", (char *)key);
     set_ocf_env(buffer, value, user_data);
 }
 
