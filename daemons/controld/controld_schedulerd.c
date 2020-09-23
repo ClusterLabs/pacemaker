@@ -437,10 +437,6 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         controld_set_fsa_action_flags(A_PE_INVOKE);
         trigger_fsa();
         return;
-
-    } else if (fsa_state != S_POLICY_ENGINE) {
-        crm_err("Invoking scheduler in state: %s", fsa_state2string(fsa_state));
-        return;
     }
 
     CRM_LOG_ASSERT(output != NULL);
