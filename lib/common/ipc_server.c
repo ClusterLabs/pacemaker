@@ -55,23 +55,6 @@ pcmk__foreach_ipc_client(GHFunc func, gpointer user_data)
     }
 }
 
-/*!
- * \internal
- * \brief Remote IPC clients based on iterative function result
- *
- * \param[in] func       Function to call for each active IPC client
- * \param[in] user_data  Pointer to pass to function
- *
- * \note The parameters are the same as for g_hash_table_foreach_remove().
- */
-void
-pcmk__foreach_ipc_client_remove(GHRFunc func, gpointer user_data)
-{
-    if ((func != NULL) && (client_connections != NULL)) {
-        g_hash_table_foreach_remove(client_connections, func, user_data);
-    }
-}
-
 pcmk__client_t *
 pcmk__find_client(qb_ipcs_connection_t *c)
 {

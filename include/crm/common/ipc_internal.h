@@ -189,7 +189,6 @@ struct pcmk__client_s {
 
 guint pcmk__ipc_client_count(void);
 void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
-void pcmk__foreach_ipc_client_remove(GHRFunc func, gpointer user_data);
 
 void pcmk__client_cleanup(void);
 
