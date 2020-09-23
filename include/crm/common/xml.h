@@ -144,8 +144,6 @@ xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
 gboolean can_prune_leaf(xmlNode * xml_node);
 
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
-
 /*
  * Searching & Modifying
  */
@@ -242,50 +240,6 @@ gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 void crm_xml_init(void);
 void crm_xml_cleanup(void);
 
-static inline xmlNode *
-__xml_first_child(const xmlNode *parent)
-{
-    xmlNode *child = parent? parent->children : NULL;
-
-    while (child && (child->type == XML_TEXT_NODE)) {
-        child = child->next;
-    }
-    return child;
-}
-
-static inline xmlNode *
-__xml_next(const xmlNode *child)
-{
-    xmlNode *next = child? child->next : NULL;
-
-    while (next && (next->type == XML_TEXT_NODE)) {
-        next = next->next;
-    }
-    return next;
-}
-
-static inline xmlNode *
-__xml_first_child_element(const xmlNode *parent)
-{
-    xmlNode *child = parent? parent->children : NULL;
-
-    while (child && (child->type != XML_ELEMENT_NODE)) {
-        child = child->next;
-    }
-    return child;
-}
-
-static inline xmlNode *
-__xml_next_element(const xmlNode *child)
-{
-    xmlNode *next = child? child->next : NULL;
-
-    while (next && (next->type != XML_ELEMENT_NODE)) {
-        next = next->next;
-    }
-    return next;
-}
-
 void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
@@ -345,6 +299,8 @@ void crm_destroy_xml(gpointer data);
  */
 
 xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
+
+gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 
 #endif
 

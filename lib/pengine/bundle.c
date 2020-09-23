@@ -15,6 +15,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
 #define PE__VARIANT_BUNDLE 1
@@ -1116,8 +1117,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             bundle_data->add_host = TRUE;
         }
 
-        for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
-             xml_child = __xml_next_element(xml_child)) {
+        for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
+             xml_child = pcmk__xe_next(xml_child)) {
 
             pe__bundle_port_t *port = calloc(1, sizeof(pe__bundle_port_t));
             port->source = crm_element_value_copy(xml_child, "port");
@@ -1142,8 +1143,8 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     xml_obj = first_named_child(rsc->xml, "storage");
-    for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
-         xml_child = __xml_next_element(xml_child)) {
+    for (xmlNode *xml_child = pcmk__xe_first_child(xml_obj); xml_child != NULL;
+         xml_child = pcmk__xe_next(xml_child)) {
 
         const char *source = crm_element_value(xml_child, "source-dir");
         const char *target = crm_element_value(xml_child, "target-dir");

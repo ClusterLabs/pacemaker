@@ -21,6 +21,9 @@
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
+// Decent chunk size for processing large amounts of data
+#define PCMK__BUFFER_SIZE 4096
+
 /*
  * XML and ACLs
  */
@@ -47,12 +50,20 @@ enum xml_private_flags {
      xpf_lazy        = 0x4000,
 };
 
+/* When deleting portions of an XML tree, we keep a record so we can know later
+ * (e.g. when checking differences) that something was deleted.
+ */
+typedef struct pcmk__deleted_xml_s {
+        char *path;
+        int position;
+} pcmk__deleted_xml_t;
+
 typedef struct xml_private_s {
         long check;
         uint32_t flags;
         char *user;
         GList *acls;
-        GList *deleted_objs;
+        GList *deleted_objs; // List of pcmk__deleted_xml_t
 } xml_private_t;
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
@@ -83,6 +94,30 @@ bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 G_GNUC_INTERNAL
 int pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
                         int offset, size_t buffer_size);
+
+G_GNUC_INTERNAL
+void pcmk__mark_xml_created(xmlNode *xml);
+
+G_GNUC_INTERNAL
+int pcmk__xml_position(xmlNode *xml, enum xml_private_flags ignore_if_set);
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact);
+
+G_GNUC_INTERNAL
+void pcmk__xe_log(int log_level, const char *file, const char *function,
+                  int line, const char *prefix, xmlNode *data, int depth,
+                  int options);
+
+G_GNUC_INTERNAL
+void pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
+                      bool as_diff);
+
+G_GNUC_INTERNAL
+xmlNode *pcmk__xc_match(xmlNode *root, xmlNode *search_comment, bool exact);
+
+G_GNUC_INTERNAL
+void pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update);
 
 G_GNUC_INTERNAL
 void pcmk__free_acls(GList *acls);

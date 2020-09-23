@@ -11,6 +11,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/lrmd.h>
 #include <crm/services.h>
 
@@ -1262,7 +1263,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
 
         for (node =
                 first_named_child(getXpathResult(search, 0), XML_CIB_TAG_NODE);
-            node; node = __xml_next(node)) {
+            node != NULL; node = pcmk__xml_next(node)) {
             lrm_state_t *lrm_state = lrm_state_find(ID(node));
 
             cnt++;

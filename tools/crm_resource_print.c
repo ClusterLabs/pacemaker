@@ -8,6 +8,7 @@
  */
 
 #include <crm_resource.h>
+#include <crm/common/xml_internal.h>
 
 #define cons_string(x) x?x:"NA"
 void
@@ -17,8 +18,8 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
     xmlNode *lifetime = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
-    for (xml_obj = __xml_first_child_element(cib_constraints); xml_obj != NULL;
-         xml_obj = __xml_next_element(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(cib_constraints); xml_obj != NULL;
+         xml_obj = pcmk__xe_next(xml_obj)) {
         const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 
         if (id == NULL) {

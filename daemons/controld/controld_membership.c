@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <pacemaker-controld.h>
@@ -216,10 +217,10 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         node_xml = output;
 
     } else {
-        node_xml = __xml_first_child(output);
+        node_xml = pcmk__xml_first_child(output);
     }
 
-    for (; node_xml != NULL; node_xml = __xml_next(node_xml)) {
+    for (; node_xml != NULL; node_xml = pcmk__xml_next(node_xml)) {
         const char *node_uuid = NULL;
         const char *node_uname = NULL;
         GHashTableIter iter;

@@ -37,6 +37,7 @@
 #include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
@@ -1747,7 +1748,8 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
     xmlNode *change = NULL;
     xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    for (change = __xml_first_child(diff); change != NULL; change = __xml_next(change)) {
+    for (change = pcmk__xml_first_child(diff); change != NULL;
+         change = pcmk__xml_next(change)) {
         const char *name = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
@@ -1789,8 +1791,8 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             xmlNode *state = NULL;
             xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
 
-            for (state = __xml_first_child_element(status); state != NULL;
-                 state = __xml_next_element(state)) {
+            for (state = pcmk__xe_first_child(status); state != NULL;
+                 state = pcmk__xe_next(state)) {
 
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {
@@ -1802,8 +1804,8 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
             xmlNode *state = NULL;
 
-            for (state = __xml_first_child_element(match); state != NULL;
-                 state = __xml_next_element(state)) {
+            for (state = pcmk__xe_first_child(match); state != NULL;
+                 state = pcmk__xe_next(state)) {
 
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {

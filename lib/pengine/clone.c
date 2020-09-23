@@ -14,6 +14,7 @@
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 
 #define VARIANT_CLONE 1
 #include "./variant.h"
@@ -181,8 +182,8 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
                  pe__rsc_bool_str(rsc, pe_rsc_promotable));
 
     // Clones may contain a single group or primitive
-    for (a_child = __xml_first_child_element(xml_obj); a_child != NULL;
-         a_child = __xml_next_element(a_child)) {
+    for (a_child = pcmk__xe_first_child(xml_obj); a_child != NULL;
+         a_child = pcmk__xe_next(a_child)) {
 
         if (pcmk__str_any_of((const char *)a_child->name, XML_CIB_TAG_RESOURCE, XML_CIB_TAG_GROUP, NULL)) {
             clone_data->xml_obj_child = a_child;

@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/util.h>
 
 #include <glib.h>
@@ -726,8 +727,9 @@ unpack_operation_on_fail(pe_action_t * action)
 
         CRM_CHECK(action->rsc != NULL, return NULL);
 
-        for (operation = __xml_first_child_element(action->rsc->ops_xml);
-             operation && !value; operation = __xml_next_element(operation)) {
+        for (operation = pcmk__xe_first_child(action->rsc->ops_xml);
+             (operation != NULL) && (value == NULL);
+             operation = pcmk__xe_next(operation)) {
 
             if (!pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
                 continue;
@@ -786,8 +788,9 @@ find_min_interval_mon(pe_resource_t * rsc, gboolean include_disabled)
     xmlNode *op = NULL;
     xmlNode *operation = NULL;
 
-    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
-         operation = __xml_next_element(operation)) {
+    for (operation = pcmk__xe_first_child(rsc->ops_xml);
+         operation != NULL;
+         operation = pcmk__xe_next(operation)) {
 
         if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
             name = crm_element_value(operation, "name");
@@ -941,11 +944,11 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
     xmlNode *attrs = NULL;
     xmlNode *attr = NULL;
 
-    for (attrs = __xml_first_child_element(versioned_meta); attrs != NULL;
-         attrs = __xml_next_element(attrs)) {
+    for (attrs = pcmk__xe_first_child(versioned_meta); attrs != NULL;
+         attrs = pcmk__xe_next(attrs)) {
 
-        for (attr = __xml_first_child_element(attrs); attr != NULL;
-             attr = __xml_next_element(attr)) {
+        for (attr = pcmk__xe_first_child(attrs); attr != NULL;
+             attr = pcmk__xe_next(attr)) {
 
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
@@ -1307,8 +1310,9 @@ find_rsc_op_entry_helper(pe_resource_t * rsc, const char *key, gboolean include_
     xmlNode *operation = NULL;
 
   retry:
-    for (operation = __xml_first_child_element(rsc->ops_xml); operation != NULL;
-         operation = __xml_next_element(operation)) {
+    for (operation = pcmk__xe_first_child(rsc->ops_xml); operation != NULL;
+         operation = pcmk__xe_next(operation)) {
+
         if (pcmk__str_eq((const char *)operation->name, "op", pcmk__str_none)) {
             name = crm_element_value(operation, "name");
             interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);

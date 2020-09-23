@@ -30,6 +30,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <crm/common/mainloop.h>
 
@@ -717,7 +718,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     bool needs_update = FALSE;
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+    for (change = pcmk__xml_first_child(patchset); change != NULL;
+         change = pcmk__xml_next(change)) {
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
         const char *shortpath = NULL;
@@ -922,7 +924,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
         xml_patch_versions(patchset, add, del);
 
-        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+        for (change = pcmk__xml_first_child(patchset); change != NULL;
+             change = pcmk__xml_next(change)) {
             const char *op = crm_element_value(change, XML_DIFF_OP);
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
 
