@@ -117,10 +117,13 @@ Multi-Site Clusters and Tickets
    across cluster sites of a multi-site cluster. You have to configure the resources
    that will be highly available across the multi-site cluster for every site
    accordingly.
-   
-   
-   [[s-ticket-constraints]]
-   == Configuring Ticket Dependencies ==
+
+.. _ticket-constraints:
+
+Configuring Ticket Dependencies
+###############################
+
+.. Convert_to_RST_2:
    
    The `rsc_ticket` constraint lets you specify the resources depending on a certain
    ticket. Together with the constraint, you can set a `loss-policy` that defines
