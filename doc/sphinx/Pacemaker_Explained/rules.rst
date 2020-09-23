@@ -120,12 +120,13 @@ Expressions are rule conditions based on the values of node attributes.
    |              | ``gte`` operations is ``number``|                                           |
    |              | if either value contains a      | How the node attributes should be         |
    |              | decimal point character, or     | compared. Allowed values are ``string``,  |
-   |              | ``integer`` otherwise. The      | ``integer``, ``number``, and ``version``. |
-   |              | default type for all other      | ``integer`` truncates floating-point      |
-   |              | operations is ``string``. If a  | values if necessary before performing an  |
-   |              | numeric parse fails for either  | integer comparison. ``number`` performs a |
-   |              | value, then the values are      | floating-point comparison.                |
-   |              | compared as type ``string``.    |                                           |
+   |              | ``integer`` otherwise. The      | ``integer`` *(since 2.0.5)*, ``number``,  |
+   |              | default type for all other      | and ``version``. ``integer`` truncates    |
+   |              | operations is ``string``. If a  | floating-point values if necessary before |
+   |              | numeric parse fails for either  | performing a 64-bit integer comparison.   |
+   |              | value, then the values are      | ``number`` performs a double-precision    |
+   |              | compared as type ``string``.    | floating-point comparison                 |
+   |              |                                 | *(32-bit integer before 2.0.5)*.          |
    +--------------+---------------------------------+-------------------------------------------+
    | operation    |                                 | .. index::                                |
    |              |                                 |    pair: expression; operation            |
@@ -218,7 +219,7 @@ in rule expressions.
    |               | ``resource-agent`` tag in the agent's metadata. Valid only|
    |               | within rules controlling resource options. This can be    |
    |               | useful during rolling upgrades of a backward-incompatible |
-   |               | resource agent. '(since x.x.x)'                           |
+   |               | resource agent. *(since x.x.x)*                           |
 
 
 .. index::
@@ -542,8 +543,8 @@ A small sample of how time-based expressions can be used:
 Resource Expressions
 ####################
 
-An ``rsc_expression`` is a rule condition based on a resource agent's
-properties. This rule is only valid within an ``rsc_defaults`` or
+An ``rsc_expression`` *(since 2.0.5)* is a rule condition based on a resource
+agent's properties. This rule is only valid within an ``rsc_defaults`` or
 ``op_defaults`` context. None of the matching attributes of ``class``,
 ``provider``, and ``type`` are required. If one is omitted, all values of that
 attribute will match.  For instance, omitting ``type`` means every type will
@@ -607,8 +608,8 @@ Operation Expressions
 #####################
 
 
-An ``op_expression`` is a rule condition based on an action of some resource
-agent. This rule is only valid within an ``op_defaults`` context.
+An ``op_expression`` *(since 2.0.5)* is a rule condition based on an action of
+some resource agent. This rule is only valid within an ``op_defaults`` context.
 
 .. table:: **Attributes of an op_expression Element**
 
