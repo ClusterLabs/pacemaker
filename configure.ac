@@ -974,14 +974,6 @@ AC_CHECK_DECLS([CLOCK_MONOTONIC], [], [], [[
     #include <time.h>
 ]])
 
-# the above alone will allow using clock_gettime(CLOCK_MONOTONIC, ...),
-# but in case there are any discrepancies found with the move onto that
-# where ftime(3) was originally used -- the callsites make do without
-# any such timestamp grabbing at this time -- so to revert that effect
-# (trigger such omission), line below can be uncommented for that intent
-# (alternatively, propagate equivalent variable assignment from outside)
-#CPPFLAGS="-DPCMK_TIME_EMERGENCY_CGT $CPPFLAGS"
-
 dnl ========================================================================
 dnl Structures
 dnl ========================================================================
