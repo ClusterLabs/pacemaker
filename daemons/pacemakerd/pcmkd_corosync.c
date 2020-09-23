@@ -62,7 +62,7 @@ pcmk_cfg_dispatch(gpointer user_data)
 static void
 cfg_connection_destroy(gpointer user_data)
 {
-    crm_err("Lost connection to Corosync");
+    crm_err("Lost connection to cluster layer");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
     pcmk_shutdown(SIGTERM);
