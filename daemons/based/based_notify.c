@@ -38,8 +38,9 @@ struct cib_notification_s {
 
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
 
-void do_cib_notify(int options, const char *op, xmlNode * update,
-                   int result, xmlNode * result_data, const char *msg_type);
+static void do_cib_notify(int options, const char *op, xmlNode *update,
+                          int result, xmlNode * result_data,
+                          const char *msg_type);
 
 static gboolean
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
@@ -174,7 +175,7 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
     do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
 }
 
-void
+static void
 do_cib_notify(int options, const char *op, xmlNode * update,
               int result, xmlNode * result_data, const char *msg_type)
 {
