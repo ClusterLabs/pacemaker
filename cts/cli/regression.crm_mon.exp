@@ -23,7 +23,7 @@ Active Resources:
 =#=#=#= End test: Basic text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output
 =#=#=#= Begin test: XML output =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -190,7 +190,7 @@ Active Resources:
 =#=#=#= End test: Basic text output without node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output without node section
 =#=#=#= Begin test: XML output without the node section =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --exclude=nodes">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --exclude=nodes">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -660,7 +660,7 @@ Negative Location Constraints:
 =#=#=#= End test: Complete brief text output grouped by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output grouped by node
 =#=#=#= Begin test: XML output grouped by node =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon -1 --output-as=xml --group-by-node">
+<pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --group-by-node">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -852,7 +852,7 @@ Negative Location Constraints:
 =#=#=#= End test: Complete text output filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by node
 =#=#=#= Begin test: XML output filtered by node =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as xml --include=all --node=cluster01">
+<pacemaker-result api-version="X" request="crm_mon --output-as xml --include=all --node=cluster01">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -998,7 +998,7 @@ Negative Location Constraints:
 =#=#=#= End test: Complete text output filtered by tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by tag
 =#=#=#= Begin test: XML output filtered by tag =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --include=all --node=even-nodes">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --include=all --node=even-nodes">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1137,7 +1137,7 @@ Operations:
 =#=#=#= End test: Complete text output filtered by resource tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by resource tag
 =#=#=#= Begin test: XML output filtered by resource tag =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --include=all --resource=fencing-rscs">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --include=all --resource=fencing-rscs">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1194,7 +1194,7 @@ Active Resources:
 =#=#=#= End test: Basic text output filtered by node that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output filtered by node that doesn't exist
 =#=#=#= Begin test: XML output filtered by node that doesn't exist =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --node=blah">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --node=blah">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1337,7 +1337,7 @@ Operations:
 =#=#=#= End test: Complete text output filtered by primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by primitive resource
 =#=#=#= Begin test: XML output filtered by primitive resource =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=Fencing">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=Fencing">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1413,7 +1413,7 @@ Operations:
 =#=#=#= End test: Complete text output filtered by group resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by group resource
 =#=#=#= Begin test: XML output filtered by group resource =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=exim-group">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=exim-group">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1493,7 +1493,7 @@ Operations:
 =#=#=#= End test: Complete text output filtered by group resource member - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by group resource member
 =#=#=#= Begin test: XML output filtered by group resource member =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=Email">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=Email">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1572,7 +1572,7 @@ Operations:
 =#=#=#= End test: Complete text output filtered by clone resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by clone resource
 =#=#=#= Begin test: XML output filtered by clone resource =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=ping-clone">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping-clone">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1661,7 +1661,7 @@ Operations:
 =#=#=#= End test: Complete text output filtered by clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by clone resource instance
 =#=#=#= Begin test: XML output filtered by clone resource instance =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=ping">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1750,7 +1750,7 @@ Operations:
 =#=#=#= End test: Complete text output filtered by exact clone resource instance - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by exact clone resource instance
 =#=#=#= Begin test: XML output filtered by exact clone resource instance =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=ping:1">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=ping:1">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1818,7 +1818,7 @@ Active Resources:
 =#=#=#= End test: Basic text output filtered by resource that doesn't exist - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output filtered by resource that doesn't exist
 =#=#=#= Begin test: XML output filtered by resource that doesn't exist =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=blah">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=blah">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1890,7 +1890,7 @@ Full List of Resources:
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundle resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle resource
 =#=#=#= Begin test: XML output filtered by inactive bundle resource =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=httpd-bundle">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -1962,7 +1962,7 @@ Full List of Resources:
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled IP address resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled IP address resource
 =#=#=#= Begin test: XML output filtered by bundled IP address resource =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2019,7 +2019,7 @@ Full List of Resources:
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled container - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled container
 =#=#=#= Begin test: XML output filtered by bundled container =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=httpd-bundle-docker-2">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-docker-2">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2076,7 +2076,7 @@ Full List of Resources:
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundle connection - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle connection
 =#=#=#= Begin test: XML output filtered by bundle connection =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=httpd-bundle-0">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd-bundle-0">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2137,7 +2137,7 @@ Full List of Resources:
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled primitive resource
 =#=#=#= Begin test: XML output filtered by bundled primitive resource =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=httpd">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=httpd">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2225,7 +2225,7 @@ Operations:
 =#=#=#= End test: Complete text output, filtered by clone name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by clone name in cloned group
 =#=#=#= Begin test: XML output, filtered by clone name in cloned group =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=mysql-clone-group">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-clone-group">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2316,7 +2316,7 @@ Operations:
 =#=#=#= End test: Complete text output, filtered by group name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by group name in cloned group
 =#=#=#= Begin test: XML output, filtered by group name in cloned group =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=mysql-group">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-group">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2419,7 +2419,7 @@ Operations:
 =#=#=#= End test: Complete text output, filtered by exact group instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by exact group instance name in cloned group
 =#=#=#= Begin test: XML output, filtered by exact group instance name in cloned group =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=mysql-group:1">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-group:1">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2516,7 +2516,7 @@ Operations:
 =#=#=#= End test: Complete text output, filtered by primitive name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by primitive name in cloned group
 =#=#=#= Begin test: XML output, filtered by primitive name in cloned group =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=mysql-proxy">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-proxy">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2619,7 +2619,7 @@ Operations:
 =#=#=#= End test: Complete text output, filtered by exact primitive instance name in cloned group - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output, filtered by exact primitive instance name in cloned group
 =#=#=#= Begin test: XML output, filtered by exact primitive instance name in cloned group =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon --output-as=xml --resource=mysql-proxy:1">
+<pacemaker-result api-version="X" request="crm_mon --output-as=xml --resource=mysql-proxy:1">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -2698,7 +2698,7 @@ Active Resources:
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon -1 --output-as=xml">
+<pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
@@ -3005,7 +3005,7 @@ Full List of Resources:
 =#=#=#= End test: Text output of partially active resources, with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources, with inactive resources, filtered by node
 =#=#=#= Begin test: Text output of partially active resources, filtered by node =#=#=#=
-<pacemaker-result api-version="2.3" request="crm_mon -1 --output-as=xml --node=cluster01">
+<pacemaker-result api-version="X" request="crm_mon -1 --output-as=xml --node=cluster01">
   <summary>
     <stack type="corosync"/>
     <current_dc present="true" version="" with_quorum="true"/>
