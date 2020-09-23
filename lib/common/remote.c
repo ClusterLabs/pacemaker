@@ -390,7 +390,7 @@ send_tls(gnutls_session_t *session, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_debug("Sending TLS message of %llu bytes",
+    crm_trace("Sending TLS message of %llu bytes",
               (unsigned long long) unsent_len);
     while (true) {
         gnutls_rc = gnutls_record_send(*session, unsent, unsent_len);
