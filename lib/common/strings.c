@@ -781,17 +781,19 @@ str_any_of(bool casei, const char *s, va_list args)
 {
     bool rc = false;
 
-    while (1) {
-        const char *ele = va_arg(args, const char *);
+    if (s != NULL) {
+        while (1) {
+            const char *ele = va_arg(args, const char *);
 
-        if (ele == NULL) {
-            break;
-        } else if (pcmk__str_eq(s, ele, casei ? pcmk__str_casei : pcmk__str_none)) {
-            rc = true;
-            break;
+            if (ele == NULL) {
+                break;
+            } else if (pcmk__str_eq(s, ele,
+                                    casei? pcmk__str_casei : pcmk__str_none)) {
+                rc = true;
+                break;
+            }
         }
     }
-
     return rc;
 }
 
