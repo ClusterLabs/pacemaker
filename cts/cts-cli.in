@@ -1602,6 +1602,7 @@ for t in $tests; do
         -e 's/(version .*)/(version)/' \
         -e 's/last_update time=\".*\"/last_update time=\"\"/' \
         -e 's/last_change time=\".*\"/last_change time=\"\"/' \
+        -e 's/ api-version=\".*\" / api-version=\"X\" /' \
         -e 's/ version=\".*\" / version=\"\" /' \
         -e 's/request=\".*crm_mon/request=\"crm_mon/' \
         -e 's/crm_feature_set="[^"]*" //'\
