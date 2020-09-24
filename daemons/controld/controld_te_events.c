@@ -365,6 +365,8 @@ process_graph_event(xmlNode *event, const char *event_node)
     crm_element_value_int(event, XML_LRM_ATTR_RC, &rc);
     crm_element_value_int(event, XML_LRM_ATTR_CALLID, &callid);
 
+    rc = pcmk__effective_rc(rc);
+
     if (decode_transition_key(magic, &update_te_uuid, &transition_num,
                               &action_num, &target_rc) == FALSE) {
         // decode_transition_key() already logged the bad key
