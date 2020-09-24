@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2014-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2014-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -16,9 +18,6 @@
 
 G_GNUC_INTERNAL
 DBusConnection *pcmk_dbus_connect(void);
-
-G_GNUC_INTERNAL
-void pcmk_dbus_connection_setup_with_select(DBusConnection *c);
 
 G_GNUC_INTERNAL
 void pcmk_dbus_disconnect(DBusConnection *connection);
