@@ -303,6 +303,15 @@ pcmk_dbus_disconnect(DBusConnection *connection)
     return;
 }
 
+// Custom DBus error names to use
+#define ERR_NO_REQUEST           "org.clusterlabs.pacemaker.NoRequest"
+#define ERR_NO_REPLY             "org.clusterlabs.pacemaker.NoReply"
+#define ERR_INVALID_REPLY        "org.clusterlabs.pacemaker.InvalidReply"
+#define ERR_INVALID_REPLY_METHOD "org.clusterlabs.pacemaker.InvalidReply.Method"
+#define ERR_INVALID_REPLY_SIGNAL "org.clusterlabs.pacemaker.InvalidReply.Signal"
+#define ERR_INVALID_REPLY_TYPE   "org.clusterlabs.pacemaker.InvalidReply.Type"
+#define ERR_SEND_FAILED          "org.clusterlabs.pacemaker.SendFailed"
+
 /*!
  * \internal
  * \brief Check whether a DBus reply indicates an error occurred
@@ -327,12 +336,10 @@ pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
     dbus_error_init(&error);
 
     if (pending == NULL) {
-        dbus_set_error_const(&error, "org.clusterlabs.pacemaker.NoRequest",
-                             "No request sent");
+        dbus_set_error_const(&error, ERR_NO_REQUEST, "No request sent");
 
     } else if (reply == NULL) {
-        dbus_set_error_const(&error, "org.clusterlabs.pacemaker.NoReply",
-                             "No reply");
+        dbus_set_error_const(&error, ERR_NO_REPLY, "No reply");
 
     } else {
         DBusMessageIter args;
@@ -352,26 +359,22 @@ pcmk_dbus_find_error(DBusPendingCall *pending, DBusMessage *reply,
                 }
                 break;
             case DBUS_MESSAGE_TYPE_INVALID:
-                dbus_set_error_const(&error,
-                                     "org.clusterlabs.pacemaker.InvalidReply",
+                dbus_set_error_const(&error, ERR_INVALID_REPLY,
                                      "Invalid reply");
                 break;
             case DBUS_MESSAGE_TYPE_METHOD_CALL:
-                dbus_set_error_const(&error,
-                                     "org.clusterlabs.pacemaker.InvalidReply.Method",
+                dbus_set_error_const(&error, ERR_INVALID_REPLY_METHOD,
                                      "Invalid reply (method call)");
                 break;
             case DBUS_MESSAGE_TYPE_SIGNAL:
-                dbus_set_error_const(&error,
-                                     "org.clusterlabs.pacemaker.InvalidReply.Signal",
+                dbus_set_error_const(&error, ERR_INVALID_REPLY_SIGNAL,
                                      "Invalid reply (signal)");
                 break;
             case DBUS_MESSAGE_TYPE_ERROR:
                 dbus_set_error_from_message(&error, reply);
                 break;
             default:
-                dbus_set_error(&error,
-                               "org.clusterlabs.pacemaker.InvalidReply.Type",
+                dbus_set_error(&error, ERR_INVALID_REPLY_TYPE,
                                "Unknown reply type %d", dtype);
         }
     }
@@ -430,7 +433,7 @@ pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
     // send message and get a handle for a reply
     if (!dbus_connection_send_with_reply(connection, msg, &pending, timeout)) {
         if (error) {
-            dbus_set_error(error, "org.clusterlabs.pacemaker.SendFailed",
+            dbus_set_error(error, ERR_SEND_FAILED,
                            "Could not queue DBus '%s' request", method);
         }
         return NULL;
