@@ -27,6 +27,8 @@ extern "C" {
 #  include <stdbool.h>
 #  include <sys/types.h>
 
+#  include "common/results.h"
+
 #  ifndef OCF_ROOT_DIR
 #    define OCF_ROOT_DIR "/usr/lib/ocf"
 #  endif
@@ -82,38 +84,6 @@ enum lsb_status_exitcode {
     /* custom codes should be in the 150-199 range reserved for application use */
     PCMK_LSB_STATUS_NOT_INSTALLED      = 150,
     PCMK_LSB_STATUS_INSUFFICIENT_PRIV  = 151,
-};
-
-/* Uniform exit codes
- * Everything is mapped to its OCF equivalent so that Pacemaker only deals with one set of codes
- */
-enum ocf_exitcode {
-    PCMK_OCF_OK                   = 0,
-    PCMK_OCF_UNKNOWN_ERROR        = 1,
-    PCMK_OCF_INVALID_PARAM        = 2,
-    PCMK_OCF_UNIMPLEMENT_FEATURE  = 3,
-    PCMK_OCF_INSUFFICIENT_PRIV    = 4,
-    PCMK_OCF_NOT_INSTALLED        = 5,
-    PCMK_OCF_NOT_CONFIGURED       = 6,
-    PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
-    PCMK_OCF_RUNNING_MASTER       = 8,
-    PCMK_OCF_FAILED_MASTER        = 9,
-
-
-    /* 150-199	reserved for application use */
-    PCMK_OCF_CONNECTION_DIED = 189, // Deprecated (see PCMK_LRM_OP_NOT_CONNECTED)
-
-    PCMK_OCF_DEGRADED        = 190, /* Active resource that is no longer 100% functional */
-    PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted resource that is no longer 100% functional */
-
-    PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
-    PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */
-    PCMK_OCF_SIGNAL        = 194,
-    PCMK_OCF_NOT_SUPPORTED = 195,
-    PCMK_OCF_PENDING       = 196,
-    PCMK_OCF_CANCELLED     = 197,
-    PCMK_OCF_TIMEOUT       = 198,
-    PCMK_OCF_OTHER_ERROR   = 199, /* Keep the same codes as PCMK_LSB */
 };
 
 enum op_status {
