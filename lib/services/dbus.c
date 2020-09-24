@@ -17,8 +17,23 @@
  * DBus message dispatch
  */
 
+// List of DBus connections (DBusConnection*) with messages available
 static GList *conn_dispatches = NULL;
 
+/*!
+ * \internal
+ * \brief Save an indication that DBus messages need dispatching
+ *
+ * \param[in] connection  DBus connection with messages to dispatch
+ * \param[in] new_status  Dispatch status as reported by DBus library
+ * \param[in] data        Ignored
+ *
+ * \note This is suitable to be used as a DBus status dispatch function.
+ *       As mentioned in the DBus documentation, dbus_connection_dispatch() must
+ *       not be called from within this function, and any re-entrancy is a bad
+ *       idea. Instead, this should just flag the main loop that messages need
+ *       to be dispatched.
+ */
 static void
 pcmk_dbus_connection_dispatch_status(DBusConnection *connection,
                                      DBusDispatchStatus new_status, void *data)
@@ -29,6 +44,10 @@ pcmk_dbus_connection_dispatch_status(DBusConnection *connection,
     }
 }
 
+/*!
+ * \internal
+ * \brief Dispatch available messages on all DBus connections
+ */
 static void
 pcmk_dbus_connections_dispatch(void)
 {
@@ -71,6 +90,17 @@ dbus_watch_flags_to_string(int flags)
     return watch_type;
 }
 
+/*!
+ * \internal
+ * \brief Dispatch data available on a DBus file descriptor watch
+ *
+ * \param[in] userdata  Pointer to the DBus watch
+ *
+ * \return Always 0
+ * \note This is suitable for use as a dispatch function in
+ *       struct mainloop_fd_callbacks (which means that a negative return value
+ *       would indicate the file descriptor is no longer required).
+ */
 static int
 pcmk_dbus_watch_dispatch(gpointer userdata)
 {
@@ -226,10 +256,12 @@ pcmk_dbus_connect(void)
         return NULL;
     }
 
-    /* This section was inspired by
-     * http://www.kolej.mff.cuni.cz/~vesej3am/devel/dbus-select.c
+    /* Tell libdbus not to exit the process when a disconnect happens. This
+     * defaults to FALSE but is toggled on by the dbus_bus_get() call above.
      */
     dbus_connection_set_exit_on_disconnect(connection, FALSE);
+
+    // Set custom handlers for various situations
     dbus_connection_set_timeout_functions(connection, pcmk_dbus_timeout_add,
                                           pcmk_dbus_timeout_remove,
                                           pcmk_dbus_timeout_toggle, NULL, NULL);
@@ -239,6 +271,8 @@ pcmk_dbus_connect(void)
     dbus_connection_set_dispatch_status_function(connection,
                                                  pcmk_dbus_connection_dispatch_status,
                                                  NULL, NULL);
+
+    // Call the dispatch function to check for any messages waiting already
     pcmk_dbus_connection_dispatch_status(connection,
                                          dbus_connection_get_dispatch_status(connection),
                                          NULL);
@@ -248,6 +282,11 @@ pcmk_dbus_connect(void)
 void
 pcmk_dbus_disconnect(DBusConnection *connection)
 {
+    /* Per the DBus documentation, connections created with
+     * dbus_connection_open() are owned by libdbus and should never be closed.
+     *
+     * @TODO Should we call dbus_connection_unref() here?
+     */
     return;
 }
 
@@ -504,6 +543,10 @@ pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected,
  * Property queries
  */
 
+/* DBus APIs often provide queryable properties that use this standard
+ * interface. See:
+ * https://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-properties
+ */
 #define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
 
 struct db_getall_data {
@@ -634,6 +677,26 @@ pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Query a property on a DBus object
+ *
+ * \param[in]  connection  An active connection to DBus
+ * \param[in]  target      DBus name that the query should be sent to
+ * \param[in]  obj         DBus object path for object with the property
+ * \param[in]  iface       DBus interface for property to query
+ * \param[in]  name        Name of property to query
+ * \param[in]  callback    If not NULL, perform query asynchronously, and call
+ *                         this function when query completes
+ * \param[in]  userdata    Caller-provided data to provide to \p callback
+ * \param[out] pending     If \p callback is not NULL, this will be set to the
+ *                         handle for the reply (or NULL on error)
+ * \param[in]  timeout     Abort query if it takes longer than this (ms)
+ *
+ * \return NULL if \p callback is non-NULL (i.e. asynchronous), otherwise a
+ *         newly allocated string with property value
+ * \note It is the caller's responsibility to free the result with free().
+ */
 char *
 pcmk_dbus_get_property(DBusConnection *connection, const char *target,
                        const char *obj, const gchar * iface, const char *name,
@@ -646,10 +709,9 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
     struct db_getall_data *query_data = NULL;
 
     crm_debug("Calling: %s on %s", method, target);
-    msg = dbus_message_new_method_call(target, // target for the method call
-                                       obj, // object to call on
-                                       BUS_PROPERTY_IFACE, // interface to call on
-                                       method); // method name
+
+    // Create a new message to use to invoke method
+    msg = dbus_message_new_method_call(target, obj, BUS_PROPERTY_IFACE, method);
     if (NULL == msg) {
         crm_err("Call to %s failed: No message", method);
         return NULL;
