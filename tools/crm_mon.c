@@ -202,6 +202,7 @@ find_section_bit(const char *name) {
 static gboolean
 apply_exclude(const gchar *excludes, GError **error) {
     char **parts = NULL;
+    gboolean result = TRUE;
 
     parts = g_strsplit(excludes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
@@ -220,17 +221,18 @@ apply_exclude(const gchar *excludes, GError **error) {
                         "fencing-pending, fencing-succeeded, nodes, none, "
                         "operations, options, resources, stack, summary, "
                         "tickets, times");
-            return FALSE;
+            result = FALSE;
+            break;
         }
     }
     g_strfreev(parts);
-
-    return TRUE;
+    return result;
 }
 
 static gboolean
 apply_include(const gchar *includes, GError **error) {
     char **parts = NULL;
+    gboolean result = TRUE;
 
     parts = g_strsplit(includes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
@@ -260,12 +262,12 @@ apply_include(const gchar *includes, GError **error) {
                         "default, failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, nodes, none, operations, "
                         "options, resources, stack, summary, tickets, times");
-            return FALSE;
+            result = FALSE;
+            break;
         }
     }
     g_strfreev(parts);
-
-    return TRUE;
+    return result;
 }
 
 static gboolean
