@@ -591,90 +591,60 @@ handle_query_result(DBusMessage *reply, struct property_query *data)
 {
     DBusError error;
     char *output = NULL;
-    DBusMessageIter dict;
     DBusMessageIter args;
+    DBusMessageIter variant_iter;
+    DBusBasicValue value;
 
+    // First, check if the reply contains an error
     if (pcmk_dbus_find_error((void*)&error, reply, &error)) {
-        crm_err("DBus query of %s for %s properties failed: %s",
-                data->target, data->object, error.message);
+        crm_err("DBus query for %s property '%s' failed: %s",
+                data->object, data->name, error.message);
         dbus_error_free(&error);
         goto cleanup;
     }
 
+    // The lone output argument should be a DBus variant type
     dbus_message_iter_init(reply, &args);
-    if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY,
+    if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_VARIANT,
                               __func__, __LINE__)) {
-        crm_err("DBus query of %s for %s properties failed: invalid reply",
-                data->target, data->object);
+        crm_err("DBus query for %s property '%s' failed: Unexpected reply type",
+                data->object, data->name);
         goto cleanup;
     }
 
-    dbus_message_iter_recurse(&args, &dict);
-    while (dbus_message_iter_get_arg_type (&dict) != DBUS_TYPE_INVALID) {
-        DBusMessageIter sv;
-        DBusMessageIter v;
-        DBusBasicValue name;
-        DBusBasicValue value;
+    // The variant should be a string
+    dbus_message_iter_recurse(&args, &variant_iter);
+    if (!pcmk_dbus_type_check(reply, &variant_iter, DBUS_TYPE_STRING,
+                              __func__, __LINE__)) {
+        crm_err("DBus query for %s property '%s' failed: "
+                "Unexpected variant type", data->object, data->name);
+        goto cleanup;
+    }
+    dbus_message_iter_get_basic(&variant_iter, &value);
 
-        if (!pcmk_dbus_type_check(reply, &dict, DBUS_TYPE_DICT_ENTRY,
-                                  __func__, __LINE__)) {
-            dbus_message_iter_next (&dict);
-            continue;
-        }
-
-        dbus_message_iter_recurse(&dict, &sv);
-        while (dbus_message_iter_get_arg_type (&sv) != DBUS_TYPE_INVALID) {
-            int dtype = dbus_message_iter_get_arg_type(&sv);
-
-            switch (dtype) {
-                case DBUS_TYPE_STRING:
-                    dbus_message_iter_get_basic(&sv, &name);
-
-                    if (!pcmk__str_eq(data->name, name.str,
-                                      pcmk__str_null_matches)) {
-                        dbus_message_iter_next (&sv); /* Skip the value */
-                    }
-                    break;
-
-                case DBUS_TYPE_VARIANT:
-                    dbus_message_iter_recurse(&sv, &v);
-                    if (pcmk_dbus_type_check(reply, &v, DBUS_TYPE_STRING,
-                                             __func__, __LINE__)) {
-
-                        dbus_message_iter_get_basic(&v, &value);
-
-                        crm_trace("DBus query of %s for %s properties: %s='%s'",
-                                  data->target, data->object,
-                                  name.str, value.str);
-
-                        if (data->callback) {
-                            data->callback(name.str, value.str, data->userdata);
-
-                        } else {
-                            free(output);
-                            output = strdup(value.str);
-                        }
-
-                        if (data->name) {
-                            goto cleanup;
-                        }
-                    }
-                    break;
-
-                default:
-                    pcmk_dbus_type_check(reply, &sv, DBUS_TYPE_STRING,
-                                         __func__, __LINE__);
-            }
-            dbus_message_iter_next (&sv);
-        }
-
-        dbus_message_iter_next (&dict);
+    // There should be no more arguments (in variant or reply)
+    dbus_message_iter_next(&variant_iter);
+    if (dbus_message_iter_get_arg_type(&variant_iter) != DBUS_TYPE_INVALID) {
+        crm_err("DBus query for %s property '%s' failed: "
+                "Too many arguments in reply",
+                data->object, data->name);
+        goto cleanup;
+    }
+    dbus_message_iter_next(&args);
+    if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_INVALID) {
+        crm_err("DBus query for %s property '%s' failed: "
+                "Too many arguments in reply", data->object, data->name);
+        goto cleanup;
     }
 
-    if (data->name && data->callback) {
-        crm_trace("DBus query of %s for %s properties: No value for %s",
-                  data->target, data->object, data->name);
-        data->callback(data->name, NULL, data->userdata);
+    crm_trace("DBus query result for %s: %s='%s'",
+              data->object, data->name, (value.str? value.str : ""));
+
+    if (data->callback) {   // Query was asynchronous
+        data->callback(data->name, (value.str? value.str : ""), data->userdata);
+
+    } else {                // Query was synchronous
+        output = strdup(value.str? value.str : "");
     }
 
   cleanup:
@@ -727,28 +697,38 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
                        DBusPendingCall **pending, int timeout)
 {
     DBusMessage *msg;
-    const char *method = "GetAll";
     char *output = NULL;
     struct property_query *query_data = NULL;
 
-    crm_trace("Querying DBus %s for %s properties (%s)",
-              target, obj, (name? name : "all"));
+    CRM_CHECK((connection != NULL) && (target != NULL) && (obj != NULL)
+              && (iface != NULL) && (name != NULL), return NULL);
+
+    crm_trace("Querying DBus %s for %s property '%s'",
+              target, obj, name);
 
     // Create a new message to use to invoke method
-    msg = dbus_message_new_method_call(target, obj, BUS_PROPERTY_IFACE, method);
-    if (NULL == msg) {
-        crm_err("DBus query of %s for %s properties failed: "
-                "Unable to create message", target, obj);
+    msg = dbus_message_new_method_call(target, obj, BUS_PROPERTY_IFACE, "Get");
+    if (msg == NULL) {
+        crm_err("DBus query for %s property '%s' failed: "
+                "Unable to create message", obj, name);
         return NULL;
     }
 
-    CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &iface,
-                                            DBUS_TYPE_INVALID));
+    // Add the interface name and property name as message arguments
+    if (!dbus_message_append_args(msg,
+                                  DBUS_TYPE_STRING, &iface,
+                                  DBUS_TYPE_STRING, &name,
+                                  DBUS_TYPE_INVALID)) {
+        crm_err("DBus query for %s property '%s' failed: "
+                "Could not append arguments", obj, name);
+        dbus_message_unref(msg);
+        return NULL;
+    }
 
     query_data = malloc(sizeof(struct property_query));
     if (query_data == NULL) {
-        crm_crit("DBus query of %s for %s properties failed: Out of memory",
-                 target, obj);
+        crm_crit("DBus query for %s property '%s' failed: Out of memory",
+                 obj, name);
         dbus_message_unref(msg);
         return NULL;
     }
@@ -757,13 +737,15 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
     query_data->object = strdup(obj);
     query_data->callback = callback;
     query_data->userdata = userdata;
-    query_data->name = NULL;
+    query_data->name = strdup(name);
+    CRM_CHECK((query_data->target != NULL)
+                  && (query_data->object != NULL)
+                  && (query_data->name != NULL),
+              free_property_query(query_data);
+              dbus_message_unref(msg);
+              return NULL);
 
-    if (name) {
-        query_data->name = strdup(name);
-    }
-
-    if (query_data->callback) {
+    if (query_data->callback) { // Asynchronous
         DBusPendingCall *local_pending;
 
         local_pending = pcmk_dbus_send(msg, connection, async_query_result_cb,
@@ -778,7 +760,7 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
             *pending = local_pending;
         }
 
-    } else {
+    } else { // Synchronous
         DBusMessage *reply = pcmk_dbus_send_recv(msg, connection, NULL,
                                                  timeout);
 
