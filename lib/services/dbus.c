@@ -35,8 +35,8 @@ static GList *conn_dispatches = NULL;
  *       to be dispatched.
  */
 static void
-pcmk_dbus_connection_dispatch_status(DBusConnection *connection,
-                                     DBusDispatchStatus new_status, void *data)
+update_dispatch_status(DBusConnection *connection,
+                       DBusDispatchStatus new_status, void *data)
 {
     crm_trace("New status %d for connection %p", new_status, connection);
     if (new_status == DBUS_DISPATCH_DATA_REMAINS) {
@@ -49,7 +49,7 @@ pcmk_dbus_connection_dispatch_status(DBusConnection *connection,
  * \brief Dispatch available messages on all DBus connections
  */
 static void
-pcmk_dbus_connections_dispatch(void)
+dispatch_messages(void)
 {
     for (GList *gIter = conn_dispatches; gIter != NULL; gIter = gIter->next) {
         DBusConnection *connection = gIter->data;
@@ -102,7 +102,7 @@ dbus_watch_flags_to_string(int flags)
  *       would indicate the file descriptor is no longer required).
  */
 static int
-pcmk_dbus_watch_dispatch(gpointer userdata)
+dispatch_fd_data(gpointer userdata)
 {
     bool oom = FALSE;
     DBusWatch *watch = userdata;
@@ -130,25 +130,25 @@ pcmk_dbus_watch_dispatch(gpointer userdata)
         crm_err("DBus encountered OOM while attempting to dispatch %p (%s)",
                 client, dbus_watch_flags_to_string(flags));
     } else {
-        pcmk_dbus_connections_dispatch();
+        dispatch_messages();
     }
     return 0;
 }
 
 static void
-pcmk_dbus_watch_destroy(gpointer userdata)
+watch_fd_closed(gpointer userdata)
 {
     mainloop_io_t *client = dbus_watch_get_data(userdata);
     crm_trace("Destroyed %p", client);
 }
 
 static struct mainloop_fd_callbacks pcmk_dbus_cb = {
-    .dispatch = pcmk_dbus_watch_dispatch,
-    .destroy = pcmk_dbus_watch_destroy,
+    .dispatch = dispatch_fd_data,
+    .destroy = watch_fd_closed,
 };
 
 static dbus_bool_t
-pcmk_dbus_watch_add(DBusWatch *watch, void *data)
+add_dbus_watch(DBusWatch *watch, void *data)
 {
     int fd = dbus_watch_get_unix_fd(watch);
 
@@ -161,7 +161,7 @@ pcmk_dbus_watch_add(DBusWatch *watch, void *data)
 }
 
 static void
-pcmk_dbus_watch_toggle(DBusWatch *watch, void *data)
+toggle_dbus_watch(DBusWatch *watch, void *data)
 {
     mainloop_io_t *client = dbus_watch_get_data(watch);
 
@@ -170,7 +170,7 @@ pcmk_dbus_watch_toggle(DBusWatch *watch, void *data)
 }
 
 static void
-pcmk_dbus_watch_remove(DBusWatch *watch, void *data)
+remove_dbus_watch(DBusWatch *watch, void *data)
 {
     mainloop_io_t *client = dbus_watch_get_data(watch);
 
@@ -178,6 +178,13 @@ pcmk_dbus_watch_remove(DBusWatch *watch, void *data)
     mainloop_del_fd(client);
 }
 
+static void
+register_watch_functions(DBusConnection *connection)
+{
+    dbus_connection_set_watch_functions(connection, add_dbus_watch,
+                                        remove_dbus_watch,
+                                        toggle_dbus_watch, NULL, NULL);
+}
 
 /*
  * DBus main loop timeouts
@@ -187,7 +194,7 @@ pcmk_dbus_watch_remove(DBusWatch *watch, void *data)
  */
 
 static gboolean
-pcmk_dbus_timeout_dispatch(gpointer data)
+timer_popped(gpointer data)
 {
     crm_info("Timeout %p expired", data);
     dbus_timeout_handle(data);
@@ -195,10 +202,10 @@ pcmk_dbus_timeout_dispatch(gpointer data)
 }
 
 static dbus_bool_t
-pcmk_dbus_timeout_add(DBusTimeout *timeout, void *data)
+add_dbus_timer(DBusTimeout *timeout, void *data)
 {
-    guint id = g_timeout_add(dbus_timeout_get_interval(timeout),
-                             pcmk_dbus_timeout_dispatch, timeout);
+    guint id = g_timeout_add(dbus_timeout_get_interval(timeout), timer_popped,
+                             timeout);
 
     crm_trace("Adding timeout %p (%d)",
               timeout, dbus_timeout_get_interval(timeout));
@@ -209,7 +216,7 @@ pcmk_dbus_timeout_add(DBusTimeout *timeout, void *data)
 }
 
 static void
-pcmk_dbus_timeout_remove(DBusTimeout *timeout, void *data)
+remove_dbus_timer(DBusTimeout *timeout, void *data)
 {
     void *vid = dbus_timeout_get_data(timeout);
     guint id = GPOINTER_TO_UINT(vid);
@@ -222,18 +229,25 @@ pcmk_dbus_timeout_remove(DBusTimeout *timeout, void *data)
 }
 
 static void
-pcmk_dbus_timeout_toggle(DBusTimeout *timeout, void *data)
+toggle_dbus_timer(DBusTimeout *timeout, void *data)
 {
     bool enabled = dbus_timeout_get_enabled(timeout);
 
     crm_trace("Toggling timeout for %p to %s", timeout, enabled? "off": "on");
     if (enabled) {
-        pcmk_dbus_timeout_add(timeout, data);
+        add_dbus_timer(timeout, data);
     } else {
-        pcmk_dbus_timeout_remove(timeout, data);
+        remove_dbus_timer(timeout, data);
     }
 }
 
+static void
+register_timer_functions(DBusConnection *connection)
+{
+    dbus_connection_set_timeout_functions(connection, add_dbus_timer,
+                                          remove_dbus_timer,
+                                          toggle_dbus_timer, NULL, NULL);
+}
 
 /*
  * General DBus utilities
@@ -262,20 +276,16 @@ pcmk_dbus_connect(void)
     dbus_connection_set_exit_on_disconnect(connection, FALSE);
 
     // Set custom handlers for various situations
-    dbus_connection_set_timeout_functions(connection, pcmk_dbus_timeout_add,
-                                          pcmk_dbus_timeout_remove,
-                                          pcmk_dbus_timeout_toggle, NULL, NULL);
-    dbus_connection_set_watch_functions(connection, pcmk_dbus_watch_add,
-                                        pcmk_dbus_watch_remove,
-                                        pcmk_dbus_watch_toggle, NULL, NULL);
+    register_timer_functions(connection);
+    register_watch_functions(connection);
     dbus_connection_set_dispatch_status_function(connection,
-                                                 pcmk_dbus_connection_dispatch_status,
+                                                 update_dispatch_status,
                                                  NULL, NULL);
 
     // Call the dispatch function to check for any messages waiting already
-    pcmk_dbus_connection_dispatch_status(connection,
-                                         dbus_connection_get_dispatch_status(connection),
-                                         NULL);
+    update_dispatch_status(connection,
+                           dbus_connection_get_dispatch_status(connection),
+                           NULL);
     return connection;
 }
 
@@ -549,16 +559,22 @@ pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected,
  */
 #define BUS_PROPERTY_IFACE "org.freedesktop.DBus.Properties"
 
-struct db_getall_data {
-    char *name;
-    char *target;
-    char *object;
-    void *userdata;
-    void (*callback)(const char *name, const char *value, void *userdata);
+// Callback prototype for when a DBus property query result is received
+typedef void (*property_callback_func)(const char *name,  // Property name
+                                       const char *value, // Property value
+                                       void *userdata);   // Caller-provided data
+
+// Data needed by DBus property queries
+struct property_query {
+    char *name;         // Property name being queried
+    char *target;       // Name of DBus bus that query should be sent to
+    char *object;       // DBus object path for object with the property
+    void *userdata;     // Caller-provided data to supply to callback
+    property_callback_func callback; // Function to call when result is received
 };
 
 static void
-free_db_getall_data(struct db_getall_data *data)
+free_property_query(struct property_query *data)
 {
     free(data->target);
     free(data->object);
@@ -567,7 +583,7 @@ free_db_getall_data(struct db_getall_data *data)
 }
 
 static char *
-pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
+handle_query_result(DBusMessage *reply, struct property_query *data)
 {
     DBusError error;
     char *output = NULL;
@@ -655,12 +671,12 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
     }
 
   cleanup:
-    free_db_getall_data(data);
+    free_property_query(data);
     return output;
 }
 
 static void
-pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
+async_query_result_cb(DBusPendingCall *pending, void *user_data)
 {
     DBusMessage *reply = NULL;
     char *value = NULL;
@@ -669,7 +685,7 @@ pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
         reply = dbus_pending_call_steal_reply(pending);
     }
 
-    value = pcmk_dbus_lookup_result(reply, user_data);
+    value = handle_query_result(reply, user_data);
     free(value);
 
     if (reply) {
@@ -700,13 +716,13 @@ pcmk_dbus_lookup_cb(DBusPendingCall *pending, void *user_data)
 char *
 pcmk_dbus_get_property(DBusConnection *connection, const char *target,
                        const char *obj, const gchar * iface, const char *name,
-                       void (*callback)(const char *name, const char *value, void *userdata),
-                       void *userdata, DBusPendingCall **pending, int timeout)
+                       property_callback_func callback, void *userdata,
+                       DBusPendingCall **pending, int timeout)
 {
     DBusMessage *msg;
     const char *method = "GetAll";
     char *output = NULL;
-    struct db_getall_data *query_data = NULL;
+    struct property_query *query_data = NULL;
 
     crm_debug("Calling: %s on %s", method, target);
 
@@ -720,7 +736,7 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
     CRM_LOG_ASSERT(dbus_message_append_args(msg, DBUS_TYPE_STRING, &iface,
                                             DBUS_TYPE_INVALID));
 
-    query_data = malloc(sizeof(struct db_getall_data));
+    query_data = malloc(sizeof(struct property_query));
     if (query_data == NULL) {
         crm_err("Call to %s failed: malloc failed", method);
         return NULL;
@@ -739,11 +755,11 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
     if (query_data->callback) {
         DBusPendingCall *local_pending;
 
-        local_pending = pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb,
+        local_pending = pcmk_dbus_send(msg, connection, async_query_result_cb,
                                        query_data, timeout);
         if (local_pending == NULL) {
-            // pcmk_dbus_lookup_cb() was not called in this case
-            free_db_getall_data(query_data);
+            // async_query_result_cb() was not called in this case
+            free_property_query(query_data);
             query_data = NULL;
         }
 
@@ -755,7 +771,7 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
         DBusMessage *reply = pcmk_dbus_send_recv(msg, connection, NULL,
                                                  timeout);
 
-        output = pcmk_dbus_lookup_result(reply, query_data);
+        output = handle_query_result(reply, query_data);
 
         if (reply) {
             dbus_message_unref(reply);
