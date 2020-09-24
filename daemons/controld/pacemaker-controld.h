@@ -26,6 +26,8 @@
 extern GMainLoop *crmd_mainloop;
 extern bool no_quorum_suicide_escalation;
 
+void do_cib_updated(const char *event, xmlNode * msg);
+void do_cib_replaced(const char *event, xmlNode * msg);
 void crmd_metadata(void);
 void controld_election_init(const char *uname);
 void controld_remove_voter(const char *uname);
