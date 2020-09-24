@@ -81,22 +81,6 @@ attrd_cpg_destroy(gpointer unused)
 }
 
 static void
-attrd_cib_replaced_cb(const char *event, xmlNode * msg)
-{
-    if (attrd_shutting_down()) {
-        return;
-    }
-
-    if (attrd_election_won()) {
-        crm_notice("Updating all attributes after %s event", event);
-        write_attributes(TRUE, FALSE);
-    }
-
-    // Check for changes in alerts
-    mainloop_set_trigger(attrd_config_read);
-}
-
-static void
 attrd_cib_destroy_cb(gpointer user_data)
 {
     cib_t *conn = user_data;

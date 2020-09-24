@@ -181,9 +181,27 @@ void
 attrd_cib_disconnect()
 {
     CRM_CHECK(the_cib != NULL, return);
+    the_cib->cmds->del_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
+    the_cib->cmds->del_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb); 
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
     the_cib = NULL;
+}
+
+void
+attrd_cib_replaced_cb(const char *event, xmlNode * msg)
+{
+    if (attrd_shutting_down()) {
+        return;
+    }
+
+    if (attrd_election_won()) {
+        crm_notice("Updating all attributes after %s event", event);
+        write_attributes(TRUE, FALSE);
+    }
+
+    // Check for changes in alerts
+    mainloop_set_trigger(attrd_config_read);
 }
 
 /* strlen("value") */
