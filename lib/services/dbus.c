@@ -746,6 +746,7 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
     if (query_data == NULL) {
         crm_crit("DBus query of %s for %s properties failed: Out of memory",
                  target, obj);
+        dbus_message_unref(msg);
         return NULL;
     }
 
