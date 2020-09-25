@@ -24,8 +24,41 @@
 
 cib_t *the_cib = NULL;
 
+static bool requesting_shutdown = FALSE;
 static bool shutting_down = FALSE;
 static GMainLoop *mloop = NULL;
+
+/*!
+ * \internal
+ * \brief  Set requesting_shutdown state
+ */
+void
+attrd_set_requesting_shutdown()
+{
+    requesting_shutdown = TRUE;
+}
+
+/*!
+ * \internal
+ * \brief  Clear requesting_shutdown state
+ */
+void
+attrd_clear_requesting_shutdown()
+{
+    requesting_shutdown = FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Check whether we're currently requesting shutdown
+ *
+ * \return TRUE if requesting shutdown, FALSE otherwise
+ */
+gboolean
+attrd_requesting_shutdown()
+{
+    return requesting_shutdown;
+}
 
 /*!
  * \internal
@@ -191,7 +224,7 @@ attrd_cib_disconnect()
 void
 attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
-    if (attrd_shutting_down()) {
+    if (attrd_requesting_shutdown() || attrd_shutting_down()) {
         return;
     }
 
