@@ -94,7 +94,7 @@ attrd_cpg_destroy(gpointer unused)
 static void
 attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
-    if (attrd_shutting_down()) {
+    if (attrd_requesting_shutdown() || attrd_shutting_down()) {
         return;
     }
 
