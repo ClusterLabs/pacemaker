@@ -213,8 +213,12 @@ Cluster Resources
    
    The supported parameters are same as the long options of the plugin.
    
-   [[primitive-resource]]
-   == Resource Properties ==
+.. _primitive-resource:
+
+Resource Properties
+###################
+
+.. Convert_to_RST:
    
    These values tell the cluster which resource agent to use for the resource,
    where to find that resource agent and what standards it conforms to.
