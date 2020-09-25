@@ -20,7 +20,7 @@
 
 int cib_retries = 0;
 
-static void
+void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     if (pcmk__alert_in_patchset(msg, TRUE)) {
@@ -28,7 +28,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     }
 }
 
-static void
+void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
     crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
@@ -66,6 +66,7 @@ do_cib_control(long long action,
         crm_info("Disconnecting from the CIB manager");
         controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
+        fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
 
         if (fsa_cib_conn->state != cib_disconnected) {

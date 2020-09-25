@@ -1146,6 +1146,7 @@ static void
 stonith_cleanup(void)
 {
     if (cib_api) {
+        cib_api->cmds->del_notify_callback(cib_api, T_CIB_DIFF_NOTIFY, update_cib_cache_cb);
         cib_api->cmds->signoff(cib_api);
     }
 
