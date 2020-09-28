@@ -116,73 +116,72 @@ expand_node_list(GListPtr list, char **uname, char **metal)
     }
 }
 
-static void
-expand_list(GListPtr list, char **rsc_list, char **node_list)
+/*!
+ * \internal
+ * \brief Separate a list of notification entries into resource and node strings
+ *
+ * \param[in,out] list       List of notify_entry_t* (will be sorted here)
+ * \param[out]    rsc_list   String list of clone instances from \p list
+ * \param[out]    node_list  String list of nodes from \p list
+ *
+ * \return (Possibly new head of) sorted \p list
+ */
+static GList *
+expand_list(GList *list, char **rsc_list, char **node_list)
 {
-    GListPtr gIter = NULL;
-    const char *uname = NULL;
-    const char *rsc_id = NULL;
     const char *last_rsc_id = NULL;
     size_t rsc_list_len = 0;
     size_t node_list_len = 0;
 
-    if (rsc_list) {
-        *rsc_list = NULL;
-    }
+    CRM_CHECK(rsc_list != NULL, return list);
 
+    // If there are no entries, return "empty" lists
     if (list == NULL) {
-        if (rsc_list) {
-            *rsc_list = strdup(" ");
-        }
+        *rsc_list = strdup(" ");
         if (node_list) {
             *node_list = strdup(" ");
         }
-        return;
+        return list;
     }
 
+    // Initialize output lists to NULL
+    *rsc_list = NULL;
     if (node_list) {
         *node_list = NULL;
     }
 
-    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+    // Sort input list for user-friendliness (and ease of filtering duplicates)
+    list = g_list_sort(list, sort_notify_entries);
+
+    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         notify_entry_t *entry = (notify_entry_t *) gIter->data;
 
-        CRM_LOG_ASSERT(entry != NULL);
-        CRM_LOG_ASSERT(entry && entry->rsc != NULL);
-
-        if(entry == NULL || entry->rsc == NULL) {
+        // Entry must have a resource (with ID)
+        CRM_LOG_ASSERT((entry != NULL) && (entry->rsc != NULL)
+                       && (entry->rsc->id != NULL));
+        if ((entry == NULL) || (entry->rsc == NULL)
+            || (entry->rsc->id == NULL)) {
             continue;
         }
 
-        /* Uh, why? */
-        CRM_LOG_ASSERT(node_list == NULL || entry->node != NULL);
-        if(node_list != NULL && entry->node == NULL) {
+        // Entry must have a node unless listing inactive resources
+        CRM_LOG_ASSERT((node_list == NULL) || (entry->node != NULL));
+        if ((node_list != NULL) && (entry->node == NULL)) {
             continue;
         }
 
-        uname = NULL;
-        rsc_id = entry->rsc->id;
-        CRM_ASSERT(rsc_id != NULL);
-
-        /* filter dups */
-        if (pcmk__str_eq(rsc_id, last_rsc_id, pcmk__str_casei)) {
+        // Don't add duplicates of a particular clone instance
+        if (pcmk__str_eq(entry->rsc->id, last_rsc_id, pcmk__str_none)) {
             continue;
         }
-        last_rsc_id = rsc_id;
-
-        if (rsc_list != NULL) {
-            pcmk__add_word(rsc_list, &rsc_list_len, rsc_id);
-        }
-
-        if (entry->node != NULL) {
-            uname = entry->node->details->uname;
-        }
-
-        if (node_list != NULL && uname) {
-            pcmk__add_word(node_list, &node_list_len, uname);
+        last_rsc_id = entry->rsc->id;
+        pcmk__add_word(rsc_list, &rsc_list_len, entry->rsc->id);
+        if ((node_list != NULL) && (entry->node->details->uname != NULL)) {
+            pcmk__add_word(node_list, &node_list_len,
+                           entry->node->details->uname);
         }
     }
-
+    return list;
 }
 
 static void
@@ -528,81 +527,58 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
                                notify_data_t *n_data,
                                pe_working_set_t *data_set)
 {
-    gboolean required = FALSE;
+    bool required = false; // Whether to make notify actions required
     char *rsc_list = NULL;
     char *node_list = NULL;
     char *metal_list = NULL;
     const char *source = NULL;
     GListPtr nodes = NULL;
 
-    if (n_data->stop) {
-        n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
-    }
-    expand_list(n_data->stop, &rsc_list, &node_list);
-    if (rsc_list != NULL && !pcmk__str_eq(" ", rsc_list, pcmk__str_casei)) {
-        if (pcmk__str_eq(n_data->action, RSC_STOP, pcmk__str_casei)) {
-            required = TRUE;
-        }
+    n_data->stop = expand_list(n_data->stop, &rsc_list, &node_list);
+    if (!pcmk__str_eq(" ", rsc_list, pcmk__str_null_matches)
+        && pcmk__str_eq(n_data->action, RSC_STOP, pcmk__str_casei)) {
+        required = true;
     }
     add_notify_env_free(n_data, "notify_stop_resource", rsc_list);
     add_notify_env_free(n_data, "notify_stop_uname", node_list);
 
-    if (n_data->start) {
-        n_data->start = g_list_sort(n_data->start, sort_notify_entries);
-        if (rsc_list && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_casei)) {
-            required = TRUE;
-        }
+    if ((n_data->start != NULL) && (rsc_list != NULL)
+        && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_casei)) {
+        required = true;
     }
-    expand_list(n_data->start, &rsc_list, &node_list);
+    n_data->start = expand_list(n_data->start, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_start_resource", rsc_list);
     add_notify_env_free(n_data, "notify_start_uname", node_list);
 
-    if (n_data->demote) {
-        n_data->demote = g_list_sort(n_data->demote, sort_notify_entries);
-        if (pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_casei)) {
-            required = TRUE;
-        }
+    if ((n_data->demote != NULL)
+        && pcmk__str_eq(n_data->action, RSC_DEMOTE, pcmk__str_casei)) {
+        required = true;
     }
-
-    expand_list(n_data->demote, &rsc_list, &node_list);
+    n_data->demote = expand_list(n_data->demote, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_demote_resource", rsc_list);
     add_notify_env_free(n_data, "notify_demote_uname", node_list);
 
-    if (n_data->promote) {
-        n_data->promote = g_list_sort(n_data->promote, sort_notify_entries);
-        if (pcmk__str_eq(n_data->action, RSC_PROMOTE, pcmk__str_casei)) {
-            required = TRUE;
-        }
+    if ((n_data->promote != NULL)
+        && pcmk__str_eq(n_data->action, RSC_PROMOTE, pcmk__str_casei)) {
+        required = true;
     }
-    expand_list(n_data->promote, &rsc_list, &node_list);
+    n_data->promote = expand_list(n_data->promote, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_promote_resource", rsc_list);
     add_notify_env_free(n_data, "notify_promote_uname", node_list);
 
-    if (n_data->active) {
-        n_data->active = g_list_sort(n_data->active, sort_notify_entries);
-    }
-    expand_list(n_data->active, &rsc_list, &node_list);
+    n_data->active = expand_list(n_data->active, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_active_resource", rsc_list);
     add_notify_env_free(n_data, "notify_active_uname", node_list);
 
-    if (n_data->slave) {
-        n_data->slave = g_list_sort(n_data->slave, sort_notify_entries);
-    }
-    expand_list(n_data->slave, &rsc_list, &node_list);
+    n_data->slave = expand_list(n_data->slave, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_slave_resource", rsc_list);
     add_notify_env_free(n_data, "notify_slave_uname", node_list);
 
-    if (n_data->master) {
-        n_data->master = g_list_sort(n_data->master, sort_notify_entries);
-    }
-    expand_list(n_data->master, &rsc_list, &node_list);
+    n_data->master = expand_list(n_data->master, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_master_resource", rsc_list);
     add_notify_env_free(n_data, "notify_master_uname", node_list);
 
-    if (n_data->inactive) {
-        n_data->inactive = g_list_sort(n_data->inactive, sort_notify_entries);
-    }
-    expand_list(n_data->inactive, &rsc_list, NULL);
+    n_data->inactive = expand_list(n_data->inactive, &rsc_list, NULL);
     add_notify_env_free(n_data, "notify_inactive_resource", rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
