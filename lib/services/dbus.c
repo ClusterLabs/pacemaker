@@ -524,7 +524,7 @@ pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected,
     }
 
     if (field == NULL) {
-        do_crm_log_alias(LOG_ERR, __FILE__, function, line,
+        do_crm_log_alias(LOG_INFO, __FILE__, function, line,
                          "DBus reply has empty parameter list (expected '%c')",
                          expected);
         return FALSE;
@@ -538,7 +538,7 @@ pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected,
 
         dbus_message_iter_init(msg, &args);
         sig = dbus_message_iter_get_signature(&args);
-        do_crm_log_alias(LOG_ERR, __FILE__, function, line,
+        do_crm_log_alias(LOG_INFO, __FILE__, function, line,
                          "DBus reply has unexpected type "
                          "(expected '%c' not '%c' in '%s')",
                          expected, dtype, sig);

@@ -265,7 +265,12 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
         }
         dbus_error_free(&error);
 
-    } else if(pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
+        crm_err("Could not load systemd unit %s for %s: "
+                "systemd reply has unexpected type", op->agent, op->id);
+
+    } else {
         dbus_message_get_args (reply, NULL,
                                DBUS_TYPE_OBJECT_PATH, &path,
                                DBUS_TYPE_INVALID);
@@ -431,13 +436,13 @@ systemd_unit_listall(void)
         char *basename = NULL;
 
         if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __func__, __LINE__)) {
-            crm_debug("ListUnitFiles reply has unexpected type");
+            crm_warn("Skipping systemd reply argument with unexpected type");
             continue;
         }
 
         dbus_message_iter_recurse(&unit, &elem);
         if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __func__, __LINE__)) {
-            crm_debug("ListUnitFiles reply does not contain a string");
+            crm_warn("Skipping systemd reply argument with no string");
             continue;
         }
 
