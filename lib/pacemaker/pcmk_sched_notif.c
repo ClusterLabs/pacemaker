@@ -542,7 +542,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_stop_resource", rsc_list);
     add_notify_env_free(n_data, "notify_stop_uname", node_list);
 
-    if ((n_data->start != NULL) && (rsc_list != NULL)
+    if ((n_data->start != NULL)
         && pcmk__str_eq(n_data->action, RSC_START, pcmk__str_casei)) {
         required = true;
     }
