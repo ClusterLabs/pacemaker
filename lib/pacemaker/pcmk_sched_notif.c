@@ -515,12 +515,19 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
          free(value); value = NULL;                                     \
     } while (0)
 
-gboolean
-expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Create notification name/value pairs from raw data
+ *
+ * \param[in]     rsc       Resource that notification is for
+ * \param[in,out] n_data    Notification data
+ * \param[in]     data_set  Cluster working set
+ */
+void
+pcmk__create_notification_keys(pe_resource_t *rsc,
+                               notify_data_t *n_data,
+                               pe_working_set_t *data_set)
 {
-    /* Expand the notification entries into a key=value hashtable
-     * This hashtable is later used in action2xml()
-     */
     gboolean required = FALSE;
     char *rsc_list = NULL;
     char *node_list = NULL;
@@ -632,7 +639,6 @@ expand_notification_data(pe_resource_t *rsc, notify_data_t * n_data, pe_working_
         update_action_flags(n_data->post_done, pe_action_optional | pe_action_clear,
                             __func__, __LINE__);
     }
-    return required;
 }
 
 /*
