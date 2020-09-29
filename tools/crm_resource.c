@@ -171,7 +171,7 @@ static crm_exit_t
 bye(crm_exit_t ec)
 {
     if (error != NULL) {
-        fprintf(stderr, "%s\n", error->message);
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         g_clear_error(&error);
     }
 
@@ -1512,7 +1512,6 @@ main(int argc, char **argv)
     processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }

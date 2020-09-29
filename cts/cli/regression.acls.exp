@@ -742,15 +742,15 @@ Call failed: Permission denied
 =#=#=#= End test: root: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - root: Create a resource
 =#=#=#= Begin test: l33t-haxor: Create a resource meta attribute =#=#=#=
-Error performing operation: Permission denied
+crm_resource: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Create a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Query a resource meta attribute =#=#=#=
-Error performing operation: Permission denied
+crm_resource: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Query a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Query a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Remove a resource meta attribute =#=#=#=
-Error performing operation: Permission denied
+crm_resource: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
@@ -2769,15 +2769,15 @@ Call failed: Permission denied
 =#=#=#= End test: root: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - root: Create a resource
 =#=#=#= Begin test: l33t-haxor: Create a resource meta attribute =#=#=#=
-Error performing operation: Permission denied
+crm_resource: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Create a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Query a resource meta attribute =#=#=#=
-Error performing operation: Permission denied
+crm_resource: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Query a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Query a resource meta attribute
 =#=#=#= Begin test: l33t-haxor: Remove a resource meta attribute =#=#=#=
-Error performing operation: Permission denied
+crm_resource: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Remove a resource meta attribute - Insufficient privileges (4) =#=#=#=
 * Passed: crm_resource   - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
