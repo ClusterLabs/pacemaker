@@ -694,7 +694,7 @@ AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 dnl BASH is already an environment variable, so use something else
 AC_PATH_PROG([BASH_PATH], [bash])
 
-PKG_PROG_PKG_CONFIG
+PKG_PROG_PKG_CONFIG(0.18)
 # PKG_NOARCH_INSTALLDIR not available prior to pkg-config 0.27 and
 # pkgconf 0.8.10, respectively (next line is to mimic that scenario)
 dnl m4_ifdef([PKG_NOARCH_INSTALLDIR], [m4_undefine([PKG_NOARCH_INSTALLDIR])])
@@ -973,14 +973,6 @@ dnl ========================================================================
 AC_CHECK_DECLS([CLOCK_MONOTONIC], [], [], [[
     #include <time.h>
 ]])
-
-# the above alone will allow using clock_gettime(CLOCK_MONOTONIC, ...),
-# but in case there are any discrepancies found with the move onto that
-# where ftime(3) was originally used -- the callsites make do without
-# any such timestamp grabbing at this time -- so to revert that effect
-# (trigger such omission), line below can be uncommented for that intent
-# (alternatively, propagate equivalent variable assignment from outside)
-#CPPFLAGS="-DPCMK_TIME_EMERGENCY_CGT $CPPFLAGS"
 
 dnl ========================================================================
 dnl Structures

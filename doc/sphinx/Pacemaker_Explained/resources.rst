@@ -720,7 +720,7 @@ ____________________
    * +demote:+ Demote the resource, without a full restart. This is valid only for
      +promote+ actions, and for +monitor+ actions with both a nonzero +interval+
      and +role+ set to +Master+; for any other action, a configuration error will
-     be logged, and the default behavior will be used.
+     be logged, and the default behavior will be used. *(since 2.0.5)*
    * +restart:+ Stop the resource and start it again (possibly on a different node).
    * +fence:+ STONITH the node on which the resource failed.
    * +standby:+ Move _all_ resources away from the node on which the resource failed.

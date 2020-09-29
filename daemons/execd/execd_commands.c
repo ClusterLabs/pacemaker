@@ -13,8 +13,7 @@
 
 // Check whether we have a high-resolution monotonic clock
 #undef PCMK__TIME_USE_CGT
-#if HAVE_DECL_CLOCK_MONOTONIC && defined(CLOCK_MONOTONIC) \
-    && !defined(PCMK_TIME_EMERGENCY_CGT)
+#if HAVE_DECL_CLOCK_MONOTONIC && defined(CLOCK_MONOTONIC)
 #  define PCMK__TIME_USE_CGT
 #  include <time.h>  /* clock_gettime */
 #endif

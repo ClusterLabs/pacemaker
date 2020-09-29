@@ -211,7 +211,7 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         |   cluster partition                                |
    |                           |         | * ``demote:`` demote promotable resources and      |
    |                           |         |   stop all other resources in the affected         |
-   |                           |         |   cluster partition                                |
+   |                           |         |   cluster partition *(since 2.0.5)*                |
    |                           |         | * ``suicide:`` fence all nodes in the affected     |
    |                           |         |   cluster partition                                |
    +---------------------------+---------+----------------------------------------------------+
@@ -511,14 +511,14 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         |                                                    |
    |                           |         | Pacemaker is primarily event-driven, and looks     |
    |                           |         | ahead to know when to recheck the cluster for      |
-   |                           |         | failure timeouts and most time-based rules.        |
-   |                           |         | However, it will also recheck the cluster after    |
-   |                           |         | this amount of inactivity. This has two goals:     |
-   |                           |         | rules with ``date_spec`` are only guaranteed to be |
-   |                           |         | checked this often, and it also serves as a        |
-   |                           |         | fail-safe for certain classes of scheduler bugs. A |
-   |                           |         | value of 0 disables this polling; positive values  |
-   |                           |         | are a time interval.                               |
+   |                           |         | failure timeouts and most time-based rules         |
+   |                           |         | *(since 2.0.3)*. However, it will also recheck the |
+   |                           |         | cluster after this amount of inactivity. This has  |
+   |                           |         | two goals: rules with ``date_spec`` are only       |
+   |                           |         | guaranteed to be checked this often, and it also   |
+   |                           |         | serves as a fail-safe for some kinds of scheduler  |
+   |                           |         | bugs. A value of 0 disables this polling; positive |
+   |                           |         | values are a time interval.                        |
    +---------------------------+---------+----------------------------------------------------+
    | shutdown-lock             | false   | .. index::                                         |
    |                           |         |    pair: cluster option; shutdown-lock             |

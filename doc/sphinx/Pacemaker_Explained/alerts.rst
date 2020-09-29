@@ -410,6 +410,7 @@ Writing an Alert Agent
    |                           | ``CRM_alert_status`` will be 2, ``CRM_alert_desc`` will be     |
    |                           | "Timed Out", and this value will be the action timeout. May    |
    |                           | not be supported on all platforms. (``resource`` alerts only)  |
+   |                           | *(since 2.0.1)*                                                |
    +---------------------------+----------------------------------------------------------------+
    | CRM_alert_interval        | .. index::                                                     |
    |                           |   single:environment variable; CRM_alert_interval              |

@@ -1066,8 +1066,8 @@ Pacemaker supports a special syntax for launching a
 with any infrastructure it requires: the *bundle*.
    
 Pacemaker bundles support `Docker <https://www.docker.com/>`_,
-`podman <https://podman.io/>`_, and `rkt <https://coreos.com/rkt/>`_
-container technologies. [#]_
+`podman <https://podman.io/>`_ *(since 2.0.1)*, and
+`rkt <https://coreos.com/rkt/>`_ container technologies. [#]_
    
 .. topic:: A bundle for a containerized web server
 
@@ -1540,9 +1540,10 @@ greater than zero.
      may be set using the container element's ``options`` attribute.
    * If you want variables to have host-specific values, you can use the
      :ref:`storage-mapping <s-bundle-storage>` element to map a file on the host as
-     ``/etc/pacemaker/pcmk-init.env`` in the container. Pacemaker Remote will parse
-     this file as a shell-like format, with variables set as NAME=VALUE, ignoring
-     blank lines and comments starting with "#".
+     ``/etc/pacemaker/pcmk-init.env`` in the container *(since 2.0.3)*.
+     Pacemaker Remote will parse this file as a shell-like format, with
+     variables set as NAME=VALUE, ignoring blank lines and comments starting
+     with "#".
    
 .. important::
 
