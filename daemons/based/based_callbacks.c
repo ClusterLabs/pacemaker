@@ -393,8 +393,16 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
         }
 
     } else {
-        crm_trace("Sending event %d to %s %s",
+        if (!pcmk_any_flags_set(client_obj->flags, cib_notify_diff | cib_notify_replace | cib_notify_confirm | cib_notify_pre | cib_notify_post) &&
+            pcmk_is_set(client_obj->flags, cib_is_daemon)) {
+            /* Skip notifications to local daemons whose flags have been cleared. */
+            crm_trace("Skipping sending event %d to %s %s",
                   call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
+            return;
+        } else {
+            crm_trace("Sending event %d to %s %s",
+                  call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
+        }
     }
 
     switch (PCMK__CLIENT_TYPE(client_obj)) {
