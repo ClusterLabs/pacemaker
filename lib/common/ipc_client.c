@@ -819,7 +819,7 @@ crm_ipc_connect(crm_ipc_t * client)
         return FALSE;
     }
 
-    if (!(rv = crm_ipc_is_authentic_process(client->pfd.fd, cl_uid, cl_gid,
+    if (!(rv = crm_ipc_is_authentic_process(client->ipc, client->pfd.fd, cl_uid, cl_gid,
                                             &found_pid, &found_uid,
                                             &found_gid))) {
         crm_err("Daemon (IPC %s) is not authentic:"
@@ -1291,14 +1291,22 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 }
 
 int
-crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
+crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
                              pid_t *gotpid, uid_t *gotuid, gid_t *gotgid) {
     int ret = 0;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
 #if defined(US_AUTH_PEERCRED_UCRED)
     struct ucred ucred;
     socklen_t ucred_len = sizeof(ucred);
+#endif
 
+#ifdef HAVE_QB_IPCC_AUTH_GET
+    if (qb_ipc && !qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid)) {
+        goto do_checks;
+    }
+#endif
+
+#if defined(US_AUTH_PEERCRED_UCRED)
     if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
                     &ucred, &ucred_len)
                 && ucred_len == sizeof(ucred)) {
@@ -1334,6 +1342,9 @@ crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
 #  error "No way to authenticate a Unix socket peer"
     errno = 0;
     if (0) {
+#endif
+#ifdef HAVE_QB_IPCC_AUTH_GET
+    do_checks:
 #endif
         if (gotpid != NULL) {
             *gotpid = found_pid;
@@ -1379,7 +1390,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
         goto bail;
     }
 
-    auth_rc = crm_ipc_is_authentic_process(fd, refuid, refgid, &found_pid,
+    auth_rc = crm_ipc_is_authentic_process(NULL, fd, refuid, refgid, &found_pid,
                                            &found_uid, &found_gid);
     if (auth_rc < 0) {
         rc = pcmk_legacy2rc(auth_rc);
