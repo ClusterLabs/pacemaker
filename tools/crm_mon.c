@@ -689,14 +689,8 @@ mon_timer_popped(gpointer data)
 }
 
 static void
-do_mon_cib_connection_destroy(gpointer user_data, bool is_error)
+do_mon_cib_connection_destroy(gpointer user_data)
 {
-    if (is_error) {
-        out->err(out, "Connection to the cluster-daemons terminated");
-    } else {
-        out->info(out, "Connection to the cluster-daemons terminated");
-    }
-
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
         mainloop_timer_stop(refresh_timer);
@@ -722,18 +716,6 @@ do_mon_cib_connection_destroy(gpointer user_data, bool is_error)
         timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
     return;
-}
-
-static void
-mon_cib_connection_destroy_regular(gpointer user_data)
-{
-    do_mon_cib_connection_destroy(user_data, false);
-}
-
-static void
-mon_cib_connection_destroy_error(gpointer user_data)
-{
-    do_mon_cib_connection_destroy(user_data, true);
 }
 
 /*
@@ -830,7 +812,8 @@ cib_connect(gboolean full)
 
         if (rc == pcmk_ok && full) {
             if (rc == pcmk_ok) {
-                rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
+                rc = cib->cmds->set_connection_dnotify(cib, do_mon_cib_connection_destroy);
+                out->info(out, "Connection to the cluster-daemons terminated");
                 if (rc == -EPROTONOSUPPORT) {
                     print_as
                         (output_format, "Notification setup not supported, won't be able to reconnect after failure");
@@ -891,7 +874,8 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                     options.mon_ops |= mon_op_fence_history;
                     options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
-                        mon_cib_connection_destroy_regular(NULL);
+                        do_mon_cib_connection_destroy(NULL);
+                        out->info(out, "Connection to the cluster-daemons terminated");
                     }
                 }
 
@@ -1953,7 +1937,7 @@ mon_refresh_display(gpointer user_data)
 
             if (history_rc != 0) {
                 out->err(out, "Critical: Unable to get stonith-history");
-                mon_cib_connection_destroy_error(NULL);
+                do_mon_cib_connection_destroy(NULL);
             } else {
                 history.data.history = stonith__sort_history(history.data.history);
                 if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
@@ -2056,7 +2040,8 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
-        mon_cib_connection_destroy_regular(NULL);
+        do_mon_cib_connection_destroy(NULL);
+        out->info(out, "Connection to the cluster-daemons terminated");
     } else if (options.external_agent) {
         char *desc = crm_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
                                     e->operation, e->origin, e->target, pcmk_strerror(e->result),
@@ -2105,7 +2090,8 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
-        mon_cib_connection_destroy_regular(NULL);
+        do_mon_cib_connection_destroy(NULL);
+        out->info(out, "Connection to the cluster-daemons terminated");
     } else {
         print_dot(output_format);
         kick_refresh(TRUE);
