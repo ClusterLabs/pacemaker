@@ -199,6 +199,7 @@ upstart_job_listall(void)
         char *path = NULL;
 
         if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
+            crm_warn("Skipping Upstart reply argument with unexpected type");
             continue;
         }
 
