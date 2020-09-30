@@ -1931,28 +1931,27 @@ mon_refresh_display(gpointer user_data)
 
     /* get the stonith-history if there is evidence we need it
      */
-    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
+    if (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
             history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &(history.data.history), 120);
 
             if (history_rc != 0) {
-                out->err(out, "Critical: Unable to get stonith-history");
+                history.is_error = true;
+                history.data.error_msg = "Unable to get stonith-history";
                 do_mon_cib_connection_destroy(NULL);
             } else {
                 history.data.history = stonith__sort_history(history.data.history);
                 if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
                     && (output_format != mon_output_xml)) {
 
+                    history.is_error = false;
                     history.data.history = reduce_stonith_history(history.data.history);
                 }
-                break; /* all other cases are errors */
             }
         } else {
-            out->err(out, "Critical: No stonith-API");
+            history.is_error = true;
+            history.data.error_msg = "No stonith-API";
         }
-        free_xml(cib_copy);
-        out->err(out, "Reading stonith-history failed");
-        return FALSE;
     }
 
     if (mon_data_set == NULL) {
