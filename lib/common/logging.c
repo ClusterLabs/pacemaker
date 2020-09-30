@@ -33,13 +33,14 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 
-unsigned int crm_log_priority = LOG_NOTICE;
 unsigned int crm_log_level = LOG_INFO;
-static gboolean crm_tracing_enabled(void);
 unsigned int crm_trace_nonlog = 0;
 bool pcmk__is_daemon = false;
 
-GLogFunc glib_log_default;
+static unsigned int crm_log_priority = LOG_NOTICE;
+static GLogFunc glib_log_default = NULL;
+
+static gboolean crm_tracing_enabled(void);
 
 static void
 crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * message,
