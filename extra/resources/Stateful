@@ -170,6 +170,13 @@ stateful_stop() {
 }
 
 stateful_monitor() {
+    # for testing
+    if [ -f "${OCF_RESKEY_state}.rc" ]; then
+        rc=$(cat "${OCF_RESKEY_state}.rc")
+        ocf_exit_reason "$rc GB redirected to /dev/null"
+        exit $rc
+    fi
+
     stateful_check_state "master"
     if [ $? -eq 0 ]; then
         if [ $OCF_RESKEY_CRM_meta_interval -eq 0 ]; then

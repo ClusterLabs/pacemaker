@@ -709,8 +709,13 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 static int
 ocf2uniform_rc(int rc)
 {
-    if (rc < 0 || rc > PCMK_OCF_FAILED_MASTER) {
-        return PCMK_OCF_UNKNOWN_ERROR;
+    switch (rc) {
+        case PCMK_OCF_DEGRADED:
+        case PCMK_OCF_DEGRADED_MASTER:
+            break;
+        default:
+            if (rc < 0 || rc > PCMK_OCF_FAILED_MASTER)
+                return PCMK_OCF_UNKNOWN_ERROR;
     }
 
     return rc;

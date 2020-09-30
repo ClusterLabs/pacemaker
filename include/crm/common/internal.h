@@ -388,4 +388,7 @@ pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
                                 interval_ms);
 }
 
+// internal resource agent functions (from agents.c)
+int pcmk__effective_rc(int rc);
+
 #endif /* CRM_COMMON_INTERNAL__H */

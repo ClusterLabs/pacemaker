@@ -3565,20 +3565,7 @@ static int
 remap_monitor_rc(int rc, xmlNode *xml_op, const pe_node_t *node,
                  const pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    int remapped_rc = rc;
-
-    switch (rc) {
-        case PCMK_OCF_DEGRADED:
-            remapped_rc = PCMK_OCF_OK;
-            break;
-
-        case PCMK_OCF_DEGRADED_MASTER:
-            remapped_rc = PCMK_OCF_RUNNING_MASTER;
-            break;
-
-        default:
-            break;
-    }
+    int remapped_rc = pcmk__effective_rc(rc);
 
     if (rc != remapped_rc) {
         crm_trace("Remapping monitor result %d to %d", rc, remapped_rc);

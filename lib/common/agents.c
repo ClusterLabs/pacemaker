@@ -67,6 +67,27 @@ pcmk_get_ra_caps(const char *standard)
     return pcmk_ra_cap_none;
 }
 
+int
+pcmk__effective_rc(int rc)
+{
+    int remapped_rc = rc;
+
+    switch (rc) {
+        case PCMK_OCF_DEGRADED:
+            remapped_rc = PCMK_OCF_OK;
+            break;
+
+        case PCMK_OCF_DEGRADED_MASTER:
+            remapped_rc = PCMK_OCF_RUNNING_MASTER;
+            break;
+
+        default:
+            break;
+    }
+
+    return remapped_rc;
+}
+
 char *
 crm_generate_ra_key(const char *standard, const char *provider,
                     const char *type)
