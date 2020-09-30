@@ -1015,6 +1015,9 @@ TESTS = [
     ],
     [   [ "stop-all-resources", "Test stop-all-resources=true "],
     ],
+    [   [ "ocf_degraded-remap-ocf_ok", "Test DEGRADED remapped to OK" ],
+        [ "ocf_degraded_master-remap-ocf_ok", "Test DEGRADED_MASTER remapped to OK"],
+    ],
     
     # @TODO: If pacemaker implements versioned attributes, uncomment these tests
     #[
