@@ -115,7 +115,9 @@ crm_trigger_blackbox(int nsig)
 void
 crm_log_deinit(void)
 {
-    g_log_set_default_handler(glib_log_default, NULL);
+    if (glib_log_default != NULL) {
+        g_log_set_default_handler(glib_log_default, NULL);
+    }
 }
 
 #define FMT_MAX 256
@@ -164,13 +166,14 @@ set_format_string(int method, const char *daemon)
     }
 }
 
+#define DEFAULT_LOG_FILE CRM_LOG_DIR "/pacemaker.log"
+
 gboolean
 crm_add_logfile(const char *filename)
 {
     bool is_default = false;
     static int default_fd = -1;
     static gboolean have_logfile = FALSE;
-    const char *default_logfile = CRM_LOG_DIR "/pacemaker.log";
 
     struct stat parent;
     int fd = 0, rc = 0;
@@ -179,16 +182,15 @@ crm_add_logfile(const char *filename)
     char *filename_cp;
 
     if (filename == NULL && have_logfile == FALSE) {
-        filename = default_logfile;
+        filename = DEFAULT_LOG_FILE;
     }
 
-    if (filename == NULL) {
-        return FALSE;           /* Nothing to do */
-    } else if(pcmk__str_eq(filename, "none", pcmk__str_casei)) {
-        return FALSE;           /* Nothing to do */
-    } else if(pcmk__str_eq(filename, "/dev/null", pcmk__str_casei)) {
-        return FALSE;           /* Nothing to do */
-    } else if(pcmk__str_eq(filename, default_logfile, pcmk__str_casei)) {
+    if ((filename == NULL)
+        || pcmk__str_eq(filename, "none", pcmk__str_casei)
+        || pcmk__str_eq(filename, "/dev/null", pcmk__str_none)) {
+        return FALSE; // User doesn't want logging, so there's nothing to do
+
+    } else if (pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none)) {
         is_default = TRUE;
     }
 
@@ -685,9 +687,8 @@ crm_identity(const char *entity, int argc, char **argv)
     setenv("PCMK_service", crm_system_name, 1);
 }
 
-
 void
-crm_log_preinit(const char *entity, int argc, char **argv) 
+crm_log_preinit(const char *entity, int argc, char **argv)
 {
     /* Configure libqb logging with nothing turned on */
 
@@ -747,7 +748,6 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
              int argc, char **argv, gboolean quiet)
 {
     const char *syslog_priority = NULL;
-    const char *logfile = pcmk__env_option("logfile");
     const char *facility = pcmk__env_option("logfacility");
     const char *f_copy = facility;
 
@@ -786,13 +786,11 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     /* What lower threshold do we have for sending to syslog */
     syslog_priority = pcmk__env_option("logpriority");
-    if(syslog_priority) {
-        int priority = crm_priority2int(syslog_priority);
-        crm_log_priority = priority;
-	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", priority);
-    } else {
-	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_NOTICE);
+    if (syslog_priority) {
+        crm_log_priority = crm_priority2int(syslog_priority);
     }
+    qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*",
+                      crm_log_priority);
 
     // Log to syslog unless requested to be quiet
     if (!quiet) {
@@ -806,14 +804,15 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
     crm_enable_stderr(to_stderr);
 
-    /* Should we log to a file */
-    if (pcmk__str_eq("none", logfile, pcmk__str_casei)) {
-        /* No soup^Hlogs for you! */
-    } else if (pcmk__is_daemon) {
-        // Daemons always get a log file, unless explicitly set to "none"
-        crm_add_logfile(logfile);
-    } else if(logfile) {
-        crm_add_logfile(logfile);
+    // Log to a file if we're a daemon or user asked for one
+    {
+        const char *logfile = pcmk__env_option("logfile");
+
+        if (!pcmk__str_eq("none", logfile, pcmk__str_casei)
+            && (pcmk__is_daemon || (logfile != NULL))) {
+            // Daemons always get a log file, unless explicitly set to "none"
+            crm_add_logfile(logfile);
+        }
     }
 
     if (pcmk__is_daemon
@@ -915,22 +914,24 @@ crm_enable_stderr(int enable)
     }
 }
 
+/*!
+ * \brief Make logging more verbose
+ *
+ * If logging to stderr is not already enabled when this function is called,
+ * enable it. Otherwise, increase the log level by 1.
+ *
+ * \param[in] argc  Ignored
+ * \param[in] argv  Ignored
+ */
 void
 crm_bump_log_level(int argc, char **argv)
 {
-    static int args = TRUE;
-    int level = crm_log_level;
-
-    if (args && argc > 1) {
-        crm_log_args(argc, argv);
+    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0)
+        != QB_LOG_STATE_ENABLED) {
+        crm_enable_stderr(TRUE);
+    } else {
+        set_crm_log_level(crm_log_level + 1);
     }
-
-    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-        set_crm_log_level(level + 1);
-    }
-
-    /* Enable after potentially logging the argstring, not before */
-    crm_enable_stderr(TRUE);
 }
 
 unsigned int
@@ -939,39 +940,28 @@ get_crm_log_level(void)
     return crm_log_level;
 }
 
-#define ARGS_FMT "Invoked: %s"
+/*!
+ * \brief Log the command line (once)
+ *
+ * \param[in]  Number of values in \p argv
+ * \param[in]  Command-line arguments (including command name)
+ *
+ * \note This function will only log once, even if called with different
+ *       arguments.
+ */
 void
 crm_log_args(int argc, char **argv)
 {
-    int lpc = 0;
-    int len = 0;
-    int existing_len = 0;
-    int line = __LINE__;
-    static int logged = 0;
+    static bool logged = false;
+    gchar *arg_string = NULL;
 
-    char *arg_string = NULL;
-
-    if (argc == 0 || argv == NULL || logged) {
+    if ((argc == 0) || (argv == NULL) || logged) {
         return;
     }
-
-    logged = 1;
-
-    // cppcheck seems not to understand the abort logic in pcmk__realloc
-    // cppcheck-suppress memleak
-    for (; lpc < argc; lpc++) {
-        if (argv[lpc] == NULL) {
-            break;
-        }
-
-        len = 2 + strlen(argv[lpc]);    /* +1 space, +1 EOS */
-        arg_string = pcmk__realloc(arg_string, len + existing_len);
-        existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
-    }
-
-    qb_log_from_external_source(__func__, __FILE__, ARGS_FMT, LOG_NOTICE, line, 0, arg_string);
-
-    free(arg_string);
+    logged = true;
+    arg_string = g_strjoinv(" ", argv);
+    crm_notice("Invoked: %s", arg_string);
+    g_free(arg_string);
 }
 
 void
