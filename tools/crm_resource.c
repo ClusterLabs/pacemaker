@@ -1868,7 +1868,7 @@ main(int argc, char **argv)
                         goto done;
                     }
                 }
-                cli_resource_why(out, cib_conn, data_set->resources, rsc, dest);
+                out->message(out, "resource-why", cib_conn, data_set->resources, rsc, dest);
                 rc = pcmk_rc_ok;
             }
             break;

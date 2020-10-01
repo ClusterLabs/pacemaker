@@ -23,6 +23,20 @@
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
 
+enum resource_check_flags {
+    rsc_remain_stopped  = (1 << 0),
+    rsc_unpromotable    = (1 << 1),
+    rsc_unmanaged       = (1 << 2)
+};
+
+typedef struct resource_checks_s {
+    pe_resource_t *rsc;
+    unsigned int flags;
+    const char *lock_node;
+} resource_checks_t;
+
+resource_checks_t *cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed);
+
 /* ban */
 int cli_resource_prefer(pcmk__output_t *out, const char *rsc_id, const char *host,
                         const char *move_lifetime, cib_t * cib_conn, int cib_options,
@@ -51,7 +65,7 @@ int cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
                                   pe_working_set_t * data_set);
 
 /* runtime */
-void cli_resource_check(pcmk__output_t *out, cib_t * cib, pe_resource_t *rsc);
+int cli_resource_check(pcmk__output_t *out, cib_t * cib, pe_resource_t *rsc);
 int cli_resource_fail(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                       const char *host_uname, const char *rsc_id,
                       pe_working_set_t *data_set);
@@ -98,7 +112,7 @@ int cli_resource_delete_attribute(pcmk__output_t *out, pe_resource_t *rsc,
 
 int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib);
-void cli_resource_why(pcmk__output_t *out, cib_t *cib_conn, GListPtr resources,
-                      pe_resource_t *rsc, pe_node_t *node);
+
+bool resource_is_running_on(pe_resource_t *rsc, const char *host);
 
 void crm_resource_register_messages(pcmk__output_t *out);

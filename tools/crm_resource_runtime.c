@@ -43,6 +43,35 @@ do_find_resource(pcmk__output_t *out, const char *rsc, pe_resource_t * the_rsc,
     return found;
 }
 
+resource_checks_t *
+cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
+{
+    pe_resource_t *parent = uber_parent(rsc);
+    resource_checks_t *rc = calloc(1, sizeof(resource_checks_t));
+
+    if (role_s) {
+        enum rsc_role_e role = text2role(role_s);
+
+        if (role == RSC_ROLE_STOPPED) {
+            rc->flags |= rsc_remain_stopped;
+        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable) &&
+                   role == RSC_ROLE_SLAVE) {
+            rc->flags |= rsc_unpromotable;
+        }
+    }
+
+    if (managed && !crm_is_true(managed)) {
+        rc->flags |= rsc_unmanaged;
+    }
+
+    if (rsc->lock_node) {
+        rc->lock_node = rsc->lock_node->details->uname;
+    }
+
+    rc->rsc = rsc;
+    return rc;
+}
+
 int
 cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
@@ -878,13 +907,14 @@ cli_cleanup_all(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     return rc;
 }
 
-void
+int
 cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
 {
-    bool printed = false;
     char *role_s = NULL;
     char *managed = NULL;
     pe_resource_t *parent = uber_parent(rsc);
+    int rc = pcmk_rc_no_output;
+    resource_checks_t *checks = NULL;
 
     find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
                        NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
@@ -892,41 +922,16 @@ cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
     find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
                        NULL, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
 
-    if(role_s) {
-        enum rsc_role_e role = text2role(role_s);
+    checks = cli_check_resource(rsc, role_s, managed);
 
-        free(role_s);
-        if(role == RSC_ROLE_UNKNOWN) {
-            // Treated as if unset
-
-        } else if(role == RSC_ROLE_STOPPED) {
-            printf("\n  * Configuration specifies '%s' should remain stopped\n",
-                   parent->id);
-            printed = true;
-
-        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable)
-                   && (role == RSC_ROLE_SLAVE)) {
-            printf("\n  * Configuration specifies '%s' should not be promoted\n",
-                   parent->id);
-            printed = true;
-        }
+    if (checks->flags != 0 || checks->lock_node != NULL) {
+        rc = out->message(out, "resource-check", checks);
     }
 
-    if (managed && !crm_is_true(managed)) {
-        printf("%s  * Configuration prevents cluster from stopping or starting unmanaged '%s'\n",
-               (printed? "" : "\n"), parent->id);
-        printed = true;
-    }
+    free(role_s);
     free(managed);
-
-    if (rsc->lock_node) {
-        printf("%s  * '%s' is locked to node %s due to shutdown\n",
-               (printed? "" : "\n"), parent->id, rsc->lock_node->details->uname);
-    }
-
-    if (printed) {
-        printf("\n");
-    }
+    free(checks);
+    return rc;
 }
 
 // \return Standard Pacemaker return code
@@ -986,7 +991,7 @@ generate_resource_params(pe_resource_t * rsc, pe_working_set_t * data_set)
     return combined;
 }
 
-static bool resource_is_running_on(pe_resource_t *rsc, const char *host) 
+bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 {
     bool found = TRUE;
     GListPtr hIter = NULL;
@@ -1976,101 +1981,4 @@ cli_resource_move(pcmk__output_t *out, pe_resource_t *rsc, const char *rsc_id,
     }
 
     return rc;
-}
-
-static void
-cli_resource_why_without_rsc_and_host(pcmk__output_t *out, cib_t *cib_conn,
-                                      GListPtr resources)
-{
-    GListPtr lpc = NULL;
-    GListPtr hosts = NULL;
-
-    for (lpc = resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-        rsc->fns->location(rsc, &hosts, TRUE);
-
-        if (hosts == NULL) {
-            printf("Resource %s is not running\n", rsc->id);
-        } else {
-            printf("Resource %s is running\n", rsc->id);
-        }
-
-        cli_resource_check(out, cib_conn, rsc);
-        g_list_free(hosts);
-        hosts = NULL;
-     }
-
-}
-
-static void
-cli_resource_why_with_rsc_and_host(pcmk__output_t *out, cib_t *cib_conn,
-                                   GListPtr resources, pe_resource_t *rsc,
-                                   const char *host_uname)
-{
-    if (resource_is_running_on(rsc, host_uname)) {
-        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
-    } else {
-        printf("Resource %s is not running on host %s\n", rsc->id, host_uname);
-    }
-    cli_resource_check(out, cib_conn, rsc);
-}
-
-static void
-cli_resource_why_without_rsc_with_host(pcmk__output_t *out, cib_t *cib_conn,
-                                       GListPtr resources, pe_node_t *node)
-{
-    const char* host_uname =  node->details->uname;
-    GListPtr allResources = node->details->allocated_rsc;
-    GListPtr activeResources = node->details->running_rsc;
-    GListPtr unactiveResources = pcmk__subtract_lists(allResources,activeResources,(GCompareFunc) strcmp);
-    GListPtr lpc = NULL;
-
-    for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
-        cli_resource_check(out, cib_conn, rsc);
-    }
-
-    for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-        printf("Resource %s is assigned to host %s but not running\n",
-               rsc->id, host_uname);
-        cli_resource_check(out, cib_conn, rsc);
-     }
-
-     g_list_free(allResources);
-     g_list_free(activeResources);
-     g_list_free(unactiveResources);
-}
-
-static void
-cli_resource_why_with_rsc_without_host(pcmk__output_t *out, cib_t *cib_conn,
-                                       GListPtr resources, pe_resource_t *rsc)
-{
-    GListPtr hosts = NULL;
-
-    rsc->fns->location(rsc, &hosts, TRUE);
-    printf("Resource %s is %srunning\n", rsc->id, (hosts? "" : "not "));
-    cli_resource_check(out, cib_conn, rsc);
-    g_list_free(hosts);
-}
-
-void cli_resource_why(pcmk__output_t *out, cib_t *cib_conn, GListPtr resources,
-                      pe_resource_t *rsc, pe_node_t *node)
-{
-    const char *host_uname = (node == NULL)? NULL : node->details->uname;
-
-    if ((rsc == NULL) && (host_uname == NULL)) {
-        cli_resource_why_without_rsc_and_host(out, cib_conn, resources);
-
-    } else if ((rsc != NULL) && (host_uname != NULL)) {
-        cli_resource_why_with_rsc_and_host(out, cib_conn, resources, rsc,
-                                           host_uname);
-
-    } else if ((rsc == NULL) && (host_uname != NULL)) {
-        cli_resource_why_without_rsc_with_host(out, cib_conn, resources, node);
-
-    } else if ((rsc != NULL) && (host_uname == NULL)) {
-        cli_resource_why_with_rsc_without_host(out, cib_conn, resources, rsc);
-    }
 }

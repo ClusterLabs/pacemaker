@@ -8,6 +8,7 @@
  */
 
 #include <crm_resource.h>
+#include <crm/common/lists_internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/output_internal.h>
 
@@ -287,6 +288,261 @@ property_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("resource-check", "resource_checks_t *")
+static int
+resource_check_default(pcmk__output_t *out, va_list args) {
+    resource_checks_t *checks = va_arg(args, resource_checks_t *);
+
+    pe_resource_t *parent = uber_parent(checks->rsc);
+    int rc = pcmk_rc_no_output;
+    bool printed = false;
+
+    if (checks->flags != 0 || checks->lock_node != NULL) {
+        printed = true;
+        out->begin_list(out, NULL, NULL, "Resource Checks");
+    }
+
+    if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
+        out->list_item(out, "check", "Configuration specifies '%s' should remain stopped",
+                       parent->id);
+    }
+
+    if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
+        out->list_item(out, "check", "Configuration specifies '%s' should not be promoted",
+                       parent->id);
+    }
+
+    if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
+        out->list_item(out, "check", "Configuration prevents cluster from stopping or starting unmanaged '%s'",
+                       parent->id);
+    }
+
+    if (checks->lock_node) {
+        out->list_item(out, "check", "'%s' is locked to node %s due to shutdown",
+                       parent->id, checks->lock_node);
+    }
+
+    if (printed) {
+        out->end_list(out);
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
+PCMK__OUTPUT_ARGS("resource-check", "resource_checks_t *")
+static int
+resource_check_xml(pcmk__output_t *out, va_list args) {
+    resource_checks_t *checks = va_arg(args, resource_checks_t *);
+
+    pe_resource_t *parent = uber_parent(checks->rsc);
+    int rc = pcmk_rc_no_output;
+
+    xmlNode *node = pcmk__output_create_xml_node(out, "check");
+
+    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) parent->id);
+
+    if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
+        xmlSetProp(node, (pcmkXmlStr) "remain_stopped", (pcmkXmlStr) "true");
+    }
+
+    if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
+        xmlSetProp(node, (pcmkXmlStr) "promotable", (pcmkXmlStr) "false");
+    }
+
+    if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
+        xmlSetProp(node, (pcmkXmlStr) "unmanaged", (pcmkXmlStr) "true");
+    }
+
+    if (checks->lock_node) {
+        xmlSetProp(node, (pcmkXmlStr) "locked-to", (pcmkXmlStr) checks->lock_node);
+    }
+
+    return rc;
+}
+
+PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GListPtr", "pe_resource_t *",
+                  "pe_node_t *")
+static int
+resource_why_default(pcmk__output_t *out, va_list args)
+{
+    cib_t *cib_conn = va_arg(args, cib_t *);
+    GListPtr resources = va_arg(args, GListPtr);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+
+    const char *host_uname = (node == NULL)? NULL : node->details->uname;
+
+    out->begin_list(out, NULL, NULL, "Resource Reasons");
+
+    if ((rsc == NULL) && (host_uname == NULL)) {
+        GListPtr lpc = NULL;
+        GListPtr hosts = NULL;
+
+        for (lpc = resources; lpc != NULL; lpc = lpc->next) {
+            pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+            rsc->fns->location(rsc, &hosts, TRUE);
+
+            if (hosts == NULL) {
+                out->list_item(out, "reason", "Resource %s is not running", rsc->id);
+            } else {
+                out->list_item(out, "reason", "Resource %s is running", rsc->id);
+            }
+
+            cli_resource_check(out, cib_conn, rsc);
+            g_list_free(hosts);
+            hosts = NULL;
+        }
+
+    } else if ((rsc != NULL) && (host_uname != NULL)) {
+        if (resource_is_running_on(rsc, host_uname)) {
+            out->list_item(out, "reason", "Resource %s is running on host %s",
+                           rsc->id, host_uname);
+        } else {
+            out->list_item(out, "reason", "Resource %s is not running on host %s",
+                           rsc->id, host_uname);
+        }
+
+        cli_resource_check(out, cib_conn, rsc);
+
+    } else if ((rsc == NULL) && (host_uname != NULL)) {
+        const char* host_uname =  node->details->uname;
+        GListPtr allResources = node->details->allocated_rsc;
+        GListPtr activeResources = node->details->running_rsc;
+        GListPtr unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
+        GListPtr lpc = NULL;
+
+        for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
+            pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+            out->list_item(out, "reason", "Resource %s is running on host %s",
+                           rsc->id, host_uname);
+            cli_resource_check(out, cib_conn, rsc);
+        }
+
+        for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
+            pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+            out->list_item(out, "reason", "Resource %s is assigned to host %s but not running",
+                           rsc->id, host_uname);
+            cli_resource_check(out, cib_conn, rsc);
+        }
+
+        g_list_free(allResources);
+        g_list_free(activeResources);
+        g_list_free(unactiveResources);
+
+    } else if ((rsc != NULL) && (host_uname == NULL)) {
+        GListPtr hosts = NULL;
+
+        rsc->fns->location(rsc, &hosts, TRUE);
+        out->list_item(out, "reason", "Resource %s is %srunning",
+                       rsc->id, (hosts? "" : "not "));
+        cli_resource_check(out, cib_conn, rsc);
+        g_list_free(hosts);
+    }
+
+    out->end_list(out);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GListPtr", "pe_resource_t *",
+                  "pe_node_t *")
+static int
+resource_why_xml(pcmk__output_t *out, va_list args)
+{
+    cib_t *cib_conn = va_arg(args, cib_t *);
+    GListPtr resources = va_arg(args, GListPtr);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+
+    const char *host_uname = (node == NULL)? NULL : node->details->uname;
+
+    xmlNode *xml_node = pcmk__output_xml_create_parent(out, "reason");
+
+    if ((rsc == NULL) && (host_uname == NULL)) {
+        GListPtr lpc = NULL;
+        GListPtr hosts = NULL;
+
+        pcmk__output_xml_create_parent(out, "resources");
+
+        for (lpc = resources; lpc != NULL; lpc = lpc->next) {
+            pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+            xmlNode *rsc_node = NULL;
+
+            rsc->fns->location(rsc, &hosts, TRUE);
+
+            rsc_node = pcmk__output_xml_create_parent(out, "resource");
+            xmlSetProp(rsc_node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
+            xmlSetProp(rsc_node, (pcmkXmlStr) "running",
+                       (pcmkXmlStr) pcmk__btoa(hosts != NULL));
+
+            cli_resource_check(out, cib_conn, rsc);
+            pcmk__output_xml_pop_parent(out);
+            g_list_free(hosts);
+            hosts = NULL;
+        }
+
+        pcmk__output_xml_pop_parent(out);
+
+    } else if ((rsc != NULL) && (host_uname != NULL)) {
+        if (resource_is_running_on(rsc, host_uname)) {
+            xmlSetProp(xml_node, (pcmkXmlStr) "running_on", (pcmkXmlStr) host_uname);
+        }
+
+        cli_resource_check(out, cib_conn, rsc);
+
+    } else if ((rsc == NULL) && (host_uname != NULL)) {
+        const char* host_uname =  node->details->uname;
+        GListPtr allResources = node->details->allocated_rsc;
+        GListPtr activeResources = node->details->running_rsc;
+        GListPtr unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
+        GListPtr lpc = NULL;
+
+        pcmk__output_xml_create_parent(out, "resources");
+
+        for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
+            pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+            xmlNode *rsc_node = NULL;
+
+            rsc_node = pcmk__output_xml_create_parent(out, "resource");
+            xmlSetProp(rsc_node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
+            xmlSetProp(rsc_node, (pcmkXmlStr) "running", (pcmkXmlStr) "true");
+            xmlSetProp(rsc_node, (pcmkXmlStr) "host", (pcmkXmlStr) host_uname);
+
+            cli_resource_check(out, cib_conn, rsc);
+            pcmk__output_xml_pop_parent(out);
+        }
+
+        for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
+            pe_resource_t *rsc = (pe_resource_t *) lpc->data;
+            xmlNode *rsc_node = NULL;
+
+            rsc_node = pcmk__output_xml_create_parent(out, "resource");
+            xmlSetProp(rsc_node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
+            xmlSetProp(rsc_node, (pcmkXmlStr) "running", (pcmkXmlStr) "false");
+            xmlSetProp(rsc_node, (pcmkXmlStr) "host", (pcmkXmlStr) host_uname);
+
+            cli_resource_check(out, cib_conn, rsc);
+            pcmk__output_xml_pop_parent(out);
+        }
+
+        pcmk__output_xml_pop_parent(out);
+        g_list_free(allResources);
+        g_list_free(activeResources);
+        g_list_free(unactiveResources);
+
+    } else if ((rsc != NULL) && (host_uname == NULL)) {
+        GListPtr hosts = NULL;
+
+        rsc->fns->location(rsc, &hosts, TRUE);
+        xmlSetProp(xml_node, (pcmkXmlStr) "running",
+                   (pcmkXmlStr) pcmk__btoa(hosts != NULL));
+        cli_resource_check(out, cib_conn, rsc);
+        g_list_free(hosts);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 add_resource_name(pcmk__output_t *out, pe_resource_t *rsc) {
     if (rsc->children == NULL) {
@@ -325,6 +581,10 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "attribute", "text", attribute_text },
     { "property", "default", property_default },
     { "property", "text", property_text },
+    { "resource-check", "default", resource_check_default },
+    { "resource-check", "xml", resource_check_xml },
+    { "resource-why", "default", resource_why_default },
+    { "resource-why", "xml", resource_why_xml },
     { "resource-names-list", "default", resource_names },
 
     { NULL, NULL, NULL }
