@@ -395,7 +395,7 @@ create_level_registration_xml(const char *node, const char *pattern,
                               const char *attr, const char *value,
                               int level, stonith_key_value_t *device_list)
 {
-    int len = 0;
+    size_t len = 0;
     char *list = NULL;
     xmlNode *data;
 
@@ -422,21 +422,7 @@ create_level_registration_xml(const char *node, const char *pattern,
     // cppcheck seems not to understand the abort logic behind pcmk__realloc
     // cppcheck-suppress memleak
     for (; device_list; device_list = device_list->next) {
-
-        int adding = strlen(device_list->value);
-        if(list) {
-            adding++;                                      /* +1 space */
-        }
-
-        crm_trace("Adding %s (%dc) at offset %d", device_list->value, adding, len);
-        list = pcmk__realloc(list, len + adding + 1);       /* +1 EOS */
-        if (list == NULL) {
-            crm_perror(LOG_CRIT, "Could not create device list");
-            free_xml(data);
-            return NULL;
-        }
-        sprintf(list + len, "%s%s", len?",":"", device_list->value);
-        len += adding;
+        pcmk__add_separated_word(&list, &len, device_list->value, ",");
     }
 
     crm_xml_add(data, XML_ATTR_STONITH_DEVICES, list);
