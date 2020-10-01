@@ -33,19 +33,18 @@ cli_resource_print_cts_constraints(pcmk__output_t *out, pe_working_set_t * data_
             continue;
         }
 
-        if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
-            printf("Constraint %s %s %s %s %s %s %s\n",
-                   crm_element_name(xml_obj),
-                   cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
-                   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
-                   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
-                   cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
-                   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
-                   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
-
-        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj), pcmk__str_casei)) {
-            /* unpack_location(xml_obj, data_set); */
+        if (!pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
+            continue;
         }
+
+        out->info(out, "Constraint %s %s %s %s %s %s %s",
+                  crm_element_name(xml_obj),
+                  cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
+                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
+                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
+                  cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
+                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
+                  cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
     }
 }
 
@@ -70,11 +69,11 @@ cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
         host = node->details->uname;
     }
 
-    printf("Resource: %s %s %s %s %s %s %s %s %d %lld 0x%.16llx\n",
-           crm_element_name(rsc->xml), rsc->id,
-           rsc->clone_name ? rsc->clone_name : rsc->id, rsc->parent ? rsc->parent->id : "NA",
-           rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
-           rsc->flags);
+    out->info(out, "Resource: %s %s %s %s %s %s %s %s %d %lld 0x%.16llx",
+              crm_element_name(rsc->xml), rsc->id,
+              rsc->clone_name ? rsc->clone_name : rsc->id, rsc->parent ? rsc->parent->id : "NA",
+              rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
+              rsc->flags);
 
     for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *child = (pe_resource_t *) lpc->data;

@@ -1813,12 +1813,14 @@ main(int argc, char **argv)
 
         case cmd_cts:
             rc = pcmk_rc_ok;
+
             for (GList *lpc = data_set->resources; lpc != NULL;
                  lpc = lpc->next) {
 
                 rsc = (pe_resource_t *) lpc->data;
                 cli_resource_print_cts(out, rsc);
             }
+
             cli_resource_print_cts_constraints(out, data_set);
             break;
 
