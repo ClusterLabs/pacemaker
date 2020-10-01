@@ -611,7 +611,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                     "multi_state", pe__rsc_bool_str(rsc, pe_rsc_promotable),
                     "unique", pe__rsc_bool_str(rsc, pe_rsc_unique),
                     "managed", pe__rsc_bool_str(rsc, pe_rsc_managed),
-                    "disabled", pe__resource_is_disabled(rsc) ? "true" : "false",
+                    "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)),
                     "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
                     "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
                     "target_role", configured_role_str(rsc));

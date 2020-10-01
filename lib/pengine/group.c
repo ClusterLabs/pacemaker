@@ -215,7 +215,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                           , "id", rsc->id
                                           , "number_resources", count
                                           , "managed", pe__rsc_bool_str(rsc, pe_rsc_managed)
-                                          , "disabled", pe__resource_is_disabled(rsc) ? "true" : "false");
+                                          , "disabled", pcmk__btoa(pe__resource_is_disabled(rsc)));
             free(count);
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
