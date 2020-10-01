@@ -496,10 +496,9 @@ build_parameter_list(const lrmd_event_data_t *op,
                      xmlNode *result, enum ra_param_flags_e param_type,
                      bool invert_for_xml)
 {
-    int len = 0;
-    int max = 0;
     char *list = NULL;
-    GList *iter = NULL;
+    size_t len = 0;
+    size_t max = 0;
 
     /* Newer resource agents support the "private" parameter attribute to
      * indicate sensitive parameters. For backward compatibility with older
@@ -517,7 +516,7 @@ build_parameter_list(const lrmd_event_data_t *op,
         max = DIMOF(secure_terms);
     }
 
-    for (iter = metadata->ra_params; iter != NULL; iter = iter->next) {
+    for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
         bool accept = FALSE;
 
@@ -534,15 +533,13 @@ build_parameter_list(const lrmd_event_data_t *op,
         }
 
         if (accept) {
-            int start = len;
-
             crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
 
-            len += strlen(param->rap_name) + 2; // include spaces around
-            list = pcmk__realloc(list, len + 1); // include null terminator
-
-            // spaces before and after make parsing simpler
-            sprintf(list + start, " %s ", param->rap_name);
+            if (list == NULL) {
+                // We will later search for " WORD ", so start list with a space
+                pcmk__add_word(&list, &len, " ");
+            }
+            pcmk__add_word(&list, &len, param->rap_name);
 
         } else {
             crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
@@ -558,6 +555,10 @@ build_parameter_list(const lrmd_event_data_t *op,
         }
     }
 
+    if (list != NULL) {
+        // We will later search for " WORD ", so end list with a space
+        pcmk__add_word(&list, &len, " ");
+    }
     return list;
 }
 
