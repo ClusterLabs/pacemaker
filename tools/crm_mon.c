@@ -1465,6 +1465,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
     int nodes_standby = 0;
     int nodes_maintenance = 0;
     char *offline_nodes = NULL;
+    size_t offline_nodes_len = 0;
     gboolean no_dc = FALSE;
     gboolean offline = FALSE;
 
@@ -1485,7 +1486,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
         } else {
             char *s = crm_strdup_printf("offline node: %s", node->details->uname);
             /* coverity[leaked_storage] False positive */
-            offline_nodes = pcmk__add_word(offline_nodes, s);
+            pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
             free(s);
             mon_ops |= mon_op_has_warnings;
             offline = TRUE;
@@ -1493,10 +1494,10 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
     }
 
     if (pcmk_is_set(mon_ops, mon_op_has_warnings)) {
-        out->info(out, "CLUSTER WARN:%s%s%s",
-                  no_dc ? " No DC" : "",
-                  no_dc && offline ? "," : "",
-                  offline ? offline_nodes : "");
+        out->info(out, "CLUSTER WARN: %s%s%s",
+                  no_dc ? "No DC" : "",
+                  no_dc && offline ? ", " : "",
+                  (offline? offline_nodes : ""));
         free(offline_nodes);
     } else {
         char *nodes_standby_s = NULL;

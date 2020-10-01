@@ -382,6 +382,12 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
+    size_t online_nodes_len = 0;
+    size_t online_remote_nodes_len = 0;
+    size_t online_guest_nodes_len = 0;
+    size_t offline_nodes_len = 0;
+    size_t offline_remote_nodes_len = 0;
+
     GListPtr gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -428,25 +434,25 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 
         } else if (node->details->online) {
             if (pe__is_guest_node(node)) {
-                online_guest_nodes = pcmk__add_word(online_guest_nodes,
-                                                    node_name);
+                pcmk__add_word(&online_guest_nodes, &online_guest_nodes_len,
+                               node_name);
             } else if (pe__is_remote_node(node)) {
-                online_remote_nodes = pcmk__add_word(online_remote_nodes,
-                                                     node_name);
+                pcmk__add_word(&online_remote_nodes, &online_remote_nodes_len,
+                               node_name);
             } else {
-                online_nodes = pcmk__add_word(online_nodes, node_name);
+                pcmk__add_word(&online_nodes, &online_nodes_len, node_name);
             }
             free(node_name);
             continue;
 
         } else {
             if (pe__is_remote_node(node)) {
-                offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
-                                                      node_name);
+                pcmk__add_word(&offline_remote_nodes, &offline_remote_nodes_len,
+                               node_name);
             } else if (pe__is_guest_node(node)) {
                 /* ignore offline container nodes */
             } else {
-                offline_nodes = pcmk__add_word(offline_nodes, node_name);
+                pcmk__add_word(&offline_nodes, &offline_nodes_len, node_name);
             }
             free(node_name);
             continue;
@@ -466,23 +472,23 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     }
 
     if (online_nodes) {
-        printf("Online: [%s ]\n", online_nodes);
+        printf("Online: [ %s ]\n", online_nodes);
         free(online_nodes);
     }
     if (offline_nodes) {
-        printf("OFFLINE: [%s ]\n", offline_nodes);
+        printf("OFFLINE: [ %s ]\n", offline_nodes);
         free(offline_nodes);
     }
     if (online_remote_nodes) {
-        printf("RemoteOnline: [%s ]\n", online_remote_nodes);
+        printf("RemoteOnline: [ %s ]\n", online_remote_nodes);
         free(online_remote_nodes);
     }
     if (offline_remote_nodes) {
-        printf("RemoteOFFLINE: [%s ]\n", offline_remote_nodes);
+        printf("RemoteOFFLINE: [ %s ]\n", offline_remote_nodes);
         free(offline_remote_nodes);
     }
     if (online_guest_nodes) {
-        printf("GuestOnline: [%s ]\n", online_guest_nodes);
+        printf("GuestOnline: [ %s ]\n", online_guest_nodes);
         free(online_guest_nodes);
     }
 

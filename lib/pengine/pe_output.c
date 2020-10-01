@@ -1353,6 +1353,12 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
+    size_t online_nodes_len = 0;
+    size_t online_remote_nodes_len = 0;
+    size_t online_guest_nodes_len = 0;
+    size_t offline_nodes_len = 0;
+    size_t offline_remote_nodes_len = 0;
+
     int rc = pcmk_rc_no_output;
 
     for (GListPtr gIter = nodes; gIter != NULL; gIter = gIter->next) {
@@ -1407,13 +1413,13 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
             node_mode = "online";
             if (group_by_node == FALSE) {
                 if (pe__is_guest_node(node)) {
-                    online_guest_nodes = pcmk__add_word(online_guest_nodes,
-                                                       node_name);
+                    pcmk__add_word(&online_guest_nodes,
+                                   &online_guest_nodes_len, node_name);
                 } else if (pe__is_remote_node(node)) {
-                    online_remote_nodes = pcmk__add_word(online_remote_nodes,
-                                                         node_name);
+                    pcmk__add_word(&online_remote_nodes,
+                                   &online_remote_nodes_len, node_name);
                 } else {
-                    online_nodes = pcmk__add_word(online_nodes, node_name);
+                    pcmk__add_word(&online_nodes, &online_nodes_len, node_name);
                 }
                 free(node_name);
                 continue;
@@ -1423,12 +1429,13 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
             node_mode = "OFFLINE";
             if (group_by_node == FALSE) {
                 if (pe__is_remote_node(node)) {
-                    offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
-                                                          node_name);
+                    pcmk__add_word(&offline_remote_nodes,
+                                   &offline_remote_nodes_len, node_name);
                 } else if (pe__is_guest_node(node)) {
                     /* ignore offline guest nodes */
                 } else {
-                    offline_nodes = pcmk__add_word(offline_nodes, node_name);
+                    pcmk__add_word(&offline_nodes,
+                                   &offline_nodes_len, node_name);
                 }
                 free(node_name);
                 continue;
@@ -1443,23 +1450,23 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
 
     /* If we're not grouping by node, summarize nodes by status */
     if (online_nodes) {
-        out->list_item(out, "Online", "[%s ]", online_nodes);
+        out->list_item(out, "Online", "[ %s ]", online_nodes);
         free(online_nodes);
     }
     if (offline_nodes) {
-        out->list_item(out, "OFFLINE", "[%s ]", offline_nodes);
+        out->list_item(out, "OFFLINE", "[ %s ]", offline_nodes);
         free(offline_nodes);
     }
     if (online_remote_nodes) {
-        out->list_item(out, "RemoteOnline", "[%s ]", online_remote_nodes);
+        out->list_item(out, "RemoteOnline", "[ %s ]", online_remote_nodes);
         free(online_remote_nodes);
     }
     if (offline_remote_nodes) {
-        out->list_item(out, "RemoteOFFLINE", "[%s ]", offline_remote_nodes);
+        out->list_item(out, "RemoteOFFLINE", "[ %s ]", offline_remote_nodes);
         free(offline_remote_nodes);
     }
     if (online_guest_nodes) {
-        out->list_item(out, "GuestOnline", "[%s ]", online_guest_nodes);
+        out->list_item(out, "GuestOnline", "[ %s ]", online_guest_nodes);
         free(online_guest_nodes);
     }
 
