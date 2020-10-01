@@ -77,6 +77,8 @@ expand_node_list(GListPtr list, char **uname, char **metal)
     GListPtr gIter = NULL;
     char *node_list = NULL;
     char *metal_list = NULL;
+    size_t node_list_len = 0;
+    size_t metal_list_len = 0;
 
     CRM_ASSERT(uname != NULL);
     if (list == NULL) {
@@ -88,28 +90,13 @@ expand_node_list(GListPtr list, char **uname, char **metal)
     }
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
-        int len = 0;
-        int existing_len = 0;
         pe_node_t *node = (pe_node_t *) gIter->data;
 
         if (node->details->uname == NULL) {
             continue;
         }
-        len = 2 + strlen(node->details->uname);
-
-        if(node_list) {
-            existing_len = strlen(node_list);
-        }
-//            crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
-        node_list = pcmk__realloc(node_list, len + existing_len);
-        sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
-
+        pcmk__add_word(&node_list, &node_list_len, node->details->uname);
         if(metal) {
-            existing_len = 0;
-            if(metal_list) {
-                existing_len = strlen(metal_list);
-            }
-
             if(node->details->remote_rsc
                && node->details->remote_rsc->container
                && node->details->remote_rsc->container->running_on) {
@@ -119,9 +106,7 @@ expand_node_list(GListPtr list, char **uname, char **metal)
             if (node->details->uname == NULL) {
                 continue;
             }
-            len = 2 + strlen(node->details->uname);
-            metal_list = pcmk__realloc(metal_list, len + existing_len);
-            sprintf(metal_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
+            pcmk__add_word(&metal_list, &metal_list_len, node->details->uname);
         }
     }
 
@@ -138,6 +123,8 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
     const char *uname = NULL;
     const char *rsc_id = NULL;
     const char *last_rsc_id = NULL;
+    size_t rsc_list_len = 0;
+    size_t node_list_len = 0;
 
     if (rsc_list) {
         *rsc_list = NULL;
@@ -184,16 +171,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
         last_rsc_id = rsc_id;
 
         if (rsc_list != NULL) {
-            int existing_len = 0;
-            int len = 2 + strlen(rsc_id);       /* +1 space, +1 EOS */
-
-            if (*rsc_list) {
-                existing_len = strlen(*rsc_list);
-            }
-
-            crm_trace("Adding %s (%dc) at offset %d", rsc_id, len - 2, existing_len);
-            *rsc_list = pcmk__realloc(*rsc_list, len + existing_len);
-            sprintf(*rsc_list + existing_len, "%s%s", existing_len == 0 ? "":" ", rsc_id);
+            pcmk__add_word(rsc_list, &rsc_list_len, rsc_id);
         }
 
         if (entry->node != NULL) {
@@ -201,16 +179,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
         }
 
         if (node_list != NULL && uname) {
-            int existing_len = 0;
-            int len = 2 + strlen(uname);
-
-            if (*node_list) {
-                existing_len = strlen(*node_list);
-            }
-
-            crm_trace("Adding %s (%dc) at offset %d", uname, len - 2, existing_len);
-            *node_list = pcmk__realloc(*node_list, len + existing_len);
-            sprintf(*node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", uname);
+            pcmk__add_word(node_list, &node_list_len, uname);
         }
     }
 
