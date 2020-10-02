@@ -70,7 +70,8 @@ do_cib_control(long long action,
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
 
         if (fsa_cib_conn->state != cib_disconnected) {
-            fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
+            /* Does not require a set_slave() reply to sign out from based. */
+            fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local | cib_discard_reply);
             fsa_cib_conn->cmds->signoff(fsa_cib_conn);
         }
         crm_notice("Disconnected from the CIB manager");
