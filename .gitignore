@@ -206,6 +206,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /lib/common/tests/flags/pcmk_all_flags_set
 /lib/common/tests/flags/pcmk_any_flags_set
 /lib/common/tests/operations/parse_op_key
+/lib/common/tests/strings/pcmk__add_word
 /lib/common/tests/strings/pcmk__btoa
 /lib/common/tests/strings/pcmk__parse_ll_range
 /lib/common/tests/strings/pcmk__scan_double

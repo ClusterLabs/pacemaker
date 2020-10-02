@@ -1,3 +1,12 @@
+#
+# Copyright 2020 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 LDADD = $(top_builddir)/lib/common/libcrmcommon.la
 
@@ -8,7 +17,8 @@ include $(top_srcdir)/mk/glib-tap.mk
 # information.
 #
 # https://developer.gnome.org/glib/unstable/glib-Testing.html
-test_programs =	pcmk__btoa			\
+test_programs =	pcmk__add_word			\
+		pcmk__btoa			\
 		pcmk__parse_ll_range		\
 		pcmk__scan_double		\
 				pcmk__str_any_of \
