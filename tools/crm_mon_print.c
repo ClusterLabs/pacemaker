@@ -49,7 +49,7 @@ static int print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set
                                  unsigned int mon_ops, GListPtr only_node,
                                  GListPtr only_rsc, gboolean print_spacer);
 static int print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
-                                GListPtr only_node, gboolean print_spacer);
+                                GListPtr only_node, GListPtr only_rsc, gboolean print_spacer);
 
 static GListPtr
 build_uname_list(pe_working_set_t *data_set, const char *s) {
@@ -602,10 +602,12 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
  */
 static int
 print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
-                     GListPtr only_node, gboolean print_spacer)
+                     GListPtr only_node, GListPtr only_rsc, gboolean print_spacer)
 {
     xmlNode *xml_op = NULL;
     int rc = pcmk_rc_no_output;
+
+    const char *id = NULL;
 
     if (xmlChildElementCount(data_set->failed) == 0) {
         return rc;
@@ -613,9 +615,23 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
 
     for (xml_op = pcmk__xml_first_child(data_set->failed); xml_op != NULL;
          xml_op = pcmk__xml_next(xml_op)) {
+        char *rsc = NULL;
+
         if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME))) {
             continue;
         }
+
+        id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+        if (parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL) == FALSE) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_rsc, rsc)) {
+            free(rsc);
+            continue;
+        }
+
+        free(rsc);
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Resource Actions");
         out->message(out, "failed-action", xml_op);
@@ -703,7 +719,8 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        CHECK_RC(rc, print_failed_actions(out, data_set, unames, rc == pcmk_rc_ok));
+        CHECK_RC(rc, print_failed_actions(out, data_set, unames, resources,
+                                          rc == pcmk_rc_ok));
     }
 
     /* Print failed stonith actions */
@@ -825,7 +842,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        print_failed_actions(out, data_set, unames, FALSE);
+        print_failed_actions(out, data_set, unames, resources, FALSE);
     }
 
     /* Print stonith history */
@@ -922,7 +939,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        print_failed_actions(out, data_set, unames, FALSE);
+        print_failed_actions(out, data_set, unames, resources, FALSE);
     }
 
     /* Print failed stonith actions */
