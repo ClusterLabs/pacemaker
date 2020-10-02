@@ -13,9 +13,11 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <regex.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <ctype.h>
 
 #include <crm/crm.h>
@@ -23,6 +25,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+
+static regex_t *notify_migrate_re = NULL;
 
 /*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
@@ -44,83 +48,158 @@ pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
     return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
+static gboolean
+try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
+{
+    size_t len = 0, offset = 0;
+    size_t op_len = 0;
+
+    len = strlen(key);
+    offset = len - 1;
+
+    // Parse interval at end of string
+    while ((offset > 0) && isdigit(key[offset])) {
+        offset--;
+    }
+
+    if (interval_ms) {
+        unsigned long l;
+
+        errno = 0;
+        l = strtoul(&(key[offset+1]), NULL, 10);
+
+        if (errno != 0) {
+            return FALSE;
+        }
+
+        *interval_ms = (guint) l;
+    }
+
+    // Verify we're at the separator between the operation and interval.
+    if (offset == len-1 || key[offset] != '_') {
+        if (interval_ms) {
+            *interval_ms = 0;
+        }
+
+        return FALSE;
+    }
+
+    // We're already on the underscore before the interval.  Back up one
+    // or this loop will never do anything.
+    offset--;
+
+    while ((offset > 0) && key[offset] != '_') {
+        offset--;
+        op_len++;
+    }
+
+    if (op_type) {
+        // Add one here to skip the leading underscore we landed on in the
+        // while loop.
+        *op_type = strndup(&(key[offset+1]), op_len);
+    }
+
+    // Verify we're at the separator between the resource and operation.
+    if (offset == len-1 || key[offset] != '_') {
+        if (interval_ms) {
+            *interval_ms = 0;
+        }
+
+        if (op_type) {
+            free(*op_type);
+            *op_type = NULL;
+        }
+
+        return FALSE;
+    }
+
+    // Everything else is the name of the resource.
+    if (rsc_id) {
+        *rsc_id = strndup(key, offset);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
+{
+    int rc = 0;
+    size_t nmatch = 8;
+    regmatch_t *pmatch = NULL;
+
+    if (notify_migrate_re == NULL) {
+        // cppcheck-suppress memleak
+        notify_migrate_re = calloc(1, sizeof(regex_t));
+        rc = regcomp(notify_migrate_re, "^(.*)_(migrate_(from|to)|(pre|post)_notify_([a-z]+|migrate_(from|to)))_([0-9]+)$",
+                     REG_EXTENDED);
+        CRM_ASSERT(rc == 0);
+    }
+
+    pmatch = calloc(nmatch, sizeof(regmatch_t));
+
+    rc = regexec(notify_migrate_re, key, nmatch, pmatch, 0);
+    if (rc == REG_NOMATCH) {
+        free(pmatch);
+        return FALSE;
+    }
+
+    if (rsc_id) {
+        *rsc_id = strndup(key+pmatch[1].rm_so, pmatch[1].rm_eo-pmatch[1].rm_so);
+    }
+
+    if (op_type) {
+        *op_type = strndup(key+pmatch[2].rm_so, pmatch[2].rm_eo-pmatch[2].rm_so);
+    }
+
+    if (interval_ms) {
+        unsigned long l;
+
+        errno = 0;
+        l = strtoul(key+pmatch[7].rm_so, NULL, 10);
+
+        if (errno != 0) {
+            if (rsc_id) {
+                free(*rsc_id);
+                *rsc_id = NULL;
+            }
+
+            if (op_type) {
+                free(*op_type);
+                *op_type = NULL;
+            }
+
+            free(pmatch);
+            return FALSE;
+        }
+
+        *interval_ms = (guint) l;
+    }
+
+    free(pmatch);
+    return TRUE;
+}
+
 gboolean
 parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
-    char *notify = NULL;
-    char *mutable_key = NULL;
-    char *mutable_key_ptr = NULL;
-    size_t len = 0, offset = 0;
-    unsigned long long ch = 0;
-    guint local_interval_ms = 0;
-
     // Initialize output variables in case of early return
     if (rsc_id) {
         *rsc_id = NULL;
     }
+
     if (op_type) {
         *op_type = NULL;
     }
+
     if (interval_ms) {
         *interval_ms = 0;
     }
 
     CRM_CHECK(key && *key, return FALSE);
 
-    // Parse interval at end of string
-    len = strlen(key);
-    offset = len - 1;
-    while ((offset > 0) && isdigit(key[offset])) {
-        ch = key[offset] - '0';
-        for (int digits = len - offset; digits > 1; --digits) {
-            ch = ch * 10;
-        }
-        local_interval_ms += ch;
-        offset--;
-    }
-    if (interval_ms) {
-        *interval_ms = local_interval_ms;
-    }
-
-    CRM_CHECK((offset != (len - 1)) && (key[offset] == '_'), return FALSE);
-
-    mutable_key = strndup(key, offset);
-    offset--;
-
-    while (offset > 0 && key[offset] != '_') {
-        offset--;
-    }
-
-    CRM_CHECK(key[offset] == '_',
-              free(mutable_key); return FALSE);
-
-    mutable_key_ptr = mutable_key + offset + 1;
-
-    if (op_type) {
-        *op_type = strdup(mutable_key_ptr);
-    }
-
-    mutable_key[offset] = 0;
-    offset--;
-
-    notify = strstr(mutable_key, "_post_notify");
-    if (notify && pcmk__str_eq(notify, "_post_notify", pcmk__str_casei)) {
-        notify[0] = 0;
-    }
-
-    notify = strstr(mutable_key, "_pre_notify");
-    if (notify && pcmk__str_eq(notify, "_pre_notify", pcmk__str_casei)) {
-        notify[0] = 0;
-    }
-
-    // @TODO We don't really need this trace if we add good unit tests for this
-    crm_trace("Parsed %s into resource %s, action %s, interval %ums",
-              key, mutable_key, mutable_key_ptr, local_interval_ms);
-
-    if (rsc_id) {
-        *rsc_id = mutable_key;
-    } else {
-        free(mutable_key);
+    if (!try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
+        return try_basic_match(key, rsc_id, op_type, interval_ms);
     }
 
     return TRUE;

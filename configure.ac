@@ -2007,6 +2007,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
                 lib/common/tests/flags/Makefile                     \
+                lib/common/tests/operations/Makefile                \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
                 lib/cluster/Makefile                                \
