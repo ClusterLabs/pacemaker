@@ -69,8 +69,8 @@ int cli_resource_check(pcmk__output_t *out, cib_t * cib, pe_resource_t *rsc);
 int cli_resource_fail(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                       const char *host_uname, const char *rsc_id,
                       pe_working_set_t *data_set);
-int cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc,
-                        const char *requested_name, pe_working_set_t *data_set);
+GListPtr cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc,
+                             const char *requested_name, pe_working_set_t *data_set);
 int cli_resource_delete(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
                         const char *host_uname, pe_resource_t *rsc,
                         const char *operation, const char *interval_spec,

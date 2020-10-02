@@ -361,6 +361,76 @@ resource_check_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("resource-search", "GListPtr", "pe_resource_t *", "gchar *")
+static int
+resource_search_default(pcmk__output_t *out, va_list args)
+{
+    GListPtr nodes = va_arg(args, GListPtr);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    gchar *requested_name = va_arg(args, gchar *);
+
+    bool printed = false;
+    int rc = pcmk_rc_no_output;
+
+    if (!out->is_quiet(out) && nodes == NULL) {
+        out->err(out, "resource %s is NOT running", requested_name);
+        return rc;
+    }
+
+    for (GListPtr lpc = nodes; lpc != NULL; lpc = lpc->next) {
+        pe_node_t *node = (pe_node_t *) lpc->data;
+
+        if (!printed) {
+            out->begin_list(out, NULL, NULL, "Nodes");
+            printed = true;
+            rc = pcmk_rc_ok;
+        }
+
+        if (out->is_quiet(out)) {
+            out->list_item(out, "node", "%s", node->details->uname);
+        } else {
+            const char *state = "";
+
+            if (!pe_rsc_is_clone(rsc) && rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
+                state = " Master";
+            }
+            out->list_item(out, "node", "resource %s is running on: %s%s",
+                           requested_name, node->details->uname, state);
+        }
+    }
+
+    if (printed) {
+        out->end_list(out);
+    }
+
+    return rc;
+}
+
+
+PCMK__OUTPUT_ARGS("resource-search", "GListPtr", "pe_resource_t *", "gchar *")
+static int
+resource_search_xml(pcmk__output_t *out, va_list args)
+{
+    GListPtr nodes = va_arg(args, GListPtr);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    gchar *requested_name = va_arg(args, gchar *);
+
+    xmlNode *xml_node = pcmk__output_xml_create_parent(out, "nodes");
+
+    xmlSetProp(xml_node, (pcmkXmlStr) "resource", (pcmkXmlStr) requested_name);
+
+    for (GListPtr lpc = nodes; lpc != NULL; lpc = lpc->next) {
+        pe_node_t *node = (pe_node_t *) lpc->data;
+        xmlNode *sub_node = pcmk__output_create_xml_text_node(out, "node", node->details->uname);
+
+        if (!pe_rsc_is_clone(rsc) && rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
+            xmlSetProp(sub_node, (pcmkXmlStr) "state", (pcmkXmlStr) "promoted");
+        }
+    }
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GListPtr", "pe_resource_t *",
                   "pe_node_t *")
 static int
@@ -583,6 +653,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "property", "text", property_text },
     { "resource-check", "default", resource_check_default },
     { "resource-check", "xml", resource_check_xml },
+    { "resource-search", "default", resource_search_default },
+    { "resource-search", "xml", resource_search_xml },
     { "resource-why", "default", resource_why_default },
     { "resource-why", "xml", resource_why_xml },
     { "resource-names-list", "default", resource_names },

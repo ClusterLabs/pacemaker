@@ -12,37 +12,6 @@
 #include <crm/common/lists_internal.h>
 #include <crm/common/xml_internal.h>
 
-static int
-do_find_resource(pcmk__output_t *out, const char *rsc, pe_resource_t * the_rsc,
-                 pe_working_set_t * data_set)
-{
-    int found = 0;
-    GListPtr lpc = NULL;
-
-    for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
-        pe_node_t *node = (pe_node_t *) lpc->data;
-
-        if (out->is_quiet(out)) {
-            out->info(out, "%s", node->details->uname);
-        } else {
-            const char *state = "";
-
-            if (!pe_rsc_is_clone(the_rsc) && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
-                state = "Master";
-            }
-            out->info(out, "resource %s is running on: %s %s", rsc, node->details->uname, state);
-        }
-
-        found++;
-    }
-
-    if (!out->is_quiet(out) && found == 0) {
-        out->err(out, "resource %s is NOT running", rsc);
-    }
-
-    return found;
-}
-
 resource_checks_t *
 cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
 {
@@ -72,16 +41,19 @@ cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
     return rc;
 }
 
-int
+GListPtr
 cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
 {
-    int found = 0;
+    GListPtr found = NULL;
     pe_resource_t *parent = uber_parent(rsc);
 
     if (pe_rsc_is_clone(rsc)) {
         for (GListPtr iter = rsc->children; iter != NULL; iter = iter->next) {
-            found += do_find_resource(out, requested_name, iter->data, data_set);
+            GListPtr extra = ((pe_resource_t *) iter->data)->running_on;
+            if (extra != NULL) {
+                found = g_list_concat(found, extra);
+            }
         }
 
     /* The anonymous clone children's common ID is supplied */
@@ -92,11 +64,14 @@ cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc, const char *request
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
 
         for (GListPtr iter = parent->children; iter; iter = iter->next) {
-            found += do_find_resource(out, requested_name, iter->data, data_set);
+            GListPtr extra = ((pe_resource_t *) iter->data)->running_on;
+            if (extra != NULL) {
+                found = g_list_concat(found, extra);
+            }
         }
 
-    } else {
-        found += do_find_resource(out, requested_name, rsc, data_set);
+    } else if (rsc->running_on != NULL) {
+        found = g_list_concat(found, rsc->running_on);
     }
 
     return found;
@@ -1828,8 +1803,8 @@ cli_resource_execute(pcmk__output_t *out, pe_resource_t *rsc,
         action = rsc_action+6;
 
         if(pe_rsc_is_clone(rsc)) {
-            int rc = cli_resource_search(out, rsc, requested_name, data_set);
-            if(rc > 0 && force == FALSE) {
+            GListPtr rscs = cli_resource_search(out, rsc, requested_name, data_set);
+            if(rscs != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          action, rsc->id);
                 out->err(out, "Try setting target-role=Stopped first or specifying "

@@ -1844,10 +1844,11 @@ main(int argc, char **argv)
                                                data_set);
             break;
 
-        case cmd_locate:
-            cli_resource_search(out, rsc, options.rsc_id, data_set);
-            rc = pcmk_rc_ok;
+        case cmd_locate: {
+            GListPtr resources = cli_resource_search(out, rsc, options.rsc_id, data_set);
+            rc = out->message(out, "resource-search", resources, rsc, options.rsc_id);
             break;
+        }
 
         case cmd_query_xml:
             rc = cli_resource_print(out, rsc, data_set, TRUE);
