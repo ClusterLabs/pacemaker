@@ -53,6 +53,7 @@ char *crm_generate_ra_key(const char *standard, const char *provider,
                           const char *type);
 int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                          char **type);
+bool pcmk_stonith_param(const char *param);
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward

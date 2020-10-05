@@ -2051,11 +2051,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
                          pcmk__str_casei)) {
             host_arg = params->value;
         }
-
-        // Strip out Pacemaker-implemented parameters
-        if (!pcmk__starts_with(params->key, "pcmk_")
-                && strcmp(params->key, PCMK_STONITH_PROVIDES)
-                && strcmp(params->key, PCMK_STONITH_STONITH_TIMEOUT)) {
+        if (!pcmk_stonith_param(params->key)) {
             g_hash_table_insert(params_table, strdup(params->key),
                                 strdup(params->value));
         }
