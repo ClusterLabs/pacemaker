@@ -122,7 +122,7 @@ cluster_connect_cfg(void)
     }
 
     /* CFG provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
         crm_crit("Rejecting Corosync CFG provider because process %lld "
                  "is running as uid %lld gid %lld, not root",
@@ -238,7 +238,7 @@ mcp_read_config(void)
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
         crm_crit("Rejecting Corosync CMAP provider because process %lld "
                  "is running as uid %lld gid %lld, not root",

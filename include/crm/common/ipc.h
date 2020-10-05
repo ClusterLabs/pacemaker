@@ -180,7 +180,7 @@ const char *crm_ipc_name(crm_ipc_t * client);
 unsigned int crm_ipc_default_buffer_size(void);
 
 /*!
- * \brief Check the authenticity of the IPC socket peer process
+ * \brief Check the authenticity of the IPC socket peer process (legacy)
  *
  * If everything goes well, peer's authenticity is verified by the means
  * of comparing against provided referential UID and GID (either satisfies),
@@ -188,7 +188,6 @@ unsigned int crm_ipc_default_buffer_size(void);
  * As an exception, detected UID of 0 ("root") satisfies arbitrary
  * provided referential daemon's credentials.
  *
- * \param[in]  qb_ipc  libqb client connection if available
  * \param[in]  sock    IPC related, connected Unix socket to check peer of
  * \param[in]  refuid  referential UID to check against
  * \param[in]  refgid  referential GID to check against
@@ -215,7 +214,7 @@ unsigned int crm_ipc_default_buffer_size(void);
  *       the least privilege principle and may pose an additional risk
  *       (i.e. such accidental inconsistency shall be eventually fixed).
  */
-int crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
+int crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                                  pid_t *gotpid, uid_t *gotuid, gid_t *gotgid);
 
 /* This is controller-specific but is declared in this header for C API

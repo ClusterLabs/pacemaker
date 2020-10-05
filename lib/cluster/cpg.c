@@ -96,7 +96,7 @@ uint32_t get_local_nodeid(cpg_handle_t handle)
         }
 
         /* CPG provider run as root (in given user namespace, anyway)? */
-        if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+        if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                                 &found_uid, &found_gid))) {
             crm_err("CPG provider is not authentic:"
                     " process %lld (uid: %lld, gid: %lld)",
@@ -586,7 +586,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     }
 
     /* CPG provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
         crm_err("CPG provider is not authentic:"
                 " process %lld (uid: %lld, gid: %lld)",

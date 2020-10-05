@@ -107,7 +107,7 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         }
 
         /* CMAP provider run as root (in given user namespace, anyway)? */
-        if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+        if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                                 &found_uid, &found_gid))) {
             crm_err("CMAP provider is not authentic:"
                     " process %lld (uid: %lld, gid: %lld)",
@@ -306,7 +306,7 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
     }
 
     /* Quorum provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
         crm_err("Quorum provider is not authentic:"
                 " process %lld (uid: %lld, gid: %lld)",
@@ -564,7 +564,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
         crm_err("CMAP provider is not authentic:"
                 " process %lld (uid: %lld, gid: %lld)",
@@ -662,7 +662,7 @@ corosync_cluster_name(void)
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
         crm_err("CMAP provider is not authentic:"
                 " process %lld (uid: %lld, gid: %lld)",
@@ -732,7 +732,7 @@ corosync_cmap_has_config(const char *prefix)
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(NULL, fd, (uid_t) 0,(gid_t) 0, &found_pid,
+    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
         crm_err("CMAP provider is not authentic:"
                 " process %lld (uid: %lld, gid: %lld)",

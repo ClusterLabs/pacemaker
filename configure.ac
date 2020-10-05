@@ -1182,7 +1182,7 @@ LIBS="$libqb_LIBS $LIBS"
 dnl libqb 0.14.0+ (2012-06)
 AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
 
-dnl libqb 2.02+ (2020-09)
+dnl libqb 2.02+ (2020-10)
 AC_CHECK_FUNCS(qb_ipcc_auth_get,
                AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
                          [Have qb_ipcc_auth_get function]))
