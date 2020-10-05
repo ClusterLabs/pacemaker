@@ -621,7 +621,7 @@ pcmk__add_separated_word(char **list, size_t *len, const char *word,
 
     CRM_ASSERT(list != NULL);
 
-    if ((word == NULL) || (word[0] == '\0')) {
+    if (pcmk__str_empty(word)) {
         return;
     }
 
