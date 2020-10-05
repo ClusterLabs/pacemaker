@@ -49,7 +49,7 @@ MAY_USE_INTERNAL_FILES = $(shell find .. -path "../lib/*.c" -o -path "../tools/*
 OTHER_FILES = $(shell find ../include -name '*h' -a \! -name '*internal.h' -a \! -path '../include/pcmki/*')
 
 cocci:
-	for cf in $(COCCI_FILES); do \
+	-for cf in $(COCCI_FILES); do \
 		for f in $(MAY_USE_INTERNAL_FILES); do \
 			spatch $(_SPATCH_FLAGS) -D internal --very-quiet --local-includes --preprocess --sp-file $$cf $$f; \
 		done ; \
