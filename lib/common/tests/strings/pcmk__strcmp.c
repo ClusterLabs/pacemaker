@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdbool.h>
 #include <glib.h>
 
 #include <crm_internal.h>
@@ -8,9 +10,9 @@ same_pointer(void) {
     const char *s2 = "wxyz";
 
     g_assert_cmpint(pcmk__strcmp(s1, s1, pcmk__str_none), ==, 0);
-    g_assert_true(pcmk__str_eq(s1, s1, pcmk__str_none));
+    g_assert_cmpint(pcmk__str_eq(s1, s1, pcmk__str_none), ==, true);
     g_assert_cmpint(pcmk__strcmp(s1, s2, pcmk__str_none), !=, 0);
-    g_assert_false(pcmk__str_eq(s1, s2, pcmk__str_none));
+    g_assert_cmpint(pcmk__str_eq(s1, s2, pcmk__str_none), ==, false);
     g_assert_cmpint(pcmk__strcmp(NULL, NULL, pcmk__str_none), ==, 0);
 }
 
@@ -19,10 +21,10 @@ one_is_null(void) {
     const char *s1 = "abcd";
 
     g_assert_cmpint(pcmk__strcmp(s1, NULL, pcmk__str_null_matches), ==, 0);
-    g_assert_true(pcmk__str_eq(s1, NULL, pcmk__str_null_matches));
+    g_assert_cmpint(pcmk__str_eq(s1, NULL, pcmk__str_null_matches), ==, true);
     g_assert_cmpint(pcmk__strcmp(NULL, s1, pcmk__str_null_matches), ==, 0);
     g_assert_cmpint(pcmk__strcmp(s1, NULL, pcmk__str_none), >, 0);
-    g_assert_false(pcmk__str_eq(s1, NULL, pcmk__str_none));
+    g_assert_cmpint(pcmk__str_eq(s1, NULL, pcmk__str_none), ==, false);
     g_assert_cmpint(pcmk__strcmp(NULL, s1, pcmk__str_none), <, 0);
 }
 
@@ -32,7 +34,7 @@ case_matters(void) {
     const char *s2 = "ABCD";
 
     g_assert_cmpint(pcmk__strcmp(s1, s2, pcmk__str_none), >, 0);
-    g_assert_false(pcmk__str_eq(s1, s2, pcmk__str_none));
+    g_assert_cmpint(pcmk__str_eq(s1, s2, pcmk__str_none), ==, false);
     g_assert_cmpint(pcmk__strcmp(s2, s1, pcmk__str_none), <, 0);
 }
 
@@ -42,7 +44,7 @@ case_insensitive(void) {
     const char *s2 = "ABCD";
 
     g_assert_cmpint(pcmk__strcmp(s1, s2, pcmk__str_casei), ==, 0);
-    g_assert_true(pcmk__str_eq(s1, s2, pcmk__str_casei));
+    g_assert_cmpint(pcmk__str_eq(s1, s2, pcmk__str_casei), ==, true);
 }
 
 static void
@@ -53,13 +55,13 @@ regex(void) {
     g_assert_cmpint(pcmk__strcmp(NULL, "a..d", pcmk__str_regex), ==, 1);
     g_assert_cmpint(pcmk__strcmp(s1, NULL, pcmk__str_regex), ==, 1);
     g_assert_cmpint(pcmk__strcmp(s1, "a..d", pcmk__str_regex), ==, 0);
-    g_assert_true(pcmk__str_eq(s1, "a..d", pcmk__str_regex));
+    g_assert_cmpint(pcmk__str_eq(s1, "a..d", pcmk__str_regex), ==, true);
     g_assert_cmpint(pcmk__strcmp(s1, "xxyy", pcmk__str_regex), !=, 0);
-    g_assert_false(pcmk__str_eq(s1, "xxyy", pcmk__str_regex));
+    g_assert_cmpint(pcmk__str_eq(s1, "xxyy", pcmk__str_regex), ==, false);
     g_assert_cmpint(pcmk__strcmp(s2, "a..d", pcmk__str_regex|pcmk__str_casei), ==, 0);
-    g_assert_true(pcmk__str_eq(s2, "a..d", pcmk__str_regex|pcmk__str_casei));
+    g_assert_cmpint(pcmk__str_eq(s2, "a..d", pcmk__str_regex|pcmk__str_casei), ==, true);
     g_assert_cmpint(pcmk__strcmp(s2, "a..d", pcmk__str_regex), !=, 0);
-    g_assert_false(pcmk__str_eq(s2, "a..d", pcmk__str_regex));
+    g_assert_cmpint(pcmk__str_eq(s2, "a..d", pcmk__str_regex), ==, false);
     g_assert_cmpint(pcmk__strcmp(s2, "*ab", pcmk__str_regex), ==, 1);
 }
 
