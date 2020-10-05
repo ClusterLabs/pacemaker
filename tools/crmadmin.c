@@ -19,11 +19,14 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>
 #include <crm/common/mainloop.h>
+
+#define SUMMARY "query and manage the Pacemaker controller"
 
 #define DEFAULT_MESSAGE_TIMEOUT_MS 30000
 
@@ -53,108 +56,75 @@ static gboolean BE_SILENT = FALSE;
 static char *dest_node = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
+
+struct {
+    gboolean quiet;
+    char *status;
+    gboolean pacemakerd;
+    gboolean dc_lookup;
+    gboolean nodes;
+    gboolean election;
+    char *kill;
+    gboolean health;
+    guint timeout;
+} options;
+
+static GOptionEntry command_options[] = {
+    { "status", 'S', 0, G_OPTION_ARG_STRING, &options.status,
+      "Display the status of the specified node."
+      "\n                          Result is state of node's internal finite state"
+      "\n                          machine, which can be useful for debugging",
+      NULL
     },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
+    { "pacemakerd", 'P', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.pacemakerd,
+      "Display the status of local pacemakerd."
+      "\n                          Result is the state of the sub-daemons watched"
+      "\n                          by pacemakerd.",
+      NULL
     },
-    {
-        "quiet", no_argument, NULL, 'q',
-        "\tDisplay only the essential query information", pcmk__option_default
+    { "dc_lookup", 'D', 0, G_OPTION_ARG_NONE, &options.dc_lookup,
+      "Display the uname of the node co-ordinating the cluster."
+      "\n                          This is an internal detail rarely useful to"
+      "\n                          administrators except when deciding on which"
+      "\n                          node to examine the logs.",
+      NULL
     },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
+    { "nodes", 'N', 0, G_OPTION_ARG_NONE, &options.nodes,
+      "Display the uname of all member nodes",
+      NULL
     },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nCommands:", pcmk__option_default
+    { "election", 'E', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.election,
+      "(Advanced) Start an election for the cluster co-ordinator",
+      NULL
     },
-    /* daemon options */
-    {
-        "status", required_argument, NULL, 'S',
-        "Display the status of the specified node.", pcmk__option_default
+    { "kill", 'K', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.kill,
+      "(Advanced) Stop controller (not rest of cluster stack) on specified node",
+      NULL
     },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\n\tResult is state of node's internal finite state machine, which "
-            "can be useful for debugging\n",
-        pcmk__option_default
+    { "health", 'H', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.health,
+      NULL,
+      NULL
     },
-    {
-        "pacemakerd", no_argument, NULL, 'P',
-        "Display the status of local pacemakerd.", pcmk__option_default
+
+    { NULL }
+};
+
+static GOptionEntry additional_options[] = {
+    { XML_ATTR_TIMEOUT, 't', 0, G_OPTION_ARG_INT, &options.timeout,
+      "Time (in milliseconds) to wait before declaring the"
+      "\n                          operation failed",
+      NULL
     },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\n\tResult is the state of the sub-daemons watched by pacemakerd.\n",
-        pcmk__option_default
+    { "bash-export", 'B', 0, G_OPTION_ARG_NONE, &BASH_EXPORT,
+      "Display nodes as shell commands of the form 'export uname=uuid'"
+      "\n                          (valid with -N/--nodes)",
     },
-    {
-        "dc_lookup", no_argument, NULL, 'D',
-        "Display the uname of the node co-ordinating the cluster.",
-        pcmk__option_default
+    { "ipc-name", 'i', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &ipc_name,
+      "Name to use for ipc instead of 'crmadmin' (with -P/--pacemakerd).",
+      NULL
     },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\n\tThis is an internal detail rarely useful to administrators "
-            "except when deciding on which node to examine the logs.\n",
-        pcmk__option_default
-    },
-    {
-        "nodes", no_argument, NULL, 'N',
-        "\tDisplay the uname of all member nodes", pcmk__option_default
-    },
-    {
-        "election", no_argument, NULL, 'E',
-        "(Advanced) Start an election for the cluster co-ordinator",
-        pcmk__option_default
-    },
-    {
-        "kill", required_argument, NULL, 'K',
-        "(Advanced) Stop controller (not rest of cluster stack) on "
-            "specified node", pcmk__option_default
-    },
-    {
-        "health", no_argument, NULL, 'H',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdditional Options:", pcmk__option_default
-    },
-    {
-        XML_ATTR_TIMEOUT, required_argument, NULL, 't',
-        "Time (in milliseconds) to wait before declaring the operation failed",
-        pcmk__option_default
-    },
-    {
-        "bash-export", no_argument, NULL, 'B',
-        "Display nodes as shell commands of the form 'export uname=uuid' "
-            "(valid with -N/--nodes)",
-        pcmk__option_default
-    },
-    {
-        "ipc-name", required_argument, NULL, 'i',
-        "Name to use for ipc instead of 'crmadmin' (with -P/--pacemakerd).",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nNotes:", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nThe -K and -E commands do not work and may be removed in a future "
-            "version.",
-        pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
+
+    { NULL }
 };
 
 static void
@@ -350,101 +320,124 @@ list_nodes()
     return pcmk_legacy2rc(rc);
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    const char *description = "Report bugs to users@clusterlabs.org";
+
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &options.quiet,
+          "Display only the essential query information",
+          NULL },
+
+        { NULL }
+    };
+
+    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    g_option_context_set_description(context, description);
+
+    /* Add the -q option, which cannot be part of the globally supported options
+     * because some tools use that flag for something else.
+     */
+    pcmk__add_main_args(context, extra_prog_entries);
+
+    pcmk__add_arg_group(context, "command", "Commands:",
+                        "Show command options", command_options);
+    pcmk__add_arg_group(context, "additional", "Additional Options:",
+                        "Show additional options", additional_options);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
-    int option_index = 0;
     int argerr = 0;
-    int flag;
     int rc;
     pcmk_ipc_api_t *controld_api = NULL;
     pcmk_ipc_api_t *pacemakerd_api = NULL;
     bool need_controld_api = true;
     bool need_pacemakerd_api = false;
 
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+
+    GError *error = NULL;
+    GOptionContext *context = NULL;
+    gchar **processed_args = NULL;
+
+    context = build_arg_context(args);
+
     crm_log_cli_init("crmadmin");
-    pcmk__set_cli_options(NULL, "<command> [options]", long_options,
-                          "query and manage the Pacemaker controller");
-    if (argc < 2) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+
+    processed_args = pcmk__cmdline_preproc(argv, "itBDEHKNPS");
+
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        rc = CRM_EX_USAGE;
+        goto done;
     }
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        if (flag == -1)
-            break;
+    for (int i = 0; i < args->verbosity; i++) {
+        BE_VERBOSE = TRUE;
+        crm_bump_log_level(argc, argv);
+    }
 
-        switch (flag) {
-            case 'V':
-                BE_VERBOSE = TRUE;
-                crm_bump_log_level(argc, argv);
-                break;
-            case 't':
-                message_timeout_ms = (guint) atoi(optarg);
-                if (message_timeout_ms < 1) {
-                    message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
-                }
-                break;
-            case 'i':
-                ipc_name = strdup(optarg);
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'D':
-                command = cmd_whois_dc;
-                break;
-            case 'B':
-                BASH_EXPORT = TRUE;
-                break;
-            case 'K':
-                command = cmd_shutdown;
-                crm_trace("Option %c => %s", flag, optarg);
-                if (dest_node != NULL) {
-                    free(dest_node);
-                }
-                dest_node = strdup(optarg);
-                break;
-            case 'q':
-                BE_SILENT = TRUE;
-                break;
-            case 'P':
-                command = cmd_pacemakerd_health;
-                need_pacemakerd_api = true;
-                need_controld_api = false;
-                break;
-            case 'S':
-                command = cmd_health;
-                crm_trace("Option %c => %s", flag, optarg);
-                if (dest_node != NULL) {
-                    free(dest_node);
-                }
-                dest_node = strdup(optarg);
-                break;
-            case 'E':
-                command = cmd_elect_dc;
-                break;
-            case 'N':
-                command = cmd_list_nodes;
-                need_controld_api = false;
-                break;
-            case 'H':
-                fprintf(stderr, "Cluster-wide health option not supported\n");
-                ++argerr;
-                break;
-            default:
-                printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
-                ++argerr;
-                break;
+    if (args->version) {
+        /* FIXME:  When crmadmin is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_USAGE);
+    }
+
+    if (options.timeout) {
+        message_timeout_ms = options.timeout;
+        if (message_timeout_ms < 1) {
+            message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
         }
     }
 
-    if (optind < argc) {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        printf("\n");
+    if (options.dc_lookup) {
+        command = cmd_whois_dc;
+    }
+
+    if (options.kill) {
+        command = cmd_shutdown;
+        crm_trace("Option %c => %s", 'K', options.kill);
+        if (dest_node != NULL) {
+            free(dest_node);
+        }
+        dest_node = strdup(options.kill);
+    }
+
+    if (options.quiet) {
+        BE_SILENT = TRUE;
+    }
+
+    if (options.pacemakerd) {
+        command = cmd_pacemakerd_health;
+        need_pacemakerd_api = true;
+        need_controld_api = false;
+    }
+
+    if (options.status) {
+        command = cmd_health;
+        crm_trace("Option %c => %s", 'S', options.status);
+        if (dest_node != NULL) {
+            free(dest_node);
+        }
+        dest_node = strdup(options.status);
+    }
+
+    if (options.election) {
+        command = cmd_elect_dc;
+    }
+
+    if (options.nodes) {
+        command = cmd_list_nodes;
+        need_controld_api = false;
+    }
+
+    if (options.health) {
+        fprintf(stderr, "Cluster-wide health option not supported\n");
+        ++argerr;
     }
 
     if (optind > argc) {
@@ -457,7 +450,12 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+        char *help = g_option_context_get_help(context, TRUE, NULL);
+
+        fprintf(stderr, "%s", help);
+        g_free(help);
+        rc = CRM_EX_USAGE;
+        goto done;
     }
 
     // Connect to the controller if needed
@@ -525,7 +523,13 @@ done:
         g_main_loop_unref(mainloop);
         mainloop = NULL;
     }
+    g_strfreev(processed_args);
+    g_clear_error(&error);
+    pcmk__free_arg_context(context);
+    free(options.status);
+    free(options.kill);
     return crm_exit(exit_code);
+
 }
 
 // \return True if reply from controller is needed
