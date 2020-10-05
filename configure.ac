@@ -2006,6 +2006,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/pacemaker-cluster.pc                            \
                 lib/common/Makefile                                 \
                 lib/common/tests/Makefile                           \
+                lib/common/tests/agents/Makefile                    \
                 lib/common/tests/cmdline/Makefile                   \
                 lib/common/tests/flags/Makefile                     \
                 lib/common/tests/operations/Makefile                \
