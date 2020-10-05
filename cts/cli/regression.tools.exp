@@ -2001,12 +2001,13 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= End test: Ban dummy from node1 - OK (0) =#=#=#=
 * Passed: crm_resource   - Ban dummy from node1
 =#=#=#= Begin test: Show where a resource is running =#=#=#=
-resource dummy is running on: node1 
+resource dummy is running on: node1
 =#=#=#= End test: Show where a resource is running - OK (0) =#=#=#=
 * Passed: crm_resource   - Show where a resource is running
 =#=#=#= Begin test: Show constraints on a resource =#=#=#=
-* dummy
-  : Node node1                                                                   (score=-INFINITY, id=cli-ban-dummy-on-node1)
+dummy:
+  * Locations:
+    * Node node1 (score=-INFINITY, id=cli-ban-dummy-on-node1)
 =#=#=#= End test: Show constraints on a resource - OK (0) =#=#=#=
 * Passed: crm_resource   - Show constraints on a resource
 =#=#=#= Begin test: Ban dummy from node2 =#=#=#=

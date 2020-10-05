@@ -53,10 +53,6 @@ int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_optio
 void cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc);
 void cli_resource_print_raw(pcmk__output_t *out, pe_resource_t * rsc);
 void cli_resource_print_cts_constraints(pcmk__output_t *out, pe_working_set_t * data_set);
-void cli_resource_print_location(pcmk__output_t *out, pe_resource_t * rsc,
-                                 const char *prefix);
-void cli_resource_print_colocation(pcmk__output_t *out, pe_resource_t * rsc,
-                                   bool dependents, bool recursive, int offset);
 
 int cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc, pe_working_set_t *data_set,
                        bool expanded);

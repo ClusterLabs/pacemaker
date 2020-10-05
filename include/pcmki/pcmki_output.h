@@ -21,6 +21,13 @@ extern pcmk__supported_format_t pcmk__out_formats[];
 int pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml);
 void pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval);
 
+/* This function registers only the formatted output messages that are a part
+ * of libpacemaker.  It is not to be confused with pcmk__register_messages,
+ * which is a part of formatted output support and registers a whole table of
+ * messages at a time.
+ */
+void pcmk__register_lib_messages(pcmk__output_t *out);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1194,38 +1194,6 @@ list_providers(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_cod
     return rc;
 }
 
-static void
-list_stacks_and_constraints(pcmk__output_t *out, pe_resource_t *rsc, bool recursive)
-{
-    GListPtr lpc = NULL;
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                               data_set->input);
-
-    unpack_constraints(cib_constraints, data_set);
-
-    // Constraints apply to group/clone, not member/instance
-    rsc = uber_parent(rsc);
-
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-        pe__clear_resource_flags(r, pe_rsc_allocating);
-    }
-
-    cli_resource_print_colocation(out, rsc, TRUE, recursive, 1);
-
-    fprintf(stdout, "* %s\n", rsc->id);
-    cli_resource_print_location(out, rsc, NULL);
-
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-        pe__clear_resource_flags(r, pe_rsc_allocating);
-    }
-
-    cli_resource_print_colocation(out, rsc, FALSE, recursive, 1);
-}
-
 static int
 populate_working_set(xmlNodePtr *cib_xml_copy)
 {
@@ -1629,7 +1597,8 @@ main(int argc, char **argv)
             pcmk__force_args(context, &error, "%s --xml-substitute", g_get_prgname());
         }
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
-        if (options.rsc_cmd == cmd_list_resources) {
+        if (options.rsc_cmd == cmd_colocations || options.rsc_cmd == cmd_colocations_deep ||
+            options.rsc_cmd == cmd_list_resources) {
             pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
         }
     }
@@ -1637,6 +1606,7 @@ main(int argc, char **argv)
     pe__register_messages(out);
     crm_resource_register_messages(out);
     lrmd__register_messages(out);
+    pcmk__register_lib_messages(out);
 
     if (args->version) {
         out->version(out, false);
@@ -1804,11 +1774,11 @@ main(int argc, char **argv)
             break;
 
         case cmd_colocations:
-            list_stacks_and_constraints(out, rsc, false);
+            rc = out->message(out, "stacks-constraints", rsc, data_set, false);
             break;
 
         case cmd_colocations_deep:
-            list_stacks_and_constraints(out, rsc, true);
+            rc = out->message(out, "stacks-constraints", rsc, data_set, true);
             break;
 
         case cmd_cts:
