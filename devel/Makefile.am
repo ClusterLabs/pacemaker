@@ -14,7 +14,7 @@
 # the target and inspecting the results.
 #
 # Documentation (including examples, which are the most useful):
-# http://coccinelle.lip6.fr/documentation.php
+#     https://coccinelle.gitlabpages.inria.fr/website/docs/
 #
 # Run the "make cocci" target to just output what would be done, or "make cocci-inplace"
 # to apply the changes to the source tree.
