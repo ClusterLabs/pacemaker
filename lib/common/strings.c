@@ -599,24 +599,52 @@ crm_str_table_dup(GHashTable *old_table)
 
 /*!
  * \internal
- * \brief Add a word to a space-separated string list
+ * \brief Add a word to a string list of words
  *
- * \param[in,out] list  Pointer to beginning of list
- * \param[in]     word  Word to add to list
+ * \param[in,out] list       Pointer to current string list (may not be NULL)
+ * \param[in,out] len        If not NULL, must be set to length of \p list,
+ *                           and will be updated to new length of \p list
+ * \param[in]     word       String to add to \p list (\p list will be
+ *                           unchanged if this is NULL or the empty string)
+ * \param[in]     separator  String to separate words in \p list
+ *                           (a space will be used if this is NULL)
  *
- * \return (Potentially new) beginning of list
- * \note This dynamically reallocates list as needed.
+ * \note This dynamically reallocates \p list as needed. \p word may contain
+ *       \p separator, though that would be a bad idea if the string needs to be
+ *       parsed later.
  */
-char *
-pcmk__add_word(char *list, const char *word)
+void
+pcmk__add_separated_word(char **list, size_t *len, const char *word,
+                         const char *separator)
 {
-    if (word != NULL) {
-        size_t len = list? strlen(list) : 0;
+    size_t orig_len, new_len;
 
-        list = pcmk__realloc(list, len + strlen(word) + 2); // 2 = space + EOS
-        sprintf(list + len, " %s", word);
+    CRM_ASSERT(list != NULL);
+
+    if (pcmk__str_empty(word)) {
+        return;
     }
-    return list;
+
+    // Use provided length, or calculate it if not available
+    orig_len = (len != NULL)? *len : ((*list == NULL)? 0 : strlen(*list));
+
+    // Don't add a separator before the first word in the list
+    if (orig_len == 0) {
+        separator = "";
+
+    // Default to space-separated
+    } else if (separator == NULL) {
+        separator = " ";
+    }
+
+    new_len = orig_len + strlen(separator) + strlen(word);
+    if (len != NULL) {
+        *len = new_len;
+    }
+
+    // +1 for null terminator
+    *list = pcmk__realloc(*list, new_len + 1);
+    sprintf(*list + orig_len, "%s%s", separator, word);
 }
 
 /*!
@@ -781,17 +809,19 @@ str_any_of(bool casei, const char *s, va_list args)
 {
     bool rc = false;
 
-    while (1) {
-        const char *ele = va_arg(args, const char *);
+    if (s != NULL) {
+        while (1) {
+            const char *ele = va_arg(args, const char *);
 
-        if (ele == NULL) {
-            break;
-        } else if (pcmk__str_eq(s, ele, casei ? pcmk__str_casei : pcmk__str_none)) {
-            rc = true;
-            break;
+            if (ele == NULL) {
+                break;
+            } else if (pcmk__str_eq(s, ele,
+                                    casei? pcmk__str_casei : pcmk__str_none)) {
+                rc = true;
+                break;
+            }
         }
     }
-
     return rc;
 }
 

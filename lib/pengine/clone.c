@@ -267,7 +267,7 @@ short_print(char *list, const char *prefix, const char *type, const char *suffix
         if (options & pe_print_html) {
             status_print("<li>");
         }
-        status_print("%s%s: [%s ]%s", prefix, type, list, suffix);
+        status_print("%s%s: [ %s ]%s", prefix, type, list, suffix);
 
         if (options & pe_print_html) {
             status_print("</li>\n");
@@ -372,6 +372,8 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     char *list_text = NULL;
     char *child_text = NULL;
     char *stopped_list = NULL;
+    size_t list_text_len = 0;
+    size_t stopped_list_len = 0;
 
     GListPtr master_list = NULL;
     GListPtr started_list = NULL;
@@ -433,7 +435,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
                 && !pcmk_is_set(options, pe_print_clone_active)) {
-                stopped_list = pcmk__add_word(stopped_list, child_rsc->id);
+                pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
@@ -489,7 +491,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        list_text = pcmk__add_word(list_text, host->details->uname);
+        pcmk__add_word(&list_text, &list_text_len, host->details->uname);
 	active_instances++;
     }
 
@@ -497,14 +499,15 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     g_list_free(master_list);
     free(list_text);
     list_text = NULL;
+    list_text_len = 0;
 
     /* Started/Slaves */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        list_text = pcmk__add_word(list_text, host->details->uname);
-	active_instances++;
+        pcmk__add_word(&list_text, &list_text_len, host->details->uname);
+        active_instances++;
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
@@ -523,6 +526,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     g_list_free(started_list);
     free(list_text);
     list_text = NULL;
+    list_text_len = 0;
 
     if (!pcmk_is_set(options, pe_print_clone_active)) {
         const char *state = "Stopped";
@@ -539,7 +543,9 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
             GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
 
             /* Custom stopped list for non-unique clones */
-            free(stopped_list); stopped_list = NULL;
+            free(stopped_list);
+            stopped_list = NULL;
+            stopped_list_len = 0;
 
             if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
@@ -553,8 +559,8 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL) {
-                    stopped_list = pcmk__add_word(stopped_list,
-                                                  node->details->uname);
+                    pcmk__add_word(&stopped_list, &stopped_list_len,
+                                   node->details->uname);
                 }
             }
             g_list_free(list);
@@ -640,6 +646,8 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
     char *list_text = NULL;
     char *stopped_list = NULL;
+    size_t list_text_len = 0;
+    size_t stopped_list_len = 0;
 
     GListPtr master_list = NULL;
     GListPtr started_list = NULL;
@@ -702,7 +710,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
                 && !pcmk_is_set(options, pe_print_clone_active)) {
-                stopped_list = pcmk__add_word(stopped_list, child_rsc->id);
+                pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
@@ -768,15 +776,16 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        list_text = pcmk__add_word(list_text, host->details->uname);
+        pcmk__add_word(&list_text, &list_text_len, host->details->uname);
         active_instances++;
     }
 
     if (list_text != NULL) {
-        out->list_item(out, NULL, " Masters: [%s ]", list_text);
+        out->list_item(out, NULL, " Masters: [ %s ]", list_text);
         g_list_free(master_list);
         free(list_text);
         list_text = NULL;
+        list_text_len = 0;
     }
 
     /* Started/Slaves */
@@ -788,7 +797,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        list_text = pcmk__add_word(list_text, host->details->uname);
+        pcmk__add_word(&list_text, &list_text_len, host->details->uname);
         active_instances++;
     }
 
@@ -797,18 +806,19 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if(role == RSC_ROLE_SLAVE) {
-                out->list_item(out, NULL, " Slaves (target-role): [%s ]", list_text);
+                out->list_item(out, NULL, " Slaves (target-role): [ %s ]", list_text);
             } else {
-                out->list_item(out, NULL, " Slaves: [%s ]", list_text);
+                out->list_item(out, NULL, " Slaves: [ %s ]", list_text);
             }
 
         } else {
-            out->list_item(out, NULL, " Started: [%s ]", list_text);
+            out->list_item(out, NULL, " Started: [ %s ]", list_text);
         }
 
         g_list_free(started_list);
         free(list_text);
         list_text = NULL;
+        list_text_len = 0;
     }
 
     if (!pcmk_is_set(options, pe_print_clone_active)) {
@@ -828,6 +838,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             /* Custom stopped list for non-unique clones */
             free(stopped_list);
             stopped_list = NULL;
+            stopped_list_len = 0;
 
             if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
@@ -842,16 +853,17 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
                     pcmk__str_in_list(only_node, node->details->uname)) {
-                    stopped_list = pcmk__add_word(stopped_list,
-                                                  node->details->uname);
+                    pcmk__add_word(&stopped_list, &stopped_list_len,
+                                   node->details->uname);
                 }
             }
             g_list_free(list);
         }
 
         if (stopped_list != NULL) {
-            out->list_item(out, NULL, " %s: [%s ]", state, stopped_list);
+            out->list_item(out, NULL, " %s: [ %s ]", state, stopped_list);
             free(stopped_list);
+            stopped_list_len = 0;
         }
     }
 
@@ -871,6 +883,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
     char *list_text = NULL;
     char *stopped_list = NULL;
+    size_t list_text_len = 0;
+    size_t stopped_list_len = 0;
 
     GListPtr master_list = NULL;
     GListPtr started_list = NULL;
@@ -933,7 +947,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
                 && !pcmk_is_set(options, pe_print_clone_active)) {
-                stopped_list = pcmk__add_word(stopped_list, child_rsc->id);
+                pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
             }
 
         } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
@@ -999,15 +1013,16 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        list_text = pcmk__add_word(list_text, host->details->uname);
+        pcmk__add_word(&list_text, &list_text_len, host->details->uname);
         active_instances++;
     }
 
     if (list_text != NULL) {
-        out->list_item(out, "Masters", "[%s ]", list_text);
+        out->list_item(out, "Masters", "[ %s ]", list_text);
         g_list_free(master_list);
         free(list_text);
         list_text = NULL;
+        list_text_len = 0;
     }
 
     /* Started/Slaves */
@@ -1019,7 +1034,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        list_text = pcmk__add_word(list_text, host->details->uname);
+        pcmk__add_word(&list_text, &list_text_len, host->details->uname);
         active_instances++;
     }
 
@@ -1028,12 +1043,12 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if(role == RSC_ROLE_SLAVE) {
-                out->list_item(out, "Slaves (target-role)", "[%s ]", list_text);
+                out->list_item(out, "Slaves (target-role)", "[ %s ]", list_text);
             } else {
-                out->list_item(out, "Slaves", "[%s ]", list_text);
+                out->list_item(out, "Slaves", "[ %s ]", list_text);
             }
         } else {
-            out->list_item(out, "Started", "[%s ]", list_text);
+            out->list_item(out, "Started", "[ %s ]", list_text);
         }
 
         g_list_free(started_list);
@@ -1058,6 +1073,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             /* Custom stopped list for non-unique clones */
             free(stopped_list);
             stopped_list = NULL;
+            stopped_list_len = 0;
 
             if (list == NULL) {
                 /* Clusters with symmetrical=false haven't calculated allowed_nodes yet
@@ -1072,15 +1088,15 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
                     pcmk__str_in_list(only_node, node->details->uname)) {
-                    stopped_list = pcmk__add_word(stopped_list,
-                                                  node->details->uname);
+                    pcmk__add_word(&stopped_list, &stopped_list_len,
+                                   node->details->uname);
                 }
             }
             g_list_free(list);
         }
 
         if (stopped_list != NULL) {
-            out->list_item(out, state, "[%s ]", stopped_list);
+            out->list_item(out, state, "[ %s ]", stopped_list);
             free(stopped_list);
         }
     }

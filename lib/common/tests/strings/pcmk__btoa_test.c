@@ -11,9 +11,9 @@
 
 static void
 btoa(void) {
-    g_assert(strcmp(pcmk__btoa(false), "false") == 0);
-    g_assert(strcmp(pcmk__btoa(true), "true") == 0);
-    g_assert(strcmp(pcmk__btoa(1 == 0), "false") == 0);
+    g_assert_cmpstr(pcmk__btoa(false), ==, "false");
+    g_assert_cmpstr(pcmk__btoa(true), ==, "true");
+    g_assert_cmpstr(pcmk__btoa(1 == 0), ==, "false");
 }
 
 int

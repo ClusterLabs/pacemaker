@@ -151,19 +151,20 @@ static char *
 synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
 {
     char *pending = NULL;
+    size_t pending_len = 0;
 
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *input = (crm_action_t *) lpc->data;
 
         if (input->failed) {
-            pending = pcmk__add_word(pending, ID(input->xml));
+            pcmk__add_word(&pending, &pending_len, ID(input->xml));
 
         } else if (input->confirmed) {
             // Confirmed successful inputs are not pending
 
         } else if (find_action(graph, input->id) != NULL) {
             // In-flight or pending
-            pending = pcmk__add_word(pending, ID(input->xml));
+            pcmk__add_word(&pending, &pending_len, ID(input->xml));
         }
     }
     if (pending == NULL) {

@@ -486,25 +486,20 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
      * features, we don't need the meta-data.
      */
 
-    CRM_CHECK(rsc_class || op, return FALSE);
+    CRM_CHECK((rsc_class != NULL) || (op != NULL), return false);
 
-    if (rsc_class
+    if ((rsc_class != NULL)
         && !pcmk_is_set(pcmk_get_ra_caps(rsc_class), pcmk_ra_cap_params)) {
         /* Meta-data is only needed for resource classes that use parameters */
-        return FALSE;
+        return false;
+    }
+    if (op == NULL) {
+        return true;
     }
 
     /* Meta-data is only needed for these actions */
-    if (!pcmk__str_eq(op, CRMD_ACTION_START, pcmk__str_null_matches)
-        && strcmp(op, CRMD_ACTION_STATUS)
-        && strcmp(op, CRMD_ACTION_PROMOTE)
-        && strcmp(op, CRMD_ACTION_DEMOTE)
-        && strcmp(op, CRMD_ACTION_RELOAD)
-        && strcmp(op, CRMD_ACTION_MIGRATE)
-        && strcmp(op, CRMD_ACTION_MIGRATED)
-        && strcmp(op, CRMD_ACTION_NOTIFY)) {
-        return FALSE;
-    }
-
-    return TRUE;
+    return pcmk__str_any_of(op, CRMD_ACTION_START, CRMD_ACTION_STATUS,
+                            CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
+                            CRMD_ACTION_RELOAD, CRMD_ACTION_MIGRATE,
+                            CRMD_ACTION_MIGRATED, CRMD_ACTION_NOTIFY, NULL);
 }

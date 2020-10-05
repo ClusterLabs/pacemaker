@@ -4,7 +4,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright 2008-2019 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2020 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -353,10 +353,10 @@ class CIB12(ConfigBase):
         m.add_op("monitor", "P10S")
         m.commit()
 
-        # Ping the test master
+        # Ping the test exerciser
         p = Resource(self.Factory, "ping-1","ping",  "ocf", "pacemaker")
         p.add_op("monitor", "60s")
-        p["host_list"] = self.CM.Env["cts-master"]
+        p["host_list"] = self.CM.Env["cts-exerciser"]
         p["name"] = "connected"
         p["debug"] = "true"
 

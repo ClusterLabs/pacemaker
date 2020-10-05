@@ -270,9 +270,13 @@ static xmlNode *
 create_controller_request(pcmk_ipc_api_t *api, const char *op,
                           const char *node, xmlNode *msg_data)
 {
-    struct controld_api_private_s *private = api->api_data;
+    struct controld_api_private_s *private = NULL;
     const char *sys_to = NULL;
 
+    if (api == NULL) {
+        return NULL;
+    }
+    private = api->api_data;
     if ((node == NULL) && !strcmp(op, CRM_OP_PING)) {
         sys_to = CRM_SYSTEM_DC;
     } else {

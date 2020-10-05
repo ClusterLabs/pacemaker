@@ -2593,14 +2593,16 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         CRM_ASSERT(client);
         flag_name = crm_element_value(request, F_STONITH_NOTIFY_ACTIVATE);
         if (flag_name) {
-            crm_debug("Setting %s callbacks for %s (%s): ON", flag_name, client->name, client->id);
+            crm_debug("Enabling %s callbacks for %s (%s)",
+                      flag_name, client->name, client->id);
             pcmk__set_client_flags(client, get_stonith_flag(flag_name));
         }
 
         flag_name = crm_element_value(request, F_STONITH_NOTIFY_DEACTIVATE);
         if (flag_name) {
-            crm_debug("Setting %s callbacks for %s (%s): off", flag_name, client->name, client->id);
-            pcmk__set_client_flags(client, get_stonith_flag(flag_name));
+            crm_debug("Disabling %s callbacks for %s (%s)",
+                      flag_name, client->name, client->id);
+            pcmk__clear_client_flags(client, get_stonith_flag(flag_name));
         }
 
         if (flags & crm_ipc_client_response) {

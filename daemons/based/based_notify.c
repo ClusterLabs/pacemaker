@@ -38,10 +38,11 @@ struct cib_notification_s {
 
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
 
-void do_cib_notify(int options, const char *op, xmlNode * update,
-                   int result, xmlNode * result_data, const char *msg_type);
+static void do_cib_notify(int options, const char *op, xmlNode *update,
+                          int result, xmlNode * result_data,
+                          const char *msg_type);
 
-static gboolean
+static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
@@ -50,12 +51,9 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     pcmk__client_t *client = value;
     struct cib_notification_s *update = user_data;
 
-    CRM_CHECK(client != NULL, return TRUE);
-    CRM_CHECK(update != NULL, return TRUE);
-
     if (client->ipcs == NULL && client->remote == NULL) {
         crm_warn("Skipping client with NULL channel");
-        return FALSE;
+        return;
     }
 
     type = crm_element_value(update->msg, F_SUBTYPE);
@@ -105,7 +103,6 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                         (unsigned long long) client->flags);
         }
     }
-    return FALSE;
 }
 
 static void
@@ -117,19 +114,17 @@ cib_notify_send(xmlNode * xml)
     ssize_t bytes = 0;
     int rc = pcmk__ipc_prepare_iov(0, xml, 0, &iov, &bytes);
 
-    crm_trace("Notifying clients");
     if (rc == pcmk_rc_ok) {
         update.msg = xml;
         update.iov = iov;
         update.iov_size = bytes;
-        pcmk__foreach_ipc_client_remove(cib_notify_send_one, &update);
+        pcmk__foreach_ipc_client(cib_notify_send_one, &update);
 
     } else {
         crm_notice("Could not notify clients: %s " CRM_XS " rc=%d",
                    pcmk_rc_str(rc), rc);
     }
     pcmk_free_ipc_event(iov);
-    crm_trace("Notify complete");
 }
 
 void
@@ -174,7 +169,7 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
     do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
 }
 
-void
+static void
 do_cib_notify(int options, const char *op, xmlNode * update,
               int result, xmlNode * result_data, const char *msg_type)
 {

@@ -179,14 +179,17 @@ void
 pe_get_versioned_attributes(xmlNode * meta_hash, pe_resource_t * rsc,
                             pe_node_t * node, pe_working_set_t * data_set)
 {
-    GHashTable *node_hash = NULL;
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = (node == NULL)? NULL : node->details->attrs,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-    if (node) {
-        node_hash = node->details->attrs;
-    }
-
-    pe_unpack_versioned_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-                                   meta_hash, data_set->now, NULL);
+    pe_eval_versioned_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS,
+                                 &rule_data, meta_hash, NULL);
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -194,8 +197,9 @@ pe_get_versioned_attributes(xmlNode * meta_hash, pe_resource_t * rsc,
 
     } else {
         /* and finally check the defaults */
-        pe_unpack_versioned_attributes(data_set->input, data_set->rsc_defaults, XML_TAG_ATTR_SETS,
-                                       node_hash, meta_hash, data_set->now, NULL);
+        pe_eval_versioned_attributes(data_set->input, data_set->rsc_defaults,
+                                     XML_TAG_ATTR_SETS, &rule_data, meta_hash,
+                                     NULL);
     }
 }
 #endif

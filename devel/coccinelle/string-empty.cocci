@@ -16,8 +16,12 @@
 virtual internal
 
 @ string_empty depends on internal @
-identifier I;
+type t;
+identifier func !~ "pcmk__str_empty";
+char* I;
 @@
+t func(...) {
+...
 (
 - (I == NULL) || (strlen(I) == 0)
 + pcmk__str_empty(I)
@@ -27,4 +31,15 @@ identifier I;
 |
 - (I == NULL) || (I[0] == 0)
 + pcmk__str_empty(I)
+|
+- (I == NULL) || (*I == 0)
++ pcmk__str_empty(I)
+|
+- (I == NULL) || (I[0] == '\0')
++ pcmk__str_empty(I)
+|
+- (I == NULL) || (*I == '\0')
++ pcmk__str_empty(I)
 )
+...
+}

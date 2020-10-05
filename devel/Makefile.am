@@ -14,7 +14,7 @@
 # the target and inspecting the results.
 #
 # Documentation (including examples, which are the most useful):
-# http://coccinelle.lip6.fr/documentation.php
+#     https://coccinelle.gitlabpages.inria.fr/website/docs/
 #
 # Run the "make cocci" target to just output what would be done, or "make cocci-inplace"
 # to apply the changes to the source tree.
@@ -49,7 +49,7 @@ MAY_USE_INTERNAL_FILES = $(shell find .. -path "../lib/*.c" -o -path "../tools/*
 OTHER_FILES = $(shell find ../include -name '*h' -a \! -name '*internal.h' -a \! -path '../include/pcmki/*')
 
 cocci:
-	for cf in $(COCCI_FILES); do \
+	-for cf in $(COCCI_FILES); do \
 		for f in $(MAY_USE_INTERNAL_FILES); do \
 			spatch $(_SPATCH_FLAGS) -D internal --very-quiet --local-includes --preprocess --sp-file $$cf $$f; \
 		done ; \

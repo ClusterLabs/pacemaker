@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2018 the Pacemaker project contributors
+# Copyright 2008-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,12 +18,13 @@ die() { echo "$@"; exit 1; }
 
 if [ -z "$CTS_asked_once" ]; then
     anyAsked=1
-    echo "This script should only be executed on the test master."
-    echo "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself."
+    echo "This script should only be executed on the test exerciser."
+    echo "The test exerciser will remotely execute the actions required by the"
+    echo "tests and should not be part of the cluster itself."
     
-    read -p "Is this host intended to be the test master? (yN) " doUnderstand
+    read -p "Is this host intended to be the test exerciser? (yN) " doUnderstand
     [ "$doUnderstand" = "y" ] \
-        || die "This script must be executed on the test master"
+        || die "This script must be executed on the test exerciser"
 fi
 
 if [ -z "$CTS_node_list" ]; then
@@ -42,7 +43,7 @@ else
 fi
 
 [ "${CTS_node_list}" = "${CTS_node_list/$HOSTNAME/}" ] \
-    || die "This script must be executed on the test master and the test master cannot be part of the cluster"
+    || die "This script must be executed on the test exerciser, and the test exerciser cannot be part of the cluster"
 
 printf "+ Bootstraping ssh... "
 if [ -z "$SSH_AUTH_SOCK" ]; then

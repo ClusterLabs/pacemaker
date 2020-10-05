@@ -61,10 +61,6 @@ void pe_eval_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
                                   const char *set_name, pe_rule_eval_data_t *rule_data,
                                   xmlNode *hash, crm_time_t *next_change);
 
-void pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
-                                    const char *set_name, GHashTable *node_hash,
-                                    xmlNode *hash, crm_time_t *now,
-                                    crm_time_t *next_change);
 GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version);
 #endif
 

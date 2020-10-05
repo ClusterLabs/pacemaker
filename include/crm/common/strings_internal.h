@@ -35,7 +35,8 @@ int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 bool pcmk__starts_with(const char *str, const char *prefix);
 bool pcmk__ends_with(const char *s, const char *match);
 bool pcmk__ends_with_ext(const char *s, const char *match);
-char *pcmk__add_word(char *list, const char *word);
+void pcmk__add_separated_word(char **list, size_t *len, const char *word,
+                              const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,
                    char **result, unsigned int *result_len);
 
@@ -52,6 +53,13 @@ static inline bool
 pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)
 {
     return pcmk__strcmp(s1, s2, flags) == 0;
+}
+
+// Like pcmk__add_separated_word() but using a space as separator
+static inline void
+pcmk__add_word(char **list, size_t *len, const char *word)
+{
+    return pcmk__add_separated_word(list, len, word, " ");
 }
 
 /* Correctly displaying singular or plural is complicated; consider "1 node has"

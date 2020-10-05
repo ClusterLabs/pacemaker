@@ -11,12 +11,12 @@
 
 static void
 set_flags(void) {
-    g_assert(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                "test", 0x0f0, 0x00f, NULL) == 0x0ff);
-    g_assert(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                "test", 0x0f0, 0xf0f, NULL) == 0xfff);
-    g_assert(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                "test", 0x0f0, 0xfff, NULL) == 0xfff);
+    g_assert_cmphex(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                       "test", 0x0f0, 0x00f, NULL), ==, 0x0ff);
+    g_assert_cmphex(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                       "test", 0x0f0, 0xf0f, NULL), ==, 0xfff);
+    g_assert_cmphex(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
+                                       "test", 0x0f0, 0xfff, NULL), ==, 0xfff);
 }
 
 int

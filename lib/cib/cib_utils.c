@@ -37,7 +37,7 @@ struct config_root_s {
   * find anywhere and risks multiple matches
   */
 /* *INDENT-OFF* */
-struct config_root_s known_paths[] = {
+static struct config_root_s known_paths[] = {
     { NULL,                         NULL,                 "//cib" },
     { XML_TAG_CIB,                  NULL,                 "//cib" },
     { XML_CIB_TAG_STATUS,           "/cib",               "//cib/status" },

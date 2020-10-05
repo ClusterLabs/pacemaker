@@ -737,25 +737,6 @@ pe_eval_versioned_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_nam
     unpack_nvpair_blocks(top, xml_obj, set_name, hash, NULL, FALSE, rule_data,
                          next_change, unpack_versioned_attr_set);
 }
-
-void
-pe_unpack_versioned_attributes(xmlNode *top, xmlNode *xml_obj,
-                               const char *set_name, GHashTable *node_hash,
-                               xmlNode *hash, crm_time_t *now,
-                               crm_time_t *next_change)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = node_hash,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    unpack_nvpair_blocks(top, xml_obj, set_name, hash, NULL, FALSE,
-                         &rule_data, next_change, unpack_versioned_attr_set);
-}
 #endif
 
 char *

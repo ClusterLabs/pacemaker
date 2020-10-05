@@ -7,23 +7,25 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdio.h>
+#include <stdbool.h>
 #include <crm_internal.h>
 
 static void
 all_set(void) {
-    g_assert(pcmk_all_flags_set(0x000, 0x003) == false);
-    g_assert(pcmk_all_flags_set(0x00f, 0x003) == true);
-    g_assert(pcmk_all_flags_set(0x00f, 0x010) == false);
-    g_assert(pcmk_all_flags_set(0x00f, 0x011) == false);
-    g_assert(pcmk_all_flags_set(0x000, 0x000) == true);
-    g_assert(pcmk_all_flags_set(0x00f, 0x000) == true);
+    g_assert_cmpint(pcmk_all_flags_set(0x000, 0x003), ==, false);
+    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x003), ==, true);
+    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x010), ==, false);
+    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x011), ==, false);
+    g_assert_cmpint(pcmk_all_flags_set(0x000, 0x000), ==, true);
+    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x000), ==, true);
 }
 
 static void
 one_is_set(void) {
     // pcmk_is_set() is a simple macro alias for pcmk_all_flags_set()
-    g_assert(pcmk_is_set(0x00f, 0x001) == true);
-    g_assert(pcmk_is_set(0x00f, 0x010) == false);
+    g_assert_cmpint(pcmk_is_set(0x00f, 0x001), ==, true);
+    g_assert_cmpint(pcmk_is_set(0x00f, 0x010), ==, false);
 }
 
 int
