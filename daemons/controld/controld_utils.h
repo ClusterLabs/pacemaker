@@ -40,6 +40,17 @@ fsa_cib_anon_update(const char *section, xmlNode *data) {
     }
 }
 
+static inline void
+fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
+    if (fsa_cib_conn == NULL) {
+        crm_err("No CIB connection available");
+    } else {
+        int opts = cib_scope_local | cib_quorum_override | cib_can_create | cib_discard_reply;
+
+        fsa_cib_conn->cmds->modify(fsa_cib_conn, section, data, opts);
+    }
+}
+
 extern gboolean fsa_has_quorum;
 extern bool controld_shutdown_lock_enabled;
 extern int last_peer_update;
