@@ -364,14 +364,19 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->no_quorum_policy = no_quorum_stop;
 
     data_set->flags = 0x0ULL;
+
+#ifdef DEFAULT_CONCURRENT_FENCING_TRUE
     pe__set_working_set_flags(data_set,
                               pe_flag_stop_rsc_orphans
                               |pe_flag_symmetric_cluster
                               |pe_flag_stop_action_orphans
-#ifdef DEFAULT_CONCURRENT_FENCING_TRUE
-                              |pe_flag_concurrent_fencing
+                              |pe_flag_concurrent_fencing;
+#else
+    pe__set_working_set_flags(data_set,
+                              pe_flag_stop_rsc_orphans
+                              |pe_flag_symmetric_cluster
+                              |pe_flag_stop_action_orphans);
 #endif
-                              );
 }
 
 pe_resource_t *
