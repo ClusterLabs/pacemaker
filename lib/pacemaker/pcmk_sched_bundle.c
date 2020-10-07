@@ -234,12 +234,12 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
-            action = create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
+            create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
             action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
             action->priority = INFINITY;
 
             /* demote */
-            action = create_pseudo_resource_op(rsc, RSC_DEMOTE, TRUE, TRUE, data_set);
+            create_pseudo_resource_op(rsc, RSC_DEMOTE, TRUE, TRUE, data_set);
             action = create_pseudo_resource_op(rsc, RSC_DEMOTED, TRUE, TRUE, data_set);
             action->priority = INFINITY;
         }
