@@ -1543,7 +1543,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if ((options.remainder != NULL) && (options.override_params != NULL)) {
+    if (!pcmk__str_empty((const char *) options.remainder) &&
+        !pcmk__str_empty((const char *) options.override_params)) {
         // Commands that use positional arguments will create override_params
         for (gchar **s = options.remainder; *s; s++) {
             char *name = calloc(1, strlen(*s));
@@ -1563,7 +1564,7 @@ main(int argc, char **argv)
             }
         }
 
-    } else if (options.remainder != NULL) {
+    } else if (!pcmk__str_empty((const char *) options.remainder)) {
         gchar **strv = NULL;
         gchar *msg = NULL;
         int i = 1;
@@ -1572,6 +1573,8 @@ main(int argc, char **argv)
         for (gchar **s = options.remainder; *s; s++) {
             len++;
         }
+
+        CRM_ASSERT(len > 0);
 
         strv = calloc(len, sizeof(char *));
         strv[0] = strdup("non-option ARGV-elements:");
