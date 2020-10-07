@@ -908,6 +908,8 @@ ban_or_move(pe_resource_t *rsc, const char *move_lifetime, crm_exit_t *exit_code
     pe_node_t *current = NULL;
     unsigned int nactive = 0;
 
+    CRM_CHECK(rsc != NULL, return EINVAL);
+
     current = pe__find_active_requires(rsc, &nactive);
 
     if (nactive == 1) {
