@@ -581,8 +581,6 @@ dnl So keep this section to a bare minimum; regard as a "necessary evil".
 case "$host_os" in
     *bsd*)
         AC_DEFINE_UNQUOTED(ON_BSD, 1, Compiling for BSD platform)
-        LIBS="-L/usr/local/lib"
-        CPPFLAGS="$CPPFLAGS -I/usr/local/include"
         INIT_EXT=".sh"
         ;;
     *solaris*)

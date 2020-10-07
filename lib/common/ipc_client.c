@@ -1362,7 +1362,7 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
 		ret = pcmk_rc_ipc_unauthorized;
 	}
     } else {
-        ret = (errno > 0) ? -errno : pcmk_rc_error;
+        ret = (errno > 0) ? errno : pcmk_rc_error;
     }
     return ret;
 }
@@ -1373,8 +1373,12 @@ crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
 {
     int ret  = pcmk__crm_ipc_is_authentic_process(NULL, sock, refuid, refgid,
                                                   gotpid, gotuid, gotgid);
+
+    /* The old function had some very odd return codes*/
     if (ret == 0) {
         return 1;
+    } else if (ret == pcmk_rc_ipc_unauthorized) {
+        return 0;
     } else {
         return pcmk_rc2legacy(ret);
     }
