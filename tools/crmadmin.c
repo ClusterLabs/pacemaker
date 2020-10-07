@@ -34,6 +34,9 @@ static guint message_timer_id = 0;
 static guint message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
 static GMainLoop *mainloop = NULL;
 
+bool need_controld_api = true;
+bool need_pacemakerd_api = false;
+
 bool do_work(pcmk_ipc_api_t *api);
 void do_find_node_list(xmlNode *xml_node);
 static char *ipc_name = NULL;
@@ -59,45 +62,41 @@ static crm_exit_t exit_code = CRM_EX_OK;
 
 struct {
     gboolean quiet;
-    char *status;
-    gboolean pacemakerd;
-    gboolean dc_lookup;
-    gboolean nodes;
-    gboolean election;
-    char *kill;
     gboolean health;
-    guint timeout;
+    gint timeout;
 } options;
 
+gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+
 static GOptionEntry command_options[] = {
-    { "status", 'S', 0, G_OPTION_ARG_STRING, &options.status,
+    { "status", 'S', 0, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the status of the specified node."
       "\n                          Result is state of node's internal finite state"
       "\n                          machine, which can be useful for debugging",
       NULL
     },
-    { "pacemakerd", 'P', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.pacemakerd,
+    { "pacemakerd", 'P', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the status of local pacemakerd."
       "\n                          Result is the state of the sub-daemons watched"
       "\n                          by pacemakerd.",
       NULL
     },
-    { "dc_lookup", 'D', 0, G_OPTION_ARG_NONE, &options.dc_lookup,
+    { "dc_lookup", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the uname of the node co-ordinating the cluster."
       "\n                          This is an internal detail rarely useful to"
       "\n                          administrators except when deciding on which"
       "\n                          node to examine the logs.",
       NULL
     },
-    { "nodes", 'N', 0, G_OPTION_ARG_NONE, &options.nodes,
+    { "nodes", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the uname of all member nodes",
       NULL
     },
-    { "election", 'E', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.election,
+    { "election", 'E', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Start an election for the cluster co-ordinator",
       NULL
     },
-    { "kill", 'K', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.kill,
+    { "kill", 'K', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Stop controller (not rest of cluster stack) on specified node",
       NULL
     },
@@ -110,7 +109,7 @@ static GOptionEntry command_options[] = {
 };
 
 static GOptionEntry additional_options[] = {
-    { XML_ATTR_TIMEOUT, 't', 0, G_OPTION_ARG_INT, &options.timeout,
+    { "timeout", 't', 0, G_OPTION_ARG_INT, &options.timeout,
       "Time (in milliseconds) to wait before declaring the"
       "\n                          operation failed",
       NULL
@@ -119,13 +118,55 @@ static GOptionEntry additional_options[] = {
       "Display nodes as shell commands of the form 'export uname=uuid'"
       "\n                          (valid with -N/--nodes)",
     },
-    { "ipc-name", 'i', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &ipc_name,
+    { "ipc-name", 'i', 0, G_OPTION_ARG_STRING, &ipc_name,
       "Name to use for ipc instead of 'crmadmin' (with -P/--pacemakerd).",
       NULL
     },
 
     { NULL }
 };
+
+gboolean
+command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error)
+{
+    if (!strcmp(option_name, "--status") || !strcmp(option_name, "-S")) {
+        command = cmd_health;
+        crm_trace("Option %c => %s", 'S', optarg);
+    }
+
+    if (!strcmp(option_name, "--pacemakerd") || !strcmp(option_name, "-P")) {
+        command = cmd_pacemakerd_health;
+        need_pacemakerd_api = true;
+        need_controld_api = false;
+    }
+
+    if (!strcmp(option_name, "--dc_lookup") || !strcmp(option_name, "-D")) {
+        command = cmd_whois_dc;
+    }
+
+    if (!strcmp(option_name, "--nodes") || !strcmp(option_name, "-N")) {
+        command = cmd_list_nodes;
+        need_controld_api = false;
+    }
+
+    if (!strcmp(option_name, "--election") || !strcmp(option_name, "-E")) {
+        command = cmd_elect_dc;
+    }
+
+    if (!strcmp(option_name, "--kill") || !strcmp(option_name, "-K")) {
+        command = cmd_shutdown;
+        crm_trace("Option %c => %s", 'K', optarg);
+    }
+
+    if (optarg) {
+        if (dest_node != NULL) {
+            free(dest_node);
+        }
+        dest_node = strdup(optarg);
+    }
+
+    return TRUE;
+}
 
 static void
 quit_main_loop(crm_exit_t ec)
@@ -356,8 +397,6 @@ main(int argc, char **argv)
     int rc;
     pcmk_ipc_api_t *controld_api = NULL;
     pcmk_ipc_api_t *pacemakerd_api = NULL;
-    bool need_controld_api = true;
-    bool need_pacemakerd_api = false;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
 
@@ -388,51 +427,14 @@ main(int argc, char **argv)
     }
 
     if (options.timeout) {
-        message_timeout_ms = options.timeout;
+        message_timeout_ms = (guint) options.timeout;
         if (message_timeout_ms < 1) {
             message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
         }
     }
 
-    if (options.dc_lookup) {
-        command = cmd_whois_dc;
-    }
-
-    if (options.kill) {
-        command = cmd_shutdown;
-        crm_trace("Option %c => %s", 'K', options.kill);
-        if (dest_node != NULL) {
-            free(dest_node);
-        }
-        dest_node = strdup(options.kill);
-    }
-
     if (options.quiet) {
         BE_SILENT = TRUE;
-    }
-
-    if (options.pacemakerd) {
-        command = cmd_pacemakerd_health;
-        need_pacemakerd_api = true;
-        need_controld_api = false;
-    }
-
-    if (options.status) {
-        command = cmd_health;
-        crm_trace("Option %c => %s", 'S', options.status);
-        if (dest_node != NULL) {
-            free(dest_node);
-        }
-        dest_node = strdup(options.status);
-    }
-
-    if (options.election) {
-        command = cmd_elect_dc;
-    }
-
-    if (options.nodes) {
-        command = cmd_list_nodes;
-        need_controld_api = false;
     }
 
     if (options.health) {
@@ -526,8 +528,6 @@ done:
     g_strfreev(processed_args);
     g_clear_error(&error);
     pcmk__free_arg_context(context);
-    free(options.status);
-    free(options.kill);
     return crm_exit(exit_code);
 
 }
