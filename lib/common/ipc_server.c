@@ -908,3 +908,28 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
         crm_exit(CRM_EX_FATAL);
     }
 }
+
+/*!
+ * \brief Check whether string represents a client name used by cluster daemons
+ *
+ * \param[in] name  String to check
+ *
+ * \return true if name is standard client name used by daemons, false otherwise
+ *
+ * \note This is provided by the client, and so cannot be used by itself as a
+ *       secure means of authentication.
+ */
+bool
+crm_is_daemon_name(const char *name)
+{
+    name = pcmk__message_name(name);
+    return (!strcmp(name, CRM_SYSTEM_CRMD)
+            || !strcmp(name, CRM_SYSTEM_STONITHD)
+            || !strcmp(name, "stonith-ng")
+            || !strcmp(name, "attrd")
+            || !strcmp(name, CRM_SYSTEM_CIB)
+            || !strcmp(name, CRM_SYSTEM_MCP)
+            || !strcmp(name, CRM_SYSTEM_DC)
+            || !strcmp(name, CRM_SYSTEM_TENGINE)
+            || !strcmp(name, CRM_SYSTEM_LRMD));
+}

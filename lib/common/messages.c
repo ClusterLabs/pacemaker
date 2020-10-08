@@ -166,3 +166,43 @@ add_message_xml(xmlNode *msg, const char *field, xmlNode *xml)
     add_node_copy(holder, xml);
     return TRUE;
 }
+
+/*!
+ * \brief Get name to be used as identifier for cluster messages
+ *
+ * \param[in] name  Actual system name to check
+ *
+ * \return Non-NULL cluster message identifier corresponding to name
+ *
+ * \note The Pacemaker daemons were renamed in version 2.0.0, but the old names
+ *       must continue to be used as the identifier for cluster messages, so
+ *       that mixed-version clusters are possible during a rolling upgrade.
+ */
+const char *
+pcmk__message_name(const char *name)
+{
+    if (name == NULL) {
+        return "unknown";
+
+    } else if (!strcmp(name, "pacemaker-attrd")) {
+        return "attrd";
+
+    } else if (!strcmp(name, "pacemaker-based")) {
+        return CRM_SYSTEM_CIB;
+
+    } else if (!strcmp(name, "pacemaker-controld")) {
+        return CRM_SYSTEM_CRMD;
+
+    } else if (!strcmp(name, "pacemaker-execd")) {
+        return CRM_SYSTEM_LRMD;
+
+    } else if (!strcmp(name, "pacemaker-fenced")) {
+        return "stonith-ng";
+
+    } else if (!strcmp(name, "pacemaker-schedulerd")) {
+        return CRM_SYSTEM_PENGINE;
+
+    } else {
+        return name;
+    }
+}
