@@ -11,7 +11,11 @@
 #  define _GNU_SOURCE
 #endif
 
-#include <config.h>
+#ifndef PCMK__CONFIG_H
+#  define PCMK__CONFIG_H
+#  include <config.h>
+#endif
+
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>

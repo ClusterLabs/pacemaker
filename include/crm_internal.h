@@ -10,7 +10,11 @@
 #ifndef CRM_INTERNAL__H
 #  define CRM_INTERNAL__H
 
-#  include <config.h>
+#  ifndef PCMK__CONFIG_H
+#    define PCMK__CONFIG_H
+#    include <config.h>
+#  endif
+
 #  include <portability.h>
 
 #  include <glib.h>

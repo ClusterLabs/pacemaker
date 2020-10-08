@@ -12,7 +12,11 @@
 
 #  include <stdio.h>
 
-#  include <config.h>
+#  ifndef PCMK__CONFIG_H
+#    define PCMK__CONFIG_H
+#    include <config.h>
+#  endif
+
 #  include <crm/common/logging.h>
 
 /*

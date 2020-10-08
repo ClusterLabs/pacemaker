@@ -19,7 +19,10 @@
 
 /* Please leave this as the first #include - Solaris needs it there */
 #  ifdef HAVE_CONFIG_H
-#    include <config.h>
+#    ifndef PCMK__CONFIG_H
+#      define PCMK__CONFIG_H
+#      include <config.h>
+#    endif
 #  endif
 
 /* Prototypes for libreplace functions */
