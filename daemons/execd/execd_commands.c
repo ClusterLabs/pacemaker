@@ -1511,10 +1511,10 @@ free_rsc(gpointer data)
     free(rsc);
 }
 
-static xmlNode *
-process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id)
+static int
+process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
+                    xmlNode **reply)
 {
-    xmlNode *reply = NULL;
     int rc = pcmk_ok;
     const char *is_ipc_provider = crm_element_value(request, F_LRMD_IS_IPC_PROVIDER);
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
@@ -1525,18 +1525,19 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id)
         rc = -EPROTO;
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
-    crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
-    crm_xml_add(reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-
     if (crm_is_true(is_ipc_provider)) {
         // This is a remote connection from a cluster node's controller
 #ifdef SUPPORT_REMOTE
         ipc_proxy_add_provider(client);
 #endif
     }
-    return reply;
+
+    *reply = create_lrmd_reply(__func__, rc, call_id);
+    crm_xml_add(*reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
+    crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
+    crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+
+    return rc;
 }
 
 static int
@@ -1849,7 +1850,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
 #endif
         do_reply = 1;
     } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        reply = process_lrmd_signon(client, request, call_id);
+        rc = process_lrmd_signon(client, request, call_id, &reply);
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
         rc = process_lrmd_rsc_register(client, id, request);
