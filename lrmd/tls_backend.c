@@ -84,6 +84,11 @@ remoted__read_handshake_data(crm_client_t *client)
     client->remote->tls_handshake_complete = TRUE;
     crm_notice("Remote client connection accepted");
 
+    /* Only a client with access to the TLS key can connect, so we can treat
+     * it as privileged.
+     */
+    set_bit(client->flags, crm_client_flag_ipc_privileged);
+
     // Alert other clients of the new connection
     notify_of_new_client(client);
     return 0;
