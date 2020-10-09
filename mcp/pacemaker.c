@@ -567,9 +567,12 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     uint32_t id = 0;
     uint32_t flags = 0;
     const char *task = NULL;
+    xmlNode *msg = NULL;
     crm_client_t *c = crm_client_get(qbc);
-    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
+    CRM_CHECK(c != NULL, return 0);
+
+    msg = crm_ipcs_recv(c, data, size, &id, &flags);
     crm_ipcs_send_ack(c, id, flags, "ack", __FUNCTION__, __LINE__);
     if (msg == NULL) {
         return 0;
