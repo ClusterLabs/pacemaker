@@ -577,9 +577,26 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
-        crm_notice("Shutting down in response to IPC request %s from %s",
-                   crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
-        pcmk_shutdown(15);
+#if ENABLE_ACL
+        /* Only allow privileged users (i.e. root or hacluster)
+         * to shut down Pacemaker from the command line (or direct IPC).
+         *
+         * We only check when ACLs are enabled, because without them, any client
+         * with IPC access could shut down Pacemaker via the CIB anyway.
+         */
+        bool allowed = pcmk_is_set(c->flags, pcmk__client_privileged);
+#else
+        bool allowed = true;
+#endif
+        if (allowed) {
+            crm_notice("Shutting down in response to IPC request %s from %s",
+                       crm_element_value(msg, F_CRM_REFERENCE),
+                       crm_element_value(msg, F_CRM_ORIGIN));
+            pcmk_shutdown(15);
+        } else {
+            crm_warn("Ignoring shutdown request from unprivileged client %s",
+                     pcmk__client_name(c));
+        }
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
         crm_trace("Ignoring IPC request to purge node "
