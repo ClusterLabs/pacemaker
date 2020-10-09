@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -2575,6 +2575,19 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
 
+#if ENABLE_ACL
+    /* IPC commands related to fencing configuration may be done only by
+     * privileged users (i.e. root or hacluster) when ACLs are supported,
+     * because all other users should go through the CIB to have ACLs applied.
+     *
+     * If no client was given, this is a peer request, which is always allowed.
+     */
+    bool allowed = (client == NULL)
+                   || is_set(client->flags, crm_client_flag_ipc_privileged);
+#else
+    bool allowed = true;
+#endif
+
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 
     if (is_set(call_options, st_opt_sync_call)) {
@@ -2731,27 +2744,43 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
         const char *device_id = NULL;
 
-        rc = stonith_device_register(request, &device_id, FALSE);
+        if (allowed) {
+            rc = stonith_device_register(request, &device_id, FALSE);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
         const char *device_id = crm_element_value(dev, XML_ATTR_ID);
 
-        rc = stonith_device_remove(device_id, FALSE);
+        if (allowed) {
+            rc = stonith_device_remove(device_id, FALSE);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_ADD, TRUE)) {
         char *device_id = NULL;
 
-        rc = stonith_level_register(request, &device_id);
+        if (allowed) {
+            rc = stonith_level_register(request, &device_id);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_level(call_options, op, rc, device_id);
         free(device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_LEVEL_DEL, TRUE)) {
         char *device_id = NULL;
 
-        rc = stonith_level_remove(request, &device_id);
+        if (allowed) {
+            rc = stonith_level_remove(request, &device_id);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_level(call_options, op, rc, device_id);
 
     } else if (crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
@@ -2781,6 +2810,11 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
     }
 
   done:
+
+    if (rc == -EACCES) {
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 crm_str(op), crm_client_name(client));
+    }
 
     /* Always reply unless the request is in process still.
      * If in progress, a reply will happen async after the request
