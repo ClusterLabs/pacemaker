@@ -159,6 +159,7 @@ class Test(object):
         self.name = name
         self.description = description
         self.cmds = []
+        self.logpath = "/tmp/pacemaker-execd-regression.log"
 
         if tls:
             self.daemon_location = "pacemaker-remoted"
@@ -216,10 +217,21 @@ class Test(object):
         if self.verbose:
             additional_args = additional_args + " -V"
 
-        self.execd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/pacemaker-execd-regression.log"
-                                                         % (self.daemon_location, additional_args)))
+        self.execd_process = subprocess.Popen(shlex.split("%s %s -l %s"
+                                                         % (self.daemon_location, additional_args, self.logpath)))
 
-        time.sleep(1)
+        logfile = None
+
+        while True:
+            time.sleep(0.1)
+
+            if logfile == None and os.path.exists(self.logpath):
+                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
+
+            if logfile != None:
+                for line in logfile.readlines():
+                    if "successfully started" in line:
+                        return
 
     def clean_environment(self):
         """ Clean up the host after running a test """
@@ -230,10 +242,10 @@ class Test(object):
 
             if self.verbose:
                 print("Daemon output")
-                logfile = io.open('/tmp/pacemaker-execd-regression.log', 'rt', errors='replace')
+                logfile = io.open(self.logpath, 'rt', errors='replace')
                 for line in logfile:
                     print(line.strip().encode('utf-8', 'replace'))
-            os.remove('/tmp/pacemaker-execd-regression.log')
+            os.remove(self.logpath)
 
         if self.stonith_process:
             self.stonith_process.terminate()
