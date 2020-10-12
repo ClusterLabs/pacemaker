@@ -335,3 +335,40 @@ Access Control Lists (ACLs)
    +stonith-enabled+, +dc-uuid+, +have-quorum+, and +cluster-name+) to restrict
    access further while still allowing status output, but cluster properties are
    unlikely to be considered sensitive.
+
+
+ACL Limitations
+###############
+
+Actions performed via IPC rather than the CIB
+_____________________________________________
+
+ACLs apply *only* to the CIB.
+
+That means ACLs apply to command-line tools that operate by reading or writing
+the CIB, such as ``crm_attribute`` when managing permanent node attributes,
+``crm_mon``, and ``cibadmin``.
+
+However, command-line tools that communicate directly with Pacemaker daemons
+via IPC are not affected by ACLs. For example, users in the ``haclient`` group
+may still do the following, regardless of ACLs:
+
+* Query transient node attribute values using ``crm_attribute`` and
+  ``attrd_updater``.
+
+* Query basic node information using ``crm_node``.
+
+* Erase resource operation history using ``crm_resource``.
+
+* Query fencing configuration information, and execute fencing against nodes,
+  using ``stonith_admin``.
+
+ACLs and Pacemaker Remote
+_________________________
+
+ACLs apply to commands run on Pacemaker Remote nodes using the Pacemaker Remote
+node's name as the ACL user name.
+
+The idea is that Pacemaker Remote nodes (especially virtual machines and
+containers) are likely to be purpose-built and have different user accounts
+from full cluster nodes.
