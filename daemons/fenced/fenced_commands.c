@@ -2619,9 +2619,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
             pcmk__clear_client_flags(client, get_stonith_flag(flag_name));
         }
 
-        if (flags & crm_ipc_client_response) {
-            pcmk__ipc_send_ack(client, id, flags, "ack");
-        }
+        pcmk__ipc_send_ack(client, id, flags, "ack", CRM_EX_OK);
         return 0;
 
     } else if (pcmk__str_eq(op, STONITH_OP_RELAY, pcmk__str_none)) {

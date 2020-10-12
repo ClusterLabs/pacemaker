@@ -760,20 +760,41 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
     return rc;
 }
 
-void
+/*!
+ * \internal
+ * \brief Send an acknowledgement with a status code to a client
+ *
+ * \param[in] function  Calling function
+ * \param[in] line      Source file line within calling function
+ * \param[in] c         Client to send ack to
+ * \param[in] request   Request ID being replied to
+ * \param[in] status    Exit status code to add to ack
+ * \param[in] flags     IPC flags to use when sending
+ * \param[in] tag       Element name to use for acknowledgement
+ * \param[in] status    Status code to send with acknowledgement
+ *
+ * \return Standard Pacemaker return code
+ */
+int
 pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                      uint32_t request, uint32_t flags, const char *tag)
+                      uint32_t request, uint32_t flags, const char *tag,
+                      crm_exit_t status)
 {
-    if (flags & crm_ipc_client_response) {
+    int rc = pcmk_rc_ok;
+
+    if (pcmk_is_set(flags, crm_ipc_client_response)) {
         xmlNode *ack = create_xml_node(NULL, tag);
 
-        crm_trace("Ack'ing IPC message from %s", pcmk__client_name(c));
+        crm_trace("Ack'ing IPC message from %s as <%s status=%d>",
+                  pcmk__client_name(c), tag, status);
         c->request_id = 0;
         crm_xml_add(ack, "function", function);
         crm_xml_add_int(ack, "line", line);
-        pcmk__ipc_send_xml(c, request, ack, flags);
+        crm_xml_add_int(ack, "status", (int) status);
+        rc = pcmk__ipc_send_xml(c, request, ack, flags);
         free_xml(ack);
     }
+    return rc;
 }
 
 /*!
