@@ -412,7 +412,7 @@ main(int argc, char **argv)
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        rc = CRM_EX_USAGE;
+        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
@@ -456,7 +456,7 @@ main(int argc, char **argv)
 
         fprintf(stderr, "%s", help);
         g_free(help);
-        rc = CRM_EX_USAGE;
+        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
