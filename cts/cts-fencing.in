@@ -232,6 +232,7 @@ class Test(object):
         self.description = description
         self.cmds = []
         self.verbose = verbose
+        self.logpath = "/tmp/stonith-regression.log"
 
         self.result_txt = ""
         self.cmd_tool_output = ""
@@ -278,13 +279,24 @@ class Test(object):
             self.stonith_options = self.stonith_options + " -V"
             print("Starting pacemaker-fenced with %s" % self.stonith_options)
 
-        if os.path.exists("/tmp/stonith-regression.log"):
-            os.remove('/tmp/stonith-regression.log')
+        if os.path.exists(self.logpath):
+            os.remove(self.logpath)
 
-        cmd = "pacemaker-fenced %s -l /tmp/stonith-regression.log" % self.stonith_options
+        cmd = "pacemaker-fenced %s -l %s" % (self.stonith_options, self.logpath)
         self.stonith_process = subprocess.Popen(shlex.split(cmd))
 
-        time.sleep(1)
+        logfile = None
+
+        while True:
+            time.sleep(0.1)
+
+            if logfile == None and os.path.exists(self.logpath):
+                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
+
+            if logfile != None:
+                for line in logfile.readlines():
+                    if "successfully started" in line:
+                        return
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
@@ -310,7 +322,7 @@ class Test(object):
         # makes fenced output any kind of 8 bit value - while still interesting
         # for debugging and we'd still like the regression-test to go over the
         # full set of test-cases
-        logfile = io.open('/tmp/stonith-regression.log', 'rt', encoding = "ISO-8859-1")
+        logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
         for line in logfile.readlines():
             self.stonith_output = self.stonith_output + line
 
@@ -318,7 +330,7 @@ class Test(object):
             print("Daemon Output Start")
             print(self.stonith_output)
             print("Daemon Output End")
-        os.remove('/tmp/stonith-regression.log')
+        os.remove(self.logpath)
 
     def add_stonith_log_pattern(self, pattern):
         """ Add a log pattern to expect from this test """
