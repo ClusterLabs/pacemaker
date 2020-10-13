@@ -759,7 +759,6 @@ unpack_operation_on_fail(pe_action_t * action)
     } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
         name = crm_element_value(action->op_entry, "name");
         role = crm_element_value(action->op_entry, "role");
-        on_fail = crm_element_value(action->op_entry, XML_OP_ATTR_ON_FAIL);
         interval_spec = crm_element_value(action->op_entry,
                                           XML_LRM_ATTR_INTERVAL);
 

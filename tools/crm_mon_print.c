@@ -12,7 +12,11 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <config.h>
+#ifndef PCMK__CONFIG_H
+#  define PCMK__CONFIG_H
+#  include <config.h>
+#endif
+
 #include <crm/cib/util.h>
 #include <crm/common/curses_internal.h>
 #include <crm/common/iso8601_internal.h>

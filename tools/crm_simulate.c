@@ -227,6 +227,16 @@ watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 }
 
 static gboolean
+xml_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.xml_file) {
+        free(options.xml_file);
+    }
+
+    options.xml_file = strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
 xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (options.xml_file) {
         free(options.xml_file);
@@ -332,9 +342,9 @@ static GOptionEntry output_entries[] = {
 
 static GOptionEntry source_entries[] = {
     { "live-check", 'L', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, live_check_cb,
-      "Connect to CIB mamager and use the current CIB contents as input",
+      "Connect to CIB manager and use the current CIB contents as input",
       NULL },
-    { "xml-file", 'x', 0, G_OPTION_ARG_FILENAME, &options.xml_file,
+    { "xml-file", 'x', 0, G_OPTION_ARG_CALLBACK, xml_file_cb,
       "Retrieve XML from the named file",
       "FILE" },
     { "xml-pipe", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, xml_pipe_cb,

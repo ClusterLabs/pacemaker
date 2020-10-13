@@ -42,8 +42,10 @@ AC_DEFUN([gl_EARLY],
   AC_REQUIRE([gl_PROG_AR_RANLIB])
 
   # Code from module byteswap:
+  # Code from module c99:
   # Code from module crypto/md5-buffer:
   # Code from module extern-inline:
+  # Code from module std-gnu11:
   # Code from module stdalign:
 ])
 
@@ -219,6 +221,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/gl-openssl.m4
   m4/gnulib-common.m4
   m4/md5.m4
+  m4/std-gnu11.m4
   m4/stdalign.m4
   m4/zzgnulib.m4
 ])

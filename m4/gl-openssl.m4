@@ -1,4 +1,4 @@
-# gl-openssl.m4 serial 4
+# gl-openssl.m4 serial 5
 dnl Copyright (C) 2013-2020 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
@@ -31,12 +31,6 @@ AC_DEFUN([gl_CRYPTO_CHECK],
     [],
     [with_openssl=$with_openssl_default])
 
-  if test "x$1" = xMD5; then
-    ALG_header=md5.h
-  else
-    ALG_header=sha.h
-  fi
-
   AC_SUBST([LIB_CRYPTO])
   if test "x$with_openssl" != xno; then
     if test "x$with_openssl" = xauto-gpl-compat; then
@@ -55,7 +49,8 @@ AC_DEFUN([gl_CRYPTO_CHECK],
     if test "x$with_openssl" != xauto-gpl-compat ||
        test "x$gl_cv_openssl_gpl_compat" = xyes; then
       AC_CHECK_LIB([crypto], [$1],
-        [AC_CHECK_HEADERS([openssl/$ALG_header],
+        [AC_CHECK_HEADERS(
+           m4_if([$1], [MD5], [openssl/md5.h], [openssl/sha.h]),
            [LIB_CRYPTO=-lcrypto
             AC_DEFINE([HAVE_OPENSSL_$1], [1],
               [Define to 1 if libcrypto is used for $1.])])])
