@@ -48,6 +48,43 @@ pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
     return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
+static inline gboolean
+convert_interval(const char *s, guint *interval_ms)
+{
+    unsigned long l;
+
+    errno = 0;
+    l = strtoul(s, NULL, 10);
+
+    if (errno != 0) {
+        return FALSE;
+    }
+
+    *interval_ms = (guint) l;
+    return TRUE;
+}
+
+static gboolean
+try_fast_match(const char *key, const char *underbar1, const char *underbar2,
+               char **rsc_id, char **op_type, guint *interval_ms)
+{
+    if (interval_ms) {
+        if (!convert_interval(underbar2+1, interval_ms)) {
+            return FALSE;
+        }
+    }
+
+    if (rsc_id) {
+        *rsc_id = strndup(key, underbar1-key);
+    }
+
+    if (op_type) {
+        *op_type = strndup(underbar1+1, underbar2-underbar1-1);
+    }
+
+    return TRUE;
+}
+
 static gboolean
 try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
@@ -63,16 +100,9 @@ try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_
     }
 
     if (interval_ms) {
-        unsigned long l;
-
-        errno = 0;
-        l = strtoul(&(key[offset+1]), NULL, 10);
-
-        if (errno != 0) {
+        if (!convert_interval(&(key[offset+1]), interval_ms)) {
             return FALSE;
         }
-
-        *interval_ms = (guint) l;
     }
 
     // Verify we're at the separator between the operation and interval.
@@ -153,12 +183,7 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
     }
 
     if (interval_ms) {
-        unsigned long l;
-
-        errno = 0;
-        l = strtoul(key+pmatch[7].rm_so, NULL, 10);
-
-        if (errno != 0) {
+        if (!convert_interval(key+pmatch[7].rm_so, interval_ms)) {
             if (rsc_id) {
                 free(*rsc_id);
                 *rsc_id = NULL;
@@ -172,8 +197,6 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
             free(pmatch);
             return FALSE;
         }
-
-        *interval_ms = (guint) l;
     }
 
     free(pmatch);
@@ -215,7 +238,8 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
     underbar3 = strchr(underbar2+1, '_');
 
     if (!underbar3) {
-        return try_basic_match(key, rsc_id, op_type, interval_ms);
+        return try_fast_match(key, underbar1, underbar2,
+                              rsc_id, op_type, interval_ms);
     } else if (try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
         return TRUE;
     } else {
