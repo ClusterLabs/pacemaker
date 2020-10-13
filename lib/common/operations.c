@@ -88,64 +88,46 @@ try_fast_match(const char *key, const char *underbar1, const char *underbar2,
 static gboolean
 try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
-    size_t len = 0, offset = 0;
-    size_t op_len = 0;
-
-    len = strlen(key);
-    offset = len - 1;
+    char *interval_sep = NULL;
+    char *type_sep = NULL;
 
     // Parse interval at end of string
-    while ((offset > 0) && isdigit(key[offset])) {
-        offset--;
+    interval_sep = strrchr(key, '_');
+    if (interval_sep == NULL) {
+        return FALSE;
     }
 
     if (interval_ms) {
-        if (!convert_interval(&(key[offset+1]), interval_ms)) {
+        if (!convert_interval(interval_sep+1, interval_ms)) {
             return FALSE;
         }
     }
 
-    // Verify we're at the separator between the operation and interval.
-    if (offset == len-1 || key[offset] != '_') {
-        if (interval_ms) {
-            *interval_ms = 0;
+    type_sep = interval_sep-1;
+
+    while (1) {
+        if (*type_sep == '_') {
+            break;
+        } else if (type_sep == key) {
+            if (interval_ms) {
+                *interval_ms = 0;
+            }
+
+            return FALSE;
         }
 
-        return FALSE;
-    }
-
-    // We're already on the underscore before the interval.  Back up one
-    // or this loop will never do anything.
-    offset--;
-
-    while ((offset > 0) && key[offset] != '_') {
-        offset--;
-        op_len++;
+        type_sep--;
     }
 
     if (op_type) {
         // Add one here to skip the leading underscore we landed on in the
         // while loop.
-        *op_type = strndup(&(key[offset+1]), op_len);
-    }
-
-    // Verify we're at the separator between the resource and operation.
-    if (offset == len-1 || key[offset] != '_') {
-        if (interval_ms) {
-            *interval_ms = 0;
-        }
-
-        if (op_type) {
-            free(*op_type);
-            *op_type = NULL;
-        }
-
-        return FALSE;
+        *op_type = strndup(type_sep+1, interval_sep-type_sep-1);
     }
 
     // Everything else is the name of the resource.
     if (rsc_id) {
-        *rsc_id = strndup(key, offset);
+        *rsc_id = strndup(key, type_sep-key);
     }
 
     return TRUE;
