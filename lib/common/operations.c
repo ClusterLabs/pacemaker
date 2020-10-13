@@ -183,6 +183,10 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
 gboolean
 parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
+    char *underbar1 = NULL;
+    char *underbar2 = NULL;
+    char *underbar3 = NULL;
+
     // Initialize output variables in case of early return
     if (rsc_id) {
         *rsc_id = NULL;
@@ -198,11 +202,25 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 
     CRM_CHECK(key && *key, return FALSE);
 
-    if (!try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
-        return try_basic_match(key, rsc_id, op_type, interval_ms);
+    underbar1 = strchr(key, '_');
+    if (!underbar1) {
+        return FALSE;
     }
 
-    return TRUE;
+    underbar2 = strchr(underbar1+1, '_');
+    if (!underbar2) {
+        return FALSE;
+    }
+
+    underbar3 = strchr(underbar2+1, '_');
+
+    if (!underbar3) {
+        return try_basic_match(key, rsc_id, op_type, interval_ms);
+    } else if (try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
+        return TRUE;
+    } else {
+        return try_basic_match(key, rsc_id, op_type, interval_ms);
+    }
 }
 
 char *
