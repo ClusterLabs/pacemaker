@@ -48,74 +48,86 @@ pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
     return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
-static gboolean
-try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
+static inline gboolean
+convert_interval(const char *s, guint *interval_ms)
 {
-    size_t len = 0, offset = 0;
-    size_t op_len = 0;
+    unsigned long l;
 
-    len = strlen(key);
-    offset = len - 1;
+    errno = 0;
+    l = strtoul(s, NULL, 10);
 
-    // Parse interval at end of string
-    while ((offset > 0) && isdigit(key[offset])) {
-        offset--;
-    }
-
-    if (interval_ms) {
-        unsigned long l;
-
-        errno = 0;
-        l = strtoul(&(key[offset+1]), NULL, 10);
-
-        if (errno != 0) {
-            return FALSE;
-        }
-
-        *interval_ms = (guint) l;
-    }
-
-    // Verify we're at the separator between the operation and interval.
-    if (offset == len-1 || key[offset] != '_') {
-        if (interval_ms) {
-            *interval_ms = 0;
-        }
-
+    if (errno != 0) {
         return FALSE;
     }
 
-    // We're already on the underscore before the interval.  Back up one
-    // or this loop will never do anything.
-    offset--;
+    *interval_ms = (guint) l;
+    return TRUE;
+}
 
-    while ((offset > 0) && key[offset] != '_') {
-        offset--;
-        op_len++;
+static gboolean
+try_fast_match(const char *key, const char *underbar1, const char *underbar2,
+               char **rsc_id, char **op_type, guint *interval_ms)
+{
+    if (interval_ms) {
+        if (!convert_interval(underbar2+1, interval_ms)) {
+            return FALSE;
+        }
+    }
+
+    if (rsc_id) {
+        *rsc_id = strndup(key, underbar1-key);
+    }
+
+    if (op_type) {
+        *op_type = strndup(underbar1+1, underbar2-underbar1-1);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
+{
+    char *interval_sep = NULL;
+    char *type_sep = NULL;
+
+    // Parse interval at end of string
+    interval_sep = strrchr(key, '_');
+    if (interval_sep == NULL) {
+        return FALSE;
+    }
+
+    if (interval_ms) {
+        if (!convert_interval(interval_sep+1, interval_ms)) {
+            return FALSE;
+        }
+    }
+
+    type_sep = interval_sep-1;
+
+    while (1) {
+        if (*type_sep == '_') {
+            break;
+        } else if (type_sep == key) {
+            if (interval_ms) {
+                *interval_ms = 0;
+            }
+
+            return FALSE;
+        }
+
+        type_sep--;
     }
 
     if (op_type) {
         // Add one here to skip the leading underscore we landed on in the
         // while loop.
-        *op_type = strndup(&(key[offset+1]), op_len);
-    }
-
-    // Verify we're at the separator between the resource and operation.
-    if (offset == len-1 || key[offset] != '_') {
-        if (interval_ms) {
-            *interval_ms = 0;
-        }
-
-        if (op_type) {
-            free(*op_type);
-            *op_type = NULL;
-        }
-
-        return FALSE;
+        *op_type = strndup(type_sep+1, interval_sep-type_sep-1);
     }
 
     // Everything else is the name of the resource.
     if (rsc_id) {
-        *rsc_id = strndup(key, offset);
+        *rsc_id = strndup(key, type_sep-key);
     }
 
     return TRUE;
@@ -126,7 +138,7 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
 {
     int rc = 0;
     size_t nmatch = 8;
-    regmatch_t *pmatch = NULL;
+    regmatch_t pmatch[nmatch];
 
     if (notify_migrate_re == NULL) {
         // cppcheck-suppress memleak
@@ -136,11 +148,8 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
         CRM_ASSERT(rc == 0);
     }
 
-    pmatch = calloc(nmatch, sizeof(regmatch_t));
-
     rc = regexec(notify_migrate_re, key, nmatch, pmatch, 0);
     if (rc == REG_NOMATCH) {
-        free(pmatch);
         return FALSE;
     }
 
@@ -153,12 +162,7 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
     }
 
     if (interval_ms) {
-        unsigned long l;
-
-        errno = 0;
-        l = strtoul(key+pmatch[7].rm_so, NULL, 10);
-
-        if (errno != 0) {
+        if (!convert_interval(key+pmatch[7].rm_so, interval_ms)) {
             if (rsc_id) {
                 free(*rsc_id);
                 *rsc_id = NULL;
@@ -169,20 +173,20 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
                 *op_type = NULL;
             }
 
-            free(pmatch);
             return FALSE;
         }
-
-        *interval_ms = (guint) l;
     }
 
-    free(pmatch);
     return TRUE;
 }
 
 gboolean
 parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
+    char *underbar1 = NULL;
+    char *underbar2 = NULL;
+    char *underbar3 = NULL;
+
     // Initialize output variables in case of early return
     if (rsc_id) {
         *rsc_id = NULL;
@@ -198,11 +202,26 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 
     CRM_CHECK(key && *key, return FALSE);
 
-    if (!try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
-        return try_basic_match(key, rsc_id, op_type, interval_ms);
+    underbar1 = strchr(key, '_');
+    if (!underbar1) {
+        return FALSE;
     }
 
-    return TRUE;
+    underbar2 = strchr(underbar1+1, '_');
+    if (!underbar2) {
+        return FALSE;
+    }
+
+    underbar3 = strchr(underbar2+1, '_');
+
+    if (!underbar3) {
+        return try_fast_match(key, underbar1, underbar2,
+                              rsc_id, op_type, interval_ms);
+    } else if (try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
+        return TRUE;
+    } else {
+        return try_basic_match(key, rsc_id, op_type, interval_ms);
+    }
 }
 
 char *
