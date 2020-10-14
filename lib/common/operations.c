@@ -138,7 +138,7 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
 {
     int rc = 0;
     size_t nmatch = 8;
-    regmatch_t *pmatch = NULL;
+    regmatch_t pmatch[nmatch];
 
     if (notify_migrate_re == NULL) {
         // cppcheck-suppress memleak
@@ -148,11 +148,8 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
         CRM_ASSERT(rc == 0);
     }
 
-    pmatch = calloc(nmatch, sizeof(regmatch_t));
-
     rc = regexec(notify_migrate_re, key, nmatch, pmatch, 0);
     if (rc == REG_NOMATCH) {
-        free(pmatch);
         return FALSE;
     }
 
@@ -176,12 +173,10 @@ try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *
                 *op_type = NULL;
             }
 
-            free(pmatch);
             return FALSE;
         }
     }
 
-    free(pmatch);
     return TRUE;
 }
 
