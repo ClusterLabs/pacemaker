@@ -24,12 +24,13 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <crm/common/mainloop.h>
 
@@ -97,7 +98,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
 
     op = crm_element_value(request, F_CRM_TASK);
-    if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
+    if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         crm_xml_add(request, F_TYPE, T_STONITH_NG);
         crm_xml_add(request, F_STONITH_OPERATION, op);
         crm_xml_add(request, F_STONITH_CLIENTID, c->id);
@@ -122,7 +123,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     crm_trace("Flags %" X32T "/%u for command %" U32T " from %s",
               flags, call_options, id, pcmk__client_name(c));
 
-    if (is_set(call_options, st_opt_sync_call)) {
+    if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);
         CRM_LOG_ASSERT(c->request_id == 0);     /* This means the client has two synchronous events in-flight */
         c->request_id = id;     /* Reply only to the last one */
@@ -168,7 +169,7 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
     const char *remote_peer = crm_element_value(msg, F_ORIG);
     const char *op = crm_element_value(msg, F_STONITH_OPERATION);
 
-    if (crm_str_eq(op, "poke", TRUE)) {
+    if (pcmk__str_eq(op, "poke", pcmk__str_none)) {
         return;
     }
 
@@ -260,22 +261,22 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
     }
 }
 
-long long
+uint64_t
 get_stonith_flag(const char *name)
 {
-    if (safe_str_eq(name, T_STONITH_NOTIFY_FENCE)) {
+    if (pcmk__str_eq(name, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         return st_callback_notify_fence;
 
-    } else if (safe_str_eq(name, STONITH_OP_DEVICE_ADD)) {
+    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
         return st_callback_device_add;
 
-    } else if (safe_str_eq(name, STONITH_OP_DEVICE_DEL)) {
+    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_DEL, pcmk__str_casei)) {
         return st_callback_device_del;
 
-    } else if (safe_str_eq(name, T_STONITH_NOTIFY_HISTORY)) {
+    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY, pcmk__str_casei)) {
         return st_callback_notify_history;
 
-    } else if (safe_str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED)) {
+    } else if (pcmk__str_eq(name, T_STONITH_NOTIFY_HISTORY_SYNCED, pcmk__str_casei)) {
         return st_callback_notify_history_synced;
 
     }
@@ -301,7 +302,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (client->options & get_stonith_flag(type)) {
+    if (pcmk_is_set(client->flags, get_stonith_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
                                     crm_ipc_server_event|crm_ipc_server_error);
 
@@ -402,7 +403,7 @@ topology_remove_helper(const char *node, int level)
     char *desc = NULL;
     xmlNode *data = create_xml_node(NULL, XML_TAG_FENCING_LEVEL);
 
-    crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_ORIGIN, __func__);
     crm_xml_add_int(data, XML_ATTR_STONITH_INDEX, level);
     crm_xml_add(data, XML_ATTR_STONITH_TARGET, node);
 
@@ -428,7 +429,7 @@ remove_cib_device(xmlXPathObjectPtr xpathObj)
             standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
         }
 
-        if (safe_str_neq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+        if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
             continue;
         }
 
@@ -600,7 +601,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     /* We only care about STONITH resources. */
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-    if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (!pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         return;
     }
 
@@ -696,8 +697,8 @@ cib_devices_update(void)
     CRM_ASSERT(fenced_data_set != NULL);
     fenced_data_set->input = local_cib;
     fenced_data_set->now = crm_time_new(NULL);
-    fenced_data_set->flags |= pe_flag_quick_location;
     fenced_data_set->localhost = stonith_our_uname;
+    pe__set_working_set_flags(fenced_data_set, pe_flag_quick_location);
 
     cluster_status(fenced_data_set);
     pcmk__schedule_actions(fenced_data_set, NULL, NULL);
@@ -717,7 +718,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     bool needs_update = FALSE;
     xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+    for (change = pcmk__xml_first_child(patchset); change != NULL;
+         change = pcmk__xml_next(change)) {
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
         const char *shortpath = NULL;
@@ -726,7 +728,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             (strcmp(op, "move") == 0) ||
             strstr(xpath, "/"XML_CIB_TAG_STATUS)) {
             continue;
-        } else if (safe_str_eq(op, "delete") && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
+        } else if (pcmk__str_eq(op, "delete", pcmk__str_casei) && strstr(xpath, "/"XML_CIB_TAG_RESOURCE)) {
             const char *rsc_id = NULL;
             char *search = NULL;
             char *mutable = NULL;
@@ -815,7 +817,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
             rsc_id = crm_element_value(match, XML_ATTR_ID);
             standard = crm_element_value(match, XML_AGENT_ATTR_CLASS);
 
-            if (safe_str_neq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+            if (!pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
                 continue;
             }
 
@@ -922,7 +924,8 @@ update_fencing_topology(const char *event, xmlNode * msg)
 
         xml_patch_versions(patchset, add, del);
 
-        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+        for (change = pcmk__xml_first_child(patchset); change != NULL;
+             change = pcmk__xml_next(change)) {
             const char *op = crm_element_value(change, XML_DIFF_OP);
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
 
@@ -1143,6 +1146,7 @@ static void
 stonith_cleanup(void)
 {
     if (cib_api) {
+        cib_api->cmds->del_notify_callback(cib_api, T_CIB_DIFF_NOTIFY, update_cib_cache_cb);
         cib_api->cmds->signoff(cib_api);
     }
 
@@ -1244,7 +1248,8 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
 static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
-    if ((type != crm_status_processes) && !is_set(node->flags, crm_remote_node)) {
+    if ((type != crm_status_processes)
+        && !pcmk_is_set(node->flags, crm_remote_node)) {
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
@@ -1308,7 +1313,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         printf("<?xml version=\"1.0\"?><!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n");
         printf("<resource-agent name=\"pacemaker-fenced\">\n");
         printf(" <version>1.0</version>\n");
@@ -1464,8 +1469,8 @@ main(int argc, char **argv)
 
     fenced_data_set = pe_new_working_set();
     CRM_ASSERT(fenced_data_set != NULL);
-    set_bit(fenced_data_set->flags, pe_flag_no_counts);
-    set_bit(fenced_data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(fenced_data_set,
+                              pe_flag_no_counts|pe_flag_no_compat);
 
     if (stand_alone == FALSE) {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,21 @@
 #  define CRM_CLUSTER_INTERNAL__H
 
 #  include <crm/cluster.h>
+
+#define pcmk__set_peer_flags(peer, flags_to_set) do {                         \
+        (peer)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
+                                           "Peer", (peer)->uname,             \
+                                           (peer)->flags, (flags_to_set),     \
+                                           #flags_to_set);                    \
+    } while (0)
+
+#define pcmk__clear_peer_flags(peer, flags_to_clear) do {                     \
+        (peer)->flags = pcmk__clear_flags_as(__func__, __LINE__,              \
+                                             LOG_TRACE,                       \
+                                             "Peer", (peer)->uname,           \
+                                             (peer)->flags, (flags_to_clear), \
+                                             #flags_to_clear);                \
+    } while (0)
 
 typedef struct crm_ais_host_s AIS_Host;
 typedef struct crm_ais_msg_s AIS_Message;
@@ -24,6 +39,18 @@ struct crm_ais_host_s {
     char uname[MAX_NAME];
 
 } __attribute__ ((packed));
+
+#if SUPPORT_COROSYNC
+#  include <qb/qbipc_common.h>
+#  include <corosync/corotypes.h>
+typedef struct qb_ipc_response_header cs_ipc_header_response_t;
+#else
+typedef struct {
+    int size __attribute__ ((aligned(8)));
+    int id __attribute__ ((aligned(8)));
+    int error __attribute__ ((aligned(8)));
+} __attribute__ ((aligned(8))) cs_ipc_header_response_t;
+#endif
 
 struct crm_ais_msg_s {
     cs_ipc_header_response_t header __attribute__ ((aligned(8)));

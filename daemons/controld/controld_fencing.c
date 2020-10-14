@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/fencing/internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -37,7 +38,7 @@ static GHashTable *stonith_failures = NULL;
 void
 update_stonith_max_attempts(const char *value)
 {
-    if (safe_str_eq(value, CRM_INFINITY_S)) {
+    if (pcmk__str_eq(value, CRM_INFINITY_S, pcmk__str_casei)) {
        stonith_max_attempts = CRM_SCORE_INFINITY;
     } else {
        stonith_max_attempts = (unsigned long int) crm_parse_ll(value, NULL);
@@ -47,11 +48,11 @@ update_stonith_max_attempts(const char *value)
 void
 set_fence_reaction(const char *reaction_s)
 {
-    if (safe_str_eq(reaction_s, "panic")) {
+    if (pcmk__str_eq(reaction_s, "panic", pcmk__str_casei)) {
         fence_reaction_panic = TRUE;
 
     } else {
-        if (safe_str_neq(reaction_s, "stop")) {
+        if (!pcmk__str_eq(reaction_s, "stop", pcmk__str_casei)) {
             crm_warn("Invalid value '%s' for %s, using 'stop'",
                      reaction_s, XML_CONFIG_ATTR_FENCE_REACTION);
         }
@@ -207,7 +208,7 @@ send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
     crmd_peer_down(peer, TRUE);
 
     /* Generate a node state update for the CIB */
-    node_state = create_node_state_update(peer, flags, NULL, __FUNCTION__);
+    node_state = create_node_state_update(peer, flags, NULL, __func__);
 
     /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {
@@ -295,7 +296,7 @@ remove_stonith_cleanup(const char *target)
         char *iter_name = tmp->data;
 
         iter = iter->next;
-        if (safe_str_eq(target, iter_name)) {
+        if (pcmk__str_eq(target, iter_name, pcmk__str_casei)) {
             crm_trace("Removing %s from the cleanup list", iter_name);
             stonith_cleanup_list = g_list_delete_link(stonith_cleanup_list, tmp);
             free(iter_name);
@@ -385,7 +386,7 @@ fail_incompletable_stonith(crm_graph_t *graph)
             }
 
             task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-            if (task && safe_str_eq(task, CRM_OP_FENCE)) {
+            if (task && pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
                 action->failed = TRUE;
                 last_action = action->xml;
                 update_graph(graph, action);
@@ -409,7 +410,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
 {
     te_cleanup_stonith_history_sync(st, FALSE);
 
-    if (is_set(fsa_input_register, R_ST_REQUIRED)) {
+    if (pcmk_is_set(fsa_input_register, R_ST_REQUIRED)) {
         crm_crit("Fencing daemon connection failed");
         mainloop_set_trigger(stonith_reconnect);
 
@@ -450,7 +451,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
 
     crmd_alert_fencing_op(st_event);
 
-    if ((st_event->result == pcmk_ok) && safe_str_eq("on", st_event->action)) {
+    if ((st_event->result == pcmk_ok) && pcmk__str_eq("on", st_event->action, pcmk__str_casei)) {
         crm_notice("%s was successfully unfenced by %s (at the request of %s)",
                    st_event->target,
                    st_event->executioner? st_event->executioner : "<anyone>",
@@ -458,7 +459,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
                 /* TODO: Hook up st_event->device */
         return;
 
-    } else if (safe_str_eq("on", st_event->action)) {
+    } else if (pcmk__str_eq("on", st_event->action, pcmk__str_casei)) {
         crm_err("Unfencing of %s by %s failed: %s (%d)",
                 st_event->target,
                 st_event->executioner? st_event->executioner : "<anyone>",
@@ -466,7 +467,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
         return;
 
     } else if ((st_event->result == pcmk_ok)
-               && crm_str_eq(st_event->target, fsa_our_uname, TRUE)) {
+               && pcmk__str_eq(st_event->target, fsa_our_uname, pcmk__str_none)) {
 
         /* We were notified of our own fencing. Most likely, either fencing was
          * misconfigured, or fabric fencing that doesn't cut cluster
@@ -481,7 +482,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
                  st_event->executioner? st_event->executioner : "the cluster",
                  st_event->origin); /* Dumps blackbox if enabled */
         if (fence_reaction_panic) {
-            pcmk_panic(__FUNCTION__);
+            pcmk__panic(__func__);
         } else {
             crm_exit(CRM_EX_FATAL);
         }
@@ -492,7 +493,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
      * DC later. The current DC has already updated its fail count in
      * tengine_stonith_callback().
      */
-    if (!AM_I_DC && safe_str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE)) {
+    if (!AM_I_DC && pcmk__str_eq(st_event->operation, T_STONITH_NOTIFY_FENCE, pcmk__str_casei)) {
         if (st_event->result == pcmk_ok) {
             st_fail_count_reset(st_event->target);
         } else {
@@ -512,7 +513,9 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
     if (st_event->result == pcmk_ok) {
         crm_node_t *peer = crm_find_known_peer_full(0, st_event->target, CRM_GET_PEER_ANY);
         const char *uuid = NULL;
-        gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
+        gboolean we_are_executioner = pcmk__str_eq(st_event->executioner,
+                                                   fsa_our_uname,
+                                                   pcmk__str_casei);
 
         if (peer == NULL) {
             return;
@@ -534,7 +537,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
              */
 
             if (st_event->client_origin
-                && safe_str_neq(st_event->client_origin, te_client_id)) {
+                && !pcmk__str_eq(st_event->client_origin, te_client_id, pcmk__str_casei)) {
 
                 /* Abort the current transition graph if it wasn't us
                  * that invoked stonith to fence someone
@@ -544,8 +547,8 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
             }
 
             /* Assume it was our leader if we don't currently have one */
-        } else if (((fsa_our_dc == NULL) || safe_str_eq(fsa_our_dc, st_event->target))
-                   && is_not_set(peer->flags, crm_remote_node)) {
+        } else if (pcmk__str_eq(fsa_our_dc, st_event->target, pcmk__str_null_matches | pcmk__str_casei)
+                   && !pcmk_is_set(peer->flags, crm_remote_node)) {
 
             crm_notice("Fencing target %s %s our leader",
                        st_event->target, (fsa_our_dc? "was" : "may have been"));
@@ -565,7 +568,7 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
          * The connection won't necessarily drop when a remote node is fenced,
          * so the failure might not otherwise be detected until the next poke.
          */
-        if (is_set(peer->flags, crm_remote_node)) {
+        if (pcmk_is_set(peer->flags, crm_remote_node)) {
             remote_ra_fail(st_event->target);
         }
 
@@ -611,7 +614,7 @@ te_connect_stonith(gpointer user_data)
         // Non-blocking (retry failures later in main loop)
         rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
         if (rc != pcmk_ok) {
-            if (is_set(fsa_input_register, R_ST_REQUIRED)) {
+            if (pcmk_is_set(fsa_input_register, R_ST_REQUIRED)) {
                 crm_notice("Fencer connection failed (will retry): %s "
                            CRM_XS " rc=%d", pcmk_strerror(rc), rc);
                 mainloop_set_trigger(stonith_reconnect);
@@ -652,7 +655,7 @@ controld_trigger_fencer_connect()
                                                  te_connect_stonith,
                                                  GINT_TO_POINTER(TRUE));
     }
-    set_bit(fsa_input_register, R_ST_REQUIRED);
+    controld_set_fsa_input_flags(R_ST_REQUIRED);
     mainloop_set_trigger(stonith_reconnect);
 }
 
@@ -661,7 +664,7 @@ controld_disconnect_fencer(bool destroy)
 {
     if (stonith_api) {
         // Prevent fencer connection from coming up again
-        clear_bit(fsa_input_register, R_ST_REQUIRED);
+        controld_clear_fsa_input_flags(R_ST_REQUIRED);
 
         if (stonith_api->state != stonith_disconnected) {
             stonith_api->cmds->disconnect(stonith_api);
@@ -731,7 +734,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     CRM_CHECK(decode_transition_key(userdata, &uuid, &transition_id, &stonith_id, NULL),
               goto bail);
 
-    if (transition_graph->complete || stonith_id < 0 || safe_str_neq(uuid, te_uuid)
+    if (transition_graph->complete || stonith_id < 0 || !pcmk__str_eq(uuid, te_uuid, pcmk__str_casei)
         || transition_graph->id != transition_id) {
         crm_info("Ignoring STONITH action initiated outside of the current transition");
         goto bail;
@@ -752,7 +755,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         crm_info("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             te_action_confirmed(action, NULL);
-            if (safe_str_eq("on", op)) {
+            if (pcmk__str_eq("on", op, pcmk__str_casei)) {
                 const char *value = NULL;
                 char *now = crm_ttoa(time(NULL));
 
@@ -805,6 +808,20 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     return;
 }
 
+static int
+fence_with_delay(const char *target, const char *type, const char *delay)
+{
+    uint32_t options = st_opt_none; // Group of enum stonith_call_options
+    int timeout_sec = (int) (transition_graph->stonith_timeout / 1000);
+
+    if (crmd_join_phase_count(crm_join_confirmed) == 1) {
+        stonith__set_call_options(options, target, st_opt_allow_suicide);
+    }
+    return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
+                                               type, timeout_sec, 0,
+                                               crm_atoi(delay, "0"));
+}
+
 gboolean
 te_fence_node(crm_graph_t *graph, crm_action_t *action)
 {
@@ -816,7 +833,6 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     char *transition_key = NULL;
     const char *priority_delay = NULL;
     gboolean invalid_action = FALSE;
-    enum stonith_call_options options = st_opt_none;
 
     id = ID(action->xml);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -844,14 +860,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
     /* Passing NULL means block until we can connect... */
     te_connect_stonith(NULL);
 
-    if (crmd_join_phase_count(crm_join_confirmed) == 1) {
-        options |= st_opt_allow_suicide;
-    }
-
-    rc = stonith_api->cmds->fence_with_delay(stonith_api, options, target, type,
-                                             (int) (transition_graph->stonith_timeout / 1000),
-                                             0, crm_atoi(priority_delay, "0"));
-
+    rc = fence_with_delay(target, type, priority_delay);
     transition_key = pcmk__transition_key(transition_graph->id, action->id, 0,
                                           te_uuid),
     stonith_api->cmds->register_callback(stonith_api, rc,

@@ -22,6 +22,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/rules.h>
 
 struct config_root_s {
@@ -36,21 +37,22 @@ struct config_root_s {
   * find anywhere and risks multiple matches
   */
 /* *INDENT-OFF* */
-struct config_root_s known_paths[] = {
-    { NULL,			NULL,                 "//cib" },
-    { XML_TAG_CIB,		NULL,                 "//cib" },
-    { XML_CIB_TAG_STATUS,       "/cib",               "//cib/status" },
-    { XML_CIB_TAG_CONFIGURATION,"/cib",               "//cib/configuration" },
-    { XML_CIB_TAG_CRMCONFIG,    "/cib/configuration", "//cib/configuration/crm_config" },
-    { XML_CIB_TAG_NODES,        "/cib/configuration", "//cib/configuration/nodes" },
-    { XML_CIB_TAG_DOMAINS,      "/cib/configuration", "//cib/configuration/domains" },
-    { XML_CIB_TAG_RESOURCES,    "/cib/configuration", "//cib/configuration/resources" },
-    { XML_CIB_TAG_CONSTRAINTS,  "/cib/configuration", "//cib/configuration/constraints" },
-    { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "//cib/configuration/op_defaults" },
-    { XML_CIB_TAG_RSCCONFIG,	"/cib/configuration", "//cib/configuration/rsc_defaults" },
-    { XML_CIB_TAG_ACLS,		"/cib/configuration", "//cib/configuration/acls" },
-    { XML_TAG_FENCING_TOPOLOGY,	"/cib/configuration", "//cib/configuration/fencing-topology" },
-    { XML_CIB_TAG_SECTION_ALL,  NULL,                 "//cib" },
+static struct config_root_s known_paths[] = {
+    { NULL,                         NULL,                 "//cib" },
+    { XML_TAG_CIB,                  NULL,                 "//cib" },
+    { XML_CIB_TAG_STATUS,           "/cib",               "//cib/status" },
+    { XML_CIB_TAG_CONFIGURATION,    "/cib",               "//cib/configuration" },
+    { XML_CIB_TAG_CRMCONFIG,        "/cib/configuration", "//cib/configuration/crm_config" },
+    { XML_CIB_TAG_NODES,            "/cib/configuration", "//cib/configuration/nodes" },
+    { XML_CIB_TAG_RESOURCES,        "/cib/configuration", "//cib/configuration/resources" },
+    { XML_CIB_TAG_CONSTRAINTS,      "/cib/configuration", "//cib/configuration/constraints" },
+    { XML_CIB_TAG_OPCONFIG,         "/cib/configuration", "//cib/configuration/op_defaults" },
+    { XML_CIB_TAG_RSCCONFIG,        "/cib/configuration", "//cib/configuration/rsc_defaults" },
+    { XML_CIB_TAG_ACLS,             "/cib/configuration", "//cib/configuration/acls" },
+    { XML_TAG_FENCING_TOPOLOGY,     "/cib/configuration", "//cib/configuration/fencing-topology" },
+    { XML_CIB_TAG_TAGS,             "/cib/configuration", "//cib/configuration/tags" },
+    { XML_CIB_TAG_ALERTS,           "/cib/configuration", "//cib/configuration/alerts" },
+    { XML_CIB_TAG_SECTION_ALL,      NULL,                 "//cib" },
 };
 /* *INDENT-ON* */
 
@@ -119,7 +121,7 @@ get_object_path(const char *object_type)
 
     for (; lpc < max; lpc++) {
         if ((object_type == NULL && known_paths[lpc].name == NULL)
-            || safe_str_eq(object_type, known_paths[lpc].name)) {
+            || pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
             return known_paths[lpc].path;
         }
     }
@@ -133,7 +135,7 @@ get_object_parent(const char *object_type)
     int max = DIMOF(known_paths);
 
     for (; lpc < max; lpc++) {
-        if (safe_str_eq(object_type, known_paths[lpc].name)) {
+        if (pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
             return known_paths[lpc].parent;
         }
     }
@@ -218,7 +220,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     const char *user = crm_element_value(req, F_CIB_USER);
     bool with_digest = FALSE;
 
-    crm_trace("Begin %s%s%s op", is_set(call_options, cib_dryrun)?"dry-run of ":"", is_query ? "read-only " : "", op);
+    crm_trace("Begin %s%s%s op",
+              (pcmk_is_set(call_options, cib_dryrun)? "dry run of " : ""),
+              (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
     CRM_CHECK(result_cib != NULL, return -ENOMSG);
@@ -275,7 +279,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
 
-    if (is_set(call_options, cib_zero_copy)) {
+    if (pcmk_is_set(call_options, cib_zero_copy)) {
         /* Conditional on v2 patch style */
 
         scratch = current_cib;
@@ -355,10 +359,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     }
 
     crm_trace("Massaging CIB contents");
-    strip_text_nodes(scratch);
+    pcmk__strip_xml_text(scratch);
     fix_plus_plus_recursive(scratch);
 
-    if (is_set(call_options, cib_zero_copy)) {
+    if (pcmk_is_set(call_options, cib_zero_copy)) {
         /* At this point, current_cib is just the 'cib' tag and its properties,
          *
          * The v1 format would barf on this, but we know the v2 patch
@@ -378,7 +382,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         local_diff = xml_create_patchset(0, current_cib, scratch, (bool*)config_changed, manage_counters);
     }
 
-    xml_log_changes(LOG_TRACE, __FUNCTION__, scratch);
+    xml_log_changes(LOG_TRACE, __func__, scratch);
     xml_accept_changes(scratch);
 
     if (diff_cs == NULL) {
@@ -388,11 +392,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
     if(local_diff) {
         patchset_process_digest(local_diff, current_cib, scratch, with_digest);
 
-        xml_log_patchset(LOG_INFO, __FUNCTION__, local_diff);
+        xml_log_patchset(LOG_INFO, __func__, local_diff);
         crm_log_xml_trace(local_diff, "raw patch");
     }
 
-    if (is_not_set(call_options, cib_zero_copy) /* The original to compare against doesn't exist */
+    if (!pcmk_is_set(call_options, cib_zero_copy) // Original to compare against doesn't exist
         && local_diff
         && crm_is_callsite_active(diff_cs, LOG_TRACE, 0)) {
 
@@ -413,7 +417,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         free_xml(c);
     }
 
-    if (safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+    if (pcmk__str_eq(section, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
         /* Throttle the amount of costly validation we perform due to status updates
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
@@ -433,10 +437,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
      };
      */
 
-    if (*config_changed && is_not_set(call_options, cib_no_mtime)) {
+    if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
         const char *schema = crm_element_value(scratch, XML_ATTR_VALIDATION);
 
-        crm_xml_add_last_written(scratch);
+        pcmk__xe_add_last_written(scratch);
         if (schema) {
             static int minimum_schema = 0;
             int current_schema = get_schema_version(schema);
@@ -460,7 +464,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
     }
 
-    crm_trace("Perform validation: %s", (check_schema? "true" : "false"));
+    crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
     if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, TRUE)) {
         const char *current_schema = crm_element_value(scratch,
                                                        XML_ATTR_VALIDATION);
@@ -599,7 +603,7 @@ cib_native_notify(gpointer data, gpointer user_data)
         crm_warn("Skipping callback - NULL callback");
         return;
 
-    } else if (safe_str_neq(entry->event, event)) {
+    } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
         crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
         return;
     }
@@ -680,47 +684,6 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     return TRUE;
 }
 
-int
-cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level)
-{
-    int rc = pcmk_err_generic;
-
-    xmlNode *diff = NULL;
-
-    CRM_ASSERT(event);
-    CRM_ASSERT(input);
-    CRM_ASSERT(output);
-
-    crm_element_value_int(event, F_CIB_RC, &rc);
-    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
-
-    if (rc < pcmk_ok || diff == NULL) {
-        return rc;
-    }
-
-    if (level > LOG_CRIT) {
-        xml_log_patchset(level, "Config update", diff);
-    }
-
-    if (input != NULL) {
-        rc = cib_process_diff(NULL, cib_none, NULL, event, diff, input, output, NULL);
-
-        if (rc != pcmk_ok) {
-            crm_debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc, *output);
-
-            if (rc == -pcmk_err_old_data) {
-                crm_trace("Masking error, we already have the supplied update");
-                return pcmk_ok;
-            }
-            free_xml(*output); *output = NULL;
-
-            return rc;
-        }
-    }
-
-    return rc;
-}
-
 /* v2 and v2 patch formats */
 #define XPATH_CONFIG_CHANGE \
     "//" XML_CIB_TAG_CRMCONFIG " | " \
@@ -759,4 +722,54 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
 #endif
 
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
+}
+
+// Deprecated functions kept only for backward API compatibility
+int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
+                          int level);
+
+/*!
+ * \deprecated
+ */
+int
+cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
+                      int level)
+{
+    int rc = pcmk_err_generic;
+
+    xmlNode *diff = NULL;
+
+    CRM_ASSERT(event);
+    CRM_ASSERT(input);
+    CRM_ASSERT(output);
+
+    crm_element_value_int(event, F_CIB_RC, &rc);
+    diff = get_message_xml(event, F_CIB_UPDATE_RESULT);
+
+    if (rc < pcmk_ok || diff == NULL) {
+        return rc;
+    }
+
+    if (level > LOG_CRIT) {
+        xml_log_patchset(level, "Config update", diff);
+    }
+
+    if (input != NULL) {
+        rc = cib_process_diff(NULL, cib_none, NULL, event, diff, input, output,
+                              NULL);
+
+        if (rc != pcmk_ok) {
+            crm_debug("Update didn't apply: %s (%d) %p",
+                      pcmk_strerror(rc), rc, *output);
+
+            if (rc == -pcmk_err_old_data) {
+                crm_trace("Masking error, we already have the supplied update");
+                return pcmk_ok;
+            }
+            free_xml(*output);
+            *output = NULL;
+            return rc;
+        }
+    }
+    return rc;
 }

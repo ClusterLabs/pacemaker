@@ -54,6 +54,18 @@ typedef struct active_op_s {
     GHashTable *params;
 } active_op_t;
 
+#define controld_set_active_op_flags(active_op, flags_to_set) do {          \
+        (active_op)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
+            LOG_TRACE, "Active operation", (active_op)->op_key,             \
+            (active_op)->flags, (flags_to_set), #flags_to_set);             \
+    } while (0)
+
+#define controld_clear_active_op_flags(active_op, flags_to_clear) do {      \
+        (active_op)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \
+            LOG_TRACE, "Active operation", (active_op)->op_key,             \
+            (active_op)->flags, (flags_to_clear), #flags_to_clear);         \
+    } while (0)
+
 typedef struct lrm_state_s {
     const char *node_name;
     void *conn;                 // Reserved for controld_execd_state.c usage

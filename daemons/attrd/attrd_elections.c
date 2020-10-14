@@ -104,12 +104,12 @@ attrd_check_for_new_writer(const crm_node_t *peer, const xmlNode *xml)
     crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
         if ((election_state(writer) == election_won)
-           && safe_str_neq(peer->uname, attrd_cluster->uname)) {
+           && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
             crm_notice("Detected another attribute writer (%s), starting new election",
                        peer->uname);
             election_vote(writer);
 
-        } else if (safe_str_neq(peer->uname, peer_writer)) {
+        } else if (!pcmk__str_eq(peer->uname, peer_writer, pcmk__str_casei)) {
             crm_notice("Recorded new attribute writer: %s (was %s)",
                        peer->uname, (peer_writer? peer_writer : "unset"));
             free(peer_writer);
@@ -132,7 +132,7 @@ void
 attrd_remove_voter(const crm_node_t *peer)
 {
     election_remove(writer, peer->uname);
-    if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
+    if (peer_writer && pcmk__str_eq(peer->uname, peer_writer, pcmk__str_casei)) {
         free(peer_writer);
         peer_writer = NULL;
         crm_notice("Lost attribute writer %s", peer->uname);

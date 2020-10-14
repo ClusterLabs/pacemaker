@@ -1,0 +1,17 @@
+
+Current cluster status:
+Node node2 (2): standby
+Online: [ node1 ]
+
+ dummy	(ocf::heartbeat:Dummy):	 Started node1
+
+Transition Summary:
+
+Executing cluster transition:
+
+Revised cluster status:
+Node node2 (2): standby
+Online: [ node1 ]
+
+ dummy	(ocf::heartbeat:Dummy):	 Started node1
+

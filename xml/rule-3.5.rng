@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0" 
+         xmlns:ann="http://relaxng.org/ns/compatibility/annotations/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <start>
+      <ref name="element-rule"/>
+  </start>
+
+  <define name="element-rule">
+    <element name="rule">
+     <choice>
+     <attribute name="id-ref"><data type="IDREF"/></attribute>
+     <group>
+      <attribute name="id"><data type="ID"/></attribute>
+      <choice>
+        <externalRef href="score.rng"/>
+        <attribute name="score-attribute"><text/></attribute>
+      </choice>
+      <optional>
+        <attribute name="boolean-op">
+          <choice>
+            <value>or</value>
+            <value>and</value>
+          </choice>
+        </attribute>
+      </optional>
+      <optional>
+        <attribute name="role"><text/></attribute>
+      </optional>
+      <oneOrMore>
+        <choice>
+          <element name="expression">
+            <attribute name="id"><data type="ID"/></attribute>
+            <attribute name="attribute"><text/></attribute>
+            <attribute name="operation">
+              <choice>
+                <value>lt</value>
+                <value>gt</value>
+                <value>lte</value>
+                <value>gte</value>
+                <value>eq</value>
+                <value>ne</value>
+                <value>defined</value>
+                <value>not_defined</value>
+              </choice>
+            </attribute>
+            <optional>
+              <attribute name="value"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="type" ann:defaultValue="string">
+                <choice>
+                  <value>string</value>
+                  <value>integer</value>
+                  <value>number</value>
+                  <value>version</value>
+                </choice>
+              </attribute>
+            </optional>
+            <optional>
+              <attribute name="value-source" ann:defaultValue="literal">
+                <choice>
+                  <value>literal</value>
+                  <value>param</value>
+                  <value>meta</value>
+                </choice>
+              </attribute>
+            </optional>
+          </element>
+          <element name="date_expression">
+            <attribute name="id"><data type="ID"/></attribute>
+            <choice>
+              <group>
+                <attribute name="operation"><value>in_range</value></attribute>
+                <choice>
+                  <group>
+                    <optional>
+                      <attribute name="start"><text/></attribute>
+                    </optional>
+                    <attribute name="end"><text/></attribute>
+                  </group>
+                  <group>
+                    <attribute name="start"><text/></attribute>
+                    <element name="duration">
+                      <ref name="date-common"/>
+                    </element>
+                  </group>
+                </choice>
+              </group>
+              <group>
+                <attribute name="operation"><value>gt</value></attribute>
+                <attribute name="start"><text/></attribute>
+              </group>
+              <group>
+                <attribute name="operation"><value>lt</value></attribute>
+                <choice>
+                  <attribute name="end"><text/></attribute>
+                </choice>
+              </group>
+              <group>
+                <attribute name="operation"><value>date_spec</value></attribute>
+                <element name="date_spec">
+                  <ref name="date-common"/>
+                </element> 
+              </group>
+            </choice>
+          </element> 
+          <element name="rsc_expression">
+            <attribute name="id"><data type="ID"/></attribute>
+            <optional>
+              <attribute name="class"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="provider"><text/></attribute>
+            </optional>
+            <optional>
+              <attribute name="type"><text/></attribute>
+            </optional>
+          </element>
+          <element name="op_expression">
+            <attribute name="id"><data type="ID"/></attribute>
+            <attribute name="name"><text/></attribute>
+            <optional>
+              <attribute name="interval"><text/></attribute>
+            </optional>
+          </element>
+          <ref name="element-rule"/>
+        </choice>
+      </oneOrMore>
+     </group>
+     </choice>
+    </element>
+  </define>
+
+  <define name="date-common">
+    <attribute name="id"><data type="ID"/></attribute>
+    <optional>
+      <attribute name="hours"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="monthdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weekdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="yearsdays"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="months"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weeks"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="years"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="weekyears"><text/></attribute>
+    </optional>
+    <optional>
+      <attribute name="moon"><text/></attribute>
+    </optional>
+  </define>
+
+</grammar>

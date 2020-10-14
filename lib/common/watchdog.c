@@ -26,14 +26,6 @@
 
 static pid_t sbd_pid = 0;
 
-enum pcmk_panic_flags
-{
-    pcmk_panic_none     = 0x00,
-    pcmk_panic_delay    = 0x01,
-    pcmk_panic_kdump    = 0x02,
-    pcmk_panic_shutdown = 0x04,
-};
-
 static void
 sysrq_trigger(char t)
 {
@@ -54,8 +46,12 @@ sysrq_trigger(char t)
 }
 
 
+/*!
+ * \internal
+ * \brief Panic the local host (if root) or tell pacemakerd to do so
+ */
 static void
-pcmk_panic_local(void) 
+panic_local(void)
 {
     int rc = pcmk_ok;
     uid_t uid = geteuid();
@@ -97,7 +93,7 @@ pcmk_panic_local(void)
 
     /* We're either pacemakerd, or a pacemaker daemon running as root */
 
-    if (safe_str_eq("crash", getenv("PCMK_panic_action"))) {
+    if (pcmk__str_eq("crash", getenv("PCMK_panic_action"), pcmk__str_casei)) {
         sysrq_trigger('c');
     } else {
         sysrq_trigger('b');
@@ -118,8 +114,12 @@ pcmk_panic_local(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Tell sbd to kill the local host, then exit
+ */
 static void
-pcmk_panic_sbd(void) 
+panic_sbd(void)
 {
     union sigval signal_value;
     pid_t ppid = getppid();
@@ -131,7 +131,7 @@ pcmk_panic_sbd(void)
     if(sigqueue(sbd_pid, SIGKILL, signal_value) < 0) {
         crm_perror(LOG_EMERG, "Cannot signal sbd[%lld] to terminate",
                    (long long) sbd_pid);
-        pcmk_panic_local();
+        panic_local();
     }
 
     if(ppid > 1) {
@@ -143,17 +143,27 @@ pcmk_panic_sbd(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Panic the local host
+ *
+ * Panic the local host either by sbd (if running), directly, or by asking
+ * pacemakerd. If trace logging this function, exit instead.
+ *
+ * \param[in] origin   Function caller (for logging only)
+ */
 void
-pcmk_panic(const char *origin) 
+pcmk__panic(const char *origin)
 {
     static struct qb_log_callsite *panic_cs = NULL;
 
     if (panic_cs == NULL) {
-        panic_cs = qb_log_callsite_get(__func__, __FILE__, "panic-delay", LOG_TRACE, __LINE__, crm_trace_nonlog);
+        panic_cs = qb_log_callsite_get(__func__, __FILE__, "panic-delay",
+                                       LOG_TRACE, __LINE__, crm_trace_nonlog);
     }
 
     /* Ensure sbd_pid is set */
-    (void)pcmk_locate_sbd();
+    (void) pcmk__locate_sbd();
 
     if (panic_cs && panic_cs->targets) {
         /* getppid() == 1 means our original parent no longer exists */
@@ -167,16 +177,20 @@ pcmk_panic(const char *origin)
     if(sbd_pid > 1) {
         crm_emerg("Signaling sbd[%lld] to panic the system: %s",
                   (long long) sbd_pid, origin);
-        pcmk_panic_sbd();
+        panic_sbd();
 
     } else {
         crm_emerg("Panicking the system directly: %s", origin);
-        pcmk_panic_local();
+        panic_local();
     }
 }
 
+/*!
+ * \internal
+ * \brief Return the process ID of sbd (or 0 if it is not running)
+ */
 pid_t
-pcmk_locate_sbd(void)
+pcmk__locate_sbd(void)
 {
     char *pidfile = NULL;
     char *sbd_path = NULL;
@@ -227,6 +241,21 @@ pcmk__get_sbd_timeout(void)
     return sbd_timeout;
 }
 
+bool
+pcmk__get_sbd_sync_resource_startup(void)
+{
+    static bool sync_resource_startup = false;
+    static bool checked_sync_resource_startup = false;
+
+    if (!checked_sync_resource_startup) {
+        sync_resource_startup =
+            crm_is_true(getenv("SBD_SYNC_RESOURCE_STARTUP"));
+        checked_sync_resource_startup = true;
+    }
+
+    return sync_resource_startup;
+}
+
 long
 pcmk__auto_watchdog_timeout()
 {
@@ -250,7 +279,7 @@ pcmk__valid_sbd_timeout(const char *value)
         crm_debug("Watchdog may be enabled but stonith-watchdog-timeout is disabled (%s)",
                   value? value : "default");
 
-    } else if (pcmk_locate_sbd() == 0) {
+    } else if (pcmk__locate_sbd() == 0) {
         crm_emerg("Shutting down: stonith-watchdog-timeout configured (%s) "
                   "but SBD not active", (value? value : "auto"));
         crm_exit(CRM_EX_FATAL);

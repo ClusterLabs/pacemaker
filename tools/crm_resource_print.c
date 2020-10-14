@@ -8,6 +8,7 @@
  */
 
 #include <crm_resource.h>
+#include <crm/common/xml_internal.h>
 
 #define cons_string(x) x?x:"NA"
 void
@@ -17,8 +18,8 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
     xmlNode *lifetime = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
 
-    for (xml_obj = __xml_first_child_element(cib_constraints); xml_obj != NULL;
-         xml_obj = __xml_next_element(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(cib_constraints); xml_obj != NULL;
+         xml_obj = pcmk__xe_next(xml_obj)) {
         const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 
         if (id == NULL) {
@@ -31,7 +32,7 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
             continue;
         }
 
-        if (safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
+        if (pcmk__str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj), pcmk__str_casei)) {
             printf("Constraint %s %s %s %s %s %s %s\n",
                    crm_element_name(xml_obj),
                    cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
@@ -41,7 +42,7 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
                    cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
                    cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
 
-        } else if (safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
+        } else if (pcmk__str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj), pcmk__str_casei)) {
             /* unpack_location(xml_obj, data_set); */
         }
     }
@@ -58,7 +59,7 @@ cli_resource_print_cts(pe_resource_t * rsc)
     const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     pe_node_t *node = pe__current_node(rsc);
 
-    if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         needs_quorum = FALSE;
     } else {
         // @TODO check requires in resource meta-data and rsc_defaults
@@ -99,6 +100,7 @@ cli_resource_print_raw(pe_resource_t * rsc)
     }
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_print_list(pe_working_set_t * data_set, bool raw)
 {
@@ -110,7 +112,7 @@ cli_resource_print_list(pe_working_set_t * data_set, bool raw)
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *rsc = (pe_resource_t *) lpc->data;
 
-        if (is_set(rsc->flags, pe_rsc_orphan)
+        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)
             && rsc->fns->active(rsc, TRUE) == FALSE) {
             continue;
         }
@@ -120,12 +122,13 @@ cli_resource_print_list(pe_working_set_t * data_set, bool raw)
 
     if (found == 0) {
         printf("NO resources configured\n");
-        return -ENXIO;
+        return ENXIO;
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool active,
                          pe_working_set_t * data_set)
@@ -165,7 +168,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
         }
         fprintf(stdout, "): %s\n", services_lrm_status_str(status));
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 void
@@ -209,14 +212,14 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
         list = rsc->rsc_cons_lhs;
     }
 
-    if (is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
         /* Break colocation loops */
         printf("loop %s\n", rsc->id);
         free(prefix);
         return;
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
 
@@ -227,7 +230,7 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
             peer = cons->rsc_lh;
         }
 
-        if (is_set(peer->flags, pe_rsc_allocating)) {
+        if (pcmk_is_set(peer->flags, pe_rsc_allocating)) {
             if (dependents == FALSE) {
                 fprintf(stdout, "%s%-*s (id=%s - loop)\n", prefix, 80 - (4 * offset), peer->id,
                         cons->id);
@@ -258,6 +261,7 @@ cli_resource_print_colocation(pe_resource_t * rsc, bool dependents, bool recursi
     free(prefix);
 }
 
+// \return Standard Pacemaker return code
 int
 cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
@@ -270,13 +274,15 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
                                  rsc->orig_xml : rsc->xml);
     fprintf(stdout, "%sxml:\n%s\n", expanded ? "" : "raw ", rsc_xml);
     free(rsc_xml);
-    return 0;
+    return pcmk_rc_ok;
 }
 
+// \return Standard Pacemaker return code
 int
-cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, const char *attr_set_type,
+                             pe_working_set_t * data_set)
 {
-    int rc = -ENXIO;
+    int rc = ENXIO;
     unsigned int count = 0;
     GHashTable *params = NULL;
     const char *value = NULL;
@@ -290,10 +296,10 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_se
 
     params = crm_str_table_new();
 
-    if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
+    if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
         get_rsc_attributes(params, rsc, current, data_set);
 
-    } else if (safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
+    } else if (pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
         /* No need to redirect to the parent */
         get_meta_attributes(params, rsc, current, data_set);
 
@@ -306,7 +312,7 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_se
     value = g_hash_table_lookup(params, attr);
     if (value != NULL) {
         fprintf(stdout, "%s\n", value);
-        rc = 0;
+        rc = pcmk_rc_ok;
 
     } else {
         CMD_ERR("Attribute '%s' not found for '%s'", attr, rsc->id);
@@ -316,7 +322,7 @@ cli_resource_print_attribute(pe_resource_t *rsc, const char *attr, pe_working_se
     return rc;
 }
 
-
+// \return Standard Pacemaker return code
 int
 cli_resource_print_property(pe_resource_t *rsc, const char *attr, pe_working_set_t * data_set)
 {
@@ -324,7 +330,7 @@ cli_resource_print_property(pe_resource_t *rsc, const char *attr, pe_working_set
 
     if (value != NULL) {
         fprintf(stdout, "%s\n", value);
-        return 0;
+        return pcmk_rc_ok;
     }
-    return -ENXIO;
+    return ENXIO;
 }

@@ -25,7 +25,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 
@@ -78,22 +78,6 @@ attrd_cpg_destroy(gpointer unused)
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }
-}
-
-static void
-attrd_cib_replaced_cb(const char *event, xmlNode * msg)
-{
-    if (attrd_shutting_down()) {
-        return;
-    }
-
-    if (attrd_election_won()) {
-        crm_notice("Updating all attributes after %s event", event);
-        write_attributes(TRUE, FALSE);
-    }
-
-    // Check for changes in alerts
-    mainloop_set_trigger(attrd_config_read);
 }
 
 static void
@@ -268,31 +252,31 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         client->name = crm_strdup_printf("%s.%d", value?value:"unknown", client->pid);
     }
 
-    if (safe_str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE)) {
+    if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_peer_remove(client->name, xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_clear_failure(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_update(xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_REFRESH)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_REFRESH, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
         attrd_client_refresh();
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_QUERY)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_QUERY, pcmk__str_casei)) {
         /* queries will get reply, so no ack is necessary */
         attrd_client_query(client, id, flags, xml);
 

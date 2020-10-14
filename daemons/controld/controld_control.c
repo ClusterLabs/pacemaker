@@ -18,7 +18,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -55,7 +55,7 @@ do_ha_control(long long action,
         crm_cluster_disconnect(cluster);
         crm_info("Disconnected from the cluster");
 
-        set_bit(fsa_input_register, R_HA_DISCONNECTED);
+        controld_set_fsa_input_flags(R_HA_DISCONNECTED);
     }
 
     if (action & A_HA_CONNECT) {
@@ -79,18 +79,19 @@ do_ha_control(long long action,
         }
 
         if (registered == FALSE) {
-            set_bit(fsa_input_register, R_HA_DISCONNECTED);
+            controld_set_fsa_input_flags(R_HA_DISCONNECTED);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             return;
         }
 
-        populate_cib_nodes(node_update_none, __FUNCTION__);
-        clear_bit(fsa_input_register, R_HA_DISCONNECTED);
+        populate_cib_nodes(node_update_none, __func__);
+        controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
         crm_info("Connected to the cluster");
     }
 
     if (action & ~(A_HA_CONNECT | A_HA_DISCONNECT)) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action), __FUNCTION__);
+        crm_err("Unexpected action %s in %s", fsa_action2string(action),
+                __func__);
     }
 }
 
@@ -101,7 +102,7 @@ do_shutdown(long long action,
             enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     /* just in case */
-    set_bit(fsa_input_register, R_SHUTDOWN);
+    controld_set_fsa_input_flags(R_SHUTDOWN);
     controld_disconnect_fencer(FALSE);
 }
 
@@ -114,12 +115,12 @@ do_shutdown_req(long long action,
 {
     xmlNode *msg = NULL;
 
-    set_bit(fsa_input_register, R_SHUTDOWN);
+    controld_set_fsa_input_flags(R_SHUTDOWN);
+    //controld_set_fsa_input_flags(R_STAYDOWN);
     crm_info("Sending shutdown request to all peers (DC is %s)",
              (fsa_our_dc? fsa_our_dc : "not set"));
     msg = create_request(CRM_OP_SHUTDOWN_REQ, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-/* 	set_bit(fsa_input_register, R_STAYDOWN); */
     if (send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
@@ -134,13 +135,13 @@ extern GHashTable *voted;
 void
 crmd_fast_exit(crm_exit_t exit_code)
 {
-    if (is_set(fsa_input_register, R_STAYDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_STAYDOWN)) {
         crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
                  exit_code, CRM_EX_FATAL);
         exit_code = CRM_EX_FATAL;
 
     } else if ((exit_code == CRM_EX_OK)
-               && is_set(fsa_input_register, R_IN_RECOVERY)) {
+               && pcmk_is_set(fsa_input_register, R_IN_RECOVERY)) {
         crm_err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
@@ -171,7 +172,7 @@ crmd_exit(crm_exit_t exit_code)
               exit_code, crm_exit_str(exit_code));
 
     /* Suppress secondary errors resulting from us disconnecting everything */
-    set_bit(fsa_input_register, R_HA_DISCONNECTED);
+    controld_set_fsa_input_flags(R_HA_DISCONNECTED);
 
 /* Close all IPC servers and clients to ensure any and all shared memory files are cleaned up */
 
@@ -215,7 +216,7 @@ crmd_exit(crm_exit_t exit_code)
         delete_fsa_input(fsa_data);
     }
 
-    clear_bit(fsa_input_register, R_MEMBERSHIP);
+    controld_clear_fsa_input_flags(R_MEMBERSHIP);
     g_list_free(fsa_message_queue); fsa_message_queue = NULL;
 
     metadata_cache_fini();
@@ -224,11 +225,13 @@ crmd_exit(crm_exit_t exit_code)
     /* Tear down the CIB manager connection, but don't free it yet -- it could
      * be used when we drain the mainloop later.
      */
+    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
+    fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
     cib_free_callbacks(fsa_cib_conn);
     fsa_cib_conn->cmds->signoff(fsa_cib_conn);
 
     verify_stopped(fsa_state, LOG_WARNING);
-    clear_bit(fsa_input_register, R_LRM_CONNECTED);
+    controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
     /* This basically will not work, since mainloop has a reference to it */
@@ -391,7 +394,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
         route_message(C_IPC_MESSAGE, msg);
     }
 
-    trigger_fsa(fsa_source);
+    trigger_fsa();
     free_xml(msg);
     return 0;
 }
@@ -407,7 +410,7 @@ crmd_ipc_closed(qb_ipcs_connection_t * c)
                   c, client);
         free(client->userdata);
         pcmk__free_client(client);
-        trigger_fsa(fsa_source);
+        trigger_fsa();
     }
     return 0;
 }
@@ -448,31 +451,31 @@ do_started(long long action,
         crm_err("Start cancelled... %s", fsa_state2string(cur_state));
         return;
 
-    } else if (is_set(fsa_input_register, R_MEMBERSHIP) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_MEMBERSHIP)) {
         crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_LRM_CONNECTED)) {
         crm_info("Delaying start, not connected to executor (%.16llx)", R_LRM_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
         crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_READ_CONFIG) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_READ_CONFIG)) {
         crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
+    } else if (!pcmk_is_set(fsa_input_register, R_PEER_DATA)) {
 
         crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
         crmd_fsa_stall(TRUE);
@@ -489,7 +492,7 @@ do_started(long long action,
     }
     controld_trigger_fencer_connect();
 
-    clear_bit(fsa_input_register, R_STARTING);
+    controld_clear_fsa_input_flags(R_STARTING);
     register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
 }
 
@@ -499,7 +502,7 @@ do_recover(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    set_bit(fsa_input_register, R_IN_RECOVERY);
+    controld_set_fsa_input_flags(R_IN_RECOVERY);
     crm_warn("Fast-tracking shutdown in response to errors");
 
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
@@ -542,7 +545,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
         "Zero disables polling, while positive values are an interval in seconds"
             "(unless other units are specified, for example \"5min\")",
         "15min", pcmk__valid_interval_spec,
-        "Polling interval to recheck cluster state and evalute rules "
+        "Polling interval to recheck cluster state and evaluate rules "
             "with date specifications",
         "Pacemaker is primarily event-driven, and looks ahead to know when to "
             "recheck cluster state for failure timeouts and most time-based "
@@ -612,10 +615,26 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         "stonith-watchdog-timeout", NULL, "time", NULL,
-        NULL, pcmk__valid_sbd_timeout,
+        "0", pcmk__valid_sbd_timeout,
         "How long to wait before we can assume nodes are safely down "
-            "when sbd is in use",
-        NULL
+            "when watchdog-based self-fencing via SBD is in use",
+        "If nonzero, along with `have-watchdog=true` automatically set by the "
+            "cluster, when fencing is required, watchdog-based self-fencing "
+            "will be performed via SBD without requiring a fencing resource "
+            "explicitly configured. "
+            "If `stonith-watchdog-timeout` is set to a positive value, unseen "
+            "nodes are assumed to self-fence within this much time. +WARNING:+ "
+            "It must be ensured that this value is larger than the "
+            "`SBD_WATCHDOG_TIMEOUT` environment variable on all nodes. "
+            "Pacemaker verifies the settings individually on all nodes and "
+            "prevents startup or shuts down if configured wrongly on the fly. "
+            "It's strongly recommended that `SBD_WATCHDOG_TIMEOUT` is set to "
+            "the same value on all nodes. "
+            "If `stonith-watchdog-timeout` is set to a negative value, and "
+            "`SBD_WATCHDOG_TIMEOUT` is set, twice that value will be used. "
+            "+WARNING:+ In this case, it's essential (currently not verified by "
+            "pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
+            "all nodes."
     },
     {
         "stonith-max-attempts", NULL, "integer", NULL,
@@ -626,7 +645,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
 
     // Already documented in libpe_status (other values must be kept identical)
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide",
+        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum, NULL, NULL
     },
     {
@@ -674,7 +693,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
-            set_bit(fsa_input_register, R_STAYDOWN);
+            controld_set_fsa_input_flags(R_STAYDOWN);
         }
         goto bail;
     }
@@ -712,7 +731,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     value = crmd_pref(config_hash, "no-quorum-policy");
-    if (safe_str_eq(value, "suicide") && pcmk_locate_sbd()) {
+    if (pcmk__str_eq(value, "suicide", pcmk__str_casei) && pcmk__locate_sbd()) {
         no_quorum_suicide_escalation = TRUE;
     }
 
@@ -756,8 +775,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
     crmd_unpack_alerts(alerts);
 
-    set_bit(fsa_input_register, R_READ_CONFIG);
-    crm_trace("Triggering FSA: %s", __FUNCTION__);
+    controld_set_fsa_input_flags(R_READ_CONFIG);
+    crm_trace("Triggering FSA: %s", __func__);
     mainloop_set_trigger(fsa_source);
 
     g_hash_table_destroy(config_hash);
@@ -797,13 +816,13 @@ crm_shutdown(int nsig)
         return;
     }
 
-    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         crm_err("Escalating shutdown");
         register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
         return;
     }
 
-    set_bit(fsa_input_register, R_SHUTDOWN);
+    controld_set_fsa_input_flags(R_SHUTDOWN);
     register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
     if (shutdown_escalation_timer->period_ms == 0) {

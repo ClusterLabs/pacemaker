@@ -20,8 +20,12 @@
 #include <servicelog.h>
 #include <syslog.h>
 #include <unistd.h>
-#include <config.h>
 #include <inttypes.h>  /* U64T ~ PRIu64, U64TS ~ SCNu64 */
+
+#ifndef PCMK__CONFIG_H
+#  define PCMK__CONFIG_H
+#  include <config.h>
+#endif
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>

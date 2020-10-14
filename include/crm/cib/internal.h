@@ -10,7 +10,7 @@
 #ifndef CIB_INTERNAL__H
 #  define CIB_INTERNAL__H
 #  include <crm/cib.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 
 #  define CIB_OP_SLAVE	"cib_slave"
 #  define CIB_OP_SLAVEALL	"cib_slave_all"
@@ -97,6 +97,18 @@ struct timer_rec_s {
     guint ref;
     cib_t *cib;
 };
+
+#define cib__set_call_options(cib_call_opts, call_for, flags_to_set) do {   \
+        cib_call_opts = pcmk__set_flags_as(__func__, __LINE__,              \
+            LOG_TRACE, "CIB call", (call_for), (cib_call_opts),             \
+            (flags_to_set), #flags_to_set); \
+    } while (0)
+
+#define cib__clear_call_options(cib_call_opts, call_for, flags_to_clear) do {  \
+        cib_call_opts = pcmk__clear_flags_as(__func__, __LINE__,               \
+            LOG_TRACE, "CIB call", (call_for), (cib_call_opts),                \
+            (flags_to_clear), #flags_to_clear);                                \
+    } while (0)
 
 typedef int (*cib_op_t) (const char *, int, const char *, xmlNode *,
                          xmlNode *, xmlNode *, xmlNode **, xmlNode **);

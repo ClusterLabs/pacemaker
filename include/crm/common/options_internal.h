@@ -10,7 +10,11 @@
 #ifndef OPTIONS_INTERNAL__H
 #  define OPTIONS_INTERNAL__H
 
-#  include <config.h>   // HAVE_GETOPT, _Noreturn
+#  ifndef PCMK__CONFIG_H
+#    define PCMK__CONFIG_H
+#    include <config.h>   // HAVE_GETOPT, _Noreturn
+#  endif
+
 #  include <glib.h>     // GHashTable
 #  include <stdbool.h>  // bool
 
@@ -111,6 +115,7 @@ bool pcmk__valid_utilization(const char *value);
 
 // from watchdog.c
 long pcmk__get_sbd_timeout(void);
+bool pcmk__get_sbd_sync_resource_startup(void);
 long pcmk__auto_watchdog_timeout(void);
 bool pcmk__valid_sbd_timeout(const char *value);
 

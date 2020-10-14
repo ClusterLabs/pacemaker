@@ -46,21 +46,21 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
                          &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
-        || safe_str_neq(conf_op_name, lrm_op_task)) {
+        || !pcmk__str_eq(conf_op_name, lrm_op_task, pcmk__str_casei)) {
         return FALSE;
     }
 
     lrm_op_id = ID(lrm_op_xml);
     last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
 
-    if (safe_str_eq(last_failure_key, lrm_op_id)) {
+    if (pcmk__str_eq(last_failure_key, lrm_op_id, pcmk__str_casei)) {
         matched = TRUE;
 
     } else {
         char *expected_op_key = pcmk__op_key(rsc_id, conf_op_name,
                                                 conf_op_interval_ms);
 
-        if (safe_str_eq(expected_op_key, lrm_op_id)) {
+        if (pcmk__str_eq(expected_op_key, lrm_op_id, pcmk__str_casei)) {
             int rc = 0;
             int target_rc = pe__target_rc_from_xml(lrm_op_xml);
 
@@ -178,7 +178,7 @@ rsc_fail_name(pe_resource_t *rsc)
 {
     const char *name = (rsc->clone_name? rsc->clone_name : rsc->id);
 
-    return is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
+    return pcmk_is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
 }
 
 /*!
@@ -239,10 +239,10 @@ generate_fail_regexes(pe_resource_t *rsc, pe_working_set_t *data_set,
     gboolean is_legacy = (compare_version(version, "3.0.13") < 0);
 
     generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name, is_legacy,
-                        is_set(rsc->flags, pe_rsc_unique), failcount_re);
+                        pcmk_is_set(rsc->flags, pe_rsc_unique), failcount_re);
 
     generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name, is_legacy,
-                        is_set(rsc->flags, pe_rsc_unique), lastfailure_re);
+                        pcmk_is_set(rsc->flags, pe_rsc_unique), lastfailure_re);
 
     free(rsc_name);
 }
@@ -287,7 +287,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     }
 
     /* If all failures have expired, ignore fail count */
-    if (is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
+    if (pcmk_is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
         && rsc->failure_timeout) {
 
         time_t now = get_effective_time(data_set);
@@ -309,7 +309,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
      * container on the wrong node.
      */
 
-    if (is_set(flags, pe_fc_fillers) && rsc->fillers
+    if (pcmk_is_set(flags, pe_fc_fillers) && rsc->fillers
         && !pe_rsc_is_bundled(rsc)) {
 
         GListPtr gIter = NULL;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 #include <stdio.h>
 #include <string.h>
+#include <crm/msg_xml.h>
+#include "crmcommon_private.h"
 
 /*
  * From xpath2.c
@@ -260,4 +262,38 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     free(nodePath);
 
     return result;
+}
+
+int
+pcmk__element_xpath(const char *prefix, xmlNode *xml, char *buffer,
+                    int offset, size_t buffer_size)
+{
+    const char *id = ID(xml);
+
+    if(offset == 0 && prefix == NULL && xml->parent) {
+        offset = pcmk__element_xpath(NULL, xml->parent, buffer, offset,
+                                     buffer_size);
+    }
+
+    if(id) {
+        offset += snprintf(buffer + offset, buffer_size - offset,
+                           "/%s[@id='%s']", (const char *) xml->name, id);
+    } else if(xml->name) {
+        offset += snprintf(buffer + offset, buffer_size - offset,
+                           "/%s", (const char *) xml->name);
+    }
+
+    return offset;
+}
+
+char *
+xml_get_path(xmlNode *xml)
+{
+    int offset = 0;
+    char buffer[PCMK__BUFFER_SIZE];
+
+    if (pcmk__element_xpath(NULL, xml, buffer, offset, sizeof(buffer)) > 0) {
+        return strdup(buffer);
+    }
+    return NULL;
 }

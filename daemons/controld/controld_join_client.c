@@ -37,7 +37,7 @@ update_dc_expected(xmlNode *msg)
     if (fsa_our_dc && crm_is_true(crm_element_value(msg, F_CRM_DC_LEAVING))) {
         crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
 
-        crm_update_peer_expected(__FUNCTION__, dc_node, CRMD_JOINSTATE_DOWN);
+        crm_update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
     }
 }
 
@@ -144,7 +144,8 @@ do_cl_join_offer_respond(long long action,
     fsa_register_cib_callback(query_call_id, FALSE, strdup(join_id), join_query_callback);
     crm_trace("Registered join query callback: %d", query_call_id);
 
-    register_fsa_action(A_DC_TIMER_STOP);
+    controld_set_fsa_action_flags(A_DC_TIMER_STOP);
+    trigger_fsa();
 }
 
 void
@@ -164,7 +165,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     if(rc != pcmk_ok || output == NULL) {
         crm_err("Could not retrieve version details for join-%s: %s (%d)",
                 join_id, pcmk_strerror(rc), rc);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
 
     } else if (fsa_our_dc == NULL) {
         crm_debug("Membership is in flux, not continuing join-%s", join_id);
@@ -191,19 +192,19 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 static void
 set_join_state(const char * start_state)
 {
-    if (safe_str_eq(start_state, "standby")) {
+    if (pcmk__str_eq(start_state, "standby", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
         update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
                              NULL, NULL, NULL, "standby", "on", TRUE, NULL, NULL);
 
-    } else if (safe_str_eq(start_state, "online")) {
+    } else if (pcmk__str_eq(start_state, "online", pcmk__str_casei)) {
         crm_notice("Forcing node %s to join in %s state per configured environment",
                    fsa_our_uname, start_state);
         update_attr_delegate(fsa_cib_conn, cib_sync_call, XML_CIB_TAG_NODES, fsa_our_uuid,
                              NULL, NULL, NULL, "standby", "off", TRUE, NULL, NULL);
 
-    } else if (safe_str_eq(start_state, "default")) {
+    } else if (pcmk__str_eq(start_state, "default", pcmk__str_casei)) {
         crm_debug("Not forcing a starting state on node %s", fsa_our_uname);
 
     } else {
@@ -231,7 +232,7 @@ do_cl_join_finalize_respond(long long action,
     const char *ack_nack = crm_element_value(input->msg, CRM_OP_JOIN_ACKNAK);
     const char *welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
 
-    if (safe_str_neq(op, CRM_OP_JOIN_ACKNAK)) {
+    if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
         crm_trace("Ignoring op=%s message", op);
         return;
     }
@@ -250,7 +251,7 @@ do_cl_join_finalize_respond(long long action,
         return;
     }
 
-    if (AM_I_DC == FALSE && safe_str_eq(welcome_from, fsa_our_uname)) {
+    if (AM_I_DC == FALSE && pcmk__str_eq(welcome_from, fsa_our_uname, pcmk__str_casei)) {
         crm_warn("Discarding our own welcome - we're no longer the DC");
         return;
     }
@@ -286,7 +287,7 @@ do_cl_join_finalize_respond(long long action,
          * are _NOT_ lucky, we will probe for the "wrong" instance of anonymous
          * clones and end up with multiple active instances on the machine.
          */
-        if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
+        if (first_join && !pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
             if (start_state) {
                 set_join_state(start_state);
@@ -297,7 +298,8 @@ do_cl_join_finalize_respond(long long action,
         free_xml(reply);
 
         if (AM_I_DC == FALSE) {
-            register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
+            register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE,
+                                   __func__);
         }
 
         free_xml(tmp1);

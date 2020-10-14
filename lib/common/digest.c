@@ -13,10 +13,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <md5.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include "crmcommon_private.h"
 
 #define BEST_EFFORT_STATUS 0
 
@@ -34,9 +36,9 @@ dump_xml_for_digest(xmlNode * an_xml_node)
     int offset = 0, max = 0;
 
     /* for compatibility with the old result which is used for v1 digests */
-    crm_buffer_add_char(&buffer, &offset, &max, ' ');
-    crm_xml_dump(an_xml_node, 0, &buffer, &offset, &max, 0);
-    crm_buffer_add_char(&buffer, &offset, &max, '\n');
+    pcmk__buffer_add_char(&buffer, &offset, &max, ' ');
+    pcmk__xml2text(an_xml_node, 0, &buffer, &offset, &max, 0);
+    pcmk__buffer_add_char(&buffer, &offset, &max, '\n');
 
     return buffer;
 }
@@ -110,7 +112,8 @@ calculate_xml_digest_v2(xmlNode * source, gboolean do_filter)
          */
 
     } else {
-        crm_xml_dump(source, do_filter ? xml_log_option_filtered : 0, &buffer, &offset, &max, 0);
+        pcmk__xml2text(source, (do_filter? xml_log_option_filtered : 0),
+                       &buffer, &offset, &max, 0);
     }
 
     CRM_ASSERT(buffer != NULL);
@@ -226,7 +229,7 @@ pcmk__verify_digest(xmlNode *input, const char *expected)
             return false;
         }
     }
-    passed = safe_str_eq(expected, calculated);
+    passed = pcmk__str_eq(expected, calculated, pcmk__str_casei);
     if (passed) {
         crm_trace("Digest comparison passed: %s", calculated);
     } else {
@@ -235,4 +238,59 @@ pcmk__verify_digest(xmlNode *input, const char *expected)
     }
     free(calculated);
     return passed;
+}
+
+/*!
+ * \internal
+ * \brief Check whether an XML attribute should be excluded from CIB digests
+ *
+ * \param[in] name  XML attribute name
+ *
+ * \return true if XML attribute should be excluded from CIB digest calculation
+ */
+bool
+pcmk__xa_filterable(const char *name)
+{
+    static const char *filter[] = {
+        XML_ATTR_ORIGIN,
+        XML_CIB_ATTR_WRITTEN,
+        XML_ATTR_UPDATE_ORIG,
+        XML_ATTR_UPDATE_CLIENT,
+        XML_ATTR_UPDATE_USER,
+    };
+
+    for (int i = 0; i < DIMOF(filter); i++) {
+        if (strcmp(name, filter[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+char *
+crm_md5sum(const char *buffer)
+{
+    int lpc = 0, len = 0;
+    char *digest = NULL;
+    unsigned char raw_digest[MD5_DIGEST_SIZE];
+
+    if (buffer == NULL) {
+        buffer = "";
+    }
+    len = strlen(buffer);
+
+    crm_trace("Beginning digest of %d bytes", len);
+    digest = malloc(2 * MD5_DIGEST_SIZE + 1);
+    if (digest) {
+        md5_buffer(buffer, len, raw_digest);
+        for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
+            sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
+        }
+        digest[(2 * MD5_DIGEST_SIZE)] = 0;
+        crm_trace("Digest %s.", digest);
+
+    } else {
+        crm_err("Could not create digest");
+    }
+    return digest;
 }

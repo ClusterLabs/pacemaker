@@ -504,7 +504,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
 
     // Convert to UTC if local timezone was not requested
     if (date_time && date_time->offset
-        && is_not_set(flags, crm_time_log_with_timezone)) {
+        && !pcmk_is_set(flags, crm_time_log_with_timezone)) {
         crm_trace("UTC conversion");
         utc = crm_get_utc_time(date_time);
         dt = utc;

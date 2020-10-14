@@ -180,8 +180,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     proxy->session_id = strdup(session_id);
     proxy->lrm = lrmd;
 
-    if (!strcmp(pcmk_message_name(crm_system_name), CRM_SYSTEM_CRMD)
-        && !strcmp(pcmk_message_name(channel), CRM_SYSTEM_CRMD)) {
+    if (!strcmp(pcmk__message_name(crm_system_name), CRM_SYSTEM_CRMD)
+        && !strcmp(pcmk__message_name(channel), CRM_SYSTEM_CRMD)) {
         // The controller doesn't need to connect to itself
         proxy->is_local = TRUE;
 
@@ -220,10 +220,10 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
     crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);
     /* This is msg from remote ipc client going to real ipc server */
 
-    if (safe_str_eq(op, LRMD_IPC_OP_DESTROY)) {
+    if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_casei)) {
         remote_proxy_end_session(proxy);
 
-    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST)) {
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
         const char *name = crm_element_value(msg, F_LRMD_IPC_CLIENT);
@@ -253,11 +253,11 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         pcmk__update_acl_user(request, F_LRMD_IPC_USER, node_name);
 #endif
 
-        if(is_set(flags, crm_ipc_proxied)) {
+        if (pcmk_is_set(flags, crm_ipc_proxied)) {
             const char *type = crm_element_value(request, F_TYPE);
             int rc = 0;
 
-            if (safe_str_eq(type, T_ATTRD)
+            if (pcmk__str_eq(type, T_ATTRD, pcmk__str_casei)
                 && crm_element_value(request,
                                      PCMK__XA_ATTR_NODE_NAME) == NULL) {
                 crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, proxy->node_name);
@@ -272,7 +272,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
 
                 /* Send a n'ack so the caller doesn't block */
-                crm_xml_add(op_reply, "function", __FUNCTION__);
+                crm_xml_add(op_reply, "function", __func__);
                 crm_xml_add_int(op_reply, "line", __LINE__);
                 crm_xml_add_int(op_reply, "rc", rc);
                 remote_proxy_relay_response(proxy, op_reply, msg_id);

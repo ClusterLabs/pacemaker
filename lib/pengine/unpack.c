@@ -18,6 +18,7 @@
 #include <crm/services.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <crm/common/util.h>
 #include <crm/pengine/rules.h>
@@ -27,15 +28,25 @@
 
 CRM_TRACE_INIT_DATA(pe_status);
 
-#define set_config_flag(data_set, option, flag) do {			\
-	const char *tmp = pe_pref(data_set->config_hash, option);	\
-	if(tmp) {							\
-	    if(crm_is_true(tmp)) {					\
-		set_bit(data_set->flags, flag);			\
-	    } else {							\
-		clear_bit(data_set->flags, flag);		\
-	    }								\
-	}								\
+/* This uses pcmk__set_flags_as()/pcmk__clear_flags_as() directly rather than
+ * use pe__set_working_set_flags()/pe__clear_working_set_flags() so that the
+ * flag is stringified more readably in log messages.
+ */
+#define set_config_flag(data_set, option, flag) do {                        \
+        const char *scf_value = pe_pref((data_set)->config_hash, (option)); \
+        if (scf_value != NULL) {                                            \
+            if (crm_is_true(scf_value)) {                                   \
+                (data_set)->flags = pcmk__set_flags_as(__func__, __LINE__,  \
+                                    LOG_TRACE, "Working set",               \
+                                    crm_system_name, (data_set)->flags,     \
+                                    (flag), #flag);                         \
+            } else {                                                        \
+                (data_set)->flags = pcmk__clear_flags_as(__func__, __LINE__,\
+                                    LOG_TRACE, "Working set",               \
+                                    crm_system_name, (data_set)->flags,     \
+                                    (flag), #flag);                         \
+            }                                                               \
+        }                                                                   \
     } while(0)
 
 static void unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
@@ -65,7 +76,8 @@ is_dangling_guest_node(pe_node_t *node)
     if (pe__is_guest_or_remote_node(node) &&
         node->details->remote_rsc &&
         node->details->remote_rsc->container == NULL &&
-        is_set(node->details->remote_rsc->flags, pe_rsc_orphan_container_filler)) {
+        pcmk_is_set(node->details->remote_rsc->flags,
+                    pe_rsc_orphan_container_filler)) {
         return TRUE;
     }
 
@@ -91,8 +103,8 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
     if (pe__is_guest_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc->container;
 
-        if (is_set(rsc->flags, pe_rsc_failed) == FALSE) {
-            if (!is_set(rsc->flags, pe_rsc_managed)) {
+        if (!pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+            if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                 crm_notice("Not fencing guest node %s "
                            "(otherwise would because %s): "
                            "its guest resource %s is unmanaged",
@@ -107,7 +119,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  * in this transition if the recovery succeeds.
                  */
                 node->details->remote_requires_reset = TRUE;
-                set_bit(rsc->flags, pe_rsc_failed);
+                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             }
         }
 
@@ -116,12 +128,13 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
                  "fencing was already done because %s, "
                  "and guest resource no longer exists",
                  node->details->uname, reason);
-        set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
+        pe__set_resource_flags(node->details->remote_rsc,
+                               pe_rsc_failed|pe_rsc_stop);
 
     } else if (pe__is_remote_node(node)) {
         pe_resource_t *rsc = node->details->remote_rsc;
 
-        if (rsc && (!is_set(rsc->flags, pe_rsc_managed))) {
+        if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             crm_notice("Not fencing remote node %s "
                        "(otherwise would because %s): connection is unmanaged",
                        node->details->uname, reason);
@@ -167,16 +180,15 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
     "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
 
-static
-void set_if_xpath(unsigned long long flag, const char *xpath,
-                  pe_working_set_t *data_set)
+static void
+set_if_xpath(uint64_t flag, const char *xpath, pe_working_set_t *data_set)
 {
     xmlXPathObjectPtr result = NULL;
 
-    if (is_not_set(data_set->flags, flag)) {
+    if (!pcmk_is_set(data_set->flags, flag)) {
         result = xpath_search(data_set->input, xpath);
         if (result && (numXpathResults(result) > 0)) {
-            set_bit(data_set->flags, flag);
+            pe__set_working_set_flags(data_set, flag);
         }
         freeXpathObject(result);
     }
@@ -188,23 +200,32 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     const char *value = NULL;
     GHashTable *config_hash = crm_str_table_new();
 
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
     data_set->config_hash = config_hash;
 
-    pe__unpack_dataset_nvpairs(config, XML_CIB_TAG_PROPSET, NULL, config_hash,
+    pe__unpack_dataset_nvpairs(config, XML_CIB_TAG_PROPSET, &rule_data, config_hash,
                                CIB_OPTIONS_FIRST, FALSE, data_set);
 
     verify_pe_options(data_set->config_hash);
 
     set_config_flag(data_set, "enable-startup-probes", pe_flag_startup_probes);
-    if(is_not_set(data_set->flags, pe_flag_startup_probes)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_startup_probes)) {
         crm_info("Startup probes: disabled (dangerous)");
     }
 
     value = pe_pref(data_set->config_hash, XML_ATTR_HAVE_WATCHDOG);
     if (value && crm_is_true(value)) {
-        crm_notice("Watchdog will be used via SBD if fencing is required "
-                   "and stonith-watchdog-timeout is nonzero");
-        set_bit(data_set->flags, pe_flag_have_stonith_resource);
+        crm_info("Watchdog-based self-fencing will be performed via SBD if "
+                 "fencing is required and stonith-watchdog-timeout is nonzero");
+        pe__set_working_set_flags(data_set, pe_flag_have_stonith_resource);
     }
 
     /* Set certain flags via xpath here, so they can be used before the relevant
@@ -218,7 +239,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);
     crm_debug("STONITH of failed nodes is %s",
-              is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
+              pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)? "enabled" : "disabled");
 
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
     if (!strcmp(data_set->stonith_action, "poweroff")) {
@@ -231,7 +252,7 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
     crm_debug("Concurrent fencing is %s",
-              is_set(data_set->flags, pe_flag_concurrent_fencing) ? "enabled" : "disabled");
+              pcmk_is_set(data_set->flags, pe_flag_concurrent_fencing)? "enabled" : "disabled");
 
     value = pe_pref(data_set->config_hash,
                     XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY);
@@ -242,28 +263,31 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
     crm_debug("Stop all active resources: %s",
-              is_set(data_set->flags, pe_flag_stop_everything) ? "true" : "false");
+              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)));
 
     set_config_flag(data_set, "symmetric-cluster", pe_flag_symmetric_cluster);
-    if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)) {
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
     value = pe_pref(data_set->config_hash, "no-quorum-policy");
 
-    if (safe_str_eq(value, "ignore")) {
+    if (pcmk__str_eq(value, "ignore", pcmk__str_casei)) {
         data_set->no_quorum_policy = no_quorum_ignore;
 
-    } else if (safe_str_eq(value, "freeze")) {
+    } else if (pcmk__str_eq(value, "freeze", pcmk__str_casei)) {
         data_set->no_quorum_policy = no_quorum_freeze;
 
-    } else if (safe_str_eq(value, "suicide")) {
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+    } else if (pcmk__str_eq(value, "demote", pcmk__str_casei)) {
+        data_set->no_quorum_policy = no_quorum_demote;
+
+    } else if (pcmk__str_eq(value, "suicide", pcmk__str_casei)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             int do_panic = 0;
 
             crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
                                   &do_panic);
-            if (do_panic || is_set(data_set->flags, pe_flag_have_quorum)) {
+            if (do_panic || pcmk_is_set(data_set->flags, pe_flag_have_quorum)) {
                 data_set->no_quorum_policy = no_quorum_suicide;
             } else {
                 crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
@@ -286,6 +310,10 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         case no_quorum_stop:
             crm_debug("On loss of quorum: Stop ALL resources");
             break;
+        case no_quorum_demote:
+            crm_debug("On loss of quorum: "
+                      "Demote promotable resources and stop other resources");
+            break;
         case no_quorum_suicide:
             crm_notice("On loss of quorum: Fence all remaining nodes");
             break;
@@ -296,29 +324,28 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     set_config_flag(data_set, "stop-orphan-resources", pe_flag_stop_rsc_orphans);
     crm_trace("Orphan resources are %s",
-              is_set(data_set->flags, pe_flag_stop_rsc_orphans) ? "stopped" : "ignored");
+              pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)? "stopped" : "ignored");
 
     set_config_flag(data_set, "stop-orphan-actions", pe_flag_stop_action_orphans);
     crm_trace("Orphan resource actions are %s",
-              is_set(data_set->flags, pe_flag_stop_action_orphans) ? "stopped" : "ignored");
+              pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)? "stopped" : "ignored");
 
     set_config_flag(data_set, "remove-after-stop", pe_flag_remove_after_stop);
     crm_trace("Stopped resources are removed from the status section: %s",
-              is_set(data_set->flags, pe_flag_remove_after_stop) ? "true" : "false");
+              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)));
 
     set_config_flag(data_set, "maintenance-mode", pe_flag_maintenance_mode);
     crm_trace("Maintenance mode: %s",
-              is_set(data_set->flags, pe_flag_maintenance_mode) ? "true" : "false");
+              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)));
 
     set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
     crm_trace("Start failures are %s",
-              is_set(data_set->flags,
-                     pe_flag_start_failure_fatal) ? "always fatal" : "handled by failcount");
+              pcmk_is_set(data_set->flags, pe_flag_start_failure_fatal)? "always fatal" : "handled by failcount");
 
-    if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
         set_config_flag(data_set, "startup-fencing", pe_flag_startup_fencing);
     }
-    if (is_set(data_set->flags, pe_flag_startup_fencing)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_startup_fencing)) {
         crm_trace("Unseen nodes will be fenced");
     } else {
         pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
@@ -338,8 +365,8 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     set_config_flag(data_set, "shutdown-lock", pe_flag_shutdown_lock);
     crm_trace("Resources will%s be locked to cleanly shut down nodes",
-              (is_set(data_set->flags, pe_flag_shutdown_lock)? "" : " not"));
-    if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+              (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)? "" : " not"));
+    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
         value = pe_pref(data_set->config_hash,
                         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT);
         data_set->shutdown_lock = crm_parse_interval_spec(value) / 1000;
@@ -398,10 +425,10 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->running_rsc = NULL;
     new_node->details->type = node_ping;
 
-    if (safe_str_eq(type, "remote")) {
+    if (pcmk__str_eq(type, "remote", pcmk__str_casei)) {
         new_node->details->type = node_remote;
-        set_bit(data_set->flags, pe_flag_have_remote_nodes);
-    } else if ((type == NULL) || safe_str_eq(type, "member")) {
+        pe__set_working_set_flags(data_set, pe_flag_have_remote_nodes);
+    } else if (pcmk__str_eq(type, "member", pcmk__str_null_matches | pcmk__str_casei)) {
         new_node->details->type = node_member;
     }
 
@@ -439,28 +466,30 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     const char *remote_allow_migrate=NULL;
     const char *is_managed = NULL;
 
-    for (attr_set = __xml_first_child_element(xml_obj); attr_set != NULL;
-         attr_set = __xml_next_element(attr_set)) {
-        if (safe_str_neq((const char *)attr_set->name, XML_TAG_META_SETS)) {
+    for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
+         attr_set = pcmk__xe_next(attr_set)) {
+
+        if (!pcmk__str_eq((const char *)attr_set->name, XML_TAG_META_SETS,
+                          pcmk__str_casei)) {
             continue;
         }
 
-        for (attr = __xml_first_child_element(attr_set); attr != NULL;
-             attr = __xml_next_element(attr)) {
+        for (attr = pcmk__xe_first_child(attr_set); attr != NULL;
+             attr = pcmk__xe_next(attr)) {
             const char *value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
             const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
 
-            if (safe_str_eq(name, XML_RSC_ATTR_REMOTE_NODE)) {
+            if (pcmk__str_eq(name, XML_RSC_ATTR_REMOTE_NODE, pcmk__str_casei)) {
                 remote_name = value;
-            } else if (safe_str_eq(name, "remote-addr")) {
+            } else if (pcmk__str_eq(name, "remote-addr", pcmk__str_casei)) {
                 remote_server = value;
-            } else if (safe_str_eq(name, "remote-port")) {
+            } else if (pcmk__str_eq(name, "remote-port", pcmk__str_casei)) {
                 remote_port = value;
-            } else if (safe_str_eq(name, "remote-connect-timeout")) {
+            } else if (pcmk__str_eq(name, "remote-connect-timeout", pcmk__str_casei)) {
                 connect_timeout = value;
-            } else if (safe_str_eq(name, "remote-allow-migrate")) {
+            } else if (pcmk__str_eq(name, "remote-allow-migrate", pcmk__str_casei)) {
                 remote_allow_migrate=value;
-            } else if (safe_str_eq(name, XML_RSC_ATTR_MANAGED)) {
+            } else if (pcmk__str_eq(name, XML_RSC_ATTR_MANAGED, pcmk__str_casei)) {
                 is_managed = value;
             }
         }
@@ -491,7 +520,7 @@ handle_startup_fencing(pe_working_set_t *data_set, pe_node_t *new_node)
         return;
     }
 
-    if (is_set(data_set->flags, pe_flag_startup_fencing)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_startup_fencing)) {
         // All nodes are unclean until we've seen their status entry
         new_node->details->unclean = TRUE;
 
@@ -515,10 +544,19 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
     const char *type = NULL;
     const char *score = NULL;
 
-    for (xml_obj = __xml_first_child_element(xml_nodes); xml_obj != NULL;
-         xml_obj = __xml_next_element(xml_obj)) {
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, TRUE)) {
+    for (xml_obj = pcmk__xe_first_child(xml_nodes); xml_obj != NULL;
+         xml_obj = pcmk__xe_next(xml_obj)) {
+
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, pcmk__str_none)) {
             new_node = NULL;
 
             id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -547,7 +585,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t * data_set)
             handle_startup_fencing(data_set, new_node);
 
             add_node_attrs(xml_obj, new_node, FALSE, data_set);
-            pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, NULL,
+            pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_UTILIZATION, &rule_data,
                                        new_node->details->utilization, NULL,
                                        FALSE, data_set);
 
@@ -581,12 +619,12 @@ setup_container(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     container_id = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_CONTAINER);
-    if (container_id && safe_str_neq(container_id, rsc->id)) {
+    if (container_id && !pcmk__str_eq(container_id, rsc->id, pcmk__str_casei)) {
         pe_resource_t *container = pe_find_resource(data_set->resources, container_id);
 
         if (container) {
             rsc->container = container;
-            set_bit(container->flags, pe_rsc_is_container);
+            pe__set_resource_flags(container, pe_rsc_is_container);
             container->fillers = g_list_append(container->fillers, rsc);
             pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
         } else {
@@ -603,8 +641,8 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
     /* Create remote nodes and guest nodes from the resource configuration
      * before unpacking resources.
      */
-    for (xml_obj = __xml_first_child_element(xml_resources); xml_obj != NULL;
-         xml_obj = __xml_next_element(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(xml_resources); xml_obj != NULL;
+         xml_obj = pcmk__xe_next(xml_obj)) {
 
         const char *new_node_id = NULL;
 
@@ -627,7 +665,7 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         /* Check for guest nodes, which are defined by special meta-attributes
          * of a primitive of any type (for example, VirtualDomain or Xen).
          */
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RESOURCE, pcmk__str_none)) {
             /* This will add an ocf:pacemaker:remote primitive to the
              * configuration for the guest node's connection, to be unpacked
              * later.
@@ -645,10 +683,10 @@ unpack_remote_nodes(xmlNode * xml_resources, pe_working_set_t * data_set)
         /* Check for guest nodes inside a group. Clones are currently not
          * supported as guest nodes.
          */
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_GROUP, pcmk__str_none)) {
             xmlNode *xml_obj2 = NULL;
-            for (xml_obj2 = __xml_first_child_element(xml_obj); xml_obj2 != NULL;
-                 xml_obj2 = __xml_next_element(xml_obj2)) {
+            for (xml_obj2 = pcmk__xe_first_child(xml_obj); xml_obj2 != NULL;
+                 xml_obj2 = pcmk__xe_next(xml_obj2)) {
 
                 new_node_id = expand_remote_rsc_meta(xml_obj2, xml_resources, data_set);
 
@@ -681,7 +719,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, pe_resource_t *new_rsc)
         return;
     }
 
-    if (is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         /* remote_nodes and remote_resources are not linked in quick location calculations */
         return;
     }
@@ -742,12 +780,12 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
                                                         g_str_equal, free,
                                                         destroy_tag);
 
-    for (xml_obj = __xml_first_child_element(xml_resources); xml_obj != NULL;
-         xml_obj = __xml_next_element(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(xml_resources); xml_obj != NULL;
+         xml_obj = pcmk__xe_next(xml_obj)) {
 
         pe_resource_t *new_rsc = NULL;
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, TRUE)) {
+        if (pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, pcmk__str_none)) {
             const char *template_id = ID(xml_obj);
 
             if (template_id && g_hash_table_lookup_extended(data_set->template_rsc_sets,
@@ -781,11 +819,11 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     }
 
     data_set->resources = g_list_sort(data_set->resources, sort_rsc_priority);
-    if (is_set(data_set->flags, pe_flag_quick_location)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         /* Ignore */
 
-    } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
-               && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
+    } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
+               && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
 
         pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
         pcmk__config_err("Either configure some or disable STONITH with the stonith-enabled option");
@@ -803,13 +841,13 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
     data_set->tags = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
                                            destroy_tag);
 
-    for (xml_tag = __xml_first_child_element(xml_tags); xml_tag != NULL;
-         xml_tag = __xml_next_element(xml_tag)) {
+    for (xml_tag = pcmk__xe_first_child(xml_tags); xml_tag != NULL;
+         xml_tag = pcmk__xe_next(xml_tag)) {
 
         xmlNode *xml_obj_ref = NULL;
         const char *tag_id = ID(xml_tag);
 
-        if (crm_str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, TRUE) == FALSE) {
+        if (!pcmk__str_eq((const char *)xml_tag->name, XML_CIB_TAG_TAG, pcmk__str_none)) {
             continue;
         }
 
@@ -819,12 +857,12 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
             continue;
         }
 
-        for (xml_obj_ref = __xml_first_child_element(xml_tag); xml_obj_ref != NULL;
-             xml_obj_ref = __xml_next_element(xml_obj_ref)) {
+        for (xml_obj_ref = pcmk__xe_first_child(xml_tag); xml_obj_ref != NULL;
+             xml_obj_ref = pcmk__xe_next(xml_obj_ref)) {
 
             const char *obj_ref = ID(xml_obj_ref);
 
-            if (crm_str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, TRUE) == FALSE) {
+            if (!pcmk__str_eq((const char *)xml_obj_ref->name, XML_CIB_TAG_OBJ_REF, pcmk__str_none)) {
                 continue;
             }
 
@@ -857,7 +895,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
     pe_ticket_t *ticket = NULL;
 
     ticket_id = ID(xml_ticket);
-    if (ticket_id == NULL || strlen(ticket_id) == 0) {
+    if (pcmk__str_empty(ticket_id)) {
         return FALSE;
     }
 
@@ -875,7 +913,7 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
         const char *prop_name = (const char *)xIter->name;
         const char *prop_value = crm_element_value(xml_ticket, prop_name);
 
-        if (crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
+        if (pcmk__str_eq(prop_name, XML_ATTR_ID, pcmk__str_none)) {
             continue;
         }
         g_hash_table_replace(ticket->state, strdup(prop_name), strdup(prop_value));
@@ -915,10 +953,10 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
 
-    for (xml_obj = __xml_first_child_element(xml_tickets); xml_obj != NULL;
-         xml_obj = __xml_next_element(xml_obj)) {
+    for (xml_obj = pcmk__xe_first_child(xml_tickets); xml_obj != NULL;
+         xml_obj = pcmk__xe_next(xml_obj)) {
 
-        if (crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, TRUE) == FALSE) {
+        if (!pcmk__str_eq((const char *)xml_obj->name, XML_CIB_TAG_TICKET_STATE, pcmk__str_none)) {
             continue;
         }
         unpack_ticket_state(xml_obj, data_set);
@@ -934,7 +972,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     xmlNode *attrs = NULL;
     pe_resource_t *rsc = NULL;
 
-    if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+    if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
         return;
     }
 
@@ -968,7 +1006,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     }
 
     if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance")) ||
-        (rsc && !is_set(rsc->flags, pe_rsc_managed))) {
+        ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_managed))) {
         crm_info("Node %s is in maintenance-mode", this_node->details->uname);
         this_node->details->maintenance = TRUE;
     }
@@ -976,7 +1014,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
     if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
         if (pe__is_remote_node(this_node)
-            && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
+            && !pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_warn("Ignoring %s attribute on remote node %s because stonith is disabled",
                      XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
         } else {
@@ -997,15 +1035,15 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
     bool changed = false;
     xmlNode *lrm_rsc = NULL;
 
-    for (xmlNode *state = __xml_first_child_element(status); state != NULL;
-         state = __xml_next_element(state)) {
+    for (xmlNode *state = pcmk__xe_first_child(status); state != NULL;
+         state = pcmk__xe_next(state)) {
 
         const char *id = NULL;
         const char *uname = NULL;
         pe_node_t *this_node = NULL;
         bool process = FALSE;
 
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+        if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             continue;
         }
 
@@ -1022,7 +1060,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             continue;
 
         } else if (!pe__is_guest_or_remote_node(this_node)
-                   && is_set(data_set->flags, pe_flag_stonith_enabled)) {
+                   && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             // A redundant test, but preserves the order for regression tests
             process = TRUE;
 
@@ -1047,7 +1085,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
 
             } else if (!pe__is_guest_node(this_node)
                        && ((rsc->role == RSC_ROLE_STARTED)
-                           || is_set(data_set->flags, pe_flag_shutdown_lock))) {
+                           || pcmk_is_set(data_set->flags, pe_flag_shutdown_lock))) {
                 check = TRUE;
                 crm_trace("Checking node %s/%s status %d/%d/%d", id, rsc->id, fence, rsc->role, RSC_ROLE_STARTED);
             }
@@ -1064,7 +1102,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
         } else if (fence) {
             process = TRUE;
 
-        } else if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+        } else if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
             process = TRUE;
         }
 
@@ -1103,13 +1141,13 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
                                                   free, destroy_ticket);
     }
 
-    for (state = __xml_first_child_element(status); state != NULL;
-         state = __xml_next_element(state)) {
+    for (state = pcmk__xe_first_child(status); state != NULL;
+         state = pcmk__xe_next(state)) {
 
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
+        if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, pcmk__str_none)) {
             unpack_tickets_state((xmlNode *) state, data_set);
 
-        } else if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
+        } else if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             xmlNode *attrs = NULL;
             const char *resource_discovery_enabled = NULL;
 
@@ -1165,7 +1203,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             crm_trace("determining node state");
             determine_online_status(state, this_node, data_set);
 
-            if (is_not_set(data_set->flags, pe_flag_have_quorum)
+            if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
                 && this_node->details->online
                 && (data_set->no_quorum_policy == no_quorum_suicide)) {
                 /* Everything else should flow from this automatically
@@ -1183,7 +1221,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     }
 
     // Now catch any nodes we didn't see
-    unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
+    unpack_node_loop(status,
+                     pcmk_is_set(data_set->flags, pe_flag_stonith_enabled),
+                     data_set);
 
     /* Now that we know where resources are, we can schedule stops of containers
      * with failed bundle connections
@@ -1230,8 +1270,8 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
     if (!crm_is_true(in_cluster)) {
         crm_trace("Node is down: in_cluster=%s", crm_str(in_cluster));
 
-    } else if (safe_str_eq(is_peer, ONLINESTATUS)) {
-        if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
+    } else if (pcmk__str_eq(is_peer, ONLINESTATUS, pcmk__str_casei)) {
+        if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
             online = TRUE;
         } else {
             crm_debug("Node is not ready to run resources: %s", join);
@@ -1288,7 +1328,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
               crm_str(join), crm_str(exp_state), do_terminate);
 
     online = crm_is_true(in_cluster);
-    crmd_online = safe_str_eq(is_peer, ONLINESTATUS);
+    crmd_online = pcmk__str_eq(is_peer, ONLINESTATUS, pcmk__str_casei);
     if (exp_state == NULL) {
         exp_state = CRMD_JOINSTATE_DOWN;
     }
@@ -1302,10 +1342,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (in_cluster == NULL) {
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster", FALSE);
 
-    } else if (safe_str_eq(join, CRMD_JOINSTATE_NACK)) {
+    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_casei)) {
         pe_fence_node(data_set, this_node, "peer failed the pacemaker membership criteria", FALSE);
 
-    } else if (do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
+    } else if (do_terminate == FALSE && pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_casei)) {
 
         if (crm_is_true(in_cluster) || crmd_online) {
             crm_info("- Node %s is not ready to run resources", this_node->details->uname);
@@ -1316,7 +1356,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
             crm_trace("%s is down or still coming up", this_node->details->uname);
         }
 
-    } else if (do_terminate && safe_str_eq(join, CRMD_JOINSTATE_DOWN)
+    } else if (do_terminate && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_casei)
                && crm_is_true(in_cluster) == FALSE && !crmd_online) {
         crm_info("Node %s was just shot", this_node->details->uname);
         online = FALSE;
@@ -1332,11 +1372,10 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     } else if (do_terminate) {
         pe_fence_node(data_set, this_node, "termination was requested", FALSE);
 
-    } else if (safe_str_eq(join, CRMD_JOINSTATE_MEMBER)) {
+    } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
         crm_info("Node %s is active", this_node->details->uname);
 
-    } else if (safe_str_eq(join, CRMD_JOINSTATE_PENDING)
-               || safe_str_eq(join, CRMD_JOINSTATE_DOWN)) {
+    } else if (pcmk__strcase_any_of(join, CRMD_JOINSTATE_PENDING, CRMD_JOINSTATE_DOWN, NULL)) {
         crm_info("Node %s is not ready to run resources", this_node->details->uname);
         this_node->details->standby = TRUE;
         this_node->details->pending = TRUE;
@@ -1388,13 +1427,13 @@ determine_remote_online_status(pe_working_set_t * data_set, pe_node_t * this_nod
     }
 
     /* Now check all the failure conditions. */
-    if(container && is_set(container->flags, pe_rsc_failed)) {
+    if(container && pcmk_is_set(container->flags, pe_rsc_failed)) {
         crm_trace("Guest node %s UNCLEAN because guest resource failed",
                   this_node->details->id);
         this_node->details->online = FALSE;
         this_node->details->remote_requires_reset = TRUE;
 
-    } else if(is_set(rsc->flags, pe_rsc_failed)) {
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         crm_trace("%s node %s OFFLINE because connection resource failed",
                   (container? "Guest" : "Remote"), this_node->details->id);
         this_node->details->online = FALSE;
@@ -1434,7 +1473,7 @@ determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_
     if (pe__shutdown_requested(this_node)) {
         this_node->details->shutdown = TRUE;
 
-    } else if (safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
+    } else if (pcmk__str_eq(exp_state, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
         this_node->details->expected_up = TRUE;
     }
 
@@ -1445,7 +1484,7 @@ determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_
                                  * Anyone caught abusing this logic will be shot
                                  */
 
-    } else if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
+    } else if (!pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
         online = determine_online_status_no_fencing(data_set, node_state, this_node);
 
     } else {
@@ -1604,9 +1643,9 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     if (crm_element_value(rsc_entry, XML_RSC_ATTR_CONTAINER)) {
         /* This orphaned rsc needs to be mapped to a container. */
         crm_trace("Detected orphaned container filler %s", rsc_id);
-        set_bit(rsc->flags, pe_rsc_orphan_container_filler);
+        pe__set_resource_flags(rsc, pe_rsc_orphan_container_filler);
     }
-    set_bit(rsc->flags, pe_rsc_orphan);
+    pe__set_resource_flags(rsc, pe_rsc_orphan);
     data_set->resources = g_list_append(data_set->resources, rsc);
     return rsc;
 }
@@ -1654,7 +1693,7 @@ find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_
 
     CRM_ASSERT(parent != NULL);
     CRM_ASSERT(pe_rsc_is_clone(parent));
-    CRM_ASSERT(is_not_set(parent->flags, pe_rsc_unique));
+    CRM_ASSERT(!pcmk_is_set(parent->flags, pe_rsc_unique));
 
     // Check for active (or partially active, for cloned groups) instance
     pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
@@ -1718,7 +1757,7 @@ find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_
         } else {
             pe_rsc_trace(parent, "Resource %s, skip inactive", child->id);
             if (!skip_inactive && !inactive_instance
-                && is_not_set(child->flags, pe_rsc_block)) {
+                && !pcmk_is_set(child->flags, pe_rsc_block)) {
                 // Remember one inactive instance in case we don't find active
                 inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
                                                           pe_find_clone);
@@ -1751,7 +1790,7 @@ find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_
      * @TODO Ideally, we'd use an inactive instance number if it is not needed
      * for any clean instances. However, we don't know that at this point.
      */
-    if ((rsc != NULL) && is_not_set(rsc->flags, pe_rsc_needs_fencing)
+    if ((rsc != NULL) && !pcmk_is_set(rsc->flags, pe_rsc_needs_fencing)
         && (!node->details->online || node->details->unclean)
         && !pe__is_guest_node(node)
         && !pe__is_universal_clone(parent, data_set)) {
@@ -1784,7 +1823,7 @@ unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *
         char *clone0_id = clone_zero(rsc_id);
         pe_resource_t *clone0 = pe_find_resource(data_set->resources, clone0_id);
 
-        if (clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
+        if (clone0 && !pcmk_is_set(clone0->flags, pe_rsc_unique)) {
             rsc = clone0;
             parent = uber_parent(clone0);
             crm_trace("%s found as %s (%s)", rsc_id, clone0_id, parent->id);
@@ -1816,14 +1855,14 @@ unpack_find_resource(pe_working_set_t * data_set, pe_node_t * node, const char *
         }
     }
 
-    if (rsc && safe_str_neq(rsc_id, rsc->id)
-        && safe_str_neq(rsc_id, rsc->clone_name)) {
+    if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_casei)
+        && !pcmk__str_eq(rsc_id, rsc->clone_name, pcmk__str_casei)) {
 
         free(rsc->clone_name);
         rsc->clone_name = strdup(rsc_id);
         pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                      rsc_id, node->details->uname, rsc->id,
-                     (is_set(rsc->flags, pe_rsc_orphan)? " (ORPHAN)" : ""));
+                     (pcmk_is_set(rsc->flags, pe_rsc_orphan)? " (ORPHAN)" : ""));
     }
     return rsc;
 }
@@ -1837,8 +1876,8 @@ process_orphan_resource(xmlNode * rsc_entry, pe_node_t * node, pe_working_set_t 
     crm_debug("Detected orphan resource %s on %s", rsc_id, node->details->uname);
     rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
 
-    if (is_set(data_set->flags, pe_flag_stop_rsc_orphans) == FALSE) {
-        clear_bit(rsc->flags, pe_rsc_managed);
+    if (!pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
+        pe__clear_resource_flags(rsc, pe_rsc_managed);
 
     } else {
         CRM_CHECK(rsc != NULL, return NULL);
@@ -1872,7 +1911,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
                              n->details->uname);
                 g_hash_table_insert(iter->known_on, (gpointer) n->details->id, n);
             }
-            if (is_set(iter->flags, pe_rsc_unique)) {
+            if (pcmk_is_set(iter->flags, pe_rsc_unique)) {
                 break;
             }
             iter = iter->parent;
@@ -1883,7 +1922,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     if (rsc->role > RSC_ROLE_STOPPED
         && node->details->online == FALSE
         && node->details->maintenance == FALSE
-        && is_set(rsc->flags, pe_rsc_managed)) {
+        && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
 
         gboolean should_fence = FALSE;
 
@@ -1895,12 +1934,12 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
          * resource to run again once we are sure we know its state.
          */
         if (pe__is_guest_node(node)) {
-            set_bit(rsc->flags, pe_rsc_failed);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             should_fence = TRUE;
 
-        } else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        } else if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             if (pe__is_remote_node(node) && node->details->remote_rsc
-                && is_not_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
+                && !pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_failed)) {
 
                 /* Setting unseen means that fencing of the remote node will
                  * occur only if the connection resource is not going to start
@@ -1938,6 +1977,11 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* nothing to do */
             break;
 
+        case action_fail_demote:
+            pe__set_resource_flags(rsc, pe_rsc_failed);
+            demote_action(rsc, node, FALSE);
+            break;
+
         case action_fail_fence:
             /* treat it as if it is still running
              * but also mark the node as unclean
@@ -1956,8 +2000,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* is_managed == FALSE will prevent any
              * actions being sent for the resource
              */
-            clear_bit(rsc->flags, pe_rsc_managed);
-            set_bit(rsc->flags, pe_rsc_block);
+            pe__clear_resource_flags(rsc, pe_rsc_managed);
+            pe__set_resource_flags(rsc, pe_rsc_block);
             break;
 
         case action_fail_migrate:
@@ -1973,14 +2017,13 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 
         case action_fail_recover:
             if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
-                set_bit(rsc->flags, pe_rsc_failed);
+                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
                 stop_action(rsc, node, FALSE);
             }
             break;
 
         case action_fail_restart_container:
-            set_bit(rsc->flags, pe_rsc_failed);
-
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
             if (rsc->container && pe_rsc_is_bundled(rsc)) {
                 /* A bundle's remote connection can run on a different node than
                  * the bundle's container. We don't necessarily know where the
@@ -1997,8 +2040,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case action_fail_reset_remote:
-            set_bit(rsc->flags, pe_rsc_failed);
-            if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+            if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 tmpnode = NULL;
                 if (rsc->is_remote_node) {
                     tmpnode = pe_find_node(data_set->nodes, rsc->id);
@@ -2032,7 +2075,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
      * to be fenced. By setting unseen = FALSE, the remote-node failure will
      * result in a fencing operation regardless if we're going to attempt to 
      * reconnect to the remote-node in this transition or not. */
-    if (is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_failed) && rsc->is_remote_node) {
         tmpnode = pe_find_node(data_set->nodes, rsc->id);
         if (tmpnode && tmpnode->details->unclean) {
             tmpnode->details->unseen = FALSE;
@@ -2040,8 +2083,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     }
 
     if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
-        if (is_set(rsc->flags, pe_rsc_orphan)) {
-            if (is_set(rsc->flags, pe_rsc_managed)) {
+        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+            if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                 pcmk__config_warn("Detected active orphan %s running on %s",
                                   rsc->id, node->details->uname);
             } else {
@@ -2053,8 +2096,16 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         }
 
         native_add_running(rsc, node, data_set);
-        if (on_fail != action_fail_ignore) {
-            set_bit(rsc->flags, pe_rsc_failed);
+        switch (on_fail) {
+            case action_fail_ignore:
+                break;
+            case action_fail_demote:
+            case action_fail_block:
+                pe__set_resource_flags(rsc, pe_rsc_failed);
+                break;
+            default:
+                pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+                break;
         }
 
     } else if (rsc->clone_name && strchr(rsc->clone_name, ':') != NULL) {
@@ -2073,7 +2124,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *stop = (pe_action_t *) gIter->data;
 
-            stop->flags |= pe_action_optional;
+            pe__set_action_flags(stop, pe_action_optional);
         }
 
         g_list_free(possible_matches);
@@ -2124,7 +2175,7 @@ process_recurring(pe_node_t * node, pe_resource_t * rsc,
         }
 
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
-        if (safe_str_eq(status, "-1")) {
+        if (pcmk__str_eq(status, "-1", pcmk__str_casei)) {
             pe_rsc_trace(rsc, "Skipping %s/%s: status", id, node->details->uname);
             continue;
         }
@@ -2157,20 +2208,20 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 
-        if (safe_str_eq(task, CRMD_ACTION_STOP)
-            && safe_str_eq(status, "0")) {
+        if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)
+            && pcmk__str_eq(status, "0", pcmk__str_casei)) {
             *stop_index = counter;
 
-        } else if (safe_str_eq(task, CRMD_ACTION_START) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_START, CRMD_ACTION_MIGRATED, NULL)) {
             *start_index = counter;
 
-        } else if ((implied_monitor_start <= *stop_index) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        } else if ((implied_monitor_start <= *stop_index) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
             const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
 
-            if (safe_str_eq(rc, "0") || safe_str_eq(rc, "8")) {
+            if (pcmk__strcase_any_of(rc, "0", "8", NULL)) {
                 implied_monitor_start = counter;
             }
-        } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE) || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+        } else if (pcmk__strcase_any_of(task, CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE, NULL)) {
             implied_clone_start = counter;
         }
     }
@@ -2226,7 +2277,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     xmlNode *rsc_op = NULL;
     xmlNode *last_failure = NULL;
 
-    enum action_fail_response on_fail = FALSE;
+    enum action_fail_response on_fail = action_fail_ignore;
     enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 
     crm_trace("[%s] Processing %s on %s",
@@ -2236,14 +2287,16 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     op_list = NULL;
     sorted_op_list = NULL;
 
-    for (rsc_op = __xml_first_child_element(rsc_entry); rsc_op != NULL;
-         rsc_op = __xml_next_element(rsc_op)) {
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
+         rsc_op = pcmk__xe_next(rsc_op)) {
+
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP,
+                         pcmk__str_none)) {
             op_list = g_list_prepend(op_list, rsc_op);
         }
     }
 
-    if (is_not_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
         if (op_list == NULL) {
             // If there are no operations, there is nothing to do
             return NULL;
@@ -2263,13 +2316,12 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     CRM_ASSERT(rsc != NULL);
 
     // Check whether the resource is "shutdown-locked" to this node
-    if (is_set(data_set->flags, pe_flag_shutdown_lock)) {
+    if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
         unpack_shutdown_lock(rsc_entry, rsc, node, data_set);
     }
 
     /* process operations */
     saved_role = rsc->role;
-    on_fail = action_fail_ignore;
     rsc->role = RSC_ROLE_UNKNOWN;
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 
@@ -2277,7 +2329,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-        if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+        if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
             migrate_op = rsc_op;
         }
 
@@ -2318,15 +2370,15 @@ static void
 handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * data_set)
 {
     xmlNode *rsc_entry = NULL;
-    for (rsc_entry = __xml_first_child_element(lrm_rsc_list); rsc_entry != NULL;
-         rsc_entry = __xml_next_element(rsc_entry)) {
+    for (rsc_entry = pcmk__xe_first_child(lrm_rsc_list); rsc_entry != NULL;
+         rsc_entry = pcmk__xe_next(rsc_entry)) {
 
         pe_resource_t *rsc;
         pe_resource_t *container;
         const char *rsc_id;
         const char *container_id;
 
-        if (safe_str_neq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE)) {
+        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_casei)) {
             continue;
         }
 
@@ -2343,7 +2395,7 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
 
         rsc = pe_find_resource(data_set->resources, rsc_id);
         if (rsc == NULL ||
-            is_set(rsc->flags, pe_rsc_orphan_container_filler) == FALSE ||
+            !pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler) ||
             rsc->container != NULL) {
             continue;
         }
@@ -2362,15 +2414,15 @@ unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_rsc_list,
     xmlNode *rsc_entry = NULL;
     gboolean found_orphaned_container_filler = FALSE;
 
-    for (rsc_entry = __xml_first_child_element(lrm_rsc_list); rsc_entry != NULL;
-         rsc_entry = __xml_next_element(rsc_entry)) {
+    for (rsc_entry = pcmk__xe_first_child(lrm_rsc_list); rsc_entry != NULL;
+         rsc_entry = pcmk__xe_next(rsc_entry)) {
 
-        if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+        if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
             pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
             if (!rsc) {
                 continue;
             }
-            if (is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
+            if (pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
                 found_orphaned_container_filler = TRUE;
             }
         }
@@ -2389,7 +2441,7 @@ set_active(pe_resource_t * rsc)
 {
     pe_resource_t *top = uber_parent(rsc);
 
-    if (top && is_set(top->flags, pe_rsc_promotable)) {
+    if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_SLAVE;
     } else {
         rsc->role = RSC_ROLE_STARTED;
@@ -2420,12 +2472,12 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
                  resource);
 
     /* Need to check against transition_magic too? */
-    if (source && safe_str_eq(op, CRMD_ACTION_MIGRATE)) {
+    if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         offset +=
             snprintf(xpath + offset, STATUS_PATH_MAX - offset,
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_target='%s']", op,
                      source);
-    } else if (source && safe_str_eq(op, CRMD_ACTION_MIGRATED)) {
+    } else if (source && pcmk__str_eq(op, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         offset +=
             snprintf(xpath + offset, STATUS_PATH_MAX - offset,
                      "/" XML_LRM_TAG_RSC_OP "[@operation='%s' and @migrate_source='%s']", op,
@@ -2577,10 +2629,21 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             }
         } else {
             /* Consider it failed here - forces a restart, prevents migration */
-            set_bit(rsc->flags, pe_rsc_failed);
-            clear_bit(rsc->flags, pe_rsc_allow_migrate);
+            pe__set_resource_flags(rsc, pe_rsc_failed|pe_rsc_stop);
+            pe__clear_resource_flags(rsc, pe_rsc_allow_migrate);
         }
     }
+}
+
+// Is there an action_name in node_name's rsc history newer than call_id?
+static bool
+newer_op(pe_resource_t *rsc, const char *action_name, const char *node_name,
+         int call_id, pe_working_set_t *data_set)
+{
+    xmlNode *action = find_lrm_op(rsc->id, action_name, node_name, NULL, TRUE,
+                                  data_set);
+
+    return pe__call_id(action) > call_id;
 }
 
 static void
@@ -2613,7 +2676,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     target_migrate_from_id = pe__call_id(target_migrate_from);
 
     if ((target_stop == NULL) || (target_stop_id < target_migrate_from_id)) {
-        /* There was no stop on the source, or a stop that happened before a
+        /* There was no stop on the target, or a stop that happened before a
          * migrate_from, so assume the resource is still active on the target
          * (if it is up).
          */
@@ -2631,24 +2694,19 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * scheduled or attempted).
          *
          * That means this could be a "dangling" migration. But first, check
-         * whether there is a newer migrate_from or start on the source node --
-         * it's possible the failed migration was followed by a successful
-         * full restart or migration in the reverse direction, in which case we
-         * don't want to force it to stop.
+         * whether there is a newer successful stop, start, or migrate_from on
+         * the source node -- it's possible the failed migration was followed by
+         * a successful stop, full restart, or migration in the reverse
+         * direction, in which case we don't want to force a stop.
          */
-        xmlNode *source_migrate_from = NULL;
-        xmlNode *source_start = NULL;
         int source_migrate_to_id = pe__call_id(xml_op);
 
-        source_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, source,
-                                          NULL, TRUE, data_set);
-        if (pe__call_id(source_migrate_from) > source_migrate_to_id) {
-            return;
-        }
-
-        source_start = find_lrm_op(rsc->id, CRMD_ACTION_START, source, NULL,
-                                   TRUE, data_set);
-        if (pe__call_id(source_start) > source_migrate_to_id) {
+        if (newer_op(rsc, CRMD_ACTION_MIGRATED, source, source_migrate_to_id,
+                     data_set)
+            || newer_op(rsc, CRMD_ACTION_START, source, source_migrate_to_id,
+                     data_set)
+            || newer_op(rsc, CRMD_ACTION_STOP, source, source_migrate_to_id,
+                     data_set)) {
             return;
         }
 
@@ -2711,7 +2769,7 @@ record_failed_op(xmlNode *op, const pe_node_t *node,
         const char *key = crm_element_value(xIter, XML_LRM_ATTR_TASK_KEY);
         const char *uname = crm_element_value(xIter, XML_ATTR_UNAME);
 
-        if(safe_str_eq(op_key, key) && safe_str_eq(uname, node->details->uname)) {
+        if(pcmk__str_eq(op_key, key, pcmk__str_casei) && pcmk__str_eq(uname, node->details->uname, pcmk__str_casei)) {
             crm_trace("Skipping duplicate entry %s on %s", op_key, node->details->uname);
             return;
         }
@@ -2752,6 +2810,96 @@ last_change_str(xmlNode *xml_op)
     return ((when_s && *when_s)? when_s : "unknown time");
 }
 
+/*!
+ * \internal
+ * \brief Compare two on-fail values
+ *
+ * \param[in] first   One on-fail value to compare
+ * \param[in] second  The other on-fail value to compare
+ *
+ * \return A negative number if second is more severe than first, zero if they
+ *         are equal, or a positive number if first is more severe than second.
+ * \note This is only needed until the action_fail_response values can be
+ *       renumbered at the next API compatibility break.
+ */
+static int
+cmp_on_fail(enum action_fail_response first, enum action_fail_response second)
+{
+    switch (first) {
+        case action_fail_demote:
+            switch (second) {
+                case action_fail_ignore:
+                    return 1;
+                case action_fail_demote:
+                    return 0;
+                default:
+                    return -1;
+            }
+            break;
+
+        case action_fail_reset_remote:
+            switch (second) {
+                case action_fail_ignore:
+                case action_fail_demote:
+                case action_fail_recover:
+                    return 1;
+                case action_fail_reset_remote:
+                    return 0;
+                default:
+                    return -1;
+            }
+            break;
+
+        case action_fail_restart_container:
+            switch (second) {
+                case action_fail_ignore:
+                case action_fail_demote:
+                case action_fail_recover:
+                case action_fail_reset_remote:
+                    return 1;
+                case action_fail_restart_container:
+                    return 0;
+                default:
+                    return -1;
+            }
+            break;
+
+        default:
+            break;
+    }
+    switch (second) {
+        case action_fail_demote:
+            return (first == action_fail_ignore)? -1 : 1;
+
+        case action_fail_reset_remote:
+            switch (first) {
+                case action_fail_ignore:
+                case action_fail_demote:
+                case action_fail_recover:
+                    return -1;
+                default:
+                    return 1;
+            }
+            break;
+
+        case action_fail_restart_container:
+            switch (first) {
+                case action_fail_ignore:
+                case action_fail_demote:
+                case action_fail_recover:
+                case action_fail_reset_remote:
+                    return -1;
+                default:
+                    return 1;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return first - second;
+}
+
 static void
 unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
@@ -2779,7 +2927,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
         exit_reason = "";
     }
 
-    if (is_not_set(data_set->flags, pe_flag_symmetric_cluster)
+    if (!pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)
         && (rc == PCMK_OCF_NOT_INSTALLED)) {
         crm_trace("Unexpected result (%s%s%s) was recorded for "
                   "%s of %s on %s at %s " CRM_XS " rc=%d id=%s",
@@ -2811,10 +2959,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
     }
 
     action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
-    if ((action->on_fail <= action_fail_fence && *on_fail < action->on_fail) ||
-        (action->on_fail == action_fail_reset_remote && *on_fail <= action_fail_recover) ||
-        (action->on_fail == action_fail_restart_container && *on_fail <= action_fail_recover) ||
-        (*on_fail == action_fail_restart_container && action->on_fail >= action_fail_migrate)) {
+    if (cmp_on_fail(*on_fail, action->on_fail) < 0) {
         pe_rsc_trace(rsc, "on-fail %s -> %s for %s (%s)", fail2text(*on_fail),
                      fail2text(action->on_fail), action->uuid, key);
         *on_fail = action->on_fail;
@@ -2862,7 +3007,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
     pe_rsc_trace(rsc, "Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
                  rsc->id, role2text(rsc->role),
-                 node->details->unclean ? "true" : "false",
+                 pcmk__btoa(node->details->unclean),
                  fail2text(action->on_fail), role2text(action->fail_role));
 
     if (action->fail_role != RSC_ROLE_STARTED && rsc->next_role < action->fail_role) {
@@ -2878,7 +3023,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
             pe_resource_t *parent = uber_parent(fail_rsc);
 
             if (pe_rsc_is_clone(parent)
-                && is_not_set(parent->flags, pe_rsc_unique)) {
+                && !pcmk_is_set(parent->flags, pe_rsc_unique)) {
                 /* For clone resources, if a child fails on an operation
                  * with on-fail = stop, all the resources fail.  Do this by preventing
                  * the parent from coming up again. */
@@ -2975,7 +3120,9 @@ determine_op_status(
             break;
 
         case PCMK_OCF_NOT_RUNNING:
-            if (is_probe || target_rc == rc || is_not_set(rsc->flags, pe_rsc_managed)) {
+            if (is_probe || (target_rc == rc)
+                || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+
                 result = PCMK_LRM_OP_DONE;
                 rsc->role = RSC_ROLE_STOPPED;
 
@@ -3024,8 +3171,8 @@ determine_op_status(
                             node->details->uname, services_ocf_exitcode_str(rc),
                             (*exit_reason? ": " : ""), exit_reason,
                             last_change_str(xml_op), rc, ID(xml_op));
-                clear_bit(rsc->flags, pe_rsc_managed);
-                set_bit(rsc->flags, pe_rsc_block);
+                pe__clear_resource_flags(rsc, pe_rsc_managed);
+                pe__set_resource_flags(rsc, pe_rsc_block);
             }
             result = PCMK_LRM_OP_ERROR_HARD;
             break;
@@ -3120,8 +3267,8 @@ should_ignore_failure_timeout(pe_resource_t *rsc, xmlNode *xml_op,
      * if the remote node hasn't been fenced.
      */
     if (rsc->remote_reconnect_ms
-        && is_set(data_set->flags, pe_flag_stonith_enabled)
-        && (interval_ms != 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+        && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
+        && (interval_ms != 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
 
         pe_node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
 
@@ -3242,7 +3389,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
         pe_action_t *clear_op = pe__clear_failcount(rsc, node, clear_reason,
                                                     data_set);
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled)
+        if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
             && rsc->remote_reconnect_ms) {
             /* If we're clearing a remote connection due to a reconnect
              * interval, we want to wait until any scheduled fencing
@@ -3258,7 +3405,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
         }
     }
 
-    if (expired && (interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    if (expired && (interval_ms == 0) && pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         switch(rc) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
@@ -3289,7 +3436,7 @@ int pe__target_rc_from_xml(xmlNode *xml_op)
 static enum action_fail_response
 get_action_on_fail(pe_resource_t *rsc, const char *key, const char *task, pe_working_set_t * data_set) 
 {
-    int result = action_fail_recover;
+    enum action_fail_response result = action_fail_recover;
     pe_action_t *action = custom_action(rsc, strdup(key), task, NULL, TRUE, FALSE, data_set);
 
     result = action->on_fail;
@@ -3313,12 +3460,12 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
     } else if (rc == PCMK_OCF_NOT_INSTALLED) {
         rsc->role = RSC_ROLE_STOPPED;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         if (last_failure) {
             const char *op_key = get_op_key(xml_op);
             const char *last_failure_key = get_op_key(last_failure);
 
-            if (safe_str_eq(op_key, last_failure_key)) {
+            if (pcmk__str_eq(op_key, last_failure_key, pcmk__str_casei)) {
                 clear_past_failure = TRUE;
             }
         }
@@ -3327,27 +3474,31 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
             set_active(rsc);
         }
 
-    } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STOPPED;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_MASTER;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-        /* Demote from Master does not clear an error */
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
+
+        if (*on_fail == action_fail_demote) {
+            // Demote clears an error only if on-fail=demote
+            clear_past_failure = TRUE;
+        }
         rsc->role = RSC_ROLE_SLAVE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STARTED;
         clear_past_failure = TRUE;
 
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         unpack_migrate_to_success(rsc, node, xml_op, data_set);
 
     } else if (rsc->role < RSC_ROLE_STARTED) {
@@ -3368,6 +3519,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
 
             case action_fail_block:
             case action_fail_ignore:
+            case action_fail_demote:
             case action_fail_recover:
             case action_fail_restart_container:
                 *on_fail = action_fail_ignore;
@@ -3413,20 +3565,7 @@ static int
 remap_monitor_rc(int rc, xmlNode *xml_op, const pe_node_t *node,
                  const pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    int remapped_rc = rc;
-
-    switch (rc) {
-        case PCMK_OCF_DEGRADED:
-            remapped_rc = PCMK_OCF_OK;
-            break;
-
-        case PCMK_OCF_DEGRADED_MASTER:
-            remapped_rc = PCMK_OCF_RUNNING_MASTER;
-            break;
-
-        default:
-            break;
-    }
+    int remapped_rc = pcmk__effective_rc(rc);
 
     if (rc != remapped_rc) {
         crm_trace("Remapping monitor result %d to %d", rc, remapped_rc);
@@ -3479,7 +3618,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         return;
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_unique)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
         parent = uber_parent(rsc);
     }
 
@@ -3562,7 +3701,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         case PCMK_LRM_OP_PENDING:
             if (!strcmp(task, CRMD_ACTION_START)) {
-                set_bit(rsc->flags, pe_rsc_start_pending);
+                pe__set_resource_flags(rsc, pe_rsc_start_pending);
                 set_active(rsc);
 
             } else if (!strcmp(task, CRMD_ACTION_PROMOTE)) {
@@ -3620,14 +3759,15 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
         case PCMK_LRM_OP_NOT_CONNECTED:
             if (pe__is_guest_or_remote_node(node)
-                && is_set(node->details->remote_rsc->flags, pe_rsc_managed)) {
+                && pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_managed)) {
                 /* We should never get into a situation where a managed remote
                  * connection resource is considered OK but a resource action
                  * behind the connection gets a "not connected" status. But as a
                  * fail-safe in case a bug or unusual circumstances do lead to
                  * that, ensure the remote connection is considered failed.
                  */
-                set_bit(node->details->remote_rsc->flags, pe_rsc_failed);
+                pe__set_resource_flags(node->details->remote_rsc,
+                                       pe_rsc_failed|pe_rsc_stop);
             }
 
             // fall through
@@ -3653,11 +3793,12 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
                 update_resource_state(rsc, node, xml_op, task, target_rc, *last_failure, on_fail, data_set);
                 crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-                set_bit(rsc->flags, pe_rsc_failure_ignored);
+                pe__set_resource_flags(rsc, pe_rsc_failure_ignored);
 
                 record_failed_op(xml_op, node, rsc, data_set);
 
-                if (failure_strategy == action_fail_restart_container && *on_fail <= action_fail_recover) {
+                if ((failure_strategy == action_fail_restart_container)
+                    && cmp_on_fail(*on_fail, action_fail_recover) <= 0) {
                     *on_fail = failure_strategy;
                 }
 
@@ -3698,12 +3839,21 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
 {
     const char *cluster_name = NULL;
 
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = data_set->now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
     g_hash_table_insert(node->details->attrs,
                         strdup(CRM_ATTR_UNAME), strdup(node->details->uname));
 
     g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_ID),
                         strdup(node->details->id));
-    if (safe_str_eq(node->details->id, data_set->dc_uuid)) {
+    if (pcmk__str_eq(node->details->id, data_set->dc_uuid, pcmk__str_casei)) {
         data_set->dc_node = node;
         node->details->is_dc = TRUE;
         g_hash_table_insert(node->details->attrs,
@@ -3719,7 +3869,7 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
                             strdup(cluster_name));
     }
 
-    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_ATTR_SETS, NULL,
+    pe__unpack_dataset_nvpairs(xml_obj, XML_TAG_ATTR_SETS, &rule_data,
                                node->details->attrs, NULL, overwrite, data_set);
 
     if (pe_node_attribute_raw(node, CRM_ATTR_SITE_NAME) == NULL) {
@@ -3756,9 +3906,11 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
     op_list = NULL;
     sorted_op_list = NULL;
 
-    for (rsc_op = __xml_first_child_element(rsc_entry);
-         rsc_op != NULL; rsc_op = __xml_next_element(rsc_op)) {
-        if (crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+    for (rsc_op = pcmk__xe_first_child(rsc_entry);
+         rsc_op != NULL; rsc_op = pcmk__xe_next(rsc_op)) {
+
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP,
+                         pcmk__str_none)) {
             crm_xml_add(rsc_op, "resource", rsc);
             crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
             op_list = g_list_prepend(op_list, rsc_op);
@@ -3815,13 +3967,13 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
     xmlNode *node_state = NULL;
 
-    for (node_state = __xml_first_child_element(status); node_state != NULL;
-         node_state = __xml_next_element(node_state)) {
+    for (node_state = pcmk__xe_first_child(status); node_state != NULL;
+         node_state = pcmk__xe_next(node_state)) {
 
-        if (crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+        if (pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
             const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
 
-            if (node != NULL && safe_str_neq(uname, node)) {
+            if (node != NULL && !pcmk__str_eq(uname, node, pcmk__str_casei)) {
                 continue;
             }
 
@@ -3837,7 +3989,8 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 determine_online_status(node_state, this_node, data_set);
             }
 
-            if (this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            if (this_node->details->online
+                || pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
                 /* offline nodes run no resources...
                  * unless stonith is enabled in which case we need to
                  *   make sure rsc start events happen after the stonith
@@ -3847,13 +4000,15 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
                 tmp = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
                 tmp = find_xml_node(tmp, XML_LRM_TAG_RESOURCES, FALSE);
 
-                for (lrm_rsc = __xml_first_child_element(tmp); lrm_rsc != NULL;
-                     lrm_rsc = __xml_next_element(lrm_rsc)) {
-                    if (crm_str_eq((const char *)lrm_rsc->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+                for (lrm_rsc = pcmk__xe_first_child(tmp); lrm_rsc != NULL;
+                     lrm_rsc = pcmk__xe_next(lrm_rsc)) {
+
+                    if (pcmk__str_eq((const char *)lrm_rsc->name,
+                                     XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 
                         const char *rsc_id = crm_element_value(lrm_rsc, XML_ATTR_ID);
 
-                        if (rsc != NULL && safe_str_neq(rsc_id, rsc)) {
+                        if (rsc != NULL && !pcmk__str_eq(rsc_id, rsc, pcmk__str_casei)) {
                             continue;
                         }
 

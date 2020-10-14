@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <pacemaker-controld.h>
@@ -33,21 +34,21 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *node = value;
 
     if (crm_is_peer_active(node) == FALSE) {
-        crm_update_peer_join(__FUNCTION__, node, crm_join_none);
+        crm_update_peer_join(__func__, node, crm_join_none);
 
         if(node && node->uname) {
-            if (safe_str_eq(fsa_our_uname, node->uname)) {
+            if (pcmk__str_eq(fsa_our_uname, node->uname, pcmk__str_casei)) {
                 crm_err("We're not part of the cluster anymore");
                 register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
-            } else if (AM_I_DC == FALSE && safe_str_eq(node->uname, fsa_our_dc)) {
+            } else if (AM_I_DC == FALSE && pcmk__str_eq(node->uname, fsa_our_dc, pcmk__str_casei)) {
                 crm_warn("Our DC node (%s) left the cluster", node->uname);
                 register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
             }
         }
 
         if (fsa_state == S_INTEGRATION || fsa_state == S_FINALIZE_JOIN) {
-            check_join_state(fsa_state, __FUNCTION__);
+            check_join_state(fsa_state, __func__);
         }
         if(node && node->uuid) {
             fail_incompletable_actions(transition_graph, node->uuid);
@@ -66,18 +67,19 @@ post_cache_update(int instance)
     crm_debug("Updated cache after membership event %d.", instance);
 
     g_hash_table_foreach(crm_peer_cache, reap_dead_nodes, NULL);
-    set_bit(fsa_input_register, R_MEMBERSHIP);
+    controld_set_fsa_input_flags(R_MEMBERSHIP);
 
     if (AM_I_DC) {
         populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
-                           node_update_expected, __FUNCTION__);
+                           node_update_expected, __func__);
     }
 
     /*
      * If we lost nodes, we should re-check the election status
      * Safe to call outside of an election
      */
-    register_fsa_action(A_ELECTION_CHECK);
+    controld_set_fsa_action_flags(A_ELECTION_CHECK);
+    trigger_fsa();
 
     /* Membership changed, remind everyone we're here.
      * This will aid detection of duplicate DCs
@@ -135,7 +137,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
     node_state = create_xml_node(parent, XML_CIB_TAG_STATE);
 
-    if (is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, crm_remote_node)) {
         crm_xml_add(node_state, XML_NODE_IS_REMOTE, XML_BOOLEAN_TRUE);
     }
 
@@ -151,13 +153,13 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
 
     if ((flags & node_update_cluster) && node->state) {
         crm_xml_add_boolean(node_state, XML_NODE_IN_CLUSTER,
-                            safe_str_eq(node->state, CRM_NODE_MEMBER));
+                            pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei));
     }
 
-    if (!is_set(node->flags, crm_remote_node)) {
+    if (!pcmk_is_set(node->flags, crm_remote_node)) {
         if (flags & node_update_peer) {
             value = OFFLINESTATUS;
-            if (is_set(node->processes, crm_get_cluster_proc())) {
+            if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
                 value = ONLINESTATUS;
             }
             crm_xml_add(node_state, XML_NODE_IS_PEER, value);
@@ -211,21 +213,21 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         return;
     }
 
-    if (safe_str_eq(crm_element_name(output), XML_CIB_TAG_NODE)) {
+    if (pcmk__str_eq(crm_element_name(output), XML_CIB_TAG_NODE, pcmk__str_casei)) {
         node_xml = output;
 
     } else {
-        node_xml = __xml_first_child(output);
+        node_xml = pcmk__xml_first_child(output);
     }
 
-    for (; node_xml != NULL; node_xml = __xml_next(node_xml)) {
+    for (; node_xml != NULL; node_xml = pcmk__xml_next(node_xml)) {
         const char *node_uuid = NULL;
         const char *node_uname = NULL;
         GHashTableIter iter;
         crm_node_t *node = NULL;
         gboolean known = FALSE;
 
-        if (safe_str_neq(crm_element_name(node_xml), XML_CIB_TAG_NODE)) {
+        if (!pcmk__str_eq(crm_element_name(node_xml), XML_CIB_TAG_NODE, pcmk__str_casei)) {
             continue;
         }
 
@@ -239,9 +241,9 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         g_hash_table_iter_init(&iter, crm_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (node->uuid
-                && safe_str_eq(node->uuid, node_uuid)
+                && pcmk__str_eq(node->uuid, node_uuid, pcmk__str_casei)
                 && node->uname
-                && safe_str_eq(node->uname, node_uname)) {
+                && pcmk__str_eq(node->uname, node_uname, pcmk__str_casei)) {
 
                 known = TRUE;
                 break;
@@ -301,7 +303,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     xmlNode *node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
 
 #if SUPPORT_COROSYNC
-    if (is_not_set(flags, node_update_quick) && is_corosync_cluster()) {
+    if (!pcmk_is_set(flags, node_update_quick) && is_corosync_cluster()) {
         from_hashtable = corosync_initialize_nodelist(NULL, FALSE, node_list);
     }
 #endif
@@ -395,7 +397,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
     ever_had_quorum |= quorum;
 
     if(ever_had_quorum && quorum == FALSE && no_quorum_suicide_escalation) {
-        pcmk_panic(__FUNCTION__);
+        pcmk__panic(__func__);
     }
 
     if (AM_I_DC && (force_update || fsa_has_quorum != quorum)) {
@@ -408,7 +410,8 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         crm_xml_add(update, XML_ATTR_DC_UUID, fsa_our_uuid);
 
         fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
-        crm_debug("Updating quorum status to %s (call=%d)", quorum ? "true" : "false", call_id);
+        crm_debug("Updating quorum status to %s (call=%d)",
+                  pcmk__btoa(quorum), call_id);
         fsa_register_cib_callback(call_id, FALSE, NULL, cib_quorum_update_complete);
         free_xml(update);
 

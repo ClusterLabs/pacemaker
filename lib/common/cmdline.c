@@ -11,11 +11,16 @@
 #  define _GNU_SOURCE
 #endif
 
-#include <config.h>
+#ifndef PCMK__CONFIG_H
+#  define PCMK__CONFIG_H
+#  include <config.h>
+#endif
+
 #include <glib.h>
 
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/strings_internal.h>
 #include <crm/common/util.h>
 
 static gboolean
@@ -173,15 +178,15 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
         }
 
         if (saw_dash_dash == true) {
-            g_ptr_array_add(arr, strdup(argv[i]));
+            g_ptr_array_add(arr, g_strdup(argv[i]));
             continue;
         }
 
         /* This is just a dash by itself.  That could indicate stdin/stdout, or
          * it could be user error.  Copy it over and let glib figure it out.
          */
-        if (safe_str_eq(argv[i], "-")) {
-            g_ptr_array_add(arr, strdup(argv[i]));
+        if (pcmk__str_eq(argv[i], "-", pcmk__str_casei)) {
+            g_ptr_array_add(arr, g_strdup(argv[i]));
             continue;
         }
 
@@ -203,8 +208,8 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
                      * arguments.  Take everything through the end as its value.
                      */
                     if (*(ch+1) != '\0') {
-                        g_ptr_array_add(arr, (gpointer) crm_strdup_printf("-%c", *ch));
-                        g_ptr_array_add(arr, strdup(ch+1));
+                        g_ptr_array_add(arr, g_strdup_printf("-%c", *ch));
+                        g_ptr_array_add(arr, g_strdup(ch+1));
                         break;
 
                     /* The argument occurs at the end of this string.  Hopefully
@@ -212,13 +217,13 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
                      * but that is not for us to decide.
                      */
                     } else {
-                        g_ptr_array_add(arr, (gpointer) crm_strdup_printf("-%c", *ch));
+                        g_ptr_array_add(arr, g_strdup_printf("-%c", *ch));
                         ch++;
                     }
 
                 /* This is a regular short argument.  Just copy it over. */
                 } else {
-                    g_ptr_array_add(arr, (gpointer) crm_strdup_printf("-%c", *ch));
+                    g_ptr_array_add(arr, g_strdup_printf("-%c", *ch));
                     ch++;
                 }
             }
@@ -228,7 +233,7 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
          * the caller to know what to do with the memory when it's done.
          */
         } else {
-            g_ptr_array_add(arr, strdup(argv[i]));
+            g_ptr_array_add(arr, g_strdup(argv[i]));
         }
     }
 

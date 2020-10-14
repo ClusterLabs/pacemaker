@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,22 +15,36 @@ extern "C" {
 #endif
 
 #  include <glib.h>
+#  include <regex.h>
+
+#  include <crm/common/iso8601.h>
 
 extern gboolean was_processing_error;
 extern gboolean was_processing_warning;
 
-/* order is significant here
- * items listed in order of accending severeness
- * more severe actions take precedent over lower ones
+/* The order is (partially) significant here; the values from action_fail_ignore
+ * through action_fail_fence are in order of increasing severity.
+ *
+ * @COMPAT The values should be ordered and numbered per the "TODO" comments
+ *         below, so all values are in order of severity and there is room for
+ *         future additions, but that would break API compatibility.
+ * @TODO   For now, we just use a function to compare the values specially, but
+ *         at the next compatibility break, we should arrange things properly.
  */
 enum action_fail_response {
-    action_fail_ignore,
-    action_fail_recover,
-    action_fail_migrate,        /* recover by moving it somewhere else */
-    action_fail_block,
-    action_fail_stop,
-    action_fail_standby,
-    action_fail_fence,
+    action_fail_ignore,     // @TODO = 10
+    // @TODO action_fail_demote = 20,
+    action_fail_recover,    // @TODO = 30
+    // @TODO action_fail_reset_remote = 40,
+    // @TODO action_fail_restart_container = 50,
+    action_fail_migrate,    // @TODO = 60
+    action_fail_block,      // @TODO = 70
+    action_fail_stop,       // @TODO = 80
+    action_fail_standby,    // @TODO = 90
+    action_fail_fence,      // @TODO = 100
+
+    // @COMPAT Values below here are out of order for API compatibility
+
     action_fail_restart_container,
 
     /* This is reserved for internal use for remote node connection resources.
@@ -41,6 +55,7 @@ enum action_fail_response {
      */
     action_fail_reset_remote,
 
+    action_fail_demote,
 };
 
 /* the "done" action must be the "pre" action +1 */
@@ -90,22 +105,23 @@ enum rsc_role_e {
 #  define RSC_ROLE_MASTER_S  "Master"
 
 enum pe_print_options {
-    pe_print_log            = 0x0001,
-    pe_print_html           = 0x0002,
-    pe_print_ncurses        = 0x0004,
-    pe_print_printf         = 0x0008,
-    pe_print_dev            = 0x0010, // Debugging (@COMPAT probably not useful)
-    pe_print_details        = 0x0020,
-    pe_print_max_details    = 0x0040,
-    pe_print_rsconly        = 0x0080,
-    pe_print_ops            = 0x0100,
-    pe_print_suppres_nl     = 0x0200,
-    pe_print_xml            = 0x0400,
-    pe_print_brief          = 0x0800,
-    pe_print_pending        = 0x1000,
-    pe_print_clone_details  = 0x2000,
-    pe_print_clone_active   = 0x4000, // Print clone instances only if active
-    pe_print_implicit       = 0x8000, // Print implicitly created resources
+    pe_print_log            = (1 << 0),
+    pe_print_html           = (1 << 1),
+    pe_print_ncurses        = (1 << 2),
+    pe_print_printf         = (1 << 3),
+    pe_print_dev            = (1 << 4),  // Debugging (@COMPAT probably not useful)
+    pe_print_details        = (1 << 5),
+    pe_print_max_details    = (1 << 6),
+    pe_print_rsconly        = (1 << 7),
+    pe_print_ops            = (1 << 8),
+    pe_print_suppres_nl     = (1 << 9),
+    pe_print_xml            = (1 << 10),
+    pe_print_brief          = (1 << 11),
+    pe_print_pending        = (1 << 12),
+    pe_print_clone_details  = (1 << 13),
+    pe_print_clone_active   = (1 << 14), // Print clone instances only if active
+    pe_print_implicit       = (1 << 15), // Print implicitly created resources
+    pe_print_expanded_xml   = (1 << 16)
 };
 
 const char *task2text(enum action_tasks task);
@@ -130,6 +146,38 @@ recovery2text(enum rsc_recovery_type type)
     }
     return "Unknown";
 }
+
+typedef struct pe_re_match_data {
+    char *string;
+    int nregs;
+    regmatch_t *pmatch;
+} pe_re_match_data_t;
+
+typedef struct pe_match_data {
+    pe_re_match_data_t *re;
+    GHashTable *params;
+    GHashTable *meta;
+} pe_match_data_t;
+
+typedef struct pe_rsc_eval_data {
+    const char *standard;
+    const char *provider;
+    const char *agent;
+} pe_rsc_eval_data_t;
+
+typedef struct pe_op_eval_data {
+    const char *op_name;
+    guint interval;
+} pe_op_eval_data_t;
+
+typedef struct pe_rule_eval_data {
+    GHashTable *node_hash;
+    enum rsc_role_e role;
+    crm_time_t *now;
+    pe_match_data_t *match_data;
+    pe_rsc_eval_data_t *rsc_data;
+    pe_op_eval_data_t *op_data;
+} pe_rule_eval_data_t;
 
 #ifdef __cplusplus
 }

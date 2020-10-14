@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,7 +40,7 @@ controld_remove_voter(const char *uname)
 {
     election_remove(fsa_election, uname);
 
-    if (safe_str_eq(uname, fsa_our_dc)) {
+    if (pcmk__str_eq(uname, fsa_our_dc, pcmk__str_casei)) {
         /* Clear any election dampening in effect. Otherwise, if the lost DC had
          * just won, an immediate new election could fizzle out with no new DC.
          */
@@ -95,7 +95,7 @@ do_election_vote(long long action,
     }
 
     if (not_voting == FALSE) {
-        if (is_set(fsa_input_register, R_STARTING)) {
+        if (pcmk_is_set(fsa_input_register, R_STARTING)) {
             not_voting = TRUE;
         }
     }
@@ -138,7 +138,7 @@ do_election_count_vote(long long action,
     ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
     if(crm_peer_cache == NULL) {
-        if(is_not_set(fsa_input_register, R_SHUTDOWN)) {
+        if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_err("Internal error, no peer cache");
         }
         return;
@@ -190,15 +190,14 @@ do_dc_takeover(long long action,
     int rc = pcmk_ok;
     xmlNode *cib = NULL;
     const char *cluster_type = name_for_cluster_type(get_cluster_type());
-    pid_t watchdog = pcmk_locate_sbd();
+    pid_t watchdog = pcmk__locate_sbd();
 
     crm_info("Taking over DC status for this partition");
-    set_bit(fsa_input_register, R_THE_DC);
+    controld_set_fsa_input_flags(R_THE_DC);
     execute_stonith_cleanup();
 
     election_reset(fsa_election);
-    set_bit(fsa_input_register, R_JOIN_OK);
-    set_bit(fsa_input_register, R_INVOKE_PE);
+    controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
     fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_scope_local);
 
@@ -207,8 +206,9 @@ do_dc_takeover(long long action,
     fsa_cib_update(XML_TAG_CIB, cib, cib_quorum_override, rc, NULL);
     fsa_register_cib_callback(rc, FALSE, NULL, feature_update_callback);
 
-    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                         XML_ATTR_HAVE_WATCHDOG, watchdog?"true":"false", FALSE, NULL, NULL);
+    update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL,
+                         NULL, NULL, NULL, XML_ATTR_HAVE_WATCHDOG,
+                         pcmk__btoa(watchdog), FALSE, NULL, NULL);
 
     update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                          "dc-version", PACEMAKER_VERSION "-" BUILD_VERSION, FALSE, NULL, NULL);
@@ -241,7 +241,7 @@ do_dc_release(long long action,
 {
     if (action & A_DC_RELEASE) {
         crm_debug("Releasing the role of DC");
-        clear_bit(fsa_input_register, R_THE_DC);
+        controld_clear_fsa_input_flags(R_THE_DC);
         controld_expect_sched_reply(NULL);
 
     } else if (action & A_DC_RELEASED) {
@@ -253,14 +253,15 @@ do_dc_release(long long action,
             result = I_SHUTDOWN;
         }
 #endif
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             crm_node_t *node = crm_get_peer(0, fsa_our_uname);
 
-            crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+            crm_update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,
-                                              __FUNCTION__);
-            fsa_cib_anon_update(XML_CIB_TAG_STATUS, update);
+                                              __func__);
+            /* Don't need a based response because controld will stop. */
+            fsa_cib_anon_update_discard_reply(XML_CIB_TAG_STATUS, update);
             free_xml(update);
         }
         register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);

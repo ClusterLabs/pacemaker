@@ -16,8 +16,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include <crm/crm.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =
@@ -72,6 +73,7 @@ html_free_priv(pcmk__output_t *out) {
     g_queue_free(priv->parent_q);
     g_slist_free(priv->errors);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
@@ -112,17 +114,10 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     private_data_t *priv = out->priv;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
-
-    /* If root is NULL, html_init failed and we are being called from pcmk__output_free
-     * in the pcmk__output_new path.
-     */
-    if (priv == NULL || priv->root == NULL) {
-        return;
-    }
 
     if (cgi_output && print) {
         fprintf(out->dest, "Content-Type: text/html\n\n");
@@ -145,7 +140,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     /* Add any extra header nodes the caller might have created. */
     for (int i = 0; i < g_slist_length(extra_headers); i++) {
-        xmlAddChild(head_node, g_slist_nth_data(extra_headers, i));
+        xmlAddChild(head_node, xmlCopyNode(g_slist_nth_data(extra_headers, i), 1));
     }
 
     /* Stylesheets are included two different ways.  The first is via a built-in
@@ -173,23 +168,40 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     if (print) {
         htmlDocDump(out->dest, priv->root->doc);
     }
+}
+
+static void
+html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    private_data_t *priv = out->priv;
+
+    /* If root is NULL, html_init failed and we are being called from pcmk__output_free
+     * in the pcmk__output_new path.
+     */
+    if (priv == NULL || priv->root == NULL) {
+        return;
+    }
+
+    finish_reset_common(out, exit_status, print);
 
     if (copy_dest != NULL) {
         *copy_dest = copy_xml(priv->root);
     }
+
+    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
 }
 
 static void
 html_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
+
     if (out->priv != NULL) {
-        private_data_t *priv = out->priv;
-        htmlDocDump(out->dest, priv->root->doc);
+        finish_reset_common(out, CRM_EX_OK, true);
     }
 
     html_free_priv(out);
-    g_slist_free_full(extra_headers, (GDestroyNotify) xmlFreeNode);
     html_init(out);
 }
 
@@ -351,6 +363,11 @@ html_end_list(pcmk__output_t *out) {
     }
 }
 
+static bool
+html_is_quiet(pcmk__output_t *out) {
+    return false;
+}
+
 pcmk__output_t *
 pcmk__mk_html_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -361,7 +378,6 @@ pcmk__mk_html_output(char **argv) {
 
     retval->fmt_name = "html";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = false;
 
     retval->init = html_init;
     retval->free_priv = html_free_priv;
@@ -381,6 +397,8 @@ pcmk__mk_html_output(char **argv) {
     retval->list_item = html_list_item;
     retval->increment_list = html_increment_list;
     retval->end_list = html_end_list;
+
+    retval->is_quiet = html_is_quiet;
 
     return retval;
 }
@@ -402,7 +420,7 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 }
 
 void
-pcmk__html_add_header(xmlNodePtr parent, const char *name, ...) {
+pcmk__html_add_header(const char *name, ...) {
     htmlNodePtr header_node;
     va_list ap;
 

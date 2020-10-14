@@ -34,9 +34,10 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
@@ -89,7 +90,7 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_HTML,
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
-    CRM_MON_SUPPORTED_FORMAT_XML,
+    PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
 
@@ -112,6 +113,7 @@ struct {
     char *external_recipient;
     char *neg_location_prefix;
     char *only_node;
+    char *only_rsc;
     unsigned int mon_ops;
     GSList *user_includes_excludes;
     GSList *includes_excludes;
@@ -146,22 +148,18 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_console:
             return mon_show_stack | mon_show_dc | mon_show_times | mon_show_counts |
                    mon_show_nodes | mon_show_resources | mon_show_failures;
-            break;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
             return all_includes(fmt);
-            break;
 
         case mon_output_html:
         case mon_output_cgi:
             return mon_show_summary | mon_show_nodes | mon_show_resources |
                    mon_show_failures;
-            break;
 
         default:
             return 0;
-            break;
     }
 }
 
@@ -193,7 +191,7 @@ struct {
 static unsigned int
 find_section_bit(const char *name) {
     for (int i = 0; sections[i].name != NULL; i++) {
-        if (crm_str_eq(sections[i].name, name, FALSE)) {
+        if (pcmk__str_eq(sections[i].name, name, pcmk__str_casei)) {
             return sections[i].bit;
         }
     }
@@ -204,41 +202,43 @@ find_section_bit(const char *name) {
 static gboolean
 apply_exclude(const gchar *excludes, GError **error) {
     char **parts = NULL;
+    gboolean result = TRUE;
 
     parts = g_strsplit(excludes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
         unsigned int bit = find_section_bit(*s);
 
-        if (crm_str_eq(*s, "all", TRUE)) {
+        if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = 0;
-        } else if (crm_str_eq(*s, "none", TRUE)) {
+        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (bit != 0) {
             show &= ~bit;
         } else {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--exclude options: all, attributes, bans, counts, dc, "
                         "failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, nodes, none, "
                         "operations, options, resources, stack, summary, "
                         "tickets, times");
-            return FALSE;
+            result = FALSE;
+            break;
         }
     }
     g_strfreev(parts);
-
-    return TRUE;
+    return result;
 }
 
 static gboolean
 apply_include(const gchar *includes, GError **error) {
     char **parts = NULL;
+    gboolean result = TRUE;
 
     parts = g_strsplit(includes, ",", 0);
     for (char **s = parts; *s != NULL; s++) {
         unsigned int bit = find_section_bit(*s);
 
-        if (crm_str_eq(*s, "all", TRUE)) {
+        if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (pcmk__starts_with(*s, "bans")) {
             show |= mon_show_bans;
@@ -250,24 +250,24 @@ apply_include(const gchar *includes, GError **error) {
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);
             }
-        } else if (crm_str_eq(*s, "default", TRUE) || crm_str_eq(*s, "defaults", TRUE)) {
+        } else if (pcmk__str_any_of(*s, "default", "defaults", NULL)) {
             show |= default_includes(output_format);
-        } else if (crm_str_eq(*s, "none", TRUE)) {
+        } else if (pcmk__str_eq(*s, "none", pcmk__str_none)) {
             show = 0;
         } else if (bit != 0) {
             show |= bit;
         } else {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_USAGE,
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
                         "default, failcounts, failures, fencing, fencing-failed, "
                         "fencing-pending, fencing-succeeded, nodes, none, operations, "
                         "options, resources, stack, summary, tickets, times");
-            return FALSE;
+            result = FALSE;
+            break;
         }
     }
     g_strfreev(parts);
-
-    return TRUE;
+    return result;
 }
 
 static gboolean
@@ -399,7 +399,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
-            g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
+            g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Fence history must be 0-3");
             return FALSE;
     }
 }
@@ -462,7 +462,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
     int rc = crm_get_msec(optarg);
 
     if (rc == -1) {
-        g_set_error(err, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
         options.reconnect_msec = crm_parse_interval_spec(optarg);
@@ -571,6 +571,11 @@ static GOptionEntry display_entries[] = {
       "When displaying information about nodes, show only what's related to the given\n"
       INDENT "node, or to all nodes tagged with the given tag",
       "NODE" },
+
+    { "resource", 0, 0, G_OPTION_ARG_STRING, &options.only_rsc,
+      "When displaying information about resources, show only what's related to the given\n"
+      INDENT "resource, or to all resources tagged with the given tag",
+      "RSC" },
 
     { "group-by-node", 'n', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, group_by_node_cb,
       "Group resources by node",
@@ -777,15 +782,17 @@ cib_connect(gboolean full)
         need_pass = FALSE;
     }
 
-    if (is_set(options.mon_ops, mon_op_fence_connect) && st == NULL) {
+    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
         st = stonith_api_new();
     }
 
-    if (is_set(options.mon_ops, mon_op_fence_connect) && st != NULL && st->state == stonith_disconnected) {
+    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect)
+        && (st != NULL) && (st->state == stonith_disconnected)) {
+
         rc = st->cmds->connect(st, crm_system_name, NULL);
         if (rc == pcmk_ok) {
             crm_trace("Setting up stonith callbacks");
-            if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+            if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
                                                 mon_st_callback_event);
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
@@ -882,7 +889,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 
         switch (c) {
             case 'm':
-                if (is_not_set(show, mon_show_fencing_all)) {
+                if (!pcmk_is_set(show, mon_show_fencing_all)) {
                     options.mon_ops |= mon_op_fence_history;
                     options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
@@ -890,8 +897,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                     }
                 }
 
-                if (is_set(show, mon_show_fence_failed) || is_set(show, mon_show_fence_pending) ||
-                    is_set(show, mon_show_fence_worked)) {
+                if (pcmk_any_flags_set(show,
+                                       mon_show_fence_failed
+                                       |mon_show_fence_pending
+                                       |mon_show_fence_worked)) {
                     show &= ~mon_show_fencing_all;
                 } else {
                     show |= mon_show_fencing_all;
@@ -909,7 +918,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'o':
                 show ^= mon_show_operations;
-                if (is_not_set(show, mon_show_operations)) {
+                if (!pcmk_is_set(show, mon_show_operations)) {
                     options.mon_ops &= ~mon_op_print_timing;
                 }
                 break;
@@ -921,7 +930,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 't':
                 options.mon_ops ^= mon_op_print_timing;
-                if (is_set(options.mon_ops, mon_op_print_timing)) {
+                if (pcmk_is_set(options.mon_ops, mon_op_print_timing)) {
                     show |= mon_show_operations;
                 }
                 break;
@@ -933,8 +942,11 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (is_set(show, mon_show_stack) || is_set(show, mon_show_dc) ||
-                    is_set(show, mon_show_times) || is_set(show, mon_show_counts)) {
+                if (pcmk_any_flags_set(show,
+                                       mon_show_stack
+                                       |mon_show_dc
+                                       |mon_show_times
+                                       |mon_show_counts)) {
                     show &= ~mon_show_summary;
                 } else {
                     show |= mon_show_summary;
@@ -961,19 +973,19 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         blank_screen();
 
         out->info(out, "%s", "Display option change mode\n");
-        print_option_help(out, 'c', is_set(show, mon_show_tickets));
-        print_option_help(out, 'f', is_set(show, mon_show_failcounts));
-        print_option_help(out, 'n', is_set(options.mon_ops, mon_op_group_by_node));
-        print_option_help(out, 'o', is_set(show, mon_show_operations));
-        print_option_help(out, 'r', is_set(options.mon_ops, mon_op_inactive_resources));
-        print_option_help(out, 't', is_set(options.mon_ops, mon_op_print_timing));
-        print_option_help(out, 'A', is_set(show, mon_show_attributes));
-        print_option_help(out, 'L', is_set(show,mon_show_bans));
-        print_option_help(out, 'D', is_not_set(show, mon_show_summary));
-        print_option_help(out, 'R', is_set(options.mon_ops, mon_op_print_clone_detail));
-        print_option_help(out, 'b', is_set(options.mon_ops, mon_op_print_brief));
-        print_option_help(out, 'j', is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', is_set(show, mon_show_fencing_all));
+        print_option_help(out, 'c', pcmk_is_set(show, mon_show_tickets));
+        print_option_help(out, 'f', pcmk_is_set(show, mon_show_failcounts));
+        print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
+        print_option_help(out, 'o', pcmk_is_set(show, mon_show_operations));
+        print_option_help(out, 'r', pcmk_is_set(options.mon_ops, mon_op_inactive_resources));
+        print_option_help(out, 't', pcmk_is_set(options.mon_ops, mon_op_print_timing));
+        print_option_help(out, 'A', pcmk_is_set(show, mon_show_attributes));
+        print_option_help(out, 'L', pcmk_is_set(show,mon_show_bans));
+        print_option_help(out, 'D', !pcmk_is_set(show, mon_show_summary));
+        print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
+        print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
+        print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
+        print_option_help(out, 'm', pcmk_is_set(show, mon_show_fencing_all));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
@@ -1073,13 +1085,13 @@ add_output_args(void) {
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_xml) {
-        if (!pcmk__force_args(context, &err, "%s --xml-simple-list", g_get_prgname())) {
+        if (!pcmk__force_args(context, &err, "%s --xml-simple-list --xml-substitute", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
     } else if (output_format == mon_output_legacy_xml) {
         output_format = mon_output_xml;
-        if (!pcmk__force_args(context, &err, "%s --xml-legacy", g_get_prgname())) {
+        if (!pcmk__force_args(context, &err, "%s --xml-legacy --xml-substitute", g_get_prgname())) {
             g_propagate_error(&error, err);
             clean_up(CRM_EX_USAGE);
         }
@@ -1103,7 +1115,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
         return;
     }
 
-    if (safe_str_eq(args->output_ty, "html")) {
+    if (pcmk__str_eq(args->output_ty, "html", pcmk__str_casei)) {
         char *dest = NULL;
 
         if (args->output_dest != NULL) {
@@ -1112,9 +1124,9 @@ reconcile_output_format(pcmk__common_args_t *args) {
 
         retval = as_html_cb("h", dest, NULL, &err);
         free(dest);
-    } else if (safe_str_eq(args->output_ty, "text")) {
+    } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_casei)) {
         retval = no_curses_cb("N", NULL, NULL, &err);
-    } else if (safe_str_eq(args->output_ty, "xml")) {
+    } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_casei)) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
         }
@@ -1122,7 +1134,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
         args->output_ty = strdup("xml");
         output_format = mon_output_xml;
         options.mon_ops |= mon_op_one_shot;
-    } else if (is_set(options.mon_ops, mon_op_one_shot)) {
+    } else if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
         }
@@ -1194,7 +1206,7 @@ main(int argc, char **argv)
             include_exclude_cb("--exclude", "times", NULL, NULL);
         }
 
-        if (is_set(options.mon_ops, mon_op_watch_fencing)) {
+        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
             fence_history_cb("--fence-history", "0", NULL, NULL);
             options.mon_ops |= mon_op_fence_connect;
         }
@@ -1238,7 +1250,7 @@ main(int argc, char **argv)
             }
         }
 
-        if (is_set(options.mon_ops, mon_op_one_shot)) {
+        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
             if (output_format == mon_output_console) {
                 output_format = mon_output_plain;
             }
@@ -1249,8 +1261,8 @@ main(int argc, char **argv)
             }
             crm_enable_stderr(FALSE);
 
-            if ((args->output_dest == NULL || safe_str_eq(args->output_dest, "-")) && !options.external_agent) {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
+            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches | pcmk__str_casei) && !options.external_agent) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--daemonize requires at least one of --output-to and --external-agent");
                 return clean_up(CRM_EX_USAGE);
             }
 
@@ -1260,7 +1272,7 @@ main(int argc, char **argv)
                  */
                 cib_delete(cib);
                 cib = NULL;
-                crm_make_daemon(crm_system_name, TRUE, options.pid_file);
+                pcmk__daemonize(crm_system_name, options.pid_file);
                 cib = cib_new();
                 if (cib == NULL) {
                     rc = -EINVAL;
@@ -1285,7 +1297,7 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         // Shouldn't really be possible
-        g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Invalid CIB source");
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
         return clean_up(CRM_EX_ERROR);
     }
 
@@ -1303,7 +1315,7 @@ main(int argc, char **argv)
     }
 
     if (rc != pcmk_rc_ok) {
-        g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
@@ -1335,13 +1347,13 @@ main(int argc, char **argv)
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
         if (cib && cib->variant == cib_file) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with --external-agent");
             return clean_up(CRM_EX_USAGE);
         } else if (options.daemonize == TRUE) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode cannot be used with -d");
             return clean_up(CRM_EX_USAGE);
         }
     }
@@ -1350,17 +1362,23 @@ main(int argc, char **argv)
         options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
     }
 
+    if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
+        out->dest != stdout) {
+        pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
+                              crm_itoa(options.reconnect_msec/1000), NULL);
+    }
+
     crm_info("Starting %s", crm_system_name);
 
     if (cib) {
 
         do {
-            if (is_not_set(options.mon_ops, mon_op_one_shot)) {
+            if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
                 print_as(output_format ,"Waiting until cluster is available on this node ...\n");
             }
-            rc = cib_connect(is_not_set(options.mon_ops, mon_op_one_shot));
+            rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
 
-            if (is_set(options.mon_ops, mon_op_one_shot)) {
+            if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
                 break;
 
             } else if (rc != pcmk_ok) {
@@ -1382,20 +1400,20 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         if (output_format == mon_output_monitor) {
-            g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
                         pcmk_strerror(rc));
             return clean_up(MON_STATUS_CRIT);
         } else {
             if (rc == -ENOTCONN) {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
             } else {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
             }
         }
         return clean_up(crm_errno2exit(rc));
     }
 
-    if (is_set(options.mon_ops, mon_op_one_shot)) {
+    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         return clean_up(CRM_EX_OK);
     }
 
@@ -1447,6 +1465,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
     int nodes_standby = 0;
     int nodes_maintenance = 0;
     char *offline_nodes = NULL;
+    size_t offline_nodes_len = 0;
     gboolean no_dc = FALSE;
     gboolean offline = FALSE;
 
@@ -1467,18 +1486,18 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
         } else {
             char *s = crm_strdup_printf("offline node: %s", node->details->uname);
             /* coverity[leaked_storage] False positive */
-            offline_nodes = pcmk__add_word(offline_nodes, s);
+            pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
             free(s);
             mon_ops |= mon_op_has_warnings;
             offline = TRUE;
         }
     }
 
-    if (is_set(mon_ops, mon_op_has_warnings)) {
-        out->info(out, "CLUSTER WARN:%s%s%s",
-                  no_dc ? " No DC" : "",
-                  no_dc && offline ? "," : "",
-                  offline ? offline_nodes : "");
+    if (pcmk_is_set(mon_ops, mon_op_has_warnings)) {
+        out->info(out, "CLUSTER WARN: %s%s%s",
+                  no_dc ? "No DC" : "",
+                  no_dc && offline ? ", " : "",
+                  (offline? offline_nodes : ""));
         free(offline_nodes);
     } else {
         char *nodes_standby_s = NULL;
@@ -1535,11 +1554,11 @@ reduce_stonith_history(stonith_history_t *history)
             for (np = new; ; np = np->next) {
                 if ((hp->state == st_done) || (hp->state == st_failed)) {
                     /* action not in progress */
-                    if (safe_str_eq(hp->target, np->target) &&
-                        safe_str_eq(hp->action, np->action) &&
+                    if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
+                        pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
                         (hp->state == np->state) &&
                         ((hp->state == st_done) ||
-                         safe_str_eq(hp->delegate, np->delegate))) {
+                         pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
                             /* purge older hp */
                             stonith_history_free(hp);
                             break;
@@ -1654,7 +1673,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 
     node = crm_element_value(rsc_op, XML_LRM_ATTR_TARGET);
 
-    while (n != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(n))) {
+    while (n != NULL && !pcmk__str_eq(XML_CIB_TAG_STATE, TYPE(n), pcmk__str_casei)) {
         n = n->parent;
     }
 
@@ -1732,7 +1751,8 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
     xmlNode *change = NULL;
     xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    for (change = __xml_first_child(diff); change != NULL; change = __xml_next(change)) {
+    for (change = pcmk__xml_first_child(diff); change != NULL;
+         change = pcmk__xml_next(change)) {
         const char *name = NULL;
         const char *op = crm_element_value(change, XML_DIFF_OP);
         const char *xpath = crm_element_value(change, XML_DIFF_PATH);
@@ -1774,8 +1794,8 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             xmlNode *state = NULL;
             xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
 
-            for (state = __xml_first_child_element(status); state != NULL;
-                 state = __xml_next_element(state)) {
+            for (state = pcmk__xe_first_child(status); state != NULL;
+                 state = pcmk__xe_next(state)) {
 
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {
@@ -1787,8 +1807,8 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
         } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
             xmlNode *state = NULL;
 
-            for (state = __xml_first_child_element(match); state != NULL;
-                 state = __xml_next_element(state)) {
+            for (state = pcmk__xe_first_child(match); state != NULL;
+                 state = pcmk__xe_next(state)) {
 
                 node = crm_element_value(state, XML_ATTR_UNAME);
                 if (node == NULL) {
@@ -1929,7 +1949,7 @@ mon_refresh_display(gpointer user_data)
 
     /* get the stonith-history if there is evidence we need it
      */
-    while (is_set(options.mon_ops, mon_op_fence_history)) {
+    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
             history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120);
 
@@ -1938,7 +1958,9 @@ mon_refresh_display(gpointer user_data)
                 mon_cib_connection_destroy_error(NULL);
             } else {
                 stonith_history = stonith__sort_history(stonith_history);
-                if (is_not_set(options.mon_ops, mon_op_fence_full_history) && output_format != mon_output_xml) {
+                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
+                    && (output_format != mon_output_xml)) {
+
                     stonith_history = reduce_stonith_history(stonith_history);
                 }
                 break; /* all other cases are errors */
@@ -1955,7 +1977,7 @@ mon_refresh_display(gpointer user_data)
         mon_data_set = pe_new_working_set();
         CRM_ASSERT(mon_data_set != NULL);
     }
-    set_bit(mon_data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
 
     mon_data_set->input = cib_copy;
     cluster_status(mon_data_set);
@@ -1963,7 +1985,7 @@ mon_refresh_display(gpointer user_data)
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
-    if (is_set(show, mon_show_bans) || is_set(show, mon_show_tickets)) {
+    if (pcmk_is_set(show, mon_show_bans) || pcmk_is_set(show, mon_show_tickets)) {
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                    mon_data_set->input);
         unpack_constraints(cib_constraints, mon_data_set);
@@ -1974,8 +1996,8 @@ mon_refresh_display(gpointer user_data)
         case mon_output_cgi:
             if (print_html_status(out, mon_data_set, stonith_history, options.mon_ops,
                                   show, options.neg_location_prefix,
-                                  options.only_node) != 0) {
-                g_set_error(&error, G_OPTION_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
+                                  options.only_node, options.only_rsc) != 0) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return FALSE;
             }
@@ -1985,12 +2007,13 @@ mon_refresh_display(gpointer user_data)
         case mon_output_xml:
             print_xml_status(out, mon_data_set, crm_errno2exit(history_rc),
                              stonith_history, options.mon_ops, show,
-                             options.neg_location_prefix, options.only_node);
+                             options.neg_location_prefix, options.only_node,
+                             options.only_rsc);
             break;
 
         case mon_output_monitor:
             print_simple_status(out, mon_data_set, stonith_history, options.mon_ops);
-            if (is_set(options.mon_ops, mon_op_has_warnings)) {
+            if (pcmk_is_set(options.mon_ops, mon_op_has_warnings)) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
             }
@@ -2003,19 +2026,23 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node);
+                         options.neg_location_prefix, options.only_node, options.only_rsc);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
             print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node);
+                         options.neg_location_prefix, options.only_node, options.only_rsc);
             break;
 
         case mon_output_unset:
         case mon_output_none:
             break;
+    }
+
+    if (options.daemonize) {
+        out->reset(out);
     }
 
     stonith_history_free(stonith_history);
@@ -2106,15 +2133,6 @@ clean_up_connections(void)
     }
 }
 
-static void
-handle_html_output(crm_exit_t exit_code) {
-    xmlNodePtr html = NULL;
-
-    pcmk__html_add_header(html, "meta", "http-equiv", "refresh", "content",
-                          crm_itoa(options.reconnect_msec/1000), NULL);
-    out->finish(out, exit_code, true, (void **) &html);
-}
-
 /*
  * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
  * deallocate memory and show usage-message if requested.
@@ -2183,16 +2201,12 @@ clean_up(crm_exit_t exit_code)
      * crm_mon to be able to do so.
      */
     if (out != NULL) {
-        switch (output_format) {
-            case mon_output_cgi:
-            case mon_output_html:
-                handle_html_output(exit_code);
-                break;
-
-            default:
-                out->finish(out, exit_code, true, NULL);
-                break;
+        if (options.daemonize) {
+            out->dest = freopen(NULL, "w", out->dest);
+            CRM_ASSERT(out->dest != NULL);
         }
+
+        out->finish(out, exit_code, true, NULL);
 
         pcmk__output_free(out);
         pcmk__unregister_formats();

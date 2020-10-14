@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/cluster.h>        /* For ONLINESTATUS etc */
 
@@ -47,7 +48,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
     CRM_CHECK(diff != NULL, return);
 
-    xml_log_patchset(LOG_TRACE, __FUNCTION__, diff);
+    xml_log_patchset(LOG_TRACE, __func__, diff);
     if (cib_config_changed(NULL, NULL, &diff)) {
         abort_transition(INFINITY, tg_restart, "Non-status change", diff);
         goto bail;              /* configuration changed */
@@ -90,7 +91,7 @@ te_update_diff_v1(const char *event, xmlNode *diff)
         const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
         const char *value = NULL;
 
-        if (safe_str_eq(CRM_OP_PROBED, name)) {
+        if (pcmk__str_eq(CRM_OP_PROBED, name, pcmk__str_casei)) {
             value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
         }
 
@@ -221,8 +222,8 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 static void
 process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
 {
-    for (xmlNode *rsc_op = __xml_first_child(lrm_resource); rsc_op != NULL;
-         rsc_op = __xml_next(rsc_op)) {
+    for (xmlNode *rsc_op = pcmk__xml_first_child(lrm_resource); rsc_op != NULL;
+         rsc_op = pcmk__xml_next(rsc_op)) {
         process_graph_event(rsc_op, node);
     }
     if (shutdown_lock_cleared(lrm_resource)) {
@@ -268,7 +269,8 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         return;
     }
 
-    for (rsc = __xml_first_child(xml); rsc != NULL; rsc = __xml_next(rsc)) {
+    for (rsc = pcmk__xml_first_child(xml); rsc != NULL;
+         rsc = pcmk__xml_next(rsc)) {
         crm_trace("Processing %s", ID(rsc));
         process_lrm_resource_diff(rsc, node);
     }
@@ -325,7 +327,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     char *node_uuid = NULL;
     crm_action_t *down = NULL;
 
-    if(safe_str_neq(op, "delete")) {
+    if(!pcmk__str_eq(op, "delete", pcmk__str_casei)) {
         abort_transition(INFINITY, tg_restart, reason, change);
         return;
     }
@@ -407,8 +409,8 @@ static void
 process_status_diff(xmlNode *status, xmlNode *change, const char *op,
                     const char *xpath)
 {
-    for (xmlNode *state = __xml_first_child(status); state != NULL;
-         state = __xml_next(state)) {
+    for (xmlNode *state = pcmk__xml_first_child(status); state != NULL;
+         state = pcmk__xml_next(state)) {
         process_node_state_diff(state, change, op, xpath);
     }
 }
@@ -434,8 +436,8 @@ te_update_diff_v2(xmlNode *diff)
 {
     crm_log_xml_trace(diff, "Patch:Raw");
 
-    for (xmlNode *change = __xml_first_child(diff); change != NULL;
-         change = __xml_next(change)) {
+    for (xmlNode *change = pcmk__xml_first_child(diff); change != NULL;
+         change = pcmk__xml_next(change)) {
 
         xmlNode *match = NULL;
         const char *name = NULL;
@@ -491,12 +493,12 @@ te_update_diff_v2(xmlNode *diff)
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
-                   || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
+                   || pcmk__str_eq(name, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
             abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
             break; // Won't be packaged with operation results we may be waiting for
 
         } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
-                   || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
+                   || pcmk__str_eq(name, XML_TAG_TRANSIENT_NODEATTRS, pcmk__str_casei)) {
             abort_unless_down(xpath, op, change, "Transient attribute change");
             break; // Won't be packaged with operation results we may be waiting for
 
@@ -616,9 +618,9 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         crm_trace("Bad sys-to %s", crm_str(sys_to));
         return FALSE;
 
-    } else if (safe_str_eq(op, CRM_OP_INVOKE_LRM)
-               && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
-/* 		  && safe_str_eq(type, XML_ATTR_RESPONSE) */
+    } else if (pcmk__str_eq(op, CRM_OP_INVOKE_LRM, pcmk__str_casei)
+               && pcmk__str_eq(sys_from, CRM_SYSTEM_LRMD, pcmk__str_casei)
+/* 		  && pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_casei) */
         ) {
         xmlXPathObject *xpathObj = NULL;
 
@@ -697,7 +699,8 @@ action_timer_callback(gpointer data)
         crm_err("Node %s did not send %s result (via %s) within %dms "
                 "(action timeout plus cluster-delay)",
                 (on_node? on_node : ""), (task? task : "unknown action"),
-                (via_node? via_node : "controller"), timer->timeout);
+                (via_node? via_node : "controller"),
+                timer->timeout + transition_graph->network_delay);
         print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
 
         timer->action->failed = TRUE;

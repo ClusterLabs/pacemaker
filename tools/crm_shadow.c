@@ -26,6 +26,7 @@
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 
 static int command_options = cib_sync_call;
 static cib_t *real_cib = NULL;
@@ -47,7 +48,7 @@ shadow_setup(char *name, gboolean do_switch)
 
     printf("Setting up shadow instance\n");
 
-    if (safe_str_eq(new_prompt, prompt)) {
+    if (pcmk__str_eq(new_prompt, prompt, pcmk__str_casei)) {
         /* nothing to do */
         goto done;
 
@@ -323,7 +324,8 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'f':
-                command_options |= cib_quorum_override;
+                cib__set_call_options(command_options, crm_system_name,
+                                      cib_quorum_override);
                 force_flag = 1;
                 break;
             case 'b':
@@ -374,7 +376,7 @@ main(int argc, char **argv)
     } else if (command != 's' && command != 'c') {
         const char *local = getenv("CIB_shadow");
 
-        if (local != NULL && safe_str_neq(local, shadow) && force_flag == FALSE) {
+        if (local != NULL && !pcmk__str_eq(local, shadow, pcmk__str_casei) && force_flag == FALSE) {
             fprintf(stderr,
                     "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
                     "  To prevent accidental destruction of the cluster,"
@@ -520,7 +522,7 @@ main(int argc, char **argv)
 
         diff = xml_create_patchset(0, old_config, new_config, NULL, FALSE);
 
-        xml_log_changes(LOG_INFO, __FUNCTION__, new_config);
+        xml_log_changes(LOG_INFO, __func__, new_config);
         xml_accept_changes(new_config);
 
         if (diff != NULL) {

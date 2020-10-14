@@ -22,6 +22,9 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
+G_DEFINE_QUARK(pcmk-rc-error-quark, pcmk__rc_error)
+G_DEFINE_QUARK(pcmk-exitc-error-quark, pcmk__exitc_error)
+
 // @COMPAT Legacy function return codes
 
 //! \deprecated Use standard return codes and pcmk_rc_name() instead
@@ -242,6 +245,10 @@ static struct pcmk__rc_info {
     },
     { "pcmk_rc_no_input",
       "Input file not available",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_underflow",
+      "Value too small to be stored in data type",
       -pcmk_err_generic,
     }
 };
@@ -637,6 +644,7 @@ pcmk_rc2exitc(int rc)
         case EFAULT:
         case ENOSYS:
         case EOVERFLOW:
+        case pcmk_rc_underflow:
             return CRM_EX_SOFTWARE;
 
         case EBADMSG:

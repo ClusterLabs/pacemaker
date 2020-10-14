@@ -17,6 +17,7 @@
 #include <crm/common/mainloop.h>
 
 #include <crm/pengine/status.h>
+#include <crm/pengine/internal.h>
 #include <crm/cib.h>
 #include <crm/lrmd.h>
 
@@ -184,7 +185,7 @@ read_events(lrmd_event_data_t * event)
 {
     report_event(event);
     if (options.listen) {
-        if (safe_str_eq(options.listen, event_buf_v0)) {
+        if (pcmk__str_eq(options.listen, event_buf_v0, pcmk__str_casei)) {
             print_result(printf("LISTEN EVENT SUCCESSFUL\n"));
             test_exit(CRM_EX_OK);
         }
@@ -277,7 +278,7 @@ start_test(gpointer user_data)
         return 0;
     }
 
-    if (safe_str_eq(options.api_call, "exec")) {
+    if (pcmk__str_eq(options.api_call, "exec", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->exec(lrmd_conn,
                                    options.rsc_id,
                                    options.action,
@@ -291,11 +292,11 @@ start_test(gpointer user_data)
             print_result(printf("API-CALL 'exec' action pending, waiting on response\n"));
         }
 
-    } else if (safe_str_eq(options.api_call, "register_rsc")) {
+    } else if (pcmk__str_eq(options.api_call, "register_rsc", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->register_rsc(lrmd_conn,
                                            options.rsc_id,
                                            options.class, options.provider, options.type, 0);
-    } else if (safe_str_eq(options.api_call, "get_rsc_info")) {
+    } else if (pcmk__str_eq(options.api_call, "get_rsc_info", pcmk__str_casei)) {
         lrmd_rsc_info_t *rsc_info;
 
         rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, options.rsc_id, 0);
@@ -310,12 +311,12 @@ start_test(gpointer user_data)
         } else {
             rc = -1;
         }
-    } else if (safe_str_eq(options.api_call, "unregister_rsc")) {
+    } else if (pcmk__str_eq(options.api_call, "unregister_rsc", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
-    } else if (safe_str_eq(options.api_call, "cancel")) {
+    } else if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
                                      options.interval_ms);
-    } else if (safe_str_eq(options.api_call, "metadata")) {
+    } else if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
         char *output = NULL;
 
         rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
@@ -325,7 +326,7 @@ start_test(gpointer user_data)
             print_result(printf("%s", output));
             free(output);
         }
-    } else if (safe_str_eq(options.api_call, "list_agents")) {
+    } else if (pcmk__str_eq(options.api_call, "list_agents", pcmk__str_casei)) {
         lrmd_list_t *list = NULL;
         lrmd_list_t *iter = NULL;
 
@@ -342,7 +343,7 @@ start_test(gpointer user_data)
             print_result(printf("API_CALL FAILURE - no agents found\n"));
             rc = -1;
         }
-    } else if (safe_str_eq(options.api_call, "list_ocf_providers")) {
+    } else if (pcmk__str_eq(options.api_call, "list_ocf_providers", pcmk__str_casei)) {
         lrmd_list_t *list = NULL;
         lrmd_list_t *iter = NULL;
 
@@ -360,7 +361,7 @@ start_test(gpointer user_data)
             rc = -1;
         }
 
-    } else if (safe_str_eq(options.api_call, "list_standards")) {
+    } else if (pcmk__str_eq(options.api_call, "list_standards", pcmk__str_casei)) {
         lrmd_list_t *list = NULL;
         lrmd_list_t *iter = NULL;
 
@@ -378,7 +379,7 @@ start_test(gpointer user_data)
             rc = -1;
         }
 
-    } else if (safe_str_eq(options.api_call, "get_recurring_ops")) {
+    } else if (pcmk__str_eq(options.api_call, "get_recurring_ops", pcmk__str_casei)) {
         GList *op_list = NULL;
         GList *op_item = NULL;
         rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
@@ -439,8 +440,7 @@ generate_params(void)
         crm_crit("Could not allocate working set");
         return -ENOMEM;
     }
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);
@@ -634,11 +634,8 @@ main(int argc, char **argv)
         ++argerr;
     }
 
-    if (!options.listen &&
-        (safe_str_eq(options.api_call, "metadata") ||
-         safe_str_eq(options.api_call, "list_agents") ||
-         safe_str_eq(options.api_call, "list_standards") ||
-         safe_str_eq(options.api_call, "list_ocf_providers"))) {
+    if (!options.listen && pcmk__strcase_any_of(options.api_call, "metadata", "list_agents",
+                                                "list_standards", "list_ocf_providers", NULL)) {
         options.no_connect = 1;
     }
 

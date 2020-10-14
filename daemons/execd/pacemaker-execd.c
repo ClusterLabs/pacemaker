@@ -18,7 +18,7 @@
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/lrmd_internal.h>
 
@@ -209,16 +209,17 @@ int
 lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 {
     crm_trace("Sending reply (%d) to client (%s)", id, client->id);
-    switch (client->kind) {
-        case PCMK__CLIENT_IPC:
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_ipc:
             return pcmk__ipc_send_xml(client, id, reply, FALSE);
 #ifdef ENABLE_PCMK_REMOTE
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
         default:
-            crm_err("Could not send reply: unknown client type %d",
-                    client->kind);
+            crm_err("Could not send reply: unknown client type for %s "
+                    CRM_XS " flags=0x%llx",
+                    pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
 }
@@ -228,15 +229,15 @@ int
 lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 {
     crm_trace("Sending notification to client (%s)", client->id);
-    switch (client->kind) {
-        case PCMK__CLIENT_IPC:
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_ipc:
             if (client->ipcs == NULL) {
                 crm_trace("Could not notify local client: disconnected");
                 return ENOTCONN;
             }
             return pcmk__ipc_send_xml(client, 0, msg, crm_ipc_server_event);
 #ifdef ENABLE_PCMK_REMOTE
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             if (client->remote == NULL) {
                 crm_trace("Could not notify remote client: disconnected");
                 return ENOTCONN;
@@ -245,7 +246,9 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
             }
 #endif
         default:
-            crm_err("Could not notify client: unknown type %d", client->kind);
+            crm_err("Could not notify client %s with unknown transport "
+                    CRM_XS " flags=0x%llx",
+                    pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
 }
@@ -467,13 +470,12 @@ main(int argc, char **argv, char **envp)
     }
 
     option = pcmk__env_option("logfacility");
-    if (option && safe_str_neq(option, "none")
-        && safe_str_neq(option, "/dev/null")) {
+    if (option && !pcmk__strcase_any_of(option, "none", "/dev/null", NULL)) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 
     option = pcmk__env_option("logfile");
-    if(option && safe_str_neq(option, "none")) {
+    if(option && !pcmk__str_eq(option, "none", pcmk__str_casei)) {
         setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
 
         if (pcmk__env_option_enabled(crm_system_name, "debug")) {

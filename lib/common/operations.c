@@ -13,9 +13,11 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <regex.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <ctype.h>
 
 #include <crm/crm.h>
@@ -23,6 +25,8 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+
+static regex_t *notify_migrate_re = NULL;
 
 /*!
  * \brief Generate an operation key (RESOURCE_ACTION_INTERVAL)
@@ -44,85 +48,180 @@ pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
     return crm_strdup_printf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
+static inline gboolean
+convert_interval(const char *s, guint *interval_ms)
+{
+    unsigned long l;
+
+    errno = 0;
+    l = strtoul(s, NULL, 10);
+
+    if (errno != 0) {
+        return FALSE;
+    }
+
+    *interval_ms = (guint) l;
+    return TRUE;
+}
+
+static gboolean
+try_fast_match(const char *key, const char *underbar1, const char *underbar2,
+               char **rsc_id, char **op_type, guint *interval_ms)
+{
+    if (interval_ms) {
+        if (!convert_interval(underbar2+1, interval_ms)) {
+            return FALSE;
+        }
+    }
+
+    if (rsc_id) {
+        *rsc_id = strndup(key, underbar1-key);
+    }
+
+    if (op_type) {
+        *op_type = strndup(underbar1+1, underbar2-underbar1-1);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+try_basic_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
+{
+    char *interval_sep = NULL;
+    char *type_sep = NULL;
+
+    // Parse interval at end of string
+    interval_sep = strrchr(key, '_');
+    if (interval_sep == NULL) {
+        return FALSE;
+    }
+
+    if (interval_ms) {
+        if (!convert_interval(interval_sep+1, interval_ms)) {
+            return FALSE;
+        }
+    }
+
+    type_sep = interval_sep-1;
+
+    while (1) {
+        if (*type_sep == '_') {
+            break;
+        } else if (type_sep == key) {
+            if (interval_ms) {
+                *interval_ms = 0;
+            }
+
+            return FALSE;
+        }
+
+        type_sep--;
+    }
+
+    if (op_type) {
+        // Add one here to skip the leading underscore we landed on in the
+        // while loop.
+        *op_type = strndup(type_sep+1, interval_sep-type_sep-1);
+    }
+
+    // Everything else is the name of the resource.
+    if (rsc_id) {
+        *rsc_id = strndup(key, type_sep-key);
+    }
+
+    return TRUE;
+}
+
+static gboolean
+try_migrate_notify_match(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
+{
+    int rc = 0;
+    size_t nmatch = 8;
+    regmatch_t pmatch[nmatch];
+
+    if (notify_migrate_re == NULL) {
+        // cppcheck-suppress memleak
+        notify_migrate_re = calloc(1, sizeof(regex_t));
+        rc = regcomp(notify_migrate_re, "^(.*)_(migrate_(from|to)|(pre|post)_notify_([a-z]+|migrate_(from|to)))_([0-9]+)$",
+                     REG_EXTENDED);
+        CRM_ASSERT(rc == 0);
+    }
+
+    rc = regexec(notify_migrate_re, key, nmatch, pmatch, 0);
+    if (rc == REG_NOMATCH) {
+        return FALSE;
+    }
+
+    if (rsc_id) {
+        *rsc_id = strndup(key+pmatch[1].rm_so, pmatch[1].rm_eo-pmatch[1].rm_so);
+    }
+
+    if (op_type) {
+        *op_type = strndup(key+pmatch[2].rm_so, pmatch[2].rm_eo-pmatch[2].rm_so);
+    }
+
+    if (interval_ms) {
+        if (!convert_interval(key+pmatch[7].rm_so, interval_ms)) {
+            if (rsc_id) {
+                free(*rsc_id);
+                *rsc_id = NULL;
+            }
+
+            if (op_type) {
+                free(*op_type);
+                *op_type = NULL;
+            }
+
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 gboolean
 parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
-    char *notify = NULL;
-    char *mutable_key = NULL;
-    char *mutable_key_ptr = NULL;
-    size_t len = 0, offset = 0;
-    unsigned long long ch = 0;
-    guint local_interval_ms = 0;
+    char *underbar1 = NULL;
+    char *underbar2 = NULL;
+    char *underbar3 = NULL;
 
     // Initialize output variables in case of early return
     if (rsc_id) {
         *rsc_id = NULL;
     }
+
     if (op_type) {
         *op_type = NULL;
     }
+
     if (interval_ms) {
         *interval_ms = 0;
     }
 
     CRM_CHECK(key && *key, return FALSE);
 
-    // Parse interval at end of string
-    len = strlen(key);
-    offset = len - 1;
-    while ((offset > 0) && isdigit(key[offset])) {
-        ch = key[offset] - '0';
-        for (int digits = len - offset; digits > 1; --digits) {
-            ch = ch * 10;
-        }
-        local_interval_ms += ch;
-        offset--;
-    }
-    crm_trace("Operation key '%s' has interval %ums", key, local_interval_ms);
-    if (interval_ms) {
-        *interval_ms = local_interval_ms;
+    underbar1 = strchr(key, '_');
+    if (!underbar1) {
+        return FALSE;
     }
 
-    CRM_CHECK((offset != (len - 1)) && (key[offset] == '_'), return FALSE);
-
-    mutable_key = strndup(key, offset);
-    offset--;
-
-    while (offset > 0 && key[offset] != '_') {
-        offset--;
+    underbar2 = strchr(underbar1+1, '_');
+    if (!underbar2) {
+        return FALSE;
     }
 
-    CRM_CHECK(key[offset] == '_',
-              free(mutable_key); return FALSE);
+    underbar3 = strchr(underbar2+1, '_');
 
-    mutable_key_ptr = mutable_key + offset + 1;
-
-    crm_trace("  Action: %s", mutable_key_ptr);
-    if (op_type) {
-        *op_type = strdup(mutable_key_ptr);
-    }
-
-    mutable_key[offset] = 0;
-    offset--;
-
-    notify = strstr(mutable_key, "_post_notify");
-    if (notify && safe_str_eq(notify, "_post_notify")) {
-        notify[0] = 0;
-    }
-
-    notify = strstr(mutable_key, "_pre_notify");
-    if (notify && safe_str_eq(notify, "_pre_notify")) {
-        notify[0] = 0;
-    }
-
-    crm_trace("  Resource: %s", mutable_key);
-    if (rsc_id) {
-        *rsc_id = mutable_key;
+    if (!underbar3) {
+        return try_fast_match(key, underbar1, underbar2,
+                              rsc_id, op_type, interval_ms);
+    } else if (try_migrate_notify_match(key, rsc_id, op_type, interval_ms)) {
+        return TRUE;
     } else {
-        free(mutable_key);
+        return try_basic_match(key, rsc_id, op_type, interval_ms);
     }
-
-    return TRUE;
 }
 
 char *
@@ -343,7 +442,6 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
         case PCMK_LRM_OP_CANCELLED:
         case PCMK_LRM_OP_PENDING:
             return FALSE;
-            break;
 
         case PCMK_LRM_OP_NOTSUPPORTED:
         case PCMK_LRM_OP_TIMEOUT:
@@ -351,7 +449,6 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
         case PCMK_LRM_OP_NOT_CONNECTED:
         case PCMK_LRM_OP_INVALID:
             return TRUE;
-            break;
 
         default:
             if (target_rc != op->rc) {
@@ -408,26 +505,20 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
      * features, we don't need the meta-data.
      */
 
-    CRM_CHECK(rsc_class || op, return FALSE);
+    CRM_CHECK((rsc_class != NULL) || (op != NULL), return false);
 
-    if (rsc_class
-        && is_not_set(pcmk_get_ra_caps(rsc_class), pcmk_ra_cap_params)) {
+    if ((rsc_class != NULL)
+        && !pcmk_is_set(pcmk_get_ra_caps(rsc_class), pcmk_ra_cap_params)) {
         /* Meta-data is only needed for resource classes that use parameters */
-        return FALSE;
+        return false;
+    }
+    if (op == NULL) {
+        return true;
     }
 
     /* Meta-data is only needed for these actions */
-    if (op
-        && strcmp(op, CRMD_ACTION_START)
-        && strcmp(op, CRMD_ACTION_STATUS)
-        && strcmp(op, CRMD_ACTION_PROMOTE)
-        && strcmp(op, CRMD_ACTION_DEMOTE)
-        && strcmp(op, CRMD_ACTION_RELOAD)
-        && strcmp(op, CRMD_ACTION_MIGRATE)
-        && strcmp(op, CRMD_ACTION_MIGRATED)
-        && strcmp(op, CRMD_ACTION_NOTIFY)) {
-        return FALSE;
-    }
-
-    return TRUE;
+    return pcmk__str_any_of(op, CRMD_ACTION_START, CRMD_ACTION_STATUS,
+                            CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
+                            CRMD_ACTION_RELOAD, CRMD_ACTION_MIGRATE,
+                            CRMD_ACTION_MIGRATED, CRMD_ACTION_NOTIFY, NULL);
 }

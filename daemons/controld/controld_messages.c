@@ -18,7 +18,7 @@
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cib.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -44,7 +44,7 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     if (fsa_actions != A_NOTHING) {
         register_fsa_input_adv(cur_data ? cur_data->fsa_cause : C_FSA_INTERNAL,
                                I_NULL, cur_data ? cur_data->data : NULL,
-                               fsa_actions, TRUE, __FUNCTION__);
+                               fsa_actions, TRUE, __func__);
     }
 
     /* reset the action list */
@@ -58,7 +58,7 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
 int
 register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                       void *data, long long with_actions,
+                       void *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
     unsigned old_len = g_list_length(fsa_message_queue);
@@ -85,7 +85,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         }
 
         if (data == NULL) {
-            fsa_actions |= with_actions;
+            controld_set_fsa_action_flags(with_actions);
             fsa_dump_actions(with_actions, "Restored");
             return 0;
         }
@@ -111,7 +111,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
-        crm_trace("Adding actions %.16llx to input", with_actions);
+        crm_trace("Adding actions %.16llx to input",
+                  (unsigned long long) with_actions);
     }
 
     if (data != NULL) {
@@ -346,12 +347,12 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_warn("Cannot route empty message");
         return TRUE;
 
-    } else if (safe_str_eq(task, CRM_OP_HELLO)) {
+    } else if (pcmk__str_eq(task, CRM_OP_HELLO, pcmk__str_casei)) {
         /* quietly ignore */
         crm_trace("No routing needed for hello message %s", ref);
         return TRUE;
 
-    } else if (safe_str_neq(type, T_CRM)) {
+    } else if (!pcmk__str_eq(type, T_CRM, pcmk__str_casei)) {
         crm_warn("Cannot route message %s: Type is '%s' not '" T_CRM "'",
                  ref, (type? type : "missing"));
         crm_log_xml_warn(msg, "[bad message type]");
@@ -370,15 +371,16 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     is_for_crm = (strcasecmp(CRM_SYSTEM_CRMD, sys_to) == 0);
 
     is_local = 0;
-    if (host_to == NULL || strlen(host_to) == 0) {
+    if (pcmk__str_empty(host_to)) {
         if (is_for_dc || is_for_te) {
             is_local = 0;
 
         } else if (is_for_crm) {
-            if (safe_str_eq(task, CRM_OP_NODE_INFO)) {
+            if (pcmk__strcase_any_of(task, CRM_OP_NODE_INFO,
+                                     PCMK__CONTROLD_CMD_NODES, NULL)) {
                 /* Node info requests do not specify a host, which is normally
                  * treated as "all hosts", because the whole point is that the
-                 * client doesn't know the local node name. Always handle these
+                 * client may not know the local node name. Always handle these
                  * requests locally.
                  */
                 is_local = 1;
@@ -390,13 +392,13 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             is_local = 1;
         }
 
-    } else if (safe_str_eq(fsa_our_uname, host_to)) {
+    } else if (pcmk__str_eq(fsa_our_uname, host_to, pcmk__str_casei)) {
         is_local = 1;
-    } else if (is_for_crm && safe_str_eq(task, CRM_OP_LRM_DELETE)) {
+    } else if (is_for_crm && pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         xmlNode *msg_data = get_message_xml(msg, F_CRM_DATA);
         const char *mode = crm_element_value(msg_data, PCMK__XA_MODE);
 
-        if (safe_str_eq(mode, XML_TAG_CIB)) {
+        if (pcmk__str_eq(mode, XML_TAG_CIB, pcmk__str_casei)) {
             // Local delete of an offline node's resource history
             is_local = 1;
         }
@@ -411,8 +413,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             crm_trace("Route message %s locally as DC request", ref);
             return FALSE; // More to be done by caller
 
-        } else if (originated_locally && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
-                   && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
+        } else if (originated_locally && !pcmk__strcase_any_of(sys_from, CRM_SYSTEM_PENGINE,
+                                                               CRM_SYSTEM_TENGINE, NULL)) {
 
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
@@ -527,7 +529,7 @@ controld_authorize_ipc_message(xmlNode *client_msg, pcmk__client_t *curr_client,
         goto rejected;
     }
 
-    if (safe_str_neq(CRM_OP_HELLO, op)) {
+    if (!pcmk__str_eq(CRM_OP_HELLO, op, pcmk__str_casei)) {
         // Only hello messages need to be authorized
         return true;
     }
@@ -571,10 +573,10 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
     CRM_CHECK(msg != NULL, return I_NULL);
 
     type = crm_element_value(msg, F_CRM_MSG_TYPE);
-    if (crm_str_eq(type, XML_ATTR_REQUEST, TRUE)) {
+    if (pcmk__str_eq(type, XML_ATTR_REQUEST, pcmk__str_none)) {
         return handle_request(msg, cause);
 
-    } else if (crm_str_eq(type, XML_ATTR_RESPONSE, TRUE)) {
+    } else if (pcmk__str_eq(type, XML_ATTR_RESPONSE, pcmk__str_none)) {
         handle_response(msg);
         return I_NULL;
     }
@@ -737,7 +739,7 @@ handle_remote_state(xmlNode *msg)
     remote_peer = crm_remote_peer_get(remote_uname);
     CRM_CHECK(remote_peer, return I_NULL);
 
-    crm_update_peer_state(__FUNCTION__, remote_peer,
+    crm_update_peer_state(__func__, remote_peer,
                           crm_is_true(remote_is_up)?
                           CRM_NODE_MEMBER : CRM_NODE_LOST, 0);
     return I_NULL;
@@ -777,6 +779,42 @@ handle_ping(xmlNode *msg)
     if (msg) {
         (void) relay_message(msg, TRUE);
         free_xml(msg);
+    }
+
+    // Nothing further to do
+    return I_NULL;
+}
+
+/*!
+ * \brief Handle a PCMK__CONTROLD_CMD_NODES message
+ *
+ * \return Next FSA input
+ */
+static enum crmd_fsa_input
+handle_node_list(xmlNode *request)
+{
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
+    xmlNode *reply = NULL;
+    xmlNode *reply_data = NULL;
+
+    // Create message data for reply
+    reply_data = create_xml_node(NULL, XML_CIB_TAG_NODES);
+    g_hash_table_iter_init(&iter, crm_peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+        xmlNode *xml = create_xml_node(reply_data, XML_CIB_TAG_NODE);
+
+        crm_xml_add_ll(xml, XML_ATTR_ID, (long long) node->id); // uint32_t
+        crm_xml_add(xml, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(xml, XML_NODE_IN_CLUSTER, node->state);
+    }
+
+    // Create and send reply
+    reply = create_reply(request, reply_data);
+    free_xml(reply_data);
+    if (reply) {
+        (void) relay_message(reply, TRUE);
+        free_xml(reply);
     }
 
     // Nothing further to do
@@ -860,7 +898,7 @@ verify_feature_set(xmlNode *msg)
                 CRM_FEATURE_SET, dc_version);
 
         // Nothing is likely to improve without administrator involvement
-        set_bit(fsa_input_register, R_STAYDOWN);
+        controld_set_fsa_input_flags(R_STAYDOWN);
         crmd_exit(CRM_EX_FATAL);
     }
 }
@@ -871,13 +909,13 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 {
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 
-    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
         crm_info("Shutting down controller");
         return I_STOP;
     }
 
-    if (safe_str_eq(host_from, fsa_our_dc)) {
+    if (pcmk__str_eq(host_from, fsa_our_dc, pcmk__str_casei)) {
         // Must be logic error -- DC confirming its own unrequested shutdown
         crm_err("Shutting down controller immediately due to "
                 "unexpected shutdown confirmation");
@@ -911,13 +949,13 @@ handle_shutdown_ack(xmlNode *stored_msg)
 
     if ((fsa_our_dc == NULL) || (strcmp(host_from, fsa_our_dc) == 0)) {
 
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
                      host_from);
         } else {
             crm_err("Shutting down controller after unexpected "
                     "shutdown request from %s", host_from);
-            set_bit(fsa_input_register, R_STAYDOWN);
+            controld_set_fsa_input_flags(R_STAYDOWN);
         }
         return I_STOP;
     }
@@ -944,7 +982,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         const char *from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
         crm_node_t *node = crm_find_peer(0, from);
 
-        crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
+        crm_update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {
             return I_NULL; /* Done */
         }
@@ -981,7 +1019,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         fsa_input.msg = stored_msg;
         register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
-                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE, __FUNCTION__);
+                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE,
+                               __func__);
 
     } else if (strcmp(op, CRM_OP_THROTTLE) == 0) {
         throttle_update(stored_msg);
@@ -1002,7 +1041,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         fsa_input.msg = stored_msg;
         register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
-                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE, __FUNCTION__);
+                               A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE,
+                               __func__);
 
         /* Sometimes we _must_ go into S_ELECTION */
         if (fsa_state == S_HALT) {
@@ -1080,6 +1120,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         remote_ra_process_maintenance_nodes(xml);
 
+    } else if (strcmp(op, PCMK__CONTROLD_CMD_NODES) == 0) {
+        return handle_node_list(stored_msg);
+
         /*========== (NOT_DC)-Only Actions ==========*/
     } else if (!AM_I_DC) {
 
@@ -1110,7 +1153,7 @@ handle_response(xmlNode *stored_msg)
         if (msg_ref == NULL) {
             crm_err("%s - Ignoring calculation with no reference", op);
 
-        } else if (safe_str_eq(msg_ref, fsa_pe_ref)) {
+        } else if (pcmk__str_eq(msg_ref, fsa_pe_ref, pcmk__str_casei)) {
             ha_msg_input_t fsa_input;
 
             controld_stop_sched_timer();
@@ -1195,7 +1238,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys)
         fsa_data.data = &fsa_input;
         fsa_data.fsa_input = I_MESSAGE;
         fsa_data.fsa_cause = C_IPC_MESSAGE;
-        fsa_data.origin = __FUNCTION__;
+        fsa_data.origin = __func__;
         fsa_data.data_type = fsa_dt_ha_msg;
 
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, fsa_state, I_MESSAGE, &fsa_data);

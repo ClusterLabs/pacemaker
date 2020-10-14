@@ -33,13 +33,14 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 
-unsigned int crm_log_priority = LOG_NOTICE;
 unsigned int crm_log_level = LOG_INFO;
-static gboolean crm_tracing_enabled(void);
 unsigned int crm_trace_nonlog = 0;
-bool crm_is_daemon = 0;
+bool pcmk__is_daemon = false;
 
-GLogFunc glib_log_default;
+static unsigned int crm_log_priority = LOG_NOTICE;
+static GLogFunc glib_log_default = NULL;
+
+static gboolean crm_tracing_enabled(void);
 
 static void
 crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * message,
@@ -50,7 +51,8 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
     static struct qb_log_callsite *glib_cs = NULL;
 
     if (glib_cs == NULL) {
-        glib_cs = qb_log_callsite_get(__FUNCTION__, __FILE__, "glib-handler", LOG_DEBUG, __LINE__, crm_trace_nonlog);
+        glib_cs = qb_log_callsite_get(__func__, __FILE__, "glib-handler",
+                                      LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
 
@@ -60,7 +62,7 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 
             if (crm_is_callsite_active(glib_cs, LOG_DEBUG, 0) == FALSE) {
                 /* log and record how we got here */
-                crm_abort(__FILE__, __FUNCTION__, __LINE__, message, TRUE, TRUE);
+                crm_abort(__FILE__, __func__, __LINE__, message, TRUE, TRUE);
             }
             break;
 
@@ -113,7 +115,9 @@ crm_trigger_blackbox(int nsig)
 void
 crm_log_deinit(void)
 {
-    g_log_set_default_handler(glib_log_default, NULL);
+    if (glib_log_default != NULL) {
+        g_log_set_default_handler(glib_log_default, NULL);
+    }
 }
 
 #define FMT_MAX 256
@@ -162,13 +166,14 @@ set_format_string(int method, const char *daemon)
     }
 }
 
+#define DEFAULT_LOG_FILE CRM_LOG_DIR "/pacemaker.log"
+
 gboolean
 crm_add_logfile(const char *filename)
 {
     bool is_default = false;
     static int default_fd = -1;
     static gboolean have_logfile = FALSE;
-    const char *default_logfile = CRM_LOG_DIR "/pacemaker.log";
 
     struct stat parent;
     int fd = 0, rc = 0;
@@ -177,16 +182,15 @@ crm_add_logfile(const char *filename)
     char *filename_cp;
 
     if (filename == NULL && have_logfile == FALSE) {
-        filename = default_logfile;
+        filename = DEFAULT_LOG_FILE;
     }
 
-    if (filename == NULL) {
-        return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, "none")) {
-        return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, "/dev/null")) {
-        return FALSE;           /* Nothing to do */
-    } else if(safe_str_eq(filename, default_logfile)) {
+    if ((filename == NULL)
+        || pcmk__str_eq(filename, "none", pcmk__str_casei)
+        || pcmk__str_eq(filename, "/dev/null", pcmk__str_none)) {
+        return FALSE; // User doesn't want logging, so there's nothing to do
+
+    } else if (pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none)) {
         is_default = TRUE;
     }
 
@@ -221,6 +225,8 @@ crm_add_logfile(const char *filename)
         gid_t pcmk_gid = 0;
         gboolean fix = FALSE;
         int logfd = fileno(logfile);
+        const char *modestr;
+        mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
         rc = fstat(logfd, &st);
         if (rc < 0) {
@@ -239,16 +245,26 @@ crm_add_logfile(const char *filename)
             }
         }
 
+        modestr = getenv("PCMK_logfile_mode");
+        if (modestr) {
+            long filemode_l = strtol(modestr, NULL, 8);
+            if (filemode_l != LONG_MIN && filemode_l != LONG_MAX) {
+                filemode = (mode_t)filemode_l;
+	    }
+        }
+
         if (fix) {
             rc = fchown(logfd, pcmk_uid, pcmk_gid);
             if (rc < 0) {
                 crm_warn("Cannot change the ownership of %s to user %s and gid %d",
                          filename, CRM_DAEMON_USER, pcmk_gid);
             }
+	}
 
-            rc = fchmod(logfd, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+	if (filemode) {
+            rc = fchmod(logfd, filemode);
             if (rc < 0) {
-                crm_warn("Cannot change the mode of %s to rw-rw----", filename);
+                crm_warn("Cannot change the mode of %s to %o", filename, filemode);
             }
 
             fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
@@ -634,7 +650,7 @@ crm_priority2int(const char *name)
     int lpc;
 
     for (lpc = 0; name != NULL && p_names[lpc].name != NULL; lpc++) {
-        if (crm_str_eq(p_names[lpc].name, name, TRUE)) {
+        if (pcmk__str_eq(p_names[lpc].name, name, pcmk__str_none)) {
             return p_names[lpc].priority;
         }
     }
@@ -671,9 +687,8 @@ crm_identity(const char *entity, int argc, char **argv)
     setenv("PCMK_service", crm_system_name, 1);
 }
 
-
 void
-crm_log_preinit(const char *entity, int argc, char **argv) 
+crm_log_preinit(const char *entity, int argc, char **argv)
 {
     /* Configure libqb logging with nothing turned on */
 
@@ -733,11 +748,10 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
              int argc, char **argv, gboolean quiet)
 {
     const char *syslog_priority = NULL;
-    const char *logfile = pcmk__env_option("logfile");
     const char *facility = pcmk__env_option("logfacility");
     const char *f_copy = facility;
 
-    crm_is_daemon = daemon;
+    pcmk__is_daemon = daemon;
     crm_log_preinit(entity, argc, argv);
 
     if (level > LOG_TRACE) {
@@ -749,7 +763,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     /* Should we log to syslog */
     if (facility == NULL) {
-        if(crm_is_daemon) {
+        if (pcmk__is_daemon) {
             facility = "daemon";
         } else {
             facility = "none";
@@ -757,7 +771,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         pcmk__set_env_option("logfacility", facility);
     }
 
-    if (safe_str_eq(facility, "none")) {
+    if (pcmk__str_eq(facility, "none", pcmk__str_casei)) {
         quiet = TRUE;
 
 
@@ -772,13 +786,11 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 
     /* What lower threshold do we have for sending to syslog */
     syslog_priority = pcmk__env_option("logpriority");
-    if(syslog_priority) {
-        int priority = crm_priority2int(syslog_priority);
-        crm_log_priority = priority;
-	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", priority);
-    } else {
-	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_NOTICE);
+    if (syslog_priority) {
+        crm_log_priority = crm_priority2int(syslog_priority);
     }
+    qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*",
+                      crm_log_priority);
 
     // Log to syslog unless requested to be quiet
     if (!quiet) {
@@ -792,17 +804,19 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
     crm_enable_stderr(to_stderr);
 
-    /* Should we log to a file */
-    if (safe_str_eq("none", logfile)) {
-        /* No soup^Hlogs for you! */
-    } else if(crm_is_daemon) {
-        // Daemons always get a log file, unless explicitly set to "none"
-        crm_add_logfile(logfile);
-    } else if(logfile) {
-        crm_add_logfile(logfile);
+    // Log to a file if we're a daemon or user asked for one
+    {
+        const char *logfile = pcmk__env_option("logfile");
+
+        if (!pcmk__str_eq("none", logfile, pcmk__str_casei)
+            && (pcmk__is_daemon || (logfile != NULL))) {
+            // Daemons always get a log file, unless explicitly set to "none"
+            crm_add_logfile(logfile);
+        }
     }
 
-    if (crm_is_daemon && pcmk__env_option_enabled(crm_system_name, "blackbox")) {
+    if (pcmk__is_daemon
+        && pcmk__env_option_enabled(crm_system_name, "blackbox")) {
         crm_enable_blackbox(0);
     }
 
@@ -814,20 +828,18 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     crm_update_callsites();
 
     /* Ok, now we can start logging... */
-    if (quiet == FALSE && crm_is_daemon == FALSE) {
-        crm_log_args(argc, argv);
-    }
 
-    if (crm_is_daemon) {
+    // Disable daemon request if user isn't root or Pacemaker daemon user
+    if (pcmk__is_daemon) {
         const char *user = getenv("USER");
 
-        if (user != NULL && safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
+        if (user != NULL && !pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Not switching to corefile directory for %s", user);
-            crm_is_daemon = FALSE;
+            pcmk__is_daemon = false;
         }
     }
 
-    if (crm_is_daemon) {
+    if (pcmk__is_daemon) {
         int user = getuid();
         const char *base = CRM_CORE_DIR;
         struct passwd *pwent = getpwuid(user);
@@ -835,8 +847,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (pwent == NULL) {
             crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
 
-        } else if (safe_str_neq(pwent->pw_name, "root")
-                   && safe_str_neq(pwent->pw_name, CRM_DAEMON_USER)) {
+        } else if (!pcmk__strcase_any_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
 
         } else if (chdir(base) < 0) {
@@ -868,6 +879,9 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
         mainloop_add_signal(SIGUSR2, crm_disable_blackbox);
         mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
+
+    } else if (!quiet) {
+        crm_log_args(argc, argv);
     }
 
     return TRUE;
@@ -900,22 +914,24 @@ crm_enable_stderr(int enable)
     }
 }
 
+/*!
+ * \brief Make logging more verbose
+ *
+ * If logging to stderr is not already enabled when this function is called,
+ * enable it. Otherwise, increase the log level by 1.
+ *
+ * \param[in] argc  Ignored
+ * \param[in] argv  Ignored
+ */
 void
 crm_bump_log_level(int argc, char **argv)
 {
-    static int args = TRUE;
-    int level = crm_log_level;
-
-    if (args && argc > 1) {
-        crm_log_args(argc, argv);
+    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0)
+        != QB_LOG_STATE_ENABLED) {
+        crm_enable_stderr(TRUE);
+    } else {
+        set_crm_log_level(crm_log_level + 1);
     }
-
-    if (qb_log_ctl(QB_LOG_STDERR, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-        set_crm_log_level(level + 1);
-    }
-
-    /* Enable after potentially logging the argstring, not before */
-    crm_enable_stderr(TRUE);
 }
 
 unsigned int
@@ -924,39 +940,28 @@ get_crm_log_level(void)
     return crm_log_level;
 }
 
-#define ARGS_FMT "Invoked: %s"
+/*!
+ * \brief Log the command line (once)
+ *
+ * \param[in]  Number of values in \p argv
+ * \param[in]  Command-line arguments (including command name)
+ *
+ * \note This function will only log once, even if called with different
+ *       arguments.
+ */
 void
 crm_log_args(int argc, char **argv)
 {
-    int lpc = 0;
-    int len = 0;
-    int existing_len = 0;
-    int line = __LINE__;
-    static int logged = 0;
+    static bool logged = false;
+    gchar *arg_string = NULL;
 
-    char *arg_string = NULL;
-
-    if (argc == 0 || argv == NULL || logged) {
+    if ((argc == 0) || (argv == NULL) || logged) {
         return;
     }
-
-    logged = 1;
-
-    // cppcheck seems not to understand the abort logic in realloc_safe
-    // cppcheck-suppress memleak
-    for (; lpc < argc; lpc++) {
-        if (argv[lpc] == NULL) {
-            break;
-        }
-
-        len = 2 + strlen(argv[lpc]);    /* +1 space, +1 EOS */
-        arg_string = realloc_safe(arg_string, len + existing_len);
-        existing_len += sprintf(arg_string + existing_len, "%s ", argv[lpc]);
-    }
-
-    qb_log_from_external_source(__func__, __FILE__, ARGS_FMT, LOG_NOTICE, line, 0, arg_string);
-
-    free(arg_string);
+    logged = true;
+    arg_string = g_strjoinv(" ", argv);
+    crm_notice("Invoked: %s", arg_string);
+    g_free(arg_string);
 }
 
 void

@@ -237,6 +237,7 @@ pcmk_cpg_dispatch(gpointer user_data)
     rc = cpg_dispatch(cluster->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %s (%d)", ais_error2text(rc), rc);
+        cpg_finalize(cluster->cpg_handle);
         cluster->cpg_handle = 0;
         return -1;
 
@@ -267,7 +268,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
             /* Not for us */
             crm_trace("Not for us: %u != %u", msg->host.id, local_nodeid);
             return NULL;
-        } else if (msg->host.size != 0 && safe_str_neq(msg->host.uname, local_name)) {
+        } else if (msg->host.size != 0 && !pcmk__str_eq(msg->host.uname, local_name, pcmk__str_casei)) {
             /* Not for us */
             crm_trace("Not for us: %s != %s", msg->host.uname, local_name);
             return NULL;
@@ -331,7 +332,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
     } else if (check_message_sanity(msg, data) == FALSE) {
         goto badmsg;
 
-    } else if (safe_str_eq("identify", data)) {
+    } else if (pcmk__str_eq("identify", data, pcmk__str_casei)) {
         char *pid_s = pcmk__getpid_s();
 
         send_cluster_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
@@ -455,7 +456,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
                      left_list[i].nodeid, left_list[i].pid,
                      cpgreason2str(left_list[i].reason));
             if (peer) {
-                crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg,
+                crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                      OFFLINESTATUS);
             }
         } else if (left_list[i].nodeid == local_nodeid) {
@@ -496,7 +497,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
         /* If the caller left auto-reaping enabled, this will also update the
          * state to member.
          */
-        peer = crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+        peer = crm_update_peer_proc(__func__, peer, crm_proc_cpg,
+                                    ONLINESTATUS);
 
         if (peer && peer->state && strcmp(peer->state, CRM_NODE_MEMBER)) {
             /* The node is a CPG member, but we currently think it's not a
@@ -516,7 +518,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
                 // If it persists for more than a minute, update the state
                 crm_warn("Node %u is member of group %s but was believed offline",
                          member_list[i].nodeid, groupName->value);
-                crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0);
+                crm_update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
             }
         }
 
@@ -542,7 +544,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     uint32_t id = 0;
     crm_node_t *peer = NULL;
     cpg_handle_t handle = 0;
-    const char *message_name = pcmk_message_name(crm_system_name);
+    const char *message_name = pcmk__message_name(crm_system_name);
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
@@ -625,7 +627,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     }
 
     peer = crm_get_peer(id, NULL);
-    crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg, ONLINESTATUS);
+    crm_update_peer_proc(__func__, peer, crm_proc_cpg, ONLINESTATUS);
     return TRUE;
 }
 
@@ -721,7 +723,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     msg->header.size = sizeof(AIS_Message) + msg->size;
 
     if (msg->size < CRM_BZ2_THRESHOLD) {
-        msg = realloc_safe(msg, msg->header.size);
+        msg = pcmk__realloc(msg, msg->header.size);
         memcpy(msg->data, data, msg->size);
 
     } else {
@@ -733,16 +735,16 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
                            &compressed, &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(AIS_Message) + new_size;
-            msg = realloc_safe(msg, msg->header.size);
+            msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
 
             msg->is_compressed = TRUE;
             msg->compressed_size = new_size;
 
         } else {
-            // cppcheck seems not to understand the abort logic in realloc_safe
+            // cppcheck seems not to understand the abort logic in pcmk__realloc
             // cppcheck-suppress memleak
-            msg = realloc_safe(msg, msg->header.size);
+            msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, data, msg->size);
         }
 
@@ -776,25 +778,24 @@ text2msg_type(const char *text)
     int type = crm_msg_none;
 
     CRM_CHECK(text != NULL, return type);
-    text = pcmk_message_name(text);
-    if (safe_str_eq(text, "ais")) {
+    text = pcmk__message_name(text);
+    if (pcmk__str_eq(text, "ais", pcmk__str_casei)) {
         type = crm_msg_ais;
-    } else if (safe_str_eq(text, CRM_SYSTEM_CIB)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_CIB, pcmk__str_casei)) {
         type = crm_msg_cib;
-    } else if (safe_str_eq(text, CRM_SYSTEM_CRMD)
-               || safe_str_eq(text, CRM_SYSTEM_DC)) {
+    } else if (pcmk__strcase_any_of(text, CRM_SYSTEM_CRMD, CRM_SYSTEM_DC, NULL)) {
         type = crm_msg_crmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_TENGINE)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         type = crm_msg_te;
-    } else if (safe_str_eq(text, CRM_SYSTEM_PENGINE)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_PENGINE, pcmk__str_casei)) {
         type = crm_msg_pe;
-    } else if (safe_str_eq(text, CRM_SYSTEM_LRMD)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_LRMD, pcmk__str_casei)) {
         type = crm_msg_lrmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_STONITHD)) {
+    } else if (pcmk__str_eq(text, CRM_SYSTEM_STONITHD, pcmk__str_casei)) {
         type = crm_msg_stonithd;
-    } else if (safe_str_eq(text, "stonith-ng")) {
+    } else if (pcmk__str_eq(text, "stonith-ng", pcmk__str_casei)) {
         type = crm_msg_stonith_ng;
-    } else if (safe_str_eq(text, "attrd")) {
+    } else if (pcmk__str_eq(text, "attrd", pcmk__str_casei)) {
         type = crm_msg_attrd;
 
     } else {

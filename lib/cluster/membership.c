@@ -99,7 +99,7 @@ crm_remote_peer_get(const char *node_name)
     }
 
     /* Populate the essential information */
-    node->flags = crm_remote_node;
+    pcmk__set_peer_flags(node, crm_remote_node);
     node->uuid = strdup(node_name);
     if (node->uuid == NULL) {
         free(node);
@@ -185,14 +185,14 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
         node = crm_remote_peer_get(remote);
         CRM_ASSERT(node);
         if (state) {
-            crm_update_peer_state(__FUNCTION__, node, state, 0);
+            crm_update_peer_state(__func__, node, state, 0);
         }
 
-    } else if (is_set(node->flags, crm_node_dirty)) {
+    } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        clear_bit(node->flags, crm_node_dirty);
+        pcmk__clear_peer_flags(node, crm_node_dirty);
         if (state) {
-            crm_update_peer_state(__FUNCTION__, node, state, 0);
+            crm_update_peer_state(__func__, node, state, 0);
         }
     }
 }
@@ -200,13 +200,13 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 static void
 mark_dirty(gpointer key, gpointer value, gpointer user_data)
 {
-    set_bit(((crm_node_t*)value)->flags, crm_node_dirty);
+    pcmk__set_peer_flags((crm_node_t *) value, crm_node_dirty);
 }
 
 static gboolean
 is_dirty(gpointer key, gpointer value, gpointer user_data)
 {
-    return is_set(((crm_node_t*)value)->flags, crm_node_dirty);
+    return pcmk_is_set(((crm_node_t*)value)->flags, crm_node_dirty);
 }
 
 /* search string to find CIB resources entries for guest nodes */
@@ -275,7 +275,7 @@ crm_is_peer_active(const crm_node_t * node)
         return FALSE;
     }
 
-    if (is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, crm_remote_node)) {
         /* remote nodes are never considered active members. This
          * guarantees they will never be considered for DC membership.*/
         return FALSE;
@@ -301,7 +301,7 @@ crm_reap_dead_member(gpointer key, gpointer value, gpointer user_data)
     } else if (search->id && node->id != search->id) {
         return FALSE;
 
-    } else if (search->id == 0 && safe_str_neq(node->uname, search->uname)) {
+    } else if (search->id == 0 && !pcmk__str_eq(node->uname, search->uname, pcmk__str_casei)) {
         return FALSE;
 
     } else if (crm_is_peer_active(value) == FALSE) {
@@ -561,7 +561,7 @@ crm_find_peer(unsigned int id, const char *uname)
         crm_trace("Only one: %p for %u/%s", by_name, id, uname);
 
         if(id && by_name->id) {
-            crm_dump_peer_hash(LOG_WARNING, __FUNCTION__);
+            crm_dump_peer_hash(LOG_WARNING, __func__);
             crm_crit("Node %u and %u share the same name '%s'",
                      id, by_name->id, uname);
             node = NULL; /* Create a new one */
@@ -574,20 +574,21 @@ crm_find_peer(unsigned int id, const char *uname)
         crm_trace("Only one: %p for %u/%s", by_id, id, uname);
 
         if(uname && by_id->uname) {
-            crm_dump_peer_hash(LOG_WARNING, __FUNCTION__);
+            crm_dump_peer_hash(LOG_WARNING, __func__);
             crm_crit("Node '%s' and '%s' share the same cluster nodeid %u: assuming '%s' is correct",
                      uname, by_id->uname, id, uname);
         }
 
     } else if(uname && by_id->uname) {
-        if(safe_str_eq(uname, by_id->uname)) {
+        if(pcmk__str_eq(uname, by_id->uname, pcmk__str_casei)) {
             crm_notice("Node '%s' has changed its ID from %u to %u", by_id->uname, by_name->id, by_id->id);
             g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
 
         } else {
             crm_warn("Node '%s' and '%s' share the same cluster nodeid: %u %s", by_id->uname, by_name->uname, id, uname);
-            crm_dump_peer_hash(LOG_INFO, __FUNCTION__);
-            crm_abort(__FILE__, __FUNCTION__, __LINE__, "member weirdness", TRUE, TRUE);
+            crm_dump_peer_hash(LOG_INFO, __func__);
+            crm_abort(__FILE__, __func__, __LINE__, "member weirdness", TRUE,
+                      TRUE);
         }
 
     } else if(id && by_name->id) {
@@ -600,7 +601,7 @@ crm_find_peer(unsigned int id, const char *uname)
          * crm_update_peer_state() and crm_update_peer_proc() only know nodeid,
          * so 'by_id' is authoritative when merging.
          */
-        crm_dump_peer_hash(LOG_DEBUG, __FUNCTION__);
+        crm_dump_peer_hash(LOG_DEBUG, __func__);
 
         crm_info("Merging %p into %p", by_name, by_id);
         g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
@@ -737,7 +738,7 @@ crm_update_peer_uname(crm_node_t *node, const char *uname)
               crm_err("Bug: can't update node name to %s without node", uname);
               return);
 
-    if (safe_str_eq(uname, node->uname)) {
+    if (pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
         crm_debug("Node uname '%s' did not change", uname);
         return;
     }
@@ -759,7 +760,7 @@ crm_update_peer_uname(crm_node_t *node, const char *uname)
     }
 
 #if SUPPORT_COROSYNC
-    if (is_corosync_cluster() && !is_set(node->flags, crm_remote_node)) {
+    if (is_corosync_cluster() && !pcmk_is_set(node->flags, crm_remote_node)) {
         crm_remove_conflicting_peer(node);
     }
 #endif
@@ -791,7 +792,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
                                     source, peer2text(flag), status); return NULL);
 
     /* Pacemaker doesn't spawn processes on remote nodes */
-    if (is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, crm_remote_node)) {
         return node;
     }
 
@@ -802,14 +803,20 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
             changed = TRUE;
         }
 
-    } else if (safe_str_eq(status, ONLINESTATUS)) {
+    } else if (pcmk__str_eq(status, ONLINESTATUS, pcmk__str_casei)) {
         if ((node->processes & flag) != flag) {
-            set_bit(node->processes, flag);
+            node->processes = pcmk__set_flags_as(__func__, __LINE__,
+                                                 LOG_TRACE, "Peer process",
+                                                 node->uname, node->processes,
+                                                 flag, "processes");
             changed = TRUE;
         }
 
     } else if (node->processes & flag) {
-        clear_bit(node->processes, flag);
+        node->processes = pcmk__clear_flags_as(__func__, __LINE__,
+                                               LOG_TRACE, "Peer process",
+                                               node->uname, node->processes,
+                                               flag, "processes");
         changed = TRUE;
     }
 
@@ -837,9 +844,14 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
         }
 
         if (crm_autoreap) {
-            node = crm_update_peer_state(__FUNCTION__, node,
-                                         is_set(node->processes, crm_get_cluster_proc())?
-                                         CRM_NODE_MEMBER : CRM_NODE_LOST, 0);
+            const char *peer_state = NULL;
+
+            if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+                peer_state = CRM_NODE_MEMBER;
+            } else {
+                peer_state = CRM_NODE_LOST;
+            }
+            node = crm_update_peer_state(__func__, node, peer_state, 0);
         }
     } else {
         crm_trace("%s: Node %s[%u] - %s is unchanged (%s)", source, node->uname, node->id,
@@ -858,12 +870,12 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
               return);
 
     /* Remote nodes don't participate in joins */
-    if (is_set(node->flags, crm_remote_node)) {
+    if (pcmk_is_set(node->flags, crm_remote_node)) {
         return;
     }
 
     last = node->expected;
-    if (expected != NULL && safe_str_neq(node->expected, expected)) {
+    if (expected != NULL && !pcmk__str_eq(node->expected, expected, pcmk__str_casei)) {
         node->expected = strdup(expected);
         changed = TRUE;
     }
@@ -904,7 +916,7 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
                       CRM_XS " source=%s", state, source);
               return NULL);
 
-    is_member = safe_str_eq(state, CRM_NODE_MEMBER);
+    is_member = pcmk__str_eq(state, CRM_NODE_MEMBER, pcmk__str_casei);
     if (is_member) {
         node->when_lost = 0;
         if (membership) {
@@ -912,7 +924,7 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         }
     }
 
-    if (state && safe_str_neq(node->state, state)) {
+    if (state && !pcmk__str_eq(node->state, state, pcmk__str_casei)) {
         char *last = node->state;
 
         node->state = strdup(state);
@@ -924,7 +936,8 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         }
         free(last);
 
-        if (crm_autoreap && !is_member && !is_set(node->flags, crm_remote_node)) {
+        if (crm_autoreap && !is_member
+            && !pcmk_is_set(node->flags, crm_remote_node)) {
             /* We only autoreap from the peer cache, not the remote peer cache,
              * because the latter should be managed only by
              * crm_remote_peer_cache_refresh().
@@ -989,7 +1002,8 @@ crm_reap_unseen_nodes(uint64_t membership)
                  * remove the node from crm_peer_cache without
                  * invalidating our iterator
                  */
-                crm_update_peer_state_iter(__FUNCTION__, node, CRM_NODE_LOST, membership, &iter);
+                crm_update_peer_state_iter(__func__, node, CRM_NODE_LOST,
+                                           membership, &iter);
 
             } else {
                 crm_info("State of node %s[%u] is still unknown",
@@ -1065,12 +1079,12 @@ crm_find_known_peer(const char *id, const char *uname)
         }
 
     } else if (uname && by_id->uname
-               && safe_str_eq(uname, by_id->uname)) {
+               && pcmk__str_eq(uname, by_id->uname, pcmk__str_casei)) {
         /* Multiple nodes have the same uname in the CIB.
          * Return by_id. */
 
     } else if (id && by_name->uuid
-               && safe_str_eq(id, by_name->uuid)) {
+               && pcmk__str_eq(id, by_name->uuid, pcmk__str_casei)) {
         /* Multiple nodes have the same id in the CIB.
          * Return by_name. */
         node = by_name;
@@ -1114,15 +1128,15 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 
         g_hash_table_replace(crm_known_peer_cache, uniqueid, node);
 
-    } else if (is_set(node->flags, crm_node_dirty)) {
-        if (safe_str_neq(uname, node->uname)) {
+    } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
+        if (!pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
             free(node->uname);
             node->uname = strdup(uname);
             CRM_ASSERT(node->uname != NULL);
         }
 
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        clear_bit(node->flags, crm_node_dirty);
+        pcmk__clear_peer_flags(node, crm_node_dirty);
     }
 
 }

@@ -1,14 +1,19 @@
+.. index::
+   single: Python
+   pair: Python; guidelines
+
 Python Coding Guidelines
 ------------------------
+
+.. index::
+   pair: Python; boilerplate
+   pair: license; Python
+   pair: copyright; Python
 
 .. _s-python-boilerplate:
 
 Python Boilerplate
 ##################
-
-.. index::
-   pair: Python; boilerplate
-   pair: licensing; Python boilerplate
 
 If a Python file is meant to be executed (as opposed to imported), it should
 have a ``.in`` extension, and its first line should be:
@@ -47,13 +52,13 @@ generally one of "GNU General Public License version 2 or later (GPLv2+)"
 or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
 
 
-Python Compatibility
-####################
-
 .. index::
    single: Python; 2
    single: Python; 3
-   single: Python; versions
+   single: Python; version
+
+Python Compatibility
+####################
 
 Pacemaker targets compatibility with Python 2.7, and Python 3.2 and
 later. These versions have added features to be more compatible with each
@@ -127,10 +132,11 @@ involved (hacky workarounds are often available):
   to add them to Pacemaker's dependencies)
 
 
+.. index::
+   pair: Python; whitespace
+
 Formatting Python Code
 ######################
-
-.. index:: Python; formatting
 
 * Indentation must be 4 spaces, no tabs.
 * Do not leave trailing whitespace.

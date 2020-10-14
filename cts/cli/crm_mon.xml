@@ -54,19 +54,19 @@
           <op id="dummy-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
         </operations>
       </primitive>
-      <primitive class="ocf" id="inactive-dummy" provider="pacemaker" type="Dummy">
-        <meta_attributes id="inactive-dummy.meta">
-          <nvpair id="inactive-dummy.meta.target" name="target-role" value="stopped"/>
+      <clone id="inactive-clone">
+        <meta_attributes id="inactive-clone-meta_attributes">
+          <nvpair id="inactive-clone-meta_attributes-target-role" name="target-role" value="stopped"/>
         </meta_attributes>
-      </primitive>
-      <master id="inactive-clone-master">
-        <primitive class="ocf" id="inactive-clone" provider="pacemaker" type="Stateful">
-          <operations>
-            <op id="inactive-clone-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="inactive-clone-monitor-interval-11" interval="11" name="monitor" role="Slave" timeout="20"/>
-          </operations>
-        </primitive>
-      </master>
+        <primitive id="inactive-dhcpd" class="lsb" type="dhcpd"/>
+      </clone>
+      <group id="inactive-group">
+        <meta_attributes id="inactive-group-meta_attributes">
+          <nvpair id="inactive-group-meta_attributes-target-role" name="target-role" value="stopped"/>
+        </meta_attributes>
+        <primitive class="ocf" id="inactive-dummy-1" provider="pacemaker" type="Dummy"/>
+        <primitive class="ocf" id="inactive-dummy-2" provider="pacemaker" type="Dummy"/>
+      </group>
       <bundle id="httpd-bundle">
         <docker image="pcmk:http" replicas="3"/>
         <network ip-range-start="192.168.122.131" host-netmask="24" host-interface="eth0">
@@ -82,8 +82,27 @@
           <nvpair id="bundle-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </bundle>
+      <group id="exim-group">
+        <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+          <instance_attributes id="params-public-ip">
+            <nvpair id="public-ip-addr" name="ip" value="192.168.1.1"/>
+          </instance_attributes>
+        </primitive>
+        <primitive id="Email" class="lsb" type="exim"/>
+      </group>
+      <clone id="mysql-clone-group">
+        <group id="mysql-group">
+          <primitive id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <operations>
+              <op name="monitor" interval="10s" id="mysql-proxy_mon" timeout="20s"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
     </resources>
-    <constraints/>
+    <constraints>
+      <rsc_location id="not-on-cluster1" rsc="dummy" node="cluster01" score="-INFINITY"/>
+    </constraints>
     <tags>
       <tag id="all-nodes">
         <obj_ref id="1"/>
@@ -94,6 +113,13 @@
       </tag>
       <tag id="odd-nodes">
         <obj_ref id="1"/>
+      </tag>
+      <tag id="inactive-rscs">
+        <obj_ref id="inactive-group"/>
+        <obj_ref id="inactive-clone"/>
+      </tag>
+      <tag id="fencing-rscs">
+        <obj_ref id="Fencing"/>
       </tag>
     </tags>
     <op_defaults>
@@ -117,6 +143,16 @@
             <lrm_rsc_op id="dummy_last_0" operation_key="dummy_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="14:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" transition-magic="0:0;14:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" exit-reason="" on_node="cluster02" call-id="18" rc-code="0" op-status="0" interval="0" last-rc-change="1588951278" last-run="1588951278" exec-time="6020" queue-time="0" op-digest="aa0f9b7caf28600646551adb55bd9b95" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="aa0f9b7caf28600646551adb55bd9b95" op-secure-params=" passwd " op-secure-digest="aa0f9b7caf28600646551adb55bd9b95"/>
             <lrm_rsc_op id="dummy_monitor_60000" operation_key="dummy_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" transition-magic="0:0;16:2:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" exit-reason="" on_node="cluster02" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1588951284" exec-time="6015" queue-time="0" op-digest="ccfee4afbb0618907016c9bef210b8b6" op-secure-params=" passwd " op-secure-digest="aa0f9b7caf28600646551adb55bd9b95"/>
           </lrm_resource>
+          <lrm_resource id="Public-IP" class="ocf" provider="heartbeat" type="IPaddr">
+            <lrm_rsc_op id="Public-IP_last_0" operation_key="Public-IP_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1591717057" last-run="1591717057" exec-time="0" queue-time="0" op-digest="3bb21cd55b79809a3ae69333a8981fd4"/>
+          </lrm_resource>
+          <lrm_resource id="Email" class="lsb" type="exim">
+            <lrm_rsc_op id="Email_last_0" operation_key="Email_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1591717057" last-run="1591717057" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <lrm_rsc_op id="mysql-proxy_last_0" operation_key="mysql-proxy_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1596126852" last-run="1596126852" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy_monitor_10000" operation_key="mysql-proxy_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1596126852" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="2">
@@ -138,6 +174,16 @@
           </lrm_resource>
           <lrm_resource id="dummy" type="Dummy" class="ocf" provider="pacemaker">
             <lrm_rsc_op id="dummy_last_0" operation_key="dummy_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="3:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" transition-magic="0:0;3:1:0:4a9e64d6-e1dd-4395-917c-1596312eafe4" exit-reason="" on_node="cluster01" call-id="16" rc-code="0" op-status="0" interval="0" last-rc-change="1588951272" last-run="1588951272" exec-time="6048" queue-time="0" op-digest="aa0f9b7caf28600646551adb55bd9b95" op-force-restart=" envfile  op_sleep  passwd  state " op-restart-digest="aa0f9b7caf28600646551adb55bd9b95" op-secure-params=" passwd " op-secure-digest="aa0f9b7caf28600646551adb55bd9b95"/>
+          </lrm_resource>
+          <lrm_resource id="Public-IP" class="ocf" provider="heartbeat" type="IPaddr">
+            <lrm_rsc_op id="Public-IP_last_0" operation_key="Public-IP_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1591717057" last-run="1591717057" exec-time="0" queue-time="0" op-digest="3bb21cd55b79809a3ae69333a8981fd4"/>
+          </lrm_resource>
+          <lrm_resource id="Email" class="lsb" type="exim">
+            <lrm_rsc_op id="Email_last_0" operation_key="Email_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.3.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1591717057" last-run="1591717057" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <lrm_rsc_op id="mysql-proxy_last_0" operation_key="mysql-proxy_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1596126852" last-run="1596126852" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mysql-proxy_monitor_10000" operation_key="mysql-proxy_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1596126852" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

@@ -19,6 +19,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
+#include <crm/common/ipc_controld.h>
 #include <crm/common/attrd_internal.h>
 
 #define SUMMARY "crm_node - Tool for displaying low-level node information"
@@ -39,7 +40,6 @@ gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
-static char *pid_s = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -91,18 +91,18 @@ static GOptionEntry addl_entries[] = {
 
 gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (safe_str_eq("-i", option_name) || safe_str_eq("--cluster-id", option_name)) {
+    if (pcmk__str_eq("-i", option_name, pcmk__str_casei) || pcmk__str_eq("--cluster-id", option_name, pcmk__str_casei)) {
         options.command = 'i';
-    } else if (safe_str_eq("-l", option_name) || safe_str_eq("--list", option_name)) {
+    } else if (pcmk__str_eq("-l", option_name, pcmk__str_casei) || pcmk__str_eq("--list", option_name, pcmk__str_casei)) {
         options.command = 'l';
-    } else if (safe_str_eq("-n", option_name) || safe_str_eq("--name", option_name)) {
+    } else if (pcmk__str_eq("-n", option_name, pcmk__str_casei) || pcmk__str_eq("--name", option_name, pcmk__str_casei)) {
         options.command = 'n';
-    } else if (safe_str_eq("-p", option_name) || safe_str_eq("--partition", option_name)) {
+    } else if (pcmk__str_eq("-p", option_name, pcmk__str_casei) || pcmk__str_eq("--partition", option_name, pcmk__str_casei)) {
         options.command = 'p';
-    } else if (safe_str_eq("-q", option_name) || safe_str_eq("--quorum", option_name)) {
+    } else if (pcmk__str_eq("-q", option_name, pcmk__str_casei) || pcmk__str_eq("--quorum", option_name, pcmk__str_casei)) {
         options.command = 'q';
     } else {
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s\n", option_name);
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Unknown param passed to command_cb: %s\n", option_name);
         return FALSE;
     }
 
@@ -120,7 +120,7 @@ gboolean
 remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (optarg == NULL) {
         crm_err("-R option requires an argument");
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "-R option requires an argument");
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "-R option requires an argument");
         return FALSE;
     }
 
@@ -130,205 +130,181 @@ remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Exit crm_node
- * Clean up memory, and either quit mainloop (if running) or exit
- *
- * \param[in] value  Exit status
- */
-static void
-crm_node_exit(crm_exit_t value)
+static gint
+sort_node(gconstpointer a, gconstpointer b)
 {
-    if (pid_s) {
-        free(pid_s);
-        pid_s = NULL;
-    }
+    const pcmk_controld_api_node_t *node_a = a;
+    const pcmk_controld_api_node_t *node_b = b;
 
-    exit_code = value;
-
-    if (mainloop && g_main_loop_is_running(mainloop)) {
-        g_main_loop_quit(mainloop);
-    } else {
-        crm_exit(exit_code);
-    }
+    return pcmk_numeric_strcasecmp((node_a->uname? node_a->uname : ""),
+                                   (node_b->uname? node_b->uname : ""));
 }
 
 static void
-exit_disconnect(gpointer user_data)
+controller_event_cb(pcmk_ipc_api_t *controld_api,
+                    enum pcmk_ipc_event event_type, crm_exit_t status,
+                    void *event_data, void *user_data)
 {
-    fprintf(stderr, "error: Lost connection to cluster\n");
-    crm_node_exit(CRM_EX_DISCONNECT);
-}
+    pcmk_controld_api_reply_t *reply = event_data;
 
-typedef int (*ipc_dispatch_fn) (const char *buffer, ssize_t length,
-                                gpointer userdata);
+    switch (event_type) {
+        case pcmk_ipc_event_disconnect:
+            if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
+                fprintf(stderr, "error: Lost connection to controller\n");
+            }
+            goto done;
+            break;
 
-static crm_ipc_t *
-new_mainloop_for_ipc(const char *system, ipc_dispatch_fn dispatch)
-{
-    mainloop_io_t *source = NULL;
-    crm_ipc_t *ipc = NULL;
+        case pcmk_ipc_event_reply:
+            break;
 
-    struct ipc_client_callbacks ipc_callbacks = {
-        .dispatch = dispatch,
-        .destroy = exit_disconnect
-    };
-
-    mainloop = g_main_loop_new(NULL, FALSE);
-    source = mainloop_add_ipc_client(system, G_PRIORITY_DEFAULT, 0,
-                                     NULL, &ipc_callbacks);
-    ipc = mainloop_get_ipc_client(source);
-    if (ipc == NULL) {
-        fprintf(stderr,
-                "error: Could not connect to cluster (is it running?)\n");
-        crm_node_exit(CRM_EX_DISCONNECT);
+        default:
+            return;
     }
-    return ipc;
-}
 
-static void
-run_mainloop_and_exit(void)
-{
-    g_main_loop_run(mainloop);
-    g_main_loop_unref(mainloop);
-    mainloop = NULL;
-    crm_node_exit(exit_code);
-}
-
-static int
-send_controller_hello(crm_ipc_t *controller)
-{
-    xmlNode *hello = NULL;
-    int rc;
-
-    pid_s = pcmk__getpid_s();
-    hello = create_hello_message(pid_s, crm_system_name, "1", "0");
-    rc = crm_ipc_send(controller, hello, 0, 0, NULL);
-    free_xml(hello);
-    return (rc < 0)? rc : 0;
-}
-
-static int
-send_node_info_request(crm_ipc_t *controller, uint32_t nodeid)
-{
-    xmlNode *ping = NULL;
-    int rc;
-
-    ping = create_request(CRM_OP_NODE_INFO, NULL, NULL, CRM_SYSTEM_CRMD,
-                          crm_system_name, pid_s);
-    if (nodeid > 0) {
-        crm_xml_add_int(ping, XML_ATTR_ID, nodeid);
-    }
-    rc = crm_ipc_send(controller, ping, 0, 0, NULL);
-    free_xml(ping);
-    return (rc < 0)? rc : 0;
-}
-
-static int
-dispatch_controller(const char *buffer, ssize_t length, gpointer userdata)
-{
-    xmlNode *message = string2xml(buffer);
-    xmlNode *data = NULL;
-    const char *value = NULL;
-
-    if (message == NULL) {
-        fprintf(stderr, "error: Could not understand reply from controller\n");
-        crm_node_exit(CRM_EX_PROTOCOL);
-        return 0;
-    }
-    crm_log_xml_trace(message, "controller reply");
-
-    exit_code = CRM_EX_PROTOCOL;
-
-    // Validate reply
-    value = crm_element_value(message, F_CRM_MSG_TYPE);
-    if (safe_str_neq(value, XML_ATTR_RESPONSE)) {
-        fprintf(stderr, "error: Message from controller was not a reply\n");
-        goto done;
-    }
-    value = crm_element_value(message, XML_ATTR_REFERENCE);
-    if (value == NULL) {
-        fprintf(stderr, "error: Controller reply did not specify original message\n");
-        goto done;
-    }
-    data = get_message_xml(message, F_CRM_DATA);
-    if (data == NULL) {
-        fprintf(stderr, "error: Controller reply did not contain any data\n");
+    if (status != CRM_EX_OK) {
+        fprintf(stderr, "error: Bad reply from controller: %s\n",
+                crm_exit_str(status));
         goto done;
     }
 
+    // Parse desired info from reply and display to user
     switch (options.command) {
         case 'i':
-            value = crm_element_value(data, XML_ATTR_ID);
-            if (value == NULL) {
-                fprintf(stderr, "error: Controller reply did not contain node ID\n");
-            } else {
-                printf("%s\n", value);
-                exit_code = CRM_EX_OK;
+            if (reply->reply_type != pcmk_controld_reply_info) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
             }
+            if (reply->data.node_info.id == 0) {
+                fprintf(stderr,
+                        "error: Controller reply did not contain node ID\n");
+                exit_code = CRM_EX_PROTOCOL;
+                goto done;
+            }
+            printf("%d\n", reply->data.node_info.id);
             break;
 
         case 'n':
         case 'N':
-            value = crm_element_value(data, XML_ATTR_UNAME);
-            if (value == NULL) {
+            if (reply->reply_type != pcmk_controld_reply_info) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
+            }
+            if (reply->data.node_info.uname == NULL) {
                 fprintf(stderr, "Node is not known to cluster\n");
                 exit_code = CRM_EX_NOHOST;
-            } else {
-                printf("%s\n", value);
-                exit_code = CRM_EX_OK;
+                goto done;
             }
+            printf("%s\n", reply->data.node_info.uname);
             break;
 
         case 'q':
-            value = crm_element_value(data, XML_ATTR_HAVE_QUORUM);
-            if (value == NULL) {
-                fprintf(stderr, "error: Controller reply did not contain quorum status\n");
-            } else {
-                bool quorum = crm_is_true(value);
+            if (reply->reply_type != pcmk_controld_reply_info) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
+            }
+            printf("%d\n", reply->data.node_info.have_quorum);
+            if (!(reply->data.node_info.have_quorum)) {
+                exit_code = CRM_EX_QUORUM;
+                goto done;
+            }
+            break;
 
-                printf("%d\n", quorum);
-                exit_code = quorum? CRM_EX_OK : CRM_EX_QUORUM;
+        case 'l':
+        case 'p':
+            if (reply->reply_type != pcmk_controld_reply_nodes) {
+                fprintf(stderr,
+                        "error: Unknown reply type %d from controller\n",
+                        reply->reply_type);
+                goto done;
+            }
+            reply->data.nodes = g_list_sort(reply->data.nodes, sort_node);
+            for (GList *node_iter = reply->data.nodes;
+                 node_iter != NULL; node_iter = node_iter->next) {
+
+                pcmk_controld_api_node_t *node = node_iter->data;
+                const char *uname = (node->uname? node->uname : "");
+                const char *state = (node->state? node->state : "");
+
+                if (options.command == 'l') {
+                    printf("%lu %s %s\n",
+                           (unsigned long) node->id, uname, state);
+
+                // i.e. CRM_NODE_MEMBER, but we don't want to include cluster.h
+                } else if (!strcmp(state, "member")) {
+                    printf("%s ", uname);
+                }
+            }
+            if (options.command == 'p') {
+                printf("\n");
             }
             break;
 
         default:
             fprintf(stderr, "internal error: Controller reply not expected\n");
             exit_code = CRM_EX_SOFTWARE;
-            break;
+            goto done;
     }
 
+    // Success
+    exit_code = CRM_EX_OK;
 done:
-    free_xml(message);
-    crm_node_exit(exit_code);
-    return 0;
+    pcmk_disconnect_ipc(controld_api);
+    pcmk_quit_main_loop(mainloop, 10);
 }
 
 static void
-run_controller_mainloop(uint32_t nodeid)
+run_controller_mainloop(uint32_t nodeid, bool list_nodes)
 {
-    crm_ipc_t *controller = NULL;
+    pcmk_ipc_api_t *controld_api = NULL;
     int rc;
 
-    controller = new_mainloop_for_ipc(CRM_SYSTEM_CRMD, dispatch_controller);
+    // Set disconnect exit code to handle unexpected disconnects
+    exit_code = CRM_EX_DISCONNECT;
 
-    rc = send_controller_hello(controller);
-    if (rc < 0) {
-        fprintf(stderr, "error: Could not register with controller: %s\n",
-                pcmk_strerror(rc));
-        crm_node_exit(crm_errno2exit(rc));
+    // Create controller IPC object
+    rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to controller: %s\n",
+                pcmk_rc_str(rc));
+        return;
+    }
+    pcmk_register_ipc_callback(controld_api, controller_event_cb, NULL);
+
+    // Connect to controller
+    rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to controller: %s\n",
+                pcmk_rc_str(rc));
+        exit_code = pcmk_rc2exitc(rc);
+        return;
     }
 
-    rc = send_node_info_request(controller, nodeid);
-    if (rc < 0) {
+    if (list_nodes) {
+        rc = pcmk_controld_api_list_nodes(controld_api);
+    } else {
+        rc = pcmk_controld_api_node_info(controld_api, nodeid);
+    }
+    if (rc != pcmk_rc_ok) {
         fprintf(stderr, "error: Could not ping controller: %s\n",
-                pcmk_strerror(rc));
-        crm_node_exit(crm_errno2exit(rc));
+                pcmk_rc_str(rc));
+        pcmk_disconnect_ipc(controld_api);
+        exit_code = pcmk_rc2exitc(rc);
+        return;
     }
 
-    // Run main loop to get controller reply via dispatch_controller()
-    run_mainloop_and_exit();
+    // Run main loop to get controller reply via controller_event_cb()
+    mainloop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
+    mainloop = NULL;
+    pcmk_free_ipc_api(controld_api);
 }
 
 static void
@@ -339,11 +315,12 @@ print_node_name(void)
 
     if (name != NULL) {
         printf("%s\n", name);
-        crm_node_exit(CRM_EX_OK);
+        exit_code = CRM_EX_OK;
+        return;
 
     } else {
         // Otherwise ask the controller
-        run_controller_mainloop(0);
+        run_controller_mainloop(0, false);
     }
 }
 
@@ -391,37 +368,61 @@ cib_remove_node(long id, const char *name)
 }
 
 static int
+controller_remove_node(const char *node_name, long nodeid)
+{
+    pcmk_ipc_api_t *controld_api = NULL;
+    int rc;
+
+    // Create controller IPC object
+    rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to controller: %s\n",
+                pcmk_rc_str(rc));
+        return ENOTCONN;
+    }
+
+    // Connect to controller (without main loop)
+    rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_sync);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "error: Could not connect to controller: %s\n",
+                pcmk_rc_str(rc));
+        pcmk_free_ipc_api(controld_api);
+        return rc;
+    }
+
+    rc = pcmk_ipc_purge_node(controld_api, node_name, nodeid);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr,
+                "error: Could not clear node from controller's cache: %s\n",
+                pcmk_rc_str(rc));
+    }
+
+    pcmk_free_ipc_api(controld_api);
+    return pcmk_rc_ok;
+}
+
+static int
 tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
 {
     int rc = -1;
-    crm_ipc_t *conn = crm_ipc_new(target, 0);
+    crm_ipc_t *conn = NULL;
     xmlNode *cmd = NULL;
 
+    conn = crm_ipc_new(target, 0);
     if (!conn) {
         return -ENOTCONN;
     }
-
     if (!crm_ipc_connect(conn)) {
         crm_perror(LOG_ERR, "Connection to %s failed", target);
         crm_ipc_destroy(conn);
         return -ENOTCONN;
     }
 
-    if(safe_str_eq(target, CRM_SYSTEM_CRMD)) {
-        // The controller requires a hello message before sending a request
-        rc = send_controller_hello(conn);
-        if (rc < 0) {
-            fprintf(stderr, "error: Could not register with controller: %s\n",
-                    pcmk_strerror(rc));
-            return rc;
-        }
-    }
-
     crm_trace("Removing %s[%ld] from the %s membership cache",
               node_name, nodeid, target);
 
-    if(safe_str_eq(target, T_ATTRD)) {
-        cmd = create_xml_node(NULL, __FUNCTION__);
+    if(pcmk__str_eq(target, T_ATTRD, pcmk__str_casei)) {
+        cmd = create_xml_node(NULL, __func__);
 
         crm_xml_add(cmd, F_TYPE, T_ATTRD);
         crm_xml_add(cmd, F_ORIG, crm_system_name);
@@ -433,9 +434,9 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
             crm_xml_add_int(cmd, PCMK__XA_ATTR_NODE_ID, (int) nodeid);
         }
 
-    } else {
-        cmd = create_request(CRM_OP_RM_NODE_CACHE,
-                             NULL, NULL, target, crm_system_name, pid_s);
+    } else { // Fencer or pacemakerd
+        cmd = create_request(CRM_OP_RM_NODE_CACHE, NULL, NULL, target,
+                             crm_system_name, NULL);
         if (nodeid > 0) {
             crm_xml_set_id(cmd, "%ld", nodeid);
         }
@@ -447,6 +448,7 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
               target, node_name, nodeid, rc);
 
     if (rc > 0) {
+        // @TODO Should this be done just once after all the rest?
         rc = cib_remove_node(nodeid, node_name);
     }
 
@@ -461,12 +463,12 @@ tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
 static void
 remove_node(const char *target_uname)
 {
+    int rc;
     int d = 0;
     long nodeid = 0;
     const char *node_name = NULL;
     char *endptr = NULL;
     const char *daemons[] = {
-        CRM_SYSTEM_CRMD,
         "stonith-ng",
         T_ATTRD,
         CRM_SYSTEM_MCP,
@@ -482,87 +484,21 @@ remove_node(const char *target_uname)
         node_name = target_uname;
     }
 
+    rc = controller_remove_node(node_name, nodeid);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        return;
+    }
+
     for (d = 0; d < DIMOF(daemons); d++) {
         if (tools_remove_node_cache(node_name, nodeid, daemons[d])) {
             crm_err("Failed to connect to %s to remove node '%s'",
                     daemons[d], target_uname);
-            crm_node_exit(CRM_EX_ERROR);
+            exit_code = CRM_EX_ERROR;
             return;
         }
     }
-    crm_node_exit(CRM_EX_OK);
-}
-
-static gint
-compare_node_xml(gconstpointer a, gconstpointer b)
-{
-    const char *a_name = crm_element_value((xmlNode*) a, "uname");
-    const char *b_name = crm_element_value((xmlNode*) b, "uname");
-
-    return strcmp((a_name? a_name : ""), (b_name? b_name : ""));
-}
-
-static int
-node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
-{
-    GList *nodes = NULL;
-    xmlNode *node = NULL;
-    xmlNode *msg = string2xml(buffer);
-    const char *uname;
-    const char *state;
-
-    if (msg == NULL) {
-        fprintf(stderr, "error: Could not understand pacemakerd response\n");
-        crm_node_exit(CRM_EX_PROTOCOL);
-        return 0;
-    }
-
-    crm_log_xml_trace(msg, "message");
-
-    for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
-        nodes = g_list_insert_sorted(nodes, node, compare_node_xml);
-    }
-
-    for (GList *iter = nodes; iter; iter = iter->next) {
-        node = (xmlNode*) iter->data;
-        uname = crm_element_value(node, "uname");
-        state = crm_element_value(node, "state");
-
-        if (options.command == 'l') {
-            int id = 0;
-
-            crm_element_value_int(node, "id", &id);
-            printf("%d %s %s\n", id, (uname? uname : ""), (state? state : ""));
-
-        // This is CRM_NODE_MEMBER but we don't want to include cluster header
-        } else if ((options.command == 'p') && safe_str_eq(state, "member")) {
-            printf("%s ", (uname? uname : ""));
-        }
-    }
-    if (options.command == 'p') {
-        fprintf(stdout, "\n");
-    }
-
-    free_xml(msg);
-    crm_node_exit(CRM_EX_OK);
-    return 0;
-}
-
-static void
-run_pacemakerd_mainloop(void)
-{
-    crm_ipc_t *ipc = NULL;
-    xmlNode *poke = NULL;
-
-    ipc = new_mainloop_for_ipc(CRM_SYSTEM_MCP, node_mcp_dispatch);
-
-    // Sending anything will get us a list of nodes
-    poke = create_xml_node(NULL, "poke");
-    crm_ipc_send(ipc, poke, 0, 0, NULL);
-    free_xml(poke);
-
-    // Handle reply via node_mcp_dispatch()
-    run_mainloop_and_exit();
+    exit_code = CRM_EX_OK;
 }
 
 static GOptionContext *
@@ -649,11 +585,11 @@ main(int argc, char **argv)
         case 'i':
         case 'q':
         case 'N':
-            run_controller_mainloop(options.nodeid);
+            run_controller_mainloop(options.nodeid, false);
             break;
         case 'l':
         case 'p':
-            run_pacemakerd_mainloop();
+            run_controller_mainloop(0, true);
             break;
         default:
             break;
@@ -663,6 +599,5 @@ done:
     g_strfreev(processed_args);
     g_clear_error(&error);
     pcmk__free_arg_context(context);
-    crm_node_exit(exit_code);
-    return exit_code;
+    return crm_exit(exit_code);
 }

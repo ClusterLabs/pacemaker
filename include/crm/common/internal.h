@@ -12,13 +12,18 @@
 
 #include <unistd.h>             // getpid()
 #include <stdbool.h>            // bool
+#include <stdint.h>             // uint8_t, uint64_t
 #include <string.h>             // strcmp()
+#include <fcntl.h>              // open()
 #include <sys/types.h>          // uid_t, gid_t, pid_t
 
 #include <glib.h>               // guint, GList, GHashTable
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/util.h>    // crm_strdup_printf()
+#include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
+#include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/strings_internal.h>
 
 // Internal ACL-related utilities (from acl.c)
 
@@ -92,15 +97,62 @@ pcmk__open_devnull(int flags)
 
 /* internal logging utilities */
 
+/*!
+ * \internal
+ * \brief Log a configuration error
+ *
+ * \param[in] fmt   printf(3)-style format string
+ * \param[in] ...   Arguments for format string
+ */
 #  define pcmk__config_err(fmt...) do {     \
-        crm_config_error = TRUE;            \
+        pcmk__config_error = true;          \
         crm_err(fmt);                       \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Log a configuration warning
+ *
+ * \param[in] fmt   printf(3)-style format string
+ * \param[in] ...   Arguments for format string
+ */
 #  define pcmk__config_warn(fmt...) do {    \
-        crm_config_warning = TRUE;          \
+        pcmk__config_warning = true;        \
         crm_warn(fmt);                      \
     } while (0)
+
+/*!
+ * \internal
+ * \brief Execute code depending on whether message would be logged
+ *
+ * This is similar to do_crm_log_unlikely() except instead of logging, it either
+ * continues past this statement or executes else_action depending on whether a
+ * message of the given severity would be logged or not. This allows whole
+ * blocks of code to be skipped if tracing or debugging is turned off.
+ *
+ * \param[in] level        Severity at which to continue past this statement
+ * \param[in] else_action  Code block to execute if severity would not be logged
+ *
+ * \note else_action must not contain a break or continue statement
+ */
+#  define pcmk__log_else(level, else_action) do {                           \
+        static struct qb_log_callsite *trace_cs = NULL;                     \
+                                                                            \
+        if (trace_cs == NULL) {                                             \
+            trace_cs = qb_log_callsite_get(__func__, __FILE__, "log_else",  \
+                                           level, __LINE__, 0);             \
+        }                                                                   \
+        if (!crm_is_callsite_active(trace_cs, level, 0)) {                  \
+            else_action;                                                    \
+        }                                                                   \
+    } while(0)
+
+
+/* internal main loop utilities (from mainloop.c) */
+
+int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
+                           struct ipc_client_callbacks *callbacks,
+                           mainloop_io_t **source);
 
 
 /* internal procfs utilities (from procfs.c) */
@@ -141,7 +193,7 @@ int pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
 int pcmk__lock_pidfile(const char *filename, const char *name);
 
 
-/* interal functions related to resource operations (from operations.c) */
+/* internal functions related to resource operations (from operations.c) */
 
 // printf-style format to create operation ID from resource, action, interval
 #define PCMK__OP_FMT "%s_%s_%u"
@@ -154,54 +206,123 @@ char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
 void pcmk__filter_op_for_digest(xmlNode *param_set);
 
 
+// bitwise arithmetic utilities
+
+/*!
+ * \internal
+ * \brief Set specified flags in a flag group
+ *
+ * \param[in] function    Function name of caller
+ * \param[in] line        Line number of caller
+ * \param[in] log_level   Log a message at this level
+ * \param[in] flag_type   Label describing this flag group (for logging)
+ * \param[in] target      Name of object whose flags these are (for logging)
+ * \param[in] flag_group  Flag group being manipulated
+ * \param[in] flags       Which flags in the group should be set
+ * \param[in] flags_str   Readable equivalent of \p flags (for logging)
+ *
+ * \return Possibly modified flag group
+ */
+static inline uint64_t
+pcmk__set_flags_as(const char *function, int line, uint8_t log_level,
+                   const char *flag_type, const char *target,
+                   uint64_t flag_group, uint64_t flags, const char *flags_str)
+{
+    uint64_t result = flag_group | flags;
+
+    if (result != flag_group) {
+        do_crm_log_unlikely(log_level,
+                            "%s flags 0x%.8llx (%s) for %s set by %s:%d",
+                            ((flag_type == NULL)? "Group of" : flag_type),
+                            (unsigned long long) flags,
+                            ((flags_str == NULL)? "flags" : flags_str),
+                            ((target == NULL)? "target" : target),
+                            function, line);
+    }
+    return result;
+}
+
+/*!
+ * \internal
+ * \brief Clear specified flags in a flag group
+ *
+ * \param[in] function    Function name of caller
+ * \param[in] line        Line number of caller
+ * \param[in] log_level   Log a message at this level
+ * \param[in] flag_type   Label describing this flag group (for logging)
+ * \param[in] target      Name of object whose flags these are (for logging)
+ * \param[in] flag_group  Flag group being manipulated
+ * \param[in] flags       Which flags in the group should be cleared
+ * \param[in] flags_str   Readable equivalent of \p flags (for logging)
+ *
+ * \return Possibly modified flag group
+ */
+static inline uint64_t
+pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
+                     const char *flag_type, const char *target,
+                     uint64_t flag_group, uint64_t flags, const char *flags_str)
+{
+    uint64_t result = flag_group & ~flags;
+
+    if (result != flag_group) {
+        do_crm_log_unlikely(log_level,
+                            "%s flags 0x%.8llx (%s) for %s cleared by %s:%d",
+                            ((flag_type == NULL)? "Group of" : flag_type),
+                            (unsigned long long) flags,
+                            ((flags_str == NULL)? "flags" : flags_str),
+                            ((target == NULL)? "target" : target),
+                            function, line);
+    }
+    return result;
+}
+
 // miscellaneous utilities (from utils.c)
 
-const char *pcmk_message_name(const char *name);
+const char *pcmk__message_name(const char *name);
+void pcmk__daemonize(const char *name, const char *pidfile);
+void pcmk__panic(const char *origin);
+pid_t pcmk__locate_sbd(void);
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;
 extern int pcmk__score_yellow;
 
-
-/* internal generic string functions (from strings.c) */
-
-int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
-                          guint *result);
-bool pcmk__starts_with(const char *str, const char *prefix);
-bool pcmk__ends_with(const char *s, const char *match);
-bool pcmk__ends_with_ext(const char *s, const char *match);
-char *pcmk__add_word(char *list, const char *word);
-int pcmk__compress(const char *data, unsigned int length, unsigned int max,
-                   char **result, unsigned int *result_len);
-
-/* Correctly displaying singular or plural is complicated; consider "1 node has"
- * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.
+/*!
+ * \internal
+ * \brief Resize a dynamically allocated memory block
  *
- * if (a == 1) {
- *     crm_info("singular message"):
- * } else {
- *     crm_info("plural message");
- * }
+ * \param[in] ptr   Memory block to resize (or NULL to allocate new memory)
+ * \param[in] size  New size of memory block in bytes (must be > 0)
  *
- * though even that's not sufficient for all languages besides English (if we
- * ever desire to do translations of output and log messages). But the following
- * convenience macros are "good enough" and more concise for many cases.
+ * \return Pointer to resized memory block
+ *
+ * \note This asserts on error, so the result is guaranteed to be non-NULL
+ *       (which is the main advantage of this over directly using realloc()).
  */
-
-/* Example:
- * crm_info("Found %d %s", nentries,
- *          pcmk__plural_alt(nentries, "entry", "entries"));
- */
-#define pcmk__plural_alt(i, s1, s2) (((i) == 1)? (s1) : (s2))
-
-// Example: crm_info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
-#define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
-
-static inline int
-pcmk__str_empty(const char *s)
+static inline void *
+pcmk__realloc(void *ptr, size_t size)
 {
-    return (s == NULL) || (s[0] == '\0');
+    void *new_ptr;
+
+    // realloc(p, 0) can replace free(p) but this wrapper can't
+    CRM_ASSERT(size > 0);
+
+    new_ptr = realloc(ptr, size);
+    if (new_ptr == NULL) {
+        free(ptr);
+        abort();
+    }
+    return new_ptr;
 }
+
+
+/* Error domains for use with g_set_error (from results.c) */
+
+GQuark pcmk__rc_error_quark(void);
+GQuark pcmk__exitc_error_quark(void);
+
+#define PCMK__RC_ERROR       pcmk__rc_error_quark()
+#define PCMK__EXITC_ERROR    pcmk__exitc_error_quark()
 
 static inline char *
 pcmk__getpid_s(void)
@@ -266,5 +387,8 @@ pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
     return pcmk__fail_attr_name(PCMK__LAST_FAILURE_PREFIX, rsc_id, op,
                                 interval_ms);
 }
+
+// internal resource agent functions (from agents.c)
+int pcmk__effective_rc(int rc);
 
 #endif /* CRM_COMMON_INTERNAL__H */

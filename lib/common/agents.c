@@ -48,7 +48,8 @@ pcmk_get_ra_caps(const char *standard)
          * @TODO Remove pcmk_ra_cap_unique at the next major schema version
          * bump, with a transform to remove globally-unique from the config.
          */
-        return pcmk_ra_cap_params | pcmk_ra_cap_unique | pcmk_ra_cap_stdin;
+        return pcmk_ra_cap_params | pcmk_ra_cap_unique | pcmk_ra_cap_stdin
+               | pcmk_ra_cap_fence_params;
 
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
                || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)
@@ -64,6 +65,27 @@ pcmk_get_ra_caps(const char *standard)
         return pcmk_ra_cap_params;
     }
     return pcmk_ra_cap_none;
+}
+
+int
+pcmk__effective_rc(int rc)
+{
+    int remapped_rc = rc;
+
+    switch (rc) {
+        case PCMK_OCF_DEGRADED:
+            remapped_rc = PCMK_OCF_OK;
+            break;
+
+        case PCMK_OCF_DEGRADED_MASTER:
+            remapped_rc = PCMK_OCF_RUNNING_MASTER;
+            break;
+
+        default:
+            break;
+    }
+
+    return remapped_rc;
 }
 
 char *
@@ -113,7 +135,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
     *standard = strndup(spec, colon - spec);
     spec = colon + 1;
 
-    if (is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
+    if (pcmk_is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
         colon = strchr(spec, ':');
         if ((colon == NULL) || (colon == spec)) {
             free(*standard);
@@ -147,5 +169,5 @@ bool crm_provider_required(const char *standard);
 bool
 crm_provider_required(const char *standard)
 {
-    return is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+    return pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }

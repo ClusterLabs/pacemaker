@@ -70,7 +70,7 @@ migration_threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     }
 
     // If we're ignoring failures, also ignore the migration threshold
-    if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         return FALSE;
     }
 
@@ -109,10 +109,10 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     get_bundle_variant_data(bundle_data, rsc);
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
@@ -168,12 +168,13 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                 }
             }
 
-            set_bit(replica->child->parent->flags, pe_rsc_allocating);
+            pe__set_resource_flags(replica->child->parent, pe_rsc_allocating);
             pe_rsc_trace(rsc, "Allocating bundle %s replica child %s",
                          rsc->id, replica->child->id);
             replica->child->cmds->allocate(replica->child, replica->node,
                                            data_set);
-            clear_bit(replica->child->parent->flags, pe_rsc_allocating);
+            pe__clear_resource_flags(replica->child->parent,
+                                       pe_rsc_allocating);
         }
     }
 
@@ -193,8 +194,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         bundle_data->child->cmds->allocate(bundle_data->child, prefer, data_set);
     }
 
-    clear_bit(rsc->flags, pe_rsc_allocating);
-    clear_bit(rsc->flags, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
     return NULL;
 }
 
@@ -232,14 +232,14 @@ pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
     if (bundle_data->child) {
         bundle_data->child->cmds->create_actions(bundle_data->child, data_set);
 
-        if (is_set(bundle_data->child->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             /* promote */
-            action = create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
+            create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
             action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
             action->priority = INFINITY;
 
             /* demote */
-            action = create_pseudo_resource_op(rsc, RSC_DEMOTE, TRUE, TRUE, data_set);
+            create_pseudo_resource_op(rsc, RSC_DEMOTE, TRUE, TRUE, data_set);
             action = create_pseudo_resource_op(rsc, RSC_DEMOTED, TRUE, TRUE, data_set);
             action->priority = INFINITY;
         }
@@ -334,7 +334,7 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
 
     if (bundle_data->child) {
         bundle_data->child->cmds->internal_constraints(bundle_data->child, data_set);
-        if (is_set(bundle_data->child->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(bundle_data->child->flags, pe_rsc_promotable)) {
             promote_demote_constraints(rsc, data_set);
 
             /* child demoted before global demoted */
@@ -483,7 +483,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     if (constraint->score == 0) {
         return;
     }
-    if (is_set(rsc->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
         return;
 
@@ -674,7 +674,7 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             if (type & (pe_order_runnable_left | pe_order_implies_then) /* Mandatory */ ) {
                 pe_rsc_info(then->rsc, "Inhibiting %s from being active", then_child->id);
                 if(assign_node(then_child, NULL, TRUE)) {
-                    changed |= pe_graph_updated_then;
+                    pe__set_graph_flags(changed, first, pe_graph_updated_then);
                 }
             }
 
@@ -719,41 +719,43 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
             }
 
             if (first_action == NULL) {
-                if (is_not_set(first_child->flags, pe_rsc_orphan)
-                    && crm_str_eq(first_task, RSC_STOP, TRUE) == FALSE
-                    && crm_str_eq(first_task, RSC_DEMOTE, TRUE) == FALSE) {
+                if (!pcmk_is_set(first_child->flags, pe_rsc_orphan)
+                    && !pcmk__str_any_of(first_task, RSC_STOP, RSC_DEMOTE, NULL)) {
                     crm_err("Internal error: No action found for %s in %s (first)",
                             first_task, first_child->id);
 
                 } else {
                     crm_trace("No action found for %s in %s%s (first)",
                               first_task, first_child->id,
-                              is_set(first_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                              pcmk_is_set(first_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
                 }
                 continue;
             }
 
             /* We're only interested if 'then' is neither stopping nor being demoted */ 
             if (then_action == NULL) {
-                if (is_not_set(then_child->flags, pe_rsc_orphan)
-                    && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE
-                    && crm_str_eq(then->task, RSC_DEMOTE, TRUE) == FALSE) {
+                if (!pcmk_is_set(then_child->flags, pe_rsc_orphan)
+                    && !pcmk__str_any_of(then->task, RSC_STOP, RSC_DEMOTE, NULL)) {
                     crm_err("Internal error: No action found for %s in %s (then)",
                             then->task, then_child->id);
 
                 } else {
                     crm_trace("No action found for %s in %s%s (then)",
                               then->task, then_child->id,
-                              is_set(then_child->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
+                              pcmk_is_set(then_child->flags, pe_rsc_orphan)? " (ORPHAN)" : "");
                 }
                 continue;
             }
 
             if (order_actions(first_action, then_action, type)) {
                 crm_debug("Created constraint for %s (%d) -> %s (%d) %.6x",
-                          first_action->uuid, is_set(first_action->flags, pe_action_optional),
-                          then_action->uuid, is_set(then_action->flags, pe_action_optional), type);
-                changed |= (pe_graph_updated_first | pe_graph_updated_then);
+                          first_action->uuid,
+                          pcmk_is_set(first_action->flags, pe_action_optional),
+                          then_action->uuid,
+                          pcmk_is_set(then_action->flags, pe_action_optional),
+                          type);
+                pe__set_graph_flags(changed, first,
+                                    pe_graph_updated_first|pe_graph_updated_then);
             }
             if(first_action && then_action) {
                 changed |= then_child->cmds->update_actions(first_action,
@@ -839,7 +841,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
             if (then_child_action) {
                 enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
 
-                if (is_set(then_child_flags, pe_action_runnable)) {
+                if (pcmk_is_set(then_child_flags, pe_action_runnable)) {
                     then_child_changed |= then_child->cmds->update_actions(first,
                         then_child_action, node, flags, filter, type, data_set);
                 }
@@ -865,8 +867,6 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     get_bundle_variant_data(bundle_data, rsc);
-
-    pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
     native_rsc_location(rsc, constraint);
 

@@ -27,7 +27,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  /* CRM_XML_LOG_BASE */
+#include <crm/common/xml_internal.h>  /* PCMK__XML_LOG_BASE */
 
 typedef struct {
     unsigned char v[2];
@@ -79,7 +79,7 @@ xml_log(int priority, const char *fmt, ...)
     va_start(ap, fmt);
     if (silent_logging == FALSE) {
         /* XXX should not this enable dechunking as well? */
-        CRM_XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
+        PCMK__XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
     }
     va_end(ap);
 }
@@ -187,8 +187,8 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     bool have_version = FALSE;
 
     xml_schema_max++;
-    known_schemas = realloc_safe(known_schemas,
-                                 xml_schema_max * sizeof(struct schema_s));
+    known_schemas = pcmk__realloc(known_schemas,
+                                  xml_schema_max * sizeof(struct schema_s));
     CRM_ASSERT(known_schemas != NULL);
     memset(known_schemas+last, 0, sizeof(struct schema_s));
     known_schemas[last].validator = validator;
@@ -872,7 +872,7 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
             vfprintf(stderr, fmt, ap);
         }
     } else {
-        CRM_XML_LOG_BASE(msg_log_level, TRUE, 0, "CIB upgrade: ", fmt, ap);
+        PCMK__XML_LOG_BASE(msg_log_level, TRUE, 0, "CIB upgrade: ", fmt, ap);
     }
 
     va_end(aq);
@@ -1035,7 +1035,7 @@ get_schema_version(const char *name)
         name = "none";
     }
     for (; lpc < xml_schema_max; lpc++) {
-        if (safe_str_eq(name, known_schemas[lpc].name)) {
+        if (pcmk__str_eq(name, known_schemas[lpc].name, pcmk__str_casei)) {
             return lpc;
         }
     }

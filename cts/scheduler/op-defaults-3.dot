@@ -1,0 +1,14 @@
+ digraph "g" {
+"dummy-rsc_monitor_0 cluster01" -> "dummy-rsc_start_0 cluster02" [ style = bold]
+"dummy-rsc_monitor_0 cluster01" [ style=bold color="green" fontcolor="black"]
+"dummy-rsc_monitor_0 cluster02" -> "dummy-rsc_start_0 cluster02" [ style = bold]
+"dummy-rsc_monitor_0 cluster02" [ style=bold color="green" fontcolor="black"]
+"dummy-rsc_monitor_10000 cluster02" [ style=bold color="green" fontcolor="black"]
+"dummy-rsc_start_0 cluster02" -> "dummy-rsc_monitor_10000 cluster02" [ style = bold]
+"dummy-rsc_start_0 cluster02" [ style=bold color="green" fontcolor="black"]
+"fencing_monitor_0 cluster01" -> "fencing_start_0 cluster01" [ style = bold]
+"fencing_monitor_0 cluster01" [ style=bold color="green" fontcolor="black"]
+"fencing_monitor_0 cluster02" -> "fencing_start_0 cluster01" [ style = bold]
+"fencing_monitor_0 cluster02" [ style=bold color="green" fontcolor="black"]
+"fencing_start_0 cluster01" [ style=bold color="green" fontcolor="black"]
+}

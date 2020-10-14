@@ -26,7 +26,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/remote_internal.h>
 #include <crm/cib/internal.h>
@@ -186,7 +186,7 @@ check_group_membership(const char *usr, const char *grp)
     }
 
     group = getgrgid(pwd->pw_gid);
-    if (group != NULL && crm_str_eq(grp, group->gr_name, TRUE)) {
+    if (group != NULL && pcmk__str_eq(grp, group->gr_name, pcmk__str_none)) {
         return TRUE;
     }
 
@@ -202,7 +202,7 @@ check_group_membership(const char *usr, const char *grp)
         if (member == NULL) {
             break;
 
-        } else if (crm_str_eq(usr, member, TRUE)) {
+        } else if (pcmk__str_eq(usr, member, pcmk__str_none)) {
             return TRUE;
         }
     };
@@ -223,13 +223,13 @@ cib_remote_auth(xmlNode * login)
     }
 
     tmp = crm_element_name(login);
-    if (safe_str_neq(tmp, "cib_command")) {
+    if (!pcmk__str_eq(tmp, "cib_command", pcmk__str_casei)) {
         crm_err("Wrong tag: %s", tmp);
         return FALSE;
     }
 
     tmp = crm_element_value(login, "op");
-    if (safe_str_neq(tmp, "authenticate")) {
+    if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         crm_err("Wrong operation: %s", tmp);
         return FALSE;
     }
@@ -319,7 +319,7 @@ cib_remote_listen(gpointer data)
 
     if (ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        new_client->kind = PCMK__CLIENT_TLS;
+        pcmk__set_client_flags(new_client, pcmk__client_tls);
 
         /* create gnutls session for the server socket */
         new_client->remote->tls_session = pcmk__new_tls_session(csock,
@@ -332,7 +332,7 @@ cib_remote_listen(gpointer data)
         }
 #endif
     } else {
-        new_client->kind = PCMK__CLIENT_TCP;
+        pcmk__set_client_flags(new_client, pcmk__client_tcp);
         new_client->remote->tcp_socket = csock;
     }
 
@@ -365,12 +365,12 @@ cib_remote_connection_destroy(gpointer user_data)
     num_clients--;
     crm_trace("Num unfree'd clients: %d", num_clients);
 
-    switch (client->kind) {
-        case PCMK__CLIENT_TCP:
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_tcp:
             csock = client->remote->tcp_socket;
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-        case PCMK__CLIENT_TLS:
+        case pcmk__client_tls:
             if (client->remote->tls_session) {
                 void *sock_ptr = gnutls_transport_get_ptr(*client->remote->tls_session);
 
@@ -385,7 +385,9 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
 #endif
         default:
-            crm_warn("Unexpected client type %d", client->kind);
+            crm_warn("Unknown transport for %s " CRM_XS " flags=0x%llx",
+                     pcmk__client_name(client),
+                     (unsigned long long) client->flags);
     }
 
     if (csock > 0) {
@@ -408,7 +410,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     const char *value = NULL;
 
     value = crm_element_name(command);
-    if (safe_str_neq(value, "cib_command")) {
+    if (!pcmk__str_eq(value, "cib_command", pcmk__str_casei)) {
         crm_log_xml_trace(command, "Bad command: ");
         return;
     }
@@ -469,11 +471,12 @@ cib_remote_msg(gpointer data)
     int rc;
     int timeout = client->remote->authenticated ? -1 : 1000;
 
-    crm_trace("%s callback",
-              (client->kind == PCMK__CLIENT_TCP)? "clear-text" : "secure");
+    crm_trace("Remote %s message received for %s",
+              pcmk__client_type_str(PCMK__CLIENT_TYPE(client)),
+              pcmk__client_name(client));
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    if ((client->kind == PCMK__CLIENT_TLS)
+    if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
         && !(client->remote->tls_handshake_complete)) {
 
         int rc = pcmk__read_handshake_data(client);
@@ -668,7 +671,7 @@ authenticate_user(const char *user, const char *passwd)
         crm_err("Unknown user authenticated.");
         goto bail;
 
-    } else if (safe_str_neq(p_user, user)) {
+    } else if (!pcmk__str_eq(p_user, user, pcmk__str_casei)) {
         crm_err("User mismatch: %s vs. %s.", (const char *)p_user, (const char *)user);
         goto bail;
     }

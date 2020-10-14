@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/lrmd.h>       // lrmd_event_data_t
+#include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 
 pe__location_t *
@@ -35,11 +36,11 @@ rsc2node_new(const char *id, pe_resource_t *rsc,
         new_con->role_filter = RSC_ROLE_UNKNOWN;
 
 
-        if (discover_mode == NULL || safe_str_eq(discover_mode, "always")) {
+        if (pcmk__str_eq(discover_mode, "always", pcmk__str_null_matches | pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_always;
-        } else if (safe_str_eq(discover_mode, "never")) {
+        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_never;
-        } else if (safe_str_eq(discover_mode, "exclusive")) {
+        } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
             new_con->discover_mode = pe_discover_exclusive;
             rsc->exclusive_discover = TRUE;
         } else {
@@ -192,11 +193,11 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
     crm_trace("%s (%d) == %s (%d) : weight",
               node1->details->uname, node1_weight, node2->details->uname, node2_weight);
 
-    if (safe_str_eq(nw->data_set->placement_strategy, "minimal")) {
+    if (pcmk__str_eq(nw->data_set->placement_strategy, "minimal", pcmk__str_casei)) {
         goto equal;
     }
 
-    if (safe_str_eq(nw->data_set->placement_strategy, "balanced")) {
+    if (pcmk__str_eq(nw->data_set->placement_strategy, "balanced", pcmk__str_casei)) {
         result = compare_capacity(node1, node2);
         if (result < 0) {
             crm_trace("%s > %s : capacity (%d)",
@@ -255,7 +256,7 @@ native_deallocate(pe_resource_t * rsc)
         pe_node_t *old = rsc->allocated_to;
 
         crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
-        set_bit(rsc->flags, pe_rsc_provisional);
+        pe__set_resource_flags(rsc, pe_rsc_provisional);
         rsc->allocated_to = NULL;
 
         old->details->allocated_rsc = g_list_remove(old->details->allocated_rsc, rsc);
@@ -296,7 +297,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
      */
 
     native_deallocate(rsc);
-    clear_bit(rsc->flags, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
     if (chosen == NULL) {
         GListPtr gIter = NULL;
@@ -310,20 +311,23 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
             const char *interval_ms_s = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL_MS);
 
             crm_debug("Processing %s", op->uuid);
-            if(safe_str_eq(RSC_STOP, op->task)) {
-                update_action_flags(op, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
+            if(pcmk__str_eq(RSC_STOP, op->task, pcmk__str_casei)) {
+                update_action_flags(op, pe_action_optional | pe_action_clear,
+                                    __func__, __LINE__);
 
-            } else if(safe_str_eq(RSC_START, op->task)) {
-                update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
-                /* set_bit(rsc->flags, pe_rsc_block); */
+            } else if(pcmk__str_eq(RSC_START, op->task, pcmk__str_casei)) {
+                update_action_flags(op, pe_action_runnable | pe_action_clear,
+                                    __func__, __LINE__);
+                //pe__set_resource_flags(rsc, pe_rsc_block);
 
-            } else if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
-                if(safe_str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC))) {
+            } else if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
+                if(pcmk__str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC), pcmk__str_casei)) {
                     /* This is a recurring monitor for the stopped state, leave it alone */
 
                 } else {
                     /* Normal monitor operation, cancel it */
-                    update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
+                    update_action_flags(op, pe_action_runnable | pe_action_clear,
+                                        __func__, __LINE__);
                 }
             }
         }
@@ -340,7 +344,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
     chosen->count++;
     calculate_utilization(chosen->details->utilization, rsc->utilization, FALSE);
     dump_rsc_utilization((show_utilization? LOG_STDOUT : LOG_TRACE),
-                         __FUNCTION__, rsc, chosen);
+                         __func__, rsc, chosen);
 
     return TRUE;
 }
@@ -350,13 +354,14 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
 {
     const char *node_uname = NULL;
     const char *node_uuid = NULL;
+    const char *desc = NULL;
 
     if (action == NULL) {
         crm_trace("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
         return;
     }
 
-    if (is_set(action->flags, pe_action_pseudo)) {
+    if (pcmk_is_set(action->flags, pe_action_pseudo)) {
         node_uname = NULL;
         node_uuid = NULL;
 
@@ -371,35 +376,45 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
     switch (text2task(action->task)) {
         case stonith_node:
         case shutdown_crm:
+            if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+                desc = "Pseudo ";
+            } else if (pcmk_is_set(action->flags, pe_action_optional)) {
+                desc = "Optional ";
+            } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+                desc = "!!Non-Startable!! ";
+            } else if (pcmk_is_set(action->flags, pe_action_processed)) {
+               desc = "";
+            } else {
+               desc = "(Provisional) ";
+            }
             crm_trace("%s%s%sAction %d: %s%s%s%s%s%s",
-                      pre_text == NULL ? "" : pre_text,
-                      pre_text == NULL ? "" : ": ",
-                      is_set(action->flags,
-                             pe_action_pseudo) ? "Pseudo " : is_set(action->flags,
-                                                                    pe_action_optional) ?
-                      "Optional " : is_set(action->flags,
-                                           pe_action_runnable) ? is_set(action->flags,
-                                                                        pe_action_processed)
-                      ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
-                      action->uuid, node_uname ? "\ton " : "",
-                      node_uname ? node_uname : "", node_uuid ? "\t\t(" : "",
-                      node_uuid ? node_uuid : "", node_uuid ? ")" : "");
+                      ((pre_text == NULL)? "" : pre_text),
+                      ((pre_text == NULL)? "" : ": "),
+                      desc, action->id, action->uuid,
+                      (node_uname? "\ton " : ""), (node_uname? node_uname : ""),
+                      (node_uuid? "\t\t(" : ""), (node_uuid? node_uuid : ""),
+                      (node_uuid? ")" : ""));
             break;
         default:
+            if (pcmk_is_set(action->flags, pe_action_optional)) {
+                desc = "Optional ";
+            } else if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+                desc = "Pseudo ";
+            } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+                desc = "!!Non-Startable!! ";
+            } else if (pcmk_is_set(action->flags, pe_action_processed)) {
+               desc = "";
+            } else {
+               desc = "(Provisional) ";
+            }
             crm_trace("%s%s%sAction %d: %s %s%s%s%s%s%s",
-                      pre_text == NULL ? "" : pre_text,
-                      pre_text == NULL ? "" : ": ",
-                      is_set(action->flags,
-                             pe_action_optional) ? "Optional " : is_set(action->flags,
-                                                                        pe_action_pseudo)
-                      ? "Pseudo " : is_set(action->flags,
-                                           pe_action_runnable) ? is_set(action->flags,
-                                                                        pe_action_processed)
-                      ? "" : "(Provisional) " : "!!Non-Startable!! ", action->id,
-                      action->uuid, action->rsc ? action->rsc->id : "<none>",
-                      node_uname ? "\ton " : "", node_uname ? node_uname : "",
-                      node_uuid ? "\t\t(" : "", node_uuid ? node_uuid : "", node_uuid ? ")" : "");
-
+                      ((pre_text == NULL)? "" : pre_text),
+                      ((pre_text == NULL)? "" : ": "),
+                      desc, action->id, action->uuid,
+                      (action->rsc? action->rsc->id : "<none>"),
+                      (node_uname? "\ton " : ""), (node_uname? node_uname : ""),
+                      (node_uuid? "\t\t(" : ""), (node_uuid? node_uuid : ""),
+                      (node_uuid? ")" : ""));
             break;
     }
 
@@ -457,10 +472,10 @@ create_pseudo_resource_op(pe_resource_t * rsc, const char *task, bool optional, 
 {
     pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
                                         task, NULL, optional, TRUE, data_set);
-    update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
-    update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
+    update_action_flags(action, pe_action_pseudo, __func__, __LINE__);
+    update_action_flags(action, pe_action_runnable, __func__, __LINE__);
     if(runnable) {
-        update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
+        update_action_flags(action, pe_action_runnable, __func__, __LINE__);
     }
     return action;
 }
@@ -556,7 +571,7 @@ append_digest(lrmd_event_data_t *op, xmlNode *update, const char *version,
 
 #if 0
     if (level < get_crm_log_level()
-        && op->interval_ms == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
+        && op->interval_ms == 0 && pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
         char *digest_source = dump_xml_unformatted(args_xml);
 
         do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n",
@@ -613,7 +628,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     /* Record a successful reload as a start, and a failed reload as a monitor,
      * to make life easier for the scheduler when determining the current state.
      */
-    if (crm_str_eq(task, "reload", TRUE)) {
+    if (pcmk__str_eq(task, "reload", pcmk__str_none)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_START;
         } else {
@@ -622,7 +637,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     key = pcmk__op_key(op->rsc_id, task, op->interval_ms);
-    if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
+    if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 
@@ -656,7 +671,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
   again:
-    xml_op = find_entity(parent, XML_LRM_TAG_RSC_OP, op_id);
+    xml_op = pcmk__xe_match(parent, XML_LRM_TAG_RSC_OP, XML_ATTR_ID, op_id);
     if (xml_op == NULL) {
         xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
     }
@@ -720,8 +735,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         }
     }
 
-    if (crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE, TRUE)
-        || crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
+    if (pcmk__str_any_of(op->op_type, CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED, NULL)) {
         /*
          * Record migrate_source and migrate_target always for migrate ops.
          */

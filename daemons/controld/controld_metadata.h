@@ -1,12 +1,14 @@
-#ifndef CRMD_METADATA_H
-#define CRMD_METADATA_H
-
 /*
- * Copyright (C) 2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2017-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef CRMD_METADATA_H
+#define CRMD_METADATA_H
 
 enum ra_flags_e {
     ra_supports_reload  = 0x01,
@@ -28,6 +30,18 @@ struct ra_metadata_s {
     GList *ra_params;   // ra_param_s
     uint32_t ra_flags;  // bitmask of ra_flags_e
 };
+
+#define controld_set_ra_flags(ra_md, ra_key, flags_to_set) do {             \
+        (ra_md)->ra_flags = pcmk__set_flags_as(__func__, __LINE__,          \
+            LOG_TRACE, "Resource agent", ra_key,                            \
+            (ra_md)->ra_flags, (flags_to_set), #flags_to_set);              \
+    } while (0)
+
+#define controld_set_ra_param_flags(ra_param, flags_to_set) do {            \
+        (ra_param)->rap_flags = pcmk__set_flags_as(__func__, __LINE__,      \
+            LOG_TRACE, "Resource agent parameter", (ra_param)->rap_name,    \
+            (ra_param)->rap_flags, (flags_to_set), #flags_to_set);          \
+    } while (0)
 
 GHashTable *metadata_cache_new(void);
 void metadata_cache_free(GHashTable *mdc);

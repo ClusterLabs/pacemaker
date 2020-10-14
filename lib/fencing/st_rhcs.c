@@ -255,12 +255,14 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         rc = stonith__rhcs_get_metadata(agent, remaining_timeout, &metadata);
 
         if (rc == pcmk_ok) {
-            long long device_flags = stonith__device_parameter_flags(metadata);
+            uint32_t device_flags = 0;
 
-            if (is_set(device_flags, st_device_supports_parameter_port)) {
+            stonith__device_parameter_flags(&device_flags, agent, metadata);
+            if (pcmk_is_set(device_flags, st_device_supports_parameter_port)) {
                 host_arg = "port";
 
-            } else if (is_set(device_flags, st_device_supports_parameter_plug)) {
+            } else if (pcmk_is_set(device_flags,
+                                   st_device_supports_parameter_plug)) {
                 host_arg = "plug";
             }
         }
@@ -273,7 +275,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
             return -ETIME;
         }
 
-    } else if (safe_str_eq(host_arg, "none")) {
+    } else if (pcmk__str_eq(host_arg, "none", pcmk__str_casei)) {
         host_arg = NULL;
     }
 

@@ -12,6 +12,7 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules.h>
 #include <crm/common/alerts_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/rules_internal.h>
 
 static void
@@ -99,8 +100,8 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
     xmlNode *event_type = NULL;
     uint32_t flags = pcmk__alert_none;
 
-    for (event_type = __xml_first_child_element(select); event_type != NULL;
-         event_type = __xml_next_element(event_type)) {
+    for (event_type = pcmk__xe_first_child(select); event_type != NULL;
+         event_type = pcmk__xe_next(event_type)) {
 
         const char *tagname = crm_element_name(event_type);
 
@@ -133,8 +134,8 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
                         entry->select_attribute_name = NULL;
                     }
                     ++nattrs;
-                    entry->select_attribute_name = realloc_safe(entry->select_attribute_name,
-                                                                (nattrs + 1) * sizeof(char*));
+                    entry->select_attribute_name = pcmk__realloc(entry->select_attribute_name,
+                                                                 (nattrs + 1) * sizeof(char*));
                     entry->select_attribute_name[nattrs - 1] = strdup(attr_name);
                     entry->select_attribute_name[nattrs] = NULL;
                 }
@@ -146,11 +147,11 @@ unpack_alert_filter(xmlNode *basenode, pcmk__alert_t *entry)
         entry->flags = flags;
         crm_debug("Alert %s receives events: attributes:%s%s%s%s",
                   entry->id,
-                  (is_set(flags, pcmk__alert_attribute)?
+                  (pcmk_is_set(flags, pcmk__alert_attribute)?
                    (entry->select_attribute_name? "some" : "all") : "none"),
-                  (is_set(flags, pcmk__alert_fencing)? " fencing" : ""),
-                  (is_set(flags, pcmk__alert_node)? " nodes" : ""),
-                  (is_set(flags, pcmk__alert_resource)? " resources" : ""));
+                  (pcmk_is_set(flags, pcmk__alert_fencing)? " fencing" : ""),
+                  (pcmk_is_set(flags, pcmk__alert_node)? " nodes" : ""),
+                  (pcmk_is_set(flags, pcmk__alert_resource)? " resources" : ""));
     }
 }
 

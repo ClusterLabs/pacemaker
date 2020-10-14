@@ -16,6 +16,7 @@
 #include <crm/msg_xml.h>
 #include <crm/cluster.h>
 #include <crm/cib.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/cib/internal.h>
@@ -106,7 +107,7 @@ build_attribute_xml(
     xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
     gboolean is_private, const char *peer, uint32_t peerid, const char *value, gboolean is_force_write)
 {
-    xmlNode *xml = create_xml_node(parent, __FUNCTION__);
+    xmlNode *xml = create_xml_node(parent, __func__);
 
     crm_xml_add(xml, PCMK__XA_ATTR_NAME, name);
     crm_xml_add(xml, PCMK__XA_ATTR_SET, set);
@@ -397,7 +398,7 @@ attrd_client_refresh(void)
  */
 static xmlNode *build_query_reply(const char *attr, const char *host)
 {
-    xmlNode *reply = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *reply = create_xml_node(NULL, __func__);
     attribute_t *a;
 
     if (reply == NULL) {
@@ -415,7 +416,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         crm_xml_add(reply, PCMK__XA_ATTR_NAME, attr);
 
         /* Allow caller to use "localhost" to refer to local node */
-        if (safe_str_eq(host, "localhost")) {
+        if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
             host = attrd_cluster->uname;
             crm_trace("Mapped localhost to %s", host);
         }
@@ -555,7 +556,7 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 void
 attrd_broadcast_protocol()
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, crm_system_name);
@@ -590,25 +591,24 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     peer_won = attrd_check_for_new_writer(peer, xml);
 
-    if (safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE)
-        || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH)
-        || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY)) {
+    if (pcmk__strcase_any_of(op, PCMK__ATTRD_CMD_UPDATE, PCMK__ATTRD_CMD_UPDATE_BOTH,
+                             PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
         attrd_peer_update(peer, xml, host, FALSE);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_SYNC)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC, pcmk__str_casei)) {
         attrd_peer_sync(peer, xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
         attrd_peer_remove(host, TRUE, peer->uname);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
         /* It is not currently possible to receive this as a peer command,
          * but will be, if we one day enable propagating this operation.
          */
         attrd_peer_clear_failure(peer, xml);
 
-    } else if (safe_str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE)
-              && safe_str_neq(peer->uname, attrd_cluster->uname)) {
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_casei)
+               && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
         xmlNode *child = NULL;
 
         crm_info("Processing %s from %s", op, peer->uname);
@@ -618,7 +618,8 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             clear_attribute_value_seen();
         }
 
-        for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(xml); child != NULL;
+             child = pcmk__xml_next(child)) {
             host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);
             attrd_peer_update(peer, child, host, TRUE);
         }
@@ -638,7 +639,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
 
     attribute_t *a = NULL;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *sync = create_xml_node(NULL, __func__);
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
@@ -738,7 +739,7 @@ attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
     GHashTableIter vIter;
     attribute_t *a;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *sync = create_xml_node(NULL, __func__);
     gboolean build = FALSE;    
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
@@ -747,7 +748,7 @@ attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            if (safe_str_eq(v->nodename, attrd_cluster->uname) && v->seen == FALSE) {
+            if (pcmk__str_eq(v->nodename, attrd_cluster->uname, pcmk__str_casei) && v->seen == FALSE) {
                 crm_trace("Syncing %s[%s] = %s to everyone.(from local only attributes)", a->id, v->nodename, v->current);
 
                 build = TRUE;
@@ -786,13 +787,13 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     }
 
     // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK__XA_TASK
-    update_both = ((op == NULL)
-                   || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH));
+    update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,
+                               pcmk__str_null_matches | pcmk__str_casei);
 
     // Look up or create attribute entry
     a = g_hash_table_lookup(attributes, attr);
     if (a == NULL) {
-        if (update_both || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE)) {
+        if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE, pcmk__str_casei)) {
             a = create_attribute(xml);
         } else {
             crm_warn("Could not update %s: attribute not found", attr);
@@ -801,7 +802,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     }
 
     // Update attribute dampening
-    if (update_both || safe_str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY)) {
+    if (update_both || pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_casei)) {
         const char *dvalue = crm_element_value(xml, PCMK__XA_ATTR_DAMPENING);
         int dampen = 0;
 
@@ -859,10 +860,10 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 
     v = attrd_lookup_or_create_value(a->values, host, xml);
 
-    if (filter && safe_str_neq(v->current, value)
-        && safe_str_eq(host, attrd_cluster->uname)) {
+    if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
+        && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
 
-        xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+        xmlNode *sync = create_xml_node(NULL, __func__);
 
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    attr, host, v->current, value, peer->uname);
@@ -878,7 +879,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         send_attrd_message(NULL, sync);
         free_xml(sync);
 
-    } else if (safe_str_neq(v->current, value)) {
+    } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
         crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
                    attr, host, v->current? v->current : "(unset)", value? value : "(unset)", peer->uname);
         free(v->current);
@@ -956,18 +957,18 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             break;
 
         case crm_status_processes:
-            if (is_not_set(peer->processes, crm_get_cluster_proc())) {
+            if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 remove_voter = TRUE;
             }
             break;
 
         case crm_status_nstate:
-            if (safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
+            if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
                 if (attrd_election_won()
-                    && !is_set(peer->flags, crm_remote_node)) {
+                    && !pcmk_is_set(peer->flags, crm_remote_node)) {
                     attrd_peer_sync(peer, NULL);
                 }
             } else {
@@ -1279,7 +1280,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
             /* Older attrd versions don't know about the cib_mixed_update
              * flag so make sure it goes to the local cib which does
              */
-            flags |= cib_mixed_update|cib_scope_local;
+            cib__set_call_options(flags, crm_system_name,
+                                  cib_mixed_update|cib_scope_local);
         }
     }
 
@@ -1289,7 +1291,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                  a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
     }
     if (cib_updates) {
-        crm_log_xml_trace(xml_top, __FUNCTION__);
+        crm_log_xml_trace(xml_top, __func__);
 
         a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                                     flags, a->user);

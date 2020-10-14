@@ -79,8 +79,14 @@ update_validation 	debug: Configuration valid for schema: pacemaker-3.2
 update_validation 	debug: pacemaker-3.2-style configuration is also valid for pacemaker-3.3
 update_validation 	debug: Testing 'pacemaker-3.3' validation (17 of X)
 update_validation 	debug: Configuration valid for schema: pacemaker-3.3
-update_validation 	trace: Stopping at pacemaker-3.3
-update_validation 	info: Transformed the configuration from pacemaker-2.10 to pacemaker-3.3
+update_validation 	debug: pacemaker-3.3-style configuration is also valid for pacemaker-3.4
+update_validation 	debug: Testing 'pacemaker-3.4' validation (18 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-3.4
+update_validation 	debug: pacemaker-3.4-style configuration is also valid for pacemaker-3.5
+update_validation 	debug: Testing 'pacemaker-3.5' validation (19 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-3.5
+update_validation 	trace: Stopping at pacemaker-3.5
+update_validation 	info: Transformed the configuration from pacemaker-2.10 to pacemaker-3.5
 =#=#=#= Current cib after: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>

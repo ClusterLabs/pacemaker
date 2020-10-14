@@ -149,7 +149,7 @@ remote_proxy_remove_by_node(gpointer key, gpointer value, gpointer user_data)
     remote_proxy_t *proxy = value;
     const char *node_name = user_data;
 
-    if (safe_str_eq(node_name, proxy->node_name)) {
+    if (pcmk__str_eq(node_name, proxy->node_name, pcmk__str_casei)) {
         return TRUE;
     }
 
@@ -297,7 +297,7 @@ find_connected_proxy_by_node(const char * node_name)
 
     while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) &proxy)) {
         if (proxy->source
-            && safe_str_eq(node_name, proxy->node_name)) {
+            && pcmk__str_eq(node_name, proxy->node_name, pcmk__str_casei)) {
             return proxy;
         }
     }
@@ -338,7 +338,7 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
 
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
-    if (is_not_set(fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->pending_ops, fail_pending_op, lrm_state);
         crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
     }
@@ -441,7 +441,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
-    trigger_fsa(fsa_source);
+    trigger_fsa();
 }
 
 static void
@@ -480,7 +480,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
     const char *op = crm_element_value(msg, F_LRMD_IPC_OP);
-    if (safe_str_eq(op, LRMD_IPC_OP_NEW)) {
+    if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
         const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
         proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
@@ -495,7 +495,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             crm_debug("Skipping remote_config_check for guest-nodes");
         }
 
-    } else if (safe_str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ)) {
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {
         char *now_s = NULL;
         time_t now = time(NULL);
 
@@ -519,7 +519,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         }
         return;
 
-    } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST) && proxy && proxy->is_local) {
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei) && proxy && proxy->is_local) {
         /* This is for the controller, which we are, so don't try
          * to send to ourselves over IPC -- do it directly.
          */
@@ -538,8 +538,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * the name, so we don't return info for ourselves instead of the
          * Pacemaker Remote node.
          */
-        if (safe_str_eq(crm_element_value(request, F_CRM_TASK),
-                        CRM_OP_NODE_INFO)) {
+        if (pcmk__str_eq(crm_element_value(request, F_CRM_TASK), CRM_OP_NODE_INFO, pcmk__str_casei)) {
             int node_id = 0;
 
             crm_element_value_int(request, XML_ATTR_ID, &node_id);
@@ -556,7 +555,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
             int msg_id = 0;
             xmlNode *op_reply = create_xml_node(NULL, "ack");
 
-            crm_xml_add(op_reply, "function", __FUNCTION__);
+            crm_xml_add(op_reply, "function", __func__);
             crm_xml_add_int(op_reply, "line", __LINE__);
 
             crm_element_value_int(msg, F_LRMD_IPC_MSG_ID, &msg_id);

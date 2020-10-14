@@ -1,0 +1,38 @@
+.. _sample-corosync-configuration:
+
+Sample Corosync Configuration
+-----------------------------
+
+.. topic:: Sample ``corosync.conf`` for two-node cluster created by ``pcs``.
+
+    .. code-block:: none
+
+        totem {
+            version: 2
+            cluster_name: mycluster
+            secauth: off
+            transport: udpu
+        }
+
+        nodelist {
+            node {
+                ring0_addr: pcmk-1
+                nodeid: 1
+            }
+
+            node {
+                ring0_addr: pcmk-2
+                nodeid: 2
+            }
+        }
+
+        quorum {
+            provider: corosync_votequorum
+            two_node: 1
+        }
+
+        logging {
+            to_logfile: yes
+            logfile: /var/log/cluster/corosync.log
+            to_syslog: yes
+        }

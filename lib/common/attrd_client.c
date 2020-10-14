@@ -30,7 +30,7 @@
 static xmlNode *
 create_attrd_op(const char *user_name)
 {
-    xmlNode *attrd_op = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *attrd_op = create_xml_node(NULL, __func__);
 
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));
@@ -62,7 +62,7 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
 
     if (ipc == NULL && local_ipc == NULL) {
         local_ipc = crm_ipc_new(T_ATTRD, 0);
-        flags |= crm_ipc_client_response;
+        pcmk__set_ipc_flags(flags, "client", crm_ipc_client_response);
         connected = FALSE;
     }
 
@@ -145,10 +145,10 @@ pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
     xmlNode *update = create_attrd_op(user_name);
 
     /* remap common aliases */
-    if (safe_str_eq(section, "reboot")) {
+    if (pcmk__str_eq(section, "reboot", pcmk__str_casei)) {
         section = XML_CIB_TAG_STATUS;
 
-    } else if (safe_str_eq(section, "forever")) {
+    } else if (pcmk__str_eq(section, "forever", pcmk__str_casei)) {
         section = XML_CIB_TAG_NODES;
     }
 
@@ -204,9 +204,9 @@ pcmk__node_attr_request(crm_ipc_t *ipc, char command, const char *host,
     crm_xml_add(update, PCMK__XA_ATTR_NODE_NAME, host);
     crm_xml_add(update, PCMK__XA_ATTR_SET, set);
     crm_xml_add_int(update, PCMK__XA_ATTR_IS_REMOTE,
-                    is_set(options, pcmk__node_attr_remote));
+                    pcmk_is_set(options, pcmk__node_attr_remote));
     crm_xml_add_int(update, PCMK__XA_ATTR_IS_PRIVATE,
-                    is_set(options, pcmk__node_attr_private));
+                    pcmk_is_set(options, pcmk__node_attr_private));
 
     rc = send_attrd_op(ipc, update);
 
@@ -254,7 +254,7 @@ pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
     crm_xml_add(clear_op, PCMK__XA_ATTR_OPERATION, operation);
     crm_xml_add(clear_op, PCMK__XA_ATTR_INTERVAL, interval_spec);
     crm_xml_add_int(clear_op, PCMK__XA_ATTR_IS_REMOTE,
-                    is_set(options, pcmk__node_attr_remote));
+                    pcmk_is_set(options, pcmk__node_attr_remote));
 
     rc = send_attrd_op(ipc, clear_op);
     free_xml(clear_op);
@@ -280,7 +280,7 @@ pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
 const char *
 pcmk__node_attr_target(const char *name)
 {
-    if(safe_str_eq(name, "auto") || safe_str_eq(name, "localhost")) {
+    if (pcmk__strcase_any_of(name, "auto", "localhost", NULL)) {
         name = NULL;
     }
 
@@ -294,7 +294,7 @@ pcmk__node_attr_target(const char *name)
         const char *host_physical = getenv(phys_var);
 
         // It is important to use the name by which the scheduler knows us
-        if (host_physical && safe_str_eq(target, "host")) {
+        if (host_physical && pcmk__str_eq(target, "host", pcmk__str_casei)) {
             name = host_physical;
 
         } else {

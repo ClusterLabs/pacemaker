@@ -95,9 +95,10 @@ cluster_status(pe_working_set_t * data_set)
                                                    XML_ATTR_DC_UUID);
     }
 
-    clear_bit(data_set->flags, pe_flag_have_quorum);
     if (crm_is_true(value)) {
-        set_bit(data_set->flags, pe_flag_have_quorum);
+        pe__set_working_set_flags(data_set, pe_flag_have_quorum);
+    } else {
+        pe__clear_working_set_flags(data_set, pe_flag_have_quorum);
     }
 
     data_set->op_defaults = get_xpath_object("//" XML_CIB_TAG_OPCONFIG,
@@ -107,33 +108,33 @@ cluster_status(pe_working_set_t * data_set)
 
     unpack_config(config, data_set);
 
-   if (is_not_set(data_set->flags, pe_flag_quick_location)
-       && is_not_set(data_set->flags, pe_flag_have_quorum)
-       && data_set->no_quorum_policy != no_quorum_ignore) {
+   if (!pcmk_any_flags_set(data_set->flags,
+                           pe_flag_quick_location|pe_flag_have_quorum)
+       && (data_set->no_quorum_policy != no_quorum_ignore)) {
         crm_warn("Fencing and resource management disabled due to lack of quorum");
     }
 
     unpack_nodes(cib_nodes, data_set);
 
-    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         unpack_remote_nodes(cib_resources, data_set);
     }
 
     unpack_resources(cib_resources, data_set);
     unpack_tags(cib_tags, data_set);
 
-    if(is_not_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
         unpack_status(cib_status, data_set);
     }
 
-    if (is_not_set(data_set->flags, pe_flag_no_counts)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_no_counts)) {
         for (GList *item = data_set->resources; item != NULL;
              item = item->next) {
             ((pe_resource_t *) (item->data))->fns->count(item->data);
         }
     }
 
-    set_bit(data_set->flags, pe_flag_have_status);
+    pe__set_working_set_flags(data_set, pe_flag_have_status);
     return TRUE;
 }
 
@@ -271,7 +272,7 @@ cleanup_calculations(pe_working_set_t * data_set)
         return;
     }
 
-    clear_bit(data_set->flags, pe_flag_have_status);
+    pe__clear_working_set_flags(data_set, pe_flag_have_status);
     if (data_set->config_hash != NULL) {
         g_hash_table_destroy(data_set->config_hash);
     }
@@ -360,14 +361,21 @@ set_working_set_defaults(pe_working_set_t * data_set)
 
     data_set->order_id = 1;
     data_set->action_id = 1;
-    data_set->no_quorum_policy = no_quorum_freeze;
+    data_set->no_quorum_policy = no_quorum_stop;
 
     data_set->flags = 0x0ULL;
-    set_bit(data_set->flags, pe_flag_stop_rsc_orphans);
-    set_bit(data_set->flags, pe_flag_symmetric_cluster);
-    set_bit(data_set->flags, pe_flag_stop_action_orphans);
+
 #ifdef DEFAULT_CONCURRENT_FENCING_TRUE
-    set_bit(data_set->flags, pe_flag_concurrent_fencing);
+    pe__set_working_set_flags(data_set,
+                              pe_flag_stop_rsc_orphans
+                              |pe_flag_symmetric_cluster
+                              |pe_flag_stop_action_orphans
+                              |pe_flag_concurrent_fencing;
+#else
+    pe__set_working_set_flags(data_set,
+                              pe_flag_stop_rsc_orphans
+                              |pe_flag_symmetric_cluster
+                              |pe_flag_stop_action_orphans);
 #endif
 }
 
@@ -415,7 +423,7 @@ pe_find_node_id(GListPtr nodes, const char *id)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (node && safe_str_eq(node->details->id, id)) {
+        if (node && pcmk__str_eq(node->details->id, id, pcmk__str_casei)) {
             return node;
         }
     }
@@ -431,7 +439,7 @@ pe_find_node(GListPtr nodes, const char *uname)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (node && safe_str_eq(node->details->uname, uname)) {
+        if (node && pcmk__str_eq(node->details->uname, uname, pcmk__str_casei)) {
             return node;
         }
     }

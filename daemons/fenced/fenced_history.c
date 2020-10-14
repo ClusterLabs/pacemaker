@@ -16,12 +16,13 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <pacemaker-fenced.h>
 
@@ -42,7 +43,7 @@ stonith_send_broadcast_history(xmlNode *history,
                                const char *target)
 {
     xmlNode *bcast = create_xml_node(NULL, "stonith_command");
-    xmlNode *data = create_xml_node(NULL, __FUNCTION__);
+    xmlNode *data = create_xml_node(NULL, __func__);
 
     if (target) {
         crm_xml_add(data, F_STONITH_TARGET, target);
@@ -223,8 +224,8 @@ stonith_xml_history_to_list(xmlNode *history)
 
     CRM_LOG_ASSERT(rv != NULL);
 
-    for (xml_op = __xml_first_child(history); xml_op != NULL;
-         xml_op = __xml_next(xml_op)) {
+    for (xml_op = pcmk__xml_first_child(history); xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
         remote_fencing_op_t *op = NULL;
         char *id = crm_element_value_copy(xml_op, F_STONITH_REMOTE_OP_ID);
         int state;
@@ -292,7 +293,7 @@ stonith_local_history_diff(GHashTable *remote_history,
                     continue; /* skip entries broadcasted already */
                 }
 
-                if (target && strcmp(op->target, target) != 0) {
+                if (!pcmk__str_eq(target, op->target, pcmk__str_null_matches)) {
                     continue;
                 }
 
@@ -353,7 +354,7 @@ stonith_merge_in_history_list(GHashTable *history)
 
         if ((op->state != st_failed) &&
             (op->state != st_done) &&
-            safe_str_eq(op->originator, stonith_our_uname)) {
+            pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
             crm_warn("received pending action we are supposed to be the "
                      "owner but it's not in our records -> fail it");
             op->state = st_failed;
@@ -441,7 +442,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                         st_opt_broadcast | st_opt_discard_reply,
                                         NULL);
         } else if (remote_peer &&
-                   !safe_str_eq(remote_peer, stonith_our_uname)) {
+                   !pcmk__str_eq(remote_peer, stonith_our_uname, pcmk__str_casei)) {
             xmlNode *history = get_xpath_object("//" F_STONITH_HISTORY_LIST,
                                                 msg, LOG_NEVER);
             GHashTable *received_history =

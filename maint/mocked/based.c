@@ -23,7 +23,7 @@
 
 #include <crm_internal.h>
 #if 0
-#include "crm/common/ipcs_internal.h"  /* pcmk__client_t */
+#include "crm/common/ipc_internal.h"  /* pcmk__client_t */
 #include "crm/common/xml.h"  /* crm_xml_add */
 #endif
 #include "crm/msg_xml.h"  /* F_SUBTYPE */
@@ -136,7 +136,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
 
     if (!strcmp(op, CRM_OP_REGISTER)) {
         if (flags & crm_ipc_client_response) {
-            xmlNode *ack = create_xml_node(NULL, __FUNCTION__);
+            xmlNode *ack = create_xml_node(NULL, __func__);
             crm_xml_add(ack, F_CIB_OPERATION, CRM_OP_REGISTER);
             crm_xml_add(ack, F_CIB_CLIENTID, cib_client->id);
             pcmk__ipc_send_xml(cib_client, id, ack, flags);
@@ -153,7 +153,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
                   type, cib_client->name, cib_client->id, on_off ? "on" : "off");
 
         if (!strcmp(type, T_CIB_DIFF_NOTIFY) && on_off) {
-            cib_client->options |= cib_notify_diff;
+            pcmk__set_client_flags(cib_client, cib_notify_diff);
         }
 
         ctxt = (mock_based_context_t *) cib_client->userdata;
