@@ -11,7 +11,7 @@ include $(top_srcdir)/mk/common.mk
 ## libraries
 lib_LTLIBRARIES	= libcrmcluster.la 
 
-libcrmcluster_la_LDFLAGS = -version-info 29:4:0
+libcrmcluster_la_LDFLAGS = -version-info 29:5:0
 
 libcrmcluster_la_CFLAGS  = $(CFLAGS_HARDENED_LIB)
 libcrmcluster_la_LDFLAGS += $(LDFLAGS_HARDENED_LIB)
