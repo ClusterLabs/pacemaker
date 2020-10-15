@@ -1,3 +1,6 @@
+.. index::
+   single: guest node; example
+
 Guest Node Quick Example
 ------------------------
 
@@ -18,7 +21,7 @@ Mile-High View of Configuration Steps
 
   Run this command if you want to make a somewhat random key:
 
-  ::
+  .. code-block:: none
 
      # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 
@@ -26,7 +29,7 @@ Mile-High View of Configuration Steps
   boot, and if a local firewall is used, allow the node to accept connections
   on TCP port 3121.
 
-  ::
+  .. code-block:: none
 
     # yum install pacemaker-remote resource-agents
     # systemctl enable pacemaker_remote
@@ -43,7 +46,7 @@ Mile-High View of Configuration Steps
   **remote-node** meta-attribute to let Pacemaker know this will be a
   guest node capable of running resources.
 
-  ::
+  .. code-block:: none
 
     # pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta remote-node="guest1"
 
@@ -83,7 +86,7 @@ Using a Guest Node
 Guest nodes will show up in ``crm_mon`` output as normal.  For example, this is the
 ``crm_mon`` output after **guest1** is integrated into the cluster:
 
-::
+.. code-block:: none
 
     Stack: corosync
     Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
@@ -99,14 +102,14 @@ Guest nodes will show up in ``crm_mon`` output as normal.  For example, this is 
 
 Now, you could place a resource, such as a webserver, on **guest1**:
 
-::
+.. code-block:: none
 
     # pcs resource create webserver apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=30s
     # pcs constraint location webserver prefers guest1
 
 Now, the crm_mon output would show:
 
-::
+.. code-block:: none
 
     Stack: corosync
     Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum

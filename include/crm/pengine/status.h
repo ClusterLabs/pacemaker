@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,7 +70,7 @@ pe_rsc_is_clone(pe_resource_t *rsc)
 static inline bool
 pe_rsc_is_unique_clone(pe_resource_t *rsc)
 {
-    return pe_rsc_is_clone(rsc) && is_set(rsc->flags, pe_rsc_unique);
+    return pe_rsc_is_clone(rsc) && pcmk_is_set(rsc->flags, pe_rsc_unique);
 }
 
 /*!
@@ -83,7 +83,7 @@ pe_rsc_is_unique_clone(pe_resource_t *rsc)
 static inline bool
 pe_rsc_is_anon_clone(pe_resource_t *rsc)
 {
-    return pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique);
+    return pe_rsc_is_clone(rsc) && !pcmk_is_set(rsc->flags, pe_rsc_unique);
 }
 
 /*!

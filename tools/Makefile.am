@@ -12,7 +12,7 @@ if BUILD_SYSTEMD
 systemdsystemunit_DATA	= crm_mon.service
 endif
 
-noinst_HEADERS		= crm_mon.h crm_resource.h crm_resource_controller.h
+noinst_HEADERS		= crm_mon.h crm_resource.h
 
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
@@ -28,8 +28,10 @@ EXTRA_DIST		= crm_diff.8.inc \
 			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
+			  crm_resource.8.inc \
 			  crm_rule.8.inc \
 			  crm_simulate.8.inc \
+			  crmadmin.8.inc \
 			  fix-manpages \
 			  stonith_admin.8.inc
 
@@ -94,7 +96,7 @@ crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c crm_mon_print.c crm_mon_runtime.c crm_mon_xml.c
+crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c crm_mon_print.c crm_mon_runtime.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\
@@ -115,7 +117,6 @@ crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 
 crm_resource_SOURCES	= crm_resource.c		\
 			  crm_resource_ban.c		\
-			  crm_resource_controller.c	\
 			  crm_resource_print.c		\
 			  crm_resource_runtime.c
 crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\

@@ -53,6 +53,7 @@ typedef struct resource_object_functions_s {
     pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (pe_resource_t*);
     void (*count) (pe_resource_t*);
+    gboolean (*is_filtered) (pe_resource_t*, GListPtr, gboolean);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
@@ -61,7 +62,8 @@ enum pe_quorum_policy {
     no_quorum_freeze,
     no_quorum_stop,
     no_quorum_ignore,
-    no_quorum_suicide
+    no_quorum_suicide,
+    no_quorum_demote
 };
 
 enum node_type {
@@ -246,6 +248,7 @@ struct pe_node_s {
 #  define pe_rsc_allocating                 0x00000200ULL
 #  define pe_rsc_merging                    0x00000400ULL
 
+#  define pe_rsc_stop                       0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL
 #  define pe_rsc_allow_remote_remotes       0x00004000ULL
 
@@ -509,7 +512,7 @@ typedef struct pe_action_wrapper_s {
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ * compatibility. It will be moved to compatibility.h in a future release.
  */
 
 //!< \deprecated Use pe_action_t instead

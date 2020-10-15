@@ -23,7 +23,7 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
 
@@ -193,7 +193,11 @@ cib_tls_close(cib_t * cib)
 static inline int
 cib__tls_client_handshake(pcmk__remote_t *remote)
 {
+#ifdef HAVE_GNUTLS_GNUTLS_H
     return pcmk__tls_client_handshake(remote, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT);
+#else
+    return 0;
+#endif
 }
 
 static int
@@ -282,7 +286,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         const char *msg_type = crm_element_value(answer, F_CIB_OPERATION);
         const char *tmp_ticket = crm_element_value(answer, F_CIB_CLIENTID);
 
-        if (safe_str_neq(msg_type, CRM_OP_REGISTER)) {
+        if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             crm_err("Invalid registration message: %s", msg_type);
             rc = -EPROTO;
 
@@ -356,10 +360,10 @@ cib_remote_callback_dispatch(gpointer user_data)
 
         crm_trace("Activating %s callbacks...", type);
 
-        if (safe_str_eq(type, T_CIB)) {
+        if (pcmk__str_eq(type, T_CIB, pcmk__str_casei)) {
             cib_native_callback(cib, msg, 0, 0);
 
-        } else if (safe_str_eq(type, T_CIB_NOTIFY)) {
+        } else if (pcmk__str_eq(type, T_CIB_NOTIFY, pcmk__str_casei)) {
             g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
         } else {
@@ -509,10 +513,6 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     }
 
     cib->call_id++;
-    /* prevent call_id from being negative (or zero) and conflicting
-     *    with the cib_errors enum
-     * use 2 because we use it as (cib->call_id - 1) below
-     */
     if (cib->call_id < 1) {
         cib->call_id = 1;
     }

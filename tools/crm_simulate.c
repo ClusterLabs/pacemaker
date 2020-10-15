@@ -227,6 +227,16 @@ watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 }
 
 static gboolean
+xml_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.xml_file) {
+        free(options.xml_file);
+    }
+
+    options.xml_file = strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
 xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (options.xml_file) {
         free(options.xml_file);
@@ -332,9 +342,9 @@ static GOptionEntry output_entries[] = {
 
 static GOptionEntry source_entries[] = {
     { "live-check", 'L', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, live_check_cb,
-      "Connect to CIB mamager and use the current CIB contents as input",
+      "Connect to CIB manager and use the current CIB contents as input",
       NULL },
-    { "xml-file", 'x', 0, G_OPTION_ARG_FILENAME, &options.xml_file,
+    { "xml-file", 'x', 0, G_OPTION_ARG_CALLBACK, xml_file_cb,
       "Retrieve XML from the named file",
       "FILE" },
     { "xml-pipe", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, xml_pipe_cb,
@@ -382,6 +392,12 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     char *offline_nodes = NULL;
     char *offline_remote_nodes = NULL;
 
+    size_t online_nodes_len = 0;
+    size_t online_remote_nodes_len = 0;
+    size_t online_guest_nodes_len = 0;
+    size_t offline_nodes_len = 0;
+    size_t offline_remote_nodes_len = 0;
+
     GListPtr gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -428,25 +444,25 @@ print_cluster_status(pe_working_set_t * data_set, long options)
 
         } else if (node->details->online) {
             if (pe__is_guest_node(node)) {
-                online_guest_nodes = pcmk__add_word(online_guest_nodes,
-                                                    node_name);
+                pcmk__add_word(&online_guest_nodes, &online_guest_nodes_len,
+                               node_name);
             } else if (pe__is_remote_node(node)) {
-                online_remote_nodes = pcmk__add_word(online_remote_nodes,
-                                                     node_name);
+                pcmk__add_word(&online_remote_nodes, &online_remote_nodes_len,
+                               node_name);
             } else {
-                online_nodes = pcmk__add_word(online_nodes, node_name);
+                pcmk__add_word(&online_nodes, &online_nodes_len, node_name);
             }
             free(node_name);
             continue;
 
         } else {
             if (pe__is_remote_node(node)) {
-                offline_remote_nodes = pcmk__add_word(offline_remote_nodes,
-                                                      node_name);
+                pcmk__add_word(&offline_remote_nodes, &offline_remote_nodes_len,
+                               node_name);
             } else if (pe__is_guest_node(node)) {
                 /* ignore offline container nodes */
             } else {
-                offline_nodes = pcmk__add_word(offline_nodes, node_name);
+                pcmk__add_word(&offline_nodes, &offline_nodes_len, node_name);
             }
             free(node_name);
             continue;
@@ -456,7 +472,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
             printf("GuestNode %s: %s\n", node_name, node_mode);
         } else if (pe__is_remote_node(node)) {
             printf("RemoteNode %s: %s\n", node_name, node_mode);
-        } else if (safe_str_eq(node->details->uname, node->details->id)) {
+        } else if (pcmk__str_eq(node->details->uname, node->details->id, pcmk__str_casei)) {
             printf("Node %s: %s\n", node_name, node_mode);
         } else {
             printf("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
@@ -466,23 +482,23 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     }
 
     if (online_nodes) {
-        printf("Online: [%s ]\n", online_nodes);
+        printf("Online: [ %s ]\n", online_nodes);
         free(online_nodes);
     }
     if (offline_nodes) {
-        printf("OFFLINE: [%s ]\n", offline_nodes);
+        printf("OFFLINE: [ %s ]\n", offline_nodes);
         free(offline_nodes);
     }
     if (online_remote_nodes) {
-        printf("RemoteOnline: [%s ]\n", online_remote_nodes);
+        printf("RemoteOnline: [ %s ]\n", online_remote_nodes);
         free(online_remote_nodes);
     }
     if (offline_remote_nodes) {
-        printf("RemoteOFFLINE: [%s ]\n", offline_remote_nodes);
+        printf("RemoteOFFLINE: [ %s ]\n", offline_remote_nodes);
         free(offline_remote_nodes);
     }
     if (online_guest_nodes) {
-        printf("GuestOnline: [%s ]\n", online_guest_nodes);
+        printf("GuestOnline: [ %s ]\n", online_guest_nodes);
         free(online_guest_nodes);
     }
 
@@ -490,7 +506,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-        if (is_set(rsc->flags, pe_rsc_orphan)
+        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)
             && rsc->role == RSC_ROLE_STOPPED) {
             continue;
         }
@@ -510,11 +526,11 @@ create_action_name(pe_action_t *action)
 
     if (action->node) {
         action_host = action->node->details->uname;
-    } else if (is_not_set(action->flags, pe_action_pseudo)) {
+    } else if (!pcmk_is_set(action->flags, pe_action_pseudo)) {
         action_host = "<none>";
     }
 
-    if (safe_str_eq(action->task, RSC_CANCEL)) {
+    if (pcmk__str_eq(action->task, RSC_CANCEL, pcmk__str_casei)) {
         prefix = "Cancel ";
         task = action->cancel_task;
     }
@@ -533,8 +549,7 @@ create_action_name(pe_action_t *action)
             interval_ms = 0;
         }
 
-        if (safe_str_eq(action->task, RSC_NOTIFY)
-            || safe_str_eq(action->task, RSC_NOTIFIED)) {
+        if (pcmk__strcase_any_of(action->task, RSC_NOTIFY, RSC_NOTIFIED, NULL)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_key_type");
             const char *n_task = g_hash_table_lookup(action->meta, "notify_key_operation");
 
@@ -553,7 +568,7 @@ create_action_name(pe_action_t *action)
         }
         free(key);
 
-    } else if (safe_str_eq(action->task, CRM_OP_FENCE)) {
+    } else if (pcmk__str_eq(action->task, CRM_OP_FENCE, pcmk__str_casei)) {
         const char *op = g_hash_table_lookup(action->meta, "stonith_action");
 
         action_name = crm_strdup_printf("%s%s '%s' %s", prefix, action->task, op, action_host);
@@ -585,7 +600,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
-        g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(errno),
+        g_set_error(error, PCMK__RC_ERROR, errno,
                     "Could not open %s for writing: %s", dot_file,
                     pcmk_rc_str(errno));
         return false;
@@ -601,22 +616,23 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 
         crm_trace("Action %d: %s %s %p", action->id, action_name, action->uuid, action);
 
-        if (is_set(action->flags, pe_action_pseudo)) {
+        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             font = "orange";
         }
 
-        if (is_set(action->flags, pe_action_dumped)) {
+        if (pcmk_is_set(action->flags, pe_action_dumped)) {
             style = "bold";
             color = "green";
 
-        } else if (action->rsc != NULL && is_not_set(action->rsc->flags, pe_rsc_managed)) {
+        } else if ((action->rsc != NULL)
+                   && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)) {
             color = "red";
             font = "purple";
             if (all_actions == FALSE) {
                 goto do_not_write;
             }
 
-        } else if (is_set(action->flags, pe_action_optional)) {
+        } else if (pcmk_is_set(action->flags, pe_action_optional)) {
             color = "blue";
             if (all_actions == FALSE) {
                 goto do_not_write;
@@ -624,11 +640,10 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
 
         } else {
             color = "red";
-            CRM_CHECK(is_set(action->flags, pe_action_runnable) == FALSE,;
-                );
+            CRM_CHECK(!pcmk_is_set(action->flags, pe_action_runnable), ;);
         }
 
-        set_bit(action->flags, pe_action_dumped);
+        pe__set_action_flags(action, pe_action_dumped);
         crm_trace("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]",
                 action_name, style, color, font);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
@@ -653,13 +668,13 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
             if (before->state == pe_link_dumped) {
                 optional = FALSE;
                 style = "bold";
-            } else if (is_set(action->flags, pe_action_pseudo)
+            } else if (pcmk_is_set(action->flags, pe_action_pseudo)
                        && (before->type & pe_order_stonith_stop)) {
                 continue;
             } else if (before->type == pe_order_none) {
                 continue;
-            } else if (is_set(before->action->flags, pe_action_dumped)
-                       && is_set(action->flags, pe_action_dumped)
+            } else if (pcmk_is_set(before->action->flags, pe_action_dumped)
+                       && pcmk_is_set(action->flags, pe_action_dumped)
                        && before->type != pe_order_load) {
                 optional = FALSE;
             }
@@ -707,17 +722,17 @@ setup_input(const char *input, const char *output, GError **error)
 
         if (rc != pcmk_rc_ok) {
             rc = pcmk_legacy2rc(rc);
-            g_set_error(error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+            g_set_error(error, PCMK__RC_ERROR, rc,
                         "Live CIB query failed: %s (%d)", pcmk_rc_str(rc), rc);
             return rc;
 
         } else if (cib_object == NULL) {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_NOINPUT,
+            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_NOINPUT,
                         "Live CIB query failed: empty result");
             return pcmk_rc_no_input;
         }
 
-    } else if (safe_str_eq(input, "-")) {
+    } else if (pcmk__str_eq(input, "-", pcmk__str_casei)) {
         cib_object = filename2xml(NULL);
 
     } else {
@@ -753,7 +768,7 @@ setup_input(const char *input, const char *output, GError **error)
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_CANTCREAT,
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT,
                     "Could not create '%s': %s", output, pcmk_rc_str(rc));
         return rc;
     } else {
@@ -934,11 +949,10 @@ main(int argc, char **argv)
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         rc = ENOMEM;
-        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
-                    "Could not allocate working set");
+        g_set_error(&error, PCMK__RC_ERROR, rc, "Could not allocate working set");
         goto done;
     }
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_compat);
 
     if (options.test_dir != NULL) {
         profile_all(options.test_dir, options.repeat, data_set, options.use_date);
@@ -955,7 +969,7 @@ main(int argc, char **argv)
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
     if (rc != pcmk_rc_ok) {
         rc = pcmk_legacy2rc(rc);
-        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+        g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not connect to the CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
@@ -963,7 +977,7 @@ main(int argc, char **argv)
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
     if (rc != pcmk_rc_ok) {
         rc = pcmk_legacy2rc(rc);
-        g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+        g_set_error(&error, PCMK__RC_ERROR, rc,
                     "Could not get local CIB: %s", pcmk_rc_str(rc));
         goto done;
     }
@@ -971,15 +985,15 @@ main(int argc, char **argv)
     data_set->input = input;
     get_date(data_set, true, options.use_date);
     if(options.xml_file) {
-        set_bit(data_set->flags, pe_flag_sanitized);
+        pe__set_working_set_flags(data_set, pe_flag_sanitized);
     }
-    set_bit(data_set->flags, pe_flag_stdout);
+    pe__set_working_set_flags(data_set, pe_flag_stdout);
     cluster_status(data_set);
 
     if (quiet == FALSE) {
         int opts = options.print_pending ? pe_print_pending : 0;
 
-        if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             quiet_log("\n              *** Resource management is DISABLED ***");
             quiet_log("\n  The cluster will not attempt to start, stop or recover services");
             quiet_log("\n");
@@ -1006,7 +1020,7 @@ main(int argc, char **argv)
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
         if (rc != pcmk_rc_ok) {
             rc = pcmk_legacy2rc(rc);
-            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Could not get modified CIB: %s", pcmk_rc_str(rc));
             goto done;
         }
@@ -1016,9 +1030,9 @@ main(int argc, char **argv)
         get_date(data_set, true, options.use_date);
 
         if(options.xml_file) {
-            set_bit(data_set->flags, pe_flag_sanitized);
+            pe__set_working_set_flags(data_set, pe_flag_sanitized);
         }
-        set_bit(data_set->flags, pe_flag_stdout);
+        pe__set_working_set_flags(data_set, pe_flag_stdout);
         cluster_status(data_set);
     }
 
@@ -1026,7 +1040,7 @@ main(int argc, char **argv)
         rc = write_xml_file(input, options.input_file, FALSE);
         if (rc < 0) {
             rc = pcmk_legacy2rc(rc);
-            g_set_error(&error, G_OPTION_ERROR, pcmk_rc2exitc(rc),
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Could not create '%s': %s", options.input_file, pcmk_rc_str(rc));
             goto done;
         }
@@ -1082,7 +1096,7 @@ main(int argc, char **argv)
             get_date(data_set, true, options.use_date);
 
             quiet_log("\nRevised cluster status:\n");
-            set_bit(data_set->flags, pe_flag_stdout);
+            pe__set_working_set_flags(data_set, pe_flag_stdout);
             cluster_status(data_set);
             print_cluster_status(data_set, 0);
         }

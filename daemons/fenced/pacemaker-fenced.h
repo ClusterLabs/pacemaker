@@ -5,6 +5,7 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdint.h>                 // uint32_t, uint64_t
 #include <crm/common/mainloop.h>
 
 /*!
@@ -35,7 +36,7 @@ typedef struct stonith_device_s {
     gboolean automatic_unfencing;
     guint priority;
 
-    enum st_device_flags flags;
+    uint32_t flags; // Group of enum st_device_flags
 
     GHashTable *params;
     GHashTable *aliases;
@@ -117,8 +118,8 @@ typedef struct remote_fencing_op_s {
     char *delegate;
     /*! The point at which the remote operation completed */
     time_t completed;
-    /*! The stonith_call_options associated with this remote operation */
-    long long call_options;
+    //! Group of enum stonith_call_options associated with this operation
+    uint32_t call_options;
 
     /*! The current state of the remote operation. This indicates
      * what stage the op is in, query, exec, done, duplicate, failed. */
@@ -162,13 +163,14 @@ typedef struct remote_fencing_op_s {
  */
 void stonith_bcast_result_to_peers(remote_fencing_op_t * op, int rc, gboolean op_merged);
 
-enum st_callback_flags {
-    st_callback_unknown               = 0x0000,
-    st_callback_notify_fence          = 0x0001,
-    st_callback_device_add            = 0x0004,
-    st_callback_device_del            = 0x0010,
-    st_callback_notify_history        = 0x0020,
-    st_callback_notify_history_synced = 0x0040
+// Fencer-specific client flags
+enum st_client_flags {
+    st_callback_unknown               =  UINT64_C(0),
+    st_callback_notify_fence          = (UINT64_C(1) << 0),
+    st_callback_device_add            = (UINT64_C(1) << 2),
+    st_callback_device_del            = (UINT64_C(1) << 4),
+    st_callback_notify_history        = (UINT64_C(1) << 5),
+    st_callback_notify_history_synced = (UINT64_C(1) << 6)
 };
 
 /*
@@ -207,7 +209,7 @@ void free_stonith_remote_op_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 
-long long get_stonith_flag(const char *name);
+uint64_t get_stonith_flag(const char *name);
 
 void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                             xmlNode *op_request, const char *remote_peer);

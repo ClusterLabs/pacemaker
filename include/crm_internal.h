@@ -10,7 +10,11 @@
 #ifndef CRM_INTERNAL__H
 #  define CRM_INTERNAL__H
 
-#  include <config.h>
+#  ifndef PCMK__CONFIG_H
+#    define PCMK__CONFIG_H
+#    include <config.h>
+#  endif
+
 #  include <portability.h>
 
 #  include <glib.h>
@@ -26,53 +30,9 @@
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
 #  include <crm/common/internal.h>
-
-/* Assorted convenience functions */
-void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
-
-static inline long long
-crm_clear_bit(const char *function, int line, const char *target, long long word, long long bit)
-{
-    long long rc = (word & ~bit);
-
-    if (rc == word) {
-        /* Unchanged */
-    } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s cleared by %s:%d", bit, target, function, line);
-    } else {
-        crm_trace("Bit 0x%.8llx cleared by %s:%d", bit, function, line);
-    }
-
-    return rc;
-}
-
-static inline long long
-crm_set_bit(const char *function, int line, const char *target, long long word, long long bit)
-{
-    long long rc = (word | bit);
-
-    if (rc == word) {
-        /* Unchanged */
-    } else if (target) {
-        crm_trace("Bit 0x%.8llx for %s set by %s:%d", bit, target, function, line);
-    } else {
-        crm_trace("Bit 0x%.8llx set by %s:%d", bit, function, line);
-    }
-
-    return rc;
-}
-
-#  define set_bit(word, bit) word = crm_set_bit(__FUNCTION__, __LINE__, NULL, word, bit)
-#  define clear_bit(word, bit) word = crm_clear_bit(__FUNCTION__, __LINE__, NULL, word, bit)
-
-char *generate_hash_key(const char *crm_msg_reference, const char *sys);
-
-void strip_text_nodes(xmlNode * xml);
-void pcmk_panic(const char *origin);
-pid_t pcmk_locate_sbd(void);
 
 
 /*
@@ -124,6 +84,7 @@ pid_t pcmk_locate_sbd(void);
 #define PCMK__ATTRD_CMD_SYNC_RESPONSE   "sync-response"
 #define PCMK__ATTRD_CMD_CLEAR_FAILURE   "clear-failure"
 
+#define PCMK__CONTROLD_CMD_NODES        "list-nodes"
 
 /*
  * Environment variables used by Pacemaker
@@ -131,50 +92,5 @@ pid_t pcmk_locate_sbd(void);
 
 #define PCMK__ENV_PHYSICAL_HOST         "physical_host"
 
-
-#  if SUPPORT_COROSYNC
-#    include <qb/qbipc_common.h>
-#    include <corosync/corotypes.h>
-typedef struct qb_ipc_request_header cs_ipc_header_request_t;
-typedef struct qb_ipc_response_header cs_ipc_header_response_t;
-#  else
-typedef struct {
-    int size __attribute__ ((aligned(8)));
-    int id __attribute__ ((aligned(8)));
-} __attribute__ ((aligned(8))) cs_ipc_header_request_t;
-
-typedef struct {
-    int size __attribute__ ((aligned(8)));
-    int id __attribute__ ((aligned(8)));
-    int error __attribute__ ((aligned(8)));
-} __attribute__ ((aligned(8))) cs_ipc_header_response_t;
-
-#  endif
-
-static inline void *
-realloc_safe(void *ptr, size_t size)
-{
-    void *new_ptr;
-
-    // realloc(p, 0) can replace free(p) but this wrapper can't
-    CRM_ASSERT(size > 0);
-
-    new_ptr = realloc(ptr, size);
-    if (new_ptr == NULL) {
-        free(ptr);
-        abort();
-    }
-    return new_ptr;
-}
-
-const char *crm_xml_add_last_written(xmlNode *xml_node);
-void crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, int depth);
-void crm_buffer_add_char(char **buffer, int *offset, int *max, char c);
-
-#if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
-#  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))
-#else
-#  define PCMK__OUTPUT_ARGS(ARGS...)
-#endif
 
 #endif                          /* CRM_INTERNAL__H */

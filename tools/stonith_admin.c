@@ -27,7 +27,7 @@
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/cmdline_internal.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
@@ -234,7 +234,7 @@ static pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-static int st_opts = st_opt_sync_call | st_opt_allow_suicide;
+static const int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 
 static char *name = NULL;
 
@@ -245,8 +245,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
     gboolean retval = TRUE;
 
     if (env == NULL) {
-        crm_err("Invalid option: -e %s", optarg);
-        g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM, "Invalid option: -e %s", optarg);
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid option: -e %s", optarg);
         retval = FALSE;
     } else {
         crm_info("Got: '%s'='%s'", optarg, env);
@@ -281,8 +280,8 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
     rc = pcmk_scan_nvpair(optarg, &name, &value);
 
     if (rc != 2) {
-        crm_err("Invalid option: -o %s: %s", optarg, pcmk_strerror(rc));
-        g_set_error(error, G_OPTION_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_strerror(rc));
+        rc = pcmk_legacy2rc(rc);
+        g_set_error(error, PCMK__RC_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_rc_str(rc));
         retval = FALSE;
     } else {
         crm_info("Got: '%s'='%s'", name, value);
@@ -499,6 +498,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    out->quiet = args->quiet;
+
     st = stonith_api_new();
     if (st == NULL) {
         rc = -ENOMEM;
@@ -596,8 +597,8 @@ main(int argc, char **argv)
             break;
 
         case 'H':
-            rc = pcmk__fence_history(out, st, target, options.timeout*1000, args->quiet,
-                                       args->verbosity, options.broadcast, options.cleanup);
+            rc = pcmk__fence_history(out, st, target, options.timeout*1000, args->verbosity,
+                                     options.broadcast, options.cleanup);
             break;
 
         case 'K':

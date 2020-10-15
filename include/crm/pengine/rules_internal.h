@@ -21,6 +21,13 @@ void pe_free_alert_list(GListPtr alert_list);
 
 crm_time_t *pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec);
 
+gboolean pe__eval_attr_expr(xmlNode *expr, pe_rule_eval_data_t *rule_data);
+int pe__eval_date_expr(xmlNode *expr, pe_rule_eval_data_t *rule_data,
+                       crm_time_t *next_change);
+gboolean pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data);
+gboolean pe__eval_role_expr(xmlNode *expr, pe_rule_eval_data_t *rule_data);
+gboolean pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data);
+
 int pe_eval_date_expression(xmlNode *time_expr,
                             crm_time_t *now,
                             crm_time_t *next_change);

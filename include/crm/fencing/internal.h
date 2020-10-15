@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the Pacemaker project contributors
+ * Copyright 2011-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,8 +12,9 @@
 
 #  include <glib.h>
 #  include <crm/common/ipc.h>
-#  include <crm/common/output.h>
 #  include <crm/common/xml.h>
+#  include <crm/common/output_internal.h>
+#  include <crm/stonith-ng.h>
 
 enum st_device_flags
 {
@@ -23,6 +24,27 @@ enum st_device_flags
     st_device_supports_parameter_plug = 0x0008,
     st_device_supports_parameter_port = 0x0010,
 };
+
+#define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
+        device_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,      \
+                                          "Fence device", device_id,          \
+                                          (device_flags), (flags_to_set),     \
+                                          #flags_to_set);                     \
+    } while (0)
+
+#define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
+        st_call_opts = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
+                                          "Fencer call", (call_for),         \
+                                          (st_call_opts), (flags_to_set),    \
+                                          #flags_to_set);                    \
+    } while (0)
+
+#define stonith__clear_call_options(st_call_opts, call_for, flags_to_clear) do { \
+        st_call_opts = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
+                                            "Fencer call", (call_for),         \
+                                            (st_call_opts), (flags_to_clear),  \
+                                            #flags_to_clear);                  \
+    } while (0)
 
 struct stonith_action_s;
 typedef struct stonith_action_s stonith_action_t;
@@ -66,7 +88,9 @@ GList *stonith__parse_targets(const char *hosts);
 gboolean stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
-long long stonith__device_parameter_flags(xmlNode *metadata);
+void stonith__device_parameter_flags(uint32_t *device_flags,
+                                     const char *device_name,
+                                     xmlNode *metadata);
 
 #  define ST_LEVEL_MAX 10
 
@@ -183,5 +207,12 @@ int stonith__event_xml(pcmk__output_t *out, va_list args);
 int stonith__validate_agent_html(pcmk__output_t *out, va_list args);
 int stonith__validate_agent_text(pcmk__output_t *out, va_list args);
 int stonith__validate_agent_xml(pcmk__output_t *out, va_list args);
+
+stonith_history_t *stonith__first_matching_event(stonith_history_t *history,
+                                                 bool (*matching_fn)(stonith_history_t *, void *),
+                                                 void *user_data);
+bool stonith__event_state_pending(stonith_history_t *history, void *user_data);
+bool stonith__event_state_eq(stonith_history_t *history, void *user_data);
+bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
 
 #endif

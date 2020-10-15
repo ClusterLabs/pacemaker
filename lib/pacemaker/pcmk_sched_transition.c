@@ -23,6 +23,7 @@
 #include <crm/cib.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -139,8 +140,8 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     op->t_rcchange = op->t_run;
 
     op->call_id = 0;
-    for (xop = __xml_first_child_element(cib_resource); xop != NULL;
-         xop = __xml_next_element(xop)) {
+    for (xop = pcmk__xe_first_child(cib_resource); xop != NULL;
+         xop = pcmk__xe_next(xop)) {
 
         int tmp = 0;
 
@@ -278,16 +279,13 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
                 "  Please supply the class and type to continue\n", resource, ID(cib_node));
         return NULL;
 
-    } else if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_OCF)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SERVICE)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_UPSTART)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_LSB)) {
+    } else if (!pcmk__strcase_any_of(rclass, PCMK_RESOURCE_CLASS_OCF, PCMK_RESOURCE_CLASS_STONITH,
+                                     PCMK_RESOURCE_CLASS_SERVICE, PCMK_RESOURCE_CLASS_UPSTART,
+                                     PCMK_RESOURCE_CLASS_SYSTEMD, PCMK_RESOURCE_CLASS_LSB, NULL)) {
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
         return NULL;
 
-    } else if (is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
+    } else if (pcmk_is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
                 && (rprovider == NULL)) {
         fprintf(stderr, "Please specify the provider for resource %s\n", resource);
         return NULL;
@@ -632,8 +630,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     char *uuid = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET_UUID);
     const char *router_node = crm_element_value(action->xml, XML_LRM_ATTR_ROUTER_NODE);
 
-    if (safe_str_eq(operation, CRM_OP_PROBED)
-        || safe_str_eq(operation, CRM_OP_REPROBE)) {
+    if (pcmk__strcase_any_of(operation, CRM_OP_PROBED, CRM_OP_REPROBE, NULL)) {
         crm_info("Skipping %s op for %s", operation, node);
         goto done;
     }
@@ -659,7 +656,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         }
     }
 
-    if (safe_str_eq(operation, "delete") || safe_str_eq(operation, RSC_METADATA)) {
+    if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
         quiet_log(" * Resource action: %-15s %s on %s\n", resource, operation, node);
         goto done;
     }
@@ -777,12 +774,12 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
 
     quiet_log(" * Fencing %s (%s)\n", target, op);
-    if(safe_str_neq(op, "on")) {
+    if(!pcmk__str_eq(op, "on", pcmk__str_casei)) {
         int rc = 0;
         char xpath[STATUS_PATH_MAX];
         xmlNode *cib_node = modify_node(fake_cib, target, FALSE);
 
-        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __FUNCTION__);
+        crm_xml_add(cib_node, XML_ATTR_ORIGIN, __func__);
         CRM_ASSERT(cib_node != NULL);
 
         rc = fake_cib->cmds->replace(fake_cib, XML_CIB_TAG_STATUS, cib_node,

@@ -11,7 +11,7 @@
 #include <stdlib.h>  /* size_t */
 #include <stdbool.h>  /* bool */
 
-#include <crm/common/ipcs_internal.h>  /* pcmk__client_t */
+#include <crm/common/ipc_internal.h>  /* pcmk__client_t */
 
 
 struct module_s;

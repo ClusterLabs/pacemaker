@@ -41,7 +41,7 @@ extern "C" {
 
 #  define CRM_ASSERT(expr) do {                                              \
         if(__unlikely((expr) == FALSE)) {                                    \
-            crm_abort(__FILE__, __FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+            crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
             abort(); /* Redundant but it makes static analyzers happy */     \
         }                                                                    \
     } while(0)
@@ -107,6 +107,7 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_underflow           = -1028,
     pcmk_rc_no_input            = -1027,
     pcmk_rc_no_output           = -1026,
     pcmk_rc_after_range         = -1025,
@@ -141,6 +142,38 @@ enum pcmk_rc_e {
     pcmk_rc_ok                  =     0
 
     // Positive values reserved for system error numbers
+};
+
+/* Uniform exit codes
+ * Everything is mapped to its OCF equivalent so that Pacemaker only deals with one set of codes
+ */
+enum ocf_exitcode {
+    PCMK_OCF_OK                   = 0,
+    PCMK_OCF_UNKNOWN_ERROR        = 1,
+    PCMK_OCF_INVALID_PARAM        = 2,
+    PCMK_OCF_UNIMPLEMENT_FEATURE  = 3,
+    PCMK_OCF_INSUFFICIENT_PRIV    = 4,
+    PCMK_OCF_NOT_INSTALLED        = 5,
+    PCMK_OCF_NOT_CONFIGURED       = 6,
+    PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
+    PCMK_OCF_RUNNING_MASTER       = 8,
+    PCMK_OCF_FAILED_MASTER        = 9,
+
+
+    /* 150-199	reserved for application use */
+    PCMK_OCF_CONNECTION_DIED = 189, // Deprecated (see PCMK_LRM_OP_NOT_CONNECTED)
+
+    PCMK_OCF_DEGRADED        = 190, /* Active resource that is no longer 100% functional */
+    PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted resource that is no longer 100% functional */
+
+    PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
+    PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */
+    PCMK_OCF_SIGNAL        = 194,
+    PCMK_OCF_NOT_SUPPORTED = 195,
+    PCMK_OCF_PENDING       = 196,
+    PCMK_OCF_CANCELLED     = 197,
+    PCMK_OCF_TIMEOUT       = 198,
+    PCMK_OCF_OTHER_ERROR   = 199, /* Keep the same codes as PCMK_LSB */
 };
 
 /*

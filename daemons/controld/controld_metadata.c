@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the Pacemaker project contributors
+ * Copyright 2017-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -164,12 +164,12 @@ ra_param_from_xml(xmlNode *param_xml)
 
     value = crm_element_value(param_xml, "unique");
     if (crm_is_true(value)) {
-        set_bit(p->rap_flags, ra_param_unique);
+        controld_set_ra_param_flags(p, ra_param_unique);
     }
 
     value = crm_element_value(param_xml, "private");
     if (crm_is_true(value)) {
-        set_bit(p->rap_flags, ra_param_private);
+        controld_set_ra_param_flags(p, ra_param_private);
     }
     return p;
 }
@@ -215,8 +215,8 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
         const char *action_name = crm_element_value(match, "name");
 
-        if (safe_str_eq(action_name, "reload")) {
-            set_bit(md->ra_flags, ra_supports_reload);
+        if (pcmk__str_eq(action_name, "reload", pcmk__str_casei)) {
+            controld_set_ra_flags(md, key, ra_supports_reload);
             break; // since this is the only action we currently care about
         }
     }
@@ -237,8 +237,8 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
             if (p == NULL) {
                 goto err;
             }
-            if (is_set(p->rap_flags, ra_param_private)) {
-                set_bit(md->ra_flags, ra_uses_private);
+            if (pcmk_is_set(p->rap_flags, ra_param_private)) {
+                controld_set_ra_flags(md, key, ra_uses_private);
             }
             md->ra_params = g_list_prepend(md->ra_params, p);
         }

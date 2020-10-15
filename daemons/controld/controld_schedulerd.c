@@ -16,6 +16,7 @@
 #include <crm/common/xml.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -28,12 +29,12 @@ static mainloop_io_t *pe_subsystem = NULL;
 void
 pe_subsystem_free(void)
 {
-    clear_bit(fsa_input_register, R_PE_REQUIRED);
+    controld_clear_fsa_input_flags(R_PE_REQUIRED);
     if (pe_subsystem) {
         controld_expect_sched_reply(NULL);
         mainloop_del_ipc_client(pe_subsystem);
         pe_subsystem = NULL;
-        clear_bit(fsa_input_register, R_PE_CONNECTED);
+        controld_clear_fsa_input_flags(R_PE_CONNECTED);
     }
 }
 
@@ -55,7 +56,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
 {
     char *id = user_data;
 
-    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     CRM_CHECK(id != NULL, return);
 
     if (rc == pcmk_ok) {
@@ -84,7 +85,7 @@ pe_ipc_destroy(gpointer user_data)
     // If we aren't connected to the scheduler, we can't expect a reply
     controld_expect_sched_reply(NULL);
 
-    if (is_set(fsa_input_register, R_PE_REQUIRED)) {
+    if (pcmk_is_set(fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
@@ -108,7 +109,7 @@ pe_ipc_destroy(gpointer user_data)
         crm_info("Connection to the scheduler released");
     }
 
-    clear_bit(fsa_input_register, R_PE_CONNECTED);
+    controld_clear_fsa_input_flags(R_PE_CONNECTED);
     pe_subsystem = NULL;
     mainloop_set_trigger(fsa_source);
     return;
@@ -150,7 +151,7 @@ pe_subsystem_new(void)
         .destroy = pe_ipc_destroy
     };
 
-    set_bit(fsa_input_register, R_PE_REQUIRED);
+    controld_set_fsa_input_flags(R_PE_REQUIRED);
     pe_subsystem = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE,
                                            G_PRIORITY_DEFAULT,
                                            5 * 1024 * 1024 /* 5MB */,
@@ -158,7 +159,7 @@ pe_subsystem_new(void)
     if (pe_subsystem == NULL) {
         return FALSE;
     }
-    set_bit(fsa_input_register, R_PE_CONNECTED);
+    controld_set_fsa_input_flags(R_PE_CONNECTED);
     return TRUE;
 }
 
@@ -201,7 +202,7 @@ do_pe_control(long long action,
         pe_subsystem_free();
     }
     if ((action & A_PE_START)
-        && (is_not_set(fsa_input_register, R_PE_CONNECTED))) {
+        && !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
 
         if (cur_state == S_STOPPING) {
             crm_info("Ignoring request to connect to scheduler while shutting down");
@@ -310,15 +311,16 @@ do_pe_invoke(long long action,
         return;
     }
 
-    if (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
-        if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
+        if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_err("Cannot shut down gracefully without the scheduler");
             register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
         } else {
             crm_info("Waiting for the scheduler to connect");
             crmd_fsa_stall(FALSE);
-            register_fsa_action(A_PE_START);
+            controld_set_fsa_action_flags(A_PE_START);
+            trigger_fsa();
         }
         return;
     }
@@ -328,7 +330,7 @@ do_pe_invoke(long long action,
                    fsa_state2string(cur_state));
         return;
     }
-    if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
+    if (!pcmk_is_set(fsa_input_register, R_HAVE_CIB)) {
         crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
         /* start the join from scratch */
@@ -374,17 +376,20 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         crm_trace("Creating %s-%s for %s=%s",
                   CIB_OPTIONS_FIRST, attr_name, attr_name, attr_value);
 
-        configuration = find_entity(xml, XML_CIB_TAG_CONFIGURATION, NULL);
+        configuration = pcmk__xe_match(xml, XML_CIB_TAG_CONFIGURATION, NULL,
+                                       NULL);
         if (configuration == NULL) {
             configuration = create_xml_node(xml, XML_CIB_TAG_CONFIGURATION);
         }
 
-        crm_config = find_entity(configuration, XML_CIB_TAG_CRMCONFIG, NULL);
+        crm_config = pcmk__xe_match(configuration, XML_CIB_TAG_CRMCONFIG, NULL,
+                                    NULL);
         if (crm_config == NULL) {
             crm_config = create_xml_node(configuration, XML_CIB_TAG_CRMCONFIG);
         }
 
-        cluster_property_set = find_entity(crm_config, XML_CIB_TAG_PROPSET, NULL);
+        cluster_property_set = pcmk__xe_match(crm_config, XML_CIB_TAG_PROPSET,
+                                              NULL, NULL);
         if (cluster_property_set == NULL) {
             cluster_property_set = create_xml_node(crm_config, XML_CIB_TAG_PROPSET);
             crm_xml_add(cluster_property_set, XML_ATTR_ID, CIB_OPTIONS_FIRST);
@@ -403,19 +408,19 @@ static void
 do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     xmlNode *cmd = NULL;
-    pid_t watchdog = pcmk_locate_sbd();
+    pid_t watchdog = pcmk__locate_sbd();
 
     if (rc != pcmk_ok) {
         crm_err("Could not retrieve the Cluster Information Base: %s "
                 CRM_XS " rc=%d call=%d", pcmk_strerror(rc), rc, call_id);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
         return;
 
     } else if (call_id != fsa_pe_query) {
         crm_trace("Skipping superseded CIB query: %d (current=%d)", call_id, fsa_pe_query);
         return;
 
-    } else if (AM_I_DC == FALSE || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
+    } else if (!AM_I_DC || !pcmk_is_set(fsa_input_register, R_PE_CONNECTED)) {
         crm_debug("No need to invoke the scheduler anymore");
         return;
 
@@ -429,11 +434,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_debug("Re-asking for the CIB: %d other peer updates still pending",
                   (num_cib_op_callbacks() - 1));
         sleep(1);
-        register_fsa_action(A_PE_INVOKE);
-        return;
-
-    } else if (fsa_state != S_POLICY_ENGINE) {
-        crm_err("Invoking scheduler in state: %s", fsa_state2string(fsa_state));
+        controld_set_fsa_action_flags(A_PE_INVOKE);
+        trigger_fsa();
         return;
     }
 
@@ -446,7 +448,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
     crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 
-    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, watchdog?"true":"false");
+    force_local_option(output, XML_ATTR_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 
     if (ever_had_quorum && crm_have_quorum == FALSE) {
         crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);
@@ -458,7 +460,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (rc < 0) {
         crm_err("Could not contact the scheduler: %s " CRM_XS " rc=%d",
                 pcmk_strerror(rc), rc);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {
         controld_expect_sched_reply(cmd);
         crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",

@@ -9,17 +9,18 @@
 
 #include <crm_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/output.h>
 #include <crm/common/results.h>
+#include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
+
 #include <glib.h>
 #include <libxml/tree.h>
 #include <pacemaker.h>
 #include <pcmki/pcmki_output.h>
 #include <pcmki/pcmki_fence.h>
 
-static int st_opts = st_opt_sync_call | st_opt_allow_suicide;
+static const int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 
 static GMainLoop *mainloop = NULL;
 
@@ -79,8 +80,8 @@ notify_callback(stonith_t * st, stonith_event_t * e)
         return;
     }
 
-    if (safe_str_eq(async_fence_data.target, e->target) &&
-        safe_str_eq(async_fence_data.action, e->action)) {
+    if (pcmk__str_eq(async_fence_data.target, e->target, pcmk__str_casei) &&
+        pcmk__str_eq(async_fence_data.action, e->action, pcmk__str_casei)) {
 
         async_fence_data.rc = e->result;
         g_main_loop_quit(mainloop);
@@ -170,12 +171,13 @@ pcmk_fence_action(stonith_t *st, const char *target, const char *action,
 
 int
 pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
-                    unsigned int timeout, bool quiet, int verbose,
-                    bool broadcast, bool cleanup) {
+                    unsigned int timeout, int verbose, bool broadcast,
+                    bool cleanup) {
     stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = pcmk_rc_ok;
+    int opts = 0;
 
-    if (!quiet) {
+    if (!out->is_quiet(out)) {
         if (cleanup) {
             out->info(out, "cleaning up fencing-history%s%s",
                       target ? " for node " : "", target ? target : "");
@@ -185,9 +187,15 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
         }
     }
 
-    rc = st->cmds->history(st, st_opts | (cleanup ? st_opt_cleanup : 0) |
-                           (broadcast ? st_opt_broadcast : 0),
-                           safe_str_eq(target, "*") ? NULL : target,
+    stonith__set_call_options(opts, target, st_opts);
+    if (cleanup) {
+        stonith__set_call_options(opts, target, st_opt_cleanup);
+    }
+    if (broadcast) {
+        stonith__set_call_options(opts, target, st_opt_broadcast);
+    }
+    rc = st->cmds->history(st, opts,
+                           pcmk__str_eq(target, "*", pcmk__str_none)? NULL : target,
                            &history, timeout/1000);
 
     if (cleanup) {
@@ -204,7 +212,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
             latest = hp;
         }
 
-        if (quiet || !verbose) {
+        if (out->is_quiet(out) || !verbose) {
             continue;
         }
 
@@ -213,7 +221,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     }
 
     if (latest) {
-        if (quiet && out->supports_quiet) {
+        if (out->is_quiet(out)) {
             out->info(out, "%lld", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
             out->message(out, "stonith-event", latest, 0, FALSE);
@@ -239,8 +247,9 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int ti
         return rc;
     }
 
-    rc = pcmk__fence_history(out, st, target, timeout, quiet, verbose,
-                             broadcast, cleanup);
+    out->quiet = quiet;
+
+    rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast, cleanup);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }

@@ -285,7 +285,7 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         if (rc > 0) {
             buf[rc] = 0;
             crm_trace("Got %d chars: %.80s", rc, buf);
-            data = realloc_safe(data, len + rc + 1);
+            data = pcmk__realloc(data, len + rc + 1);
             len += sprintf(data + len, "%s", buf);
 
         } else if (errno != EINTR) {
@@ -372,7 +372,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
     char buffer[500];
 
-    snprintf(buffer, sizeof(buffer), "OCF_RESKEY_%s", (char *)key);
+    snprintf(buffer, sizeof(buffer), strcmp(key, "OCF_CHECK_LEVEL") != 0 ? "OCF_RESKEY_%s" : "%s", (char *)key);
     set_ocf_env(buffer, value, user_data);
 }
 
@@ -408,7 +408,7 @@ add_action_env_vars(const svc_action_t *op)
     if (op->agent == NULL) {
         env_setter = set_alert_env;  /* we deal with alert handler */
 
-    } else if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF)) {
+    } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         env_setter = set_ocf_env_with_prefix;
     }
 
@@ -637,15 +637,15 @@ services_handle_exec_error(svc_action_t * op, int error)
     int rc_not_installed, rc_insufficient_priv, rc_exec_error;
 
     /* Mimic the return codes for each standard as that's what we'll convert back from in get_uniform_rc() */
-    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB)
-        && safe_str_eq(op->action, "status")) {
+    if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)
+        && pcmk__str_eq(op->action, "status", pcmk__str_casei)) {
 
         rc_not_installed = PCMK_LSB_STATUS_NOT_INSTALLED;
         rc_insufficient_priv = PCMK_LSB_STATUS_INSUFFICIENT_PRIV;
         rc_exec_error = PCMK_LSB_STATUS_UNKNOWN;
 
 #if SUPPORT_NAGIOS
-    } else if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
+    } else if (pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
         rc_not_installed = NAGIOS_NOT_INSTALLED;
         rc_insufficient_priv = NAGIOS_INSUFFICIENT_PRIV;
         rc_exec_error = PCMK_OCF_EXEC_ERROR;
@@ -714,7 +714,7 @@ action_launch_child(svc_action_t *op)
 #if SUPPORT_CIBSECRETS
     if (pcmk__substitute_secrets(op->rsc, op->params) != pcmk_rc_ok) {
         /* replacing secrets failed! */
-        if (safe_str_eq(op->action,"stop")) {
+        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
             /* don't fail on stop! */
             crm_info("proceeding with the stop operation for %s", op->rsc);
 
@@ -923,7 +923,7 @@ services_os_action_execute(svc_action_t * op)
         return FALSE;
     }
 
-    if (is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
+    if (pcmk_is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
         if (pipe(stdin_fd) < 0) {
             rc = errno;
 

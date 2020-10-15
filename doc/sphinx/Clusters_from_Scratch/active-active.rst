@@ -1,0 +1,294 @@
+.. index::
+   single: storage; active/active
+
+Convert Storage to Active/Active
+--------------------------------
+
+The primary requirement for an Active/Active cluster is that the data
+required for your services is available, simultaneously, on both
+machines. Pacemaker makes no requirement on how this is achieved; you
+could use a SAN if you had one available, but since DRBD supports
+multiple Primaries, we can continue to use it here.
+
+.. index::
+   single: GFS2
+   single: DLM
+   single: filesystem; GFS2
+
+Install Cluster Filesystem Software
+###################################
+
+The only hitch is that we need to use a cluster-aware filesystem. The
+one we used earlier with DRBD, xfs, is not one of those. Both OCFS2
+and GFS2 are supported; here, we will use GFS2.
+
+On both nodes, install the GFS2 command-line utilities and the
+Distributed Lock Manager (DLM) required by cluster filesystems:
+
+.. code-block:: none
+
+    # yum install -y gfs2-utils dlm
+
+Configure the Cluster for the DLM
+#################################
+
+The DLM control daemon needs to run on both nodes, so we'll start by creating a
+resource for it (using the **ocf:pacemaker:controld** resource script), and clone
+it:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster cib dlm_cfg
+    [root@pcmk-1 ~]# pcs -f dlm_cfg resource create dlm \
+        ocf:pacemaker:controld op monitor interval=60s
+    [root@pcmk-1 ~]# pcs -f dlm_cfg resource clone dlm clone-max=2 clone-node-max=1
+    [root@pcmk-1 ~]# pcs -f dlm_cfg resource show
+     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+     Master/Slave Set: WebDataClone [WebData]
+         Masters: [ pcmk-1 ]
+         Slaves: [ pcmk-2 ]
+     WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
+     Clone Set: dlm-clone [dlm]
+         Stopped: [ pcmk-1 pcmk-2 ]
+
+Activate our new configuration, and see how the cluster responds:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster cib-push dlm_cfg --config
+    CIB updated
+    [root@pcmk-1 ~]# pcs status
+    Cluster name: mycluster
+    Stack: corosync
+    Current DC: pcmk-1 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+    Last updated: Tue Sep 11 10:18:30 2018
+    Last change: Tue Sep 11 10:16:49 2018 by hacluster via crmd on pcmk-2
+
+    2 nodes configured
+    8 resources configured
+
+    Online: [ pcmk-1 pcmk-2 ]
+
+    Full list of resources:
+
+     ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1
+     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+     Master/Slave Set: WebDataClone [WebData]
+         Masters: [ pcmk-1 ]
+         Slaves: [ pcmk-2 ]
+     WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
+     Clone Set: dlm-clone [dlm]
+         Started: [ pcmk-1 pcmk-2 ]
+
+    Daemon Status:
+      corosync: active/disabled
+      pacemaker: active/disabled
+      pcsd: active/enabled
+
+
+Create and Populate GFS2 Filesystem
+###################################
+
+Before we do anything to the existing partition, we need to make sure it
+is unmounted. We do this by telling the cluster to stop the WebFS resource.
+This will ensure that other resources (in our case, Apache) using WebFS
+are not only stopped, but stopped in the correct order.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource disable WebFS
+    [root@pcmk-1 ~]# pcs resource
+     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+     WebSite	(ocf::heartbeat:apache):	Stopped
+     Master/Slave Set: WebDataClone [WebData]
+         Masters: [ pcmk-1 ]
+         Slaves: [ pcmk-2 ]
+     WebFS	(ocf::heartbeat:Filesystem):	Stopped (disabled)
+     Clone Set: dlm-clone [dlm]
+         Started: [ pcmk-1 pcmk-2 ]
+
+You can see that both Apache and WebFS have been stopped,
+and that **pcmk-1** is the current master for the DRBD device.
+
+Now we can create a new GFS2 filesystem on the DRBD device.
+
+.. WARNING::
+
+    This will erase all previous content stored on the DRBD device. Ensure
+    you have a copy of any important data.
+
+.. IMPORTANT::
+
+    Run the next command on whichever node has the DRBD Primary role.
+    Otherwise, you will receive the message:
+
+    .. code-block:: none
+
+        /dev/drbd1: Read-only file system
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
+    It appears to contain an existing filesystem (xfs)
+    This will destroy any data on /dev/drbd1
+    Are you sure you want to proceed? [y/n] y
+    Discarding device contents (may take a while on large devices): Done
+    Adding journals: Done 
+    Building resource groups: Done 
+    Creating quota file: Done
+    Writing superblock and syncing: Done
+    Device:                    /dev/drbd1
+    Block size:                4096
+    Device size:               0.50 GB (131059 blocks)
+    Filesystem size:           0.50 GB (131056 blocks)
+    Journals:                  2
+    Resource groups:           3
+    Locking protocol:          "lock_dlm"
+    Lock table:                "mycluster:web"
+    UUID:                      0bcbffab-cada-4105-94d1-be8a26669ee0
+
+The ``mkfs.gfs2`` command required a number of additional parameters:
+
+* ``-p lock_dlm`` specifies that we want to use the kernel's DLM.
+
+* ``-j 2`` indicates that the filesystem should reserve enough
+  space for two journals (one for each node that will access the filesystem).
+
+* ``-t mycluster:web`` specifies the lock table name. The format for this
+  field is ``<CLUSTERNAME>:<FSNAME>``. For ``CLUSTERNAME``, we need to use the
+  same value we specified originally with ``pcs cluster setup --name`` (which is
+  also the value of **cluster_name** in ``/etc/corosync/corosync.conf``). If
+  you are unsure what your cluster name is, you can look in
+  ``/etc/corosync/corosync.conf`` or execute the command
+  ``pcs cluster corosync pcmk-1 | grep cluster_name``.
+
+Now we can (re-)populate the new filesystem with data
+(web pages). We'll create yet another variation on our home page.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# mount /dev/drbd1 /mnt
+    [root@pcmk-1 ~]# cat <<-END >/mnt/index.html
+    <html>
+    <body>My Test Site - GFS2</body>
+    </html>
+    END
+    [root@pcmk-1 ~]# chcon -R --reference=/var/www/html /mnt
+    [root@pcmk-1 ~]# umount /dev/drbd1
+    [root@pcmk-1 ~]# drbdadm verify wwwdata
+
+Reconfigure the Cluster for GFS2
+################################
+
+With the WebFS resource stopped, let's update the configuration.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource show WebFS
+     Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
+      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
+      Meta Attrs: target-role=Stopped 
+      Operations: monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
+                  notify interval=0s timeout=60 (WebFS-notify-interval-0s)
+                  start interval=0s timeout=60 (WebFS-start-interval-0s)
+                  stop interval=0s timeout=60 (WebFS-stop-interval-0s)
+
+The fstype option needs to be updated to **gfs2** instead of **xfs**.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
+    [root@pcmk-1 ~]# pcs resource show WebFS
+     Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
+      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2
+      Meta Attrs: target-role=Stopped 
+      Operations: monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
+                  notify interval=0s timeout=60 (WebFS-notify-interval-0s)
+                  start interval=0s timeout=60 (WebFS-start-interval-0s)
+                  stop interval=0s timeout=60 (WebFS-stop-interval-0s)
+
+GFS2 requires that DLM be running, so we also need to set up new colocation
+and ordering constraints for it:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs constraint colocation add WebFS with dlm-clone INFINITY
+    [root@pcmk-1 ~]# pcs constraint order dlm-clone then WebFS
+    Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
+
+
+.. index::
+   pair: filesystem; clone
+
+Clone the Filesystem Resource
+#############################
+
+Now that we have a cluster filesystem ready to go, we can configure the cluster
+so both nodes mount the filesystem.
+
+Clone the filesystem resource in a new configuration.
+Notice how pcs automatically updates the relevant constraints again.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster cib active_cfg
+    [root@pcmk-1 ~]# pcs -f active_cfg resource clone WebFS
+    [root@pcmk-1 ~]# pcs -f active_cfg constraint
+    Location Constraints:
+    Ordering Constraints:
+      start ClusterIP then start WebSite (kind:Mandatory)
+      promote WebDataClone then start WebFS-clone (kind:Mandatory)
+      start WebFS-clone then start WebSite (kind:Mandatory)
+      start dlm-clone then start WebFS-clone (kind:Mandatory)
+    Colocation Constraints:
+      WebSite with ClusterIP (score:INFINITY)
+      WebFS-clone with WebDataClone (score:INFINITY) (with-rsc-role:Master)
+      WebSite with WebFS-clone (score:INFINITY)
+      WebFS-clone with dlm-clone (score:INFINITY)
+    Ticket Constraints:
+
+Tell the cluster that it is now allowed to promote both instances to be DRBD
+Primary (aka. master).
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone master-max=2
+
+Finally, load our configuration to the cluster, and re-enable the WebFS resource
+(which we disabled earlier).
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster cib-push active_cfg --config
+    CIB updated
+    [root@pcmk-1 ~]# pcs resource enable WebFS
+
+After all the processes are started, the status should look similar to this.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource
+     Master/Slave Set: WebDataClone [WebData]
+         Masters: [ pcmk-1 pcmk-2 ]
+     Clone Set: dlm-clone [dlm]
+         Started: [ pcmk-1 pcmk-2 ]
+     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+     Clone Set: WebFS-clone [WebFS]
+         Started: [ pcmk-1 pcmk-2 ]
+     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+
+Test Failover
+#############
+
+Testing failover is left as an exercise for the reader.
+
+With this configuration, the data is now active/active. The website
+administrator could change HTML files on either node, and the live website will
+show the changes even if it is running on the opposite node.
+
+If the web server is configured to listen on all IP addresses, it is possible
+to remove the constraints between the WebSite and ClusterIP resources, and
+clone the WebSite resource. The web server would always be ready to serve web
+pages, and only the IP address would need to be moved in a failover.

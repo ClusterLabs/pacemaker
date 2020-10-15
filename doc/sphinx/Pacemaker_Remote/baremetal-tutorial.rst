@@ -1,3 +1,6 @@
+.. index::
+   single: remote node; walk-through
+
 Remote Node Walk-through
 ------------------------
 
@@ -15,12 +18,15 @@ a third to act as the remote node.
 Configure Remote Node
 #####################
 
+.. index::
+   single: remote node; firewall
+
 Configure Firewall on Remote Node
 _________________________________
 
 Allow cluster-related services through the local firewall:
 
-::
+.. code-block:: none
 
     # firewall-cmd --permanent --add-service=high-availability
     success
@@ -41,7 +47,7 @@ Allow cluster-related services through the local firewall:
 
     To disable security measures:
 
-    ::
+    .. code-block:: none
 
         # setenforce 0
         # sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
@@ -54,13 +60,13 @@ _________________________________________
 
 Install the pacemaker_remote daemon on the remote node.
 
-::
+.. code-block:: none
 
     # yum install -y pacemaker-remote resource-agents pcs
 
 Create a location for the shared authentication key:
 
-::
+.. code-block:: none
 
     # mkdir -p --mode=0750 /etc/pacemaker
     # chgrp haclient /etc/pacemaker
@@ -70,20 +76,20 @@ authentication key installed for the communication to work correctly.
 If you already have a key on an existing node, copy it to the new
 remote node. Otherwise, create a new key, for example:
 
-::
+.. code-block:: none
 
     # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
 
 Now start and enable the pacemaker_remote daemon on the remote node.
 
-::
+.. code-block:: none
 
     # systemctl enable pacemaker_remote.service
     # systemctl start pacemaker_remote.service
 
 Verify the start is successful.
 
-::
+.. code-block:: none
 
     # systemctl status pacemaker_remote
     pacemaker_remote.service - Pacemaker Remote Service
@@ -115,7 +121,7 @@ discovered.
 Execute the following on each cluster node, replacing the IP address with the
 actual IP address of the remote node.
 
-::
+.. code-block:: none
 
     # cat << END >> /etc/hosts
     192.168.122.10    remote1
@@ -124,19 +130,19 @@ actual IP address of the remote node.
 If running the ssh command on one of the cluster nodes results in this
 output before disconnecting, the connection works:
 
-::
+.. code-block:: none
 
     # ssh -p 3121 remote1
     ssh_exchange_identification: read: Connection reset by peer
 
 If you see one of these, the connection is not working:
 
-::
+.. code-block:: none
 
     # ssh -p 3121 remote1
     ssh: connect to host remote1 port 3121: No route to host
 
-::
+.. code-block:: none
 
     # ssh -p 3121 remote1
     ssh: connect to host remote1 port 3121: Connection refused
@@ -158,7 +164,7 @@ __________________________________
 
 On the two cluster nodes, install the following packages.
 
-::
+.. code-block:: none
 
     # yum install -y pacemaker corosync pcs resource-agents
 
@@ -168,7 +174,7 @@ ________________________________________
 Create a location for the shared authentication key,
 and copy it from any existing node:
 
-::
+.. code-block:: none
 
     # mkdir -p --mode=0750 /etc/pacemaker
     # chgrp haclient /etc/pacemaker
@@ -185,7 +191,7 @@ start.
 To initialize the corosync config file, execute the following pcs command on
 both nodes, filling in the information in <> with your nodes' information.
 
-::
+.. code-block:: none
 
     # pcs cluster setup --force --local --name mycluster <node1 ip or hostname> <node2 ip or hostname>
 
@@ -194,13 +200,13 @@ ________________________________
 
 Start the cluster stack on both cluster nodes using the following command.
 
-::
+.. code-block:: none
 
     # pcs cluster start
 
 Verify corosync membership
 
-::
+.. code-block:: none
 
     # pcs status corosync
     Membership information
@@ -211,7 +217,7 @@ Verify corosync membership
 Verify Pacemaker status. At first, the ``pcs cluster status`` output will look
 like this.
 
-::
+.. code-block:: none
 
     # pcs status
     Cluster name: mycluster
@@ -225,7 +231,7 @@ like this.
 
 After about a minute, you should see your two cluster nodes come online.
 
-::
+.. code-block:: none
 
     # pcs status
     Cluster name: mycluster
@@ -242,7 +248,7 @@ After about a minute, you should see your two cluster nodes come online.
 For the sake of this tutorial, we are going to disable stonith to avoid having
 to cover fencing device configuration.
 
-::
+.. code-block:: none
 
     # pcs property set stonith-enabled=false
 
@@ -261,13 +267,13 @@ script that performs any work.
 Define the remote node connection resource to our remote node,
 **remote1**, using the following command on any cluster node.
 
-::
+.. code-block:: none
 
     # pcs resource create remote1 ocf:pacemaker:remote
 
 That's it.  After a moment you should see the remote node come online.
 
-::
+.. code-block:: none
 
     Cluster name: mycluster
     Stack: corosync
@@ -302,6 +308,10 @@ resource creation.
 
     Never involve a remote node connection resource in a resource group,
     colocation constraint, or order constraint.
+
+
+.. index::
+   single: remote node; fencing
 
 Fencing Remote Nodes
 ####################

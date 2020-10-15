@@ -40,9 +40,8 @@ cib_prepare_common(xmlNode * root, const char *section)
     if (root == NULL) {
         return NULL;
 
-    } else if (safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
-               || safe_str_eq(crm_element_name(root), F_CRM_DATA)
-               || safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
+    } else if (pcmk__strcase_any_of(crm_element_name(root), XML_TAG_FRAGMENT,
+                                    F_CRM_DATA, F_CIB_CALLDATA, NULL)) {
         data = first_named_child(root, XML_TAG_CIB);
 
     } else {
@@ -50,7 +49,7 @@ cib_prepare_common(xmlNode * root, const char *section)
     }
 
     /* grab the section specified for the command */
-    if (section != NULL && data != NULL && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)) {
+    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
         data = get_object_root(section, data);
     }
 
@@ -111,7 +110,7 @@ cib_cleanup_query(int options, xmlNode ** data, xmlNode ** output)
 {
     CRM_LOG_ASSERT(*data == NULL);
     if ((options & cib_no_children)
-        || safe_str_eq(crm_element_name(*output), "xpath-query")) {
+        || pcmk__str_eq(crm_element_name(*output), "xpath-query", pcmk__str_casei)) {
         free_xml(*output);
     }
     return pcmk_ok;

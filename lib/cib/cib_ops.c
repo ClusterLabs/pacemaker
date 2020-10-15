@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -22,6 +24,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
@@ -40,7 +43,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     CRM_CHECK(*answer == NULL, free_xml(*answer));
     *answer = NULL;
 
-    if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
+    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
     }
 
@@ -184,14 +187,14 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
 
     tag = crm_element_name(input);
 
-    if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
+    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (safe_str_eq(tag, section)) {
+    } else if (pcmk__str_eq(tag, section, pcmk__str_casei)) {
         section = NULL;
     }
 
-    if (safe_str_eq(tag, XML_TAG_CIB)) {
+    if (pcmk__str_eq(tag, XML_TAG_CIB, pcmk__str_casei)) {
         int updates = 0;
         int epoch = 0;
         int admin_epoch = 0;
@@ -210,7 +213,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                                                                  version ? version :
                                                                  CRM_FEATURE_SET);
 
-            if (safe_str_neq(digest_verify, digest)) {
+            if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
                 crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer,
                         digest_verify, digest);
                 reason = "digest mismatch";
@@ -292,9 +295,10 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     }
 
     obj_root = get_object_root(section, *result_cib);
-    if(safe_str_eq(crm_element_name(input), section)) {
+    if(pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
         xmlNode *child = NULL;
-        for(child = __xml_first_child(input); child; child = __xml_next(child)) {
+        for (child = pcmk__xml_first_child(input); child;
+             child = pcmk__xml_next(child)) {
             if (replace_xml_child(NULL, obj_root, child, TRUE) == FALSE) {
                 crm_trace("No matching object to delete: %s=%s", child->name, ID(child));
             }
@@ -398,7 +402,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
         target = find_xml_node(parent, object_name, FALSE);
 
     } else {
-        target = find_entity(parent, object_name, object_id);
+        target = pcmk__xe_match(parent, object_name, XML_ATTR_ID, object_id);
     }
 
     if (target == NULL) {
@@ -445,7 +449,8 @@ update_cib_object(xmlNode * parent, xmlNode * update)
 
     crm_trace("Processing children of <%s id=%s>", crm_str(object_name), crm_str(object_id));
 
-    for (a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
+    for (a_child = pcmk__xml_first_child(update); a_child != NULL;
+         a_child = pcmk__xml_next(a_child)) {
         int tmp_result = 0;
 
         crm_trace("Updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
@@ -493,7 +498,8 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
         equiv_node = find_xml_node(parent, object_name, FALSE);
 
     } else {
-        equiv_node = find_entity(parent, object_name, object_id);
+        equiv_node = pcmk__xe_match(parent, object_name, XML_ATTR_ID,
+                                    object_id);
     }
 
     if (result != pcmk_ok) {
@@ -518,13 +524,13 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     xmlNode *update_section = NULL;
 
     crm_trace("Processing \"%s\" event for section=%s", op, crm_str(section));
-    if (safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
+    if (pcmk__str_eq(XML_CIB_TAG_SECTION_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (safe_str_eq(XML_TAG_CIB, section)) {
+    } else if (pcmk__str_eq(XML_TAG_CIB, section, pcmk__str_casei)) {
         section = NULL;
 
-    } else if (safe_str_eq(crm_element_name(input), XML_TAG_CIB)) {
+    } else if (pcmk__str_eq(crm_element_name(input), XML_TAG_CIB, pcmk__str_casei)) {
         section = NULL;
     }
 
@@ -543,10 +549,11 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     failed = create_xml_node(NULL, XML_TAG_FAILED);
 
     update_section = get_object_root(section, *result_cib);
-    if (safe_str_eq(crm_element_name(input), section)) {
+    if (pcmk__str_eq(crm_element_name(input), section, pcmk__str_casei)) {
         xmlNode *a_child = NULL;
 
-        for (a_child = __xml_first_child(input); a_child != NULL; a_child = __xml_next(a_child)) {
+        for (a_child = pcmk__xml_first_child(input); a_child != NULL;
+             a_child = pcmk__xml_next(a_child)) {
             result = add_cib_object(update_section, a_child);
             if (update_results(failed, a_child, op, result)) {
                 break;
@@ -583,8 +590,9 @@ cib_process_diff(const char *op, int options, const char *section, xmlNode * req
         originator = crm_element_value(req, F_ORIG);
     }
 
-    crm_trace("Processing \"%s\" event from %s %s",
-              op, originator, is_set(options, cib_force_diff)?"(global update)":"");
+    crm_trace("Processing \"%s\" event from %s%s",
+              op, originator,
+              (pcmk_is_set(options, cib_force_diff)? " (global update)" : ""));
 
     free_xml(*result_cib);
     *result_cib = copy_xml(existing_cib);
@@ -670,7 +678,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
     int lpc = 0;
     int max = 0;
     int rc = pcmk_ok;
-    gboolean is_query = safe_str_eq(op, CIB_OP_QUERY);
+    gboolean is_query = pcmk__str_eq(op, CIB_OP_QUERY, pcmk__str_casei);
 
     xmlXPathObjectPtr xpathObj = NULL;
 
@@ -684,7 +692,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
 
     max = numXpathResults(xpathObj);
 
-    if (max < 1 && safe_str_eq(op, CIB_OP_DELETE)) {
+    if (max < 1 && pcmk__str_eq(op, CIB_OP_DELETE, pcmk__str_casei)) {
         crm_debug("%s was already removed", section);
 
     } else if (max < 1) {
@@ -697,7 +705,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         }
     }
 
-    if (safe_str_eq(op, CIB_OP_DELETE) && (options & cib_multiple)) {
+    if (pcmk__str_eq(op, CIB_OP_DELETE, pcmk__str_casei) && (options & cib_multiple)) {
         dedupXpathResults(xpathObj);
     }
 
@@ -713,7 +721,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
         crm_debug("Processing %s op for %s with %s", op, section, path);
         free(path);
 
-        if (safe_str_eq(op, CIB_OP_DELETE)) {
+        if (pcmk__str_eq(op, CIB_OP_DELETE, pcmk__str_casei)) {
             if (match == *result_cib) {
                 /* Attempting to delete the whole "/cib" */
                 crm_warn("Cannot perform %s for %s: The xpath is addressing the whole /cib", op, section);
@@ -726,18 +734,18 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                 break;
             }
 
-        } else if (safe_str_eq(op, CIB_OP_MODIFY)) {
+        } else if (pcmk__str_eq(op, CIB_OP_MODIFY, pcmk__str_casei)) {
             if (update_xml_child(match, input) == FALSE) {
                 rc = -ENXIO;
             } else if ((options & cib_multiple) == 0) {
                 break;
             }
 
-        } else if (safe_str_eq(op, CIB_OP_CREATE)) {
+        } else if (pcmk__str_eq(op, CIB_OP_CREATE, pcmk__str_casei)) {
             add_node_copy(match, input);
             break;
 
-        } else if (safe_str_eq(op, CIB_OP_QUERY)) {
+        } else if (pcmk__str_eq(op, CIB_OP_QUERY, pcmk__str_casei)) {
 
             if (options & cib_no_children) {
                 const char *tag = TYPE(match);
@@ -785,7 +793,7 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                 *answer = match;
             }
 
-        } else if (safe_str_eq(op, CIB_OP_REPLACE)) {
+        } else if (pcmk__str_eq(op, CIB_OP_REPLACE, pcmk__str_casei)) {
             xmlNode *parent = match->parent;
 
             free_xml(match);

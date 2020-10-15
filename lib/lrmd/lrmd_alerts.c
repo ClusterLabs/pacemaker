@@ -144,7 +144,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
         lrmd_key_value_t *head = NULL;
         int rc;
 
-        if (is_not_set(entry->flags, kind)) {
+        if (!pcmk_is_set(entry->flags, kind)) {
             crm_trace("Filtering unwanted %s alert to %s via %s",
                       kind_s, entry->recipient, entry->id);
             continue;
@@ -355,7 +355,7 @@ lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
 
     target_rc = rsc_op_expected_rc(op);
     if ((op->interval_ms == 0) && (target_rc == op->rc)
-        && safe_str_eq(op->op_type, RSC_STATUS)) {
+        && pcmk__str_eq(op->op_type, RSC_STATUS, pcmk__str_casei)) {
 
         /* Don't send alerts for probes with the expected result. Leave it up to
          * the agent whether to alert for 'failed' probes. (Even if we find a

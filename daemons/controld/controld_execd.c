@@ -50,10 +50,10 @@ static int do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
 static void
 lrm_connection_destroy(void)
 {
-    if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
+    if (pcmk_is_set(fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Connection to executor failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
-        clear_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_clear_fsa_input_flags(R_LRM_CONNECTED);
 
     } else {
         crm_info("Disconnected from executor");
@@ -101,8 +101,8 @@ history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
         lrmd_event_data_t *existing = iter->data;
 
         if ((op->interval_ms == existing->interval_ms)
-            && crm_str_eq(op->rsc_id, existing->rsc_id, TRUE)
-            && safe_str_eq(op->op_type, existing->op_type)) {
+            && pcmk__str_eq(op->rsc_id, existing->rsc_id, pcmk__str_none)
+            && pcmk__str_eq(op->op_type, existing->op_type, pcmk__str_casei)) {
 
             history->recurring_op_list = g_list_delete_link(history->recurring_op_list, iter);
             lrmd_free_event(existing);
@@ -170,7 +170,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         return;
     }
 
-    if (safe_str_eq(op->op_type, RSC_NOTIFY)) {
+    if (pcmk__str_eq(op->op_type, RSC_NOTIFY, pcmk__str_casei)) {
         return;
     }
 
@@ -225,11 +225,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         }
         entry->last = lrmd_copy_event(op);
 
-        if (op->params &&
-            (safe_str_eq(CRMD_ACTION_START, op->op_type) ||
-             safe_str_eq("reload", op->op_type) ||
-             safe_str_eq(CRMD_ACTION_STATUS, op->op_type))) {
-
+        if (op->params && pcmk__strcase_any_of(op->op_type, CRMD_ACTION_START,
+                                               "reload", CRMD_ACTION_STATUS, NULL)) {
             if (entry->stop_params) {
                 g_hash_table_destroy(entry->stop_params);
             }
@@ -247,7 +244,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
                   op->rsc_id, op->op_type, op->interval_ms);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
-    } else if (entry->recurring_op_list && safe_str_eq(op->op_type, RSC_STATUS) == FALSE) {
+    } else if (entry->recurring_op_list && !pcmk__str_eq(op->op_type, RSC_STATUS, pcmk__str_casei)) {
         crm_trace("Dropping %d recurring ops because of: " PCMK__OP_FMT,
                   g_list_length(entry->recurring_op_list), op->rsc_id,
                   op->op_type, op->interval_ms);
@@ -345,7 +342,7 @@ do_lrm_control(long long action,
             }
         }
 
-        clear_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_clear_fsa_input_flags(R_LRM_CONNECTED);
         crm_info("Disconnecting from the executor");
         lrm_state_disconnect(lrm_state);
         lrm_state_reset_tables(lrm_state, FALSE);
@@ -379,12 +376,13 @@ do_lrm_control(long long action,
             return;
         }
 
-        set_bit(fsa_input_register, R_LRM_CONNECTED);
+        controld_set_fsa_input_flags(R_LRM_CONNECTED);
         crm_info("Connection to the executor established");
     }
 
     if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action), __FUNCTION__);
+        crm_err("Unexpected action %s in %s", fsa_action2string(action),
+                __func__);
     }
 }
 
@@ -406,7 +404,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         log_level = LOG_ERR;
         when = "shutdown";
 
-    } else if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    } else if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         when = "shutdown... waiting";
     }
 
@@ -435,7 +433,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         do_crm_log(log_level, "%d pending executor operation%s at %s",
                    counter, pcmk__plural_s(counter), when);
 
-        if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
+        if ((cur_state == S_TERMINATE)
+            || !pcmk_is_set(fsa_input_register, R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
             while (g_hash_table_iter_next(&gIter, (gpointer*)&key, (gpointer*)&pending)) {
                 do_crm_log(log_level, "Pending action: %s (%s)", key, pending->op_key);
@@ -451,7 +450,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         return rc;
     }
 
-    if (is_set(fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)) {
         /* At this point we're not waiting, we're just shutting down */
         when = "shutdown";
     }
@@ -474,7 +473,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 
             g_hash_table_iter_init(&hIter, lrm_state->pending_ops);
             while (g_hash_table_iter_next(&hIter, (gpointer*)&key, (gpointer*)&pending)) {
-                if (crm_str_eq(entry->id, pending->rsc_id, TRUE)) {
+                if (pcmk__str_eq(entry->id, pending->rsc_id, pcmk__str_none)) {
                     crm_notice("%sction %s (%s) incomplete at %s",
                                pending->interval_ms == 0 ? "A" : "Recurring a",
                                key, pending->op_key, when);
@@ -497,10 +496,9 @@ build_parameter_list(const lrmd_event_data_t *op,
                      xmlNode *result, enum ra_param_flags_e param_type,
                      bool invert_for_xml)
 {
-    int len = 0;
-    int max = 0;
     char *list = NULL;
-    GList *iter = NULL;
+    size_t len = 0;
+    size_t max = 0;
 
     /* Newer resource agents support the "private" parameter attribute to
      * indicate sensitive parameters. For backward compatibility with older
@@ -512,22 +510,22 @@ build_parameter_list(const lrmd_event_data_t *op,
         "user",
     };
 
-    if (is_not_set(metadata->ra_flags, ra_uses_private)
+    if (!pcmk_is_set(metadata->ra_flags, ra_uses_private)
         && (param_type == ra_param_private)) {
 
         max = DIMOF(secure_terms);
     }
 
-    for (iter = metadata->ra_params; iter != NULL; iter = iter->next) {
+    for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
         bool accept = FALSE;
 
-        if (is_set(param->rap_flags, param_type)) {
+        if (pcmk_is_set(param->rap_flags, param_type)) {
             accept = TRUE;
 
         } else if (max) {
             for (int lpc = 0; lpc < max; lpc++) {
-                if (safe_str_eq(secure_terms[lpc], param->rap_name)) {
+                if (pcmk__str_eq(secure_terms[lpc], param->rap_name, pcmk__str_casei)) {
                     accept = TRUE;
                     break;
                 }
@@ -535,15 +533,13 @@ build_parameter_list(const lrmd_event_data_t *op,
         }
 
         if (accept) {
-            int start = len;
-
             crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
 
-            len += strlen(param->rap_name) + 2; // include spaces around
-            list = realloc_safe(list, len + 1); // include null terminator
-
-            // spaces before and after make parsing simpler
-            sprintf(list + start, " %s ", param->rap_name);
+            if (list == NULL) {
+                // We will later search for " WORD ", so start list with a space
+                pcmk__add_word(&list, &len, " ");
+            }
+            pcmk__add_word(&list, &len, param->rap_name);
 
         } else {
             crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
@@ -559,6 +555,10 @@ build_parameter_list(const lrmd_event_data_t *op,
         }
     }
 
+    if (list != NULL) {
+        // We will later search for " WORD ", so end list with a space
+        pcmk__add_word(&list, &len, " ");
+    }
     return list;
 }
 
@@ -577,7 +577,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    if (is_set(metadata->ra_flags, ra_supports_reload)) {
+    if (pcmk_is_set(metadata->ra_flags, ra_supports_reload)) {
         restart = create_xml_node(NULL, XML_TAG_PARAMS);
         /* Add any parameters with unique="1" to the "op-force-restart" list.
          *
@@ -752,11 +752,11 @@ is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
 
     crm_trace("Processing %s: %s.%d=%d", rsc_id, entry->last->op_type,
               entry->last->interval_ms, entry->last->rc);
-    if (entry->last->rc == PCMK_OCF_OK && safe_str_eq(entry->last->op_type, CRMD_ACTION_STOP)) {
+    if (entry->last->rc == PCMK_OCF_OK && pcmk__str_eq(entry->last->op_type, CRMD_ACTION_STOP, pcmk__str_casei)) {
         return FALSE;
 
     } else if (entry->last->rc == PCMK_OCF_OK
-               && safe_str_eq(entry->last->op_type, CRMD_ACTION_MIGRATE)) {
+               && pcmk__str_eq(entry->last->op_type, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         // A stricter check is too complex ... leave that to the scheduler
         return FALSE;
 
@@ -796,10 +796,13 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
                 crm_xml_add(xml_rsc, XML_RSC_ATTR_CONTAINER, container);
             }
         }
-        build_operation_update(xml_rsc, &(entry->rsc), entry->failed, lrm_state->node_name, __FUNCTION__);
-        build_operation_update(xml_rsc, &(entry->rsc), entry->last, lrm_state->node_name, __FUNCTION__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->failed, lrm_state->node_name,
+                               __func__);
+        build_operation_update(xml_rsc, &(entry->rsc), entry->last, lrm_state->node_name,
+                               __func__);
         for (gIter = entry->recurring_op_list; gIter != NULL; gIter = gIter->next) {
-            build_operation_update(xml_rsc, &(entry->rsc), gIter->data, lrm_state->node_name, __FUNCTION__);
+            build_operation_update(xml_rsc, &(entry->rsc), gIter->data, lrm_state->node_name,
+                                   __func__);
         }
     }
 
@@ -818,7 +821,7 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     CRM_CHECK(peer != NULL, return NULL);
 
     xml_state = create_node_state_update(peer, update_flags, NULL,
-                                         __FUNCTION__);
+                                         __func__);
     if (xml_state == NULL) {
         return NULL;
     }
@@ -888,7 +891,7 @@ controld_rc2event(lrmd_event_data_t *event, int rc)
 void
 controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
 {
-    if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+    if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
@@ -922,7 +925,7 @@ lrm_remove_deleted_rsc(gpointer key, gpointer value, gpointer user_data)
     struct delete_event_s *event = user_data;
     struct pending_deletion_op_s *op = value;
 
-    if (crm_str_eq(event->rsc, op->rsc, TRUE)) {
+    if (pcmk__str_eq(event->rsc, op->rsc, pcmk__str_none)) {
         notify_deleted(event->lrm_state, op->input, event->rsc, event->rc);
         return TRUE;
     }
@@ -935,7 +938,7 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
     const char *rsc = user_data;
     active_op_t *pending = value;
 
-    if (crm_str_eq(rsc, pending->rsc_id, TRUE)) {
+    if (pcmk__str_eq(rsc, pending->rsc_id, pcmk__str_none)) {
         crm_info("Removing op %s:%d for deleted resource %s",
                  pending->op_key, pending->call_id, rsc);
         return TRUE;
@@ -1079,7 +1082,7 @@ last_failed_matches_op(rsc_history_t *entry, const char *op, guint interval_ms)
     if (op == NULL) {
         return TRUE;
     }
-    return (safe_str_eq(op, entry->failed->op_type)
+    return (pcmk__str_eq(op, entry->failed->op_type, pcmk__str_casei)
             && (interval_ms == entry->failed->interval_ms));
 }
 
@@ -1147,17 +1150,17 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     pending = g_hash_table_lookup(lrm_state->pending_ops, key);
 
     if (pending) {
-        if (remove && is_not_set(pending->flags, active_op_remove)) {
-            set_bit(pending->flags, active_op_remove);
+        if (remove && !pcmk_is_set(pending->flags, active_op_remove)) {
+            controld_set_active_op_flags(pending, active_op_remove);
             crm_debug("Scheduling %s for removal", key);
         }
 
-        if (is_set(pending->flags, active_op_cancelled)) {
+        if (pcmk_is_set(pending->flags, active_op_cancelled)) {
             crm_debug("Operation %s already cancelled", key);
             free(local_key);
             return FALSE;
         }
-        set_bit(pending->flags, active_op_cancelled);
+        controld_set_active_op_flags(pending, active_op_cancelled);
 
     } else {
         crm_info("No pending op found for %s", key);
@@ -1203,7 +1206,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
     struct cancel_data *data = user_data;
     active_op_t *op = value;
 
-    if (crm_str_eq(op->op_key, data->key, TRUE)) {
+    if (pcmk__str_eq(op->op_key, data->key, pcmk__str_none)) {
         data->done = TRUE;
         remove = !cancel_op(data->lrm_state, data->rsc->id, key, op->call_id, data->remove);
     }
@@ -1458,7 +1461,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
 
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
 
-    if (safe_str_eq(operation, RSC_NOTIFY)) { // Notifications can't fail
+    if (pcmk__str_eq(operation, RSC_NOTIFY, pcmk__str_casei)) { // Notifications can't fail
         fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_OK);
     } else {
         fake_op_status(lrm_state, op, op_status, rc);
@@ -1555,7 +1558,7 @@ handle_refresh_op(lrm_state_t *lrm_state, const char *user_name,
     fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
     crm_info("Forced a local resource history refresh: call=%d", rc);
 
-    if (safe_str_neq(CRM_SYSTEM_CRMD, from_sys)) {
+    if (!pcmk__str_eq(CRM_SYSTEM_CRMD, from_sys, pcmk__str_casei)) {
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, fragment, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
                                         fsa_our_uuid);
@@ -1593,8 +1596,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
     crm_notice("Forcing the status of all resources to be redetected");
     force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
 
-    if (safe_str_neq(CRM_SYSTEM_PENGINE, from_sys)
-        && safe_str_neq(CRM_SYSTEM_TENGINE, from_sys)) {
+    if (!pcmk__strcase_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
 
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
                                         from_sys, CRM_SYSTEM_LRMD,
@@ -1746,7 +1748,8 @@ do_lrm_invoke(long long action,
     bool crm_rsc_delete = FALSE;
 
     target_node = lrm_op_target(input->xml);
-    is_remote_node = safe_str_neq(target_node, fsa_our_uname);
+    is_remote_node = !pcmk__str_eq(target_node, fsa_our_uname,
+                                   pcmk__str_casei);
 
     lrm_state = lrm_state_find(target_node);
     if ((lrm_state == NULL) && is_remote_node) {
@@ -1764,7 +1767,7 @@ do_lrm_invoke(long long action,
 
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
     from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
-    if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+    if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
 #if ENABLE_ACL
@@ -1775,13 +1778,13 @@ do_lrm_invoke(long long action,
               crm_op, from_sys);
 #endif
 
-    if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
-        if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+    if (pcmk__str_eq(crm_op, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+        if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
             crm_rsc_delete = TRUE; // from crm_resource
         }
         operation = CRMD_ACTION_DELETE;
 
-    } else if (safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_FAIL, pcmk__str_casei)) {
         fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
                           from_sys);
         return;
@@ -1790,25 +1793,26 @@ do_lrm_invoke(long long action,
         operation = crm_element_value(input->xml, XML_LRM_ATTR_TASK);
     }
 
-    if (safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
+    if (pcmk__str_eq(crm_op, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         handle_refresh_op(lrm_state, user_name, from_host, from_sys);
 
-    } else if (safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_LRM_QUERY, pcmk__str_casei)) {
         handle_query_op(input->msg, lrm_state);
 
-    } else if (safe_str_eq(operation, CRM_OP_PROBED)) {
+    } else if (pcmk__str_eq(operation, CRM_OP_PROBED, pcmk__str_casei)) {
         update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
                      user_name, is_remote_node);
 
-    } else if (safe_str_eq(operation, CRM_OP_REPROBE)
-               || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+    } else if (pcmk__str_eq(crm_op, CRM_OP_REPROBE, pcmk__str_casei)
+               || pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_casei)) {
         handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
                           is_remote_node);
 
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
         xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
-        gboolean create_rsc = safe_str_neq(operation, CRMD_ACTION_DELETE);
+        gboolean create_rsc = !pcmk__str_eq(operation, CRMD_ACTION_DELETE,
+                                            pcmk__str_casei);
         int rc;
 
         // We can't return anything meaningful without a resource ID
@@ -1852,12 +1856,12 @@ do_lrm_invoke(long long action,
             return;
         }
 
-        if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
+        if (pcmk__str_eq(operation, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
             if (!do_lrm_cancel(input, lrm_state, rsc, from_host, from_sys)) {
                 crm_log_xml_warn(input->xml, "Bad command");
             }
 
-        } else if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
+        } else if (pcmk__str_eq(operation, CRMD_ACTION_DELETE, pcmk__str_casei)) {
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
 
@@ -1873,13 +1877,72 @@ do_lrm_invoke(long long action,
     }
 }
 
+#if ENABLE_VERSIONED_ATTRS
+static void
+resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
+                             const xmlNode *rsc_op, GHashTable *params)
+{
+    /* Resource info *should* already be cached, so we don't get
+     * executor call */
+    lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
+    struct ra_metadata_s *metadata;
+
+    metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
+    if (metadata) {
+        xmlNode *versioned_attrs = NULL;
+        GHashTable *hash = NULL;
+        char *key = NULL;
+        char *value = NULL;
+        GHashTableIter iter;
+
+        versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_ATTRS);
+        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
+        g_hash_table_iter_init(&iter, hash);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+            g_hash_table_iter_steal(&iter);
+            g_hash_table_replace(params, key, value);
+        }
+        g_hash_table_destroy(hash);
+
+        versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_META);
+        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
+        g_hash_table_iter_init(&iter, hash);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+            g_hash_table_replace(params, crm_meta_name(key), strdup(value));
+
+            if (pcmk__str_eq(key, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
+                op->timeout = crm_parse_int(value, "0");
+            } else if (pcmk__str_eq(key, XML_OP_ATTR_START_DELAY, pcmk__str_casei)) {
+                op->start_delay = crm_parse_int(value, "0");
+            }
+        }
+        g_hash_table_destroy(hash);
+
+        versioned_attrs = first_named_child(rsc_op, XML_TAG_RSC_VER_ATTRS);
+        hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
+        g_hash_table_iter_init(&iter, hash);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+            g_hash_table_iter_steal(&iter);
+            g_hash_table_replace(params, key, value);
+        }
+        g_hash_table_destroy(hash);
+    }
+
+    lrmd_free_rsc_info(rsc);
+}
+#endif
+
 static lrmd_event_data_t *
-construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, const char *operation)
+construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
+             const char *operation)
 {
     lrmd_event_data_t *op = NULL;
     const char *op_delay = NULL;
     const char *op_timeout = NULL;
     GHashTable *params = NULL;
+
+    xmlNode *primitive = NULL;
+    const char *class = NULL;
 
     const char *transition = NULL;
 
@@ -1893,7 +1956,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     op->start_delay = 0;
 
     if (rsc_op == NULL) {
-        CRM_LOG_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+        CRM_LOG_ASSERT(pcmk__str_eq(CRMD_ACTION_STOP, operation, pcmk__str_casei));
         op->user_data = NULL;
         /* the stop_all_resources() case
          * by definition there is no DC (or they'd be shutting
@@ -1922,62 +1985,30 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
         op->interval_ms = 0;
     }
 
-#if ENABLE_VERSIONED_ATTRS
-    // Resolve any versioned parameters
-    if (lrm_state && safe_str_neq(op->op_type, RSC_METADATA)
-        && safe_str_neq(op->op_type, CRMD_ACTION_DELETE)
-        && !is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
+    /* Use pcmk_monitor_timeout instead of meta timeout for stonith
+       recurring monitor, if set */
+    primitive = find_xml_node(rsc_op, XML_CIB_TAG_RESOURCE, FALSE);
+    class = crm_element_value(primitive, XML_AGENT_ATTR_CLASS);
 
-        // Resource info *should* already be cached, so we don't get executor call
-        lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
-        struct ra_metadata_s *metadata;
+    if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
+            && pcmk__str_eq(operation, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && (op->interval_ms > 0)) {
 
-        metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
-        if (metadata) {
-            xmlNode *versioned_attrs = NULL;
-            GHashTable *hash = NULL;
-            char *key = NULL;
-            char *value = NULL;
-            GHashTableIter iter;
-
-            versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_ATTRS);
-            hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-            g_hash_table_iter_init(&iter, hash);
-            while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-                g_hash_table_iter_steal(&iter);
-                g_hash_table_replace(params, key, value);
-            }
-            g_hash_table_destroy(hash);
-
-            versioned_attrs = first_named_child(rsc_op, XML_TAG_OP_VER_META);
-            hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-            g_hash_table_iter_init(&iter, hash);
-            while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-                g_hash_table_replace(params, crm_meta_name(key), strdup(value));
-
-                if (safe_str_eq(key, XML_ATTR_TIMEOUT)) {
-                    op->timeout = crm_parse_int(value, "0");
-                } else if (safe_str_eq(key, XML_OP_ATTR_START_DELAY)) {
-                    op->start_delay = crm_parse_int(value, "0");
-                }
-            }
-            g_hash_table_destroy(hash);
-
-            versioned_attrs = first_named_child(rsc_op, XML_TAG_RSC_VER_ATTRS);
-            hash = pe_unpack_versioned_parameters(versioned_attrs, metadata->ra_version);
-            g_hash_table_iter_init(&iter, hash);
-            while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
-                g_hash_table_iter_steal(&iter);
-                g_hash_table_replace(params, key, value);
-            }
-            g_hash_table_destroy(hash);
+        op_timeout = g_hash_table_lookup(params, "pcmk_monitor_timeout");
+        if (op_timeout != NULL) {
+            op->timeout = crm_get_msec(op_timeout);
         }
+    }
 
-        lrmd_free_rsc_info(rsc);
+#if ENABLE_VERSIONED_ATTRS
+    if (lrm_state && !is_remote_lrmd_ra(NULL, NULL, rsc_id)
+        && !pcmk__strcase_any_of(op_type, CRMD_ACTION_METADATA, CRMD_ACTION_DELETE,
+                                 NULL)) {
+        resolve_versioned_parameters(lrm_state, rsc_id, rsc_op, params);
     }
 #endif
 
-    if (safe_str_neq(operation, RSC_STOP)) {
+    if (!pcmk__str_eq(operation, RSC_STOP, pcmk__str_casei)) {
         op->params = params;
 
     } else {
@@ -2017,8 +2048,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     op->user_data = strdup(transition);
 
     if (op->interval_ms != 0) {
-        if (safe_str_eq(operation, CRMD_ACTION_START)
-            || safe_str_eq(operation, CRMD_ACTION_STOP)) {
+        if (pcmk__strcase_any_of(operation, CRMD_ACTION_START, CRMD_ACTION_STOP, NULL)) {
             crm_err("Start and Stop actions cannot have an interval: %u",
                     op->interval_ms);
             op->interval_ms = 0;
@@ -2064,7 +2094,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     peer = crm_get_peer(0, fsa_our_uname);
     update = create_node_state_update(peer, node_update_none, NULL,
-                                      __FUNCTION__);
+                                      __func__);
 
     iter = create_xml_node(update, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
@@ -2073,7 +2103,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, fsa_our_uname, __FUNCTION__);
+    build_operation_update(iter, rsc, op, fsa_our_uname, __func__);
     reply = create_request(CRM_OP_INVOKE_LRM, update, to_host, to_sys, CRM_SYSTEM_LRMD, NULL);
 
     crm_log_xml_trace(update, "[direct ACK]");
@@ -2106,7 +2136,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
         }
     }
 
-    set_bit(fsa_input_register, R_SENT_RSC_STOP);
+    controld_set_fsa_input_flags(R_SENT_RSC_STOP);
     g_list_free(lrm_state_list); lrm_state_list = NULL;
     return res;
 }
@@ -2124,7 +2154,7 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
     active_op_t *op = value;
 
     if ((op->interval_ms != 0)
-        && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
+        && pcmk__str_eq(op->rsc_id, event->rsc->id, pcmk__str_none)) {
 
         crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, (char*)key);
         remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
@@ -2245,24 +2275,28 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     }
 
     /* now do the op */
-    crm_info("Performing key=%s op=" PCMK__OP_FMT,
-             transition, rsc->id, operation, op->interval_ms);
+    crm_notice("Requesting local execution of %s operation for %s on %s "
+               CRM_XS " transition_key=%s op_key=" PCMK__OP_FMT,
+               crm_action_str(op->op_type, op->interval_ms), rsc->id, lrm_state->node_name,
+               transition, rsc->id, operation, op->interval_ms);
 
-    if (is_set(fsa_input_register, R_SHUTDOWN) && safe_str_eq(operation, RSC_START)) {
+    if (pcmk_is_set(fsa_input_register, R_SHUTDOWN)
+        && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
+
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
         send_nack = TRUE;
 
     } else if (fsa_state != S_NOT_DC
                && fsa_state != S_POLICY_ENGINE /* Recalculating */
                && fsa_state != S_TRANSITION_ENGINE
-               && safe_str_neq(operation, CRMD_ACTION_STOP)) {
+               && !pcmk__str_eq(operation, CRMD_ACTION_STOP, pcmk__str_casei)) {
         send_nack = TRUE;
     }
 
     if(send_nack) {
         crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
                    operation, rsc->id, fsa_state2string(fsa_state),
-                   is_set(fsa_input_register, R_SHUTDOWN)?"true":"false");
+                   pcmk__btoa(pcmk_is_set(fsa_input_register, R_SHUTDOWN)));
 
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
         op->op_status = PCMK_LRM_OP_INVALID;
@@ -2366,7 +2400,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 
     if (call_id == last_resource_update) {
         last_resource_update = 0;
-        trigger_fsa(fsa_source);
+        trigger_fsa();
     }
 }
 
@@ -2412,7 +2446,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     update = iter;
     iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
-    if (safe_str_eq(node_name, fsa_our_uname)) {
+    if (pcmk__str_eq(node_name, fsa_our_uname, pcmk__str_casei)) {
         uuid = fsa_our_uuid;
 
     } else {
@@ -2429,7 +2463,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
 
     crm_xml_add(iter, XML_ATTR_UUID,  uuid);
     crm_xml_add(iter, XML_ATTR_UNAME, node_name);
-    crm_xml_add(iter, XML_ATTR_ORIGIN, __FUNCTION__);
+    crm_xml_add(iter, XML_ATTR_ORIGIN, __func__);
 
     iter = create_xml_node(iter, XML_CIB_TAG_LRM);
     crm_xml_add(iter, XML_ATTR_ID, uuid);
@@ -2438,7 +2472,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
     iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
     crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 
-    build_operation_update(iter, rsc, op, node_name, __FUNCTION__);
+    build_operation_update(iter, rsc, op, node_name, __func__);
 
     if (rsc) {
         const char *container = NULL;
@@ -2471,7 +2505,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t *rsc,
         goto cleanup;
     }
 
-    crm_log_xml_trace(update, __FUNCTION__);
+    crm_log_xml_trace(update, __func__);
 
     /* make it an asynchronous call and be done with it
      *
@@ -2554,8 +2588,8 @@ did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
         return FALSE;
     }
 
-    if (crm_str_eq(entry->failed->rsc_id, rsc_id, TRUE)
-        && safe_str_eq(entry->failed->op_type, op_type)
+    if (pcmk__str_eq(entry->failed->rsc_id, rsc_id, pcmk__str_none)
+        && pcmk__str_eq(entry->failed->op_type, op_type, pcmk__str_casei)
         && entry->failed->interval_ms == interval_ms) {
         return TRUE;
     }
@@ -2701,7 +2735,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         crm_err("Recurring operation %s was cancelled without transition information",
                 op_key);
 
-    } else if (is_set(pending->flags, active_op_remove)) {
+    } else if (pcmk_is_set(pending->flags, active_op_remove)) {
         /* This recurring operation was cancelled (by us) and pending, and we
          * have been waiting for it to finish.
          */
@@ -2773,7 +2807,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                      crm_action_str(op->op_type, op->interval_ms),
                      op->rsc_id, node_name,
                      services_lrm_status_str(op->op_status),
-                     op->call_id, op_key, (removed? "true" : "false"));
+                     op->call_id, op_key, pcmk__btoa(removed));
             break;
 
         case PCMK_LRM_OP_DONE:
@@ -2782,8 +2816,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                        crm_action_str(op->op_type, op->interval_ms),
                        op->rsc_id, node_name,
                        services_ocf_exitcode_str(op->rc), op->rc,
-                       op->call_id, op_key, (removed? "true" : "false"),
-                       update_id);
+                       op->call_id, op_key, pcmk__btoa(removed), update_id);
             break;
 
         case PCMK_LRM_OP_TIMEOUT:
@@ -2801,7 +2834,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                     crm_action_str(op->op_type, op->interval_ms),
                     op->rsc_id, node_name,
                     services_lrm_status_str(op->op_status), op->call_id, op_key,
-                    (removed? "true" : "false"), op->op_status, update_id);
+                    pcmk__btoa(removed), op->op_status, update_id);
     }
 
     if (op->output) {
@@ -2819,7 +2852,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     }
 
     if (lrm_state) {
-        if (safe_str_neq(op->op_type, RSC_METADATA)) {
+        if (!pcmk__str_eq(op->op_type, RSC_METADATA, pcmk__str_casei)) {
             crmd_alert_resource_op(lrm_state->node_name, op);
         } else if (rsc && (op->rc == PCMK_OCF_OK)) {
             char *metadata = unescape_newlines(op->output);

@@ -6,6 +6,9 @@ test cluster, but are not the best method in most situations. They are
 presented here for completeness and as an example of Pacemaker's flexibility
 to suit your needs.
 
+.. index::
+   single: virtual machine; as cluster node
+
 Virtual Machines as Cluster Nodes
 #################################
 
@@ -30,6 +33,9 @@ are proper fencing (usually via a custom resource agent that communicates
 with the provider's APIs) and maintaining a static IP address between reboots,
 as well as resource contention issues.
 
+.. index::
+   single: virtual machine; as remote node
+
 Virtual Machines as Remote Nodes
 ################################
 
@@ -41,6 +47,15 @@ This is mainly useful in testing, to use a single physical host to simulate a
 larger cluster involving remote nodes. Pacemaker's Cluster Test Suite (CTS)
 uses this approach to test remote node functionality.
 
+.. index::
+   single: container; as guest node
+   single: container; LXC
+   single: container; Docker
+   single: container; bundle
+   single: LXC
+   single: Docker
+   single: bundle
+
 Containers as Guest Nodes
 #########################
 
@@ -49,9 +64,9 @@ and in particular Linux containers (LXC) and Docker, have become a popular
 method of isolating services in a resource-efficient manner.
 
 The preferred means of integrating containers into Pacemaker is as a
-cluster resource, whether opaque or using Pacemaker's 'bundle' resource type.
+cluster resource, whether opaque or using Pacemaker's ``bundle`` resource type.
 
-However, it is possible to run `pacemaker_remote` inside a container,
+However, it is possible to run ``pacemaker_remote`` inside a container,
 following the process for guest nodes. This is not recommended but can
 be useful, for example, in testing scenarios, to simulate a large number of
 guest nodes.

@@ -1,0 +1,124 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="11" operation="start" operation_key="fencing_start_0" on_node="cluster01" on_node_uuid="1">
+        <primitive id="fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  ip_family="ipv4"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="1" operation="monitor" operation_key="fencing_monitor_0" on_node="cluster01" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="fencing_monitor_0" on_node="cluster02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="6" operation="monitor" operation_key="fencing_monitor_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  ip_family="ipv4"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="1" operation="monitor" operation_key="fencing_monitor_0" on_node="cluster01" on_node_uuid="1">
+        <primitive id="fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  ip_family="ipv4"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="ip-rsc_monitor_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="ip-rsc" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32"  ip="172.17.1.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="2" operation="monitor" operation_key="ip-rsc_monitor_0" on_node="cluster01" on_node_uuid="1">
+        <primitive id="ip-rsc" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32"  ip="172.17.1.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="ip-rsc2_monitor_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="ip-rsc2" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32"  ip="172.17.1.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="3" operation="monitor" operation_key="ip-rsc2_monitor_0" on_node="cluster01" on_node_uuid="1">
+        <primitive id="ip-rsc2" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="32"  ip="172.17.1.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="dummy-rsc_monitor_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="dummy-rsc" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  op_sleep="10"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="4" operation="monitor" operation_key="dummy-rsc_monitor_0" on_node="cluster01" on_node_uuid="1">
+        <primitive id="dummy-rsc" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  op_sleep="10"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="14" operation="start" operation_key="ping-rsc-ping_start_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="ping-rsc-ping" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  host_list="4.2.2.2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="ping-rsc-ping_monitor_0" on_node="cluster01" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="ping-rsc-ping_monitor_0" on_node="cluster02" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="ping-rsc-ping_monitor_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="ping-rsc-ping" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  host_list="4.2.2.2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="ping-rsc-ping_monitor_0" on_node="cluster01" on_node_uuid="1">
+        <primitive id="ping-rsc-ping" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  host_list="4.2.2.2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

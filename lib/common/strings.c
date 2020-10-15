@@ -13,10 +13,14 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <regex.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <float.h>  // DBL_MIN
 #include <limits.h>
+#include <math.h>   // fabs()
 #include <bzlib.h>
 #include <sys/types.h>
 
@@ -38,12 +42,15 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
  * \param[out] result    If not NULL, where to store scanned value
  * \param[out] end_text  If not NULL, where to store pointer to just after value
  *
- * \return Standard Pacemaker return code (also set errno on error)
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
+ *         \c EINVAL on failed string conversion due to invalid input,
+ *         or \c EOVERFLOW on arithmetic overflow)
+ * \note Sets \c errno on error
  */
 static int
 scan_ll(const char *text, long long *result, char **end_text)
 {
-    long long local_result = -1;
+    long long local_result = PCMK__PARSE_INT_DEFAULT;
     char *local_end_text = NULL;
     int rc = pcmk_rc_ok;
 
@@ -55,25 +62,24 @@ scan_ll(const char *text, long long *result, char **end_text)
         local_result = strtoll(text, &local_end_text, 10);
 #endif
         if (errno == ERANGE) {
-            rc = errno;
+            rc = EOVERFLOW;
             crm_warn("Integer parsed from %s was clipped to %lld",
                      text, local_result);
 
         } else if (errno != 0) {
             rc = errno;
-            local_result = -1;
-            crm_err("Could not parse integer from %s (using -1 instead): %s",
-                    text, pcmk_rc_str(rc));
+            local_result = PCMK__PARSE_INT_DEFAULT;
+            crm_warn("Could not parse integer from %s (using %d instead): %s",
+                    text, PCMK__PARSE_INT_DEFAULT, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             rc = EINVAL;
-            local_result = -1;
-            crm_err("Could not parse integer from %s (using -1 instead): "
-                    "No digits found", text);
+            local_result = PCMK__PARSE_INT_DEFAULT;
+            crm_warn("Could not parse integer from %s (using %d instead): "
+                    "No digits found", text, PCMK__PARSE_INT_DEFAULT);
         }
 
-        if ((end_text == NULL) && (local_end_text != NULL)
-            && (local_end_text[0] != '\0')) {
+        if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
             crm_warn("Characters left over after parsing '%s': '%s'",
                      text, local_end_text);
         }
@@ -94,7 +100,8 @@ scan_ll(const char *text, long long *result, char **end_text)
  * \param[in] text          The string to parse
  * \param[in] default_text  Default string to parse if text is NULL
  *
- * \return Parsed value on success, -1 (and set errno) on error
+ * \return Parsed value on success, PCMK__PARSE_INT_DEFAULT (and set
+ *         errno) on error
  */
 long long
 crm_parse_ll(const char *text, const char *default_text)
@@ -106,7 +113,7 @@ crm_parse_ll(const char *text, const char *default_text)
         if (text == NULL) {
             crm_err("No default conversion value supplied");
             errno = EINVAL;
-            return -1;
+            return PCMK__PARSE_INT_DEFAULT;
         }
     }
     scan_ll(text, &result, NULL);
@@ -119,8 +126,9 @@ crm_parse_ll(const char *text, const char *default_text)
  * \param[in] text          The string to parse
  * \param[in] default_text  Default string to parse if text is NULL
  *
- * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to ERANGE)
- *         if parsed value is out of integer range, otherwise -1 (and set errno)
+ * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to
+ *         ERANGE) if parsed value is out of integer range, otherwise
+ *         PCMK__PARSE_INT_DEFAULT (and set errno)
  */
 int
 crm_parse_int(const char *text, const char *default_text)
@@ -145,6 +153,126 @@ crm_parse_int(const char *text, const char *default_text)
     }
 
     return (int) result;
+}
+
+/*!
+ * \internal
+ * \brief Scan a double-precision floating-point value from a string
+ *
+ * \param[in]      text         The string to parse
+ * \param[out]     result       Parsed value on success, or
+ *                              \c PCMK__PARSE_DBL_DEFAULT on error
+ * \param[in]      default_text Default string to parse if \p text is
+ *                              \c NULL
+ * \param[out]     end_text     If not \c NULL, where to store a pointer
+ *                              to the position immediately after the
+ *                              value
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
+ *         \c EINVAL on failed string conversion due to invalid input,
+ *         \c EOVERFLOW on arithmetic overflow, \c pcmk_rc_underflow
+ *         on arithmetic underflow, or \c errno from \c strtod() on
+ *         other parse errors)
+ */
+int
+pcmk__scan_double(const char *text, double *result, const char *default_text,
+                  char **end_text)
+{
+    int rc = pcmk_rc_ok;
+    char *local_end_text = NULL;
+
+    CRM_ASSERT(result != NULL);
+    *result = PCMK__PARSE_DBL_DEFAULT;
+
+    text = (text != NULL) ? text : default_text;
+
+    if (text == NULL) {
+        rc = EINVAL;
+        crm_debug("No text and no default conversion value supplied");
+
+    } else {
+        errno = 0;
+        *result = strtod(text, &local_end_text);
+
+        if (errno == ERANGE) {
+            /*
+             * Overflow: strtod() returns +/- HUGE_VAL and sets errno to
+             *           ERANGE
+             *
+             * Underflow: strtod() returns "a value whose magnitude is
+             *            no greater than the smallest normalized
+             *            positive" double. Whether ERANGE is set is
+             *            implementation-defined.
+             */
+            const char *over_under;
+
+            if (fabs(*result) > DBL_MIN) {
+                rc = EOVERFLOW;
+                over_under = "over";
+            } else {
+                rc = pcmk_rc_underflow;
+                over_under = "under";
+            }
+
+            crm_debug("Floating-point value parsed from '%s' would %sflow "
+                      "(using %g instead)", text, over_under, *result);
+
+        } else if (errno != 0) {
+            rc = errno;
+            // strtod() set *result = 0 on parse failure
+            *result = PCMK__PARSE_DBL_DEFAULT;
+
+            crm_debug("Could not parse floating-point value from '%s' (using "
+                      "%.1f instead): %s", text, PCMK__PARSE_DBL_DEFAULT,
+                      pcmk_rc_str(rc));
+
+        } else if (local_end_text == text) {
+            // errno == 0, but nothing was parsed
+            rc = EINVAL;
+            *result = PCMK__PARSE_DBL_DEFAULT;
+
+            crm_debug("Could not parse floating-point value from '%s' (using "
+                      "%.1f instead): No digits found", text,
+                      PCMK__PARSE_DBL_DEFAULT);
+
+        } else if (fabs(*result) <= DBL_MIN) {
+            /*
+             * errno == 0 and text was parsed, but value might have
+             * underflowed.
+             *
+             * ERANGE might not be set for underflow. Check magnitude
+             * of *result, but also make sure the input number is not
+             * actually zero (0 <= DBL_MIN is not underflow).
+             *
+             * This check must come last. A parse failure in strtod()
+             * also sets *result == 0, so a parse failure would match
+             * this test condition prematurely.
+             */
+            for (const char *p = text; p != local_end_text; p++) {
+                if (strchr("0.eE", *p) == NULL) {
+                    rc = pcmk_rc_underflow;
+                    crm_debug("Floating-point value parsed from '%s' would "
+                              "underflow (using %g instead)", text, *result);
+                    break;
+                }
+            }
+
+        } else {
+            crm_trace("Floating-point value parsed successfully from "
+                      "'%s': %g", text, *result);
+        }
+
+        if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
+            crm_debug("Characters left over after parsing '%s': '%s'",
+                      text, local_end_text);
+        }
+    }
+
+    if (end_text != NULL) {
+        *end_text = local_end_text;
+    }
+
+    return rc;
 }
 
 /*!
@@ -205,7 +333,8 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
  * \param[in] input  String with a number and units (optionally with whitespace
  *                   before and/or after the number)
  *
- * \return Milliseconds corresponding to string expression, or -1 on error
+ * \return Milliseconds corresponding to string expression, or
+ *         PCMK__PARSE_INT_DEFAULT on error
  */
 long long
 crm_get_msec(const char *input)
@@ -214,18 +343,18 @@ crm_get_msec(const char *input)
     const char *units;
     long long multiplier = 1000;
     long long divisor = 1;
-    long long msec = -1;
+    long long msec = PCMK__PARSE_INT_DEFAULT;
     size_t num_len = 0;
     char *end_text = NULL;
 
     if (input == NULL) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
 
     num_start = input + strspn(input, WHITESPACE);
     num_len = strspn(num_start, NUMCHARS);
     if (num_len < 1) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
     units = num_start + num_len;
     units += strspn(units, WHITESPACE);
@@ -246,7 +375,7 @@ crm_get_msec(const char *input)
         multiplier = 60 * 60 * 1000;
         divisor = 1;
     } else if ((*units != EOS) && (*units != '\n') && (*units != '\r')) {
-        return -1;
+        return PCMK__PARSE_INT_DEFAULT;
     }
 
     scan_ll(num_start, &msec, &end_text);
@@ -257,21 +386,6 @@ crm_get_msec(const char *input)
     msec *= multiplier;
     msec /= divisor;
     return msec;
-}
-
-gboolean
-safe_str_neq(const char *a, const char *b)
-{
-    if (a == b) {
-        return FALSE;
-
-    } else if (a == NULL || b == NULL) {
-        return TRUE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return FALSE;
-    }
-    return TRUE;
 }
 
 gboolean
@@ -320,26 +434,6 @@ crm_strip_trailing_newline(char *str)
     }
 
     return str;
-}
-
-gboolean
-crm_str_eq(const char *a, const char *b, gboolean use_case)
-{
-    if (use_case) {
-        return g_strcmp0(a, b) == 0;
-
-        /* TODO - Figure out which calls, if any, really need to be case independent */
-    } else if (a == b) {
-        return TRUE;
-
-    } else if (a == NULL || b == NULL) {
-        /* shouldn't be comparing NULLs */
-        return FALSE;
-
-    } else if (strcasecmp(a, b) == 0) {
-        return TRUE;
-    }
-    return FALSE;
 }
 
 /*!
@@ -468,7 +562,7 @@ g_str_hash_traditional(gconstpointer v)
 gboolean
 crm_strcase_equal(gconstpointer a, gconstpointer b)
 {
-    return crm_str_eq((const char *) a, (const char *) b, FALSE);
+    return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
 guint
@@ -505,24 +599,52 @@ crm_str_table_dup(GHashTable *old_table)
 
 /*!
  * \internal
- * \brief Add a word to a space-separated string list
+ * \brief Add a word to a string list of words
  *
- * \param[in,out] list  Pointer to beginning of list
- * \param[in]     word  Word to add to list
+ * \param[in,out] list       Pointer to current string list (may not be NULL)
+ * \param[in,out] len        If not NULL, must be set to length of \p list,
+ *                           and will be updated to new length of \p list
+ * \param[in]     word       String to add to \p list (\p list will be
+ *                           unchanged if this is NULL or the empty string)
+ * \param[in]     separator  String to separate words in \p list
+ *                           (a space will be used if this is NULL)
  *
- * \return (Potentially new) beginning of list
- * \note This dynamically reallocates list as needed.
+ * \note This dynamically reallocates \p list as needed. \p word may contain
+ *       \p separator, though that would be a bad idea if the string needs to be
+ *       parsed later.
  */
-char *
-pcmk__add_word(char *list, const char *word)
+void
+pcmk__add_separated_word(char **list, size_t *len, const char *word,
+                         const char *separator)
 {
-    if (word != NULL) {
-        size_t len = list? strlen(list) : 0;
+    size_t orig_len, new_len;
 
-        list = realloc_safe(list, len + strlen(word) + 2); // 2 = space + EOS
-        sprintf(list + len, " %s", word);
+    CRM_ASSERT(list != NULL);
+
+    if (pcmk__str_empty(word)) {
+        return;
     }
-    return list;
+
+    // Use provided length, or calculate it if not available
+    orig_len = (len != NULL)? *len : ((*list == NULL)? 0 : strlen(*list));
+
+    // Don't add a separator before the first word in the list
+    if (orig_len == 0) {
+        separator = "";
+
+    // Default to space-separated
+    } else if (separator == NULL) {
+        separator = " ";
+    }
+
+    new_len = orig_len + strlen(separator) + strlen(word);
+    if (len != NULL) {
+        *len = new_len;
+    }
+
+    // +1 for null terminator
+    *list = pcmk__realloc(*list, new_len + 1);
+    sprintf(*list + orig_len, "%s%s", separator, word);
 }
 
 /*!
@@ -608,11 +730,11 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 
     CRM_ASSERT(start != NULL && end != NULL);
 
-    *start = -1;
-    *end = -1;
+    *start = PCMK__PARSE_INT_DEFAULT;
+    *end = PCMK__PARSE_INT_DEFAULT;
 
     crm_trace("Attempting to decode: [%s]", srcstring);
-    if (srcstring == NULL || strcmp(srcstring, "") == 0 || strcmp(srcstring, "-") == 0) {
+    if (pcmk__str_empty(srcstring) || !strcmp(srcstring, "-")) {
         return pcmk_rc_unknown_format;
     }
 
@@ -643,7 +765,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
             }
         }
     } else if (*remainder && *remainder != '-') {
-        *start = -1;
+        *start = PCMK__PARSE_INT_DEFAULT;
         return pcmk_rc_unknown_format;
     } else {
         /* The input string contained only one number.  Set start and end
@@ -656,6 +778,18 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Find a string in a list of strings
+ *
+ * Search \p lst for \p s, taking case into account.  As a special case,
+ * if "*" is the only element of \p lst, the search is successful.
+ *
+ * \param[in]  lst  List to search
+ * \param[in]  s    String to search for
+ *
+ * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
+ */
 gboolean
 pcmk__str_in_list(GList *lst, const gchar *s)
 {
@@ -668,4 +802,314 @@ pcmk__str_in_list(GList *lst, const gchar *s)
     }
 
     return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
+}
+
+static bool
+str_any_of(bool casei, const char *s, va_list args)
+{
+    bool rc = false;
+
+    if (s != NULL) {
+        while (1) {
+            const char *ele = va_arg(args, const char *);
+
+            if (ele == NULL) {
+                break;
+            } else if (pcmk__str_eq(s, ele,
+                                    casei? pcmk__str_casei : pcmk__str_none)) {
+                rc = true;
+                break;
+            }
+        }
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Is a string a member of a list of strings?
+ *
+ * \param[in]  s    String to search for in \p ...
+ * \param[in]  ...  Strings to compare \p s against.  The final string
+ *                  must be NULL.
+ *
+ * \note The comparison is done case-insensitively.  The function name is
+ *       meant to be reminiscent of strcasecmp.
+ *
+ * \return \c true if \p s is in \p ..., or \c false otherwise
+ */
+bool
+pcmk__strcase_any_of(const char *s, ...)
+{
+    va_list ap;
+    bool rc;
+
+    va_start(ap, s);
+    rc = str_any_of(true, s, ap);
+    va_end(ap);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Is a string a member of a list of strings?
+ *
+ * \param[in]  s    String to search for in \p ...
+ * \param[in]  ...  Strings to compare \p s against.  The final string
+ *                  must be NULL.
+ *
+ * \note The comparison is done taking case into account.
+ *
+ * \return \c true if \p s is in \p ..., or \c false otherwise
+ */
+bool
+pcmk__str_any_of(const char *s, ...)
+{
+    va_list ap;
+    bool rc;
+
+    va_start(ap, s);
+    rc = str_any_of(false, s, ap);
+    va_end(ap);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a character is in any of a list of strings
+ *
+ * \param[in]   ch      Character (ASCII) to search for
+ * \param[in]   ...     Strings to search. Final argument must be
+ *                      \c NULL.
+ *
+ * \return  \c true if any of \p ... contain \p ch, \c false otherwise
+ * \note    \p ... must contain at least one argument (\c NULL).
+ */
+bool
+pcmk__char_in_any_str(int ch, ...)
+{
+    bool rc = false;
+    va_list ap;
+
+    /*
+     * Passing a char to va_start() can generate compiler warnings,
+     * so ch is declared as an int.
+     */
+    va_start(ap, ch);
+
+    while (1) {
+        const char *ele = va_arg(ap, const char *);
+
+        if (ele == NULL) {
+            break;
+        } else if (strchr(ele, ch) != NULL) {
+            rc = true;
+            break;
+        }
+    }
+
+    va_end(ap);
+    return rc;
+}
+
+/*!
+ * \brief Sort strings, with numeric portions sorted numerically
+ *
+ * Sort two strings case-insensitively like strcasecmp(), but with any numeric
+ * portions of the string sorted numerically. This is particularly useful for
+ * node names (for example, "node10" will sort higher than "node9" but lower
+ * than "remotenode9").
+ *
+ * \param[in] s1  First string to compare (must not be NULL)
+ * \param[in] s2  Second string to compare (must not be NULL)
+ *
+ * \retval -1 \p s1 comes before \p s2
+ * \retval  0 \p s1 and \p s2 are equal
+ * \retval  1 \p s1 comes after \p s2
+ */
+int
+pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+{
+    while (*s1 && *s2) {
+        if (isdigit(*s1) && isdigit(*s2)) {
+            // If node names contain a number, sort numerically
+
+            char *end1 = NULL;
+            char *end2 = NULL;
+            long num1 = strtol(s1, &end1, 10);
+            long num2 = strtol(s2, &end2, 10);
+
+            // allow ordering e.g. 007 > 7
+            size_t len1 = end1 - s1;
+            size_t len2 = end2 - s2;
+
+            if (num1 < num2) {
+                return -1;
+            } else if (num1 > num2) {
+                return 1;
+            } else if (len1 < len2) {
+                return -1;
+            } else if (len1 > len2) {
+                return 1;
+            }
+            s1 = end1;
+            s2 = end2;
+        } else {
+            // Compare non-digits case-insensitively
+            int lower1 = tolower(*s1);
+            int lower2 = tolower(*s2);
+
+            if (lower1 < lower2) {
+                return -1;
+            } else if (lower1 > lower2) {
+                return 1;
+            }
+            ++s1;
+            ++s2;
+        }
+    }
+    if (!*s1 && *s2) {
+        return -1;
+    } else if (*s1 && !*s2) {
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * \brief Sort strings.
+ *
+ * This is your one-stop function for string comparison.  By default, this
+ * function works like g_strcmp0.  That is, like strcmp but a NULL string
+ * sorts before a non-NULL string.
+ *
+ * Behavior can be changed with various flags:
+ *
+ * - pcmk__str_regex - The second string is a regular expression that the
+ *                     first string will be matched against.
+ * - pcmk__str_casei - By default, comparisons are done taking case into
+ *                     account.  This flag makes comparisons case-insensitive.
+ *                     This can be combined with pcmk__str_regex.
+ * - pcmk__str_null_matches - If one string is NULL and the other is not,
+ *                            still return 0.
+ *
+ * \param[in] s1    First string to compare
+ * \param[in] s2    Second string to compare, or a regular expression to
+ *                  match if pcmk__str_regex is set
+ * \param[in] flags A bitfield of pcmk__str_flags to modify operation
+ *
+ * \retval -1 \p s1 is NULL or comes before \p s2
+ * \retval  0 \p s1 and \p s2 are equal, or \p s1 is found in \p s2 if
+ *            pcmk__str_regex is set
+ * \retval  1 \p s2 is NULL or \p s1 comes after \p s2, or if \p s2
+ *            is an invalid regular expression, or \p s1 was not found
+ *            in \p s2 if pcmk__str_regex is set.
+ */
+int
+pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
+{
+    /* If this flag is set, the second string is a regex. */
+    if (pcmk_is_set(flags, pcmk__str_regex)) {
+        regex_t *r_patt = calloc(1, sizeof(regex_t));
+        int reg_flags = REG_EXTENDED | REG_NOSUB;
+        int regcomp_rc = 0;
+        int rc = 0;
+
+        if (s1 == NULL || s2 == NULL) {
+            free(r_patt);
+            return 1;
+        }
+
+        if (pcmk_is_set(flags, pcmk__str_casei)) {
+            reg_flags |= REG_ICASE;
+        }
+        regcomp_rc = regcomp(r_patt, s2, reg_flags);
+        if (regcomp_rc != 0) {
+            rc = 1;
+            crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
+        } else {
+            rc = regexec(r_patt, s1, 0, NULL, 0);
+
+            if (rc != 0) {
+                rc = 1;
+            }
+        }
+
+        regfree(r_patt);
+        free(r_patt);
+        return rc;
+    }
+
+    /* If the strings are the same pointer, return 0 immediately. */
+    if (s1 == s2) {
+        return 0;
+    }
+
+    /* If this flag is set, return 0 if either (or both) of the input strings
+     * are NULL.  If neither one is NULL, we need to continue and compare
+     * them normally.
+     */
+    if (pcmk_is_set(flags, pcmk__str_null_matches)) {
+        if (s1 == NULL || s2 == NULL) {
+            return 0;
+        }
+    }
+
+    /* Handle the cases where one is NULL and the str_null_matches flag is not set.
+     * A NULL string always sorts to the beginning.
+     */
+    if (s1 == NULL) {
+        return -1;
+    } else if (s2 == NULL) {
+        return 1;
+    }
+
+    if (pcmk_is_set(flags, pcmk__str_casei)) {
+        return strcasecmp(s1, s2);
+    } else {
+        return strcmp(s1, s2);
+    }
+}
+
+// Deprecated functions kept only for backward API compatibility
+
+gboolean safe_str_neq(const char *a, const char *b);
+
+gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean
+safe_str_neq(const char *a, const char *b)
+{
+    if (a == b) {
+        return FALSE;
+
+    } else if (a == NULL || b == NULL) {
+        return TRUE;
+
+    } else if (strcasecmp(a, b) == 0) {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+//! \deprecated Use pcmk__str_eq() instead
+gboolean
+crm_str_eq(const char *a, const char *b, gboolean use_case)
+{
+    if (use_case) {
+        return g_strcmp0(a, b) == 0;
+
+        /* TODO - Figure out which calls, if any, really need to be case independent */
+    } else if (a == b) {
+        return TRUE;
+
+    } else if (a == NULL || b == NULL) {
+        /* shouldn't be comparing NULLs */
+        return FALSE;
+
+    } else if (strcasecmp(a, b) == 0) {
+        return TRUE;
+    }
+    return FALSE;
 }

@@ -53,16 +53,12 @@ long long crm_parse_ll(const char *text, const char *default_text);
 int crm_parse_int(const char *text, const char *default_text);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-gboolean safe_str_neq(const char *a, const char *b);
 gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
 guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
-gboolean pcmk__str_in_list(GList *lst, const gchar *s);
+int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
 
-#  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 #  define crm_str_hash g_str_hash_traditional
 
 static inline char *
@@ -148,6 +144,7 @@ enum pcmk_ra_caps {
     pcmk_ra_cap_unique       = (1 << 3), // Supports unique clones
     pcmk_ra_cap_promotable   = (1 << 4), // Supports promotable clones
     pcmk_ra_cap_stdin        = (1 << 5), // Reads from standard input
+    pcmk_ra_cap_fence_params = (1 << 6), // Supports pcmk_monitor_timeout, etc.
 };
 
 uint32_t pcmk_get_ra_caps(const char *standard);
@@ -163,23 +160,40 @@ int compare_version(const char *version1, const char *version2);
 void crm_abort(const char *file, const char *function, int line,
                const char *condition, gboolean do_core, gboolean do_fork);
 
-static inline gboolean
-is_not_set(long long word, long long bit)
+/*!
+ * \brief Check whether any of specified flags are set in a flag group
+ *
+ * \param[in] flag_group        The flag group being examined
+ * \param[in] flags_to_check    Which flags in flag_group should be checked
+ *
+ * \return true if \p flags_to_check is nonzero and any of its flags are set in
+ *         \p flag_group, or false otherwise
+ */
+static inline bool
+pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
 {
-    return ((word & bit) == 0);
+    return (flag_group & flags_to_check) != 0;
 }
 
-static inline gboolean
-is_set(long long word, long long bit)
+/*!
+ * \brief Check whether all of specified flags are set in a flag group
+ *
+ * \param[in] flag_group        The flag group being examined
+ * \param[in] flags_to_check    Which flags in flag_group should be checked
+ *
+ * \return true if \p flags_to_check is zero or all of its flags are set in
+ *         \p flag_group, or false otherwise
+ */
+static inline bool
+pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
 {
-    return ((word & bit) == bit);
+    return (flag_group & flags_to_check) == flags_to_check;
 }
 
-static inline gboolean
-is_set_any(long long word, long long bit)
-{
-    return ((word & bit) != 0);
-}
+/*!
+ * \brief Convenience alias for pcmk_all_flags_set(), to check single flag
+ */
+#define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
 
 static inline guint
 crm_hash_table_size(GHashTable * hashtable)
@@ -212,14 +226,44 @@ bool pcmk_str_is_minus_infinity(const char *s);
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ * compatibility. It will be moved to compatibility.h in a future release.
  */
 
 //! \deprecated Use crm_parse_interval_spec() instead
 #define crm_get_interval crm_parse_interval_spec
 
+//! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
+static inline gboolean
+is_not_set(long long word, long long bit)
+{
+    return ((word & bit) == 0);
+}
+
+//! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
+static inline gboolean
+is_set(long long word, long long bit)
+{
+    return ((word & bit) == bit);
+}
+
+//! \deprecated Use pcmk_any_flags_set() instead
+static inline gboolean
+is_set_any(long long word, long long bit)
+{
+    return ((word & bit) != 0);
+}
+
 //! \deprecated Use pcmk_get_ra_caps() instead
 bool crm_provider_required(const char *standard);
+
+//! \deprecated Use strcmp or strcasecmp instead
+gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
+
+//! \deprecated Use strcmp instead
+gboolean safe_str_neq(const char *a, const char *b);
+
+//! \deprecated Use strcasecmp instead
+#define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
 #endif // PCMK__NO_COMPAT
 

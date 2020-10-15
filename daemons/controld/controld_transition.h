@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -50,9 +50,9 @@ extern void abort_transition_graph(int abort_priority, enum transition_action ab
                                    const char *abort_text, xmlNode * reason, const char *fn,
                                    int line);
 
-#  define trigger_graph()	trigger_graph_processing(__FUNCTION__, __LINE__)
+#  define trigger_graph()	trigger_graph_processing(__func__, __LINE__)
 #  define abort_transition(pri, action, text, reason)			\
-	abort_transition_graph(pri, action, text, reason,__FUNCTION__,__LINE__);
+	abort_transition_graph(pri, action, text, reason,__func__,__LINE__);
 
 extern crm_trigger_t *transition_trigger;
 

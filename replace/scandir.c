@@ -205,8 +205,8 @@ scandir(const char *directory_name,
 
             if (counter + 1 == allocated) {
                 allocated <<= 1;
-                array = (struct dirent **)
-                    realloc_safe((char *)array, allocated * sizeof(struct dirent *));
+                array = pcmk__realloc((char *)array,
+                                      allocated * sizeof(struct dirent *));
                 if (array == NULL) {
                     closedir(directory);
                     free(array);

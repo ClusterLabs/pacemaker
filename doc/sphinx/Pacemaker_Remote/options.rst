@@ -1,31 +1,38 @@
+.. index::
+    single: configuration
+
 Configuration Explained
 -----------------------
 
 The walk-through examples use some of these options, but don't explain exactly
 what they mean or do.  This section is meant to be the go-to resource for all
-the options available for configuring pacemaker_remote-based nodes.
+the options available for configuring Pacemaker Remote.
+
+.. index::
+   pair: configuration; guest node
+   single: guest node; meta-attribute
 
 Resource Meta-Attributes for Guest Nodes
 ########################################
 
 When configuring a virtual machine as a guest node, the virtual machine is
 created using one of the usual resource agents for that purpose (for example,
-ocf:heartbeat:VirtualDomain or ocf:heartbeat:Xen), with additional metadata
-parameters.
+**ocf:heartbeat:VirtualDomain** or **ocf:heartbeat:Xen**), with additional
+meta-attributes.
 
 No restrictions are enforced on what agents may be used to create a guest node,
 but obviously the agent must create a distinct environment capable of running
 the pacemaker_remote daemon and cluster resources. An additional requirement is
 that fencing the host running the guest node resource must be sufficient for
 ensuring the guest node is stopped. This means, for example, that not all
-hypervisors supported by VirtualDomain may be used to create guest nodes; if
-the guest can survive the hypervisor being fenced, it may not be used as a
+hypervisors supported by **VirtualDomain** may be used to create guest nodes;
+if the guest can survive the hypervisor being fenced, it may not be used as a
 guest node.
 
-Below are the metadata options available to enable a resource as a guest node
+Below are the meta-attributes available to enable a resource as a guest node
 and define its connection parameters.
 
-.. table:: Meta-attributes for configuring VM resources as guest nodes
+.. table:: **Meta-attributes for configuring VM resources as guest nodes**
 
   +------------------------+-----------------+-----------------------------------------------------------+
   | Option                 | Default         | Description                                               |
@@ -47,6 +54,9 @@ and define its connection parameters.
   | remote-connect-timeout | 60s             | How long before a pending guest connection will time out. |
   +------------------------+-----------------+-----------------------------------------------------------+
 
+.. index::
+   pair: configuration; remote node
+
 Connection Resources for Remote Nodes
 #####################################
 
@@ -57,7 +67,7 @@ network and how to communicate with it.
 Descriptions of these instance attributes can be retrieved using the following
 ``pcs`` command:
 
-::
+.. code-block:: none
 
     # pcs resource describe remote
     ocf:pacemaker:remote - remote resource agent
@@ -73,20 +83,24 @@ Descriptions of these instance attributes can be retrieved using the following
 
 When defining a remote node's connection resource, it is common and recommended
 to name the connection resource the same as the remote node's hostname. By
-default, if no **server** option is provided, the cluster will attempt to contact
+default, if no ``server`` option is provided, the cluster will attempt to contact
 the remote node using the resource name as the hostname.
 
 Example defining a remote node with the hostname **remote1**:
 
-::
+.. code-block:: none
 
     # pcs resource create remote1 remote
 
 Example defining a remote node to connect to a specific IP address and port:
 
-::
+.. code-block:: none
 
     # pcs resource create remote1 remote server=192.168.122.200 port=8938
+
+.. index::
+   single: configuration; environment variable
+   single: environment variable
 
 Environment Variables for Daemon Start-up
 #########################################
@@ -99,11 +113,11 @@ remote node must share the same private key. By default, this
 key is placed at ``/etc/pacemaker/authkey`` on each node.
 
 You can change the default port and/or key location for Pacemaker and
-pacemaker_remote via environment variables. How these variables are set varies
-by OS, but usually they are set in the ``/etc/sysconfig/pacemaker`` or
+``pacemaker_remoted`` via environment variables. How these variables are set
+varies by OS, but usually they are set in the ``/etc/sysconfig/pacemaker`` or
 ``/etc/default/pacemaker`` file.
 
-::
+.. code-block:: none
 
     #==#==# Pacemaker Remote
     # Use a custom directory for finding the authkey.
@@ -119,9 +133,10 @@ If the resource creating a guest node, or the **ocf:pacemaker:remote** resource
 creating a connection to a remote node, is removed from the configuration, the
 affected node will continue to show up in output as an offline node.
 
-If you want to get rid of that output, run (replacing $NODE_NAME appropriately):
+If you want to get rid of that output, run (replacing ``$NODE_NAME``
+appropriately):
 
-::
+.. code-block:: none
 
     # crm_node --force --remove $NODE_NAME
 

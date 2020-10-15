@@ -63,8 +63,8 @@ mock_based_cib_notify_send_one(pcmk__client_t *client, xmlNode *xml)
 
     type = crm_element_value(update.msg, F_SUBTYPE);
     CRM_LOG_ASSERT(type != NULL);
-    if (is_set(client->options, cib_notify_diff)
-            && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
+    if (pcmk_is_set(client->options, cib_notify_diff)
+        && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
 
         if (pcmk__ipc_send_iov(client, update.iov,
                                crm_ipc_server_event) != pcmk_rc_ok) {
@@ -137,7 +137,7 @@ mock_based_notifyfencedmer_callback_worker(gpointer data)
     int options;
     char update_str[4096];
 
-    options |= cib_zero_copy;
+    cib__set_call_options(options, crm_system_name, cib_zero_copy);
 
 
     input = create_xml_node(NULL, "cib");

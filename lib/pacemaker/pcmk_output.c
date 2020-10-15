@@ -8,8 +8,8 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/output.h>
 #include <crm/common/results.h>
+#include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <libxml/tree.h>

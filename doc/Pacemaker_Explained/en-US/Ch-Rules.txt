@@ -116,8 +116,15 @@ Expressions are rule conditions based on the values of node attributes.
 
 |type
 |+string+
+|The default type for +lt+, +gt+, +lte+, and +gte+ operations is
+ +number+ if either value contains a decimal point character, or
+ +integer+ otherwise. The default type for all other operations is
+ +string+. If a numeric parse fails for either value, then the values
+ compared as type +string+.
 |How the node attributes should be compared. Allowed values are
- +string+, +integer+, and +version+.
+ +string+, +integer+, +number+, and +version+. +integer+ truncates
+ floating-point values if necessary before performing an integer
+ comparison. +number+ performs a floating-point comparison.
  indexterm:[XML attribute,type attribute,expression element]
  indexterm:[XML element,expression element,type attribute]
 
@@ -522,6 +529,124 @@ You may wish to write +end="2005-03-31T23:59:59"+ to avoid confusion.
 -------
 =====
 
+== Resource Expressions ==
+
+An +rsc_expression+ is a rule condition based on a resource agent's properties.
+This rule is only valid within an +rsc_defaults+ or +op_defaults+ context.  None
+of the matching attributes of +class+, +provider+, and +type+ are required.  If
+one is omitted, all values of that attribute will match.  For instance, omitting
++type+ means every type will match.
+
+.Attributes of an rsc_expression Element
+[width="95%",cols="2m,<5",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|A unique name for the expression (required)
+ indexterm:[XML attribute,id attribute,rsc_expression element]
+ indexterm:[XML element,rsc_expression element,id attribute]
+
+|class
+|The standard name to be matched against resource agents
+ indexterm:[XML attribute,class attribute,rsc_expression element]
+ indexterm:[XML element,rsc_expression element,class attribute]
+
+|provider
+|If given, the vendor to be matched against resource agents.  This
+ only makes sense for agents using the OCF spec.
+ indexterm:[XML attribute,provider attribute,rsc_expression element]
+ indexterm:[XML element,rsc_expression element,provider attribute]
+
+|type
+|The name of the resource agent to be matched
+ indexterm:[XML attribute,type attribute,rsc_expression element]
+ indexterm:[XML element,rsc_expression element,type attribute]
+
+|=========================================================
+
+=== Example Resource-Based Expressions ===
+
+A small sample of how resource-based expressions can be used:
+
+.True for all ocf:heartbeat:IPaddr2 resources
+====
+[source,XML]
+----
+<rule id="rule1" score="INFINITY">
+    <rsc_expression id="rule_expr1" class="ocf" provider="heartbeat" type="IPaddr2"/>
+</rule>
+----
+====
+
+.Provider doesn't apply to non-OCF resources
+====
+[source,XML]
+----
+<rule id="rule2" score="INFINITY">
+    <rsc_expression id="rule_expr2" class="stonith" type="fence_xvm"/>
+</rule>
+----
+====
+
+== Operation Expressions ==
+
+An +op_expression+ is a rule condition based on an action of some resource
+agent.  This rule is only valid within an +op_defaults+ context.
+
+.Attributes of an op_expression Element
+[width="95%",cols="2m,<5",options="header",align="center"]
+|=========================================================
+
+|Field
+|Description
+
+|id
+|A unique name for the expression (required)
+ indexterm:[XML attribute,id attribute,op_expression element]
+ indexterm:[XML element,op_expression element,id attribute]
+
+|name
+|The action name to match against.  This can be any action supported by
+ the resource agent; common values include +monitor+, +start+, and +stop+
+ (required).
+ indexterm:[XML attribute,name attribute,op_expression element]
+ indexterm:[XML element,op_expression element,name attribute]
+
+|interval
+|The interval of the action to match against.  If not given, only
+ the name attribute will be used to match.
+ indexterm:[XML attribute,interval attribute,op_expression element]
+ indexterm:[XML element,op_expression element,interval attribute]
+
+|=========================================================
+
+=== Example Operation-Based Expressions ===
+
+A small sample of how operation-based expressions can be used:
+
+.True for all monitor actions
+====
+[source,XML]
+----
+<rule id="rule1" score="INFINITY">
+    <op_expression id="rule_expr1" name="monitor"/>
+</rule>
+----
+====
+
+.True for all monitor actions with a 10 second interval
+====
+[source,XML]
+----
+<rule id="rule2" score="INFINITY">
+    <op_expression id="rule_expr2" name="monitor" interval="10s"/>
+</rule>
+----
+====
+
 == Using Rules to Determine Resource Location ==
 indexterm:[Rule,Determine Resource Location]
 indexterm:[Resource,Location,Determine by Rules]
@@ -709,6 +834,62 @@ Rules may be used similarly in +instance_attributes+ or +utilization+ blocks.
 
 Any single block may directly contain only a single rule, but that rule may
 itself contain any number of rules.
+
++rsc_expression+ and +op_expression+ blocks may additionally be used to set defaults
+on either a single resource or across an entire class of resources with a single
+rule.  +rsc_expression+ may be used to select resource agents within both +rsc_defaults+
+and +op_defaults+, while +op_expression+ may only be used within +op_defaults+.  If
+multiple rules succeed for a given resource agent, the last one specified will be
+the one that takes effect.  As with any other rule, boolean operations may be used
+to make more complicated expressions.
+
+.Set all IPaddr2 resources to stopped
+=====
+[source,XML]
+-------
+<rsc_defaults>
+    <meta_attributes id="op-target-role">
+        <rule id="op-target-role-rule" score="INFINITY">
+            <rsc_expression id="op-target-role-expr" class="ocf" provider="heartbeat"
+              type="IPaddr2"/>
+        </rule>
+        <nvpair id="op-target-role-nvpair" name="target-role" value="Stopped"/>
+    </meta_attributes>
+</rsc_defaults>
+-------
+=====
+
+.Set all monitor action timeouts to 7 seconds
+=====
+[source,XML]
+-------
+<op_defaults>
+    <meta_attributes id="op-monitor-defaults">
+        <rule id="op-monitor-default-rule" score="INFINITY">
+            <op_expression id="op-monitor-default-expr" name="monitor"/>
+        </rule>
+        <nvpair id="op-monitor-timeout" name="timeout" value="7s"/>
+    </meta_attributes>
+</op_defaults>
+-------
+=====
+
+.Set the monitor action timeout on all IPaddr2 resources with a given monitor interval to 8 seconds
+=====
+[source,XML]
+-------
+<op_defaults>
+    <meta_attributes id="op-monitor-and">
+        <rule id="op-monitor-and-rule" score="INFINITY">
+            <rsc_expression id="op-monitor-and-rsc-expr" class="ocf" provider="heartbeat"
+              type="IPaddr2"/>
+            <op_expression id="op-monitor-and-op-expr" name="monitor" interval="10s"/>
+        </rule>
+        <nvpair id="op-monitor-and-timeout" name="timeout" value="8s"/>
+    </meta_attributes>
+</op_defaults>
+-------
+=====
 
 === Using Rules to Control Cluster Options ===
 indexterm:[Rule,Controlling Cluster Options]

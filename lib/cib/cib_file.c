@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -24,15 +25,35 @@
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
-#define CIB_FLAG_DIRTY 0x00001
-#define CIB_FLAG_LIVE  0x00002
+enum cib_file_flags {
+    cib_file_flag_dirty = (1 << 0),
+    cib_file_flag_live  = (1 << 1),
+};
 
 typedef struct cib_file_opaque_s {
-    int flags;
+    uint32_t flags; // Group of enum cib_file_flags
     char *filename;
-
 } cib_file_opaque_t;
+
+#define cib_set_file_flags(cibfile, flags_to_set) do {                  \
+        (cibfile)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
+                                              LOG_TRACE, "CIB file",    \
+                                              cibfile->filename,        \
+                                              (cibfile)->flags,         \
+                                              (flags_to_set),           \
+                                              #flags_to_set);           \
+    } while (0)
+
+#define cib_clear_file_flags(cibfile, flags_to_clear) do {              \
+        (cibfile)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
+                                                LOG_TRACE, "CIB file",  \
+                                                cibfile->filename,      \
+                                                (cibfile)->flags,       \
+                                                (flags_to_clear),       \
+                                                #flags_to_clear);       \
+    } while (0)
 
 int cib_file_perform_op(cib_t * cib, const char *op, const char *host, const char *section,
                         xmlNode * data, xmlNode ** output_data, int call_options);
@@ -311,7 +332,7 @@ cib_file_prepare_xml(xmlNode *root)
 
     /* Always write out with num_updates=0 and current last-written timestamp */
     crm_xml_add(root, XML_ATTR_NUMUPDATES, "0");
-    crm_xml_add_last_written(root);
+    pcmk__xe_add_last_written(root);
 
     /* Delete status section before writing to file, because
      * we discard it on startup anyway, and users get confused by it */
@@ -485,7 +506,7 @@ cib_file_new(const char *cib_location)
     }
     private->flags = 0;
     if (cib_file_is_live(cib_location)) {
-        set_bit(private->flags, CIB_FLAG_LIVE);
+        cib_set_file_flags(private, cib_file_flag_live);
         crm_trace("File %s detected as live CIB", cib_location);
     }
     private->filename = strdup(cib_location);
@@ -681,10 +702,10 @@ cib_file_signoff(cib_t * cib)
     cib->type = cib_no_connection;
 
     /* If the in-memory CIB has been changed, write it to disk */
-    if (is_set(private->flags, CIB_FLAG_DIRTY)) {
+    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
 
         /* If this is the live CIB, write it out with a digest */
-        if (is_set(private->flags, CIB_FLAG_LIVE)) {
+        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
             if (cib_file_write_live(private->filename) < 0) {
                 rc = pcmk_err_generic;
             }
@@ -700,7 +721,7 @@ cib_file_signoff(cib_t * cib)
 
         if (rc == pcmk_ok) {
             crm_info("Wrote CIB to %s", private->filename);
-            clear_bit(private->flags, CIB_FLAG_DIRTY);
+            cib_clear_file_flags(private, cib_file_flag_dirty);
         } else {
             crm_err("Could not write CIB to %s", private->filename);
         }
@@ -791,7 +812,8 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
              (op? op : "invalid"), (section? section : "entire CIB"));
 #endif
 
-    call_options |= (cib_no_mtime | cib_inhibit_bcast | cib_scope_local);
+    cib__set_call_options(call_options, "file operation",
+                          cib_no_mtime|cib_inhibit_bcast|cib_scope_local);
 
     if (cib->state == cib_disconnected) {
         return -ENOTCONN;
@@ -806,7 +828,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     }
 
     for (lpc = 0; lpc < max_msg_types; lpc++) {
-        if (safe_str_eq(op, cib_file_ops[lpc].op)) {
+        if (pcmk__str_eq(op, cib_file_ops[lpc].op, pcmk__str_casei)) {
             fn = &(cib_file_ops[lpc].fn);
             query = cib_file_ops[lpc].read_only;
             break;
@@ -826,7 +848,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
 #endif
 
     /* Mirror the logic in cib_prepare_common() */
-    if (section != NULL && data != NULL && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)) {
+    if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {
         data = get_object_root(section, data);
     }
 
@@ -846,7 +868,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
         xml_log_patchset(LOG_DEBUG, "cib:diff", cib_diff);
         free_xml(in_mem_cib);
         in_mem_cib = result_cib;
-        set_bit(private->flags, CIB_FLAG_DIRTY);
+        cib_set_file_flags(private, cib_file_flag_dirty);
     }
 
     free_xml(cib_diff);

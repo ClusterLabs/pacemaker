@@ -19,6 +19,7 @@
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/ipc.h>
 
 #include <crm/common/attrd_internal.h>
@@ -222,7 +223,7 @@ main(int argc, char **argv)
                 query_all = TRUE;
                 break;
             case 'p':
-                set_bit(attr_options, pcmk__node_attr_private);
+                pcmk__set_node_attr_flags(attr_options, pcmk__node_attr_private);
                 break;
             case 'q':
                 break;
@@ -297,7 +298,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
     xmlNode *query;
 
     /* Build the query XML */
-    query = create_xml_node(NULL, __FUNCTION__);
+    query = create_xml_node(NULL, __func__);
     if (query == NULL) {
         return -ENOMEM;
     }
@@ -314,7 +315,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
         crm_perror(LOG_ERR, "Connection to cluster attribute manager failed");
         rc = -ENOTCONN;
     } else {
-        rc = crm_ipc_send(ipc, query, crm_ipc_flags_none|crm_ipc_client_response, 0, reply);
+        rc = crm_ipc_send(ipc, query, crm_ipc_client_response, 0, reply);
         if (rc > 0) {
             rc = pcmk_ok;
         }
@@ -354,7 +355,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
         return -ENXIO;
     }
 
-    if (safe_str_neq(crm_element_value(reply, F_TYPE), T_ATTRD)
+    if (!pcmk__str_eq(crm_element_value(reply, F_TYPE), T_ATTRD, pcmk__str_casei)
         || (crm_element_value(reply, PCMK__XA_ATTR_VERSION) == NULL)
         || strcmp(reply_attr, attr_name)) {
             fprintf(stderr,
@@ -381,8 +382,11 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
     gboolean have_values = FALSE;
 
     /* Iterate through reply's XML tags (a node tag for each host-value pair) */
-    for (child = __xml_first_child(reply); child != NULL; child = __xml_next(child)) {
-        if (safe_str_neq((const char*)child->name, XML_CIB_TAG_NODE)) {
+    for (child = pcmk__xml_first_child(reply); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        if (!pcmk__str_eq((const char *)child->name, XML_CIB_TAG_NODE,
+                          pcmk__str_casei)) {
             crm_warn("Ignoring unexpected %s tag in query reply", child->name);
         } else {
             reply_host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);

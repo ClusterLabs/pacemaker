@@ -144,14 +144,10 @@ xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
 gboolean can_prune_leaf(xmlNode * xml_node);
 
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
-
 /*
  * Searching & Modifying
  */
 xmlNode *find_xml_node(xmlNode * cib, const char *node_path, gboolean must_find);
-
-xmlNode *find_entity(xmlNode * parent, const char *node_name, const char *id);
 
 void xml_remove_prop(xmlNode * obj, const char *name);
 
@@ -178,7 +174,7 @@ crm_map_element_name(const xmlNode *xml)
 {
     const char *name = crm_element_name(xml);
 
-    if (crm_str_eq(name, "master", TRUE)) {
+    if (strcmp(name, "master") == 0) {
         return "clone";
     } else {
         return name;
@@ -244,50 +240,6 @@ gboolean cli_config_update(xmlNode ** xml, int *best_version, gboolean to_logs);
 void crm_xml_init(void);
 void crm_xml_cleanup(void);
 
-static inline xmlNode *
-__xml_first_child(const xmlNode *parent)
-{
-    xmlNode *child = parent? parent->children : NULL;
-
-    while (child && (child->type == XML_TEXT_NODE)) {
-        child = child->next;
-    }
-    return child;
-}
-
-static inline xmlNode *
-__xml_next(const xmlNode *child)
-{
-    xmlNode *next = child? child->next : NULL;
-
-    while (next && (next->type == XML_TEXT_NODE)) {
-        next = next->next;
-    }
-    return next;
-}
-
-static inline xmlNode *
-__xml_first_child_element(const xmlNode *parent)
-{
-    xmlNode *child = parent? parent->children : NULL;
-
-    while (child && (child->type != XML_ELEMENT_NODE)) {
-        child = child->next;
-    }
-    return child;
-}
-
-static inline xmlNode *
-__xml_next_element(const xmlNode *child)
-{
-    xmlNode *next = child? child->next : NULL;
-
-    while (next && (next->type != XML_ELEMENT_NODE)) {
-        next = next->next;
-    }
-    return next;
-}
-
 void pcmk_free_xml_subtree(xmlNode *xml);
 void free_xml(xmlNode * child);
 
@@ -340,6 +292,17 @@ void crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \brief xmlNode destructor which can be used in glib collections
  */
 void crm_destroy_xml(gpointer data);
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h in a future release.
+ */
+
+xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
+
+gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
+
+#endif
 
 #ifdef __cplusplus
 }

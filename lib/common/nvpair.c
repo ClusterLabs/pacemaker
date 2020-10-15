@@ -19,6 +19,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include "crmcommon_private.h"
 
@@ -935,8 +936,8 @@ xml2list(xmlNode *parent)
         g_hash_table_insert(nvpair_hash, strdup(p_name), strdup(p_value));
     }
 
-    for (child = __xml_first_child(nvpair_list); child != NULL;
-         child = __xml_next(child)) {
+    for (child = pcmk__xml_first_child(nvpair_list); child != NULL;
+         child = pcmk__xml_next(child)) {
 
         if (strcmp((const char *)child->name, XML_TAG_PARAM) == 0) {
             const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);

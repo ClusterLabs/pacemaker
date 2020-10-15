@@ -20,7 +20,7 @@
 
 int cib_retries = 0;
 
-static void
+void
 do_cib_updated(const char *event, xmlNode * msg)
 {
     if (pcmk__alert_in_patchset(msg, TRUE)) {
@@ -28,20 +28,21 @@ do_cib_updated(const char *event, xmlNode * msg)
     }
 }
 
-static void
+void
 do_cib_replaced(const char *event, xmlNode * msg)
 {
-    crm_debug("Updating the CIB after a replace: DC=%s", AM_I_DC ? "true" : "false");
+    crm_debug("Updating the CIB after a replace: DC=%s", pcmk__btoa(AM_I_DC));
     if (AM_I_DC == FALSE) {
         return;
 
-    } else if (fsa_state == S_FINALIZE_JOIN && is_set(fsa_input_register, R_CIB_ASKED)) {
+    } else if ((fsa_state == S_FINALIZE_JOIN)
+               && pcmk_is_set(fsa_input_register, R_CIB_ASKED)) {
         /* no need to restart the join - we asked for this replace op */
         return;
     }
 
     /* start the join process again so we get everyone's LRM status */
-    populate_cib_nodes(node_update_quick|node_update_all, __FUNCTION__);
+    populate_cib_nodes(node_update_quick|node_update_all, __func__);
     register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 }
 
@@ -63,12 +64,14 @@ do_cib_control(long long action,
         }
 
         crm_info("Disconnecting from the CIB manager");
-        clear_bit(fsa_input_register, R_CIB_CONNECTED);
+        controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
+        fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced);
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
 
         if (fsa_cib_conn->state != cib_disconnected) {
-            fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
+            /* Does not require a set_slave() reply to sign out from based. */
+            fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local | cib_discard_reply);
             fsa_cib_conn->cmds->signoff(fsa_cib_conn);
         }
         crm_notice("Disconnected from the CIB manager");
@@ -109,11 +112,11 @@ do_cib_control(long long action,
             crm_err("Could not set CIB notification callback (update)");
 
         } else {
-            set_bit(fsa_input_register, R_CIB_CONNECTED);
+            controld_set_fsa_input_flags(R_CIB_CONNECTED);
             cib_retries = 0;
         }
 
-        if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
+        if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
 
             cib_retries++;
             crm_warn("Couldn't complete CIB registration %d"
@@ -144,7 +147,7 @@ int crmd_cib_smart_opt()
 
     if (fsa_state == S_ELECTION || fsa_state == S_PENDING) {
         crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
-        call_opt |= cib_scope_local;
+        cib__set_call_options(call_opt, "update", cib_scope_local);
     }
     return call_opt;
 }
@@ -160,13 +163,8 @@ int crmd_cib_smart_opt()
 bool
 controld_action_is_recordable(const char *action)
 {
-    if (safe_str_eq(action, CRMD_ACTION_CANCEL)
-        || safe_str_eq(action, CRMD_ACTION_DELETE)
-        || safe_str_eq(action, CRMD_ACTION_NOTIFY)
-        || safe_str_eq(action, CRMD_ACTION_METADATA)) {
-        return FALSE;
-    }
-    return TRUE;
+    return !pcmk__strcase_any_of(action, CRMD_ACTION_CANCEL, CRMD_ACTION_DELETE,
+                            CRMD_ACTION_NOTIFY, CRMD_ACTION_METADATA, NULL);
 }
 
 static void
@@ -254,7 +252,8 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
     } else {
         int call_id;
 
-        options |= cib_quorum_override|cib_xpath|cib_multiple;
+        cib__set_call_options(options, "node state deletion",
+                              cib_quorum_override|cib_xpath|cib_multiple);
         call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL, options);
         crm_info("Deleting %s (via CIB call %d) " CRM_XS " xpath=%s",
                  desc, call_id, xpath);
@@ -316,8 +315,8 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
         return rc;
     }
 
-    if (is_set(call_options, cib_sync_call)) {
-        if (is_set(call_options, cib_dryrun)) {
+    if (pcmk_is_set(call_options, cib_sync_call)) {
+        if (pcmk_is_set(call_options, cib_dryrun)) {
             crm_debug("Deletion of %s would succeed", desc);
         } else {
             crm_debug("Deletion of %s succeeded", desc);

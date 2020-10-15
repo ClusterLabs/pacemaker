@@ -97,6 +97,7 @@ function test_assert() {
 }
 
 function test_crm_mon() {
+    local TMPXML
     export CIB_file="$test_home/cli/crm_mon.xml"
 
     desc="Basic text output"
@@ -128,6 +129,30 @@ function test_crm_mon() {
 
     # XML includes everything already so there's no need for a complete test
 
+    desc="Complete text output with detail"
+    cmd="crm_mon -1R --include=all"
+    test_assert $CRM_EX_OK 0
+
+    # XML includes detailed output already
+
+    desc="Complete brief text output"
+    cmd="crm_mon -1 --include=all --brief"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output grouped by node"
+    cmd="crm_mon -1 --include=all --group-by-node"
+    test_assert $CRM_EX_OK 0
+
+    # XML does not have a brief output option
+
+    desc="Complete brief text output grouped by node"
+    cmd="crm_mon -1 --include=all --group-by-node --brief"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output grouped by node"
+    cmd="crm_mon -1 --output-as=xml --group-by-node"
+    test_assert $CRM_EX_OK 0
+
     desc="Complete text output filtered by node"
     cmd="crm_mon -1 --include=all --node=cluster01"
     test_assert $CRM_EX_OK 0
@@ -144,6 +169,14 @@ function test_crm_mon() {
     cmd="crm_mon --output-as=xml --include=all --node=even-nodes"
     test_assert $CRM_EX_OK 0
 
+    desc="Complete text output filtered by resource tag"
+    cmd="crm_mon -1 --include=all --resource=fencing-rscs"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by resource tag"
+    cmd="crm_mon --output-as=xml --include=all --resource=fencing-rscs"
+    test_assert $CRM_EX_OK 0
+
     desc="Basic text output filtered by node that doesn't exist"
     cmd="crm_mon -1 --node=blah"
     test_assert $CRM_EX_OK 0
@@ -151,12 +184,6 @@ function test_crm_mon() {
     desc="XML output filtered by node that doesn't exist"
     cmd="crm_mon --output-as=xml --node=blah"
     test_assert $CRM_EX_OK 0
-
-    desc="Detailed text output"
-    cmd="crm_mon -1 --show-detail"
-    test_assert $CRM_EX_OK 0
-
-    # XML already includes extra detail
 
     desc="Basic text output with inactive resources"
     cmd="crm_mon -1 -r"
@@ -169,6 +196,146 @@ function test_crm_mon() {
     test_assert $CRM_EX_OK 0
 
     # XML already includes inactive resources
+
+    desc="Complete text output filtered by primitive resource"
+    cmd="crm_mon -1 --include=all --resource=Fencing"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by primitive resource"
+    cmd="crm_mon --output-as=xml --resource=Fencing"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by group resource"
+    cmd="crm_mon -1 --include=all --resource=exim-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by group resource"
+    cmd="crm_mon --output-as=xml --resource=exim-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by group resource member"
+    cmd="crm_mon -1 --include=all --resource=Public-IP"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by group resource member"
+    cmd="crm_mon --output-as=xml --resource=Email"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by clone resource"
+    cmd="crm_mon -1 --include=all --resource=ping-clone"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by clone resource"
+    cmd="crm_mon --output-as=xml --resource=ping-clone"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by clone resource instance"
+    cmd="crm_mon -1 --include=all --resource=ping"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by clone resource instance"
+    cmd="crm_mon --output-as=xml --resource=ping"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output filtered by exact clone resource instance"
+    cmd="crm_mon -1 --include=all --show-detail --resource=ping:0"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by exact clone resource instance"
+    cmd="crm_mon --output-as=xml --resource=ping:1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output filtered by resource that doesn't exist"
+    cmd="crm_mon -1 --resource=blah"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by resource that doesn't exist"
+    cmd="crm_mon --output-as=xml --resource=blah"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by tag"
+    cmd="crm_mon -1 -r --resource=inactive-rscs"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundle resource"
+    cmd="crm_mon -1 -r --resource=httpd-bundle"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by inactive bundle resource"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundled IP address resource"
+    cmd="crm_mon -1 -r --resource=httpd-bundle-ip-192.168.122.131"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundled IP address resource"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundled container"
+    cmd="crm_mon -1 -r --resource=httpd-bundle-docker-1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundled container"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle-docker-2"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundle connection"
+    cmd="crm_mon -1 -r --resource=httpd-bundle-0"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundle connection"
+    cmd="crm_mon --output-as=xml --resource=httpd-bundle-0"
+    test_assert $CRM_EX_OK 0
+
+    desc="Basic text output with inactive resources, filtered by bundled primitive resource"
+    cmd="crm_mon -1 -r --resource=httpd"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output filtered by bundled primitive resource"
+    cmd="crm_mon --output-as=xml --resource=httpd"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by clone name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-clone-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by clone name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-clone-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by group name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by group name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by exact group instance name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-group:1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by exact group instance name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-group:1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by primitive name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-proxy"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by primitive name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-proxy"
+    test_assert $CRM_EX_OK 0
+
+    desc="Complete text output, filtered by exact primitive instance name in cloned group"
+    cmd="crm_mon -1 --include=all --show-detail --resource=mysql-proxy:1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output, filtered by exact primitive instance name in cloned group"
+    cmd="crm_mon --output-as=xml --resource=mysql-proxy:1"
+    test_assert $CRM_EX_OK 0
 
     unset CIB_file
 
@@ -188,6 +355,16 @@ function test_crm_mon() {
 
     # XML already includes inactive resources
 
+    desc="Complete brief text output, with inactive resources"
+    cmd="crm_mon -1 -r --include=all --brief"
+    test_assert $CRM_EX_OK 0
+
+    # XML does not have a brief output option
+
+    desc="Complete brief text output grouped by node, with inactive resources"
+    cmd="crm_mon -1 -r --include=all --group-by-node --brief"
+    test_assert $CRM_EX_OK 0
+
     desc="Text output of partially active resources, with inactive resources, filtered by node"
     cmd="crm_mon -1 -r --node=cluster01"
     test_assert $CRM_EX_OK 0
@@ -196,6 +373,16 @@ function test_crm_mon() {
     cmd="crm_mon -1 --output-as=xml --node=cluster01"
     test_assert $CRM_EX_OK 0
 
+    unset CIB_file
+
+    export CIB_file=$(mktemp ${TMPDIR:-/tmp}/cts-cli.crm_mon.xml.XXXXXXXXXX)
+    sed -e '/maintenance-mode/ s/false/true/' "$test_home/cli/crm_mon.xml" > $CIB_file
+
+    desc="Text output of all resources with maintenance-mode enabled"
+    cmd="crm_mon -1 -r"
+    test_assert $CRM_EX_OK 0
+
+    rm -r "$CIB_file"
     unset CIB_file
 }
 
@@ -343,6 +530,18 @@ function test_tools() {
     cmd="crm_resource -r dummy --meta -d is-managed"
     test_assert $CRM_EX_OK
 
+    desc="Create another resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show why a resource is not running"
+    cmd="crm_resource -Y -r dummy"
+    test_assert $CRM_EX_OK 0
+
+    desc="Remove another resource meta attribute"
+    cmd="crm_resource -r dummy --meta -d target-role"
+    test_assert $CRM_EX_OK 0
+
     desc="Create a resource attribute"
     cmd="crm_resource -r dummy -p delay -v 10s"
     test_assert $CRM_EX_OK
@@ -350,6 +549,14 @@ function test_tools() {
     desc="List the configured resources"
     cmd="crm_resource -L"
     test_assert $CRM_EX_OK
+
+    desc="List IDs of instantiated resources"
+    cmd="crm_resource -l"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show XML configuration of resource"
+    cmd="crm_resource -q -r dummy"
+    test_assert $CRM_EX_OK 0
 
     desc="Require a destination when migrating a resource that is stopped"
     cmd="crm_resource -r dummy -M"
@@ -368,7 +575,7 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Try to move a resource to its existing location"
-    cmd="crm_resource -r dummy --move --host node1"
+    cmd="crm_resource -r dummy --move --node node1"
     test_assert $CRM_EX_EXISTS
 
     desc="Move a resource from its existing location"
@@ -422,6 +629,14 @@ function test_tools() {
     desc="Ban dummy from node1"
     cmd="crm_resource -r dummy -B -N node1"
     test_assert $CRM_EX_OK
+
+    desc="Show where a resource is running"
+    cmd="crm_resource -r dummy -W"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show constraints on a resource"
+    cmd="crm_resource -a -r dummy"
+    test_assert $CRM_EX_OK 0
 
     desc="Ban dummy from node2"
     cmd="crm_resource -r dummy -B -N node2"
@@ -491,7 +706,7 @@ function test_tools() {
     cmd="cibadmin -Q -o resources > $TMPXML"
     test_assert $CRM_EX_OK 0
 
-    desc="Delete resource paremt meta attribute (force)"
+    desc="Delete resource parent meta attribute (force)"
     cmd="crm_resource -r test-clone --meta -d is-managed --force"
     test_assert $CRM_EX_OK
 
@@ -533,6 +748,17 @@ function test_tools() {
     desc="Remove expired constraints"
     sleep 2
     cmd="crm_resource --clear --expired"
+    test_assert $CRM_EX_OK
+
+    # Clear has already been tested elsewhere, but we need to get rid of the
+    # constraints so testing delete works.  It won't delete if there's still
+    # a reference to the resource somewhere.
+    desc="Clear all implicit constraints for dummy"
+    cmd="crm_resource -r dummy -U"
+    test_assert $CRM_EX_OK
+
+    desc="Delete a resource"
+    cmd="crm_resource -D -r dummy -t primitive"
     test_assert $CRM_EX_OK
 
     unset CIB_shadow
@@ -644,6 +870,7 @@ function test_acl_loop() {
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
 
+    ### no ACL ###
     export CIB_user=unknownguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
@@ -661,6 +888,7 @@ function test_acl_loop() {
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### deny /cib permission ###
     export CIB_user=l33t-haxor
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
@@ -678,6 +906,7 @@ function test_acl_loop() {
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### observer role ###
     export CIB_user=niceguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
@@ -708,6 +937,7 @@ function test_acl_loop() {
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
     test_assert $CRM_EX_OK
 
+    ### deny /cib permission ###
     export CIB_user=l33t-haxor
 
     desc="$CIB_user: Create a resource meta attribute"
@@ -722,6 +952,7 @@ function test_acl_loop() {
     cmd="crm_resource -r dummy --meta -d target-role"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### observer role ###
     export CIB_user=niceguy
 
     desc="$CIB_user: Create a resource meta attribute"
@@ -740,11 +971,13 @@ function test_acl_loop() {
     cmd="crm_resource -r dummy --meta -p target-role -v Started"
     test_assert $CRM_EX_OK
 
+    ### read //meta_attributes ###
     export CIB_user=badidea
     desc="$CIB_user: Query configuration - implied deny"
     cmd="cibadmin -Q"
     test_assert $CRM_EX_OK 0
 
+    ### deny /cib, read //meta_attributes ###
     export CIB_user=betteridea
     desc="$CIB_user: Query configuration - explicit deny"
     cmd="cibadmin -Q"
@@ -754,6 +987,7 @@ function test_acl_loop() {
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
+    ### observer role ###
     export CIB_user=niceguy
     desc="$CIB_user: Replace - remove acls"
     cmd="cibadmin --replace --xml-file $TMPXML"
@@ -791,12 +1025,13 @@ function test_acl_loop() {
     cmd="cibadmin --replace --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
+    ### admin role ###
     CIB_user=bob
     CIB_user=root cibadmin -Q > "$TMPXML"
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - create attribute (allow)"
+    desc="$CIB_user: Replace - create attribute (direct allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
 
@@ -804,7 +1039,7 @@ function test_acl_loop() {
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - modify attribute (allow)"
+    desc="$CIB_user: Replace - modify attribute (direct allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
 
@@ -812,9 +1047,96 @@ function test_acl_loop() {
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
     CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
-    desc="$CIB_user: Replace - delete attribute (allow)"
+    desc="$CIB_user: Replace - delete attribute (direct allow)"
     cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
+
+    ### super_user role ###
+    export CIB_user=joe
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (inherited allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (inherited allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (inherited allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    ### rsc_writer role ###
+    export CIB_user=mike
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (allow overrides deny)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (allow overrides deny)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (allow overrides deny)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    ### rsc_denied role ###
+    export CIB_user=chris
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (deny overrides allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    # Set as root since setting as chris failed
+    CIB_user=root cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (deny overrides allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    # Set as root since setting as chris failed
+    CIB_user=root cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (deny overrides allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 }
 
 function test_acls() {
@@ -838,6 +1160,15 @@ function test_acls() {
       <acl_user id="bob">
         <role_ref id="admin"/>
       </acl_user>
+      <acl_user id="joe">
+        <role_ref id="super_user"/>
+      </acl_user>
+      <acl_user id="mike">
+        <role_ref id="rsc_writer"/>
+      </acl_user>
+      <acl_user id="chris">
+        <role_ref id="rsc_denied"/>
+      </acl_user>
       <acl_role id="observer">
         <read id="observer-read-1" xpath="/cib"/>
         <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
@@ -846,6 +1177,17 @@ function test_acls() {
       <acl_role id="admin">
         <read id="admin-read-1" xpath="/cib"/>
         <write id="admin-write-1" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="super_user">
+        <write id="super_user-write-1" xpath="/cib"/>
+      </acl_role>
+      <acl_role id="rsc_writer">
+        <deny id="rsc-writer-deny-1" xpath="/cib"/>
+        <write id="rsc-writer-write-1" xpath="//resources"/>
+      </acl_role>
+      <acl_role id="rsc_denied">
+        <write id="rsc-denied-write-1" xpath="/cib"/>
+        <deny id="rsc-denied-deny-1" xpath="//resources"/>
       </acl_role>
     </acls>
 EOF
@@ -1260,6 +1602,7 @@ for t in $tests; do
         -e 's/(version .*)/(version)/' \
         -e 's/last_update time=\".*\"/last_update time=\"\"/' \
         -e 's/last_change time=\".*\"/last_change time=\"\"/' \
+        -e 's/ api-version=\".*\" / api-version=\"X\" /' \
         -e 's/ version=\".*\" / version=\"\" /' \
         -e 's/request=\".*crm_mon/request=\"crm_mon/' \
         -e 's/crm_feature_set="[^"]*" //'\
@@ -1277,6 +1620,7 @@ for t in $tests; do
         -e 's/ end=\"[0-9][-+: 0-9]*Z*\"/ end=\"\"/' \
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
         -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
+        -e 's/^lt-//' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
@@ -1307,7 +1651,7 @@ done
 echo -e "\n\nSummary"
 for t in $tests; do
     eval TMPFILE="\$TMPFILE_$t"
-    grep -e '^\*' "$TMPFILE"
+    grep -e '^\* \(Passed\|Failed\)' "$TMPFILE"
 done
 
 if [ $num_errors -ne 0 ]; then

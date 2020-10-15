@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2019 the Pacemaker project contributors
+ * Copyright 2009-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -146,6 +146,7 @@ pid_t mainloop_child_pid(mainloop_child_t * child);
 void mainloop_clear_child_userdata(mainloop_child_t * child);
 gboolean mainloop_child_kill(pid_t pid);
 
+void pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n);
 void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
                           bool (*check)(guint));
 
@@ -153,7 +154,7 @@ void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
 
 #ifndef PCMK__NO_COMPAT
 /* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h when 2.1.0 is released.
+ * compatibility. It will be moved to compatibility.h in a future release.
  */
 gboolean crm_signal(int sig, void (*dispatch) (int sig)); // deprecated
 #endif

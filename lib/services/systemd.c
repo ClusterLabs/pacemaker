@@ -236,7 +236,7 @@ systemd_mask_error(svc_action_t *op, const char *error)
        || strstr(error, "org.freedesktop.systemd1.LoadFailed")
        || strstr(error, "org.freedesktop.systemd1.NoSuchUnit")) {
 
-        if (safe_str_eq(op->action, "stop")) {
+        if (pcmk__str_eq(op->action, "stop", pcmk__str_casei)) {
             crm_trace("Masking %s failure for %s: unknown services are stopped", op->action, op->rsc);
             op->rc = PCMK_OCF_OK;
             return TRUE;
@@ -265,7 +265,12 @@ systemd_loadunit_result(DBusMessage *reply, svc_action_t * op)
         }
         dbus_error_free(&error);
 
-    } else if(pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+    } else if (!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH,
+                                     __func__, __LINE__)) {
+        crm_err("Could not load systemd unit %s for %s: "
+                "systemd reply has unexpected type", op->agent, op->id);
+
+    } else {
         dbus_message_get_args (reply, NULL,
                                DBUS_TYPE_OBJECT_PATH, &path,
                                DBUS_TYPE_INVALID);
@@ -415,7 +420,7 @@ systemd_unit_listall(void)
         return NULL;
     }
     if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY,
-                              __FUNCTION__, __LINE__)) {
+                              __func__, __LINE__)) {
         crm_err("Could not list systemd unit files: systemd reply has invalid arguments");
         dbus_message_unref(reply);
         return NULL;
@@ -430,14 +435,14 @@ systemd_unit_listall(void)
         char *unit_name = NULL;
         char *basename = NULL;
 
-        if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __FUNCTION__, __LINE__)) {
-            crm_debug("ListUnitFiles reply has unexpected type");
+        if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __func__, __LINE__)) {
+            crm_warn("Skipping systemd reply argument with unexpected type");
             continue;
         }
 
         dbus_message_iter_recurse(&unit, &elem);
-        if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __FUNCTION__, __LINE__)) {
-            crm_debug("ListUnitFiles reply does not contain a string");
+        if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __func__, __LINE__)) {
+            crm_warn("Skipping systemd reply argument with no string");
             continue;
         }
 
@@ -551,7 +556,7 @@ systemd_exec_result(DBusMessage *reply, svc_action_t *op)
         dbus_error_free(&error);
 
     } else {
-        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __FUNCTION__, __LINE__)) {
+        if(!pcmk_dbus_type_check(reply, NULL, DBUS_TYPE_OBJECT_PATH, __func__, __LINE__)) {
             crm_warn("Call to %s passed but return type was unexpected", op->action);
             op->rc = PCMK_OCF_OK;
 
@@ -723,7 +728,7 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
 
     CRM_ASSERT(unit);
 
-    if (safe_str_eq(op->action, "monitor") || safe_str_eq(method, "status")) {
+    if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) || pcmk__str_eq(method, "status", pcmk__str_casei)) {
         DBusPendingCall *pending = NULL;
         char *state;
 
@@ -832,7 +837,7 @@ systemd_unit_exec(svc_action_t * op)
     crm_debug("Performing %ssynchronous %s op on systemd unit %s named '%s'",
               op->synchronous ? "" : "a", op->action, op->agent, op->rsc);
 
-    if (safe_str_eq(op->action, "meta-data")) {
+    if (pcmk__str_eq(op->action, "meta-data", pcmk__str_casei)) {
         // @TODO Implement an async meta-data call in executor API
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         op->rc = PCMK_OCF_OK;

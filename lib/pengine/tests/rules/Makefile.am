@@ -1,3 +1,11 @@
+#
+# Copyright 2020 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 LDADD = $(top_builddir)/lib/common/libcrmcommon.la \
 		$(top_builddir)/lib/pengine/libpe_rules.la
@@ -9,7 +17,9 @@ include $(top_srcdir)/mk/glib-tap.mk
 # information.
 #
 # https://developer.gnome.org/glib/unstable/glib-Testing.html
-test_programs = pe_cron_range_satisfied
+#
+# Add "_test" to the end of all test program names to simplify .gitignore.
+test_programs = pe_cron_range_satisfied_test
 
 # If any extra data needs to be added to the source distribution, add it to the
 # following list.

@@ -12,6 +12,7 @@
 #include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cib/internal.h> /* for F_CIB_UPDATE_RESULT */
 
 /*
@@ -220,7 +221,8 @@ pcmk__alert_in_patchset(xmlNode *msg, bool config)
             return TRUE;
         }
     } else if (format == 2) {
-        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+        for (change = pcmk__xml_first_child(patchset); change != NULL;
+             change = pcmk__xml_next(change)) {
             const char *xpath = crm_element_value(change, XML_DIFF_PATH);
 
             if (xpath == NULL) {
@@ -236,7 +238,7 @@ pcmk__alert_in_patchset(xmlNode *msg, bool config)
                 const char *name = NULL;
 
                 if ((strcmp(xpath, XPATH_CONFIG) != 0) ||
-                    ((section = __xml_first_child(change)) == NULL) ||
+                    ((section = pcmk__xml_first_child(change)) == NULL) ||
                     ((name = crm_element_name(section)) == NULL) ||
                     (strcmp(name, XML_CIB_TAG_ALERTS) != 0)) {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <crm/crm.h>
 #include <crm/common/curses_internal.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
@@ -46,6 +46,7 @@ curses_free_priv(pcmk__output_t *out) {
 
     g_queue_free(priv->parent_q);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
@@ -241,6 +242,11 @@ curses_end_list(pcmk__output_t *out) {
     free(node);
 }
 
+static bool
+curses_is_quiet(pcmk__output_t *out) {
+    return out->quiet;
+}
+
 pcmk__output_t *
 crm_mon_mk_curses_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -251,7 +257,6 @@ crm_mon_mk_curses_output(char **argv) {
 
     retval->fmt_name = "console";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = true;
 
     retval->init = curses_init;
     retval->free_priv = curses_free_priv;
@@ -271,6 +276,8 @@ crm_mon_mk_curses_output(char **argv) {
     retval->list_item = curses_list_item;
     retval->increment_list = curses_increment_list;
     retval->end_list = curses_end_list;
+
+    retval->is_quiet = curses_is_quiet;
 
     return retval;
 }
@@ -309,7 +316,7 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
     va_end(ap);
 }
 
-PCMK__OUTPUT_ARGS("stonith-event", "struct stonith_history_t *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
 static int
 stonith_event_console(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
@@ -352,15 +359,29 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode")
+PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long")
 static int
 cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
-    printw("\n              *** Resource management is DISABLED ***");
-    printw("\n  The cluster will not attempt to start, stop or recover services");
-    printw("\n");
+    unsigned long long flags = va_arg(args, unsigned long long);
+    int rc;
+
+    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+        printw("\n              *** Resource management is DISABLED ***");
+        printw("\n  The cluster will not attempt to start, stop or recover services");
+        printw("\n");
+        rc = pcmk_rc_ok;
+    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+        printw("\n    *** Resource management is DISABLED ***");
+        printw("\n  The cluster will keep all resources stopped");
+        printw("\n");
+        rc = pcmk_rc_ok;
+    } else {
+        rc = pcmk_rc_no_output;
+    }
+
     clrtoeol();
     refresh();
-    return pcmk_rc_ok;
+    return rc;
 }
 
 static pcmk__message_entry_t fmt_functions[] = {

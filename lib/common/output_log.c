@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,9 +15,10 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include <crm/crm.h>
-#include <crm/common/output.h>
 #include <crm/common/xml.h>
+#include <crm/common/output_internal.h>
 
 GOptionEntry pcmk__log_output_entries[] = {
     { NULL }
@@ -44,6 +45,7 @@ log_free_priv(pcmk__output_t *out) {
 
     g_queue_free(priv->prefixes);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
@@ -70,6 +72,9 @@ log_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 static void
 log_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
+
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
 
     log_free_priv(out);
     log_init(out);
@@ -216,6 +221,11 @@ log_info(pcmk__output_t *out, const char *format, ...) {
     free(buffer);
 }
 
+static bool
+log_is_quiet(pcmk__output_t *out) {
+    return false;
+}
+
 pcmk__output_t *
 pcmk__mk_log_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -226,7 +236,6 @@ pcmk__mk_log_output(char **argv) {
 
     retval->fmt_name = "log";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = false;
 
     retval->init = log_init;
     retval->free_priv = log_free_priv;
@@ -245,6 +254,8 @@ pcmk__mk_log_output(char **argv) {
     retval->begin_list = log_begin_list;
     retval->list_item = log_list_item;
     retval->end_list = log_end_list;
+
+    retval->is_quiet = log_is_quiet;
 
     return retval;
 }

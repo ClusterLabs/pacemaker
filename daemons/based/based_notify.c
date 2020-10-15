@@ -38,10 +38,11 @@ struct cib_notification_s {
 
 void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
 
-void do_cib_notify(int options, const char *op, xmlNode * update,
-                   int result, xmlNode * result_data, const char *msg_type);
+static void do_cib_notify(int options, const char *op, xmlNode *update,
+                          int result, xmlNode * result_data,
+                          const char *msg_type);
 
-static gboolean
+static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
@@ -50,55 +51,58 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     pcmk__client_t *client = value;
     struct cib_notification_s *update = user_data;
 
-    CRM_CHECK(client != NULL, return TRUE);
-    CRM_CHECK(update != NULL, return TRUE);
-
     if (client->ipcs == NULL && client->remote == NULL) {
         crm_warn("Skipping client with NULL channel");
-        return FALSE;
+        return;
     }
 
     type = crm_element_value(update->msg, F_SUBTYPE);
-
     CRM_LOG_ASSERT(type != NULL);
-    if (is_set(client->options, cib_notify_diff) && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
+
+    if (pcmk_is_set(client->flags, cib_notify_diff)
+        && pcmk__str_eq(type, T_CIB_DIFF_NOTIFY, pcmk__str_casei)) {
+
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_replace)
-               && safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
+    } else if (pcmk_is_set(client->flags, cib_notify_replace)
+               && pcmk__str_eq(type, T_CIB_REPLACE_NOTIFY, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_confirm)
-               && safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
+    } else if (pcmk_is_set(client->flags, cib_notify_confirm)
+               && pcmk__str_eq(type, T_CIB_UPDATE_CONFIRM, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_pre) && safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
+    } else if (pcmk_is_set(client->flags, cib_notify_pre)
+               && pcmk__str_eq(type, T_CIB_PRE_NOTIFY, pcmk__str_casei)) {
         do_send = TRUE;
 
-    } else if (is_set(client->options, cib_notify_post) && safe_str_eq(type, T_CIB_POST_NOTIFY)) {
+    } else if (pcmk_is_set(client->flags, cib_notify_post)
+               && pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
+
         do_send = TRUE;
     }
 
     if (do_send) {
-        switch (client->kind) {
-            case PCMK__CLIENT_IPC:
+        switch (PCMK__CLIENT_TYPE(client)) {
+            case pcmk__client_ipc:
                 if (pcmk__ipc_send_iov(client, update->iov,
                                        crm_ipc_server_event) != pcmk_rc_ok) {
                     crm_warn("Notification of client %s/%s failed", client->name, client->id);
                 }
                 break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
-            case PCMK__CLIENT_TLS:
+            case pcmk__client_tls:
 #endif
-            case PCMK__CLIENT_TCP:
+            case pcmk__client_tcp:
                 crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
                 pcmk__remote_send_xml(client->remote, update->msg);
                 break;
             default:
-                crm_err("Unknown transport %d for %s", client->kind, client->name);
+                crm_err("Unknown transport for %s " CRM_XS " flags=0x%llx",
+                        pcmk__client_name(client),
+                        (unsigned long long) client->flags);
         }
     }
-    return FALSE;
 }
 
 static void
@@ -110,19 +114,17 @@ cib_notify_send(xmlNode * xml)
     ssize_t bytes = 0;
     int rc = pcmk__ipc_prepare_iov(0, xml, 0, &iov, &bytes);
 
-    crm_trace("Notifying clients");
     if (rc == pcmk_rc_ok) {
         update.msg = xml;
         update.iov = iov;
         update.iov_size = bytes;
-        pcmk__foreach_ipc_client_remove(cib_notify_send_one, &update);
+        pcmk__foreach_ipc_client(cib_notify_send_one, &update);
 
     } else {
         crm_notice("Could not notify clients: %s " CRM_XS " rc=%d",
                    pcmk_rc_str(rc), rc);
     }
     pcmk_free_ipc_event(iov);
-    crm_trace("Notify complete");
 }
 
 void
@@ -167,7 +169,7 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
     do_cib_notify(options, op, update, result, diff, T_CIB_DIFF_NOTIFY);
 }
 
-void
+static void
 do_cib_notify(int options, const char *op, xmlNode * update,
               int result, xmlNode * result_data, const char *msg_type)
 {

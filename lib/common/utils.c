@@ -41,14 +41,16 @@
 #include <crm/common/mainloop.h>
 #include <libxml2/libxml/relaxng.h>
 
+#include "crmcommon_private.h"
+
 #ifndef PW_BUFFER_LEN
 #  define PW_BUFFER_LEN		500
 #endif
 
 CRM_TRACE_INIT_DATA(common);
 
-gboolean crm_config_error = FALSE;
-gboolean crm_config_warning = FALSE;
+bool pcmk__config_error = false;
+bool pcmk__config_warning = false;
 char *crm_system_name = NULL;
 
 int pcmk__score_red = 0;
@@ -68,13 +70,13 @@ char2score(const char *score)
     } else if (pcmk_str_is_infinity(score)) {
         score_f = CRM_SCORE_INFINITY;
 
-    } else if (safe_str_eq(score, "red")) {
+    } else if (pcmk__str_eq(score, "red", pcmk__str_casei)) {
         score_f = pcmk__score_red;
 
-    } else if (safe_str_eq(score, "yellow")) {
+    } else if (pcmk__str_eq(score, "yellow", pcmk__str_casei)) {
         score_f = pcmk__score_yellow;
 
-    } else if (safe_str_eq(score, "green")) {
+    } else if (pcmk__str_eq(score, "green", pcmk__str_casei)) {
         score_f = pcmk__score_green;
 
     } else {
@@ -115,17 +117,6 @@ score2char(int score)
     }
     return crm_itoa(score);
 }
-
-char *
-generate_hash_key(const char *crm_msg_reference, const char *sys)
-{
-    char *hash_key = crm_strdup_printf("%s_%s", (sys? sys : "none"),
-                                       crm_msg_reference);
-
-    crm_trace("created hash key: (%s)", hash_key);
-    return hash_key;
-}
-
 
 int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
@@ -192,8 +183,15 @@ pcmk_daemon_user(uid_t *uid, gid_t *gid)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Return the integer equivalent of a portion of a string
+ *
+ * \param[in]  text      Pointer to beginning of string portion
+ * \param[out] end_text  This will point to next character after integer
+ */
 static int
-crm_version_helper(const char *text, const char **end_text)
+version_helper(const char *text, const char **end_text)
 {
     int atoi_result = -1;
 
@@ -252,11 +250,11 @@ compare_version(const char *version1, const char *version2)
         }
 
         if (ver1_iter != NULL) {
-            digit1 = crm_version_helper(ver1_iter, &ver1_iter);
+            digit1 = version_helper(ver1_iter, &ver1_iter);
         }
 
         if (ver2_iter != NULL) {
-            digit2 = crm_version_helper(ver2_iter, &ver2_iter);
+            digit2 = version_helper(ver2_iter, &ver2_iter);
         }
 
         if (digit1 < digit2) {
@@ -334,8 +332,6 @@ crm_parse_interval_spec(const char *input)
     return (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
 }
 
-extern bool crm_is_daemon;
-
 /* coverity[+kill] */
 void
 crm_abort(const char *file, const char *function, int line,
@@ -348,7 +344,7 @@ crm_abort(const char *file, const char *function, int line,
     /* Implied by the parent's error logging below */
     /* crm_write_blackbox(0); */
 
-    if(crm_is_daemon == FALSE) {
+    if (!pcmk__is_daemon) {
         /* This is a command line tool - do not fork */
 
         /* crm_add_logfile(NULL);   * Record it to a file? */
@@ -399,15 +395,22 @@ crm_abort(const char *file, const char *function, int line,
     crm_perror(LOG_ERR, "Cannot wait on forked child %d", pid);
 }
 
+/*!
+ * \internal
+ * \brief Convert the current process to a daemon process
+ *
+ * Fork a child process, exit the parent, create a PID file with the current
+ * process ID, and close the standard input/output/error file descriptors.
+ * Exit instead if a daemon is already running and using the PID file.
+ *
+ * \param[in] name     Daemon executable name
+ * \param[in] pidfile  File name to use as PID file
+ */
 void
-crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
+pcmk__daemonize(const char *name, const char *pidfile)
 {
     int rc;
     pid_t pid;
-
-    if (daemonize == FALSE) {
-        return;
-    }
 
     /* Check before we even try... */
     rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
@@ -514,7 +517,7 @@ crm_generate_uuid(void)
  *       that mixed-version clusters are possible during a rolling upgrade.
  */
 const char *
-pcmk_message_name(const char *name)
+pcmk__message_name(const char *name)
 {
     if (name == NULL) {
         return "unknown";
@@ -552,7 +555,7 @@ pcmk_message_name(const char *name)
 bool
 crm_is_daemon_name(const char *name)
 {
-    name = pcmk_message_name(name);
+    name = pcmk__message_name(name);
     return (!strcmp(name, CRM_SYSTEM_CRMD)
             || !strcmp(name, CRM_SYSTEM_STONITHD)
             || !strcmp(name, "stonith-ng")
@@ -562,36 +565,6 @@ crm_is_daemon_name(const char *name)
             || !strcmp(name, CRM_SYSTEM_DC)
             || !strcmp(name, CRM_SYSTEM_TENGINE)
             || !strcmp(name, CRM_SYSTEM_LRMD));
-}
-
-#include <md5.h>
-
-char *
-crm_md5sum(const char *buffer)
-{
-    int lpc = 0, len = 0;
-    char *digest = NULL;
-    unsigned char raw_digest[MD5_DIGEST_SIZE];
-
-    if (buffer == NULL) {
-        buffer = "";
-    }
-    len = strlen(buffer);
-
-    crm_trace("Beginning digest of %d bytes", len);
-    digest = malloc(2 * MD5_DIGEST_SIZE + 1);
-    if(digest) {
-        md5_buffer(buffer, len, raw_digest);
-        for (lpc = 0; lpc < MD5_DIGEST_SIZE; lpc++) {
-            sprintf(digest + (2 * lpc), "%02x", raw_digest[lpc]);
-        }
-        digest[(2 * MD5_DIGEST_SIZE)] = 0;
-        crm_trace("Digest %s.", digest);
-
-    } else {
-        crm_err("Could not create digest");
-    }
-    return digest;
 }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -618,10 +591,10 @@ pcmk_hostname()
 
 bool
 pcmk_str_is_infinity(const char *s) {
-    return crm_str_eq(s, CRM_INFINITY_S, TRUE) || crm_str_eq(s, CRM_PLUS_INFINITY_S, TRUE);
+    return pcmk__str_any_of(s, CRM_INFINITY_S, CRM_PLUS_INFINITY_S, NULL);
 }
 
 bool
 pcmk_str_is_minus_infinity(const char *s) {
-    return crm_str_eq(s, CRM_MINUS_INFINITY_S, TRUE);
+    return pcmk__str_eq(s, CRM_MINUS_INFINITY_S, pcmk__str_none);
 }

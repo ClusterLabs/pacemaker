@@ -1,0 +1,334 @@
+Set up a Cluster
+----------------
+
+Simplify Administration With a Cluster Shell
+############################################
+
+In the dark past, configuring Pacemaker required the administrator to
+read and write XML.  In true UNIX style, there were also a number of
+different commands that specialized in different aspects of querying
+and updating the cluster.
+
+In addition, the various components of the cluster stack (corosync, pacemaker,
+etc.) had to be configured separately, with different configuration tools and
+formats.
+
+All of that has been greatly simplified with the creation of higher-level tools,
+whether command-line or GUIs, that hide all the mess underneath.
+
+Command-line cluster shells take all the individual aspects required for
+managing and configuring a cluster, and pack them into one simple-to-use
+command-line tool.
+
+They even allow you to queue up several changes at once and commit
+them all at once.
+
+Two popular command-line shells are ``pcs`` and ``crmsh``. Clusters from Scratch is
+based on ``pcs`` because it comes with CentOS, but both have similar
+functionality. Choosing a shell or GUI is a matter of personal preference and
+what comes with (and perhaps is supported by) your choice of operating system.
+
+
+Install the Cluster Software
+############################
+
+Fire up a shell on both nodes and run the following to install pacemaker, pcs,
+and some other command-line tools that will make our lives easier:
+
+.. code-block:: none
+
+    # yum install -y pacemaker pcs psmisc policycoreutils-python
+
+.. IMPORTANT::
+
+    This document will show commands that need to be executed on both nodes
+    with a simple ``#`` prompt. Be sure to run them on each node individually.
+
+.. NOTE::
+
+    This document uses ``pcs`` for cluster management. Other alternatives,
+    such as ``crmsh``, are available, but their syntax
+    will differ from the examples used here.
+
+Configure the Cluster Software
+##############################
+
+.. index::
+   single: firewall
+
+Allow cluster services through firewall
+_______________________________________
+
+On each node, allow cluster-related services through the local firewall:
+
+.. code-block:: none
+
+    # firewall-cmd --permanent --add-service=high-availability
+    success
+    # firewall-cmd --reload
+    success
+
+.. NOTE ::
+
+    If you are using iptables directly, or some other firewall solution besides
+    firewalld, simply open the following ports, which can be used by various
+    clustering components: TCP ports 2224, 3121, and 21064, and UDP port 5405.
+
+    If you run into any problems during testing, you might want to disable
+    the firewall and SELinux entirely until you have everything working.
+    This may create significant security issues and should not be performed on
+    machines that will be exposed to the outside world, but may be appropriate
+    during development and testing on a protected host.
+
+    To disable security measures:
+
+    .. code-block:: none
+
+        [root@pcmk-1 ~]# setenforce 0
+        [root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
+        [root@pcmk-1 ~]# systemctl mask firewalld.service
+        [root@pcmk-1 ~]# systemctl stop firewalld.service
+        [root@pcmk-1 ~]# iptables --flush
+
+Enable pcs Daemon
+_________________
+
+Before the cluster can be configured, the pcs daemon must be started and enabled
+to start at boot time on each node. This daemon works with the pcs command-line interface
+to manage synchronizing the corosync configuration across all nodes in the cluster.
+
+Start and enable the daemon by issuing the following commands on each node:
+
+.. code-block:: none
+
+    # systemctl start pcsd.service
+    # systemctl enable pcsd.service
+    Created symlink from /etc/systemd/system/multi-user.target.wants/pcsd.service to /usr/lib/systemd/system/pcsd.service.
+
+The installed packages will create a **hacluster** user with a disabled password.
+While this is fine for running ``pcs`` commands locally,
+the account needs a login password in order to perform such tasks as syncing
+the corosync configuration, or starting and stopping the cluster on other nodes.
+
+This tutorial will make use of such commands,
+so now we will set a password for the **hacluster** user, using the same password
+on both nodes:
+
+.. code-block:: none
+
+    # passwd hacluster
+    Changing password for user hacluster.
+    New password:
+    Retype new password:
+    passwd: all authentication tokens updated successfully.
+
+.. NOTE::
+
+    Alternatively, to script this process or set the password on a
+    different machine from the one you're logged into, you can use
+    the ``--stdin`` option for ``passwd``:
+
+    .. code-block:: none
+
+        [root@pcmk-1 ~]# ssh pcmk-2 -- 'echo mysupersecretpassword | passwd --stdin hacluster'
+
+Configure Corosync
+__________________
+
+On either node, use ``pcs cluster auth`` to authenticate as the **hacluster** user:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster auth pcmk-1 pcmk-2
+    Username: hacluster
+    Password:
+    pcmk-2: Authorized
+    pcmk-1: Authorized
+
+.. NOTE::
+
+    In Fedora 29 and CentOS 8.0, the command has been changed to ``pcs host auth``:
+
+    .. code-block:: none
+
+        [root@pcmk-1 ~]# pcs host auth pcmk-1 pcmk-2
+        Username: hacluster
+        Password:
+        pcmk-2: Authorized
+        pcmk-1: Authorized
+
+Next, use ``pcs cluster setup`` on the same node to generate and synchronize the
+corosync configuration:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster setup --name mycluster pcmk-1 pcmk-2
+    Destroying cluster on nodes: pcmk-1, pcmk-2...
+    pcmk-2: Stopping Cluster (pacemaker)...
+    pcmk-1: Stopping Cluster (pacemaker)...
+    pcmk-1: Successfully destroyed cluster
+    pcmk-2: Successfully destroyed cluster
+
+    Sending 'pacemaker_remote authkey' to 'pcmk-1', 'pcmk-2'
+    pcmk-2: successful distribution of the file 'pacemaker_remote authkey'
+    pcmk-1: successful distribution of the file 'pacemaker_remote authkey'
+    Sending cluster config files to the nodes...
+    pcmk-1: Succeeded
+    pcmk-2: Succeeded
+
+    Synchronizing pcsd certificates on nodes pcmk-1, pcmk-2...
+    pcmk-2: Success
+    pcmk-1: Success
+    Restarting pcsd on the nodes in order to reload the certificates...
+    pcmk-2: Success
+    pcmk-1: Success
+
+.. NOTE ::
+    In Fedora 29 and CentOS 8.0, the syntax has been changed and the ``--name`` option
+    has been dropped:
+
+    .. code-block:: none
+
+        [root@pcmk-1 ~]# pcs cluster setup mycluster pcmk-1 pcmk-2
+        No addresses specified for host 'pcmk-1', using 'pcmk-1'
+        No addresses specified for host 'pcmk-2', using 'pcmk-2'
+        Destroying cluster on hosts: 'pcmk-1', 'pcmk-2'...
+        pcmk-1: Successfully destroyed cluster
+        pcmk-2: Successfully destroyed cluster
+        Requesting remove 'pcsd settings' from 'pcmk-1', 'pcmk-2'
+        pcmk-1: successful removal of the file 'pcsd settings'
+        pcmk-2: successful removal of the file 'pcsd settings'
+        Sending 'corosync authkey', 'pacemaker authkey' to 'pcmk-1', 'pcmk-2'
+        pcmk-2: successful distribution of the file 'corosync authkey'
+        pcmk-2: successful distribution of the file 'pacemaker authkey'
+        pcmk-1: successful distribution of the file 'corosync authkey'
+        pcmk-1: successful distribution of the file 'pacemaker authkey'
+        Synchronizing pcsd SSL certificates on nodes 'pcmk-1', 'pcmk-2'...
+        pcmk-1: Success
+        pcmk-2: Success
+        Sending 'corosync.conf' to 'pcmk-1', 'pcmk-2'
+        pcmk-2: successful distribution of the file 'corosync.conf'
+        pcmk-1: successful distribution of the file 'corosync.conf'
+        Cluster has been successfully set up.
+
+If you received an authorization error for either of those commands, make
+sure you configured the **hacluster** user account on each node
+with the same password.
+
+.. NOTE::
+
+    If you are not using ``pcs`` for cluster administration,
+    follow whatever procedures are appropriate for your tools
+    to create a corosync.conf and copy it to all nodes.
+
+    The ``pcs`` command will configure corosync to use UDP unicast transport; if you
+    choose to use multicast instead, choose a multicast address carefully [#]_.
+
+The final corosync.conf configuration on each node should look
+something like the sample in :ref:`sample-corosync-configuration`.
+
+Explore pcs
+###########
+
+Start by taking some time to familiarize yourself with what ``pcs`` can do.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs
+
+    Usage: pcs [-f file] [-h] [commands]...
+    Control and configure pacemaker and corosync.
+
+    Options:
+        -h, --help         Display usage and exit.
+        -f file            Perform actions on file instead of active CIB.
+        --debug            Print all network traffic and external commands run.
+        --version          Print pcs version information. List pcs capabilities if
+                           --full is specified.
+        --request-timeout  Timeout for each outgoing request to another node in
+                           seconds. Default is 60s.
+        --force            Override checks and errors, the exact behavior depends on
+                           the command. WARNING: Using the --force option is
+                           strongly discouraged unless you know what you are doing.
+
+    Commands:
+        cluster     Configure cluster options and nodes.
+        resource    Manage cluster resources.
+        stonith     Manage fence devices.
+        constraint  Manage resource constraints.
+        property    Manage pacemaker properties.
+        acl         Manage pacemaker access control lists.
+        qdevice     Manage quorum device provider on the local host.
+        quorum      Manage cluster quorum settings.
+        booth       Manage booth (cluster ticket manager).
+        status      View cluster status.
+        config      View and manage cluster configuration.
+        pcsd        Manage pcs daemon.
+        node        Manage cluster nodes.
+        alert       Manage pacemaker alerts.
+
+As you can see, the different aspects of cluster management are separated
+into categories. To discover the functionality available in each of these
+categories, one can issue the command ``pcs <CATEGORY> help``.  Below is an
+example of all the options available under the status category.
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pcs status help
+
+    Usage: pcs status [commands]...
+    View current cluster and resource status
+    Commands:
+        [status] [--full | --hide-inactive]
+            View all information about the cluster and resources (--full provides
+            more details, --hide-inactive hides inactive resources).
+
+        resources [<resource id> | --full | --groups | --hide-inactive]
+            Show all currently configured resources or if a resource is specified
+            show the options for the configured resource.  If --full is specified,
+            all configured resource options will be displayed.  If --groups is
+            specified, only show groups (and their resources).  If --hide-inactive
+            is specified, only show active resources.
+
+        groups
+            View currently configured groups and their resources.
+
+        cluster
+            View current cluster status.
+
+        corosync
+            View current membership information as seen by corosync.
+
+        quorum
+            View current quorum status.
+
+        qdevice <device model> [--full] [<cluster name>]
+            Show runtime status of specified model of quorum device provider.  Using
+            --full will give more detailed output.  If <cluster name> is specified,
+            only information about the specified cluster will be displayed.
+
+        nodes [corosync | both | config]
+            View current status of nodes from pacemaker. If 'corosync' is
+            specified, view current status of nodes from corosync instead. If
+            'both' is specified, view current status of nodes from both corosync &
+            pacemaker. If 'config' is specified, print nodes from corosync &
+            pacemaker configuration.
+
+        pcsd [<node>]...
+            Show current status of pcsd on nodes specified, or on all nodes
+            configured in the local cluster if no nodes are specified.
+
+        xml
+            View xml version of status (output from crm_mon -r -1 -X).
+
+Additionally, if you are interested in the version and supported cluster stack(s)
+available with your Pacemaker installation, run:
+
+.. code-block:: none
+
+    [root@pcmk-1 ~]# pacemakerd --features
+    Pacemaker 1.1.18-11.el7_5.3 (Build: 2b07d5c5a9)
+     Supporting v3.0.14:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls
+
+.. [#] For some subtle issues, see `Topics in High-Performance Messaging: Multicast Address Assignment <http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html>`_
+       or the more detailed treatment in `Cisco's Guidelines for Enterprise IP Multicast Address Allocation <https://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf>`_.

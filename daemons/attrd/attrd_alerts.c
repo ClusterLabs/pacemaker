@@ -92,8 +92,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crmalerts = output;
-    if (crmalerts && !crm_str_eq(crm_element_name(crmalerts),
-                                 XML_CIB_TAG_ALERTS, TRUE)) {
+    if (crmalerts && !pcmk__str_eq(crm_element_name(crmalerts), XML_CIB_TAG_ALERTS, pcmk__str_none)) {
         crmalerts = first_named_child(crmalerts, XML_CIB_TAG_ALERTS);
     }
     if (!crmalerts) {

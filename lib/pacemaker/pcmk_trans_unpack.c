@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 
 static crm_action_t *
@@ -41,13 +42,13 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
 
-    if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP)) {
+    if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
         action->type = action_type_rsc;
 
-    } else if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_PSEUDO_EVENT)) {
+    } else if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_PSEUDO_EVENT, pcmk__str_casei)) {
         action->type = action_type_pseudo;
 
-    } else if (safe_str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT)) {
+    } else if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT, pcmk__str_casei)) {
         action->type = action_type_crm;
     }
 
@@ -106,13 +107,15 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
 
     crm_trace("look for actions in synapse %s", crm_element_value(xml_synapse, XML_ATTR_ID));
 
-    for (action_set = __xml_first_child(xml_synapse); action_set != NULL;
-         action_set = __xml_next(action_set)) {
-        if (crm_str_eq((const char *)action_set->name, "action_set", TRUE)) {
+    for (action_set = pcmk__xml_first_child(xml_synapse); action_set != NULL;
+         action_set = pcmk__xml_next(action_set)) {
+
+        if (pcmk__str_eq((const char *)action_set->name, "action_set",
+                         pcmk__str_none)) {
             xmlNode *action = NULL;
 
-            for (action = __xml_first_child(action_set); action != NULL;
-                 action = __xml_next(action)) {
+            for (action = pcmk__xml_first_child(action_set); action != NULL;
+                 action = pcmk__xml_next(action)) {
                 crm_action_t *new_action = unpack_action(new_synapse, action);
 
                 if (new_action == NULL) {
@@ -130,15 +133,18 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
 
     crm_trace("look for inputs in synapse %s", ID(xml_synapse));
 
-    for (inputs = __xml_first_child(xml_synapse); inputs != NULL; inputs = __xml_next(inputs)) {
-        if (crm_str_eq((const char *)inputs->name, "inputs", TRUE)) {
+    for (inputs = pcmk__xml_first_child(xml_synapse); inputs != NULL;
+         inputs = pcmk__xml_next(inputs)) {
+
+        if (pcmk__str_eq((const char *)inputs->name, "inputs", pcmk__str_none)) {
             xmlNode *trigger = NULL;
 
-            for (trigger = __xml_first_child(inputs); trigger != NULL;
-                 trigger = __xml_next(trigger)) {
+            for (trigger = pcmk__xml_first_child(inputs); trigger != NULL;
+                 trigger = pcmk__xml_next(trigger)) {
                 xmlNode *input = NULL;
 
-                for (input = __xml_first_child(trigger); input != NULL; input = __xml_next(input)) {
+                for (input = pcmk__xml_first_child(trigger); input != NULL;
+                     input = pcmk__xml_next(input)) {
                     crm_action_t *new_input = unpack_action(new_synapse, input);
 
                     if (new_input == NULL) {
@@ -215,8 +221,10 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         new_graph->migration_limit = crm_parse_int(t_id, "-1");
     }
 
-    for (synapse = __xml_first_child(xml_graph); synapse != NULL; synapse = __xml_next(synapse)) {
-        if (crm_str_eq((const char *)synapse->name, "synapse", TRUE)) {
+    for (synapse = pcmk__xml_first_child(xml_graph); synapse != NULL;
+         synapse = pcmk__xml_next(synapse)) {
+
+        if (pcmk__str_eq((const char *)synapse->name, "synapse", pcmk__str_none)) {
             synapse_t *new_synapse = unpack_synapse(new_graph, synapse);
 
             if (new_synapse != NULL) {
@@ -314,7 +322,8 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
         g_hash_table_insert(op->params, strdup(name), strdup(value));
     }
 
-    for (xop = __xml_first_child(resource); xop != NULL; xop = __xml_next(xop)) {
+    for (xop = pcmk__xml_first_child(resource); xop != NULL;
+         xop = pcmk__xml_next(xop)) {
         int tmp = 0;
 
         crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);

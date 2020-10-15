@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,18 +11,24 @@
 #  define _GNU_SOURCE
 #endif
 
-#include <config.h>
+#ifndef PCMK__CONFIG_H
+#  define PCMK__CONFIG_H
+#  include <config.h>
+#endif
+
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <crm/crm.h>
-#include <crm/common/output.h>
-#include <crm/common/xml.h>
 #include <glib.h>
+
+#include <crm/crm.h>
+#include <crm/common/xml.h>
+#include <crm/common/output_internal.h>
 
 static gboolean legacy_xml = FALSE;
 static gboolean simple_list = FALSE;
+static gboolean substitute = FALSE;
 
 GOptionEntry pcmk__xml_output_entries[] = {
     { "xml-legacy", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &legacy_xml,
@@ -31,8 +37,34 @@ GOptionEntry pcmk__xml_output_entries[] = {
     { "xml-simple-list", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &simple_list,
       NULL,
       NULL },
+    { "xml-substitute", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &substitute,
+      NULL,
+      NULL },
 
     { NULL }
+};
+
+typedef struct subst_s {
+    const char *from;
+    const char *to;
+} subst_t;
+
+static subst_t substitutions[] = {
+    { "Attributes",                     "attributes" },
+    { "Active Resources",               "resources" },
+    { "Full List of Resources",         "resources" },
+    { "Inactive Resources",             "resources" },
+    { "Cluster Summary",                "summary" },
+    { "Failed Resource Actions",        "failures" },
+    { "Fencing History",                "fence_history" },
+    { "Migration Summary",              "node_history" },
+    { "Operations",                     "node_history" },
+    { "Negative Location Constraints",  "bans" },
+    { "Node Attributes",                "node_attributes" },
+    { "Resources",                      "resources" },
+    { "Tickets",                        "tickets" },
+
+    { NULL, NULL }
 };
 
 typedef struct private_data_s {
@@ -54,6 +86,7 @@ xml_free_priv(pcmk__output_t *out) {
     g_queue_free(priv->parent_q);
     g_slist_free(priv->errors);
     free(priv);
+    out->priv = NULL;
 }
 
 static bool
@@ -105,16 +138,9 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     xmlNodePtr node;
     private_data_t *priv = out->priv;
-
-    /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
-     * in the pcmk__output_new path.
-     */
-    if (priv == NULL || priv->root == NULL) {
-        return;
-    }
 
     if (legacy_xml) {
         GSList *node = priv->errors;
@@ -147,6 +173,20 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         fprintf(out->dest, "%s", buf);
         free(buf);
     }
+}
+
+static void
+xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    private_data_t *priv = out->priv;
+
+    /* If root is NULL, xml_init failed and we are being called from pcmk__output_free
+     * in the pcmk__output_new path.
+     */
+    if (priv == NULL || priv->root == NULL) {
+        return;
+    }
+
+    finish_reset_common(out, exit_status, print);
 
     if (copy_dest != NULL) {
         *copy_dest = copy_xml(priv->root);
@@ -155,15 +195,13 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
 static void
 xml_reset(pcmk__output_t *out) {
-    char *buf = NULL;
-
     CRM_ASSERT(out != NULL);
 
+    out->dest = freopen(NULL, "w", out->dest);
+    CRM_ASSERT(out->dest != NULL);
+
     if (out->priv != NULL) {
-        private_data_t *priv = out->priv;
-        buf = dump_xml_formatted_with_text(priv->root);
-        fprintf(out->dest, "%s", buf);
-        free(buf);
+        finish_reset_common(out, CRM_EX_OK, true);
     }
 
     xml_free_priv(out);
@@ -250,6 +288,7 @@ static void
 xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
                const char *format, ...) {
     va_list ap;
+    const char *name = NULL;
     char *buf = NULL;
     int len;
 
@@ -258,13 +297,26 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
+    if (substitute) {
+        for (subst_t *s = substitutions; s->from != NULL; s++) {
+            if (!strcmp(s->from, buf)) {
+                name = s->to;
+                break;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        name = buf;
+    }
+
     if (legacy_xml || simple_list) {
-        pcmk__output_xml_create_parent(out, buf);
+        pcmk__output_xml_create_parent(out, name);
     } else {
         xmlNodePtr list_node = NULL;
 
         list_node = pcmk__output_xml_create_parent(out, "list");
-        xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) buf);
+        xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
     }
 
     free(buf);
@@ -287,9 +339,12 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     va_end(ap);
 
     item_node = pcmk__output_create_xml_text_node(out, "item", buf);
-    free(buf);
 
-    xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+    if (name != NULL) {
+        xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+    }
+
+    free(buf);
 }
 
 static void
@@ -316,6 +371,11 @@ xml_end_list(pcmk__output_t *out) {
     }
 }
 
+static bool
+xml_is_quiet(pcmk__output_t *out) {
+    return false;
+}
+
 pcmk__output_t *
 pcmk__mk_xml_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -326,7 +386,6 @@ pcmk__mk_xml_output(char **argv) {
 
     retval->fmt_name = "xml";
     retval->request = argv == NULL ? NULL : g_strjoinv(" ", argv);
-    retval->supports_quiet = false;
 
     retval->init = xml_init;
     retval->free_priv = xml_free_priv;
@@ -346,6 +405,8 @@ pcmk__mk_xml_output(char **argv) {
     retval->list_item = xml_list_item;
     retval->increment_list = xml_increment_list;
     retval->end_list = xml_end_list;
+
+    retval->is_quiet = xml_is_quiet;
 
     return retval;
 }

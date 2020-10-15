@@ -45,7 +45,7 @@ check_md5_hash(char *hash, char *value)
 
     hash2 = crm_md5sum(value);
     crm_debug("hash: %s, calculated hash: %s", hash, hash2);
-    if (safe_str_eq(hash, hash2)) {
+    if (pcmk__str_eq(hash, hash2, pcmk__str_casei)) {
         rc = true;
     }
     free(hash2);

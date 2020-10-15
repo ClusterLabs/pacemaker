@@ -3,7 +3,9 @@
 # Define HAVE_[ENUM_NAME]_[ENUM_VALUE] if the specified enum value is
 # available.
 dnl
-dnl Copyright 2018 Andrew Beekhof <andrew@beekhof.net>
+dnl Copyright 2018-2020 the Pacemaker project contributors
+dnl
+dnl The version control history for this file may have further details.
 dnl
 dnl This source code is licensed under the GNU General Public License version 2
 dnl or later (GPLv2+) WITHOUT ANY WARRANTY.

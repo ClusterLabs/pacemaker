@@ -23,28 +23,21 @@ gboolean was_processing_warning = FALSE;
 static bool
 check_health(const char *value)
 {
-    return safe_str_eq(value, "none")
-            || safe_str_eq(value, "custom")
-            || safe_str_eq(value, "only-green")
-            || safe_str_eq(value, "progressive")
-            || safe_str_eq(value, "migrate-on-red");
+    return pcmk__strcase_any_of(value, "none", "custom", "only-green", "progressive",
+                           "migrate-on-red", NULL);
 }
 
 static bool
 check_stonith_action(const char *value)
 {
-    return safe_str_eq(value, "reboot")
-           || safe_str_eq(value, "poweroff")
-           || safe_str_eq(value, "off");
+    return pcmk__strcase_any_of(value, "reboot", "poweroff", "off", NULL);
 }
 
 static bool
 check_placement_strategy(const char *value)
 {
-    return safe_str_eq(value, "default")
-           || safe_str_eq(value, "utilization")
-           || safe_str_eq(value, "minimal")
-           || safe_str_eq(value, "balanced");
+    return pcmk__strcase_any_of(value, "default", "utilization", "minimal",
+                           "balanced", NULL);
 }
 
 static pcmk__cluster_option_t pe_opts[] = {
@@ -54,7 +47,7 @@ static pcmk__cluster_option_t pe_opts[] = {
      * long description
      */
     {
-        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide",
+        "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, demote, suicide",
         "stop", pcmk__valid_quorum,
         "What to do when the cluster does not have quorum",
         NULL
@@ -138,7 +131,11 @@ static pcmk__cluster_option_t pe_opts[] = {
         "false", pcmk__valid_boolean,
         "Whether watchdog integration is enabled",
         "This is set automatically by the cluster according to whether SBD "
-            "is detected to be in use. User-configured values are ignored."
+            "is detected to be in use. User-configured values are ignored. "
+            "The value `true` is meaningful if diskless SBD is used and "
+            "`stonith-watchdog-timeout` is nonzero. In that case, if fencing "
+            "is required, watchdog-based self-fencing will be performed via "
+            "SBD without requiring a fencing resource explicitly configured."
     },
     {
         "concurrent-fencing", NULL, "boolean", NULL,
@@ -326,6 +323,9 @@ fail2text(enum action_fail_response fail)
         case action_fail_ignore:
             result = "ignore";
             break;
+        case action_fail_demote:
+            result = "demote";
+            break;
         case action_fail_block:
             result = "block";
             break;
@@ -357,47 +357,47 @@ fail2text(enum action_fail_response fail)
 enum action_tasks
 text2task(const char *task)
 {
-    if (safe_str_eq(task, CRMD_ACTION_STOP)) {
+    if (pcmk__str_eq(task, CRMD_ACTION_STOP, pcmk__str_casei)) {
         return stop_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_STOPPED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STOPPED, pcmk__str_casei)) {
         return stopped_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_START)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_START, pcmk__str_casei)) {
         return start_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_STARTED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STARTED, pcmk__str_casei)) {
         return started_rsc;
-    } else if (safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+    } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         return shutdown_crm;
-    } else if (safe_str_eq(task, CRM_OP_FENCE)) {
+    } else if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
         return stonith_node;
-    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         return monitor_rsc;
-    } else if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei)) {
         return action_notify;
-    } else if (safe_str_eq(task, CRMD_ACTION_NOTIFIED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_NOTIFIED, pcmk__str_casei)) {
         return action_notified;
-    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
         return action_promote;
-    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
         return action_demote;
-    } else if (safe_str_eq(task, CRMD_ACTION_PROMOTED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTED, pcmk__str_casei)) {
         return action_promoted;
-    } else if (safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTED, pcmk__str_casei)) {
         return action_demoted;
     }
 #if SUPPORT_TRACING
-    if (safe_str_eq(task, CRMD_ACTION_CANCEL)) {
+    if (pcmk__str_eq(task, CRMD_ACTION_CANCEL, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_DELETE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_DELETE, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRM_OP_PROBED)) {
+    } else if (pcmk__str_eq(task, CRM_OP_PROBED, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRM_OP_LRM_REFRESH)) {
+    } else if (pcmk__str_eq(task, CRM_OP_LRM_REFRESH, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATE, pcmk__str_casei)) {
         return no_action;
-    } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+    } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         return no_action;
     }
     crm_trace("Unsupported action: %s", task);
@@ -484,15 +484,15 @@ enum rsc_role_e
 text2role(const char *role)
 {
     CRM_ASSERT(role != NULL);
-    if (safe_str_eq(role, RSC_ROLE_STOPPED_S)) {
+    if (pcmk__str_eq(role, RSC_ROLE_STOPPED_S, pcmk__str_casei)) {
         return RSC_ROLE_STOPPED;
-    } else if (safe_str_eq(role, RSC_ROLE_STARTED_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_casei)) {
         return RSC_ROLE_STARTED;
-    } else if (safe_str_eq(role, RSC_ROLE_SLAVE_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_SLAVE_S, pcmk__str_casei)) {
         return RSC_ROLE_SLAVE;
-    } else if (safe_str_eq(role, RSC_ROLE_MASTER_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_MASTER_S, pcmk__str_casei)) {
         return RSC_ROLE_MASTER;
-    } else if (safe_str_eq(role, RSC_ROLE_UNKNOWN_S)) {
+    } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
         return RSC_ROLE_UNKNOWN;
     }
     crm_err("Unknown role: %s", role);
@@ -578,7 +578,7 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
     if (name == NULL || value == NULL) {
         return;
 
-    } else if (safe_str_eq(value, "#default")) {
+    } else if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
         return;
 
     } else if (g_hash_table_lookup(hash, name) == NULL) {
@@ -600,7 +600,7 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
     }
 
     source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-    if(source == NULL || safe_str_eq("host", source) == FALSE) {
+    if(source == NULL || !pcmk__str_eq("host", source, pcmk__str_casei)) {
         return g_hash_table_lookup(node->details->attrs, name);
     }
 

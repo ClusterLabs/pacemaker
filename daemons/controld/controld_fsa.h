@@ -16,7 +16,7 @@
 #  include <crm/common/mainloop.h>
 #  include <crm/cluster.h>
 #  include <crm/cluster/election.h>
-#  include <crm/common/ipcs_internal.h>
+#  include <crm/common/ipc_internal.h>
 
 /*! States the controller can be in */
 enum crmd_fsa_state {
@@ -452,7 +452,7 @@ struct fsa_data_s {
     int id;
     enum crmd_fsa_input fsa_input;
     enum crmd_fsa_cause fsa_cause;
-    long long actions;
+    uint64_t actions;
     const char *origin;
     void *data;
     enum fsa_data_type data_type;
@@ -461,8 +461,42 @@ struct fsa_data_s {
 /* Global FSA stuff */
 extern gboolean do_fsa_stall;
 extern enum crmd_fsa_state fsa_state;
-extern long long fsa_input_register;
-extern long long fsa_actions;
+extern uint64_t fsa_input_register;
+extern uint64_t fsa_actions;
+
+#define controld_set_fsa_input_flags(flags_to_set) do {                     \
+        fsa_input_register = pcmk__set_flags_as(__func__, __LINE__,         \
+                                                LOG_TRACE,                  \
+                                                "FSA input", "controller",  \
+                                                fsa_input_register,         \
+                                                (flags_to_set),             \
+                                                #flags_to_set);             \
+    } while (0)
+
+#define controld_clear_fsa_input_flags(flags_to_clear) do {                 \
+        fsa_input_register = pcmk__clear_flags_as(__func__, __LINE__,       \
+                                                  LOG_TRACE,                \
+                                                  "FSA input", "controller",\
+                                                  fsa_input_register,       \
+                                                  (flags_to_clear),         \
+                                                  #flags_to_clear);         \
+    } while (0)
+
+#define controld_set_fsa_action_flags(flags_to_set) do {                    \
+        fsa_actions = pcmk__set_flags_as(__func__, __LINE__,                \
+                                         LOG_DEBUG,                         \
+                                         "FSA action", "controller",        \
+                                         fsa_actions, (flags_to_set),       \
+                                         #flags_to_set);                    \
+    } while (0)
+
+#define controld_clear_fsa_action_flags(flags_to_clear) do {                \
+        fsa_actions = pcmk__clear_flags_as(__func__, __LINE__,              \
+                                           LOG_DEBUG,                       \
+                                           "FSA action", "controller",      \
+                                           fsa_actions, (flags_to_clear),   \
+                                           #flags_to_clear);                \
+    } while (0)
 
 extern cib_t *fsa_cib_conn;
 
@@ -493,11 +527,13 @@ const char *fsa_action2string(long long action);
 
 enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
 
-#  define AM_I_DC is_set(fsa_input_register, R_THE_DC)
-#  define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING) == FALSE)
-#  define trigger_fsa(source) do { \
-        crm_trace("Triggering FSA: %s", __FUNCTION__); \
-        mainloop_set_trigger(source); \
+#  define AM_I_DC pcmk_is_set(fsa_input_register, R_THE_DC)
+#  define AM_I_OPERATIONAL !pcmk_is_set(fsa_input_register, R_STARTING)
+#  define trigger_fsa() do {                    \
+        if (fsa_source != NULL) {               \
+            crm_trace("Triggering FSA");        \
+            mainloop_set_trigger(fsa_source);   \
+        }                                       \
     } while(0)
 
 /* A_READCONFIG */

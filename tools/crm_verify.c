@@ -243,7 +243,7 @@ main(int argc, char **argv)
     }
 
     xml_tag = crm_element_name(cib_object);
-    if (safe_str_neq(xml_tag, XML_TAG_CIB)) {
+    if (!pcmk__str_eq(xml_tag, XML_TAG_CIB, pcmk__str_casei)) {
         fprintf(stderr,
                 "This tool can only check complete configurations (i.e. those starting with <cib>).\n");
         rc = -EBADMSG;
@@ -265,7 +265,7 @@ main(int argc, char **argv)
         cib_object = NULL;
 
     } else if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
-        crm_config_error = TRUE;
+        pcmk__config_error = true;
         free_xml(cib_object);
         cib_object = NULL;
         fprintf(stderr, "The cluster will NOT be able to use this configuration.\n");
@@ -279,8 +279,7 @@ main(int argc, char **argv)
         crm_perror(LOG_CRIT, "Unable to allocate working set");
         goto done;
     }
-    set_bit(data_set->flags, pe_flag_no_counts);
-    set_bit(data_set->flags, pe_flag_no_compat);
+    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     if (cib_object == NULL) {
     } else if (status != NULL || USE_LIVE_CIB) {
@@ -294,14 +293,14 @@ main(int argc, char **argv)
     }
     pe_free_working_set(data_set);
 
-    if (crm_config_error) {
+    if (pcmk__config_error) {
         fprintf(stderr, "Errors found during check: config not valid\n");
         if (verbose == FALSE) {
             fprintf(stderr, "  -V may provide more details\n");
         }
         rc = -pcmk_err_schema_validation;
 
-    } else if (crm_config_warning) {
+    } else if (pcmk__config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
         if (verbose == FALSE) {
             fprintf(stderr, "  Use -V -V for more details\n");

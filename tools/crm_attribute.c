@@ -28,6 +28,7 @@
 #include <crm/cluster.h>
 
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/common/attrd_internal.h>
 #include <sys/utsname.h>
 
@@ -326,7 +327,8 @@ main(int argc, char **argv)
                 break;
             case '!':
                 crm_warn("Inhibiting notifications for this update");
-                cib_opts |= cib_inhibit_notify;
+                cib__set_call_options(cib_opts, crm_system_name,
+                                      cib_inhibit_notify);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -363,10 +365,10 @@ main(int argc, char **argv)
 	    type = "forever";
     }
 
-    if (safe_str_eq(type, "reboot")) {
+    if (pcmk__str_eq(type, "reboot", pcmk__str_casei)) {
         type = XML_CIB_TAG_STATUS;
 
-    } else if (safe_str_eq(type, "forever")) {
+    } else if (pcmk__str_eq(type, "forever", pcmk__str_casei)) {
         type = XML_CIB_TAG_NODES;
     }
 
@@ -374,8 +376,8 @@ main(int argc, char **argv)
         /* we're updating cluster options - don't populate dest_node */
         type = XML_CIB_TAG_CRMCONFIG;
 
-    } else if (safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
-    } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
+    } else if (pcmk__str_eq(type, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
@@ -401,7 +403,7 @@ main(int argc, char **argv)
 
     if (attr_pattern) {
         if (((command != 'v') && (command != 'D'))
-            || safe_str_neq(type, XML_CIB_TAG_STATUS)) {
+            || !pcmk__str_eq(type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
 
             fprintf(stderr, "Error: pattern can only be used with till-reboot update or delete\n");
             crm_exit(CRM_EX_USAGE);
@@ -412,7 +414,7 @@ main(int argc, char **argv)
     }
 
     // Only go through attribute manager for transient attributes
-    try_attrd = safe_str_eq(type, XML_CIB_TAG_STATUS);
+    try_attrd = pcmk__str_eq(type, XML_CIB_TAG_STATUS, pcmk__str_casei);
 
     // Don't try to contact attribute manager if we're using a file as CIB
     if (getenv("CIB_file") || getenv("CIB_shadow")) {

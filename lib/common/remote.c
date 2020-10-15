@@ -28,7 +28,7 @@
 #include <glib.h>
 #include <bzlib.h>
 
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
@@ -390,7 +390,7 @@ send_tls(gnutls_session_t *session, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_debug("Sending TLS message of %llu bytes",
+    crm_trace("Sending TLS message of %llu bytes",
               (unsigned long long) unsent_len);
     while (true) {
         gnutls_rc = gnutls_record_send(*session, unsent, unsent_len);
@@ -713,7 +713,7 @@ read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer_size = 2 * read_len;
         crm_trace("Expanding buffer to %llu bytes",
                   (unsigned long long) remote->buffer_size);
-        remote->buffer = realloc_safe(remote->buffer, remote->buffer_size + 1);
+        remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H

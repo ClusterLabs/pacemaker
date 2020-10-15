@@ -11,8 +11,11 @@ include $(top_srcdir)/mk/common.mk
 # Things you might want to override on the command line
 
 # Books to generate
-BOOKS		?= Pacemaker_Development \
-			   Pacemaker_Remote
+BOOKS		?= Clusters_from_Scratch	\
+		   Pacemaker_Administration	\
+		   Pacemaker_Development	\
+		   Pacemaker_Explained		\
+		   Pacemaker_Remote
 
 # Output formats to generate. Possible values:
 #  html       (multiple HTML files)
@@ -53,6 +56,12 @@ TAG	?= $(shell [ -n "`git tag --points-at HEAD | head -1`" ]		\
 
 BOOK		= none
 
+DEPS_Clusters_from_Scratch	= shared/pacemaker-intro.rst
+DEPS_Pacemaker_Administration	= shared/pacemaker-intro.rst
+DEPS_Pacemaker_Development	=
+DEPS_Pacemaker_Explained	= shared/pacemaker-intro.rst
+DEPS_Pacemaker_Remote		= $(wildcard $(srcdir)/Pacemaker_Remote/images/*.png)
+
 if BUILD_SPHINX_DOCS
 $(BOOKS:%=%/conf.py): conf.py.in
 	$(AM_V_GEN)sed							\
@@ -61,7 +70,7 @@ $(BOOKS:%=%/conf.py): conf.py.in
 		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'	\
 		$(<) > "$@"
 
-$(BOOK)/_build: _static/pacemaker.css $(BOOK)/conf.py $(wildcard $(srcdir)/$(BOOK)/*.rst)
+$(BOOK)/_build: _static/pacemaker.css $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(srcdir)/$(BOOK)/*.rst)
 	@echo 'Building "$(subst _, ,$(BOOK))" because of $?' $(PCMK_quiet)
 	$(AM_V_at)rm -rf "$@"
 	$(AM_V_BOOK)for format in $(BOOK_FORMATS); do			\

@@ -27,21 +27,21 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 
     get_group_variant_data(group_data, rsc);
 
-    if (is_not_set(rsc->flags, pe_rsc_provisional)) {
+    if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to;
     }
-    if (is_set(rsc->flags, pe_rsc_allocating)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
         pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
     }
 
     if (group_data->first_child == NULL) {
         // Nothing to allocate
-        clear_bit(rsc->flags, pe_rsc_provisional);
+        pe__clear_resource_flags(rsc, pe_rsc_provisional);
         return NULL;
     }
 
-    set_bit(rsc->flags, pe_rsc_allocating);
+    pe__set_resource_flags(rsc, pe_rsc_allocating);
     rsc->role = group_data->first_child->role;
 
     group_data->first_child->rsc_cons =
@@ -52,7 +52,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         g_list_concat(group_data->last_child->rsc_cons_lhs, rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 
-    pe__show_node_weights(!show_scores, rsc, __FUNCTION__, rsc->allowed_nodes);
+    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -67,8 +67,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     rsc->next_role = group_data->first_child->next_role;
-    clear_bit(rsc->flags, pe_rsc_allocating);
-    clear_bit(rsc->flags, pe_rsc_provisional);
+    pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
 
     if (group_data->colocated) {
         return group_node;
@@ -95,34 +94,32 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     op = start_action(rsc, NULL, TRUE /* !group_data->child_starting */ );
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, started_key(rsc),
                        RSC_STARTED, NULL, TRUE /* !group_data->child_starting */ , TRUE, data_set);
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = stop_action(rsc, NULL, TRUE /* !group_data->child_stopping */ );
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     op = custom_action(rsc, stopped_key(rsc),
                        RSC_STOPPED, NULL, TRUE /* !group_data->child_stopping */ , TRUE, data_set);
-    set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
+    pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
     value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
     if (crm_is_true(value)) {
         op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+
         op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
 
         op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
+
         op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
-        set_bit(op->flags, pe_action_pseudo);
-        set_bit(op->flags, pe_action_runnable);
+        pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
 }
 
@@ -146,15 +143,17 @@ group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (is_set(action->flags, pe_action_optional)) {
+        if (pcmk_is_set(action->flags, pe_action_optional)) {
             continue;
         }
-        if (safe_str_eq(RSC_STOP, action->task) && is_set(action->flags, pe_action_runnable)) {
+        if (pcmk__str_eq(RSC_STOP, action->task, pcmk__str_casei)
+            && pcmk_is_set(action->flags, pe_action_runnable)) {
+
             group_data->child_stopping = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is stopping", action->uuid);
 
-        } else if (safe_str_eq(RSC_START, action->task)
-                   && is_set(action->flags, pe_action_runnable)) {
+        } else if (pcmk__str_eq(RSC_START, action->task, pcmk__str_casei)
+                   && pcmk_is_set(action->flags, pe_action_runnable)) {
             group_data->child_starting = TRUE;
             pe_rsc_trace(action->rsc, "Based on %s the group is starting", action->uuid);
         }
@@ -188,7 +187,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         if (last_rsc == NULL) {
             if (group_data->ordered) {
-                stop |= pe_order_optional;
+                pe__set_order_flags(stop, pe_order_optional);
                 stopped = pe_order_implies_then;
             }
 
@@ -197,7 +196,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                                child_rsc, last_rsc, NULL, NULL, data_set);
         }
 
-        if (is_set(top->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             new_rsc_order(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
                           stop | pe_order_implies_first_printed, data_set);
 
@@ -219,7 +218,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         if (group_data->ordered == FALSE) {
             order_start_start(rsc, child_rsc, start | pe_order_implies_first_printed);
-            if (is_set(top->flags, pe_rsc_promotable)) {
+            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
                               start | pe_order_implies_first_printed, data_set);
             }
@@ -230,7 +229,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             order_start_start(last_rsc, child_rsc, start);
             order_stop_stop(child_rsc, last_rsc, pe_order_optional | pe_order_restart);
 
-            if (is_set(top->flags, pe_rsc_promotable)) {
+            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(last_rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, start, data_set);
                 new_rsc_order(child_rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, pe_order_optional,
                               data_set);
@@ -246,7 +245,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             int flags = pe_order_none;
 
             order_start_start(rsc, child_rsc, flags);
-            if (is_set(top->flags, pe_rsc_promotable)) {
+            if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
             }
 
@@ -274,7 +273,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
         order_stop_stop(rsc, last_rsc, stop_stop_flags);
         new_rsc_order(last_rsc, RSC_STOP, rsc, RSC_STOPPED, stop_stopped_flags, data_set);
 
-        if (is_set(top->flags, pe_rsc_promotable)) {
+        if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
             new_rsc_order(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, stop_stop_flags, data_set);
             new_rsc_order(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stop_stopped_flags, data_set);
         }
@@ -344,7 +343,7 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     pe_rsc_trace(rsc_rh, "Processing RH %s of constraint %s (LH is %s)",
                  rsc_rh->id, constraint->id, rsc_lh->id);
 
-    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
+    if (pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return;
 
     } else if (group_data->colocated && group_data->first_child) {
@@ -393,26 +392,30 @@ group_action_flags(pe_action_t * action, pe_node_t * node)
         if (child_action) {
             enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 
-            if (is_set(flags, pe_action_optional)
-                && is_set(child_flags, pe_action_optional) == FALSE) {
+            if (pcmk_is_set(flags, pe_action_optional)
+                && !pcmk_is_set(child_flags, pe_action_optional)) {
                 pe_rsc_trace(action->rsc, "%s is mandatory because of %s", action->uuid,
                              child_action->uuid);
-                clear_bit(flags, pe_action_optional);
-                pe_clear_action_bit(action, pe_action_optional);
+                pe__clear_raw_action_flags(flags, "group action",
+                                           pe_action_optional);
+                pe__clear_action_flags(action, pe_action_optional);
             }
-            if (safe_str_neq(task_s, action->task)
-                && is_set(flags, pe_action_runnable)
-                && is_set(child_flags, pe_action_runnable) == FALSE) {
+            if (!pcmk__str_eq(task_s, action->task, pcmk__str_casei)
+                && pcmk_is_set(flags, pe_action_runnable)
+                && !pcmk_is_set(child_flags, pe_action_runnable)) {
+
                 pe_rsc_trace(action->rsc, "%s is not runnable because of %s", action->uuid,
                              child_action->uuid);
-                clear_bit(flags, pe_action_runnable);
-                pe_clear_action_bit(action, pe_action_runnable);
+                pe__clear_raw_action_flags(flags, "group action",
+                                           pe_action_runnable);
+                pe__clear_action_flags(action, pe_action_runnable);
             }
 
         } else if (task != stop_rsc && task != action_demote) {
             pe_rsc_trace(action->rsc, "%s is not runnable because of %s (not found in %s)",
                          action->uuid, task_s, child->id);
-            clear_bit(flags, pe_action_runnable);
+            pe__clear_raw_action_flags(flags, "group action",
+                                       pe_action_runnable);
         }
     }
 
@@ -499,12 +502,12 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
 
     get_group_variant_data(group_data, rsc);
 
-    if (is_set(rsc->flags, pe_rsc_merging)) {
+    if (pcmk_is_set(rsc->flags, pe_rsc_merging)) {
         pe_rsc_info(rsc, "Breaking dependency loop with %s at %s", rsc->id, rhs);
         return nodes;
     }
 
-    set_bit(rsc->flags, pe_rsc_merging);
+    pe__set_resource_flags(rsc, pe_rsc_merging);
 
     nodes =
         group_data->first_child->cmds->merge_weights(group_data->first_child, rhs, nodes, attr,
@@ -522,7 +525,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
                                            flags);
     }
 
-    clear_bit(rsc->flags, pe_rsc_merging);
+    pe__clear_resource_flags(rsc, pe_rsc_merging);
     return nodes;
 }
 

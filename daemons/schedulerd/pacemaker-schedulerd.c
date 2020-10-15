@@ -11,6 +11,7 @@
 
 #include <crm/crm.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -21,7 +22,7 @@
 
 #include <libxml/parser.h>
 
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
@@ -68,7 +69,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
     } else if (strcasecmp(op, CRM_OP_HELLO) == 0) {
         /* ignore */
 
-    } else if (safe_str_eq(crm_element_value(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE)) {
+    } else if (pcmk__str_eq(crm_element_value(msg, F_CRM_MSG_TYPE), XML_ATTR_RESPONSE, pcmk__str_casei)) {
         /* ignore */
 
     } else if (sys_to == NULL || strcasecmp(sys_to, CRM_SYSTEM_PENGINE) != 0) {
@@ -87,8 +88,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         gboolean is_repoke = FALSE;
         gboolean process = TRUE;
 
-        crm_config_error = FALSE;
-        crm_config_warning = FALSE;
+        pcmk__config_error = false;
+        pcmk__config_warning = false;
 
         was_processing_error = FALSE;
         was_processing_warning = FALSE;
@@ -96,8 +97,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         if (sched_data_set == NULL) {
             sched_data_set = pe_new_working_set();
             CRM_ASSERT(sched_data_set != NULL);
-            set_bit(sched_data_set->flags, pe_flag_no_counts);
-            set_bit(sched_data_set->flags, pe_flag_no_compat);
+            pe__set_working_set_flags(sched_data_set,
+                                      pe_flag_no_counts|pe_flag_no_compat);
         }
 
         digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
@@ -109,7 +110,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             process = FALSE;
             free(digest);
 
-        } else if (safe_str_eq(digest, last_digest)) {
+        } else if (pcmk__str_eq(digest, last_digest, pcmk__str_casei)) {
             crm_info("Input has not changed since last time, not saving to disk");
             is_repoke = TRUE;
             free(digest);
@@ -159,8 +160,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
         crm_xml_add_int(reply, "graph-errors", was_processing_error);
         crm_xml_add_int(reply, "graph-warnings", was_processing_warning);
-        crm_xml_add_int(reply, "config-errors", crm_config_error);
-        crm_xml_add_int(reply, "config-warnings", crm_config_warning);
+        crm_xml_add_int(reply, "config-errors", pcmk__config_error);
+        crm_xml_add_int(reply, "config-warnings", pcmk__config_warning);
 
         if (pcmk__ipc_send_xml(sender, 0, reply,
                                crm_ipc_server_event) != pcmk_rc_ok) {
@@ -309,7 +310,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         pe_metadata();
         return CRM_EX_OK;
     }

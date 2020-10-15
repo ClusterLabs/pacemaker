@@ -158,7 +158,7 @@ main(int argc, char **argv)
                 break;
         }
     }
-    if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+    if (argc - optind == 1 && pcmk__str_eq("metadata", argv[optind], pcmk__str_casei)) {
         cib_metadata();
         return CRM_EX_OK;
     }
@@ -269,7 +269,7 @@ cib_cs_destroy(gpointer user_data)
         crm_info("Corosync disconnection complete");
     } else {
         crm_crit("Lost connection to cluster layer, shutting down");
-        terminate_cib(__FUNCTION__, CRM_EX_DISCONNECT);
+        terminate_cib(__func__, CRM_EX_DISCONNECT);
     }
 }
 #endif
@@ -280,7 +280,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     switch (type) {
         case crm_status_processes:
             if (cib_legacy_mode()
-                && is_not_set(node->processes, crm_get_cluster_proc())) {
+                && !pcmk_is_set(node->processes, crm_get_cluster_proc())) {
 
                 uint32_t old = data? *(const uint32_t *)data : 0;
 
@@ -298,7 +298,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                 && (pcmk__ipc_client_count() == 0)) {
 
                 crm_info("No more peers");
-                terminate_cib(__FUNCTION__, -1);
+                terminate_cib(__func__, -1);
             }
             break;
     }

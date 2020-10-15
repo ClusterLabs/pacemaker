@@ -189,6 +189,7 @@ pcmk_quorum_dispatch(gpointer user_data)
     rc = quorum_dispatch(pcmk_quorum_handle, CS_DISPATCH_ALL);
     if (rc < 0) {
         crm_err("Connection to the Quorum API failed: %d", rc);
+        quorum_finalize(pcmk_quorum_handle);
         pcmk_quorum_handle = 0;
         return -1;
     }
@@ -252,7 +253,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
         }
 
         /* Update the node state (including updating last_seen to ring_id) */
-        crm_update_peer_state(__FUNCTION__, node, CRM_NODE_MEMBER, ring_id);
+        crm_update_peer_state(__func__, node, CRM_NODE_MEMBER, ring_id);
     }
 
     /* Remove any peer cache entries we didn't update */
@@ -365,7 +366,6 @@ init_cs_connection(crm_cluster_t * cluster)
         switch (rc) {
             case CS_OK:
                 return TRUE;
-                break;
             case CS_ERR_TRY_AGAIN:
             case CS_ERR_QUEUE_FULL:
                 sleep(retries);
@@ -515,7 +515,7 @@ crm_is_corosync_peer_active(const crm_node_t * node)
         crm_trace("NULL");
         return FALSE;
 
-    } else if (safe_str_neq(node->state, CRM_NODE_MEMBER)) {
+    } else if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
         crm_trace("%s: state=%s", node->uname, node->state);
         return FALSE;
 

@@ -7,10 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <libxml/tree.h>
+
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/internal.h>
-#include <crm/common/output.h>
+#include <crm/common/output_internal.h>
+#include <crm/common/strings_internal.h>
 #include <libxml/tree.h>
 
 static GHashTable *formatters = NULL;
@@ -54,7 +57,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
         return ENOMEM;
     }
 
-    if (filename == NULL || safe_str_eq(filename, "-")) {
+    if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
         (*out)->dest = stdout;
     } else {
         (*out)->dest = fopen(filename, "w");
@@ -62,6 +65,8 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
             return errno;
         }
     }
+
+    (*out)->quiet = false;
 
     (*out)->messages = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
 
@@ -141,7 +146,7 @@ pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table) {
     pcmk__message_entry_t *entry;
 
     for (entry = table; entry->message_id != NULL; entry++) {
-        if (safe_str_eq(out->fmt_name, entry->fmt_name)) {
+        if (pcmk__strcase_any_of(entry->fmt_name, "default", out->fmt_name, NULL)) {
             pcmk__register_message(out, entry->message_id, entry->fn);
         }
     }

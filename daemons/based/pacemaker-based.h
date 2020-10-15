@@ -22,7 +22,7 @@
 #include <crm/cib.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 
@@ -31,15 +31,17 @@
 #  include <gnutls/gnutls.h>
 #endif
 
-enum cib_notifications {
-    cib_notify_pre     = 0x0001,
-    cib_notify_post    = 0x0002,
-    cib_notify_replace = 0x0004,
-    cib_notify_confirm = 0x0008,
-    cib_notify_diff    = 0x0010,
+// CIB-specific client flags
+enum cib_client_flags {
+    // Notifications
+    cib_notify_pre     = (UINT64_C(1) << 0),
+    cib_notify_post    = (UINT64_C(1) << 1),
+    cib_notify_replace = (UINT64_C(1) << 2),
+    cib_notify_confirm = (UINT64_C(1) << 3),
+    cib_notify_diff    = (UINT64_C(1) << 4),
 
-    // Not a notification, but uses the same IPC bitmask
-    cib_is_daemon      = 0x1000, // Whether client is another cluster daemon
+    // Whether client is another cluster daemon
+    cib_is_daemon      = (UINT64_C(1) << 12),
 };
 
 typedef struct cib_operation_s {

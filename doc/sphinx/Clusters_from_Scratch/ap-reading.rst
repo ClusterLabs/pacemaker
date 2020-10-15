@@ -1,0 +1,10 @@
+Further Reading
+---------------
+
+- Project Website https://www.clusterlabs.org/
+
+- SuSE has a comprehensive guide to cluster commands (though using the ``crmsh`` command-line
+  shell rather than ``pcs``) at:
+  https://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html
+
+- Corosync http://www.corosync.org/

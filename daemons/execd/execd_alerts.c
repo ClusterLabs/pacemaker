@@ -14,7 +14,7 @@
 #include <crm/crm.h>
 #include <crm/services.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipcs_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/msg_xml.h>
 
