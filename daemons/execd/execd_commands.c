@@ -1526,9 +1526,11 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     }
 
     if (crm_is_true(is_ipc_provider)) {
-        // This is a remote connection from a cluster node's controller
 #ifdef SUPPORT_REMOTE
+        // This is a remote connection from a cluster node's controller
         ipc_proxy_add_provider(client);
+#else
+        rc = -EPROTONOSUPPORT;
 #endif
     }
 
@@ -1847,6 +1849,8 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
 #ifdef SUPPORT_REMOTE
         ipc_proxy_forward_client(client, request);
+#else
+        rc = -EPROTONOSUPPORT;
 #endif
         do_reply = 1;
     } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
