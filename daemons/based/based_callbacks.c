@@ -974,7 +974,11 @@ cib_process_request(xmlNode *request, gboolean privileged,
     is_update = cib_op_modifies(call_type);
 
     if (call_options & cib_discard_reply) {
-        needs_reply = is_update;
+        /* If the request will modify the CIB, and we are in legacy mode, we
+         * need to build a reply so we can broadcast a diff, even if the
+         * requester doesn't want one.
+         */
+        needs_reply = is_update && cib_legacy_mode();
         local_notify = FALSE;
     }
 
