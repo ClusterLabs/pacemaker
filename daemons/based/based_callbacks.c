@@ -1338,7 +1338,7 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
 
     xml_log_patchset(LOG_TRACE, "cib:diff", *cib_diff);
   done:
-    if ((call_options & cib_discard_reply) == 0) {
+    if (!pcmk_is_set(call_options, cib_discard_reply) || cib_legacy_mode()) {
         const char *caller = crm_element_value(request, F_CIB_CLIENTID);
 
         *reply = create_xml_node(NULL, "cib-reply");
