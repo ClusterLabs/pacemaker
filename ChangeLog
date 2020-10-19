@@ -1,3 +1,64 @@
+* Mon Oct 19 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5
+- Changesets: 497
+- Diff: 285 files changed, 22704 insertions(+), 14458 deletions(-)
+
+- Features added since Pacemaker-2.0.4
+  + configuration: Add type="integer" to rule elements, allowing for
+                   specifying 64-bit integers and specifying
+                   double-precision floating point numbers when
+                   type="number".
+  + daemons: Recognize new OCF agent status codes 190 (degraded) and 191
+             (degraded master) to be treated as success but displayed as
+             errors.
+  + sbd-integration: support SBD_SYNC_RESOURCE_STARTUP environment
+                     variable to better synchronize Pacemaker start-up
+                     and shutdown with SBD
+  + scheduler: Add rule-based tests to op_defaults and rsc_defaults.
+  + scheduler: Add on-fail=demote and no-quorum-policy=demote recovery
+               policies for promoted resources.
+  + tools: Add --resource= to filter crm_mon output for a resource.
+  + tools: Add -P to crmadmin to show pacemakerd status.
+  + tools: In cibsecret, read value to set from input (or stdin) if not specified.
+
+- Fixes for regressions introduced in Pacemaker-2.0.4
+  + tools: Add the node name back to bundle instances in crm_mon.
+  + tools: get stonith_admin --list-targets working again
+
+- Fixes for regressions introduced in Pacemaker-2.0.3
+  + tools: Fix adding HTTP headers to crm_mon in daemon mode.
+
+- Fixes for regressions introduced in Pacemaker-2.0.1
+  + scheduler: require pre-/post-start notifications correctly.
+
+- Changes since Pacemaker-2.0.4
+  + build: Fix a build issue on Fedora s390x.
+  + controller: avoid recovery delay when shutdown locks expire
+  + controller: Log correct timeout for timed-out stonith monitor
+  + fencer: avoid infinite loop if device is removed during operation
+  + fencer: avoid possible use-of-NULL when parsing metadata
+  + libfencing: add `port` or `plug` parameter according to metadata on
+                `validate` if no `pcmk_host_argument` specified
+  + libfencing: respect `pcmk_host_argument=none` on `validate`
+  + scheduler: disallow on-fail=stop for stop operations
+  + scheduler: don't schedule a dangling migration stop if one already occurred
+  + scheduler: don't select instance to be promoted on a guest that can't run
+  + scheduler: Use pcmk_monitor_timeout as stonith start timeout
+  + tools: Add management status to crm_mon's group output.
+  + tools: Add "No active resources" to one case in crm_mon output.
+  + tools: Allow tags and alerts in cibadmin --scope
+  + tools: Avoid crm_node on Pacemaker Remote nodes failing when other
+           executor actions are occurring.
+  + tools: Avoid pending fence actions getting stuck in crm_mon display
+  + tools: Display stop-all-resources in crm_mon's cluster options.
+  + tools: don't use pssh -q option in cibsecret unless supported
+  + tools: Fix adding the http-equiv header to crm_mon in daemon mode.
+  + tools: If a clone or group is disabled, display that in crm_mon as part
+           of the resource's header.
+  + tools: crm_node -l and -p now work from Pacemaker Remote nodes
+  + tools: Don't display crm_resource error messages twice.
+  + tools: Print inactive resources by default with crm_mon xml output.
+  + tools: properly detect local node name in cibsecret
+
 * Mon Jun 15 2020 Klaus Wenninger <klaus.wenninger@aon.at> Pacemaker-2.0.4
 - Changesets: 515
 - Diff: 269 files changed, 22560 insertions(+), 13726 deletions(-)
