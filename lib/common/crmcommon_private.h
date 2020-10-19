@@ -305,8 +305,9 @@ extern bool pcmk__is_daemon;
  * \param[out] gotgid  to optionally store obtained GID of the peer
  *
  * \return Standard Pacemaker return code
- *         ie > 1 if the connection is not authentic 0, if it is
- *         < 1 for -errno
+ *         ie: 0 if it the connection is authentic
+ *         pcmk_rc_ipc_unauthorized if the connection is not authentic,
+ *         standard errors.
  *
  * \note While this function is tolerant on what constitutes authorized
  *       IPC daemon process (its effective user matches UID=0 or \p refuid,

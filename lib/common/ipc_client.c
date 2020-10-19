@@ -821,7 +821,7 @@ crm_ipc_connect(crm_ipc_t * client)
 
     if ((rv = pcmk__crm_ipc_is_authentic_process(client->ipc, client->pfd.fd, cl_uid, cl_gid,
                                                   &found_pid, &found_uid,
-                                                  &found_gid)) > 0) {
+                                                  &found_gid)) == pcmk_rc_ipc_unauthorized) {
         crm_err("Daemon (IPC %s) is not authentic:"
                 " process %lld (uid: %lld, gid: %lld)",
                 client->name,  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
@@ -1358,9 +1358,9 @@ pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t
         }
         if (found_uid == 0 || found_uid == refuid || found_gid == refgid) {
 		ret = 0;
-	} else {
-		ret = pcmk_rc_ipc_unauthorized;
-	}
+        } else {
+                ret = pcmk_rc_ipc_unauthorized;
+        }
     } else {
         ret = (errno > 0) ? errno : pcmk_rc_error;
     }
@@ -1424,7 +1424,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
         *gotpid = found_pid;
     }
 
-    if (auth_rc != 0) {
+    if (auth_rc == pcmk_rc_ipc_unauthorized) {
         crm_err("Daemon (IPC %s) effectively blocked with unauthorized"
                 " process %lld (uid: %lld, gid: %lld)",
                 name, (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
