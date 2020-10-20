@@ -368,6 +368,11 @@ html_is_quiet(pcmk__output_t *out) {
     return false;
 }
 
+static void
+html_spacer(pcmk__output_t *out) {
+    pcmk__output_create_xml_node(out, "br");
+}
+
 pcmk__output_t *
 pcmk__mk_html_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -399,6 +404,7 @@ pcmk__mk_html_output(char **argv) {
     retval->end_list = html_end_list;
 
     retval->is_quiet = html_is_quiet;
+    retval->spacer = html_spacer;
 
     return retval;
 }

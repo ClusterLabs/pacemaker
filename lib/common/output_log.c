@@ -226,6 +226,11 @@ log_is_quiet(pcmk__output_t *out) {
     return false;
 }
 
+static void
+log_spacer(pcmk__output_t *out) {
+    /* This function intentionally left blank */
+}
+
 pcmk__output_t *
 pcmk__mk_log_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -256,6 +261,7 @@ pcmk__mk_log_output(char **argv) {
     retval->end_list = log_end_list;
 
     retval->is_quiet = log_is_quiet;
+    retval->spacer = log_spacer;
 
     return retval;
 }
