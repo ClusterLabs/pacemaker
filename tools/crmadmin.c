@@ -275,7 +275,7 @@ crmadmin_node_list(pcmk__output_t *out, va_list args)
     xmlNode *node = NULL;
     xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
-    out->begin_list(out, NULL, NULL, "Nodes");
+    out->begin_list(out, NULL, NULL, "nodes");
 
     for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
          node = crm_next_same_xml(node)) {
@@ -324,7 +324,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     char *name = va_arg(args, char *);
     char *id = va_arg(args, char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "crmadmin-node");
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "node");
     xmlSetProp(node, (pcmkXmlStr) "type", (pcmkXmlStr) (type ? type : "member"));
     xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) crm_str(name));
     xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) crm_str(id));
@@ -603,6 +603,10 @@ main(int argc, char **argv)
     out->quiet = args->quiet;
 
     pcmk__register_messages(out, fmt_functions);
+
+    if (!pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname())) {
+        goto done;
+    }
 
     if (args->version) {
         out->version(out, false);
