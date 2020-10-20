@@ -20,6 +20,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc_controld.h>
@@ -38,7 +39,6 @@ bool need_controld_api = true;
 bool need_pacemakerd_api = false;
 
 bool do_work(pcmk_ipc_api_t *api);
-void do_find_node_list(xmlNode *xml_node);
 static char *ipc_name = NULL;
 
 gboolean admin_message_timeout(gpointer data);
@@ -55,13 +55,12 @@ static enum {
 
 static gboolean BE_VERBOSE = FALSE;
 static gboolean BASH_EXPORT = FALSE;
-static gboolean BE_SILENT = FALSE;
 static char *dest_node = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
+pcmk__output_t *out = NULL;
 
 
 struct {
-    gboolean quiet;
     gboolean health;
     gint timeout;
 } options;
@@ -168,6 +167,191 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     return TRUE;
 }
 
+PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+static int
+health_text(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *host_from = va_arg(args, char *);
+    char *fsa_state = va_arg(args, char *);
+    char *result = va_arg(args, char *);
+
+    if (!out->is_quiet(out)) {
+        out->info(out, "Status of %s@%s: %s (%s)", crm_str(sys_from),
+                       crm_str(host_from), crm_str(fsa_state), crm_str(result));
+    } else if (fsa_state != NULL) {
+        out->info(out, "%s", fsa_state);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+static int
+health_xml(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *host_from = va_arg(args, char *);
+    char *fsa_state = va_arg(args, char *);
+    char *result = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, crm_str(sys_from));
+    xmlSetProp(node, (pcmkXmlStr) "node_name", (pcmkXmlStr) crm_str(host_from));
+    xmlSetProp(node, (pcmkXmlStr) "state", (pcmkXmlStr) crm_str(fsa_state));
+    xmlSetProp(node, (pcmkXmlStr) "result", (pcmkXmlStr) crm_str(result));
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+static int
+pacemakerd_health_text(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *state = va_arg(args, char *);
+    char *last_updated = va_arg(args, char *);
+
+    if (!out->is_quiet(out)) {
+        out->info(out, "Status of %s: '%s' %s %s", crm_str(sys_from),
+                  crm_str(state), (!pcmk__str_empty(last_updated))?
+                  "last updated":"", crm_str(last_updated));
+    } else {
+        out->info(out, "%s", crm_str(state));
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+static int
+pacemakerd_health_xml(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *state = va_arg(args, char *);
+    char *last_updated = va_arg(args, char *);
+
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, crm_str(sys_from));
+    xmlSetProp(node, (pcmkXmlStr) "state", (pcmkXmlStr) crm_str(state));
+    xmlSetProp(node, (pcmkXmlStr) "last_updated", (pcmkXmlStr) crm_str(last_updated));
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("dc", "char *")
+static int
+dc_text(pcmk__output_t *out, va_list args)
+{
+    char *dc = va_arg(args, char *);
+
+    if (!out->is_quiet(out)) {
+        out->info(out, "Designated Controller is: %s", crm_str(dc));
+    } else if (dc != NULL) {
+        out->info(out, "%s", dc);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("dc", "char *")
+static int
+dc_xml(pcmk__output_t *out, va_list args)
+{
+    char *dc = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "dc");
+    xmlSetProp(node, (pcmkXmlStr) "node_name", (pcmkXmlStr) crm_str(dc));
+
+    return pcmk_rc_ok;
+}
+
+
+PCMK__OUTPUT_ARGS("crmadmin-node-list", "xmlNode *")
+static int
+crmadmin_node_list(pcmk__output_t *out, va_list args)
+{
+    xmlNode *xml_node = va_arg(args, xmlNode *);
+    int found = 0;
+    xmlNode *node = NULL;
+    xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
+
+    out->begin_list(out, NULL, NULL, "nodes");
+
+    for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
+         node = crm_next_same_xml(node)) {
+        const char *node_type = BASH_EXPORT ? NULL :
+                     crm_element_value(node, XML_ATTR_TYPE);
+        out->message(out, "crmadmin-node", node_type,
+                     crm_str(crm_element_value(node, XML_ATTR_UNAME)),
+                     crm_str(crm_element_value(node, XML_ATTR_ID)));
+
+        found++;
+    }
+    // @TODO List Pacemaker Remote nodes that don't have a <node> entry
+
+    out->end_list(out);
+
+    if (found == 0) {
+        out->info(out, "No nodes configured");
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *")
+static int
+crmadmin_node_text(pcmk__output_t *out, va_list args)
+{
+        char *type = va_arg(args, char *);
+        char *name = va_arg(args, char *);
+        char *id = va_arg(args, char *);
+
+        if (BASH_EXPORT) {
+            out->info(out, "export %s=%s", crm_str(name), crm_str(id));
+        } else {
+            out->info(out, "%s node: %s (%s)", type ? type : "member",
+                      crm_str(name), crm_str(id));
+        }
+
+        return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *")
+static int
+crmadmin_node_xml(pcmk__output_t *out, va_list args)
+{
+    char *type = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *id = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "node");
+    xmlSetProp(node, (pcmkXmlStr) "type", (pcmkXmlStr) (type ? type : "member"));
+    xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) crm_str(name));
+    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) crm_str(id));
+
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    {"health", "default", health_text },
+    {"health", "xml", health_xml },
+    {"pacemakerd-health", "default", pacemakerd_health_text },
+    {"pacemakerd-health", "xml", pacemakerd_health_xml },
+    {"dc", "default", dc_text },
+    {"dc", "xml", dc_xml },
+    {"crmadmin-node-list", "default", crmadmin_node_list },
+    {"crmadmin-node", "default", crmadmin_node_text },
+    {"crmadmin-node", "xml", crmadmin_node_xml },
+
+    { NULL, NULL, NULL }
+};
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 static void
 quit_main_loop(crm_exit_t ec)
 {
@@ -191,7 +375,7 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
-                fprintf(stderr, "error: Lost connection to controller\n");
+                out->err(out, "error: Lost connection to controller");
             }
             goto done;
             break;
@@ -209,14 +393,14 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     }
 
     if (status != CRM_EX_OK) {
-        fprintf(stderr, "error: Bad reply from controller: %s",
+        out->err(out, "error: Bad reply from controller: %s",
                 crm_exit_str(status));
         exit_code = status;
         goto done;
     }
 
     if (reply->reply_type != pcmk_controld_reply_ping) {
-        fprintf(stderr, "error: Unknown reply type %d from controller\n",
+        out->err(out, "error: Unknown reply type %d from controller",
                 reply->reply_type);
         goto done;
     }
@@ -224,22 +408,16 @@ controller_event_cb(pcmk_ipc_api_t *controld_api,
     // Parse desired information from reply
     switch (command) {
         case cmd_health:
-            printf("Status of %s@%s: %s (%s)\n",
+            out->message(out, "health",
                    reply->data.ping.sys_from,
                    reply->host_from,
                    reply->data.ping.fsa_state,
                    reply->data.ping.result);
-            if (BE_SILENT && (reply->data.ping.fsa_state != NULL)) {
-                fprintf(stderr, "%s\n", reply->data.ping.fsa_state);
-            }
             exit_code = CRM_EX_OK;
             break;
 
         case cmd_whois_dc:
-            printf("Designated Controller is: %s\n", reply->host_from);
-            if (BE_SILENT && (reply->host_from != NULL)) {
-                fprintf(stderr, "%s\n", reply->host_from);
-            }
+            out->message(out, "dc", reply->host_from);
             exit_code = CRM_EX_OK;
             break;
 
@@ -263,7 +441,7 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
-                fprintf(stderr, "error: Lost connection to pacemakerd\n");
+                out->err(out, "error: Lost connection to pacemakerd");
             }
             goto done;
             break;
@@ -281,14 +459,14 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     if (status != CRM_EX_OK) {
-        fprintf(stderr, "error: Bad reply from pacemakerd: %s",
+        out->err(out, "error: Bad reply from pacemakerd: %s",
                 crm_exit_str(status));
         exit_code = status;
         goto done;
     }
 
     if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
-        fprintf(stderr, "error: Unknown reply type %d from pacemakerd\n",
+        out->err(out, "error: Unknown reply type %d from pacemakerd",
                 reply->reply_type);
         goto done;
     }
@@ -305,21 +483,12 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
                     crm_time_log_date | crm_time_log_timeofday |
                         crm_time_log_with_timezone);
 
-                printf("Status of %s: '%s' %s %s\n",
+                out->message(out, "pacemakerd-health",
                     reply->data.ping.sys_from,
                     (reply->data.ping.status == pcmk_rc_ok)?
                         pcmk_pacemakerd_api_daemon_state_enum2text(
                             reply->data.ping.state):"query failed",
-                    (reply->data.ping.status == pcmk_rc_ok)?"last updated":"",
                     (reply->data.ping.status == pcmk_rc_ok)?pinged_buf:"");
-                if (BE_SILENT &&
-                    (reply->data.ping.state != pcmk_pacemakerd_state_invalid)) {
-                    fprintf(stderr, "%s\n",
-                        (reply->data.ping.status == pcmk_rc_ok)?
-                        pcmk_pacemakerd_api_daemon_state_enum2text(
-                            reply->data.ping.state):
-                        "query failed");
-                }
                 exit_code = CRM_EX_OK;
                 free(pinged_buf);
             }
@@ -354,7 +523,7 @@ list_nodes()
     rc = the_cib->cmds->query(the_cib, NULL, &output,
                               cib_scope_local | cib_sync_call);
     if (rc == pcmk_ok) {
-        do_find_node_list(output);
+        out->message(out, "crmadmin-node-list", output);
         free_xml(output);
     }
     the_cib->cmds->signoff(the_cib);
@@ -362,20 +531,20 @@ list_nodes()
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     const char *description = "Report bugs to users@clusterlabs.org";
 
     GOptionEntry extra_prog_entries[] = {
-        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &options.quiet,
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
           "Display only the essential query information",
           NULL },
 
         { NULL }
     };
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     /* Add the -q option, which cannot be part of the globally supported options
@@ -402,9 +571,11 @@ main(int argc, char **argv)
 
     GError *error = NULL;
     GOptionContext *context = NULL;
+    GOptionGroup *output_group = NULL;
     gchar **processed_args = NULL;
 
-    context = build_arg_context(args);
+    context = build_arg_context(args, &output_group);
+    pcmk__register_formats(output_group, formats);
 
     crm_log_cli_init("crmadmin");
 
@@ -421,9 +592,25 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "Error creating output format %s: %s\n",
+                args->output_ty, pcmk_rc_str(rc));
+        exit_code = CRM_EX_ERROR;
+        goto done;
+    }
+
+    out->quiet = args->quiet;
+
+    pcmk__register_messages(out, fmt_functions);
+
+    if (!pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname())) {
+        goto done;
+    }
+
     if (args->version) {
-        /* FIXME:  When crmadmin is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_USAGE);
+        out->version(out, false);
+        goto done;
     }
 
     if (options.timeout) {
@@ -433,12 +620,8 @@ main(int argc, char **argv)
         }
     }
 
-    if (options.quiet) {
-        BE_SILENT = TRUE;
-    }
-
     if (options.health) {
-        fprintf(stderr, "Cluster-wide health option not supported\n");
+        out->err(out, "Cluster-wide health option not supported");
         ++argerr;
     }
 
@@ -447,14 +630,14 @@ main(int argc, char **argv)
     }
 
     if (command == cmd_none) {
-        fprintf(stderr, "error: Must specify a command option\n\n");
+        out->err(out, "error: Must specify a command option");
         ++argerr;
     }
 
     if (argerr) {
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
-        fprintf(stderr, "%s", help);
+        out->err(out, "%s", help);
         g_free(help);
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -464,7 +647,7 @@ main(int argc, char **argv)
     if (need_controld_api) {
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (controld_api == NULL) {
-            fprintf(stderr, "error: Could not connect to controller: %s\n",
+            out->err(out, "error: Could not connect to controller: %s",
                     pcmk_rc_str(rc));
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -472,7 +655,7 @@ main(int argc, char **argv)
         pcmk_register_ipc_callback(controld_api, controller_event_cb, NULL);
         rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
         if (rc != pcmk_rc_ok) {
-            fprintf(stderr, "error: Could not connect to controller: %s\n",
+            out->err(out, "error: Could not connect to controller: %s",
                     pcmk_rc_str(rc));
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -483,7 +666,7 @@ main(int argc, char **argv)
     if (need_pacemakerd_api) {
         rc = pcmk_new_ipc_api(&pacemakerd_api, pcmk_ipc_pacemakerd);
         if (pacemakerd_api == NULL) {
-            fprintf(stderr, "error: Could not connect to pacemakerd: %s\n",
+            out->err(out, "error: Could not connect to pacemakerd: %s",
                     pcmk_rc_str(rc));
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -491,7 +674,7 @@ main(int argc, char **argv)
         pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb, NULL);
         rc = pcmk_connect_ipc(pacemakerd_api, pcmk_ipc_dispatch_main);
         if (rc != pcmk_rc_ok) {
-            fprintf(stderr, "error: Could not connect to pacemakerd: %s\n",
+            out->err(out, "error: Could not connect to pacemakerd: %s",
                     pcmk_rc_str(rc));
             exit_code = pcmk_rc2exitc(rc);
             goto done;
@@ -528,6 +711,10 @@ done:
     g_strfreev(processed_args);
     g_clear_error(&error);
     pcmk__free_arg_context(context);
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
     return crm_exit(exit_code);
 
 }
@@ -567,7 +754,7 @@ do_work(pcmk_ipc_api_t *api)
             break;
     }
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "error: Command failed: %s", pcmk_rc_str(rc));
+        out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
     }
     return need_reply;
@@ -576,43 +763,10 @@ do_work(pcmk_ipc_api_t *api)
 gboolean
 admin_message_timeout(gpointer data)
 {
-    fprintf(stderr,
-            "error: No reply received from controller before timeout (%dms)\n",
+    out->err(out,
+            "error: No reply received from controller before timeout (%dms)",
             message_timeout_ms);
     message_timer_id = 0;
     quit_main_loop(CRM_EX_TIMEOUT);
     return FALSE; // Tells glib to remove source
-}
-
-void
-do_find_node_list(xmlNode * xml_node)
-{
-    int found = 0;
-    xmlNode *node = NULL;
-    xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
-
-    for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
-         node = crm_next_same_xml(node)) {
-
-        if (BASH_EXPORT) {
-            printf("export %s=%s\n",
-                   crm_element_value(node, XML_ATTR_UNAME),
-                   crm_element_value(node, XML_ATTR_ID));
-        } else {
-            const char *node_type = crm_element_value(node, XML_ATTR_TYPE);
-
-            if (node_type == NULL) {
-                node_type = "member";
-            }
-            printf("%s node: %s (%s)\n", node_type,
-                   crm_element_value(node, XML_ATTR_UNAME),
-                   crm_element_value(node, XML_ATTR_ID));
-        }
-        found++;
-    }
-    // @TODO List Pacemaker Remote nodes that don't have a <node> entry
-
-    if (found == 0) {
-        printf("No nodes configured\n");
-    }
 }
