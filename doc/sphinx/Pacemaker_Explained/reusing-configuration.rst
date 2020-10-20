@@ -358,3 +358,58 @@ A tag may be used directly in the constraint, or indirectly by being
 listed in a :ref:`resource set <s-resource-sets>` used in the constraint.
 When used in a resource set, an expanded tag will honor the set's
 ``sequential`` property.
+
+Filtering With Tags
+___________________
+
+The ``crm_mon`` tool can be used to display lots of information about the
+state of the cluster.  On large or complicated clusters, this can include
+a lot of information, which makes it difficult to find the one thing you
+are interested in.  The ``--resource=`` and ``--node=`` command line
+options can be used to filter results.  In their most basic usage, these
+options take a single resource or node name.  However, they can also
+be supplied with a tag name to display several objects at once.
+
+For instance, given the following CIB section:
+
+.. code-block:: xml
+
+   <resources>
+     <primitive class="stonith" id="Fencing" type="fence_xvm"/>
+     <primitive class="ocf" id="dummy" provider="pacemaker" type="Dummy"/>
+     <group id="inactive-group">
+       <primitive class="ocf" id="inactive-dummy-1" provider="pacemaker" type="Dummy"/>
+       <primitive class="ocf" id="inactive-dummy-2" provider="pacemaker" type="Dummy"/>
+     </group>
+     <clone id="inactive-clone">
+       <primitive id="inactive-dhcpd" class="lsb" type="dhcpd"/>
+     </clone>
+   </resources>
+   <tags>
+     <tag id="inactive-rscs">
+       <obj_ref id="inactive-group"/>
+       <obj_ref id="inactive-clone"/>
+     </tag>
+   </tags>
+
+The following would be output for ``crm_mon --resource=inactive-rscs -r``:
+
+.. code-block:: none
+
+   Cluster Summary:
+     * Stack: corosync
+     * Current DC: cluster02 (version 2.0.4-1.e97f9675f.git.el7-e97f9675f) - partition with quorum
+     * Last updated: Tue Oct 20 16:09:01 2020
+     * Last change:  Tue May  5 12:04:36 2020 by hacluster via crmd on cluster01
+     * 5 nodes configured
+     * 27 resource instances configured (4 DISABLED)
+
+   Node List:
+     * Online: [ cluster01 cluster02 ]
+
+   Full List of Resources:
+     * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
+       * Stopped (disabled): [ cluster01 cluster02 ]
+     * Resource Group: inactive-group (disabled):
+       * inactive-dummy-1  (ocf::pacemaker:Dummy):  Stopped (disabled)
+       * inactive-dummy-2  (ocf::pacemaker:Dummy):  Stopped (disabled)
