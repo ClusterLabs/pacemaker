@@ -376,6 +376,11 @@ xml_is_quiet(pcmk__output_t *out) {
     return false;
 }
 
+static void
+xml_spacer(pcmk__output_t *out) {
+    /* This function intentionally left blank */
+}
+
 pcmk__output_t *
 pcmk__mk_xml_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -407,6 +412,7 @@ pcmk__mk_xml_output(char **argv) {
     retval->end_list = xml_end_list;
 
     retval->is_quiet = xml_is_quiet;
+    retval->spacer = xml_spacer;
 
     return retval;
 }

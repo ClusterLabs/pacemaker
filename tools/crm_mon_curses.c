@@ -247,6 +247,11 @@ curses_is_quiet(pcmk__output_t *out) {
     return out->quiet;
 }
 
+static void
+curses_spacer(pcmk__output_t *out) {
+    addch('\n');
+}
+
 pcmk__output_t *
 crm_mon_mk_curses_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -278,6 +283,7 @@ crm_mon_mk_curses_output(char **argv) {
     retval->end_list = curses_end_list;
 
     retval->is_quiet = curses_is_quiet;
+    retval->spacer = curses_spacer;
 
     return retval;
 }

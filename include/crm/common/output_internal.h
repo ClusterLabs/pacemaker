@@ -460,6 +460,14 @@ struct pcmk__output_s {
      * \return true if output should be supressed, false otherwise.
      */
     bool (*is_quiet) (pcmk__output_t *out);
+
+    /*!
+     * \internal
+     * \brief Output a spacer.  Not all formatter will do this.
+     *
+     * \param[in] out The output functions structure.
+     */
+    void (*spacer) (pcmk__output_t *out);
 };
 
 /*!
@@ -745,7 +753,7 @@ G_GNUC_NULL_TERMINATED;
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \
-        out_obj->info(out_obj, "%s", "");       \
+        out->spacer(out);                       \
     }
 
 #define PCMK__OUTPUT_LIST_HEADER(out_obj, cond, retcode, title...)  \

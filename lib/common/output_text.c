@@ -244,6 +244,11 @@ text_is_quiet(pcmk__output_t *out) {
     return out->quiet;
 }
 
+static void
+text_spacer(pcmk__output_t *out) {
+    fprintf(out->dest, "\n");
+}
+
 pcmk__output_t *
 pcmk__mk_text_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -275,6 +280,7 @@ pcmk__mk_text_output(char **argv) {
     retval->end_list = text_end_list;
 
     retval->is_quiet = text_is_quiet;
+    retval->spacer = text_spacer;
 
     return retval;
 }
