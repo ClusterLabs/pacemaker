@@ -1772,9 +1772,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     }
 
     if (services_action_sync(op)) {
-        int more, lpc, last;
-        char *local_copy = NULL;
-
         exit_code = op->rc;
 
         if (op->status == PCMK_LRM_OP_DONE) {
@@ -1791,33 +1788,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         if (resource_verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei))
             goto done;
 
-        if (op->stdout_data) {
-            local_copy = strdup(op->stdout_data);
-            more = strlen(local_copy);
-            last = 0;
-
-            for (lpc = 0; lpc < more; lpc++) {
-                if (local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
-                    local_copy[lpc] = 0;
-                    printf(" >  stdout: %s\n", local_copy + last);
-                    last = lpc + 1;
-                }
-            }
-            free(local_copy);
-        }
-        if (op->stderr_data) {
-            local_copy = strdup(op->stderr_data);
-            more = strlen(local_copy);
-            last = 0;
-
-            for (lpc = 0; lpc < more; lpc++) {
-                if (local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
-                    local_copy[lpc] = 0;
-                    printf(" >  stderr: %s\n", local_copy + last);
-                    last = lpc + 1;
-                }
-            }
-            free(local_copy);
+        if (op->stdout_data || op->stderr_data) {
+            out->subprocess_output(out, op->rc, op->stdout_data, op->stderr_data);
         }
     } else {
         exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
