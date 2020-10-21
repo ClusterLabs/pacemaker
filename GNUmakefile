@@ -416,11 +416,14 @@ CLANG_checkers =
 # --enable={warning,style,performance,portability,information,all}
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
+BASE_CPPCHECK_ARGS = -I include --max-configs=30 --library=posix --library=gnu \
+					 --library=gtk $(GLIB_CFLAGS) -D__GNUC__ --inline-suppr -q
+cppcheck-all:
+	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) -DBUILD_PUBLIC_LIBPACEMAKER \
+		-DDEFAULT_CONCURRENT_FENCING_TRUE replace lib daemons tools
+
 cppcheck:
-	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=30	\
-		--library=posix --library=gnu --library=gtk	\
-		$(GLIB_CFLAGS) -D__GNUC__			\
-		--inline-suppr -q replace lib daemons tools
+	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) replace lib daemons tools
 
 clang:
 	test -e $(CLANG_analyzer)
