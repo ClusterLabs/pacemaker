@@ -2034,7 +2034,212 @@ append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNo
     }
     g_hash_table_destroy(hash);
 }
+
+static void
+append_all_versioned_params(pe_resource_t *rsc, pe_node_t *node,
+                            pe_action_t *action, xmlNode *xml_op,
+                            pe_working_set_t *data_set)
+{
+    const char *ra_version = NULL;
+    xmlNode *local_versioned_params = NULL;
+    pe_rsc_action_details_t *details = pe_rsc_action_details(action);
+
+    local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
+    pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
+    if (xml_op != NULL) {
+        ra_version = crm_element_value(xml_op, XML_ATTR_RA_VERSION);
+    }
+    append_versioned_params(local_versioned_params, ra_version,
+                            data->params_all);
+    append_versioned_params(rsc->versioned_parameters, ra_version,
+                            data->params_all);
+    append_versioned_params(details->versioned_parameters, ra_version,
+                            data->params_all);
+}
 #endif
+
+/*!
+ * \internal
+ * \brief Add digest of all parameters to a digest cache entry
+ *
+ * \param[out] data        Digest cache entry to modify
+ * \param[in]  rsc         Resource that action was for
+ * \param[in]  node        Node action was performed on
+ * \param[in]  task        Name of action performed
+ * \param[in]  key         Action's task key
+ * \param[in]  xml_op      XML of operation in CIB status (if available)
+ * \param[in]  op_version  CRM feature set to use for digest calculation
+ * \param[in]  data_set    Cluster working set
+ */
+static void
+calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
+                      pe_node_t *node, const char *task, const char *key,
+                      xmlNode *xml_op, const char *op_version,
+                      pe_working_set_t *data_set)
+{
+    pe_action_t *action = NULL;
+    GHashTable *local_rsc_params = crm_str_table_new();
+
+    get_rsc_attributes(local_rsc_params, rsc, node, data_set);
+
+    data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
+
+    /* REMOTE_CONTAINER_HACK: Allow Pacemaker Remote nodes to run containers
+     * that themselves are Pacemaker Remote nodes
+     */
+    if (pe__add_bundle_remote_name(rsc, data->params_all,
+                                   XML_RSC_ATTR_REMOTE_RA_ADDR)) {
+        crm_trace("Set address for bundle connection %s (on %s)",
+                  rsc->id, node->details->uname);
+    }
+
+    action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
+    g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
+    g_hash_table_foreach(action->extra, hash2field, data->params_all);
+    g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
+    g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
+
+#if ENABLE_VERSIONED_ATTRS
+    append_all_versioned_params(rsc, node, action, xml_op, data_set);
+#endif
+
+    pcmk__filter_op_for_digest(data->params_all);
+
+    g_hash_table_destroy(local_rsc_params);
+    pe_free_action(action);
+
+    data->digest_all_calc = calculate_operation_digest(data->params_all,
+                                                       op_version);
+}
+
+/*!
+ * \internal
+ * \brief Add secure digest to a digest cache entry
+ *
+ * \param[out] data        Digest cache entry to modify
+ * \param[in]  rsc         Resource that action was for
+ * \param[in]  xml_op      XML of operation in CIB status (if available)
+ * \param[in]  op_version  CRM feature set to use for digest calculation
+ */
+static void
+calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
+                        xmlNode *xml_op, const char *op_version)
+{
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *secure_list = NULL;
+
+    if (xml_op == NULL) {
+        secure_list = " passwd password user ";
+    } else {
+        secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
+    }
+
+    /* The controller doesn't create a digest of *all* non-sensitive
+     * parameters, only those listed in resource agent meta-data. The
+     * equivalent here is rsc->parameters.
+     */
+    data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
+    g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
+    if (secure_list != NULL) {
+        filter_parameters(data->params_secure, secure_list, FALSE);
+    }
+    if (pcmk_is_set(pcmk_get_ra_caps(class),
+                    pcmk_ra_cap_fence_params)) {
+        /* For stonith resources, Pacemaker adds special parameters,
+         * but these are not listed in fence agent meta-data, so the
+         * controller will not hash them. That means we have to filter
+         * them out before calculating our hash for comparison.
+         */
+        for (xmlAttrPtr iter = data->params_secure->properties;
+             iter != NULL; ) {
+            const char *prop_name = (const char *) iter->name;
+
+            iter = iter->next; // Grab next now in case we remove current
+            if (pcmk_stonith_param(prop_name)) {
+                xml_remove_prop(data->params_secure, prop_name);
+            }
+        }
+    }
+    data->digest_secure_calc = calculate_operation_digest(data->params_secure,
+                                                          op_version);
+}
+
+/*!
+ * \internal
+ * \brief Add restart digest to a digest cache entry
+ *
+ * \param[out] data        Digest cache entry to modify
+ * \param[in]  xml_op      XML of operation in CIB status (if available)
+ * \param[in]  op_version  CRM feature set to use for digest calculation
+ */
+static void
+calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
+                         const char *op_version)
+{
+    const char *value = NULL;
+
+    // We must have XML of resource operation history
+    if (xml_op == NULL) {
+        return;
+    }
+
+    // And the history must have a restart digest to compare against
+    if (crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST) == NULL) {
+        return;
+    }
+
+    // Start with a copy of all parameters
+    data->params_restart = copy_xml(data->params_all);
+
+    // Then filter out reloadable parameters, if any
+    value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
+    if (value != NULL) {
+        filter_parameters(data->params_restart, value, TRUE);
+    }
+
+    value = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    data->digest_restart_calc = calculate_operation_digest(data->params_restart,
+                                                           value);
+}
+
+/*!
+ * \internal
+ * \brief Create a new digest cache entry with calculated digests
+ *
+ * \param[in] rsc          Resource that action was for
+ * \param[in] task         Name of action performed
+ * \param[in] key          Action's task key
+ * \param[in] node         Node action was performed on
+ * \param[in] xml_op       XML of operation in CIB status (if available)
+ * \param[in] calc_secure  Whether to calculate secure digest
+ * \param[in] data_set     Cluster working set
+ *
+ * \return Pointer to new digest cache entry (or NULL on memory error)
+ * \note It is the caller's responsibility to free the result using
+ *       destroy_digest_cache().
+ */
+op_digest_cache_t *
+pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
+                      pe_node_t *node, xmlNode *xml_op, bool calc_secure,
+                      pe_working_set_t *data_set)
+{
+    op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
+    const char *op_version = CRM_FEATURE_SET;
+
+    if (data == NULL) {
+        return NULL;
+    }
+    if (xml_op != NULL) {
+        op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    }
+    calculate_main_digest(data, rsc, node, task, key, xml_op, op_version,
+                          data_set);
+    if (calc_secure) {
+        calculate_secure_digest(data, rsc, xml_op, op_version);
+    }
+    calculate_restart_digest(data, xml_op, op_version);
+    return data;
+}
 
 /*!
  * \internal
@@ -2059,114 +2264,11 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
 
     data = g_hash_table_lookup(node->details->digest_cache, key);
     if (data == NULL) {
-        GHashTable *local_rsc_params = crm_str_table_new();
-        pe_action_t *action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
-#if ENABLE_VERSIONED_ATTRS
-        xmlNode *local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
-        const char *ra_version = NULL;
-#endif
-
-        const char *op_version = NULL;
-        const char *restart_list = NULL;
-        const char *secure_list = NULL;
-
-        data = calloc(1, sizeof(op_digest_cache_t));
+        data = pe__calculate_digests(rsc, task, key, node, xml_op, calc_secure,
+                                     data_set);
         CRM_ASSERT(data != NULL);
-
-        get_rsc_attributes(local_rsc_params, rsc, node, data_set);
-#if ENABLE_VERSIONED_ATTRS
-        pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
-#endif
-
-        data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
-
-        // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-        if (pe__add_bundle_remote_name(rsc, data->params_all,
-                                       XML_RSC_ATTR_REMOTE_RA_ADDR)) {
-            crm_trace("Set address for bundle connection %s (on %s)",
-                      rsc->id, node->details->uname);
-        }
-
-        g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
-        g_hash_table_foreach(action->extra, hash2field, data->params_all);
-        g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
-        g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
-
-        if(xml_op) {
-            secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
-            restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
-
-            op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
-#if ENABLE_VERSIONED_ATTRS
-            ra_version = crm_element_value(xml_op, XML_ATTR_RA_VERSION);
-#endif
-
-        } else {
-            secure_list = " passwd password user ";
-            op_version = CRM_FEATURE_SET;
-        }
-
-#if ENABLE_VERSIONED_ATTRS
-        append_versioned_params(local_versioned_params, ra_version, data->params_all);
-        append_versioned_params(rsc->versioned_parameters, ra_version, data->params_all);
-
-        {
-            pe_rsc_action_details_t *details = pe_rsc_action_details(action);
-            append_versioned_params(details->versioned_parameters, ra_version, data->params_all);
-        }
-#endif
-
-        pcmk__filter_op_for_digest(data->params_all);
-
-        g_hash_table_destroy(local_rsc_params);
-        pe_free_action(action);
-
-        data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
-
-        if (calc_secure) {
-            const char *class = crm_element_value(rsc->xml,
-                                                  XML_AGENT_ATTR_CLASS);
-
-            /* The controller doesn't create a digest of *all* non-sensitive
-             * parameters, only those listed in resource agent meta-data. The
-             * equivalent here is rsc->parameters.
-             */
-            data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
-            g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
-            if(secure_list) {
-                filter_parameters(data->params_secure, secure_list, FALSE);
-            }
-            if (pcmk_is_set(pcmk_get_ra_caps(class),
-                            pcmk_ra_cap_fence_params)) {
-                /* For stonith resources, Pacemaker adds special parameters,
-                 * but these are not listed in fence agent meta-data, so the
-                 * controller will not hash them. That means we have to filter
-                 * them out before calculating our hash for comparison.
-                 */
-                for (xmlAttrPtr iter = data->params_secure->properties;
-                     iter != NULL; ) {
-                    const char *prop_name = (const char *) iter->name;
-
-                    iter = iter->next; // Grab next now in case we remove current
-                    if (pcmk_stonith_param(prop_name)) {
-                        xml_remove_prop(data->params_secure, prop_name);
-                    }
-                }
-            }
-            data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
-        }
-
-        if(xml_op && crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST) != NULL) {
-            data->params_restart = copy_xml(data->params_all);
-            if (restart_list) {
-                filter_parameters(data->params_restart, restart_list, TRUE);
-            }
-            data->digest_restart_calc = calculate_operation_digest(data->params_restart, op_version);
-        }
-
         g_hash_table_insert(node->details->digest_cache, strdup(key), data);
     }
-
     return data;
 }
 

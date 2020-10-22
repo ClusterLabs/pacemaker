@@ -528,6 +528,11 @@ typedef struct op_digest_cache_s {
     char *digest_restart_calc;
 } op_digest_cache_t;
 
+op_digest_cache_t *pe__calculate_digests(pe_resource_t *rsc, const char *task,
+                                         const char *key, pe_node_t *node,
+                                         xmlNode *xml_op, bool calc_secure,
+                                         pe_working_set_t *data_set);
+
 op_digest_cache_t *rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
                                          pe_working_set_t * data_set);
 
