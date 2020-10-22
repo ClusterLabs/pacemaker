@@ -536,11 +536,13 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     if (reply) {
         if (pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event) !=
                 pcmk_rc_ok) {
-            crm_err("Failed sending ping-reply");
+            crm_err("Failed sending ping reply to client %s",
+                    pcmk__client_name(c));
         }
         free_xml(reply);
     } else {
-        crm_err("Failed building ping-reply");
+        crm_err("Failed building ping reply for client %s",
+                pcmk__client_name(c));
     }
     /* just proceed state on sbd pinging us */
     if (from && strstr(from, "sbd")) {
@@ -601,8 +603,8 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         }
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
-        crm_trace("Ignoring IPC request to purge node "
-                  "because peer cache is not used");
+        crm_trace("Ignoring request from client %s to purge node "
+                  "because peer cache is not used", pcmk__client_name(c));
         pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_OK);
 
     } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
@@ -610,8 +612,8 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         pcmk_handle_ping_request(c, msg, id);
 
     } else {
-        crm_debug("Unrecognized IPC command '%s' sent to pacemakerd",
-                  crm_str(task));
+        crm_debug("Unrecognized IPC command '%s' from client %s",
+                  crm_str(task), pcmk__client_name(c));
         pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INVALID_PARAM);
     }
 

@@ -515,8 +515,8 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
          * running as Pacemaker Remote, we may have clients proxied to other
          * IPC services in the cluster, so skip those.
          */
-        crm_trace("Skipping executor API notification to %s IPC client",
-                  client->name);
+        crm_trace("Skipping executor API notification to client %s",
+                  pcmk__client_name(client));
         return;
     }
 
@@ -536,9 +536,8 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
             msg = pcmk_rc_str(rc);
             break;
     }
-    do_crm_log(log_level,
-               "Could not notify client %s/%s: %s " CRM_XS " rc=%d",
-               client->name, client->id, msg, rc);
+    do_crm_log(log_level, "Could not notify client %s: %s " CRM_XS " rc=%d",
+               pcmk__client_name(client), msg, rc);
 }
 
 static void
@@ -1943,7 +1942,8 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
-        crm_err("Unknown IPC request '%s' from %s", op, client->name);
+        crm_err("Unknown IPC request '%s' from client %s",
+                op, pcmk__client_name(client));
     }
 
     if (rc == -EACCES) {
@@ -1963,8 +1963,8 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         send_rc = lrmd_server_send_reply(client, id, reply);
         free_xml(reply);
         if (send_rc != pcmk_rc_ok) {
-            crm_warn("Reply to client %s failed: %s " CRM_XS " %d",
-                     client->name, pcmk_rc_str(send_rc), send_rc);
+            crm_warn("Reply to client %s failed: %s " CRM_XS " rc=%d",
+                     pcmk__client_name(client), pcmk_rc_str(send_rc), send_rc);
         }
     }
 

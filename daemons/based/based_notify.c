@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <inttypes.h>           // PRIx64
 
 #include <stdlib.h>
 #include <errno.h>
@@ -47,6 +48,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
     gboolean do_send = FALSE;
+    int rc = pcmk_rc_ok;
 
     pcmk__client_t *client = value;
     struct cib_notification_s *update = user_data;
@@ -85,22 +87,26 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     if (do_send) {
         switch (PCMK__CLIENT_TYPE(client)) {
             case pcmk__client_ipc:
-                if (pcmk__ipc_send_iov(client, update->iov,
-                                       crm_ipc_server_event) != pcmk_rc_ok) {
-                    crm_warn("Notification of client %s/%s failed", client->name, client->id);
+                rc = pcmk__ipc_send_iov(client, update->iov,
+                                        crm_ipc_server_event);
+                if (rc != pcmk_rc_ok) {
+                    crm_warn("Could not notify client %s: %s " CRM_XS " id=%s",
+                             pcmk__client_name(client), pcmk_rc_str(rc),
+                             client->id);
                 }
                 break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
             case pcmk__client_tls:
 #endif
             case pcmk__client_tcp:
-                crm_debug("Sent %s notification to client %s/%s", type, client->name, client->id);
+                crm_debug("Sent %s notification to client %s (id %s)",
+                          type, pcmk__client_name(client), client->id);
                 pcmk__remote_send_xml(client->remote, update->msg);
                 break;
             default:
-                crm_err("Unknown transport for %s " CRM_XS " flags=0x%llx",
-                        pcmk__client_name(client),
-                        (unsigned long long) client->flags);
+                crm_err("Unknown transport for client %s "
+                        CRM_XS " flags=0x%016" PRIx64,
+                        pcmk__client_name(client), client->flags);
         }
     }
 }

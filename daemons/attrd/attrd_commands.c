@@ -188,7 +188,7 @@ create_attribute(xmlNode *xml)
  * \return void
  */
 void
-attrd_client_peer_remove(const char *client_name, xmlNode *xml)
+attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
 {
     // Host and ID are not used in combination, rather host has precedence
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
@@ -216,12 +216,12 @@ attrd_client_peer_remove(const char *client_name, xmlNode *xml)
 
     if (host) {
         crm_info("Client %s is requesting all values for %s be removed",
-                 client_name, host);
+                 pcmk__client_name(client), host);
         send_attrd_message(NULL, xml); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
         crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
-                 client_name);
+                 pcmk__client_name(client));
     }
 }
 

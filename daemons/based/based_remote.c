@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <inttypes.h>           // PRIx64
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
@@ -360,7 +361,8 @@ cib_remote_connection_destroy(gpointer user_data)
         return;
     }
 
-    crm_trace("Cleaning up after client disconnect: %s/%s", crm_str(client->name), client->id);
+    crm_trace("Cleaning up after client %s disconnect",
+              pcmk__client_name(client));
 
     num_clients--;
     crm_trace("Num unfree'd clients: %d", num_clients);
@@ -385,9 +387,9 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
 #endif
         default:
-            crm_warn("Unknown transport for %s " CRM_XS " flags=0x%llx",
-                     pcmk__client_name(client),
-                     (unsigned long long) client->flags);
+            crm_warn("Unknown transport for client %s "
+                     CRM_XS " flags=0x%016" PRIx64,
+                     pcmk__client_name(client), client->flags);
     }
 
     if (csock > 0) {
@@ -471,7 +473,7 @@ cib_remote_msg(gpointer data)
     int rc;
     int timeout = client->remote->authenticated ? -1 : 1000;
 
-    crm_trace("Remote %s message received for %s",
+    crm_trace("Remote %s message received for client %s",
               pcmk__client_type_str(PCMK__CLIENT_TYPE(client)),
               pcmk__client_name(client));
 

@@ -159,14 +159,14 @@ struct pcmk__client_s {
 #define pcmk__set_client_flags(client, flags_to_set) do {               \
         (client)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
             LOG_TRACE,                                                  \
-            "Client", ((client)->name? (client)->name : "client"),      \
+            "Client", pcmk__client_name(client),                        \
             (client)->flags, (flags_to_set), #flags_to_set);            \
     } while (0)
 
 #define pcmk__clear_client_flags(client, flags_to_clear) do {           \
         (client)->flags = pcmk__clear_flags_as(__func__, __LINE__,      \
             LOG_TRACE,                                                  \
-            "Client", ((client)->name? (client)->name : "client"),      \
+            "Client", pcmk__client_name(client),                        \
             (client)->flags, (flags_to_clear), #flags_to_clear);        \
     } while (0)
 

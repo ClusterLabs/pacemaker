@@ -391,7 +391,8 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
 
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
     if (controld_authorize_ipc_message(msg, client, NULL)) {
-        crm_trace("Processing IPC message from %s", pcmk__client_name(client));
+        crm_trace("Processing IPC message from client %s",
+                  pcmk__client_name(client));
         route_message(C_IPC_MESSAGE, msg);
     }
 
