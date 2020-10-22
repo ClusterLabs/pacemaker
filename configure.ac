@@ -1177,9 +1177,6 @@ PKG_CHECK_MODULES(libqb, libqb >= 0.13)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
-dnl libqb 0.14.0+ (2012-06)
-AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
-
 dnl libqb 2.02+ (2020-10)
 AC_CHECK_FUNCS(qb_ipcc_auth_get,
                AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
@@ -1491,7 +1488,7 @@ else
     PKG_CHECK_MODULES(libcorosync_common, libcorosync_common) dnl Fatal
 
     CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
-    COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
+    COROSYNC_LIBS="$COROSYNC_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
     PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
     STACKS="$STACKS corosync-native"
