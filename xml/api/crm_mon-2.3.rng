@@ -83,7 +83,9 @@
                     <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
                     <attribute name="no-quorum-policy"> <text /> </attribute>
                     <attribute name="maintenance-mode"> <data type="boolean" /> </attribute>
-                    <attribute name="stop-all-resources"> <data type="boolean" /> </attribute>
+                    <optional>
+                        <attribute name="stop-all-resources"> <data type="boolean" /> </attribute>
+                    </optional>
                 </element>
             </optional>
         </element>
@@ -357,7 +359,9 @@
             <attribute name="multi_state"> <data type="boolean" /> </attribute>
             <attribute name="unique"> <data type="boolean" /> </attribute>
             <attribute name="managed"> <data type="boolean" /> </attribute>
-            <attribute name="disabled"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="disabled"> <data type="boolean" /> </attribute>
+            </optional>
             <attribute name="failed"> <data type="boolean" /> </attribute>
             <attribute name="failure_ignored"> <data type="boolean" /> </attribute>
             <optional>
@@ -371,8 +375,12 @@
         <element name="group">
             <attribute name="id"> <text/> </attribute>
             <attribute name="number_resources"> <data type="nonNegativeInteger" /> </attribute>
-            <attribute name="managed"> <data type="boolean" /> </attribute>
-            <attribute name="disabled"> <data type="boolean" /> </attribute>
+            <optional>
+                <attribute name="managed"> <data type="boolean" /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="disabled"> <data type="boolean" /> </attribute>
+            </optional>
             <ref name="element-resource-list" />
         </element>
     </define>
