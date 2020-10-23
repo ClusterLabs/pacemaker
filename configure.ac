@@ -90,6 +90,16 @@ gl_EARLY
 gl_SET_CRYPTO_CHECK_DEFAULT([no])
 gl_INIT
 
+# --enable-new-dtags: Use RUNPATH instead of RPATH.
+# It is necessary to have this done before libtool does linker detection.
+# See also: https://github.com/kronosnet/kronosnet/issues/107
+AX_CHECK_LINK_FLAG([-Wl,--enable-new-dtags],
+                  [AM_LDFLAGS=-Wl,--enable-new-dtags],
+                  [AC_MSG_ERROR(["Linker support for --enable-new-dtags is required"])])
+AC_SUBST([AM_LDFLAGS])
+
+saved_LDFLAGS="$LDFLAGS"
+LDFLAGS="$AM_LDFLAGS $LDFLAGS"
 LT_INIT([dlopen])
 LTDL_INIT([convenience])
 
@@ -1487,7 +1497,7 @@ else
     PKG_CHECK_MODULES(quorum, libquorum) dnl Fatal
     PKG_CHECK_MODULES(libcorosync_common, libcorosync_common) dnl Fatal
 
-    CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
+    CFLAGS="$CFLAGS $libqb_CFLAGS $cpg_CFLAGS $cfg_CFLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
     COROSYNC_LIBS="$COROSYNC_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
     PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
@@ -1541,11 +1551,7 @@ if test $SUPPORT_ACL = no; then
 else
     AC_MSG_RESULT($SUPPORT_ACL)
 
-    SUPPORT_ACL=1
-    AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
-    if test $ac_cv_lib_qb_qb_ipcs_connection_auth_set != yes; then
-        SUPPORT_ACL=0
-    fi
+    AC_CHECK_FUNCS(qb_ipcs_connection_auth_set, SUPPORT_ACL=1, SUPPORT_ACL=0)
 
     if test $SUPPORT_ACL = 0; then
         if test $missingisfatal = 0; then
