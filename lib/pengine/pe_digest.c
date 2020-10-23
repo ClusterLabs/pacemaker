@@ -123,13 +123,14 @@ append_all_versioned_params(pe_resource_t *rsc, pe_node_t *node,
  * \param[in]  key         Action's task key
  * \param[in]  xml_op      XML of operation in CIB status (if available)
  * \param[in]  op_version  CRM feature set to use for digest calculation
+ * \param[in]  overrides   Key/value hash table to override resource parameters
  * \param[in]  data_set    Cluster working set
  */
 static void
 calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
                       pe_node_t *node, const char *task, const char *key,
                       xmlNode *xml_op, const char *op_version,
-                      pe_working_set_t *data_set)
+                      GHashTable *overrides, pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
     GHashTable *local_rsc_params = crm_str_table_new();
@@ -148,6 +149,9 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     }
 
     action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
+    if (overrides != NULL) {
+        g_hash_table_foreach(overrides, hash2field, data->params_all);
+    }
     g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
@@ -174,10 +178,12 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
  * \param[in]  rsc         Resource that action was for
  * \param[in]  xml_op      XML of operation in CIB status (if available)
  * \param[in]  op_version  CRM feature set to use for digest calculation
+ * \param[in]  overrides   Key/value hash table to override resource parameters
  */
 static void
 calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
-                        xmlNode *xml_op, const char *op_version)
+                        xmlNode *xml_op, const char *op_version,
+                        GHashTable *overrides)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *secure_list = NULL;
@@ -193,6 +199,9 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
      * equivalent here is rsc->parameters.
      */
     data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
+    if (overrides != NULL) {
+        g_hash_table_foreach(overrides, hash2field, data->params_secure);
+    }
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
     if (secure_list != NULL) {
         filter_parameters(data->params_secure, secure_list, FALSE);
@@ -225,6 +234,9 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
  * \param[out] data        Digest cache entry to modify
  * \param[in]  xml_op      XML of operation in CIB status (if available)
  * \param[in]  op_version  CRM feature set to use for digest calculation
+ *
+ * \note This function doesn't need to handle overrides because it starts with
+ *       data->params_all, which already has overrides applied.
  */
 static void
 calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
@@ -265,6 +277,7 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
  * \param[in] key          Action's task key
  * \param[in] node         Node action was performed on
  * \param[in] xml_op       XML of operation in CIB status (if available)
+ * \param[in] overrides    Key/value hash table to override resource parameters
  * \param[in] calc_secure  Whether to calculate secure digest
  * \param[in] data_set     Cluster working set
  *
@@ -274,8 +287,8 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
  */
 op_digest_cache_t *
 pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
-                      pe_node_t *node, xmlNode *xml_op, bool calc_secure,
-                      pe_working_set_t *data_set)
+                      pe_node_t *node, xmlNode *xml_op, GHashTable *overrides,
+                      bool calc_secure, pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
     const char *op_version = CRM_FEATURE_SET;
@@ -287,9 +300,9 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     }
     calculate_main_digest(data, rsc, node, task, key, xml_op, op_version,
-                          data_set);
+                          overrides, data_set);
     if (calc_secure) {
-        calculate_secure_digest(data, rsc, xml_op, op_version);
+        calculate_secure_digest(data, rsc, xml_op, op_version, overrides);
     }
     calculate_restart_digest(data, xml_op, op_version);
     return data;
@@ -318,8 +331,8 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
 
     data = g_hash_table_lookup(node->details->digest_cache, key);
     if (data == NULL) {
-        data = pe__calculate_digests(rsc, task, key, node, xml_op, calc_secure,
-                                     data_set);
+        data = pe__calculate_digests(rsc, task, key, node, xml_op, NULL,
+                                     calc_secure, data_set);
         CRM_ASSERT(data != NULL);
         g_hash_table_insert(node->details->digest_cache, strdup(key), data);
     }

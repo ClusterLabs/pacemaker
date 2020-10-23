@@ -530,7 +530,8 @@ typedef struct op_digest_cache_s {
 
 op_digest_cache_t *pe__calculate_digests(pe_resource_t *rsc, const char *task,
                                          const char *key, pe_node_t *node,
-                                         xmlNode *xml_op, bool calc_secure,
+                                         xmlNode *xml_op, GHashTable *overrides,
+                                         bool calc_secure,
                                          pe_working_set_t *data_set);
 
 void pe__free_digests(gpointer ptr);
