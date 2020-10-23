@@ -376,33 +376,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Free an operation digest cache entry
- *
- * \param[in] ptr  Pointer to cache entry to free
- *
- * \note The argument is a gpointer so this can be used as a hash table
- *       free function.
- */
-void
-pe__free_digests(gpointer ptr)
-{
-    op_digest_cache_t *data = ptr;
-
-    if (data != NULL) {
-        free_xml(data->params_all);
-        free_xml(data->params_secure);
-        free_xml(data->params_restart);
-
-        free(data->digest_all_calc);
-        free(data->digest_restart_calc);
-        free(data->digest_secure_calc);
-
-        free(data);
-    }
-}
-
 pe_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
                const char *score, pe_working_set_t * data_set)
