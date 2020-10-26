@@ -301,6 +301,7 @@ int pe__node_list_text(pcmk__output_t *out, va_list args);
 int pe__node_list_xml(pcmk__output_t *out, va_list args);
 int pe__op_history_text(pcmk__output_t *out, va_list args);
 int pe__op_history_xml(pcmk__output_t *out, va_list args);
+int pe__resource_config(pcmk__output_t *out, va_list args);
 int pe__resource_history_text(pcmk__output_t *out, va_list args);
 int pe__resource_history_xml(pcmk__output_t *out, va_list args);
 int pe__resource_xml(pcmk__output_t *out, va_list args);

@@ -223,15 +223,12 @@ int
 cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc,
                    pe_working_set_t *data_set, bool expanded)
 {
-    char *rsc_xml = NULL;
     int opts = pe_print_printf | pe_print_pending;
 
     rsc->fns->print(rsc, NULL, opts, stdout);
 
-    rsc_xml = dump_xml_formatted((!expanded && rsc->orig_xml)?
-                                 rsc->orig_xml : rsc->xml);
-    fprintf(stdout, "%sxml:\n%s\n", expanded ? "" : "raw ", rsc_xml);
-    free(rsc_xml);
+    out->message(out, "resource-config", rsc, !expanded);
+
     return pcmk_rc_ok;
 }
 
