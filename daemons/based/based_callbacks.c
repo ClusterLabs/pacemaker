@@ -160,6 +160,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
     } else if (pcmk__str_eq(op, T_CIB_NOTIFY, pcmk__str_none)) {
         /* Update the notify filters for this client */
         int on_off = 0;
+        crm_exit_t status = CRM_EX_OK;
         uint64_t bit = UINT64_C(0);
         const char *type = crm_element_value(op_request, F_CIB_NOTIFY_TYPE);
 
@@ -182,6 +183,9 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
         } else if (pcmk__str_eq(type, T_CIB_REPLACE_NOTIFY, pcmk__str_casei)) {
             bit = cib_notify_replace;
+
+        } else {
+            status = CRM_EX_INVALID_PARAM;
         }
 
         if (bit != 0) {
@@ -192,10 +196,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
             }
         }
 
-        if (flags & crm_ipc_client_response) {
-            /* TODO - include rc */
-            pcmk__ipc_send_ack(cib_client, id, flags, "ack");
-        }
+        pcmk__ipc_send_ack(cib_client, id, flags, "ack", status);
         return;
     }
 
@@ -217,7 +218,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
 
     if (op_request == NULL) {
         crm_trace("Invalid message from %p", c);
-        pcmk__ipc_send_ack(cib_client, id, flags, "nack");
+        pcmk__ipc_send_ack(cib_client, id, flags, "nack", CRM_EX_PROTOCOL);
         return 0;
 
     } else if(cib_client == NULL) {

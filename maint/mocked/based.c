@@ -164,7 +164,7 @@ mock_based_common_callback_worker(uint32_t id, uint32_t flags,
         }
 
         if (flags & crm_ipc_client_response) {
-            pcmk__ipc_send_ack(cib_client, id, flags, "ack");
+            pcmk__ipc_send_ack(cib_client, id, flags, "ack", CRM_EX_OK);
         }
 
     } else if (!strcmp(op, CIB_OP_QUERY)) {
@@ -190,7 +190,7 @@ mock_based_dispatch_command(qb_ipcs_connection_t *c, void *data, size_t size)
     if (cib_client == NULL || op_request == NULL) {
         if (op_request == NULL) {
             crm_trace("Invalid message from %p", c);
-            pcmk__ipc_send_ack(cib_client, id, flags, "nack");
+            pcmk__ipc_send_ack(cib_client, id, flags, "nack", CRM_EX_PROTOCOL);
         }
         return 0;
     }

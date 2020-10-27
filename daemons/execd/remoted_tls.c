@@ -72,6 +72,11 @@ remoted__read_handshake_data(pcmk__client_t *client)
     client->remote->tls_handshake_complete = TRUE;
     crm_notice("Remote client connection accepted");
 
+    /* Only a client with access to the TLS key can connect, so we can treat
+     * it as privileged.
+     */
+    pcmk__set_client_flags(client, pcmk__client_privileged);
+
     // Alert other clients of the new connection
     notify_of_new_client(client);
     return 0;

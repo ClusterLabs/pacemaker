@@ -564,30 +564,55 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     uint32_t id = 0;
     uint32_t flags = 0;
     const char *task = NULL;
+    xmlNode *msg = NULL;
     pcmk__client_t *c = pcmk__find_client(qbc);
-    xmlNode *msg = pcmk__client_data2xml(c, data, &id, &flags);
 
-    pcmk__ipc_send_ack(c, id, flags, "ack");
+    CRM_CHECK(c != NULL, return 0);
+
+    msg = pcmk__client_data2xml(c, data, &id, &flags);
     if (msg == NULL) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_PROTOCOL);
         return 0;
     }
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
-        crm_notice("Shutting down in response to IPC request %s from %s",
-                   crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
-        pcmk_shutdown(15);
+#if ENABLE_ACL
+        /* Only allow privileged users (i.e. root or hacluster)
+         * to shut down Pacemaker from the command line (or direct IPC).
+         *
+         * We only check when ACLs are enabled, because without them, any client
+         * with IPC access could shut down Pacemaker via the CIB anyway.
+         */
+        bool allowed = pcmk_is_set(c->flags, pcmk__client_privileged);
+#else
+        bool allowed = true;
+#endif
+        if (allowed) {
+            crm_notice("Shutting down in response to IPC request %s from %s",
+                       crm_element_value(msg, F_CRM_REFERENCE),
+                       crm_element_value(msg, F_CRM_ORIGIN));
+            pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_OK);
+            pcmk_shutdown(15);
+        } else {
+            crm_warn("Ignoring shutdown request from unprivileged client %s",
+                     pcmk__client_name(c));
+            pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INSUFFICIENT_PRIV);
+        }
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
         crm_trace("Ignoring IPC request to purge node "
                   "because peer cache is not used");
+        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_OK);
 
     } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
+        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INDETERMINATE);
         pcmk_handle_ping_request(c, msg, id);
 
     } else {
         crm_debug("Unrecognized IPC command '%s' sent to pacemakerd",
                   crm_str(task));
+        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INVALID_PARAM);
     }
 
     free_xml(msg);
@@ -1059,6 +1084,60 @@ remove_core_file_limit(void)
     }
 }
 
+static crm_exit_t
+request_shutdown(crm_ipc_t *ipc)
+{
+    xmlNode *request = NULL;
+    xmlNode *reply = NULL;
+    int rc = 0;
+    crm_exit_t status = CRM_EX_OK;
+
+    request = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP,
+                             CRM_SYSTEM_MCP, NULL);
+    if (request == NULL) {
+        crm_err("Unable to create shutdown request"); // Probably memory error
+        status = CRM_EX_TEMPFAIL;
+        goto done;
+    }
+
+    crm_notice("Requesting shutdown of existing Pacemaker instance");
+    rc = crm_ipc_send(ipc, request, crm_ipc_client_response, 0, &reply);
+    if (rc < 0) {
+        crm_err("Could not send shutdown request");
+        status = crm_errno2exit(rc);
+        goto done;
+    }
+
+    if ((rc == 0) || (reply == NULL)) {
+        crm_err("Unrecognized response to shutdown request");
+        status = CRM_EX_PROTOCOL;
+        goto done;
+    }
+
+    if ((crm_element_value_int(reply, "status", &rc) == 0)
+        && (rc != CRM_EX_OK)) {
+        crm_err("Shutdown request failed: %s", crm_exit_str(rc));
+        status = rc;
+        goto done;
+    }
+
+    // Wait for pacemakerd to shut down IPC (with 30-minute timeout)
+    status = CRM_EX_TIMEOUT;
+    for (int i = 0; i < 900; ++i) {
+        if (!crm_ipc_connected(ipc)) {
+            status = CRM_EX_OK;
+            break;
+        }
+        sleep(2);
+    }
+
+done:
+    free_xml(request);
+    crm_ipc_close(ipc);
+    crm_ipc_destroy(ipc);
+    return status;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1138,20 +1217,7 @@ main(int argc, char **argv)
     (void) crm_ipc_connect(old_instance);
 
     if (shutdown) {
-        crm_debug("Shutting down existing Pacemaker instance by request");
-        while (crm_ipc_connected(old_instance)) {
-            xmlNode *cmd =
-                create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP, CRM_SYSTEM_MCP, NULL);
-
-            crm_debug(".");
-            crm_ipc_send(old_instance, cmd, 0, 0, NULL);
-            free_xml(cmd);
-
-            sleep(2);
-        }
-        crm_ipc_close(old_instance);
-        crm_ipc_destroy(old_instance);
-        crm_exit(CRM_EX_OK);
+        crm_exit(request_shutdown(old_instance));
 
     } else if (crm_ipc_connected(old_instance)) {
         crm_ipc_close(old_instance);
