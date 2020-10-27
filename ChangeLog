@@ -1,4 +1,16 @@
-* Mon Oct 19 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5
+* Tue Oct 27 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5-rc2
+- Changesets: 16
+- Diff: 19 files changed, 348 insertions(+), 145 deletions(-)
+
+- Changes since Pacemaker-2.0.5-rc1
+  + Prevent the bypassing of ACLs by direct IPC (CVE-2020-25654)
+  + scheduler: fix build when DEFAULT_CONCURRENT_FENCING_TRUE is set
+  + scheduler: Remove pe_print_expanded_xml print option.
+  + tools: Revert some crm_resource string-related checks on variables
+           that aren't strings.
+  + xml: Mark new crm_mon attributes as optional in schema
+
+* Mon Oct 19 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5-rc1
 - Changesets: 497
 - Diff: 285 files changed, 22704 insertions(+), 14458 deletions(-)
 
