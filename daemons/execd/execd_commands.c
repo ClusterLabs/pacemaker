@@ -1511,10 +1511,10 @@ free_rsc(gpointer data)
     free(rsc);
 }
 
-static xmlNode *
-process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id)
+static int
+process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
+                    xmlNode **reply)
 {
-    xmlNode *reply = NULL;
     int rc = pcmk_ok;
     const char *is_ipc_provider = crm_element_value(request, F_LRMD_IS_IPC_PROVIDER);
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
@@ -1525,18 +1525,25 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id)
         rc = -EPROTO;
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
-    crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
-    crm_xml_add(reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-
     if (crm_is_true(is_ipc_provider)) {
-        // This is a remote connection from a cluster node's controller
 #ifdef SUPPORT_REMOTE
-        ipc_proxy_add_provider(client);
+        if ((client->remote != NULL) && client->remote->tls_handshake_complete) {
+            // This is a remote connection from a cluster node's controller
+            ipc_proxy_add_provider(client);
+        } else {
+            rc = -EACCES;
+        }
+#else
+        rc = -EPROTONOSUPPORT;
 #endif
     }
-    return reply;
+
+    *reply = create_lrmd_reply(__func__, rc, call_id);
+    crm_xml_add(*reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
+    crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
+    crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+
+    return rc;
 }
 
 static int
@@ -1840,55 +1847,108 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     int do_notify = 0;
     xmlNode *reply = NULL;
 
+#if ENABLE_ACL
+    /* Certain IPC commands may be done only by privileged users (i.e. root or
+     * hacluster) when ACLs are enabled, because they would otherwise provide a
+     * means of bypassing ACLs.
+     */
+    bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
+#else
+    bool allowed = true;
+#endif
+
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
 #ifdef SUPPORT_REMOTE
-        ipc_proxy_forward_client(client, request);
+        if (allowed) {
+            ipc_proxy_forward_client(client, request);
+        } else {
+            rc = -EACCES;
+        }
+#else
+        rc = -EPROTONOSUPPORT;
 #endif
         do_reply = 1;
     } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        reply = process_lrmd_signon(client, request, call_id);
+        rc = process_lrmd_signon(client, request, call_id, &reply);
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
-        rc = process_lrmd_rsc_register(client, id, request);
-        do_notify = 1;
+        if (allowed) {
+            rc = process_lrmd_rsc_register(client, id, request);
+            do_notify = 1;
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_INFO, pcmk__str_none)) {
-        reply = process_lrmd_get_rsc_info(request, call_id);
+        if (allowed) {
+            reply = process_lrmd_get_rsc_info(request, call_id);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
-        rc = process_lrmd_rsc_unregister(client, id, request);
-        /* don't notify anyone about failed un-registers */
-        if (rc == pcmk_ok || rc == -EINPROGRESS) {
-            do_notify = 1;
+        if (allowed) {
+            rc = process_lrmd_rsc_unregister(client, id, request);
+            /* don't notify anyone about failed un-registers */
+            if (rc == pcmk_ok || rc == -EINPROGRESS) {
+                do_notify = 1;
+            }
+        } else {
+            rc = -EACCES;
         }
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
-        rc = process_lrmd_rsc_exec(client, id, request);
+        if (allowed) {
+            rc = process_lrmd_rsc_exec(client, id, request);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_CANCEL, pcmk__str_none)) {
-        rc = process_lrmd_rsc_cancel(client, id, request);
+        if (allowed) {
+            rc = process_lrmd_rsc_cancel(client, id, request);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
         do_notify = 1;
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
-        xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
-        const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
-        CRM_LOG_ASSERT(data != NULL);
-        pcmk__valid_sbd_timeout(timeout);
+        if (allowed) {
+            xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA);
+
+            CRM_LOG_ASSERT(data != NULL);
+            pcmk__valid_sbd_timeout(crm_element_value(data, F_LRMD_WATCHDOG));
+        } else {
+            rc = -EACCES;
+        }
     } else if (pcmk__str_eq(op, LRMD_OP_ALERT_EXEC, pcmk__str_none)) {
-        rc = process_lrmd_alert_exec(client, id, request);
+        if (allowed) {
+            rc = process_lrmd_alert_exec(client, id, request);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_GET_RECURRING, pcmk__str_none)) {
-        reply = process_lrmd_get_recurring(request, call_id);
+        if (allowed) {
+            reply = process_lrmd_get_recurring(request, call_id);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
         crm_err("Unknown IPC request '%s' from %s", op, client->name);
+    }
+
+    if (rc == -EACCES) {
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 op, pcmk__client_name(client));
     }
 
     crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",

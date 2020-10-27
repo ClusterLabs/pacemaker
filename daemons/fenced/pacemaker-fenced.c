@@ -92,7 +92,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     request = pcmk__client_data2xml(c, data, &id, &flags);
     if (request == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, "nack");
+        pcmk__ipc_send_ack(c, id, flags, "nack", CRM_EX_PROTOCOL);
         return 0;
     }
 

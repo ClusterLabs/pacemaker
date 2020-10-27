@@ -760,20 +760,41 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, xmlNode *message,
     return rc;
 }
 
-void
+/*!
+ * \internal
+ * \brief Send an acknowledgement with a status code to a client
+ *
+ * \param[in] function  Calling function
+ * \param[in] line      Source file line within calling function
+ * \param[in] c         Client to send ack to
+ * \param[in] request   Request ID being replied to
+ * \param[in] status    Exit status code to add to ack
+ * \param[in] flags     IPC flags to use when sending
+ * \param[in] tag       Element name to use for acknowledgement
+ * \param[in] status    Status code to send with acknowledgement
+ *
+ * \return Standard Pacemaker return code
+ */
+int
 pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                      uint32_t request, uint32_t flags, const char *tag)
+                      uint32_t request, uint32_t flags, const char *tag,
+                      crm_exit_t status)
 {
-    if (flags & crm_ipc_client_response) {
+    int rc = pcmk_rc_ok;
+
+    if (pcmk_is_set(flags, crm_ipc_client_response)) {
         xmlNode *ack = create_xml_node(NULL, tag);
 
-        crm_trace("Ack'ing IPC message from %s", pcmk__client_name(c));
+        crm_trace("Ack'ing IPC message from %s as <%s status=%d>",
+                  pcmk__client_name(c), tag, status);
         c->request_id = 0;
         crm_xml_add(ack, "function", function);
         crm_xml_add_int(ack, "line", line);
-        pcmk__ipc_send_xml(c, request, ack, flags);
+        crm_xml_add_int(ack, "status", (int) status);
+        rc = pcmk__ipc_send_xml(c, request, ack, flags);
         free_xml(ack);
     }
+    return rc;
 }
 
 /*!
@@ -886,4 +907,29 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }
+}
+
+/*!
+ * \brief Check whether string represents a client name used by cluster daemons
+ *
+ * \param[in] name  String to check
+ *
+ * \return true if name is standard client name used by daemons, false otherwise
+ *
+ * \note This is provided by the client, and so cannot be used by itself as a
+ *       secure means of authentication.
+ */
+bool
+crm_is_daemon_name(const char *name)
+{
+    name = pcmk__message_name(name);
+    return (!strcmp(name, CRM_SYSTEM_CRMD)
+            || !strcmp(name, CRM_SYSTEM_STONITHD)
+            || !strcmp(name, "stonith-ng")
+            || !strcmp(name, "attrd")
+            || !strcmp(name, CRM_SYSTEM_CIB)
+            || !strcmp(name, CRM_SYSTEM_MCP)
+            || !strcmp(name, CRM_SYSTEM_DC)
+            || !strcmp(name, CRM_SYSTEM_TENGINE)
+            || !strcmp(name, CRM_SYSTEM_LRMD));
 }

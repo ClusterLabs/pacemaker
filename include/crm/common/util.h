@@ -210,6 +210,8 @@ const char *crm_meta_value(GHashTable * hash, const char *field);
 char *crm_md5sum(const char *buffer);
 
 char *crm_generate_uuid(void);
+
+// This belongs in ipc.h but is here for backward compatibility
 bool crm_is_daemon_name(const char *name);
 
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);

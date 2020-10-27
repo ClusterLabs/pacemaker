@@ -1543,8 +1543,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!pcmk__str_empty((const char *) options.remainder) &&
-        !pcmk__str_empty((const char *) options.override_params)) {
+    if ((options.remainder != NULL) && (options.override_params != NULL)) {
         // Commands that use positional arguments will create override_params
         for (gchar **s = options.remainder; *s; s++) {
             char *name = calloc(1, strlen(*s));
@@ -1564,7 +1563,7 @@ main(int argc, char **argv)
             }
         }
 
-    } else if (!pcmk__str_empty((const char *) options.remainder)) {
+    } else if (options.remainder != NULL) {
         gchar **strv = NULL;
         gchar *msg = NULL;
         int i = 1;

@@ -155,6 +155,11 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            mainloop_io_t **source);
 
 
+/* internal messaging utilities (from messages.c) */
+
+const char *pcmk__message_name(const char *name);
+
+
 /* internal procfs utilities (from procfs.c) */
 
 pid_t pcmk__procfs_pid_of(const char *name);
@@ -278,7 +283,6 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 // miscellaneous utilities (from utils.c)
 
-const char *pcmk__message_name(const char *name);
 void pcmk__daemonize(const char *name, const char *pidfile);
 void pcmk__panic(const char *origin);
 pid_t pcmk__locate_sbd(void);

@@ -370,7 +370,7 @@ set_working_set_defaults(pe_working_set_t * data_set)
                               pe_flag_stop_rsc_orphans
                               |pe_flag_symmetric_cluster
                               |pe_flag_stop_action_orphans
-                              |pe_flag_concurrent_fencing;
+                              |pe_flag_concurrent_fencing);
 #else
     pe__set_working_set_flags(data_set,
                               pe_flag_stop_rsc_orphans

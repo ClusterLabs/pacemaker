@@ -16,7 +16,7 @@ noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h \
 				  services_lsb.h services_nagios.h \
 				  services_private.h
 
-libcrmservice_la_LDFLAGS	= -version-info 30:1:2
+libcrmservice_la_LDFLAGS	= -version-info 30:2:2
 libcrmservice_la_CPPFLAGS	= -DOCF_ROOT_DIR=\"@OCF_ROOT_DIR@\" $(AM_CPPFLAGS)
 libcrmservice_la_CFLAGS		=
 
