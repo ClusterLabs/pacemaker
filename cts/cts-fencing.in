@@ -227,11 +227,12 @@ class XmlValidationError(TestError):
 class Test(object):
     """ Executor for a single test """
 
-    def __init__(self, name, description, verbose=0, with_cpg=0):
+    def __init__(self, name, description, verbose=0, with_cpg=0, timeout=2):
         self.name = name
         self.description = description
         self.cmds = []
         self.verbose = verbose
+        self.timeout = timeout
         self.logpath = "/tmp/stonith-regression.log"
 
         self.result_txt = ""
@@ -287,6 +288,9 @@ class Test(object):
 
         logfile = None
 
+        init_time = time.time()
+        update_time = init_time
+
         while True:
             time.sleep(0.1)
 
@@ -297,6 +301,19 @@ class Test(object):
                 for line in logfile.readlines():
                     if "successfully started" in line:
                         return
+
+            now = time.time()
+
+            if self.timeout > 0 and (now - init_time) >= self.timeout:
+                print("\tDaemon pacemaker-fenced doesn't seem to have been initialized within %fs."
+                      "\n\tConsider specifying a longer '--timeout' value."
+                      %(self.timeout))
+                return
+
+            if (now - update_time) >= 5:
+                print("\tWaiting for pacemaker-fenced to be initialized: %fs ..."
+                      %(now - init_time))
+                update_time = now
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
@@ -521,15 +538,16 @@ class Test(object):
 class Tests(object):
     """ Collection of all fencing regression tests """
 
-    def __init__(self, verbose=0):
+    def __init__(self, verbose=0, timeout=2):
         self.tests = []
         self.verbose = verbose
+        self.timeout = timeout
         self.autogen_corosync_cfg = not os.path.exists("/etc/corosync/corosync.conf")
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, with_cpg)
+        test = Test(name, description, self.verbose, with_cpg, self.timeout)
         self.tests.append(test)
         return test
 
@@ -1460,6 +1478,7 @@ class TestOptions(object):
         self.options['run-only'] = ""
         self.options['run-only-pattern'] = ""
         self.options['verbose'] = 0
+        self.options['timeout'] = 2
         self.options['invalid-arg'] = ""
         self.options['cpg-only'] = 0
         self.options['no-cpg'] = 0
@@ -1480,6 +1499,8 @@ class TestOptions(object):
                 self.options['list-tests'] = 1
             elif args[i] == "-V" or args[i] == "--verbose":
                 self.options['verbose'] = 1
+            elif args[i] == "-t" or args[i] == "--timeout":
+                self.options['timeout'] = float(args[i+1])
             elif args[i] == "-n" or args[i] == "--no-cpg":
                 self.options['no-cpg'] = 1
             elif args[i] == "-c" or args[i] == "--cpg-only":
@@ -1503,6 +1524,9 @@ class TestOptions(object):
         print("\t [--no-cpg | -n]                      Only run tests that do not require corosync")
         print("\t [--run-only | -r 'testname']         Run a specific test")
         print("\t [--verbose | -V]                     Verbose output")
+        print("\t [--timeout | -t 'floating point number']"
+              "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
+              "\n\t\tDefaults to 2. The value 0 means no limit.")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_stop'")
         print("\t\t " + sys.argv[0] + " --run-only start_stop")
@@ -1520,7 +1544,7 @@ def main(argv):
 
     use_corosync = 1
 
-    tests = Tests(opts.options['verbose'])
+    tests = Tests(opts.options['verbose'], opts.options['timeout'])
     tests.build_standalone_tests()
     tests.build_custom_timeout_tests()
     tests.build_api_sanity_tests()
