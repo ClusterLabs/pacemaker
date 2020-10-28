@@ -203,10 +203,11 @@ void pcmk__free_client(pcmk__client_t *c);
 void pcmk__drop_all_clients(qb_ipcs_service_t *s);
 bool pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 
-void pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                           uint32_t request, uint32_t flags, const char *tag);
-#define pcmk__ipc_send_ack(c, req, flags, tag) \
-    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag))
+int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
+                          uint32_t request, uint32_t flags, const char *tag,
+                          crm_exit_t status);
+#define pcmk__ipc_send_ack(c, req, flags, tag, st) \
+    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (st))
 
 int pcmk__ipc_prepare_iov(uint32_t request, xmlNode *message,
                           uint32_t max_send_size,

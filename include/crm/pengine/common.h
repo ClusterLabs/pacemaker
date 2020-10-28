@@ -120,8 +120,7 @@ enum pe_print_options {
     pe_print_pending        = (1 << 12),
     pe_print_clone_details  = (1 << 13),
     pe_print_clone_active   = (1 << 14), // Print clone instances only if active
-    pe_print_implicit       = (1 << 15), // Print implicitly created resources
-    pe_print_expanded_xml   = (1 << 16)
+    pe_print_implicit       = (1 << 15)  // Print implicitly created resources
 };
 
 const char *task2text(enum action_tasks task);

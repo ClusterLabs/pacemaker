@@ -2547,6 +2547,20 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
 
+    bool allowed = false;
+
+#if ENABLE_ACL
+    /* IPC commands related to fencing configuration may be done only by
+     * privileged users (i.e. root or hacluster) when ACLs are supported,
+     * because all other users should go through the CIB to have ACLs applied.
+     */
+    if (client != NULL) {
+        allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
+    }
+#else
+    allowed = true;
+#endif
+
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
@@ -2605,9 +2619,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
             pcmk__clear_client_flags(client, get_stonith_flag(flag_name));
         }
 
-        if (flags & crm_ipc_client_response) {
-            pcmk__ipc_send_ack(client, id, flags, "ack");
-        }
+        pcmk__ipc_send_ack(client, id, flags, "ack", CRM_EX_OK);
         return 0;
 
     } else if (pcmk__str_eq(op, STONITH_OP_RELAY, pcmk__str_none)) {
@@ -2705,27 +2717,43 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_ADD, pcmk__str_none)) {
         const char *device_id = NULL;
 
-        rc = stonith_device_register(request, &device_id, FALSE);
+        if (allowed) {
+            rc = stonith_device_register(request, &device_id, FALSE);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_DEVICE_DEL, pcmk__str_none)) {
         xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, request, LOG_ERR);
         const char *device_id = crm_element_value(dev, XML_ATTR_ID);
 
-        rc = stonith_device_remove(device_id, FALSE);
+        if (allowed) {
+            rc = stonith_device_remove(device_id, FALSE);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_device(call_options, op, rc, device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_ADD, pcmk__str_none)) {
         char *device_id = NULL;
 
-        rc = stonith_level_register(request, &device_id);
+        if (allowed) {
+            rc = stonith_level_register(request, &device_id);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_level(call_options, op, rc, device_id);
         free(device_id);
 
     } else if (pcmk__str_eq(op, STONITH_OP_LEVEL_DEL, pcmk__str_none)) {
         char *device_id = NULL;
 
-        rc = stonith_level_remove(request, &device_id);
+        if (allowed) {
+            rc = stonith_level_remove(request, &device_id);
+        } else {
+            rc = -EACCES;
+        }
         do_stonith_notify_level(call_options, op, rc, device_id);
 
     } else if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
@@ -2744,6 +2772,11 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     }
 
   done:
+
+    if (rc == -EACCES) {
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 crm_str(op), pcmk__client_name(client));
+    }
 
     /* Always reply unless the request is in process still.
      * If in progress, a reply will happen async after the request
