@@ -155,7 +155,7 @@ class OutputFoundError(TestError):
 class Test(object):
     """ Executor for a single pacemaker-execd regression test """
 
-    def __init__(self, name, description, verbose=0, tls=0):
+    def __init__(self, name, description, verbose=0, tls=0, timeout=2):
         self.name = name
         self.description = description
         self.cmds = []
@@ -169,6 +169,7 @@ class Test(object):
         self.test_tool_location = "cts-exec-helper"
         self.verbose = verbose
         self.tls = tls
+        self.timeout = timeout
 
         self.result_txt = ""
         self.cmd_tool_output = ""
@@ -222,6 +223,9 @@ class Test(object):
 
         logfile = None
 
+        init_time = time.time()
+        update_time = init_time
+
         while True:
             time.sleep(0.1)
 
@@ -232,6 +236,19 @@ class Test(object):
                 for line in logfile.readlines():
                     if "successfully started" in line:
                         return
+
+            now = time.time()
+
+            if self.timeout > 0 and (now - init_time) >= self.timeout:
+                print("\tDaemon %s doesn't seem to have been initialized within %fs."
+                      "\n\tConsider specifying a longer '--timeout' value."
+                       %(self.daemon_location, self.timeout))
+                return
+
+            if (now - update_time) >= 5:
+                print("\tWaiting for %s to be initialized: %fs ..."
+                      %(self.daemon_location, now - init_time))
+                update_time = now
 
     def clean_environment(self):
         """ Clean up the host after running a test """
@@ -382,10 +399,11 @@ class Test(object):
 class Tests(object):
     """ Collection of all pacemaker-execd regression tests """
 
-    def __init__(self, verbose=0, tls=0):
+    def __init__(self, verbose=0, tls=0, timeout=2):
         self.tests = []
         self.verbose = verbose
         self.tls = tls
+        self.timeout = timeout
         self.rsc_classes = output_from_command("crm_resource --list-standards")
         self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
         self.installed_files = []
@@ -491,7 +509,7 @@ class Tests(object):
     def new_test(self, name, description):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, self.tls)
+        test = Test(name, description, self.verbose, self.tls, self.timeout)
         self.tests.append(test)
         return test
 
@@ -1143,6 +1161,7 @@ class TestOptions(object):
         self.options['run-only'] = ""
         self.options['run-only-pattern'] = ""
         self.options['verbose'] = 0
+        self.options['timeout'] = 2
         self.options['invalid-arg'] = ""
         self.options['show-usage'] = 0
         self.options['pacemaker-remote'] = 0
@@ -1162,6 +1181,8 @@ class TestOptions(object):
                 self.options['list-tests'] = 1
             elif args[i] == "-V" or args[i] == "--verbose":
                 self.options['verbose'] = 1
+            elif args[i] == "-t" or args[i] == "--timeout":
+                self.options['timeout'] = float(args[i+1])
             elif args[i] == "-R" or args[i] == "--pacemaker-remote":
                 self.options['pacemaker-remote'] = 1
             elif args[i] == "-r" or args[i] == "--run-only":
@@ -1181,6 +1202,9 @@ class TestOptions(object):
         print("\t [--list-tests | -l]                  Print out all registered tests.")
         print("\t [--run-only | -r 'testname']         Run a specific test")
         print("\t [--verbose | -V]                     Verbose output")
+        print("\t [--timeout | -t 'floating point number']"
+              "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
+              "\n\t\tDefaults to 2. The value 0 means no limit.")
         print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_stop'")
@@ -1197,7 +1221,8 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
-    tests = Tests(opts.options['verbose'], opts.options['pacemaker-remote'])
+    tests = Tests(opts.options['verbose'], opts.options['pacemaker-remote'],
+                  opts.options['timeout'])
 
     tests.build_generic_tests()
     tests.build_multi_rsc_tests()
