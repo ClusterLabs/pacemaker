@@ -133,9 +133,6 @@ enum pcmk__client_flags {
 struct pcmk__client_s {
     unsigned int pid;
 
-    uid_t uid;
-    gid_t gid;
-
     char *id;
     char *name;
     char *user;
