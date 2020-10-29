@@ -686,7 +686,7 @@ pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long")
+PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
 int
 pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);

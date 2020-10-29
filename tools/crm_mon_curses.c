@@ -365,7 +365,7 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long")
+PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
 static int
 cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
