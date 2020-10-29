@@ -44,6 +44,11 @@ version_pairs_last = $(wordlist \
 			    ),$(1),$(2) \
 			  )
 
+# NOTE: All files in API_request_base, CIB_cfg_base, API_base, and CIB_base
+# need to start with a unique prefix.  These variables all get iterated over
+# and globbed, and two files starting with the same prefix will cause
+# problems.
+
 # Names of API schemas that form the choices for pacemaker-result content
 API_request_base	= command-output crm_mon crmadmin stonith_admin version
 
@@ -51,7 +56,7 @@ API_request_base	= command-output crm_mon crmadmin stonith_admin version
 CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
 
 # Names of all schemas (including top level and those included by others)
-API_base		= $(API_request_base) fence-event item resources status
+API_base		= $(API_request_base) fence-event generic-list item resources status
 CIB_base		= cib $(CIB_cfg_base) status score rule nvset
 
 # Static schema files and transforms (only CIB has transforms)
