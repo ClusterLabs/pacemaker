@@ -357,6 +357,174 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+static int
+health_text(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *host_from = va_arg(args, char *);
+    char *fsa_state = va_arg(args, char *);
+    char *result = va_arg(args, char *);
+
+    if (!out->is_quiet(out)) {
+        out->info(out, "Status of %s@%s: %s (%s)", crm_str(sys_from),
+                       crm_str(host_from), crm_str(fsa_state), crm_str(result));
+    } else if (fsa_state != NULL) {
+        out->info(out, "%s", fsa_state);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+static int
+health_xml(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *host_from = va_arg(args, char *);
+    char *fsa_state = va_arg(args, char *);
+    char *result = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, crm_str(sys_from));
+    xmlSetProp(node, (pcmkXmlStr) "node_name", (pcmkXmlStr) crm_str(host_from));
+    xmlSetProp(node, (pcmkXmlStr) "state", (pcmkXmlStr) crm_str(fsa_state));
+    xmlSetProp(node, (pcmkXmlStr) "result", (pcmkXmlStr) crm_str(result));
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+static int
+pacemakerd_health_text(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *state = va_arg(args, char *);
+    char *last_updated = va_arg(args, char *);
+
+    if (!out->is_quiet(out)) {
+        out->info(out, "Status of %s: '%s' %s %s", crm_str(sys_from),
+                  crm_str(state), (!pcmk__str_empty(last_updated))?
+                  "last updated":"", crm_str(last_updated));
+    } else {
+        out->info(out, "%s", crm_str(state));
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+static int
+pacemakerd_health_xml(pcmk__output_t *out, va_list args)
+{
+    char *sys_from = va_arg(args, char *);
+    char *state = va_arg(args, char *);
+    char *last_updated = va_arg(args, char *);
+
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, crm_str(sys_from));
+    xmlSetProp(node, (pcmkXmlStr) "state", (pcmkXmlStr) crm_str(state));
+    xmlSetProp(node, (pcmkXmlStr) "last_updated", (pcmkXmlStr) crm_str(last_updated));
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("dc", "char *")
+static int
+dc_text(pcmk__output_t *out, va_list args)
+{
+    char *dc = va_arg(args, char *);
+
+    if (!out->is_quiet(out)) {
+        out->info(out, "Designated Controller is: %s", crm_str(dc));
+    } else if (dc != NULL) {
+        out->info(out, "%s", dc);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("dc", "char *")
+static int
+dc_xml(pcmk__output_t *out, va_list args)
+{
+    char *dc = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "dc");
+    xmlSetProp(node, (pcmkXmlStr) "node_name", (pcmkXmlStr) crm_str(dc));
+
+    return pcmk_rc_ok;
+}
+
+
+PCMK__OUTPUT_ARGS("crmadmin-node-list", "pcmk__output_t *", "xmlNode *")
+static int
+crmadmin_node_list(pcmk__output_t *out, va_list args)
+{
+    xmlNode *xml_node = va_arg(args, xmlNode *);
+    int found = 0;
+    xmlNode *node = NULL;
+    xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
+    gboolean BASH_EXPORT = va_arg(args, gboolean);
+
+    out->begin_list(out, NULL, NULL, "nodes");
+
+    for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
+         node = crm_next_same_xml(node)) {
+        const char *node_type = BASH_EXPORT ? NULL :
+                     crm_element_value(node, XML_ATTR_TYPE);
+        out->message(out, "crmadmin-node", node_type,
+                     crm_str(crm_element_value(node, XML_ATTR_UNAME)),
+                     crm_str(crm_element_value(node, XML_ATTR_ID)),
+                     BASH_EXPORT);
+
+        found++;
+    }
+    // @TODO List Pacemaker Remote nodes that don't have a <node> entry
+
+    out->end_list(out);
+
+    if (found == 0) {
+        out->info(out, "No nodes configured");
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *", "gboolean")
+static int
+crmadmin_node_text(pcmk__output_t *out, va_list args)
+{
+    char *type = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *id = va_arg(args, char *);
+    gboolean BASH_EXPORT = va_arg(args, gboolean);
+
+    if (BASH_EXPORT) {
+        out->info(out, "export %s=%s", crm_str(name), crm_str(id));
+    } else {
+        out->info(out, "%s node: %s (%s)", type ? type : "member",
+                  crm_str(name), crm_str(id));
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *", "gboolean")
+static int
+crmadmin_node_xml(pcmk__output_t *out, va_list args)
+{
+    char *type = va_arg(args, char *);
+    char *name = va_arg(args, char *);
+    char *id = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "node");
+    xmlSetProp(node, (pcmkXmlStr) "type", (pcmkXmlStr) (type ? type : "member"));
+    xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) crm_str(name));
+    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) crm_str(id));
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "colocations-list", "default", colocations_list },
     { "colocations-list", "xml", colocations_list_xml },
@@ -364,6 +532,15 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "locations-list", "xml", locations_list_xml },
     { "stacks-constraints", "default", stacks_and_constraints },
     { "stacks-constraints", "xml", stacks_and_constraints_xml },
+    { "health", "default", health_text },
+    { "health", "xml", health_xml },
+    { "pacemakerd-health", "default", pacemakerd_health_text },
+    { "pacemakerd-health", "xml", pacemakerd_health_xml },
+    { "dc", "default", dc_text },
+    { "dc", "xml", dc_xml },
+    { "crmadmin-node-list", "default", crmadmin_node_list },
+    { "crmadmin-node", "default", crmadmin_node_text },
+    { "crmadmin-node", "xml", crmadmin_node_xml },
 
     { NULL, NULL, NULL }
 };

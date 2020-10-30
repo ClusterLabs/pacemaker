@@ -10,6 +10,7 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 noinst_HEADERS		= pcmki_error.h \
+			  pcmki_cluster_queries.h \
 			  pcmki_fence.h \
 			  pcmki_output.h \
 			  pcmki_sched_allocate.h \
