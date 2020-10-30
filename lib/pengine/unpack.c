@@ -2653,6 +2653,17 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 }
 
+// Is there an action_name in node_name's rsc history newer than call_id?
+static bool
+newer_op(pe_resource_t *rsc, const char *action_name, const char *node_name,
+         int call_id, pe_working_set_t *data_set)
+{
+    xmlNode *action = find_lrm_op(rsc->id, action_name, node_name, NULL, TRUE,
+                                  data_set);
+
+    return pe__call_id(action) > call_id;
+}
+
 static void
 unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                           pe_working_set_t *data_set)
@@ -2680,7 +2691,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     target_migrate_from_id = pe__call_id(target_migrate_from);
 
     if ((target_stop == NULL) || (target_stop_id < target_migrate_from_id)) {
-        /* There was no stop on the source, or a stop that happened before a
+        /* There was no stop on the target, or a stop that happened before a
          * migrate_from, so assume the resource is still active on the target
          * (if it is up).
          */
@@ -2698,24 +2709,19 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
          * scheduled or attempted).
          *
          * That means this could be a "dangling" migration. But first, check
-         * whether there is a newer migrate_from or start on the source node --
-         * it's possible the failed migration was followed by a successful
-         * full restart or migration in the reverse direction, in which case we
-         * don't want to force it to stop.
+         * whether there is a newer successful stop, start, or migrate_from on
+         * the source node -- it's possible the failed migration was followed by
+         * a successful stop, full restart, or migration in the reverse
+         * direction, in which case we don't want to force a stop.
          */
-        xmlNode *source_migrate_from = NULL;
-        xmlNode *source_start = NULL;
         int source_migrate_to_id = pe__call_id(xml_op);
 
-        source_migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, source,
-                                          NULL, TRUE, data_set);
-        if (pe__call_id(source_migrate_from) > source_migrate_to_id) {
-            return;
-        }
-
-        source_start = find_lrm_op(rsc->id, CRMD_ACTION_START, source, NULL,
-                                   TRUE, data_set);
-        if (pe__call_id(source_start) > source_migrate_to_id) {
+        if (newer_op(rsc, CRMD_ACTION_MIGRATED, source, source_migrate_to_id,
+                     data_set)
+            || newer_op(rsc, CRMD_ACTION_START, source, source_migrate_to_id,
+                     data_set)
+            || newer_op(rsc, CRMD_ACTION_STOP, source, source_migrate_to_id,
+                     data_set)) {
             return;
         }
 
