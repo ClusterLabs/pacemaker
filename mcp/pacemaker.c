@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the Pacemaker project contributors
+ * Copyright 2010-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -567,9 +567,12 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     uint32_t id = 0;
     uint32_t flags = 0;
     const char *task = NULL;
+    xmlNode *msg = NULL;
     crm_client_t *c = crm_client_get(qbc);
-    xmlNode *msg = crm_ipcs_recv(c, data, size, &id, &flags);
 
+    CRM_CHECK(c != NULL, return 0);
+
+    msg = crm_ipcs_recv(c, data, size, &id, &flags);
     crm_ipcs_send_ack(c, id, flags, "ack", __FUNCTION__, __LINE__);
     if (msg == NULL) {
         return 0;
@@ -577,10 +580,26 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (crm_str_eq(task, CRM_OP_QUIT, TRUE)) {
-        /* Time to quit */
-        crm_notice("Shutting down in response to ticket %s (%s)",
-                   crm_element_value(msg, F_CRM_REFERENCE), crm_element_value(msg, F_CRM_ORIGIN));
-        pcmk_shutdown(15);
+#if ENABLE_ACL
+        /* Only allow privileged users (i.e. root or hacluster)
+         * to shut down Pacemaker from the command line (or direct IPC).
+         *
+         * We only check when ACLs are enabled, because without them, any client
+         * with IPC access could shut down Pacemaker via the CIB anyway.
+         */
+        bool allowed = is_set(c->flags, crm_client_flag_ipc_privileged);
+#else
+        bool allowed = true;
+#endif
+        if (allowed) {
+            crm_notice("Shutting down in response to IPC request %s from %s",
+                       crm_element_value(msg, F_CRM_REFERENCE),
+                       crm_element_value(msg, F_CRM_ORIGIN));
+            pcmk_shutdown(15);
+        } else {
+            crm_warn("Ignoring shutdown request from unprivileged client %s",
+                     crm_client_name(c));
+        }
 
     } else if (crm_str_eq(task, CRM_OP_RM_NODE_CACHE, TRUE)) {
         /* Send to everyone */

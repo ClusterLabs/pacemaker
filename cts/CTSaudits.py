@@ -245,7 +245,7 @@ class FileAudit(ClusterAudit):
                     for line in lsout:
                         self.CM.debug("ps[%s]: %s" % (node, line))
 
-                    self.CM.rsh(node, "rm -f /dev/shm/qb-*")
+                    self.CM.rsh(node, "rm -rf /dev/shm/qb-*")
 
             else:
                 self.CM.debug("Skipping %s" % node)

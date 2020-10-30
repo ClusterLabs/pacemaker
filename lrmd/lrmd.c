@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -373,23 +373,15 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 }
 
-static void
-send_reply(crm_client_t * client, int rc, uint32_t id, int call_id)
+static xmlNode *
+create_lrmd_reply(const char *origin, int rc, int call_id)
 {
-    int send_rc = 0;
-    xmlNode *reply = NULL;
+    xmlNode *reply = create_xml_node(NULL, T_LRMD_REPLY);
 
-    reply = create_xml_node(NULL, T_LRMD_REPLY);
-    crm_xml_add(reply, F_LRMD_ORIGIN, __FUNCTION__);
+    crm_xml_add(reply, F_LRMD_ORIGIN, origin);
     crm_xml_add_int(reply, F_LRMD_RC, rc);
     crm_xml_add_int(reply, F_LRMD_CALLID, call_id);
-
-    send_rc = lrmd_server_send_reply(client, id, reply);
-
-    free_xml(reply);
-    if (send_rc < 0) {
-        crm_warn("LRMD reply to %s failed: %d", client->name, send_rc);
-    }
+    return reply;
 }
 
 static void
@@ -1397,32 +1389,38 @@ free_rsc(gpointer data)
 }
 
 static int
-process_lrmd_signon(crm_client_t * client, uint32_t id, xmlNode * request)
+process_lrmd_signon(crm_client_t *client, xmlNode *request, int call_id,
+                    xmlNode **reply)
 {
-    xmlNode *reply = create_xml_node(NULL, "reply");
+    int rc = pcmk_ok;
     const char *is_ipc_provider = crm_element_value(request, F_LRMD_IS_IPC_PROVIDER);
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
 
     if (compare_version(protocol_version, LRMD_MIN_PROTOCOL_VERSION) < 0) {
         crm_err("Cluster API version must be greater than or equal to %s, not %s",
                 LRMD_MIN_PROTOCOL_VERSION, protocol_version);
-        crm_xml_add_int(reply, F_LRMD_RC, -EPROTO);
+        rc = -EPROTO;
     }
 
-    crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
-    crm_xml_add(reply, F_LRMD_CLIENTID, client->id);
-    crm_xml_add(reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-    lrmd_server_send_reply(client, id, reply);
-
     if (crm_is_true(is_ipc_provider)) {
-        /* this is a remote connection from a cluster nodes crmd */
 #ifdef SUPPORT_REMOTE
-        ipc_proxy_add_provider(client);
+        if ((client->remote != NULL) && client->remote->tls_handshake_complete) {
+            // This is a remote connection from a cluster node's controller
+            ipc_proxy_add_provider(client);
+        } else {
+            rc = -EACCES;
+        }
+#else
+        rc = -EPROTONOSUPPORT;
 #endif
     }
 
-    free_xml(reply);
-    return pcmk_ok;
+    *reply = create_lrmd_reply(__func__, rc, call_id);
+    crm_xml_add(*reply, F_LRMD_OPERATION, CRM_OP_REGISTER);
+    crm_xml_add(*reply, F_LRMD_CLIENTID, client->id);
+    crm_xml_add(*reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+
+    return rc;
 }
 
 static int
@@ -1450,52 +1448,34 @@ process_lrmd_rsc_register(crm_client_t * client, uint32_t id, xmlNode * request)
     return rc;
 }
 
-static void
-process_lrmd_get_rsc_info(crm_client_t * client, uint32_t id, xmlNode * request)
+static xmlNode *
+process_lrmd_get_rsc_info(xmlNode *request, int call_id)
 {
     int rc = pcmk_ok;
-    int send_rc = 0;
-    int call_id = 0;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
     xmlNode *reply = NULL;
     lrmd_rsc_t *rsc = NULL;
 
-    crm_element_value_int(request, F_LRMD_CALLID, &call_id);
-
-    if (!rsc_id) {
+    if (rsc_id == NULL) {
         rc = -ENODEV;
-        goto get_rsc_done;
+    } else {
+        rsc = g_hash_table_lookup(rsc_list, rsc_id);
+        if (rsc == NULL) {
+            crm_info("Resource '%s' not found (%d active resources)",
+                     rsc_id, g_hash_table_size(rsc_list));
+            rc = -ENODEV;
+        }
     }
 
-    if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
-        crm_info("Resource '%s' not found (%d active resources)",
-                 rsc_id, g_hash_table_size(rsc_list));
-        rc = -ENODEV;
-        goto get_rsc_done;
-    }
-
-  get_rsc_done:
-
-    reply = create_xml_node(NULL, T_LRMD_REPLY);
-    crm_xml_add(reply, F_LRMD_ORIGIN, __FUNCTION__);
-    crm_xml_add_int(reply, F_LRMD_RC, rc);
-    crm_xml_add_int(reply, F_LRMD_CALLID, call_id);
-
+    reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
     if (rsc) {
         crm_xml_add(reply, F_LRMD_RSC_ID, rsc->rsc_id);
         crm_xml_add(reply, F_LRMD_CLASS, rsc->class);
         crm_xml_add(reply, F_LRMD_PROVIDER, rsc->provider);
         crm_xml_add(reply, F_LRMD_TYPE, rsc->type);
     }
-
-    send_rc = lrmd_server_send_reply(client, id, reply);
-
-    if (send_rc < 0) {
-        crm_warn("LRMD reply to %s failed: %d", client->name, send_rc);
-    }
-
-    free_xml(reply);
+    return reply;
 }
 
 static int
@@ -1675,46 +1655,93 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
     const char *op = crm_element_value(request, F_LRMD_OPERATION);
     int do_reply = 0;
     int do_notify = 0;
+    xmlNode *reply = NULL;
+
+#if ENABLE_ACL
+    /* Certain IPC commands may be done only by privileged users (i.e. root or
+     * hacluster) when ACLs are enabled, because they would otherwise provide a
+     * means of bypassing ACLs.
+     */
+    bool allowed = is_set(client->flags, crm_client_flag_ipc_privileged);
+#else
+    bool allowed = true;
+#endif
 
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
     if (crm_str_eq(op, CRM_OP_IPC_FWD, TRUE)) {
 #ifdef SUPPORT_REMOTE
-        ipc_proxy_forward_client(client, request);
+        if (allowed) {
+            ipc_proxy_forward_client(client, request);
+        } else {
+            rc = -EACCES;
+        }
+#else
+        rc = -EPROTONOSUPPORT;
 #endif
         do_reply = 1;
     } else if (crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
-        rc = process_lrmd_signon(client, id, request);
+        rc = process_lrmd_signon(client, request, call_id, &reply);
+        do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_RSC_REG, TRUE)) {
-        rc = process_lrmd_rsc_register(client, id, request);
-        do_notify = 1;
+        if (allowed) {
+            rc = process_lrmd_rsc_register(client, id, request);
+            do_notify = 1;
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_RSC_INFO, TRUE)) {
-        process_lrmd_get_rsc_info(client, id, request);
+        if (allowed) {
+            reply = process_lrmd_get_rsc_info(request, call_id);
+        } else {
+            rc = -EACCES;
+        }
+        do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_RSC_UNREG, TRUE)) {
-        rc = process_lrmd_rsc_unregister(client, id, request);
-        /* don't notify anyone about failed un-registers */
-        if (rc == pcmk_ok || rc == -EINPROGRESS) {
-            do_notify = 1;
+        if (allowed) {
+            rc = process_lrmd_rsc_unregister(client, id, request);
+            /* don't notify anyone about failed un-registers */
+            if (rc == pcmk_ok || rc == -EINPROGRESS) {
+                do_notify = 1;
+            }
+        } else {
+            rc = -EACCES;
         }
         do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_RSC_EXEC, TRUE)) {
-        rc = process_lrmd_rsc_exec(client, id, request);
+        if (allowed) {
+            rc = process_lrmd_rsc_exec(client, id, request);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_RSC_CANCEL, TRUE)) {
-        rc = process_lrmd_rsc_cancel(client, id, request);
+        if (allowed) {
+            rc = process_lrmd_rsc_cancel(client, id, request);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_POKE, TRUE)) {
         do_notify = 1;
         do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_CHECK, TRUE)) {
-        xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
-        const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
-        CRM_LOG_ASSERT(data != NULL);
-        check_sbd_timeout(timeout);
+        if (allowed) {
+            xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA);
+
+            CRM_LOG_ASSERT(data != NULL);
+            check_sbd_timeout(crm_element_value(data, F_LRMD_WATCHDOG));
+        } else {
+            rc = -EACCES;
+        }
     } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
-        rc = process_lrmd_alert_exec(client, id, request);
+        if (allowed) {
+            rc = process_lrmd_alert_exec(client, id, request);
+        } else {
+            rc = -EACCES;
+        }
         do_reply = 1;
     } else {
         rc = -EOPNOTSUPP;
@@ -1723,11 +1750,26 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
         crm_log_xml_warn(request, "UnknownOp");
     }
 
+    if (rc == -EACCES) {
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 op, crm_client_name(client));
+    }
+
     crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",
               op, client->id, rc, do_reply, do_notify);
 
     if (do_reply) {
-        send_reply(client, rc, id, call_id);
+        int send_rc = pcmk_ok;
+
+        if (reply == NULL) {
+            reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
+        }
+        send_rc = lrmd_server_send_reply(client, id, reply);
+        free_xml(reply);
+        if (send_rc < 0) {
+            crm_warn("Reply to client %s failed: %s " CRM_XS " %d",
+                     client->name, pcmk_strerror(send_rc), send_rc);
+        }
     }
 
     if (do_notify) {
