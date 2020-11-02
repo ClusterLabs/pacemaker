@@ -50,7 +50,6 @@ typedef struct subst_s {
 } subst_t;
 
 static subst_t substitutions[] = {
-    { "Attributes",                     "attributes" },
     { "Active Resources",               "resources" },
     { "Full List of Resources",         "resources" },
     { "Inactive Resources",             "resources" },
@@ -61,8 +60,6 @@ static subst_t substitutions[] = {
     { "Operations",                     "node_history" },
     { "Negative Location Constraints",  "bans" },
     { "Node Attributes",                "node_attributes" },
-    { "Resources",                      "resources" },
-    { "Tickets",                        "tickets" },
 
     { NULL, NULL }
 };
@@ -288,7 +285,7 @@ static void
 xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
                const char *format, ...) {
     va_list ap;
-    const char *name = NULL;
+    char *name = NULL;
     char *buf = NULL;
     int len;
 
@@ -300,14 +297,14 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     if (substitute) {
         for (subst_t *s = substitutions; s->from != NULL; s++) {
             if (!strcmp(s->from, buf)) {
-                name = s->to;
+                name = g_strdup(s->to);
                 break;
             }
         }
     }
 
     if (name == NULL) {
-        name = buf;
+        name = g_ascii_strdown(buf, -1);
     }
 
     if (legacy_xml || simple_list) {
@@ -319,6 +316,7 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
         xmlSetProp(list_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
     }
 
+    g_free(name);
     free(buf);
 }
 

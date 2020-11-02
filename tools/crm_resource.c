@@ -720,9 +720,7 @@ list_alternatives_cb(const gchar *option_name, const gchar *optarg,
                      gpointer data, GError **error)
 {
     SET_COMMAND(cmd_list_alternatives);
-    options.require_cib = FALSE;
-    options.require_dataset = FALSE;
-    options.require_resource = FALSE;
+    get_agent_spec(optarg);
     return TRUE;
 }
 

@@ -243,6 +243,9 @@ void clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *
 void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
+gchar * pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
+                                   long options, const char *target_role, bool show_nodes);
+
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
 char *pe__node_display_name(pe_node_t *node, bool print_detail);
