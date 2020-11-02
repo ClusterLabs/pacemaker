@@ -203,7 +203,7 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
                  * glib does not.  Grab both the argument and its value and
                  * separate them into a new argument.
                  */
-                if (strchr(special, *ch) != NULL) {
+                if (special != NULL && strchr(special, *ch) != NULL) {
                     /* The argument does not occur at the end of this string of
                      * arguments.  Take everything through the end as its value.
                      */

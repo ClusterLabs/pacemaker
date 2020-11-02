@@ -1,1 +1,1 @@
-SUBDIRS = flags operations strings utils
+SUBDIRS = cmdline flags operations strings utils
