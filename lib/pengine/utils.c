@@ -20,6 +20,8 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
+#include "pe_status_private.h"
+
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -2401,9 +2403,9 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
  *
  * \return Node's digest cache entry
  */
-static op_digest_cache_t *
-fencing_action_digest_cmp(pe_resource_t *rsc, const char *agent,
-                          pe_node_t *node, pe_working_set_t *data_set)
+op_digest_cache_t *
+pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
+                           pe_node_t *node, pe_working_set_t *data_set)
 {
     const char *node_summary = NULL;
 
@@ -2613,7 +2615,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
                                                         XML_ATTR_TYPE);
                 op_digest_cache_t *data = NULL;
 
-                data = fencing_action_digest_cmp(match, agent, node, data_set);
+                data = pe__compare_fencing_digest(match, agent, node, data_set);
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
                     crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
