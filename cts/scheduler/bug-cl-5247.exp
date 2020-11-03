@@ -14,206 +14,16 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <pseudo_event id="20" operation="stopped" operation_key="grpStonith1_stopped_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="16" operation="stop" operation_key="prmStonith1-2_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="19" operation="stop" operation_key="grpStonith1_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="2">
-    <action_set>
-      <pseudo_event id="19" operation="stop" operation_key="grpStonith1_stop_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="3">
-    <action_set>
-      <pseudo_event id="18" operation="running" operation_key="grpStonith1_running_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="8" operation="start" operation_key="prmStonith1-2_start_0" on_node="bl460g8n4" on_node_uuid="3232261400"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="17" operation="start" operation_key="grpStonith1_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="4">
-    <action_set>
-      <pseudo_event id="17" operation="start" operation_key="grpStonith1_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="20" operation="stopped" operation_key="grpStonith1_stopped_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="5">
-    <action_set>
-      <rsc_op id="16" operation="stop" operation_key="prmStonith1-2_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400">
-        <primitive id="prmStonith1-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="19" operation="stop" operation_key="grpStonith1_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="6">
-    <action_set>
-      <rsc_op id="8" operation="start" operation_key="prmStonith1-2_start_0" on_node="bl460g8n4" on_node_uuid="3232261400">
-        <primitive id="prmStonith1-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="16" operation="stop" operation_key="prmStonith1-2_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="17" operation="start" operation_key="grpStonith1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="70" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="7">
-    <action_set>
-      <rsc_op id="1" operation="monitor" operation_key="prmStonith1-2_monitor_3600000" on_node="bl460g8n4" on_node_uuid="3232261400">
-        <primitive id="prmStonith1-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_timeout="60000"  hostname="bl460g8n3" interface="lanplus" ipaddr="192.168.28.43" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="8" operation="start" operation_key="prmStonith1-2_start_0" on_node="bl460g8n4" on_node_uuid="3232261400"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="8">
-    <action_set>
-      <pseudo_event id="25" operation="stopped" operation_key="grpStonith2_stopped_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="21" operation="stop" operation_key="prmStonith2-2_stop_0" on_node="bl460g8n3" on_node_uuid="3232261399"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="24" operation="stop" operation_key="grpStonith2_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="9">
-    <action_set>
-      <pseudo_event id="24" operation="stop" operation_key="grpStonith2_stop_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="10">
-    <action_set>
-      <pseudo_event id="23" operation="running" operation_key="grpStonith2_running_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="9" operation="start" operation_key="prmStonith2-2_start_0" on_node="bl460g8n3" on_node_uuid="3232261399"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="22" operation="start" operation_key="grpStonith2_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="11">
-    <action_set>
-      <pseudo_event id="22" operation="start" operation_key="grpStonith2_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="25" operation="stopped" operation_key="grpStonith2_stopped_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="12">
-    <action_set>
-      <rsc_op id="21" operation="stop" operation_key="prmStonith2-2_stop_0" on_node="bl460g8n3" on_node_uuid="3232261399">
-        <primitive id="prmStonith2-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_on_node="bl460g8n3" CRM_meta_on_node_uuid="3232261399" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="24" operation="stop" operation_key="grpStonith2_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="13">
-    <action_set>
-      <rsc_op id="9" operation="start" operation_key="prmStonith2-2_start_0" on_node="bl460g8n3" on_node_uuid="3232261399">
-        <primitive id="prmStonith2-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n3" CRM_meta_on_node_uuid="3232261399" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="21" operation="stop" operation_key="prmStonith2-2_stop_0" on_node="bl460g8n3" on_node_uuid="3232261399"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="22" operation="start" operation_key="grpStonith2_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="70" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="14">
-    <action_set>
-      <rsc_op id="5" operation="monitor" operation_key="prmStonith2-2_monitor_3600000" on_node="bl460g8n3" on_node_uuid="3232261399">
-        <primitive id="prmStonith2-2" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="3600000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="bl460g8n3" CRM_meta_on_node_uuid="3232261399" CRM_meta_timeout="60000"  hostname="bl460g8n4" interface="lanplus" ipaddr="192.168.28.44" passwd="****" pcmk_reboot_timeout="60s" userid="USERID"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="9" operation="start" operation_key="prmStonith2-2_start_0" on_node="bl460g8n3" on_node_uuid="3232261399"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="15">
-    <action_set>
       <pseudo_event id="35" operation="stopped" operation_key="master-group_stopped_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="vip-master_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="10" operation="monitor" operation_key="vip-master_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
       <trigger>
-        <rsc_op id="13" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="11" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
       <trigger>
         <pseudo_event id="26" operation="stop" operation_key="vip-master_stop_0"/>
@@ -226,7 +36,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="16">
+  <synapse id="2">
     <action_set>
       <pseudo_event id="34" operation="stop" operation_key="master-group_stop_0">
         <attributes CRM_meta_timeout="20000" />
@@ -241,7 +51,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="17">
+  <synapse id="3">
     <action_set>
       <pseudo_event id="33" operation="running" operation_key="master-group_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -259,7 +69,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18">
+  <synapse id="4">
     <action_set>
       <pseudo_event id="32" operation="start" operation_key="master-group_start_0">
         <attributes CRM_meta_timeout="20000" />
@@ -271,7 +81,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="5">
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="vip-master_monitor_10000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-master" class="ocf" provider="heartbeat" type="Dummy"/>
@@ -284,7 +94,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20">
+  <synapse id="6">
     <action_set>
       <rsc_op id="27" operation="start" operation_key="vip-master_start_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-master" class="ocf" provider="heartbeat" type="Dummy"/>
@@ -293,7 +103,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="vip-master_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="10" operation="monitor" operation_key="vip-master_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
       <trigger>
         <pseudo_event id="26" operation="stop" operation_key="vip-master_stop_0"/>
@@ -306,7 +116,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21">
+  <synapse id="7">
     <action_set>
       <pseudo_event id="26" operation="stop" operation_key="vip-master_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="fence" CRM_meta_physical_host="bl460g8n4" CRM_meta_timeout="60000" />
@@ -314,7 +124,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="11" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
       <trigger>
         <pseudo_event id="29" operation="stop" operation_key="vip-rep_stop_0"/>
@@ -327,16 +137,16 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="22">
+  <synapse id="8">
     <action_set>
-      <rsc_op id="12" operation="monitor" operation_key="vip-master_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
+      <rsc_op id="10" operation="monitor" operation_key="vip-master_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-master" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_op_target_rc="7" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="23">
+  <synapse id="9">
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="vip-rep_monitor_10000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-rep" class="ocf" provider="heartbeat" type="Dummy"/>
@@ -349,7 +159,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="24">
+  <synapse id="10">
     <action_set>
       <rsc_op id="30" operation="start" operation_key="vip-rep_start_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-rep" class="ocf" provider="heartbeat" type="Dummy"/>
@@ -358,7 +168,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="11" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
       <trigger>
         <rsc_op id="27" operation="start" operation_key="vip-master_start_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
@@ -374,7 +184,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="25">
+  <synapse id="11">
     <action_set>
       <pseudo_event id="29" operation="stop" operation_key="vip-rep_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_on_fail="ignore" CRM_meta_physical_host="bl460g8n4" CRM_meta_timeout="60000" />
@@ -389,16 +199,16 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="26">
+  <synapse id="12">
     <action_set>
-      <rsc_op id="13" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
+      <rsc_op id="11" operation="monitor" operation_key="vip-rep_monitor_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="vip-rep" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_op_target_rc="7" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="27" priority="1000000">
+  <synapse id="13" priority="1000000">
     <action_set>
       <pseudo_event id="72" operation="notified" operation_key="pgsql_notified_0" internal_operation_key="pgsql:0_confirmed-post_notify_stonith_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
@@ -413,7 +223,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="28" priority="1000000">
+  <synapse id="14" priority="1000000">
     <action_set>
       <pseudo_event id="71" operation="notify" operation_key="pgsql_post_notify_stop_0" internal_operation_key="pgsql:0_post_notify_stonith_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
@@ -425,7 +235,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="29">
+  <synapse id="15">
     <action_set>
       <pseudo_event id="37" operation="stop" operation_key="pgsql_stop_0" internal_operation_key="pgsql:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_on_fail="fence" CRM_meta_physical_host="bl460g8n4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="300000" />
@@ -443,7 +253,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="30">
+  <synapse id="16">
     <action_set>
       <pseudo_event id="36" operation="demote" operation_key="pgsql_demote_0" internal_operation_key="pgsql:0_demote_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_on_fail="fence" CRM_meta_physical_host="bl460g8n4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="300000" />
@@ -458,7 +268,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="31" priority="1000000">
+  <synapse id="17" priority="1000000">
     <action_set>
       <rsc_op id="81" operation="notify" operation_key="pgsql_post_notify_demote_0" internal_operation_key="pgsql:1_post_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
@@ -471,7 +281,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="32">
+  <synapse id="18">
     <action_set>
       <rsc_op id="80" operation="notify" operation_key="pgsql_pre_notify_demote_0" internal_operation_key="pgsql:1_pre_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
@@ -484,7 +294,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="33">
+  <synapse id="19">
     <action_set>
       <rsc_op id="79" operation="notify" operation_key="pgsql_pre_notify_stop_0" internal_operation_key="pgsql:1_pre_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
@@ -497,7 +307,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="34" priority="1000000">
+  <synapse id="20" priority="1000000">
     <action_set>
       <rsc_op id="73" operation="notify" operation_key="pgsql_post_notify_stop_0" internal_operation_key="pgsql:1_post_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
@@ -513,7 +323,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="35">
+  <synapse id="21">
     <action_set>
       <rsc_op id="42" operation="monitor" operation_key="pgsql_monitor_9000" internal_operation_key="pgsql:1_monitor_9000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
@@ -532,7 +342,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="36" priority="1000000">
+  <synapse id="22" priority="1000000">
     <action_set>
       <pseudo_event id="66" operation="notified" operation_key="msPostgresql_confirmed-post_notify_demoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -547,7 +357,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="37" priority="1000000">
+  <synapse id="23" priority="1000000">
     <action_set>
       <pseudo_event id="65" operation="notify" operation_key="msPostgresql_post_notify_demoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -562,7 +372,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="38">
+  <synapse id="24">
     <action_set>
       <pseudo_event id="64" operation="notified" operation_key="msPostgresql_confirmed-pre_notify_demote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -577,7 +387,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="39">
+  <synapse id="25">
     <action_set>
       <pseudo_event id="63" operation="notify" operation_key="msPostgresql_pre_notify_demote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -585,7 +395,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="40" priority="1000000">
+  <synapse id="26" priority="1000000">
     <action_set>
       <pseudo_event id="62" operation="demoted" operation_key="msPostgresql_demoted_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -600,7 +410,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="41">
+  <synapse id="27">
     <action_set>
       <pseudo_event id="61" operation="demote" operation_key="msPostgresql_demote_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -612,7 +422,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="42" priority="1000000">
+  <synapse id="28" priority="1000000">
     <action_set>
       <pseudo_event id="54" operation="notified" operation_key="msPostgresql_confirmed-post_notify_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -627,7 +437,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="43" priority="1000000">
+  <synapse id="29" priority="1000000">
     <action_set>
       <pseudo_event id="53" operation="notify" operation_key="msPostgresql_post_notify_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -642,7 +452,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="44">
+  <synapse id="30">
     <action_set>
       <pseudo_event id="52" operation="notified" operation_key="msPostgresql_confirmed-pre_notify_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -657,7 +467,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="45">
+  <synapse id="31">
     <action_set>
       <pseudo_event id="51" operation="notify" operation_key="msPostgresql_pre_notify_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -669,7 +479,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="46" priority="1000000">
+  <synapse id="32" priority="1000000">
     <action_set>
       <pseudo_event id="50" operation="stopped" operation_key="msPostgresql_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -684,7 +494,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="47">
+  <synapse id="33">
     <action_set>
       <pseudo_event id="49" operation="stop" operation_key="msPostgresql_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
@@ -702,16 +512,16 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="48">
+  <synapse id="34">
     <action_set>
-      <rsc_op id="11" operation="monitor" operation_key="pgsr01_monitor_0" on_node="bl460g8n4" on_node_uuid="3232261400">
+      <rsc_op id="9" operation="monitor" operation_key="pgsr01_monitor_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="pgsr01" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="prmDB1" CRM_meta_on_node="bl460g8n4" CRM_meta_on_node_uuid="3232261400" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="49">
+  <synapse id="35">
     <action_set>
       <rsc_op id="69" operation="stop" operation_key="pgsr02_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400">
         <primitive id="pgsr02" class="ocf" provider="pacemaker" type="remote"/>
@@ -723,16 +533,16 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="50">
+  <synapse id="36">
     <action_set>
-      <rsc_op id="10" operation="monitor" operation_key="pgsr02_monitor_0" on_node="bl460g8n3" on_node_uuid="3232261399">
+      <rsc_op id="8" operation="monitor" operation_key="pgsr02_monitor_0" on_node="bl460g8n3" on_node_uuid="3232261399">
         <primitive id="pgsr02" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="prmDB2" CRM_meta_on_node="bl460g8n3" CRM_meta_on_node_uuid="3232261399" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="51">
+  <synapse id="37">
     <action_set>
       <pseudo_event id="70" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02">
         <attributes CRM_meta_master_pgsql="10" CRM_meta_on_node="pgsr02" CRM_meta_on_node_uuid="pgsr02" CRM_meta_stonith_action="off" />

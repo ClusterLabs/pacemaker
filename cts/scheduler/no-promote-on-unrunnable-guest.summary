@@ -26,27 +26,21 @@ GuestOnline: [ galera-bundle-0:galera-bundle-podman-0 galera-bundle-1:galera-bun
  Container bundle: openstack-cinder-volume [cluster.common.tag/rhosp16-openstack-cinder-volume:pcmklatest]
    openstack-cinder-volume-podman-0	(ocf::heartbeat:podman):	 Started controller-0
 
+Only 'private' parameters to stonith-fence_ipmilan-5254005e097a_start_0 on controller-0 changed: 0:0;217:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to stonith-fence_ipmilan-5254005e097a_monitor_60000 on controller-0 changed: 0:0;218:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to stonith-fence_ipmilan-525400985679_start_0 on controller-1 changed: 0:0;223:64:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to stonith-fence_ipmilan-525400985679_monitor_60000 on controller-1 changed: 0:0;224:64:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to stonith-fence_ipmilan-525400afe30e_start_0 on controller-2 changed: 0:0;219:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
+Only 'private' parameters to stonith-fence_ipmilan-525400afe30e_monitor_60000 on controller-2 changed: 0:0;220:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
 Transition Summary:
  * Stop       ovn-dbs-bundle-podman-0                (                     controller-0 )   due to node availability
  * Stop       ovn-dbs-bundle-0                       (                     controller-0 )   due to unrunnable ovn-dbs-bundle-podman-0 start
  * Stop       ovndb_servers:0                        (           Slave ovn-dbs-bundle-0 )   due to unrunnable ovn-dbs-bundle-podman-0 start
  * Promote    ovndb_servers:1                        ( Slave -> Master ovn-dbs-bundle-1 )  
- * Restart    stonith-fence_ipmilan-5254005e097a     (                     controller-0 )   due to resource definition change
- * Restart    stonith-fence_ipmilan-525400afe30e     (                     controller-2 )   due to resource definition change
- * Restart    stonith-fence_ipmilan-525400985679     (                     controller-1 )   due to resource definition change
 
 Executing cluster transition:
  * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-1
  * Pseudo action:   ovn-dbs-bundle-master_pre_notify_stop_0
- * Resource action: stonith-fence_ipmilan-5254005e097a stop on controller-0
- * Resource action: stonith-fence_ipmilan-5254005e097a start on controller-0
- * Resource action: stonith-fence_ipmilan-5254005e097a monitor=60000 on controller-0
- * Resource action: stonith-fence_ipmilan-525400afe30e stop on controller-2
- * Resource action: stonith-fence_ipmilan-525400afe30e start on controller-2
- * Resource action: stonith-fence_ipmilan-525400afe30e monitor=60000 on controller-2
- * Resource action: stonith-fence_ipmilan-525400985679 stop on controller-1
- * Resource action: stonith-fence_ipmilan-525400985679 start on controller-1
- * Resource action: stonith-fence_ipmilan-525400985679 monitor=60000 on controller-1
  * Pseudo action:   ovn-dbs-bundle_stop_0
  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-0
  * Resource action: ovndb_servers   notify on ovn-dbs-bundle-1

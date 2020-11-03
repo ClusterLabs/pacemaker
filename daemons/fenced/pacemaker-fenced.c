@@ -653,7 +653,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         get_rsc_attributes(rsc->parameters, rsc, node, data_set);
         get_meta_attributes(rsc->meta, rsc, node, data_set);
 
-        rsc_provides = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROVIDES);
+        rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
 
         g_hash_table_iter_init(&gIter, rsc->parameters);
         while (g_hash_table_iter_next(&gIter, (gpointer *) & name, (gpointer *) & value)) {
@@ -1331,7 +1331,8 @@ main(int argc, char **argv)
         printf("  </parameter>\n");
 #endif
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTARG);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_ARGUMENT);
         printf
             ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
         printf
@@ -1342,7 +1343,8 @@ main(int argc, char **argv)
         printf("    <content type=\"string\" default=\"port\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTMAP);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_MAP);
         printf
             ("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
         printf
@@ -1350,25 +1352,28 @@ main(int argc, char **argv)
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTLIST);
-        printf
-            ("    <shortdesc lang=\"en\">A list of machines controlled by this device (Optional unless %s=static-list).</shortdesc>\n",
-             STONITH_ATTR_HOSTCHECK);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_LIST);
+        printf("    <shortdesc lang=\"en\">A list of machines controlled by "
+               "this device (Optional unless %s=static-list).</shortdesc>\n",
+               PCMK_STONITH_HOST_CHECK);
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTCHECK);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_CHECK);
         printf
             ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
         printf("    <longdesc lang=\"en\">Allowed values: dynamic-list "
                "(query the device via the 'list' command), static-list "
-               "(check the " STONITH_ATTR_HOSTLIST " attribute), status "
+               "(check the " PCMK_STONITH_HOST_LIST " attribute), status "
                "(query the device via the 'status' command), none (assume "
                "every device can fence every machine)</longdesc>\n");
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_MAX);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_DELAY_MAX);
         printf
             ("    <shortdesc lang=\"en\">Enable a random delay for stonith actions and specify the maximum of random delay.</shortdesc>\n");
         printf
@@ -1378,7 +1383,8 @@ main(int argc, char **argv)
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_BASE);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_DELAY_BASE);
         printf
             ("    <shortdesc lang=\"en\">Enable a base delay for stonith actions and specify base delay value.</shortdesc>\n");
         printf
@@ -1388,7 +1394,8 @@ main(int argc, char **argv)
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_ACTION_LIMIT);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_ACTION_LIMIT);
         printf
             ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
         printf
@@ -1507,7 +1514,8 @@ main(int argc, char **argv)
         xmlNode *xml;
         stonith_key_value_t *params = NULL;
 
-        params = stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, stonith_our_uname);
+        params = stonith_key_value_add(params, PCMK_STONITH_HOST_LIST,
+                                       stonith_our_uname);
 
         xml = create_device_registration_xml("watchdog", st_namespace_internal,
                                              STONITH_WATCHDOG_AGENT, params,

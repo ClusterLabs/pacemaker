@@ -2066,9 +2066,9 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
         const char *ra_version = NULL;
 #endif
 
-        const char *op_version;
+        const char *op_version = NULL;
         const char *restart_list = NULL;
-        const char *secure_list = " passwd password ";
+        const char *secure_list = NULL;
 
         data = calloc(1, sizeof(op_digest_cache_t));
         CRM_ASSERT(data != NULL);
@@ -2102,6 +2102,7 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
 #endif
 
         } else {
+            secure_list = " passwd password user ";
             op_version = CRM_FEATURE_SET;
         }
 
@@ -2123,9 +2124,34 @@ rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
         data->digest_all_calc = calculate_operation_digest(data->params_all, op_version);
 
         if (calc_secure) {
-            data->params_secure = copy_xml(data->params_all);
+            const char *class = crm_element_value(rsc->xml,
+                                                  XML_AGENT_ATTR_CLASS);
+
+            /* The controller doesn't create a digest of *all* non-sensitive
+             * parameters, only those listed in resource agent meta-data. The
+             * equivalent here is rsc->parameters.
+             */
+            data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
+            g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
             if(secure_list) {
                 filter_parameters(data->params_secure, secure_list, FALSE);
+            }
+            if (pcmk_is_set(pcmk_get_ra_caps(class),
+                            pcmk_ra_cap_fence_params)) {
+                /* For stonith resources, Pacemaker adds special parameters,
+                 * but these are not listed in fence agent meta-data, so the
+                 * controller will not hash them. That means we have to filter
+                 * them out before calculating our hash for comparison.
+                 */
+                for (xmlAttrPtr iter = data->params_secure->properties;
+                     iter != NULL; ) {
+                    const char *prop_name = (const char *) iter->name;
+
+                    iter = iter->next; // Grab next now in case we remove current
+                    if (pcmk_stonith_param(prop_name)) {
+                        xml_remove_prop(data->params_secure, prop_name);
+                    }
+                }
             }
             data->digest_secure_calc = calculate_operation_digest(data->params_secure, op_version);
         }
@@ -2357,7 +2383,8 @@ find_unfencing_devices(GListPtr candidates, GListPtr matches)
 {
     for (GListPtr gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *candidate = gIter->data;
-        const char *provides = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_PROVIDES);
+        const char *provides = g_hash_table_lookup(candidate->meta,
+                                                   PCMK_STONITH_PROVIDES);
         const char *requires = g_hash_table_lookup(candidate->meta, XML_RSC_ATTR_REQUIRES);
 
         if(candidate->children) {

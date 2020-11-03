@@ -169,7 +169,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
 
 // nvpair with provides or requires set to unfencing
 #define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR                \
-    "[(@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_PROVIDES "'"    \
+    "[(@" XML_NVPAIR_ATTR_NAME "='" PCMK_STONITH_PROVIDES "'"    \
     "or @" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_REQUIRES "') " \
     "and @" XML_NVPAIR_ATTR_VALUE "='unfencing']"
 

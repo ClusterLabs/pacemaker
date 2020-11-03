@@ -1,1 +1,1 @@
-SUBDIRS = cmdline flags operations strings utils
+SUBDIRS = agents cmdline flags operations strings utils
