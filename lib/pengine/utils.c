@@ -2216,7 +2216,7 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
  *
  * \return Pointer to new digest cache entry (or NULL on memory error)
  * \note It is the caller's responsibility to free the result using
- *       destroy_digest_cache().
+ *       pe__free_digests().
  */
 op_digest_cache_t *
 pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
