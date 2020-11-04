@@ -229,7 +229,7 @@ is the equivalent of the following constraint configuration:
      </resource_set>
    </rsc_order>
 
-.. _s-reusing-config-elements::
+.. _s-reusing-config-elements:
 
 Reusing Rules, Options and Sets of Operations
 #############################################
@@ -251,14 +251,14 @@ So if for one resource you have
 
 Then instead of duplicating the rule for all your other resources, you can instead specify:
 
-.. topic:: Referencing rules from other constraints
+.. topic:: **Referencing rules from other constraints**
 
-.. code-block:: xml
-
-   <rsc_location id="WebDB-connectivity" rsc="WebDB">
-      <rule id-ref="ping-prefer-rule"/>
-   </rsc_location>
-
+   .. code-block:: xml
+   
+      <rsc_location id="WebDB-connectivity" rsc="WebDB">
+         <rule id-ref="ping-prefer-rule"/>
+      </rsc_location>
+   
 .. important::
 
    The cluster will insist that the ``rule`` exists somewhere.  Attempting
