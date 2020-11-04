@@ -85,6 +85,12 @@ g_list_free_full(GList * list, GDestroyNotify free_func)
 }
 #  endif
 
+#  if !GLIB_CHECK_VERSION(2,38,0)
+#    define g_assert_true(expr) g_assert_cmpint((expr), ==, TRUE)
+#    define g_assert_false(expr) g_assert_cmpint((expr), !=, TRUE)
+#    define g_assert_null(expr)  g_assert_cmpint((expr) == NULL, ==, TRUE)
+#  endif
+
 #  if SUPPORT_DBUS
 #    ifndef HAVE_DBUSBASICVALUE
 #      include <stdint.h>

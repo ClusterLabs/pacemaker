@@ -15,22 +15,22 @@
 static void
 is_stonith_param(void)
 {
-    g_assert_cmpint(pcmk_stonith_param(NULL), ==, false);
-    g_assert_cmpint(pcmk_stonith_param(""), ==, false);
-    g_assert_cmpint(pcmk_stonith_param("unrecognized"), ==, false);
-    g_assert_cmpint(pcmk_stonith_param("pcmk_unrecognized"), ==, false);
-    g_assert_cmpint(pcmk_stonith_param("x" PCMK_STONITH_ACTION_LIMIT), ==, false);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_ACTION_LIMIT "x"), ==, false);
+    g_assert_false(pcmk_stonith_param(NULL));
+    g_assert_false(pcmk_stonith_param(""));
+    g_assert_false(pcmk_stonith_param("unrecognized"));
+    g_assert_false(pcmk_stonith_param("pcmk_unrecognized"));
+    g_assert_false(pcmk_stonith_param("x" PCMK_STONITH_ACTION_LIMIT));
+    g_assert_false(pcmk_stonith_param(PCMK_STONITH_ACTION_LIMIT "x"));
 
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_ACTION_LIMIT), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_DELAY_BASE), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_DELAY_MAX), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_HOST_ARGUMENT), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_HOST_CHECK), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_HOST_LIST), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_HOST_MAP), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_PROVIDES), ==, true);
-    g_assert_cmpint(pcmk_stonith_param(PCMK_STONITH_STONITH_TIMEOUT), ==, true);
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_ACTION_LIMIT));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_DELAY_BASE));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_DELAY_MAX));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_ARGUMENT));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_CHECK));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_LIST));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_MAP));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_PROVIDES));
+    g_assert_true(pcmk_stonith_param(PCMK_STONITH_STONITH_TIMEOUT));
 }
 
 static void
@@ -39,10 +39,10 @@ is_stonith_action_param(void)
     /* Currently, the function accepts any string not containing underbars as
      * the action name, so we do not need to verify particular action names.
      */
-    g_assert_cmpint(pcmk_stonith_param("pcmk_on_unrecognized"), ==, false);
-    g_assert_cmpint(pcmk_stonith_param("pcmk_on_action"), ==, true);
-    g_assert_cmpint(pcmk_stonith_param("pcmk_on_timeout"), ==, true);
-    g_assert_cmpint(pcmk_stonith_param("pcmk_on_retries"), ==, true);
+    g_assert_false(pcmk_stonith_param("pcmk_on_unrecognized"));
+    g_assert_true(pcmk_stonith_param("pcmk_on_action"));
+    g_assert_true(pcmk_stonith_param("pcmk_on_timeout"));
+    g_assert_true(pcmk_stonith_param("pcmk_on_retries"));
 }
 
 int
