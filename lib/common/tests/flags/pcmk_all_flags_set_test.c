@@ -13,19 +13,19 @@
 
 static void
 all_set(void) {
-    g_assert_cmpint(pcmk_all_flags_set(0x000, 0x003), ==, false);
-    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x003), ==, true);
-    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x010), ==, false);
-    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x011), ==, false);
-    g_assert_cmpint(pcmk_all_flags_set(0x000, 0x000), ==, true);
-    g_assert_cmpint(pcmk_all_flags_set(0x00f, 0x000), ==, true);
+    g_assert_false(pcmk_all_flags_set(0x000, 0x003));
+    g_assert_true(pcmk_all_flags_set(0x00f, 0x003));
+    g_assert_false(pcmk_all_flags_set(0x00f, 0x010));
+    g_assert_false(pcmk_all_flags_set(0x00f, 0x011));
+    g_assert_true(pcmk_all_flags_set(0x000, 0x000));
+    g_assert_true(pcmk_all_flags_set(0x00f, 0x000));
 }
 
 static void
 one_is_set(void) {
     // pcmk_is_set() is a simple macro alias for pcmk_all_flags_set()
-    g_assert_cmpint(pcmk_is_set(0x00f, 0x001), ==, true);
-    g_assert_cmpint(pcmk_is_set(0x00f, 0x010), ==, false);
+    g_assert_true(pcmk_is_set(0x00f, 0x001));
+    g_assert_false(pcmk_is_set(0x00f, 0x010));
 }
 
 int

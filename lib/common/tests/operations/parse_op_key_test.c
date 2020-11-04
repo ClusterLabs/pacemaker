@@ -10,7 +10,7 @@ basic(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("Fencing_monitor_60000", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("Fencing_monitor_60000", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "Fencing");
     g_assert_cmpstr(ty, ==, "monitor");
     g_assert_cmpint(ms, ==, 60000);
@@ -25,14 +25,14 @@ colon_in_rsc(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("ClusterIP:0_start_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("ClusterIP:0_start_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "ClusterIP:0");
     g_assert_cmpstr(ty, ==, "start");
     g_assert_cmpint(ms, ==, 0);
     free(rsc);
     free(ty);
 
-    g_assert_cmpint(parse_op_key("imagestoreclone:1_post_notify_stop_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("imagestoreclone:1_post_notify_stop_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "imagestoreclone:1");
     g_assert_cmpstr(ty, ==, "post_notify_stop");
     g_assert_cmpint(ms, ==, 0);
@@ -47,14 +47,14 @@ dashes_in_rsc(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("httpd-bundle-0_monitor_30000", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("httpd-bundle-0_monitor_30000", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "httpd-bundle-0");
     g_assert_cmpstr(ty, ==, "monitor");
     g_assert_cmpint(ms, ==, 30000);
     free(rsc);
     free(ty);
 
-    g_assert_cmpint(parse_op_key("httpd-bundle-ip-192.168.122.132_start_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("httpd-bundle-ip-192.168.122.132_start_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "httpd-bundle-ip-192.168.122.132");
     g_assert_cmpstr(ty, ==, "start");
     g_assert_cmpint(ms, ==, 0);
@@ -69,21 +69,21 @@ migrate_to_from(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("vm_migrate_from_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("vm_migrate_from_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "vm");
     g_assert_cmpstr(ty, ==, "migrate_from");
     g_assert_cmpint(ms, ==, 0);
     free(rsc);
     free(ty);
 
-    g_assert_cmpint(parse_op_key("vm_migrate_to_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("vm_migrate_to_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "vm");
     g_assert_cmpstr(ty, ==, "migrate_to");
     g_assert_cmpint(ms, ==, 0);
     free(rsc);
     free(ty);
 
-    g_assert_cmpint(parse_op_key("vm_idcc_devel_migrate_to_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("vm_idcc_devel_migrate_to_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "vm_idcc_devel");
     g_assert_cmpstr(ty, ==, "migrate_to");
     g_assert_cmpint(ms, ==, 0);
@@ -98,21 +98,21 @@ pre_post(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("rsc_drbd_7788:1_post_notify_start_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("rsc_drbd_7788:1_post_notify_start_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "rsc_drbd_7788:1");
     g_assert_cmpstr(ty, ==, "post_notify_start");
     g_assert_cmpint(ms, ==, 0);
     free(rsc);
     free(ty);
 
-    g_assert_cmpint(parse_op_key("rabbitmq-bundle-clone_pre_notify_stop_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("rabbitmq-bundle-clone_pre_notify_stop_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "rabbitmq-bundle-clone");
     g_assert_cmpstr(ty, ==, "pre_notify_stop");
     g_assert_cmpint(ms, ==, 0);
     free(rsc);
     free(ty);
 
-    g_assert_cmpint(parse_op_key("post_notify_start_0", &rsc, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("post_notify_start_0", &rsc, &ty, &ms));
     g_assert_cmpstr(rsc, ==, "post_notify");
     g_assert_cmpstr(ty, ==, "start");
     g_assert_cmpint(ms, ==, 0);
@@ -126,7 +126,7 @@ skip_rsc(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("Fencing_monitor_60000", NULL, &ty, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("Fencing_monitor_60000", NULL, &ty, &ms));
     g_assert_cmpstr(ty, ==, "monitor");
     g_assert_cmpint(ms, ==, 60000);
     free(ty);
@@ -138,7 +138,7 @@ skip_ty(void)
     char *rsc = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("Fencing_monitor_60000", &rsc, NULL, &ms), ==, TRUE);
+    g_assert_true(parse_op_key("Fencing_monitor_60000", &rsc, NULL, &ms));
     g_assert_cmpstr(rsc, ==, "Fencing");
     g_assert_cmpint(ms, ==, 60000);
     free(rsc);
@@ -150,7 +150,7 @@ skip_ms(void)
     char *rsc = NULL;
     char *ty = NULL;
 
-    g_assert_cmpint(parse_op_key("Fencing_monitor_60000", &rsc, &ty, NULL), ==, TRUE);
+    g_assert_true(parse_op_key("Fencing_monitor_60000", &rsc, &ty, NULL));
     g_assert_cmpstr(rsc, ==, "Fencing");
     g_assert_cmpstr(ty, ==, "monitor");
     free(rsc);
@@ -164,14 +164,14 @@ empty_input(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("", &rsc, &ty, &ms), ==, FALSE);
-    g_assert_cmpint(rsc == NULL, ==, TRUE);
-    g_assert_cmpint(ty == NULL, ==, TRUE);
+    g_assert_false(parse_op_key("", &rsc, &ty, &ms));
+    g_assert_null(rsc);
+    g_assert_null(ty);
     g_assert_cmpint(ms, ==, 0);
 
-    g_assert_cmpint(parse_op_key(NULL, &rsc, &ty, &ms), ==, FALSE);
-    g_assert_cmpint(rsc == NULL, ==, TRUE);
-    g_assert_cmpint(ty == NULL, ==, TRUE);
+    g_assert_false(parse_op_key(NULL, &rsc, &ty, &ms));
+    g_assert_null(rsc);
+    g_assert_null(ty);
     g_assert_cmpint(ms, ==, 0);
 }
 
@@ -182,19 +182,19 @@ malformed_input(void)
     char *ty = NULL;
     guint ms = 0;
 
-    g_assert_cmpint(parse_op_key("httpd-bundle-0", &rsc, &ty, &ms), ==, FALSE);
-    g_assert_cmpint(rsc == NULL, ==, TRUE);
-    g_assert_cmpint(ty == NULL, ==, TRUE);
+    g_assert_false(parse_op_key("httpd-bundle-0", &rsc, &ty, &ms));
+    g_assert_null(rsc);
+    g_assert_null(ty);
     g_assert_cmpint(ms, ==, 0);
 
-    g_assert_cmpint(parse_op_key("httpd-bundle-0_monitor", &rsc, &ty, &ms), ==, FALSE);
-    g_assert_cmpint(rsc == NULL, ==, TRUE);
-    g_assert_cmpint(ty == NULL, ==, TRUE);
+    g_assert_false(parse_op_key("httpd-bundle-0_monitor", &rsc, &ty, &ms));
+    g_assert_null(rsc);
+    g_assert_null(ty);
     g_assert_cmpint(ms, ==, 0);
 
-    g_assert_cmpint(parse_op_key("httpd-bundle-0_30000", &rsc, &ty, &ms), ==, FALSE);
-    g_assert_cmpint(rsc == NULL, ==, TRUE);
-    g_assert_cmpint(ty == NULL, ==, TRUE);
+    g_assert_false(parse_op_key("httpd-bundle-0_30000", &rsc, &ty, &ms));
+    g_assert_null(rsc);
+    g_assert_null(ty);
     g_assert_cmpint(ms, ==, 0);
 }
 

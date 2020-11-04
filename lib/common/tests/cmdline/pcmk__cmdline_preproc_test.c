@@ -19,7 +19,7 @@
 
 static void
 empty_input(void) {
-    g_assert_cmpint(pcmk__cmdline_preproc(NULL, "") == NULL, ==, TRUE);
+    g_assert_null(pcmk__cmdline_preproc(NULL, ""));
 }
 
 static void
