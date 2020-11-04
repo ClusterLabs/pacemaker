@@ -2547,18 +2547,17 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
 
-    bool allowed = false;
-
 #if ENABLE_ACL
     /* IPC commands related to fencing configuration may be done only by
      * privileged users (i.e. root or hacluster) when ACLs are supported,
      * because all other users should go through the CIB to have ACLs applied.
+     *
+     * If no client was given, this is a peer request, which is always allowed.
      */
-    if (client != NULL) {
-        allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
-    }
+    bool allowed = (client == NULL)
+                   || pcmk_is_set(client->flags, pcmk__client_privileged);
 #else
-    allowed = true;
+    bool allowed = true;
 #endif
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
