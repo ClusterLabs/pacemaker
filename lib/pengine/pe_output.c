@@ -1284,6 +1284,109 @@ pe__node_attribute_html(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-and-op", "pe_working_set_t *", "xmlNodePtr")
+int
+pe__node_and_op(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
+
+    pe_resource_t *rsc = NULL;
+    gchar *node_str = NULL;
+    char *last_change_str = NULL;
+
+    const char *op_rsc = crm_element_value(xml_op, "resource");
+    const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    int status = crm_parse_int(status_s, "0");
+    time_t last_change = 0;
+
+    rsc = pe_find_resource(data_set->resources, op_rsc);
+
+    if (rsc) {
+        pe_node_t *node = pe__current_node(rsc);
+        const char *target_role = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+        int opts = pe_print_rsconly | pe_print_pending;
+
+        if (node == NULL) {
+            node = rsc->pending_node;
+        }
+
+        node_str = pcmk__native_output_string(rsc, rsc_printable_id(rsc), node,
+                                              opts, target_role, false);
+    } else {
+        node_str = crm_strdup_printf("Unknown resource %s", op_rsc);
+    }
+
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change) == pcmk_ok) {
+        last_change_str = crm_strdup_printf(", %s=%s, exec=%sms",
+                                            XML_RSC_OP_LAST_CHANGE,
+                                            crm_strip_trailing_newline(ctime(&last_change)),
+                                            crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+    }
+
+    out->list_item(out, NULL, "%s: %s (node=%s, call=%s, rc=%s%s): %s",
+                   node_str, op_key ? op_key : ID(xml_op),
+                   crm_element_value(xml_op, XML_ATTR_UNAME),
+                   crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                   crm_element_value(xml_op, XML_LRM_ATTR_RC),
+                   last_change_str ? last_change_str : "",
+                   services_lrm_status_str(status));
+
+    g_free(node_str);
+    free(last_change_str);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-and-op", "pe_working_set_t *", "xmlNodePtr")
+int
+pe__node_and_op_xml(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
+
+    pe_resource_t *rsc = NULL;
+    const char *op_rsc = crm_element_value(xml_op, "resource");
+    const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    int status = crm_parse_int(status_s, "0");
+    time_t last_change = 0;
+
+    xmlNode *node = pcmk__output_create_xml_node(out, "operation");
+
+    rsc = pe_find_resource(data_set->resources, op_rsc);
+
+    if (rsc) {
+        const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+        const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+        char *agent_tuple = NULL;
+
+        agent_tuple = crm_strdup_printf("%s:%s:%s", class,
+                                        pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider) ? crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER) : "",
+                                        kind);
+
+        xmlSetProp(node, (pcmkXmlStr) "rsc", (pcmkXmlStr) rsc_printable_id(rsc));
+        xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent_tuple);
+        free(agent_tuple);
+    }
+
+    xmlSetProp(node, (pcmkXmlStr) "op", (pcmkXmlStr) (op_key ? op_key : ID(xml_op)));
+    xmlSetProp(node, (pcmkXmlStr) "node", (pcmkXmlStr) crm_element_value(xml_op, XML_ATTR_UNAME));
+    xmlSetProp(node, (pcmkXmlStr) "call", (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
+    xmlSetProp(node, (pcmkXmlStr) "rc", (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_RC));
+
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change) == pcmk_ok) {
+        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE,
+                   (pcmkXmlStr) crm_strip_trailing_newline(ctime(&last_change)));
+        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_EXEC,
+                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+    }
+
+    xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) services_lrm_status_str(status));
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
 int
 pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
@@ -1583,6 +1686,26 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "gboolean")
+int pe__resource_config(pcmk__output_t *out, va_list args) {
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    gboolean raw = va_arg(args, gboolean);
+
+    char *rsc_xml = NULL;
+
+    if (raw) {
+        rsc_xml = dump_xml_formatted(rsc->orig_xml ? rsc->orig_xml : rsc->xml);
+    } else {
+        rsc_xml = dump_xml_formatted(rsc->xml);
+    }
+
+    out->info(out, "Resource XML:");
+    out->output_xml(out, "xml", rsc_xml);
+
+    free(rsc_xml);
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "gboolean", "int", "time_t", "gboolean")
 int
 pe__resource_history_text(pcmk__output_t *out, va_list args) {
@@ -1858,6 +1981,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node", "log", pe__node_text },
     { "node", "text", pe__node_text },
     { "node", "xml", pe__node_xml },
+    { "node-and-op", "default", pe__node_and_op },
+    { "node-and-op", "xml", pe__node_and_op_xml },
     { "node-list", "html", pe__node_list_html },
     { "node-list", "log", pe__node_list_text },
     { "node-list", "text", pe__node_list_text },
@@ -1872,6 +1997,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
     { "primitive", "log",  pe__resource_text },
+    { "resource-config", "default", pe__resource_config },
     { "resource-history", "default", pe__resource_history_text },
     { "resource-history", "xml", pe__resource_history_xml },
     { "resource-list", "default", pe__resource_list },

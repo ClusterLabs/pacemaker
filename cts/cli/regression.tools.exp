@@ -876,9 +876,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
 * Passed: crm_resource   - Create another resource meta attribute
 =#=#=#= Begin test: Show why a resource is not running =#=#=#=
 Resource dummy is not running
-
-  * Configuration specifies 'dummy' should remain stopped
-
+Configuration specifies 'dummy' should remain stopped
 =#=#=#= End test: Show why a resource is not running - OK (0) =#=#=#=
 * Passed: crm_resource   - Show why a resource is not running
 =#=#=#= Begin test: Remove another resource meta attribute =#=#=#=
@@ -926,7 +924,8 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 =#=#=#= End test: Create a resource attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Create a resource attribute
 =#=#=#= Begin test: List the configured resources =#=#=#=
- dummy	(ocf::pacemaker:Dummy):	 Stopped
+Full List of Resources:
+  * dummy	(ocf::pacemaker:Dummy):	 Stopped
 =#=#=#= Current cib after: List the configured resources =#=#=#=
 <cib epoch="19" num_updates="0" admin_epoch="1">
   <configuration>
@@ -970,15 +969,14 @@ dummy
 =#=#=#= End test: List IDs of instantiated resources - OK (0) =#=#=#=
 * Passed: crm_resource   - List IDs of instantiated resources
 =#=#=#= Begin test: Show XML configuration of resource =#=#=#=
- dummy	(ocf::pacemaker:Dummy):	 Stopped
-xml:
+dummy	(ocf::pacemaker:Dummy):	 Stopped
+Resource XML:
 <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
   <meta_attributes id="dummy-meta_attributes"/>
   <instance_attributes id="dummy-instance_attributes">
     <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
   </instance_attributes>
 </primitive>
-
 =#=#=#= End test: Show XML configuration of resource - OK (0) =#=#=#=
 * Passed: crm_resource   - Show XML configuration of resource
 =#=#=#= Begin test: Require a destination when migrating a resource that is stopped =#=#=#=
@@ -2003,12 +2001,13 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= End test: Ban dummy from node1 - OK (0) =#=#=#=
 * Passed: crm_resource   - Ban dummy from node1
 =#=#=#= Begin test: Show where a resource is running =#=#=#=
-resource dummy is running on: node1 
+resource dummy is running on: node1
 =#=#=#= End test: Show where a resource is running - OK (0) =#=#=#=
 * Passed: crm_resource   - Show where a resource is running
 =#=#=#= Begin test: Show constraints on a resource =#=#=#=
-* dummy
-  : Node node1                                                                   (score=-INFINITY, id=cli-ban-dummy-on-node1)
+dummy:
+  * Locations:
+    * Node node1 (score=-INFINITY, id=cli-ban-dummy-on-node1)
 =#=#=#= End test: Show constraints on a resource - OK (0) =#=#=#=
 * Passed: crm_resource   - Show constraints on a resource
 =#=#=#= Begin test: Ban dummy from node2 =#=#=#=
@@ -3223,10 +3222,10 @@ Migration will take effect until:
 =#=#=#= End test: Try to move a resource previously moved with a lifetime - OK (0) =#=#=#=
 * Passed: crm_resource   - Try to move a resource previously moved with a lifetime
 =#=#=#= Begin test: Ban dummy from node1 for a short time =#=#=#=
+Migration will take effect until:
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
-Migration will take effect until:
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
 <cib epoch="53" num_updates="0" admin_epoch="1">
   <configuration>

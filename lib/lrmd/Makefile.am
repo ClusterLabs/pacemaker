@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2018 the Pacemaker project contributors
+# Copyright 2012-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,4 +18,4 @@ liblrmd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 liblrmd_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/services/libcrmservice.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la
-liblrmd_la_SOURCES	= lrmd_client.c proxy_common.c lrmd_alerts.c
+liblrmd_la_SOURCES	= lrmd_client.c proxy_common.c lrmd_alerts.c lrmd_output.c
