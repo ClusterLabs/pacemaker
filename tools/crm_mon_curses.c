@@ -365,32 +365,6 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
-static int
-cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
-    unsigned long long flags = va_arg(args, unsigned long long);
-
-    int rc;
-
-    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
-        printw("\n              *** Resource management is DISABLED ***");
-        printw("\n  The cluster will not attempt to start, stop or recover services");
-        printw("\n");
-        rc = pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
-        printw("\n    *** Resource management is DISABLED ***");
-        printw("\n  The cluster will keep all resources stopped");
-        printw("\n");
-        rc = pcmk_rc_ok;
-    } else {
-        rc = pcmk_rc_no_output;
-    }
-
-    clrtoeol();
-    refresh();
-    return rc;
-}
-
 static pcmk__message_entry_t fmt_functions[] = {
     { "ban", "console", pe__ban_text },
     { "bundle", "console", pe__bundle_text },
@@ -406,7 +380,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "fencing-history", "console", stonith__history },
     { "full-fencing-history", "console", stonith__full_history },
     { "group", "console", pe__group_text },
-    { "maint-mode", "console", cluster_maint_mode_console },
+    { "maint-mode", "console", pe__cluster_maint_mode_text },
     { "node", "console", pe__node_text },
     { "node-attribute", "console", pe__node_attribute_text },
     { "node-list", "console", pe__node_list_text },
