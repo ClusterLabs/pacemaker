@@ -124,6 +124,7 @@ append_all_versioned_params(pe_resource_t *rsc, pe_node_t *node,
  * \param[out]    data         Digest cache entry to modify
  * \param[in]     rsc          Resource that action was for
  * \param[in]     node         Node action was performed on
+ * \param[in]     params       Resource parameters evaluated for node
  * \param[in]     task         Name of action performed
  * \param[in,out] interval_ms  Action's interval (will be reset if in overrides)
  * \param[in]     xml_op       XML of operation in CIB status (if available)
@@ -133,14 +134,12 @@ append_all_versioned_params(pe_resource_t *rsc, pe_node_t *node,
  */
 static void
 calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
-                      pe_node_t *node, const char *task, guint *interval_ms,
+                      pe_node_t *node, GHashTable *params,
+                      const char *task, guint *interval_ms,
                       xmlNode *xml_op, const char *op_version,
                       GHashTable *overrides, pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
-    GHashTable *local_rsc_params = crm_str_table_new();
-
-    get_rsc_attributes(local_rsc_params, rsc, node, data_set);
 
     data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
 
@@ -174,7 +173,7 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     if (overrides != NULL) {
         g_hash_table_foreach(overrides, hash2field, data->params_all);
     }
-    g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
+    g_hash_table_foreach(params, hash2field, data->params_all);
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
 
@@ -184,7 +183,6 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
 
     pcmk__filter_op_for_digest(data->params_all);
 
-    g_hash_table_destroy(local_rsc_params);
     pe_free_action(action);
 
     data->digest_all_calc = calculate_operation_digest(data->params_all,
@@ -204,14 +202,15 @@ is_fence_param(xmlAttrPtr attr, void *user_data)
  *
  * \param[out] data        Digest cache entry to modify
  * \param[in]  rsc         Resource that action was for
+ * \param[in]  params      Resource parameters evaluated for node
  * \param[in]  xml_op      XML of operation in CIB status (if available)
  * \param[in]  op_version  CRM feature set to use for digest calculation
  * \param[in]  overrides   Key/value hash table to override resource parameters
  */
 static void
 calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
-                        xmlNode *xml_op, const char *op_version,
-                        GHashTable *overrides)
+                        GHashTable *params, xmlNode *xml_op,
+                        const char *op_version, GHashTable *overrides)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *secure_list = NULL;
@@ -222,16 +221,12 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
     }
 
-    /* The controller doesn't create a digest of *all* non-sensitive
-     * parameters, only those listed in resource agent meta-data. The
-     * equivalent here is rsc->parameters.
-     */
     data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
     if (overrides != NULL) {
         g_hash_table_foreach(overrides, hash2field, data->params_secure);
     }
 
-    g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
+    g_hash_table_foreach(params, hash2field, data->params_secure);
     if (secure_list != NULL) {
         pcmk__xe_remove_matching_attrs(data->params_secure, attr_not_in_string,
                                        (void *) secure_list);
@@ -328,6 +323,7 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
 {
     op_digest_cache_t *data = calloc(1, sizeof(op_digest_cache_t));
     const char *op_version = CRM_FEATURE_SET;
+    GHashTable *params = NULL;
 
     if (data == NULL) {
         return NULL;
@@ -336,10 +332,12 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     }
 
-    calculate_main_digest(data, rsc, node, task, interval_ms, xml_op,
+    params = pe_rsc_params(rsc, node, data_set);
+    calculate_main_digest(data, rsc, node, params, task, interval_ms, xml_op,
                           op_version, overrides, data_set);
     if (calc_secure) {
-        calculate_secure_digest(data, rsc, xml_op, op_version, overrides);
+        calculate_secure_digest(data, rsc, params, xml_op, op_version,
+                                overrides);
     }
     calculate_restart_digest(data, xml_op, op_version);
     return data;
