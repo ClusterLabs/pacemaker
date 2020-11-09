@@ -2,6 +2,8 @@ sub=crmcommon
 libdir=@libdir@
 includedir=@includedir@/@PACKAGE_TARNAME@
 
+prefix=@prefix@
+exec_prefix=@exec_prefix@
 daemon_group=@CRM_DAEMON_GROUP@
 daemon_user=@CRM_DAEMON_USER@
 daemondir=@CRM_DAEMON_DIR@
