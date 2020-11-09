@@ -63,7 +63,9 @@ script:
 - sudo make install-exec-local || true
 - make
 - make check
-- ./cts/cts-regression -V cli scheduler exec
+- ./cts/cts-cli -V
+- ./cts/cts-scheduler -V
+- sudo ./cts/cts-exec -V --force-wait
 - test $MAINT_EXTRA -eq 0 ||
   { { echo 'looking for presence of control characters...';
       { git ls-files
