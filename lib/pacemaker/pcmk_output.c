@@ -218,7 +218,7 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
 static int locations_list(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc G_GNUC_UNUSED = va_arg(args, pe_resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     GList *lpc = NULL;
     GList *list = rsc->rsc_location;
@@ -280,9 +280,9 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "gboolean")
 static int
 stacks_and_constraints(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc G_GNUC_UNUSED = va_arg(args, pe_resource_t *);
-    pe_working_set_t *data_set G_GNUC_UNUSED = va_arg(args, pe_working_set_t *);
-    gboolean recursive G_GNUC_UNUSED = va_arg(args, gboolean);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    gboolean recursive = va_arg(args, gboolean);
 
     GList *lpc = NULL;
     xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
