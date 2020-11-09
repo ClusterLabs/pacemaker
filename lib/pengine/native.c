@@ -1320,12 +1320,12 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
             }
 
             if (print_all) {
-                out->list_item(out, NULL, " %d/%d\t(%s):\tActive %s",
+                out->list_item(out, NULL, "%d/%d\t(%s):\tActive %s",
                                *active_counter,
                                rsc_counter ? *rsc_counter : 0, type,
                                (*active_counter > 0) && node_name ? node_name : "");
             } else {
-                out->list_item(out, NULL, " %d\t(%s):\tActive %s",
+                out->list_item(out, NULL, "%d\t(%s):\tActive %s",
                                *active_counter, type,
                                (*active_counter > 0) && node_name ? node_name : "");
             }
@@ -1334,7 +1334,7 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
         }
 
         if (print_all && active_counter_all == 0) {
-            out->list_item(out, NULL, " %d/%d\t(%s):\tActive",
+            out->list_item(out, NULL, "%d/%d\t(%s):\tActive",
                            active_counter_all,
                            rsc_counter ? *rsc_counter : 0, type);
             rc = pcmk_rc_ok;

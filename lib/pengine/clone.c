@@ -781,7 +781,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
-        out->list_item(out, NULL, " Masters: [ %s ]", list_text);
+        out->list_item(out, NULL, "Masters: [ %s ]", list_text);
         g_list_free(master_list);
         free(list_text);
         list_text = NULL;
@@ -806,13 +806,13 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if(role == RSC_ROLE_SLAVE) {
-                out->list_item(out, NULL, " Slaves (target-role): [ %s ]", list_text);
+                out->list_item(out, NULL, "Slaves (target-role): [ %s ]", list_text);
             } else {
-                out->list_item(out, NULL, " Slaves: [ %s ]", list_text);
+                out->list_item(out, NULL, "Slaves: [ %s ]", list_text);
             }
 
         } else {
-            out->list_item(out, NULL, " Started: [ %s ]", list_text);
+            out->list_item(out, NULL, "Started: [ %s ]", list_text);
         }
 
         g_list_free(started_list);
@@ -861,7 +861,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (stopped_list != NULL) {
-            out->list_item(out, NULL, " %s: [ %s ]", state, stopped_list);
+            out->list_item(out, NULL, "%s: [ %s ]", state, stopped_list);
             free(stopped_list);
             stopped_list_len = 0;
         }

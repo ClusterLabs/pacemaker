@@ -1890,13 +1890,13 @@ pe__ticket_text(pcmk__output_t *out, va_list args) {
 
     if (ticket->last_granted > -1) {
         char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
-        out->list_item(out, ticket->id, "\t%s%s %s",
+        out->list_item(out, ticket->id, "%s%s %s",
                        ticket->granted ? "granted" : "revoked",
                        ticket->standby ? " [standby]" : "",
                        time);
         free(time);
     } else {
-        out->list_item(out, ticket->id, "\t%s%s",
+        out->list_item(out, ticket->id, "%s%s",
                        ticket->granted ? "granted" : "revoked",
                        ticket->standby ? " [standby]" : "");
     }

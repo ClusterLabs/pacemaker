@@ -480,13 +480,13 @@ Node List:
   * Online: [ cluster01 cluster02 ]
 
 Active Resources:
-  *  1	(ocf::pacemaker:Dummy):	Active cluster02
-  *  1	(stonith:fence_xvm):	Active cluster01
+  * 1	(ocf::pacemaker:Dummy):	Active cluster02
+  * 1	(stonith:fence_xvm):	Active cluster01
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 cluster02 ]
   * Resource Group: exim-group:
-    *  1/1	(lsb:exim):	Active cluster02
-    *  1/1	(ocf::heartbeat:IPaddr):	Active cluster02
+    * 1/1	(lsb:exim):	Active cluster02
+    * 1/1	(ocf::heartbeat:IPaddr):	Active cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
 
@@ -609,16 +609,16 @@ Cluster Summary:
 Node List:
   * Node cluster01: online:
     * Resources:
-      *  1	(lsb:mysql-proxy):	Active 
-      *  1	(ocf::pacemaker:ping):	Active 
-      *  1	(stonith:fence_xvm):	Active 
+      * 1	(lsb:mysql-proxy):	Active 
+      * 1	(ocf::pacemaker:ping):	Active 
+      * 1	(stonith:fence_xvm):	Active 
   * Node cluster02: online:
     * Resources:
-      *  1	(lsb:exim):	Active 
-      *  1	(lsb:mysql-proxy):	Active 
-      *  1	(ocf::heartbeat:IPaddr):	Active 
-      *  1	(ocf::pacemaker:Dummy):	Active 
-      *  1	(ocf::pacemaker:ping):	Active 
+      * 1	(lsb:exim):	Active 
+      * 1	(lsb:mysql-proxy):	Active 
+      * 1	(ocf::heartbeat:IPaddr):	Active 
+      * 1	(ocf::pacemaker:Dummy):	Active 
+      * 1	(ocf::pacemaker:ping):	Active 
 
 Node Attributes:
   * Node: cluster01:
@@ -2857,7 +2857,7 @@ Node List:
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Full List of Resources:
-  *  1/1	(stonith:fence_xvm):	Active cluster01
+  * 1/1	(stonith:fence_xvm):	Active cluster01
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 ]
     * Stopped: [ cluster02 ]
@@ -2865,7 +2865,7 @@ Full List of Resources:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group:
-    *  1/2	(ocf::pacemaker:Dummy):	Active cluster02
+    * 1/2	(ocf::pacemaker:Dummy):	Active cluster02
 
 Node Attributes:
   * Node: cluster01:
@@ -2919,20 +2919,20 @@ Cluster Summary:
 Node List:
   * Node cluster01: online:
     * Resources:
-      *  1	(ocf::heartbeat:IPaddr2):	Active 
-      *  1	(ocf::heartbeat:docker):	Active 
-      *  1	(ocf::pacemaker:ping):	Active 
-      *  1	(ocf::pacemaker:remote):	Active 
-      *  1	(stonith:fence_xvm):	Active 
+      * 1	(ocf::heartbeat:IPaddr2):	Active 
+      * 1	(ocf::heartbeat:docker):	Active 
+      * 1	(ocf::pacemaker:ping):	Active 
+      * 1	(ocf::pacemaker:remote):	Active 
+      * 1	(stonith:fence_xvm):	Active 
   * Node cluster02: online:
     * Resources:
-      *  1	(ocf::heartbeat:IPaddr2):	Active 
-      *  1	(ocf::heartbeat:docker):	Active 
-      *  1	(ocf::pacemaker:Dummy):	Active 
-      *  1	(ocf::pacemaker:remote):	Active 
+      * 1	(ocf::heartbeat:IPaddr2):	Active 
+      * 1	(ocf::heartbeat:docker):	Active 
+      * 1	(ocf::pacemaker:Dummy):	Active 
+      * 1	(ocf::pacemaker:remote):	Active 
   * GuestNode httpd-bundle-0@cluster02: online:
     * Resources:
-      *  1	(ocf::heartbeat:apache):	Active 
+      * 1	(ocf::heartbeat:apache):	Active 
 
 Inactive Resources:
   * Clone Set: ping-clone [ping]:
@@ -2942,7 +2942,7 @@ Inactive Resources:
     * httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group:
-    *  1/2	(ocf::pacemaker:Dummy):	Active cluster02
+    * 1/2	(ocf::pacemaker:Dummy):	Active cluster02
 
 Node Attributes:
   * Node: cluster01:
