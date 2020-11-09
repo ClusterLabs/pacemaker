@@ -376,22 +376,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     return TRUE;
 }
 
-static void
-destroy_digest_cache(gpointer ptr)
-{
-    op_digest_cache_t *data = ptr;
-
-    free_xml(data->params_all);
-    free_xml(data->params_secure);
-    free_xml(data->params_restart);
-
-    free(data->digest_all_calc);
-    free(data->digest_restart_calc);
-    free(data->digest_secure_calc);
-
-    free(data);
-}
-
 pe_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
                const char *score, pe_working_set_t * data_set)
@@ -446,7 +430,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->details->digest_cache = g_hash_table_new_full(crm_str_hash,
                                                             g_str_equal, free,
-                                                            destroy_digest_cache);
+                                                            pe__free_digests);
 
     data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
     return new_node;
