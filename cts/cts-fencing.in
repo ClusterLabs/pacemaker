@@ -227,11 +227,14 @@ class XmlValidationError(TestError):
 class Test(object):
     """ Executor for a single test """
 
-    def __init__(self, name, description, verbose=0, with_cpg=0):
+    def __init__(self, name, description, verbose=0, with_cpg=0, timeout=2, force_wait=0):
         self.name = name
         self.description = description
         self.cmds = []
         self.verbose = verbose
+        self.timeout = timeout
+        self.force_wait = force_wait
+        self.logpath = "/tmp/stonith-regression.log"
 
         self.result_txt = ""
         self.cmd_tool_output = ""
@@ -278,13 +281,42 @@ class Test(object):
             self.stonith_options = self.stonith_options + " -V"
             print("Starting pacemaker-fenced with %s" % self.stonith_options)
 
-        if os.path.exists("/tmp/stonith-regression.log"):
-            os.remove('/tmp/stonith-regression.log')
+        if os.path.exists(self.logpath):
+            os.remove(self.logpath)
 
-        cmd = "pacemaker-fenced %s -l /tmp/stonith-regression.log" % self.stonith_options
+        cmd = "pacemaker-fenced %s -l %s" % (self.stonith_options, self.logpath)
         self.stonith_process = subprocess.Popen(shlex.split(cmd))
 
-        time.sleep(1)
+        logfile = None
+
+        init_time = time.time()
+        update_time = init_time
+
+        while True:
+            time.sleep(0.1)
+
+            if self.force_wait == 0 and logfile == None \
+               and os.path.exists(self.logpath):
+                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
+
+            if self.force_wait == 0 and logfile != None:
+                for line in logfile.readlines():
+                    if "successfully started" in line:
+                        return
+
+            now = time.time()
+
+            if self.timeout > 0 and (now - init_time) >= self.timeout:
+                if self.force_wait == 0:
+                    print("\tDaemon pacemaker-fenced doesn't seem to have been initialized within %fs."
+                          "\n\tConsider specifying a longer '--timeout' value."
+                          %(self.timeout))
+                return
+
+            if self.verbose and (now - update_time) >= 5:
+                print("Waiting for pacemaker-fenced to be initialized: %fs ..."
+                      %(now - init_time))
+                update_time = now
 
     def clean_environment(self):
         """ Clean up the host after executing a test """
@@ -310,7 +342,7 @@ class Test(object):
         # makes fenced output any kind of 8 bit value - while still interesting
         # for debugging and we'd still like the regression-test to go over the
         # full set of test-cases
-        logfile = io.open('/tmp/stonith-regression.log', 'rt', encoding = "ISO-8859-1")
+        logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
         for line in logfile.readlines():
             self.stonith_output = self.stonith_output + line
 
@@ -318,7 +350,7 @@ class Test(object):
             print("Daemon Output Start")
             print(self.stonith_output)
             print("Daemon Output End")
-        os.remove('/tmp/stonith-regression.log')
+        os.remove(self.logpath)
 
     def add_stonith_log_pattern(self, pattern):
         """ Add a log pattern to expect from this test """
@@ -509,15 +541,17 @@ class Test(object):
 class Tests(object):
     """ Collection of all fencing regression tests """
 
-    def __init__(self, verbose=0):
+    def __init__(self, verbose=0, timeout=2, force_wait=0):
         self.tests = []
         self.verbose = verbose
+        self.timeout = timeout
+        self.force_wait = force_wait
         self.autogen_corosync_cfg = not os.path.exists("/etc/corosync/corosync.conf")
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, with_cpg)
+        test = Test(name, description, self.verbose, with_cpg, self.timeout, self.force_wait)
         self.tests.append(test)
         return test
 
@@ -1448,6 +1482,8 @@ class TestOptions(object):
         self.options['run-only'] = ""
         self.options['run-only-pattern'] = ""
         self.options['verbose'] = 0
+        self.options['timeout'] = 2
+        self.options['force-wait'] = 0
         self.options['invalid-arg'] = ""
         self.options['cpg-only'] = 0
         self.options['no-cpg'] = 0
@@ -1468,6 +1504,10 @@ class TestOptions(object):
                 self.options['list-tests'] = 1
             elif args[i] == "-V" or args[i] == "--verbose":
                 self.options['verbose'] = 1
+            elif args[i] == "-t" or args[i] == "--timeout":
+                self.options['timeout'] = float(args[i+1])
+            elif args[i] == "-w" or args[i] == "--force-wait":
+                self.options['force-wait'] = 1
             elif args[i] == "-n" or args[i] == "--no-cpg":
                 self.options['no-cpg'] = 1
             elif args[i] == "-c" or args[i] == "--cpg-only":
@@ -1491,6 +1531,11 @@ class TestOptions(object):
         print("\t [--no-cpg | -n]                      Only run tests that do not require corosync")
         print("\t [--run-only | -r 'testname']         Run a specific test")
         print("\t [--verbose | -V]                     Verbose output")
+        print("\t [--timeout | -t 'floating point number']"
+              "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
+              "\n\t\tDefaults to 2. The value 0 means no limit.")
+        print("\t [--force-wait | -w]"
+              "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_stop'")
         print("\t\t " + sys.argv[0] + " --run-only start_stop")
@@ -1508,7 +1553,8 @@ def main(argv):
 
     use_corosync = 1
 
-    tests = Tests(opts.options['verbose'])
+    tests = Tests(opts.options['verbose'], opts.options['timeout'],
+                  opts.options['force-wait'])
     tests.build_standalone_tests()
     tests.build_custom_timeout_tests()
     tests.build_api_sanity_tests()
