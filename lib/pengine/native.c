@@ -384,15 +384,6 @@ struct print_data_s {
     void *print_data;
 };
 
-static void
-native_print_attr(gpointer key, gpointer value, gpointer user_data)
-{
-    long options = ((struct print_data_s *)user_data)->options;
-    void *print_data = ((struct print_data_s *)user_data)->print_data;
-
-    status_print("Option: %s = %s\n", (char *)key, (char *)value);
-}
-
 static const char *
 native_pending_state(pe_resource_t * rsc)
 {
@@ -507,14 +498,6 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
         if (pending_task) {
             status_print("pending=\"%s\" ", pending_task);
         }
-    }
-
-    if (options & pe_print_dev) {
-        status_print("provisional=\"%s\" ",
-                     pe__rsc_bool_str(rsc, pe_rsc_provisional));
-        status_print("runnable=\"%s\" ", pe__rsc_bool_str(rsc, pe_rsc_runnable));
-        status_print("priority=\"%f\" ", (double)rsc->priority);
-        status_print("variant=\"%s\" ", crm_element_name(rsc->xml));
     }
 
     /* print out the nodes this resource is running on */
@@ -672,18 +655,6 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
         have_flags = add_output_flag(outstr, "failure ignored", have_flags);
     }
-    if (pcmk_is_set(options, pe_print_dev)) {
-        if (pcmk_is_set(options, pe_rsc_provisional)) {
-            have_flags = add_output_flag(outstr, "provisional", have_flags);
-        }
-        if (!pcmk_is_set(options, pe_rsc_runnable)) {
-            have_flags = add_output_flag(outstr, "non-startable", have_flags);
-        }
-        have_flags = add_output_flag(outstr, "variant:", have_flags);
-        g_string_append_printf(outstr, "%s priority:%f",
-                                       crm_element_name(rsc->xml),
-                                       (double) (rsc->priority));
-    }
     if (have_flags) {
         g_string_append(outstr, ")");
     }
@@ -770,42 +741,6 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
         g_free(s);
     }
 
-    if (pcmk_is_set(options, pe_print_details)) {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        out->begin_list(out, NULL, NULL, "Options");
-        g_hash_table_iter_init(&iter, rsc->parameters);
-        while (g_hash_table_iter_next(&iter, &key, &value)) {
-            out->list_item(out, NULL, "Option: %s = %s", (char *) key, (char *) value);
-        }
-        out->end_list(out);
-    }
-
-    if (pcmk_is_set(options, pe_print_dev)) {
-        GHashTableIter iter;
-        pe_node_t *n = NULL;
-
-        out->begin_list(out, NULL, NULL, "Allowed Nodes");
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
-            out->list_item(out, NULL, "%s %d", n->details->uname, n->weight);
-        }
-        out->end_list(out);
-    }
-
-    if (pcmk_is_set(options, pe_print_max_details)) {
-        GHashTableIter iter;
-        pe_node_t *n = NULL;
-
-        out->begin_list(out, NULL, NULL, "=== Allowed Nodes");
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
-            pe__output_node(n, FALSE, out);
-        }
-        out->end_list(out);
-    }
-
     return pcmk_rc_ok;
 }
 
@@ -835,42 +770,6 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
 
         out->list_item(out, NULL, "%s", s);
         g_free(s);
-    }
-
-    if (pcmk_is_set(options, pe_print_details)) {
-        GHashTableIter iter;
-        gpointer key, value;
-
-        out->begin_list(out, NULL, NULL, "Options");
-        g_hash_table_iter_init(&iter, rsc->parameters);
-        while (g_hash_table_iter_next(&iter, &key, &value)) {
-            out->list_item(out, NULL, "Option: %s = %s", (char *) key, (char *) value);
-        }
-        out->end_list(out);
-    }
-
-    if (pcmk_is_set(options, pe_print_dev)) {
-        GHashTableIter iter;
-        pe_node_t *n = NULL;
-
-        out->begin_list(out, NULL, NULL, "Allowed Nodes");
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
-            out->list_item(out, NULL, "%s %d", n->details->uname, n->weight);
-        }
-        out->end_list(out);
-    }
-
-    if (pcmk_is_set(options, pe_print_max_details)) {
-        GHashTableIter iter;
-        pe_node_t *n = NULL;
-
-        out->begin_list(out, NULL, NULL, "=== Allowed Nodes");
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
-            pe__output_node(n, FALSE, out);
-        }
-        out->end_list(out);
     }
 
     return pcmk_rc_ok;
@@ -998,36 +897,6 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
     } else if ((options & pe_print_printf) || (options & pe_print_ncurses)) {
         status_print("\n");
     }
-
-    if (options & pe_print_details) {
-        struct print_data_s pdata;
-
-        pdata.options = options;
-        pdata.print_data = print_data;
-        g_hash_table_foreach(rsc->parameters, native_print_attr, &pdata);
-    }
-
-    if (options & pe_print_dev) {
-        GHashTableIter iter;
-        pe_node_t *n = NULL;
-
-        status_print("%s\tAllowed Nodes", pre_text);
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
-            status_print("%s\t * %s %d", pre_text, n->details->uname, n->weight);
-        }
-    }
-
-    if (options & pe_print_max_details) {
-        GHashTableIter iter;
-        pe_node_t *n = NULL;
-
-        status_print("%s\t=== Allowed Nodes\n", pre_text);
-        g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
-            print_node("\t", n, FALSE);
-        }
-    }
 }
 
 void
@@ -1065,7 +934,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *rsc_state = native_displayable_state(rsc, options);
 
     long is_print_pending = options & pe_print_pending;
-    long is_print_dev = options & pe_print_dev;
 
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
@@ -1090,7 +958,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     nodes_running_on = crm_itoa(g_list_length(rsc->running_on));
     priority = crm_ftoa(rsc->priority);
 
-    rc = pe__name_and_nvpairs_xml(out, true, "resource", 16,
+    rc = pe__name_and_nvpairs_xml(out, true, "resource", 12,
              "id", rsc_printable_id(rsc),
              "resource_agent", ra_name,
              "role", rsc_state,
@@ -1102,11 +970,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
              "nodes_running_on", nodes_running_on,
-             "pending", (is_print_pending? native_pending_task(rsc) : NULL),
-             "provisional", (is_print_dev? pe__rsc_bool_str(rsc, pe_rsc_provisional) : NULL),
-             "runnable", (is_print_dev? pe__rsc_bool_str(rsc, pe_rsc_runnable) : NULL),
-             "priority", (is_print_dev? priority : NULL),
-             "variant", (is_print_dev? crm_element_name(rsc->xml) : NULL));
+             "pending", (is_print_pending? native_pending_task(rsc) : NULL));
     free(priority);
     free(nodes_running_on);
 

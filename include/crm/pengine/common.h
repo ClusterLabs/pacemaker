@@ -109,9 +109,9 @@ enum pe_print_options {
     pe_print_html           = (1 << 1),
     pe_print_ncurses        = (1 << 2),
     pe_print_printf         = (1 << 3),
-    pe_print_dev            = (1 << 4),  // Debugging (@COMPAT probably not useful)
-    pe_print_details        = (1 << 5),
-    pe_print_max_details    = (1 << 6),
+    pe_print_dev            = (1 << 4),  //! \deprecated Ignored
+    pe_print_details        = (1 << 5),  //! \deprecated Ignored
+    pe_print_max_details    = (1 << 6),  //! \deprecated Ignored
     pe_print_rsconly        = (1 << 7),
     pe_print_ops            = (1 << 8),
     pe_print_suppres_nl     = (1 << 9),
