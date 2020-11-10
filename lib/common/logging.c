@@ -251,12 +251,6 @@ crm_add_logfile(const char *filename)
             if (rc < 0) {
                 crm_warn("Cannot change the mode of %s to %o", filename, filemode);
             }
-
-            fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
-                    pcmk_uid, pcmk_gid, filename);
-            if (fflush(logfile) < 0 || fsync(logfd) < 0) {
-                crm_err("Couldn't write out logfile: %s", filename);
-            }
         }
     }
 
