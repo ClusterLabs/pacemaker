@@ -557,8 +557,6 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         return FALSE;
     }
 
-    (*rsc)->parameters = crm_str_table_new();
-
 #if ENABLE_VERSIONED_ATTRS
     (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 #endif
@@ -584,7 +582,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     pe_rsc_trace((*rsc), "Unpacking resource...");
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
-    get_rsc_attributes((*rsc)->parameters, *rsc, NULL, data_set);
+    (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
 #if ENABLE_VERSIONED_ATTRS
     pe_get_versioned_attributes((*rsc)->versioned_parameters, *rsc, NULL, data_set);
 #endif
@@ -808,7 +806,15 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     if (remote_node) {
-        value = g_hash_table_lookup((*rsc)->parameters, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
+        GHashTable *params = pe_rsc_params(*rsc, NULL, data_set);
+
+        /* Grabbing the value now means that any rules based on node attributes
+         * will evaluate to false, so such rules should not be used with
+         * reconnect_interval.
+         *
+         * @TODO Evaluate per node before using
+         */
+        value = g_hash_table_lookup(params, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
@@ -922,9 +928,6 @@ common_free(pe_resource_t * rsc)
     g_list_free(rsc->rsc_tickets);
     g_list_free(rsc->dangling_migrations);
 
-    if (rsc->parameters != NULL) {
-        g_hash_table_destroy(rsc->parameters);
-    }
     if (rsc->parameter_cache != NULL) {
         g_hash_table_destroy(rsc->parameter_cache);
     }

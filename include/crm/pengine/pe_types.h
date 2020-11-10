@@ -358,7 +358,7 @@ struct pe_resource_s {
     enum rsc_role_e next_role;
 
     GHashTable *meta;
-    GHashTable *parameters;
+    GHashTable *parameters; //! \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;
 
     GListPtr children;          /* pe_resource_t*   */
