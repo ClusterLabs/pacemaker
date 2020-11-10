@@ -175,11 +175,8 @@ crm_add_logfile(const char *filename)
     static int default_fd = -1;
     static gboolean have_logfile = FALSE;
 
-    struct stat parent;
     int fd = 0, rc = 0;
     FILE *logfile = NULL;
-    char *parent_dir = NULL;
-    char *filename_cp;
 
     if (filename == NULL && have_logfile == FALSE) {
         filename = DEFAULT_LOG_FILE;
@@ -197,18 +194,6 @@ crm_add_logfile(const char *filename)
     if(is_default && default_fd >= 0) {
         return TRUE;           /* Nothing to do */
     }
-
-    /* Check the parent directory */
-    filename_cp = strdup(filename);
-    parent_dir = dirname(filename_cp);
-    rc = stat(parent_dir, &parent);
-
-    if (rc != 0) {
-        crm_err("Directory '%s' does not exist: logging to '%s' is disabled", parent_dir, filename);
-        free(filename_cp);
-        return FALSE;
-    }
-    free(filename_cp);
 
     errno = 0;
     logfile = fopen(filename, "a");
