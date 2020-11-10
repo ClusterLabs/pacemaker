@@ -198,8 +198,8 @@ crm_add_logfile(const char *filename)
     errno = 0;
     logfile = fopen(filename, "a");
     if(logfile == NULL) {
-        crm_err("%s (%d): Logging to '%s' as uid=%u, gid=%u is disabled",
-                pcmk_strerror(errno), errno, filename, geteuid(), getegid());
+        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " uid=%u gid=%u",
+                 filename, strerror(errno), geteuid(), getegid());
         return FALSE;
     }
 
@@ -215,7 +215,8 @@ crm_add_logfile(const char *filename)
 
         rc = fstat(logfd, &st);
         if (rc < 0) {
-            crm_perror(LOG_WARNING, "Cannot stat %s", filename);
+            crm_warn("Logging to '%s' is disabled: %s " CRM_XS " fstat",
+                     filename, strerror(errno));
             fclose(logfile);
             return FALSE;
         }
@@ -241,15 +242,16 @@ crm_add_logfile(const char *filename)
         if (fix) {
             rc = fchown(logfd, pcmk_uid, pcmk_gid);
             if (rc < 0) {
-                crm_warn("Cannot change the ownership of %s to user %s and gid %d",
-                         filename, CRM_DAEMON_USER, pcmk_gid);
+                crm_warn("Couldn't change '%s' ownership to user %s gid %d: %s",
+                         filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
             }
 	}
 
 	if (filemode) {
             rc = fchmod(logfd, filemode);
             if (rc < 0) {
-                crm_warn("Cannot change the mode of %s to %o", filename, filemode);
+                crm_warn("Couldn't change '%s' mode to %04o: %s",
+                         filename, filemode, strerror(errno));
             }
         }
     }
@@ -259,7 +261,8 @@ crm_add_logfile(const char *filename)
     fd = qb_log_file_open(filename);
 
     if (fd < 0) {
-        crm_perror(LOG_WARNING, "Couldn't send additional logging to %s", filename);
+        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " qb_log_file_open",
+                 filename, strerror(-fd));
         return FALSE;
     }
 
@@ -272,7 +275,7 @@ crm_add_logfile(const char *filename)
         }
 
     } else if(default_fd >= 0) {
-        crm_notice("Switching to %s", filename);
+        crm_notice("Switching logging to %s", filename);
         qb_log_ctl(default_fd, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
 
