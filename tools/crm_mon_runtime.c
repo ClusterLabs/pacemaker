@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,19 +64,6 @@ append_attr_list(GList *attr_list, char *name)
     }
 
     return g_list_insert_sorted(attr_list, name, compare_attribute);
-}
-
-void
-crm_mon_get_parameters(pe_resource_t *rsc, pe_working_set_t * data_set)
-{
-    get_rsc_attributes(rsc->parameters, rsc, NULL, data_set);
-    if(rsc->children) {
-        GListPtr gIter = NULL;
-
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            crm_mon_get_parameters(gIter->data, data_set);
-        }
-    }
 }
 
 /*!
