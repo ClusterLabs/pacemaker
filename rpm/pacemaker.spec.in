@@ -192,10 +192,15 @@
 %define python_site %{?python2_sitelib}%{!?python2_sitelib:%(
   %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %else
+%if %{defined python_version}
+%global python_name python%(echo %{python_version} | cut -d'.' -f1)
+%define python_path %{?__python}%{!?__python:/usr/bin/%{python_name}}
+%else
 %global python_name python
 %global python_path %{?__python}%{!?__python:/usr/bin/python%{?python_pkgversion}}
+%endif
 %define python_site %{?python_sitelib}%{!?python_sitelib:%(
-  python -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+  %{python_name} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %endif
 %endif
 
