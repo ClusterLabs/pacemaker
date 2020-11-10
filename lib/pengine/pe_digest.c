@@ -162,7 +162,6 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     }
     g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
-    g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
 
 #if ENABLE_VERSIONED_ATTRS
