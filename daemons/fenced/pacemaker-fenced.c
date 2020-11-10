@@ -643,6 +643,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         /* Our node is allowed, so update the device information */
         int rc;
         xmlNode *data;
+        GHashTable *rsc_params = NULL;
         GHashTableIter gIter;
         stonith_key_value_t *params = NULL;
 
@@ -651,12 +652,12 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         const char *rsc_provides = NULL;
 
         crm_debug("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
-        get_rsc_attributes(rsc->parameters, rsc, node, data_set);
+        rsc_params = pe_rsc_params(rsc, node, data_set);
         get_meta_attributes(rsc->meta, rsc, node, data_set);
 
         rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
 
-        g_hash_table_iter_init(&gIter, rsc->parameters);
+        g_hash_table_iter_init(&gIter, rsc_params);
         while (g_hash_table_iter_next(&gIter, (gpointer *) & name, (gpointer *) & value)) {
             if (!name || !value) {
                 continue;
