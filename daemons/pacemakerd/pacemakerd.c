@@ -1147,6 +1147,7 @@ main(int argc, char **argv)
     int argerr = 0;
 
     int option_index = 0;
+    bool old_instance_connected = false;
     gboolean shutdown = FALSE;
 
     uid_t pcmk_uid = 0;
@@ -1216,12 +1217,20 @@ main(int argc, char **argv)
 
     crm_debug("Checking for existing Pacemaker instance");
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
-    (void) crm_ipc_connect(old_instance);
+    old_instance_connected = crm_ipc_connect(old_instance);
 
     if (shutdown) {
-        crm_exit(request_shutdown(old_instance));
+        if (old_instance_connected) {
+            crm_exit(request_shutdown(old_instance));
+        } else {
+            crm_err("Could not request shutdown of existing "
+                    "Pacemaker instance: %s", strerror(errno));
+            crm_ipc_close(old_instance);
+            crm_ipc_destroy(old_instance);
+            crm_exit(CRM_EX_DISCONNECT);
+        }
 
-    } else if (crm_ipc_connected(old_instance)) {
+    } else if (old_instance_connected) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("Aborting start-up because active Pacemaker instance found");
