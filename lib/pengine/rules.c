@@ -140,37 +140,6 @@ find_expression_type(xmlNode * expr)
     return attr_expr;
 }
 
-gboolean
-pe_test_role_expression(xmlNode *expr, enum rsc_role_e role, crm_time_t *now)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = role,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    return pe__eval_role_expr(expr, &rule_data);
-}
-
-gboolean
-pe_test_attr_expression(xmlNode *expr, GHashTable *hash, crm_time_t *now,
-                        pe_match_data_t *match_data)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = hash,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = now,
-        .match_data = match_data,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    return pe__eval_attr_expr(expr, &rule_data);
-}
-
 /* As per the nethack rules:
  *
  * moon period = 29.53058 days ~= 30, year = 365.2422 days
@@ -331,38 +300,6 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
     return end;
 }
 
-/*!
- * \internal
- * \brief Test a date expression (pass/fail) for a specific time
- *
- * \param[in]  time_expr    date_expression XML
- * \param[in]  now          Time for which to evaluate expression
- * \param[out] next_change  If not NULL, set to when evaluation will change
- *
- * \return TRUE if date expression is in effect at given time, FALSE otherwise
- */
-gboolean
-pe_test_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    switch (pe__eval_date_expr(expr, &rule_data, next_change)) {
-        case pcmk_rc_within_range:
-        case pcmk_rc_ok:
-            return TRUE;
-
-        default:
-            return FALSE;
-    }
-}
-
 // Set next_change to t if t is earlier
 static void
 crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
@@ -373,31 +310,6 @@ crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
             crm_time_set(next_change, t);
         }
     }
-}
-
-/*!
- * \internal
- * \brief Evaluate a date expression for a specific time
- *
- * \param[in]  time_expr    date_expression XML
- * \param[in]  now          Time for which to evaluate expression
- * \param[out] next_change  If not NULL, set to when evaluation will change
- *
- * \return Standard Pacemaker return code
- */
-int
-pe_eval_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    return pe__eval_date_expr(expr, &rule_data, next_change);
 }
 
 // Information about a block of nvpair elements
@@ -908,7 +820,16 @@ pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_
             break;
 
         case time_expr:
-            accept = pe_test_date_expression(expr, rule_data->now, next_change);
+            switch (pe__eval_date_expr(expr, rule_data, next_change)) {
+                case pcmk_rc_within_range:
+                case pcmk_rc_ok:
+                    accept = TRUE;
+                    break;
+
+                default:
+                    accept = FALSE;
+                    break;
+            }
             break;
 
         case role_expr:
@@ -1104,6 +1025,16 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
     return false;   // Should never reach this point
 }
 
+/*!
+ * \internal
+ * \brief Evaluate a node attribute expression based on #uname, #id, #kind,
+ *        or a generic node attribute
+ *
+ * \param[in] expr       XML of rule expression
+ * \param[in] rule_data  The match_data and node_hash members are used
+ *
+ * \return TRUE if rule_data satisfies the expression, FALSE otherwise
+ */
 gboolean
 pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 {
@@ -1169,8 +1100,16 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
     return accept_attr_expr(h_val, value, type, op);
 }
 
-
-
+/*!
+ * \internal
+ * \brief Evaluate a date_expression
+ *
+ * \param[in]  expr         XML of rule expression
+ * \param[in]  rule_data    Only the now member is used
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code
+ */
 int
 pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
 {
@@ -1285,6 +1224,15 @@ pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data) {
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Evaluate a node attribute expression based on #role
+ *
+ * \param[in] expr       XML of rule expression
+ * \param[in] rule_data  Only the role member is used
+ *
+ * \return TRUE if rule_data->role satisfies the expression, FALSE otherwise
+ */
 gboolean
 pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 {

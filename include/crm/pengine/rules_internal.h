@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the Pacemaker project contributors
+ * Copyright 2015-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,14 +28,6 @@ gboolean pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data);
 gboolean pe__eval_role_expr(xmlNode *expr, pe_rule_eval_data_t *rule_data);
 gboolean pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data);
 
-int pe_eval_date_expression(xmlNode *time_expr,
-                            crm_time_t *now,
-                            crm_time_t *next_change);
-gboolean pe_test_date_expression(xmlNode *time_expr, crm_time_t *now,
-                                 crm_time_t *next_change);
 int pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec);
-gboolean pe_test_attr_expression(xmlNode *expr, GHashTable *hash, crm_time_t *now,
-                                 pe_match_data_t *match_data);
-gboolean pe_test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now);
 
 #endif
