@@ -312,47 +312,27 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
     return NULL;
 }
 
+// create is ignored
 char *
 native_parameter(pe_resource_t * rsc, pe_node_t * node, gboolean create, const char *name,
                  pe_working_set_t * data_set)
 {
     char *value_copy = NULL;
     const char *value = NULL;
-    GHashTable *hash = NULL;
-    GHashTable *local_hash = NULL;
+    GHashTable *params = NULL;
 
     CRM_CHECK(rsc != NULL, return NULL);
     CRM_CHECK(name != NULL && strlen(name) != 0, return NULL);
 
     pe_rsc_trace(rsc, "Looking up %s in %s", name, rsc->id);
-
-    if (create || g_hash_table_size(rsc->parameters) == 0) {
-        if (node != NULL) {
-            pe_rsc_trace(rsc, "Creating hash with node %s", node->details->uname);
-        } else {
-            pe_rsc_trace(rsc, "Creating default hash");
-        }
-
-        local_hash = crm_str_table_new();
-
-        get_rsc_attributes(local_hash, rsc, node, data_set);
-
-        hash = local_hash;
-    } else {
-        hash = rsc->parameters;
-    }
-
-    value = g_hash_table_lookup(hash, name);
+    params = pe_rsc_params(rsc, node, data_set);
+    value = g_hash_table_lookup(params, name);
     if (value == NULL) {
         /* try meta attributes instead */
         value = g_hash_table_lookup(rsc->meta, name);
     }
-
     if (value != NULL) {
         value_copy = strdup(value);
-    }
-    if (local_hash != NULL) {
-        g_hash_table_destroy(local_hash);
     }
     return value_copy;
 }
