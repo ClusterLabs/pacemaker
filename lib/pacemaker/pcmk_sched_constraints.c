@@ -48,6 +48,7 @@ static pe__location_t *generate_location_rule(pe_resource_t *rsc,
                                               crm_time_t *next_change,
                                               pe_working_set_t *data_set,
                                               pe_match_data_t *match_data);
+static void unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 static bool
 evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
@@ -709,11 +710,13 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
     return TRUE;
 }
 
-static gboolean unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role,
-                             const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data);
+static void unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh,
+                                const char *role, const char *score,
+                                pe_working_set_t *data_set,
+                                pe_match_data_t *match_data);
 
-static gboolean
-unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
@@ -721,7 +724,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     if(value) {
         pe_resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, value);
 
-        return unpack_rsc_location(xml_obj, rsc_lh, NULL, NULL, data_set, NULL);
+        unpack_rsc_location(xml_obj, rsc_lh, NULL, NULL, data_set, NULL);
     }
 
     value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
@@ -741,7 +744,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
                              " has invalid value '%s'", id, value);
             regfree(r_patt);
             free(r_patt);
-            return FALSE;
+            return;
         }
 
         for (rIter = data_set->resources; rIter; rIter = rIter->next) {
@@ -787,13 +790,12 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
         regfree(r_patt);
         free(r_patt);
     }
-
-    return FALSE;
 }
 
-static gboolean
-unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role,
-                    const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data)
+static void
+unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
+                    const char *score, pe_working_set_t *data_set,
+                    pe_match_data_t *match_data)
 {
     pe__location_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
@@ -804,7 +806,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
     if (rsc_lh == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                           "does not exist", id, id_lh);
-        return FALSE;
+        return;
     }
 
     if (score == NULL) {
@@ -816,7 +818,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
         pe_node_t *match = pe_find_node(data_set->nodes, node);
 
         if (!match) {
-            return FALSE;
+            return;
         }
         location = rsc2node_new(id, rsc_lh, score_i, discovery, match, data_set);
 
@@ -850,7 +852,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
             pe__update_recheck_time(t, data_set);
         }
         crm_time_free(next_change);
-        return TRUE;
+        return;
     }
 
     if (role == NULL) {
@@ -860,7 +862,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
     if (location && role) {
         if (text2role(role) == RSC_ROLE_UNKNOWN) {
             pe_err("Invalid constraint %s: Bad role %s", id, role);
-            return FALSE;
+            return;
 
         } else {
             enum rsc_role_e r = text2role(role);
@@ -877,8 +879,6 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
             }
         }
     }
-
-    return TRUE;
 }
 
 static gboolean
@@ -992,8 +992,8 @@ unpack_location_set(xmlNode * location, xmlNode * set, pe_working_set_t * data_s
     return TRUE;
 }
 
-gboolean
-unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *set = NULL;
     gboolean any_sets = FALSE;
@@ -1002,7 +1002,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *expanded_xml = NULL;
 
     if (unpack_location_tags(xml_obj, &expanded_xml, data_set) == FALSE) {
-        return FALSE;
+        return;
     }
 
     if (expanded_xml) {
@@ -1020,7 +1020,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
                 if (expanded_xml) {
                     free_xml(expanded_xml);
                 }
-                return FALSE;
+                return;
             }
         }
     }
@@ -1031,10 +1031,8 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (any_sets == FALSE) {
-        return unpack_simple_location(xml_obj, data_set);
+        unpack_simple_location(xml_obj, data_set);
     }
-
-    return TRUE;
 }
 
 static int
