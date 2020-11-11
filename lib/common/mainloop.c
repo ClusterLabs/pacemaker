@@ -860,7 +860,9 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
     CRM_CHECK((ipc != NULL) && (callbacks != NULL), return EINVAL);
 
     if (!crm_ipc_connect(ipc)) {
-        return ENOTCONN;
+        int rc = errno;
+        crm_debug("Connection to %s failed: %d", crm_ipc_name(ipc), errno);
+        return rc;
     }
     *source = mainloop_add_fd(crm_ipc_name(ipc), priority, crm_ipc_get_fd(ipc),
                               userdata, NULL);
@@ -891,6 +893,11 @@ mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                     name, pcmk_rc_str(rc));
         }
         crm_ipc_destroy(ipc);
+        if (rc > 0) {
+            errno = rc;
+        } else {
+            errno = ENOTCONN;
+        }
         return NULL;
     }
     return source;
