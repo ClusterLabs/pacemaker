@@ -1041,6 +1041,7 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
     gboolean attr_allocated = FALSE;
     const char *h_val = NULL;
     GHashTable *table = NULL;
+    bool literal = true;
 
     const char *op = NULL;
     const char *type = NULL;
@@ -1071,18 +1072,22 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
         }
 
         if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
+            literal = false;
             table = rule_data->match_data->params;
         } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
+            literal = false;
             table = rule_data->match_data->meta;
         }
     }
 
-    if (table) {
+    if (!literal) {
         const char *param_name = value;
         const char *param_value = NULL;
 
-        if (param_name && param_name[0]) {
-            if ((param_value = (const char *)g_hash_table_lookup(table, param_name))) {
+        value = NULL;
+        if ((table != NULL) && !pcmk__str_empty(param_name)) {
+            param_value = (const char *)g_hash_table_lookup(table, param_name);
+            if (param_value != NULL) {
                 value = param_value;
             }
         }
