@@ -322,9 +322,9 @@ msg_type2text(enum crm_ais_msg_types type)
 
 gboolean send_cpg_iov(struct iovec * iov);
 
-char *corosync_cluster_name(void);
+char *pcmk__corosync_cluster_name(void);
 
-gboolean corosync_initialize_nodelist(xmlNode *xml_parent);
+bool pcmk__corosync_add_nodes(xmlNode *xml_parent);
 
 gboolean send_cluster_message_cs(xmlNode * msg, gboolean local,
                                  crm_node_t * node, enum crm_ais_msg_types dest);
@@ -339,9 +339,9 @@ void crm_update_peer_uname(crm_node_t *node, const char *uname);
 void crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected);
 void crm_reap_unseen_nodes(uint64_t ring_id);
 
-gboolean cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
-                                void (*destroy) (gpointer));
-
+void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
+                                                        gboolean),
+                                   void (*destroy) (gpointer));
 crm_node_t * crm_find_peer_full(unsigned int id, const char *uname, int flags);
 crm_node_t * crm_find_peer(unsigned int id, const char *uname);
 

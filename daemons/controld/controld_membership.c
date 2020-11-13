@@ -304,7 +304,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
 #if SUPPORT_COROSYNC
     if (!pcmk_is_set(flags, node_update_quick) && is_corosync_cluster()) {
-        from_hashtable = corosync_initialize_nodelist(node_list);
+        from_hashtable = pcmk__corosync_add_nodes(node_list);
     }
 #endif
 

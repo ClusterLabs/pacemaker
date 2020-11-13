@@ -218,7 +218,7 @@ do_dc_takeover(long long action,
 
 #if SUPPORT_COROSYNC
     if (fsa_cluster_name == NULL && is_corosync_cluster()) {
-        char *cluster_name = corosync_cluster_name();
+        char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name) {
             update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,

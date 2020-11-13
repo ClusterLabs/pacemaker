@@ -37,14 +37,24 @@
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"
 
-quorum_handle_t pcmk_quorum_handle = 0;
+static quorum_handle_t pcmk_quorum_handle = 0;
 
-gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
+static gboolean (*quorum_app_callback)(unsigned long long seq,
+                                       gboolean quorate) = NULL;
 
+/*!
+ * \internal
+ * \brief Get the Corosync UUID associated with a Pacemaker node
+ *
+ * \param[in] node  Pacemaker node
+ *
+ * \return Newly allocated string with node's Corosync UUID, or NULL if unknown
+ * \note It is the caller's responsibility to free the result with free().
+ */
 char *
 pcmk__corosync_uuid(crm_node_t *node)
 {
-    if (node && is_corosync_cluster()) {
+    if ((node != NULL) && is_corosync_cluster()) {
         if (node->id > 0) {
             return crm_strdup_printf("%u", node->id);
         } else {
@@ -76,12 +86,22 @@ node_name_is_valid(const char *key, const char *name)
 }
 
 /*
- * CFG functionality stolen from node_name() in corosync-quorumtool.c
- * This resolves the first address assigned to a node and returns the name or IP address.
+ * \internal
+ * \brief Get Corosync node name corresponding to a node ID
+ *
+ * \param[in] cmap_handle  Connection to Corosync CMAP
+ * \param[in] nodeid       Node ID to check
+ *
+ * \return Newly allocated string with name or (if no name) IP address
+ *         associated with first address assigned to a Corosync node ID (or NULL
+ *         if unknown)
+ * \note It is the caller's responsibility to free the result with free().
  */
 char *
 pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 {
+    // Originally based on corosync-quorumtool.c:node_name()
+
     int lpc = 0;
     cs_error_t rc = CS_OK;
     int retries = 0;
@@ -157,17 +177,18 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         }
 
         if (nodeid == id) {
-            crm_trace("Searching for node name for %u in nodelist.node.%d %s", nodeid, lpc, name);
+            crm_trace("Searching for node name for %u in nodelist.node.%d %s",
+                      nodeid, lpc, crm_str(name));
             if (name == NULL) {
                 key = crm_strdup_printf("nodelist.node.%d.name", lpc);
                 cmap_get_string(cmap_handle, key, &name);
-                crm_trace("%s = %s", key, name);
+                crm_trace("%s = %s", key, crm_str(name));
                 free(key);
             }
             if (name == NULL) {
                 key = crm_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
                 cmap_get_string(cmap_handle, key, &name);
-                crm_trace("%s = %s", key, name);
+                crm_trace("%s = %s", key, crm_str(name));
 
                 if (!node_name_is_valid(key, name)) {
                     free(name);
@@ -192,6 +213,12 @@ bail:
     return name;
 }
 
+/*!
+ * \internal
+ * \brief Disconnect from Corosync cluster
+ *
+ * \param[in] cluster  Cluster connection to disconnect
+ */
 void
 pcmk__corosync_disconnect(crm_cluster_t *cluster)
 {
@@ -203,12 +230,19 @@ pcmk__corosync_disconnect(crm_cluster_t *cluster)
     crm_notice("Disconnected from Corosync");
 }
 
+/*!
+ * \internal
+ * \brief Dispatch function for quorum connection file descriptor
+ *
+ * \param[in] user_data  Ignored
+ *
+ * \return 0 on success, -1 on error (per mainloop_io_t interface)
+ */
 static int
-pcmk_quorum_dispatch(gpointer user_data)
+quorum_dispatch_cb(gpointer user_data)
 {
-    int rc = 0;
+    int rc = quorum_dispatch(pcmk_quorum_handle, CS_DISPATCH_ALL);
 
-    rc = quorum_dispatch(pcmk_quorum_handle, CS_DISPATCH_ALL);
     if (rc < 0) {
         crm_err("Connection to the Quorum API failed: %d", rc);
         quorum_finalize(pcmk_quorum_handle);
@@ -218,10 +252,20 @@ pcmk_quorum_dispatch(gpointer user_data)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Notification callback for Corosync quorum connection
+ *
+ * \param[in] handle             Corosync quorum connection
+ * \param[in] quorate            Whether cluster is quorate
+ * \param[in] ring_id            Corosync ring ID
+ * \param[in] view_list_entries  Number of entries in \p view_list
+ * \param[in] view_list          Corosync node IDs in membership
+ */
 static void
-pcmk_quorum_notification(quorum_handle_t handle,
-                         uint32_t quorate,
-                         uint64_t ring_id, uint32_t view_list_entries, uint32_t * view_list)
+quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
+                       uint64_t ring_id, uint32_t view_list_entries,
+                       uint32_t *view_list)
 {
     int i;
     GHashTableIter iter;
@@ -287,12 +331,20 @@ pcmk_quorum_notification(quorum_handle_t handle,
 }
 
 quorum_callbacks_t quorum_callbacks = {
-    .quorum_notify_fn = pcmk_quorum_notification,
+    .quorum_notify_fn = quorum_notification_cb,
 };
 
-gboolean
-cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
-                       void (*destroy) (gpointer))
+/*!
+ * \internal
+ * \brief Connect to Corosync quorum service
+ *
+ * \param[in] dispatch   Connection dispatch callback
+ * \param[in] destroy    Connection destroy callback
+ */
+void
+pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
+                                                   gboolean),
+                              void (*destroy)(gpointer))
 {
     cs_error_t rc;
     int fd = 0;
@@ -304,7 +356,7 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
     pid_t found_pid = 0;
     int rv;
 
-    quorum_fd_callbacks.dispatch = pcmk_quorum_dispatch;
+    quorum_fd_callbacks.dispatch = quorum_dispatch_cb;
     quorum_fd_callbacks.destroy = destroy;
 
     crm_debug("Configuring Pacemaker to obtain quorum from Corosync");
@@ -365,18 +417,22 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
 
     mainloop_add_fd("quorum", G_PRIORITY_HIGH, fd, dispatch, &quorum_fd_callbacks);
 
-    corosync_initialize_nodelist(NULL);
+    pcmk__corosync_add_nodes(NULL);
 
   bail:
     if (rc != CS_OK) {
         quorum_finalize(pcmk_quorum_handle);
-        return FALSE;
     }
-    return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Connect to Corosync cluster layer
+ *
+ * \param[in] cluster   Initialized cluster object to connect
+ */
 gboolean
-pcmk__corosync_connect(crm_cluster_t * cluster)
+pcmk__corosync_connect(crm_cluster_t *cluster)
 {
     crm_node_t *peer = NULL;
     enum cluster_type_e stack = get_cluster_type();
@@ -414,6 +470,12 @@ pcmk__corosync_connect(crm_cluster_t * cluster)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a Corosync cluster is active
+ *
+ * \return pcmk_cluster_corosync if Corosync is found, else pcmk_cluster_unknown
+ */
 enum cluster_type_e
 pcmk__corosync_detect(void)
 {
@@ -442,31 +504,48 @@ pcmk__corosync_detect(void)
     return pcmk_cluster_corosync;
 }
 
+/*!
+ * \brief Check whether a Corosync cluster peer is active
+ *
+ * \param[in] node  Node to check
+ *
+ * \return TRUE if \p node is an active Corosync peer, otherwise FALSE
+ */
 gboolean
-crm_is_corosync_peer_active(const crm_node_t * node)
+crm_is_corosync_peer_active(const crm_node_t *node)
 {
     if (node == NULL) {
-        crm_trace("NULL");
+        crm_trace("Corosync peer inactive: NULL");
         return FALSE;
 
     } else if (!pcmk__str_eq(node->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
-        crm_trace("%s: state=%s", node->uname, node->state);
+        crm_trace("Corosync peer %s inactive: state=%s",
+                  node->uname, node->state);
         return FALSE;
 
-    } else if ((node->processes & crm_proc_cpg) == 0) {
-        crm_trace("%s: processes=%.16x", node->uname, node->processes);
+    } else if (!pcmk_is_set(node->processes, crm_proc_cpg)) {
+        crm_trace("Corosync peer %s inactive: processes=%.16x",
+                  node->uname, node->processes);
         return FALSE;
     }
     return TRUE;
 }
 
-gboolean
-corosync_initialize_nodelist(xmlNode *xml_parent)
+/*!
+ * \internal
+ * \brief Load Corosync node list (via CMAP) into peer cache and optionally XML
+ *
+ * \param[in] xml_parent  If not NULL, add a <node> entry to this for each node
+ *
+ * \return true if any nodes were found, false otherwise
+ */
+bool
+pcmk__corosync_add_nodes(xmlNode *xml_parent)
 {
     int lpc = 0;
     cs_error_t rc = CS_OK;
     int retries = 0;
-    gboolean any = FALSE;
+    bool any = false;
     cmap_handle_t cmap_handle;
     int fd = -1;
     uid_t found_uid = 0;
@@ -487,7 +566,7 @@ corosync_initialize_nodelist(xmlNode *xml_parent)
 
     if (rc != CS_OK) {
         crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
-        return FALSE;
+        return false;
     }
 
     rc = cmap_fd_get(cmap_handle, &fd);
@@ -549,7 +628,7 @@ corosync_initialize_nodelist(xmlNode *xml_parent)
         }
 
         if (nodeid > 0 && name != NULL) {
-            any = TRUE;
+            any = true;
 
             if (xml_parent) {
                 xmlNode *node = create_xml_node(xml_parent, XML_CIB_TAG_NODE);
@@ -566,8 +645,14 @@ bail:
     return any;
 }
 
+/*!
+ * \internal
+ * \brief Get cluster name from Corosync configuration (via CMAP)
+ *
+ * \return Newly allocated string with cluster name if configured, or NULL
+ */
 char *
-corosync_cluster_name(void)
+pcmk__corosync_cluster_name(void)
 {
     cmap_handle_t handle;
     char *cluster_name = NULL;
