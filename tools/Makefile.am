@@ -69,7 +69,8 @@ MAN8DEPS		= crm_attribute
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
-			  $(top_builddir)/lib/common/libcrmcommon.la
+			  $(top_builddir)/lib/common/libcrmcommon.la	\
+			  $(top_builddir)/lib/pacemaker/libpacemaker.la
 
 crm_error_SOURCES	= crm_error.c
 crm_error_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
