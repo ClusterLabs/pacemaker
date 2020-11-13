@@ -35,13 +35,14 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
+#include "crmcluster_private.h"
 
 quorum_handle_t pcmk_quorum_handle = 0;
 
 gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
 
 char *
-get_corosync_uuid(crm_node_t *node)
+pcmk__corosync_uuid(crm_node_t *node)
 {
     if (node && is_corosync_cluster()) {
         if (node->id > 0) {
@@ -79,7 +80,7 @@ node_name_is_valid(const char *key, const char *name)
  * This resolves the first address assigned to a node and returns the name or IP address.
  */
 char *
-corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
+pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 {
     int lpc = 0;
     cs_error_t rc = CS_OK;
@@ -192,7 +193,7 @@ bail:
 }
 
 void
-terminate_cs_connection(crm_cluster_t *cluster)
+pcmk__corosync_disconnect(crm_cluster_t *cluster)
 {
     cluster_disconnect_cpg(cluster);
     if (pcmk_quorum_handle) {
@@ -266,7 +267,7 @@ pcmk_quorum_notification(quorum_handle_t handle,
         /* Get this node's peer cache entry (adding one if not already there) */
         node = crm_get_peer(id, NULL);
         if (node->uname == NULL) {
-            char *name = corosync_node_name(0, id);
+            char *name = pcmk__corosync_name(0, id);
 
             crm_info("Obtaining name for new node %u", id);
             node = crm_get_peer(id, name);
@@ -375,7 +376,7 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
 }
 
 gboolean
-init_cs_connection(crm_cluster_t * cluster)
+pcmk__corosync_connect(crm_cluster_t * cluster)
 {
     int retries = 0;
 
@@ -433,13 +434,13 @@ init_cs_connection_once(crm_cluster_t * cluster)
 
     /* Ensure the local node always exists */
     peer = crm_get_peer(cluster->nodeid, cluster->uname);
-    cluster->uuid = get_corosync_uuid(peer);
+    cluster->uuid = pcmk__corosync_uuid(peer);
 
     return TRUE;
 }
 
 enum cluster_type_e
-find_corosync_variant(void)
+pcmk__corosync_detect(void)
 {
     int rc = CS_OK;
     cmap_handle_t handle;
@@ -550,7 +551,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
             break;
         }
 
-        name = corosync_node_name(cmap_handle, nodeid);
+        name = pcmk__corosync_name(cmap_handle, nodeid);
         if (name != NULL) {
             GHashTableIter iter;
             crm_node_t *node = NULL;

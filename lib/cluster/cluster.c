@@ -23,6 +23,7 @@
 
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
+#include "crmcluster_private.h"
 
 CRM_TRACE_INIT_DATA(cluster);
 
@@ -49,7 +50,7 @@ crm_peer_uuid(crm_node_t *peer)
     switch (get_cluster_type()) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            uuid = get_corosync_uuid(peer);
+            uuid = pcmk__corosync_uuid(peer);
 #endif
             break;
 
@@ -82,7 +83,7 @@ crm_cluster_connect(crm_cluster_t *cluster)
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
                 crm_peer_init();
-                return init_cs_connection(cluster);
+                return pcmk__corosync_connect(cluster);
             }
 #endif
             break;
@@ -109,7 +110,7 @@ crm_cluster_disconnect(crm_cluster_t *cluster)
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
                 crm_peer_destroy();
-                terminate_cs_connection(cluster);
+                pcmk__corosync_disconnect(cluster);
             }
 #endif
             break;
@@ -179,7 +180,7 @@ get_node_name(uint32_t nodeid)
     switch (stack) {
 #  if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
-            name = corosync_node_name(0, nodeid);
+            name = pcmk__corosync_name(0, nodeid);
             break;
 #  endif
 
@@ -323,7 +324,7 @@ get_cluster_type(void)
     /* If nothing is defined in the environment, try corosync (if supported) */
     if (cluster == NULL) {
         crm_debug("Testing with Corosync");
-        cluster_type = find_corosync_variant();
+        cluster_type = pcmk__corosync_detect();
         if (cluster_type != pcmk_cluster_unknown) {
             detected = true;
             goto done;

@@ -322,8 +322,6 @@ msg_type2text(enum crm_ais_msg_types type)
 
 gboolean send_cpg_iov(struct iovec * iov);
 
-char *get_corosync_uuid(crm_node_t *peer);
-char *corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid);
 char *corosync_cluster_name(void);
 int corosync_cmap_has_config(const char *prefix);
 
@@ -332,10 +330,6 @@ gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlN
 gboolean send_cluster_message_cs(xmlNode * msg, gboolean local,
                                  crm_node_t * node, enum crm_ais_msg_types dest);
 
-enum cluster_type_e find_corosync_variant(void);
-
-void terminate_cs_connection(crm_cluster_t * cluster);
-gboolean init_cs_connection(crm_cluster_t * cluster);
 gboolean init_cs_connection_once(crm_cluster_t * cluster);
 #  endif
 
