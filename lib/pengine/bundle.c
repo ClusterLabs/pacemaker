@@ -959,28 +959,13 @@ pe__bundle_needs_remote_name(pe_resource_t *rsc)
     const char *value;
 
     if (rsc == NULL) {
-        return FALSE;
+        return false;
     }
 
     value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_REMOTE_RA_ADDR);
-    if (!pcmk__str_eq(value, "#uname", pcmk__str_casei)) {
-        return FALSE;
 
-    } else {
-        const char *match[3][2] = {
-            { XML_ATTR_TYPE,           "remote"                },
-            { XML_AGENT_ATTR_CLASS,    PCMK_RESOURCE_CLASS_OCF },
-            { XML_AGENT_ATTR_PROVIDER, "pacemaker"             },
-        };
-
-        for (int m = 0; m < 3; m++) {
-            value = crm_element_value(rsc->xml, match[m][0]);
-            if (!pcmk__str_eq(value, match[m][1], pcmk__str_casei)) {
-                return FALSE;
-            }
-        }
-    }
-    return TRUE;
+    return pcmk__str_eq(value, "#uname", pcmk__str_casei)
+           && xml_contains_remote_node(rsc->xml);
 }
 
 const char *
