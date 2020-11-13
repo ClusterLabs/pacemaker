@@ -541,18 +541,19 @@ make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
                          pcmk__str_null_matches)) {
             const char *score = NULL;
             sorted_set_t *pair = NULL;
+            xmlNode *expanded_attr_set = expand_idref(attr_set, top);
 
-            attr_set = expand_idref(attr_set, top);
-            if (attr_set == NULL) {
+            if (expanded_attr_set == NULL) {
+                // Schema (if not "none") prevents this
                 continue;
             }
 
             pair = calloc(1, sizeof(sorted_set_t));
-            pair->name = ID(attr_set);
+            pair->name = ID(expanded_attr_set);
             pair->special_name = always_first;
-            pair->attr_set = attr_set;
+            pair->attr_set = expanded_attr_set;
 
-            score = crm_element_value(attr_set, XML_RULE_ATTR_SCORE);
+            score = crm_element_value(expanded_attr_set, XML_RULE_ATTR_SCORE);
             pair->score = char2score(score);
 
             unsorted = g_list_prepend(unsorted, pair);
