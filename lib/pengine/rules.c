@@ -529,20 +529,19 @@ static GList *
 make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
            const char *always_first)
 {
-    GListPtr unsorted = NULL;
-    const char *score = NULL;
-    sorted_set_t *pair = NULL;
-    xmlNode *attr_set = NULL;
+    GList *unsorted = NULL;
 
     if (xml_obj == NULL) {
         return NULL;
     }
-    for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
+    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
          attr_set = pcmk__xe_next(attr_set)) {
 
-        /* Uncertain if set_name == NULL check is strictly necessary here */
-        if (pcmk__str_eq(set_name, (const char *)attr_set->name, pcmk__str_null_matches)) {
-            pair = NULL;
+        if (pcmk__str_eq(set_name, (const char *) attr_set->name,
+                         pcmk__str_null_matches)) {
+            const char *score = NULL;
+            sorted_set_t *pair = NULL;
+
             attr_set = expand_idref(attr_set, top);
             if (attr_set == NULL) {
                 continue;
