@@ -236,7 +236,7 @@ pcmk_cpg_dispatch(gpointer user_data)
 }
 
 static gboolean
-check_message_sanity(const AIS_Message * msg, const char *data)
+check_message_sanity(const AIS_Message *msg)
 {
     gboolean sane = TRUE;
     int dest = msg->host.type;
@@ -263,21 +263,14 @@ check_message_sanity(const AIS_Message * msg, const char *data)
         sane = FALSE;
     }
 
-    if (sane && data && msg->is_compressed == FALSE) {
-        int str_size = strlen(data) + 1;
+    if (sane && !msg->is_compressed && (msg->size > 0)) {
+        size_t str_size = strlen(msg->data) + 1;
 
-        if (ais_data_len(msg) != str_size) {
-            int lpc = 0;
-
-            crm_warn("Message payload is corrupted: expected %d bytes, got %d",
-                     ais_data_len(msg), str_size);
+        if (msg->size != str_size) {
+            crm_warn("Message payload is corrupted: expected %llu bytes, got %llu",
+                     (unsigned long long) msg->size,
+                     (unsigned long long) str_size);
             sane = FALSE;
-            for (lpc = (str_size - 10); lpc < msg->size; lpc++) {
-                if (lpc < 0) {
-                    lpc = 0;
-                }
-                crm_debug("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
-            }
         }
     }
 
@@ -359,7 +352,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         char *uncompressed = NULL;
         unsigned int new_size = msg->size + 1;
 
-        if (check_message_sanity(msg, NULL) == FALSE) {
+        if (!check_message_sanity(msg)) {
             goto badmsg;
         }
 
@@ -379,15 +372,8 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
         data = uncompressed;
 
-    } else if (check_message_sanity(msg, data) == FALSE) {
+    } else if (!check_message_sanity(msg)) {
         goto badmsg;
-
-    } else if (pcmk__str_eq("identify", data, pcmk__str_casei)) {
-        char *pid_s = pcmk__getpid_s();
-
-        send_cluster_text(crm_class_cluster, pid_s, TRUE, NULL, crm_msg_ais);
-        free(pid_s);
-        return NULL;
 
     } else {
         data = strdup(msg->data);
