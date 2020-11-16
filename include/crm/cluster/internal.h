@@ -319,11 +319,7 @@ msg_type2text(enum crm_ais_msg_types type)
 }
 
 #  if SUPPORT_COROSYNC
-
-gboolean send_cpg_iov(struct iovec * iov);
-
 char *pcmk__corosync_cluster_name(void);
-
 bool pcmk__corosync_add_nodes(xmlNode *xml_parent);
 #  endif
 

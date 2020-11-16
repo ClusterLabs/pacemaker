@@ -215,19 +215,6 @@ crm_cs_flush(gpointer data)
     return rc;
 }
 
-gboolean
-send_cpg_iov(struct iovec * iov)
-{
-    static unsigned int queued = 0;
-
-    queued++;
-    crm_trace("Queueing CPG message %u (%llu bytes)",
-              queued, (unsigned long long) iov->iov_len);
-    cs_message_queue = g_list_append(cs_message_queue, iov);
-    crm_cs_flush(&pcmk_cpg_handle);
-    return TRUE;
-}
-
 static int
 pcmk_cpg_dispatch(gpointer user_data)
 {
@@ -830,7 +817,8 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     }
     free(target);
 
-    send_cpg_iov(iov);
+    cs_message_queue = g_list_append(cs_message_queue, iov);
+    crm_cs_flush(&pcmk_cpg_handle);
 
     return TRUE;
 }
