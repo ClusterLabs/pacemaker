@@ -38,16 +38,16 @@ static bool cpg_evicted = FALSE;
 
 static void crm_cs_flush(gpointer data);
 
-#define cs_repeat(counter, max, code) do {		\
-	code;						\
-	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
-	    counter++;					\
-	    crm_debug("Retrying operation after %ds", counter);	\
-	    sleep(counter);				\
-	} else {                                        \
-            break;                                      \
-        }                                               \
-    } while(counter < max)
+#define cs_repeat(rc, counter, max, code) do {                          \
+        rc = code;                                                      \
+        if ((rc == CS_ERR_TRY_AGAIN) || (rc == CS_ERR_QUEUE_FULL)) {    \
+            counter++;                                                  \
+            crm_debug("Retrying operation after %ds", counter);         \
+            sleep(counter);                                             \
+        } else {                                                        \
+            break;                                                      \
+        }                                                               \
+    } while (counter < max)
 
 void
 cluster_disconnect_cpg(crm_cluster_t *cluster)
@@ -83,7 +83,7 @@ uint32_t get_local_nodeid(cpg_handle_t handle)
 
     if(handle == 0) {
         crm_trace("Creating connection");
-        cs_repeat(retries, 5, rc = cpg_initialize(&local_handle, &cb));
+        cs_repeat(rc, retries, 5, cpg_initialize(&local_handle, &cb));
         if (rc != CS_OK) {
             crm_err("Could not connect to the CPG API: %s (%d)",
                     cs_strerror(rc), rc);
@@ -115,7 +115,7 @@ uint32_t get_local_nodeid(cpg_handle_t handle)
     if (rc == CS_OK) {
         retries = 0;
         crm_trace("Performing lookup");
-        cs_repeat(retries, 5, rc = cpg_local_get(local_handle, &local_nodeid));
+        cs_repeat(rc, retries, 5, cpg_local_get(local_handle, &local_nodeid));
     }
 
     if (rc != CS_OK) {
@@ -607,7 +607,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     cluster->group.value[127] = 0;
     cluster->group.length = 1 + QB_MIN(127, strlen(cluster->group.value));
 
-    cs_repeat(retries, 30, rc = cpg_initialize(&handle, &cpg_callbacks));
+    cs_repeat(rc, retries, 30, cpg_initialize(&handle, &cpg_callbacks));
     if (rc != CS_OK) {
         crm_err("Could not connect to the CPG API: %s (%d)",
                 cs_strerror(rc), rc);
@@ -646,7 +646,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     cluster->nodeid = id;
 
     retries = 0;
-    cs_repeat(retries, 30, rc = cpg_join(handle, &cluster->group));
+    cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->group));
     if (rc != CS_OK) {
         crm_err("Could not join the CPG group '%s': %d", message_name, rc);
         goto bail;
