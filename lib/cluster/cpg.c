@@ -34,7 +34,6 @@
 cpg_handle_t pcmk_cpg_handle = 0; /* TODO: Remove, use cluster.cpg_handle */
 
 static bool cpg_evicted = FALSE;
-gboolean(*pcmk_cpg_dispatch_fn) (int kind, const char *from, const char *data) = NULL;
 
 #define cs_repeat(counter, max, code) do {		\
 	code;						\
