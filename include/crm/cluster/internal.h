@@ -323,7 +323,6 @@ msg_type2text(enum crm_ais_msg_types type)
 gboolean send_cpg_iov(struct iovec * iov);
 
 char *corosync_cluster_name(void);
-int corosync_cmap_has_config(const char *prefix);
 
 gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent);
 

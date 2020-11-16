@@ -624,22 +624,15 @@ bail:
 
 /*!
  * \internal
- * \brief Check whether Corosync has any configuration keys with given prefix
+ * \brief Check (via CMAP) whether Corosync configuration has a node list
  *
- * \param[in] prefix  Configuration key prefix
- *
- * \return -1 on error, 0 if no such key present, 1 if any such key present
- * \note This function always returns the result of the first time it was
- *       called, even if later called with a different section name (which
- *       obviously should never be done), and even if the corosync configuration
- *       has since been reloaded.
+ * \return true if Corosync has node list, otherwise false
  */
-int
-corosync_cmap_has_config(const char *prefix)
+bool
+pcmk__corosync_has_nodelist(void)
 {
-    cs_error_t rc = CS_OK;
+    cs_error_t cs_rc = CS_OK;
     int retries = 0;
-    static int found = -1;
     cmap_handle_t cmap_handle;
     cmap_iter_handle_t iter_handle;
     char key_name[CMAP_KEYNAME_MAXLEN + 1];
@@ -647,66 +640,77 @@ corosync_cmap_has_config(const char *prefix)
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
-    int rv;
+    int rc = pcmk_ok;
 
-    if(found != -1) {
-        return found;
+    static bool got_result = false;
+    static bool result = false;
+
+    if (got_result) {
+        return result;
     }
 
+    // Connect to CMAP
     do {
-        rc = cmap_initialize(&cmap_handle);
-        if (rc != CS_OK) {
+        cs_rc = cmap_initialize(&cmap_handle);
+        if (cs_rc != CS_OK) {
             retries++;
-            crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
-                      retries);
+            crm_debug("CMAP connection failed: %s (rc=%d, retrying in %ds)",
+                      cs_strerror(cs_rc), cs_rc, retries);
             sleep(retries);
         }
-
-    } while (retries < 5 && rc != CS_OK);
-
-    if (rc != CS_OK) {
-        crm_warn("Could not connect to Cluster Configuration Database API: %s (rc=%d)",
-                 cs_strerror(rc), rc);
-        return -1;
+    } while ((retries < 5) && (cs_rc != CS_OK));
+    if (cs_rc != CS_OK) {
+        crm_warn("Assuming Corosync does not have node list: "
+                 "CMAP connection failed (%s) " CRM_XS " rc=%d",
+                 cs_strerror(cs_rc), cs_rc);
+        return false;
     }
 
-    rc = cmap_fd_get(cmap_handle, &fd);
-    if (rc != CS_OK) {
-        crm_err("Could not obtain the CMAP API connection: %s (%d)",
-                cs_strerror(rc), rc);
+    // Get CMAP connection file descriptor
+    cs_rc = cmap_fd_get(cmap_handle, &fd);
+    if (cs_rc != CS_OK) {
+        crm_warn("Assuming Corosync does not have node list: "
+                 "CMAP unusable (%s) " CRM_XS " rc=%d",
+                 cs_strerror(cs_rc), cs_rc);
         goto bail;
     }
 
-    /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                            &found_uid, &found_gid))) {
-        crm_err("CMAP provider is not authentic:"
-                " process %lld (uid: %lld, gid: %lld)",
-                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) found_gid);
+    // Check whether CMAP connection is authentic (i.e. provided by root)
+    rc = crm_ipc_is_authentic_process(fd, (uid_t) 0, (gid_t) 0,
+                                      &found_pid, &found_uid, &found_gid);
+    if (rc == 0) {
+        crm_warn("Assuming Corosync does not have node list: "
+                 "CMAP provider is inauthentic "
+                 CRM_XS " pid=%lld uid=%lld gid=%lld",
+                 (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                 (long long) found_uid, (long long) found_gid);
         goto bail;
-    } else if (rv < 0) {
-        crm_err("Could not verify authenticity of CMAP provider: %s (%d)",
-                strerror(-rv), -rv);
-        goto bail;
-    }
-
-    rc = cmap_iter_init(cmap_handle, prefix, &iter_handle);
-    if (rc != CS_OK) {
-        crm_warn("Failed to initialize iteration for corosync cmap '%s': %s (rc=%d)",
-                 prefix, cs_strerror(rc), rc);
+    } else if (rc < 0) {
+        crm_warn("Assuming Corosync does not have node list: "
+                 "Could not verify CMAP authenticity (%s) " CRM_XS " rc=%d",
+                  pcmk_strerror(rc), rc);
         goto bail;
     }
 
-    found = 0;
-    if (cmap_iter_next(cmap_handle, iter_handle, key_name, NULL, NULL) == CS_OK) {
-        crm_trace("'%s' is configured in corosync cmap: %s", prefix, key_name);
-        found = 1;
+    // Check whether nodelist section is presetn
+    cs_rc = cmap_iter_init(cmap_handle, "nodelist", &iter_handle);
+    if (cs_rc != CS_OK) {
+        crm_warn("Assuming Corosync does not have node list: "
+                 "CMAP not readable (%s) " CRM_XS " rc=%d",
+                 cs_strerror(cs_rc), cs_rc);
+        goto bail;
     }
+
+    cs_rc = cmap_iter_next(cmap_handle, iter_handle, key_name, NULL, NULL);
+    if (cs_rc == CS_OK) {
+        result = true;
+    }
+
     cmap_iter_finalize(cmap_handle, iter_handle);
+    got_result = true;
+    crm_debug("Corosync %s node list", (result? "has" : "does not have"));
 
 bail:
     cmap_finalize(cmap_handle);
-
-    return found;
+    return result;
 }

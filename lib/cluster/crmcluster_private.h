@@ -25,6 +25,9 @@ G_GNUC_INTERNAL
 enum cluster_type_e pcmk__corosync_detect(void);
 
 G_GNUC_INTERNAL
+bool pcmk__corosync_has_nodelist(void);
+
+G_GNUC_INTERNAL
 char *pcmk__corosync_uuid(crm_node_t *peer);
 
 G_GNUC_INTERNAL

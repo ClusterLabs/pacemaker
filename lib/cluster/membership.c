@@ -23,6 +23,7 @@
 #include <crm/cluster/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
+#include "crmcluster_private.h"
 
 /* The peer cache remembers cluster nodes that have been seen.
  * This is managed mostly automatically by libcluster, based on
@@ -622,7 +623,7 @@ crm_remove_conflicting_peer(crm_node_t *node)
         return 0;
     }
 
-    if (corosync_cmap_has_config("nodelist") != 0) {
+    if (!pcmk__corosync_has_nodelist()) {
         return 0;
     }
 
