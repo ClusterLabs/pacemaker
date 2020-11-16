@@ -32,9 +32,15 @@
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 #include "crmcluster_private.h"
 
-cpg_handle_t pcmk_cpg_handle = 0; /* TODO: Remove, use cluster.cpg_handle */
+/* @TODO Once we can update the public API to require crm_cluster_t* in more
+ *       functions, we can ditch this in favor of cluster->cpg_handle.
+ */
+static cpg_handle_t pcmk_cpg_handle = 0;
 
-static bool cpg_evicted = FALSE;
+// @TODO These could be moved to crm_cluster_t* at that time as well
+static bool cpg_evicted = false;
+static GList *cs_message_queue = NULL;
+static int cs_message_timer = 0;
 
 static void crm_cs_flush(gpointer data);
 
@@ -49,6 +55,11 @@ static void crm_cs_flush(gpointer data);
         }                                                               \
     } while (counter < max)
 
+/*!
+ * \brief Disconnect from Corosync CPG
+ *
+ * \param[in] Cluster to disconnect
+ */
 void
 cluster_disconnect_cpg(crm_cluster_t *cluster)
 {
@@ -64,7 +75,15 @@ cluster_disconnect_cpg(crm_cluster_t *cluster)
     }
 }
 
-uint32_t get_local_nodeid(cpg_handle_t handle)
+/*!
+ * \brief Get the local Corosync node ID (via CPG)
+ *
+ * \param[in] handle  CPG connection to use (or 0 to use new connection)
+ *
+ * \return Corosync ID of local node (or 0 if not known)
+ */
+uint32_t
+get_local_nodeid(cpg_handle_t handle)
 {
     cs_error_t rc = CS_OK;
     int retries = 0;
@@ -131,10 +150,14 @@ bail:
     return local_nodeid;
 }
 
-
-GListPtr cs_message_queue = NULL;
-int cs_message_timer = 0;
-
+/*!
+ * \internal
+ * \brief Callback function for Corosync message queue timer
+ *
+ * \param[in] data  CPG handle
+ *
+ * \return FALSE (to indicate to glib that timer should not be removed)
+ */
 static gboolean
 crm_cs_flush_cb(gpointer data)
 {
@@ -215,11 +238,19 @@ crm_cs_flush(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Dispatch function for CPG handle
+ *
+ * \param[in] user_data  Cluster object
+ *
+ * \return 0 on success, -1 on error (per mainloop_io_t interface)
+ */
 static int
 pcmk_cpg_dispatch(gpointer user_data)
 {
-    int rc = 0;
-    crm_cluster_t *cluster = (crm_cluster_t*) user_data;
+    cs_error_t rc = CS_OK;
+    crm_cluster_t *cluster = (crm_cluster_t *) user_data;
 
     rc = cpg_dispatch(cluster->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
@@ -228,14 +259,22 @@ pcmk_cpg_dispatch(gpointer user_data)
         cluster->cpg_handle = 0;
         return -1;
 
-    } else if(cpg_evicted) {
+    } else if (cpg_evicted) {
         crm_err("Evicted from CPG membership");
         return -1;
     }
     return 0;
 }
 
-static gboolean
+/*!
+ * \internal
+ * \brief Check whether a Corosync CPG message is valid
+ *
+ * \param[in] msg   Corosync CPG message to check
+ *
+ * \return true if \p msg is valid, otherwise false
+ */
+static bool
 check_message_sanity(const AIS_Message *msg)
 {
     gboolean sane = TRUE;
@@ -291,6 +330,22 @@ check_message_sanity(const AIS_Message *msg)
     return sane;
 }
 
+/*!
+ * \brief Extract text data from a Corosync CPG message
+ *
+ * \param[in]  handle   CPG connection (to get local node ID if not yet known)
+ * \param[in]  nodeid   Corosync ID of node that sent message
+ * \param[in]  pid      Process ID of message sender (for logging only)
+ * \param[in]  content  CPG message
+ * \param[out] kind     If not NULL, will be set to CPG header ID
+ *                      (which should be an enum crm_ais_msg_class value,
+ *                      currently always crm_class_cluster)
+ * \param[out] from     If not NULL, will be set to sender uname
+ *                      (valid for the lifetime of \p content)
+ *
+ * \return Newly allocated string with message data
+ * \note It is the caller's responsibility to free the return value with free().
+ */
 char *
 pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *content,
                         uint32_t *kind, const char **from)
@@ -397,8 +452,19 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
     return NULL;
 }
 
-static int cmp_member_list_nodeid(const void *first,
-                                  const void *second)
+/*!
+ * \internal
+ * \brief Compare cpg_address objects by node ID
+ *
+ * \param[in] first   First cpg_address structure to compare
+ * \param[in] second  Second cpg_address structure to compare
+ *
+ * \return Negative number if first's node ID is lower,
+ *         positive number if first's node ID is greater,
+ *         or 0 if both node IDs are equal
+ */
+static int
+cmp_member_list_nodeid(const void *first, const void *second)
 {
     const struct cpg_address *const a = *((const struct cpg_address **) first),
                              *const b = *((const struct cpg_address **) second);
@@ -411,6 +477,14 @@ static int cmp_member_list_nodeid(const void *first,
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Get a readable string equivalent of a cpg_reason_t value
+ *
+ * \param[in] reason  CPG reason value
+ *
+ * \return Readable string suitable for logging
+ */
 static const char *
 cpgreason2str(cpg_reason_t reason)
 {
@@ -425,6 +499,14 @@ cpgreason2str(cpg_reason_t reason)
     return "";
 }
 
+/*!
+ * \internal
+ * \brief Get a log-friendly node name
+ *
+ * \param[in] peer  Node to check
+ *
+ * \return Node's uname, or readable string if not known
+ */
 static inline const char *
 peer_name(crm_node_t *peer)
 {
@@ -437,6 +519,18 @@ peer_name(crm_node_t *peer)
     }
 }
 
+/*!
+ * \brief Handle a CPG configuration change event
+ *
+ * \param[in] handle               CPG connection
+ * \param[in] cpg_name             CPG group name
+ * \param[in] member_list          List of current CPG members
+ * \param[in] member_list_entries  Number of entries in \p member_list
+ * \param[in] left_list            List of CPG members that left
+ * \param[in] left_list_entries    Number of entries in \p left_list
+ * \param[in] joined_list          List of CPG members that joined
+ * \param[in] joined_list_entries  Number of entries in \p joined_list
+ */
 void
 pcmk_cpg_membership(cpg_handle_t handle,
                     const struct cpg_name *groupName,
@@ -565,12 +659,19 @@ pcmk_cpg_membership(cpg_handle_t handle,
 
     if (!found) {
         crm_err("Local node was evicted from group %s", groupName->value);
-        cpg_evicted = TRUE;
+        cpg_evicted = true;
     }
 
     counter++;
 }
 
+/*!
+ * \brief Connect to Corosync CPG
+ *
+ * \param[in] cluster  Cluster object
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
 gboolean
 cluster_connect_cpg(crm_cluster_t *cluster)
 {
@@ -598,7 +699,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
         /* .cpg_confchg_fn = pcmk_cpg_membership, */
     };
 
-    cpg_evicted = FALSE;
+    cpg_evicted = false;
     cluster->group.length = 0;
     cluster->group.value[0] = 0;
 
@@ -667,6 +768,16 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Send an XML message via Corosync CPG
+ *
+ * \param[in] msg   XML message to send
+ * \param[in] node  Cluster node to send message to
+ * \param[in] dest  Type of message to send
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
 gboolean
 pcmk__cpg_send_xml(xmlNode *msg, crm_node_t *node, enum crm_ais_msg_types dest)
 {
@@ -679,6 +790,18 @@ pcmk__cpg_send_xml(xmlNode *msg, crm_node_t *node, enum crm_ais_msg_types dest)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Send string data via Corosync CPG
+ *
+ * \param[in] msg_class  Message class (to set as CPG header ID)
+ * \param[in] data       Data to send
+ * \param[in] local      What to set as host "local" value (which is never used)
+ * \param[in] node       Cluster node to send message to
+ * \param[in] dest       Type of message to send
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
 gboolean
 send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
                   gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
@@ -703,10 +826,10 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
 
     CRM_CHECK(dest != crm_msg_ais, return FALSE);
 
-    if(local_name == NULL) {
+    if (local_name == NULL) {
         local_name = get_local_node_name();
     }
-    if(local_name_len == 0 && local_name) {
+    if ((local_name_len == 0) && (local_name != NULL)) {
         local_name_len = strlen(local_name);
     }
 
@@ -751,7 +874,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     msg->sender.pid = local_pid;
     msg->sender.size = local_name_len;
     memset(msg->sender.uname, 0, MAX_NAME);
-    if(local_name && msg->sender.size) {
+    if ((local_name != NULL) && (msg->sender.size != 0)) {
         memcpy(msg->sender.uname, local_name, msg->sender.size);
     }
 
@@ -809,6 +932,13 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     return TRUE;
 }
 
+/*!
+ * \brief Get the message type equivalent of a string
+ *
+ * \param[in] text  String of message type
+ *
+ * \return Message type equivalent of \p text
+ */
 enum crm_ais_msg_types
 text2msg_type(const char *text)
 {
