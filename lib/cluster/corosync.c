@@ -378,61 +378,36 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
 gboolean
 pcmk__corosync_connect(crm_cluster_t * cluster)
 {
-    int retries = 0;
-
-    while (retries < 5) {
-        int rc = init_cs_connection_once(cluster);
-
-        retries++;
-
-        switch (rc) {
-            case CS_OK:
-                return TRUE;
-            case CS_ERR_TRY_AGAIN:
-            case CS_ERR_QUEUE_FULL:
-                sleep(retries);
-                break;
-            default:
-                return FALSE;
-        }
-    }
-
-    crm_err("Could not connect to corosync after %d retries", retries);
-    return FALSE;
-}
-
-gboolean
-init_cs_connection_once(crm_cluster_t * cluster)
-{
     crm_node_t *peer = NULL;
     enum cluster_type_e stack = get_cluster_type();
 
     crm_peer_init();
 
-    /* Here we just initialize comms */
     if (stack != pcmk_cluster_corosync) {
-        crm_err("Invalid cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+        crm_err("Invalid cluster type: %s " CRM_XS " stack=%d",
+                name_for_cluster_type(stack), stack);
         return FALSE;
     }
 
-    if (cluster_connect_cpg(cluster) == FALSE) {
+    if (!cluster_connect_cpg(cluster)) {
+        // Error message was logged by cluster_connect_cpg()
         return FALSE;
     }
-    crm_info("Connection to '%s': established", name_for_cluster_type(stack));
+    crm_info("Connection to %s established", name_for_cluster_type(stack));
 
     cluster->nodeid = get_local_nodeid(0);
-    if(cluster->nodeid == 0) {
-        crm_err("Could not establish local nodeid");
+    if (cluster->nodeid == 0) {
+        crm_err("Could not determine local node ID");
         return FALSE;
     }
 
     cluster->uname = get_node_name(0);
-    if(cluster->uname == NULL) {
-        crm_err("Could not establish local node name");
+    if (cluster->uname == NULL) {
+        crm_err("Could not determine local node name");
         return FALSE;
     }
 
-    /* Ensure the local node always exists */
+    // Ensure local node always exists in peer cache
     peer = crm_get_peer(cluster->nodeid, cluster->uname);
     cluster->uuid = pcmk__corosync_uuid(peer);
 

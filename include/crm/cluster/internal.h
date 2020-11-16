@@ -329,8 +329,6 @@ gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlN
 
 gboolean send_cluster_message_cs(xmlNode * msg, gboolean local,
                                  crm_node_t * node, enum crm_ais_msg_types dest);
-
-gboolean init_cs_connection_once(crm_cluster_t * cluster);
 #  endif
 
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
