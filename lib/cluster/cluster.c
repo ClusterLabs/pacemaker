@@ -247,30 +247,8 @@ name_for_cluster_type(enum cluster_type_e type)
     return "invalid";
 }
 
-/* Do not expose these two */
-int set_cluster_type(enum cluster_type_e type);
 static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
 
-int
-set_cluster_type(enum cluster_type_e type)
-{
-    if (cluster_type == pcmk_cluster_unknown) {
-        crm_info("Cluster type set to: %s", name_for_cluster_type(type));
-        cluster_type = type;
-        return 0;
-
-    } else if (cluster_type == type) {
-        return 0;
-
-    } else if (pcmk_cluster_unknown == type) {
-        cluster_type = type;
-        return 0;
-    }
-
-    crm_err("Cluster type already set to %s, ignoring %s",
-            name_for_cluster_type(cluster_type), name_for_cluster_type(type));
-    return -1;
-}
 enum cluster_type_e
 get_cluster_type(void)
 {
