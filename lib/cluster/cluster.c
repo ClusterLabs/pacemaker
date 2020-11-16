@@ -309,24 +309,3 @@ is_corosync_cluster(void)
 {
     return get_cluster_type() == pcmk_cluster_corosync;
 }
-
-gboolean
-node_name_is_valid(const char *key, const char *name)
-{
-    int octet;
-
-    if (name == NULL) {
-        crm_trace("%s is empty", key);
-        return FALSE;
-
-    } else if (sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
-        crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
-        return FALSE;
-
-    } else if (strstr(name, ":") != NULL) {
-        crm_trace("%s contains an ipv6 address, ignoring: %s", key, name);
-        return FALSE;
-    }
-    crm_trace("%s is valid", key);
-    return TRUE;
-}

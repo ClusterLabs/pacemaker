@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,6 +51,27 @@ get_corosync_uuid(crm_node_t *node)
         }
     }
     return NULL;
+}
+
+static bool
+node_name_is_valid(const char *key, const char *name)
+{
+    int octet;
+
+    if (name == NULL) {
+        crm_trace("%s is empty", key);
+        return false;
+
+    } else if (sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
+        crm_trace("%s contains an IPv4 address (%s), ignoring", key, name);
+        return false;
+
+    } else if (strstr(name, ":") != NULL) {
+        crm_trace("%s contains an IPv6 address (%s), ignoring", key, name);
+        return false;
+    }
+    crm_trace("'%s: %s' is valid", key, name);
+    return true;
 }
 
 /*
@@ -147,7 +168,7 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
                 cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s", key, name);
 
-                if (node_name_is_valid(key, name) == FALSE) {
+                if (!node_name_is_valid(key, name)) {
                     free(name);
                     name = NULL;
                 }
