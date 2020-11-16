@@ -318,8 +318,6 @@ msg_type2text(enum crm_ais_msg_types type)
     return text;
 }
 
-gboolean check_message_sanity(const AIS_Message * msg, const char *data);
-
 #  if SUPPORT_COROSYNC
 
 gboolean send_cpg_iov(struct iovec * iov);

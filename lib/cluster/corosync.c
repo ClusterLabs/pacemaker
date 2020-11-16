@@ -438,69 +438,6 @@ init_cs_connection_once(crm_cluster_t * cluster)
     return TRUE;
 }
 
-gboolean
-check_message_sanity(const AIS_Message * msg, const char *data)
-{
-    gboolean sane = TRUE;
-    int dest = msg->host.type;
-    int tmp_size = msg->header.size - sizeof(AIS_Message);
-
-    if (sane && msg->header.size == 0) {
-        crm_warn("Message with no size");
-        sane = FALSE;
-    }
-
-    if (sane && msg->header.error != CS_OK) {
-        crm_warn("Message header contains an error: %d", msg->header.error);
-        sane = FALSE;
-    }
-
-    if (sane && ais_data_len(msg) != tmp_size) {
-        crm_warn("Message payload size is incorrect: expected %d, got %d", ais_data_len(msg),
-                 tmp_size);
-        sane = FALSE;
-    }
-
-    if (sane && ais_data_len(msg) == 0) {
-        crm_warn("Message with no payload");
-        sane = FALSE;
-    }
-
-    if (sane && data && msg->is_compressed == FALSE) {
-        int str_size = strlen(data) + 1;
-
-        if (ais_data_len(msg) != str_size) {
-            int lpc = 0;
-
-            crm_warn("Message payload is corrupted: expected %d bytes, got %d",
-                     ais_data_len(msg), str_size);
-            sane = FALSE;
-            for (lpc = (str_size - 10); lpc < msg->size; lpc++) {
-                if (lpc < 0) {
-                    lpc = 0;
-                }
-                crm_debug("bad_data[%d]: %d / '%c'", lpc, data[lpc], data[lpc]);
-            }
-        }
-    }
-
-    if (sane == FALSE) {
-        crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
-                msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
-                ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-                msg->sender.pid, msg->is_compressed, ais_data_len(msg), msg->header.size);
-
-    } else {
-        crm_trace
-            ("Verified message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
-             msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
-             msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
-             ais_data_len(msg), msg->header.size);
-    }
-
-    return sane;
-}
-
 enum cluster_type_e
 find_corosync_variant(void)
 {
