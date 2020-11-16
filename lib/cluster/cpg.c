@@ -30,6 +30,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
+#include "crmcluster_private.h"
 
 cpg_handle_t pcmk_cpg_handle = 0; /* TODO: Remove, use cluster.cpg_handle */
 
@@ -694,13 +695,13 @@ cluster_connect_cpg(crm_cluster_t *cluster)
 }
 
 gboolean
-send_cluster_message_cs(xmlNode * msg, gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
+pcmk__cpg_send_xml(xmlNode *msg, crm_node_t *node, enum crm_ais_msg_types dest)
 {
     gboolean rc = TRUE;
     char *data = NULL;
 
     data = dump_xml_unformatted(msg);
-    rc = send_cluster_text(crm_class_cluster, data, local, node, dest);
+    rc = send_cluster_text(crm_class_cluster, data, FALSE, node, dest);
     free(data);
     return rc;
 }

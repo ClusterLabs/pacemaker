@@ -40,4 +40,8 @@ gboolean pcmk__corosync_connect(crm_cluster_t *cluster);
 G_GNUC_INTERNAL
 void pcmk__corosync_disconnect(crm_cluster_t *cluster);
 
+G_GNUC_INTERNAL
+gboolean pcmk__cpg_send_xml(xmlNode *msg, crm_node_t *node,
+                            enum crm_ais_msg_types dest);
+
 #endif  // PCMK__CRMCLUSTER_PRIVATE__H

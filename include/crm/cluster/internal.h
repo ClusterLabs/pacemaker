@@ -325,9 +325,6 @@ gboolean send_cpg_iov(struct iovec * iov);
 char *pcmk__corosync_cluster_name(void);
 
 bool pcmk__corosync_add_nodes(xmlNode *xml_parent);
-
-gboolean send_cluster_message_cs(xmlNode * msg, gboolean local,
-                                 crm_node_t * node, enum crm_ais_msg_types dest);
 #  endif
 
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,

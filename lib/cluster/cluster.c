@@ -136,7 +136,7 @@ send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
     switch (get_cluster_type()) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            return send_cluster_message_cs(data, FALSE, node, service);
+            return pcmk__cpg_send_xml(data, node, service);
 #endif
             break;
         default:
