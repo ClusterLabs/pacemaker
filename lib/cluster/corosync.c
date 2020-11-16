@@ -365,7 +365,7 @@ cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
 
     mainloop_add_fd("quorum", G_PRIORITY_HIGH, fd, dispatch, &quorum_fd_callbacks);
 
-    corosync_initialize_nodelist(NULL, FALSE, NULL);
+    corosync_initialize_nodelist(NULL);
 
   bail:
     if (rc != CS_OK) {
@@ -461,7 +461,7 @@ crm_is_corosync_peer_active(const crm_node_t * node)
 }
 
 gboolean
-corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent)
+corosync_initialize_nodelist(xmlNode *xml_parent)
 {
     int lpc = 0;
     cs_error_t rc = CS_OK;
@@ -556,9 +556,6 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
 
                 crm_xml_set_id(node, "%u", nodeid);
                 crm_xml_add(node, XML_ATTR_UNAME, name);
-                if (force_member) {
-                    crm_xml_add(node, XML_ATTR_TYPE, CRM_NODE_MEMBER);
-                }
             }
         }
 

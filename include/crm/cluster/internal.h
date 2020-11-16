@@ -324,7 +324,7 @@ gboolean send_cpg_iov(struct iovec * iov);
 
 char *corosync_cluster_name(void);
 
-gboolean corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent);
+gboolean corosync_initialize_nodelist(xmlNode *xml_parent);
 
 gboolean send_cluster_message_cs(xmlNode * msg, gboolean local,
                                  crm_node_t * node, enum crm_ais_msg_types dest);
