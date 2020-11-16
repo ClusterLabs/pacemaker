@@ -36,6 +36,8 @@ cpg_handle_t pcmk_cpg_handle = 0; /* TODO: Remove, use cluster.cpg_handle */
 
 static bool cpg_evicted = FALSE;
 
+static void crm_cs_flush(gpointer data);
+
 #define cs_repeat(counter, max, code) do {		\
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
@@ -133,8 +135,6 @@ bail:
 GListPtr cs_message_queue = NULL;
 int cs_message_timer = 0;
 
-static ssize_t crm_cs_flush(gpointer data);
-
 static gboolean
 crm_cs_flush_cb(gpointer data)
 {
@@ -143,47 +143,51 @@ crm_cs_flush_cb(gpointer data)
     return FALSE;
 }
 
+// Send no more than this many CPG messages in one flush
 #define CS_SEND_MAX 200
-static ssize_t
+
+/*!
+ * \internal
+ * \brief Send messages in Corosync CPG message queue
+ *
+ * \param[in] data   CPG handle
+ */
+static void
 crm_cs_flush(gpointer data)
 {
-    int sent = 0;
-    ssize_t rc = 0;
-    int queue_len = 0;
-    static unsigned int last_sent = 0;
-    cpg_handle_t *handle = (cpg_handle_t *)data;
+    unsigned int sent = 0;
+    guint queue_len = 0;
+    cs_error_t rc = 0;
+    cpg_handle_t *handle = (cpg_handle_t *) data;
 
     if (*handle == 0) {
         crm_trace("Connection is dead");
-        return pcmk_ok;
+        return;
     }
 
     queue_len = g_list_length(cs_message_queue);
-    if ((queue_len % 1000) == 0 && queue_len > 1) {
+    if (((queue_len % 1000) == 0) && (queue_len > 1)) {
         crm_err("CPG queue has grown to %d", queue_len);
 
     } else if (queue_len == CS_SEND_MAX) {
         crm_warn("CPG queue has grown to %d", queue_len);
     }
 
-    if (cs_message_timer) {
+    if (cs_message_timer != 0) {
         /* There is already a timer, wait until it goes off */
         crm_trace("Timer active %d", cs_message_timer);
-        return pcmk_ok;
+        return;
     }
 
-    while (cs_message_queue && sent < CS_SEND_MAX) {
+    while ((cs_message_queue != NULL) && (sent < CS_SEND_MAX)) {
         struct iovec *iov = cs_message_queue->data;
 
-        errno = 0;
         rc = cpg_mcast_joined(*handle, CPG_TYPE_AGREED, iov, 1);
-
         if (rc != CS_OK) {
             break;
         }
 
         sent++;
-        last_sent++;
         crm_trace("CPG message sent, size=%llu",
                   (unsigned long long) iov->iov_len);
 
@@ -193,26 +197,22 @@ crm_cs_flush(gpointer data)
     }
 
     queue_len -= sent;
-    if (sent > 1 || cs_message_queue) {
-        crm_info("Sent %d CPG messages  (%d remaining, last=%u): %s (%lld)",
-                 sent, queue_len, last_sent, ais_error2text(rc),
-                 (long long) rc);
+    if ((sent > 1) || (cs_message_queue != NULL)) {
+        crm_info("Sent %u CPG messages  (%d remaining): %s (%d)",
+                 sent, queue_len, ais_error2text(rc), (int) rc);
     } else {
-        crm_trace("Sent %d CPG messages  (%d remaining, last=%u): %s (%lld)",
-                  sent, queue_len, last_sent, ais_error2text(rc),
-                  (long long) rc);
+        crm_trace("Sent %u CPG messages  (%d remaining): %s (%d)",
+                  sent, queue_len, ais_error2text(rc), (int) rc);
     }
 
     if (cs_message_queue) {
         uint32_t delay_ms = 100;
-        if(rc != CS_OK) {
+        if (rc != CS_OK) {
             /* Proportionally more if sending failed but cap at 1s */
             delay_ms = QB_MIN(1000, CS_SEND_MAX + (10 * queue_len));
         }
         cs_message_timer = g_timeout_add(delay_ms, crm_cs_flush_cb, data);
     }
-
-    return rc;
 }
 
 static int
