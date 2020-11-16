@@ -458,7 +458,7 @@ check_message_sanity(const AIS_Message * msg, const char *data)
     if (sane && ais_data_len(msg) != tmp_size) {
         crm_warn("Message payload size is incorrect: expected %d, got %d", ais_data_len(msg),
                  tmp_size);
-        sane = TRUE;
+        sane = FALSE;
     }
 
     if (sane && ais_data_len(msg) == 0) {
