@@ -786,6 +786,48 @@ crm_update_peer_uname(crm_node_t *node, const char *uname)
 
 /*!
  * \internal
+ * \brief Get log-friendly string equivalent of a process flag
+ *
+ * \param[in] proc  Process flag
+ *
+ * \return Log-friendly string equivalent of \p proc
+ */
+static inline const char *
+proc2text(enum crm_proc_flag proc)
+{
+    const char *text = "unknown";
+
+    switch (proc) {
+        case crm_proc_none:
+            text = "none";
+            break;
+        case crm_proc_based:
+            text = "pacemaker-based";
+            break;
+        case crm_proc_controld:
+            text = "pacemaker-controld";
+            break;
+        case crm_proc_schedulerd:
+            text = "pacemaker-schedulerd";
+            break;
+        case crm_proc_execd:
+            text = "pacemaker-execd";
+            break;
+        case crm_proc_attrd:
+            text = "pacemaker-attrd";
+            break;
+        case crm_proc_fenced:
+            text = "pacemaker-fenced";
+            break;
+        case crm_proc_cpg:
+            text = "corosync-cpg";
+            break;
+    }
+    return text;
+}
+
+/*!
+ * \internal
  * \brief Update a node's process information (and potentially state)
  *
  * \param[in] source      Caller's function name (for log messages)
@@ -807,7 +849,8 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
     gboolean changed = FALSE;
 
     CRM_CHECK(node != NULL, crm_err("%s: Could not set %s to %s for NULL",
-                                    source, peer2text(flag), status); return NULL);
+                                    source, proc2text(flag), status);
+                            return NULL);
 
     /* Pacemaker doesn't spawn processes on remote nodes */
     if (pcmk_is_set(node->flags, crm_remote_node)) {
@@ -844,7 +887,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
                      node->id);
         } else {
             crm_info("%s: Node %s[%u] - %s is now %s", source, node->uname, node->id,
-                     peer2text(flag), status);
+                     proc2text(flag), status);
         }
 
         /* Call the client callback first, then update the peer state,
@@ -873,7 +916,7 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
         }
     } else {
         crm_trace("%s: Node %s[%u] - %s is unchanged (%s)", source, node->uname, node->id,
-                  peer2text(flag), status);
+                  proc2text(flag), status);
     }
     return node;
 }

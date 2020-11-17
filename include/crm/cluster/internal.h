@@ -48,40 +48,6 @@ crm_get_cluster_proc(void)
     return crm_proc_none;
 }
 
-static inline const char *
-peer2text(enum crm_proc_flag proc)
-{
-    const char *text = "unknown";
-
-    switch (proc) {
-        case crm_proc_none:
-            text = "none";
-            break;
-        case crm_proc_based:
-            text = "pacemaker-based";
-            break;
-        case crm_proc_controld:
-            text = "pacemaker-controld";
-            break;
-        case crm_proc_schedulerd:
-            text = "pacemaker-schedulerd";
-            break;
-        case crm_proc_execd:
-            text = "pacemaker-execd";
-            break;
-        case crm_proc_attrd:
-            text = "pacemaker-attrd";
-            break;
-        case crm_proc_fenced:
-            text = "pacemaker-fenced";
-            break;
-        case crm_proc_cpg:
-            text = "corosync-cpg";
-            break;
-    }
-    return text;
-}
-
 /*
 typedef enum {
    CS_OK = 1,
