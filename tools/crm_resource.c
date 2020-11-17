@@ -1902,6 +1902,7 @@ main(int argc, char **argv)
             unsigned int count = 0;
             GHashTable *params = NULL;
             pe_node_t *current = pe__find_active_on(rsc, &count, NULL);
+            bool free_params = true;
 
             if (count > 1) {
                 out->err(out, "%s is active on more than one node,"
@@ -1909,23 +1910,26 @@ main(int argc, char **argv)
                 current = NULL;
             }
 
-            params = crm_str_table_new();
+            crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
 
             if (pcmk__str_eq(options.attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
-                get_rsc_attributes(params, rsc, current, data_set);
+                params = pe_rsc_params(rsc, current, data_set);
+                free_params = false;
 
             } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
-                /* No need to redirect to the parent */
+                params = crm_str_table_new();
                 get_meta_attributes(params, rsc, current, data_set);
 
             } else {
+                params = crm_str_table_new();
                 pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
                                            NULL, FALSE, data_set);
             }
 
-            crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
             rc = out->message(out, "attribute-list", rsc, options.prop_name, params);
-            g_hash_table_destroy(params);
+            if (free_params) {
+                g_hash_table_destroy(params);
+            }
             break;
         }
 

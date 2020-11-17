@@ -916,40 +916,29 @@ cli_resource_fail(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 }
 
 static GHashTable *
-generate_resource_params(pe_resource_t * rsc, pe_working_set_t * data_set)
+generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
+                         pe_working_set_t *data_set)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTable *combined = NULL;
     GHashTableIter iter;
+    char *key = NULL;
+    char *value = NULL;
 
-    if (!rsc) {
-        crm_err("Resource does not exist in config");
-        return NULL;
-    }
-
-    params = crm_str_table_new();
-    meta = crm_str_table_new();
     combined = crm_str_table_new();
 
-    get_rsc_attributes(params, rsc, NULL /* TODO: Pass in local node */ , data_set);
-    get_meta_attributes(meta, rsc, NULL /* TODO: Pass in local node */ , data_set);
-
-    if (params) {
-        char *key = NULL;
-        char *value = NULL;
-
+    params = pe_rsc_params(rsc, node, data_set);
+    if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
             g_hash_table_insert(combined, strdup(key), strdup(value));
         }
-        g_hash_table_destroy(params);
     }
 
-    if (meta) {
-        char *key = NULL;
-        char *value = NULL;
-
+    meta = crm_str_table_new();
+    get_meta_attributes(meta, rsc, node, data_set);
+    if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
             char *crm_name = crm_meta_name(key);
@@ -1827,7 +1816,8 @@ cli_resource_execute(pcmk__output_t *out, pe_resource_t *rsc,
     rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
-    params = generate_resource_params(rsc, data_set);
+    params = generate_resource_params(rsc, NULL /* @TODO use local node */,
+                                      data_set);
 
     if (timeout_ms == 0) {
         timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
