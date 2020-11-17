@@ -1074,19 +1074,6 @@ crm_reap_unseen_nodes(uint64_t membership)
     }
 }
 
-int
-crm_terminate_member(int nodeid, const char *uname, void *unused)
-{
-    /* Always use the synchronous, non-mainloop version */
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
-int
-crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
-{
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
 static crm_node_t *
 crm_find_known_peer(const char *id, const char *uname)
 {
@@ -1249,4 +1236,29 @@ crm_find_known_peer_full(unsigned int id, const char *uname, int flags)
 
     free(id_str);
     return node;
+}
+
+
+// Deprecated functions kept only for backward API compatibility
+
+int crm_terminate_member(int nodeid, const char *uname, void *unused);
+int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
+                                     int *connection);
+/*!
+ * \deprecated Use stonith_api_kick() from libstonithd instead
+ */
+int
+crm_terminate_member(int nodeid, const char *uname, void *unused)
+{
+    /* Always use the synchronous, non-mainloop version */
+    return stonith_api_kick(nodeid, uname, 120, TRUE);
+}
+
+/*!
+ * \deprecated Use stonith_api_kick() from libstonithd instead
+ */
+int
+crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
+{
+    return stonith_api_kick(nodeid, uname, 120, TRUE);
 }

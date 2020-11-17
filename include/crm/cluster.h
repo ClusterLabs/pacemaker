@@ -139,8 +139,6 @@ crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 guint crm_active_peers(void);
 gboolean crm_is_peer_active(const crm_node_t * node);
 guint reap_crm_member(uint32_t id, const char *name);
-int crm_terminate_member(int nodeid, const char *uname, void *unused);
-int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
 
 #  if SUPPORT_COROSYNC
 uint32_t get_local_nodeid(cpg_handle_t handle);
@@ -212,6 +210,16 @@ crm_join_phase_str(enum crm_join_phase phase)
     }
     return "invalid";
 }
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h in a future release.
+ */
+
+int crm_terminate_member(int nodeid, const char *uname, void *unused);
+int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
+                                     int *connection);
+#endif
 
 #ifdef __cplusplus
 }
