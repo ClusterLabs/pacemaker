@@ -19,6 +19,7 @@
 #include <crm/common/mainloop.h>
 #include <sys/utsname.h>
 
+#include <qb/qbipc_common.h>
 #include <qb/qbipcc.h>
 #include <qb/qbutil.h>
 
@@ -42,7 +43,37 @@ static bool cpg_evicted = false;
 static GList *cs_message_queue = NULL;
 static int cs_message_timer = 0;
 
+struct pcmk__cpg_host_s {
+    uint32_t id;
+    uint32_t pid;
+    gboolean local;
+    enum crm_ais_msg_types type;
+    uint32_t size;
+    char uname[MAX_NAME];
+} __attribute__ ((packed));
+
+typedef struct pcmk__cpg_host_s pcmk__cpg_host_t;
+
+struct pcmk__cpg_msg_s {
+    struct qb_ipc_response_header header __attribute__ ((aligned(8)));
+    uint32_t id;
+    gboolean is_compressed;
+
+    pcmk__cpg_host_t host;
+    pcmk__cpg_host_t sender;
+
+    uint32_t size;
+    uint32_t compressed_size;
+    /* 584 bytes */
+    char data[0];
+
+} __attribute__ ((packed));
+
+typedef struct pcmk__cpg_msg_s pcmk__cpg_msg_t;
+
 static void crm_cs_flush(gpointer data);
+
+#define msg_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
 
 #define cs_repeat(rc, counter, max, code) do {                          \
         rc = code;                                                      \
@@ -266,6 +297,58 @@ pcmk_cpg_dispatch(gpointer user_data)
     return 0;
 }
 
+static inline const char *
+ais_dest(const pcmk__cpg_host_t *host)
+{
+    if (host->local) {
+        return "local";
+    } else if (host->size > 0) {
+        return host->uname;
+    } else {
+        return "<all>";
+    }
+}
+
+static inline const char *
+msg_type2text(enum crm_ais_msg_types type)
+{
+    const char *text = "unknown";
+
+    switch (type) {
+        case crm_msg_none:
+            text = "unknown";
+            break;
+        case crm_msg_ais:
+            text = "ais";
+            break;
+        case crm_msg_cib:
+            text = "cib";
+            break;
+        case crm_msg_crmd:
+            text = "crmd";
+            break;
+        case crm_msg_pe:
+            text = "pengine";
+            break;
+        case crm_msg_te:
+            text = "tengine";
+            break;
+        case crm_msg_lrmd:
+            text = "lrmd";
+            break;
+        case crm_msg_attrd:
+            text = "attrd";
+            break;
+        case crm_msg_stonithd:
+            text = "stonithd";
+            break;
+        case crm_msg_stonith_ng:
+            text = "stonith-ng";
+            break;
+    }
+    return text;
+}
+
 /*!
  * \internal
  * \brief Check whether a Corosync CPG message is valid
@@ -275,11 +358,11 @@ pcmk_cpg_dispatch(gpointer user_data)
  * \return true if \p msg is valid, otherwise false
  */
 static bool
-check_message_sanity(const AIS_Message *msg)
+check_message_sanity(const pcmk__cpg_msg_t *msg)
 {
     gboolean sane = TRUE;
     int dest = msg->host.type;
-    int tmp_size = msg->header.size - sizeof(AIS_Message);
+    int tmp_size = msg->header.size - sizeof(pcmk__cpg_msg_t);
 
     if (sane && msg->header.size == 0) {
         crm_warn("Message with no size");
@@ -291,13 +374,13 @@ check_message_sanity(const AIS_Message *msg)
         sane = FALSE;
     }
 
-    if (sane && ais_data_len(msg) != tmp_size) {
-        crm_warn("Message payload size is incorrect: expected %d, got %d", ais_data_len(msg),
+    if (sane && msg_data_len(msg) != tmp_size) {
+        crm_warn("Message payload size is incorrect: expected %d, got %d", msg_data_len(msg),
                  tmp_size);
         sane = FALSE;
     }
 
-    if (sane && ais_data_len(msg) == 0) {
+    if (sane && msg_data_len(msg) == 0) {
         crm_warn("Message with no payload");
         sane = FALSE;
     }
@@ -317,14 +400,14 @@ check_message_sanity(const AIS_Message *msg)
         crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
                 msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
                 ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-                msg->sender.pid, msg->is_compressed, ais_data_len(msg), msg->header.size);
+                msg->sender.pid, msg->is_compressed, msg_data_len(msg), msg->header.size);
 
     } else {
         crm_trace
             ("Verified message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
              msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
              msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
-             ais_data_len(msg), msg->header.size);
+             msg_data_len(msg), msg->header.size);
     }
 
     return sane;
@@ -351,7 +434,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
                         uint32_t *kind, const char **from)
 {
     char *data = NULL;
-    AIS_Message *msg = (AIS_Message *) content;
+    pcmk__cpg_msg_t *msg = (pcmk__cpg_msg_t *) content;
 
     if(handle) {
         // Do filtering and field massaging
@@ -393,7 +476,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
 
     crm_trace("Got new%s message (size=%d, %d, %d)",
               msg->is_compressed ? " compressed" : "",
-              ais_data_len(msg), msg->size, msg->compressed_size);
+              msg_data_len(msg), msg->size, msg->compressed_size);
 
     if (kind != NULL) {
         *kind = msg->header.id;
@@ -445,7 +528,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
             " min=%d, total=%d, size=%d, bz2_size=%d",
             msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
             ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-            msg->sender.pid, (int)sizeof(AIS_Message),
+            msg->sender.pid, (int)sizeof(pcmk__cpg_msg_t),
             msg->header.size, msg->size, msg->compressed_size);
 
     free(data);
@@ -813,7 +896,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
 
     char *target = NULL;
     struct iovec *iov;
-    AIS_Message *msg = NULL;
+    pcmk__cpg_msg_t *msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
     switch (msg_class) {
@@ -845,7 +928,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
         sender = local_pid;
     }
 
-    msg = calloc(1, sizeof(AIS_Message));
+    msg = calloc(1, sizeof(pcmk__cpg_msg_t));
 
     msg_id++;
     msg->id = msg_id;
@@ -879,7 +962,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
     }
 
     msg->size = 1 + strlen(data);
-    msg->header.size = sizeof(AIS_Message) + msg->size;
+    msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
 
     if (msg->size < CRM_BZ2_THRESHOLD) {
         msg = pcmk__realloc(msg, msg->header.size);
@@ -893,7 +976,7 @@ send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
         if (pcmk__compress(uncompressed, (unsigned int) msg->size, 0,
                            &compressed, &new_size) == pcmk_rc_ok) {
 
-            msg->header.size = sizeof(AIS_Message) + new_size;
+            msg->header.size = sizeof(pcmk__cpg_msg_t) + new_size;
             msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
 

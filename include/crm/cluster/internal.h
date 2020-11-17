@@ -12,46 +12,6 @@
 
 #  include <crm/cluster.h>
 
-typedef struct crm_ais_host_s AIS_Host;
-typedef struct crm_ais_msg_s AIS_Message;
-
-struct crm_ais_host_s {
-    uint32_t id;
-    uint32_t pid;
-    gboolean local;
-    enum crm_ais_msg_types type;
-    uint32_t size;
-    char uname[MAX_NAME];
-
-} __attribute__ ((packed));
-
-#if SUPPORT_COROSYNC
-#  include <qb/qbipc_common.h>
-#  include <corosync/corotypes.h>
-typedef struct qb_ipc_response_header cs_ipc_header_response_t;
-#else
-typedef struct {
-    int size __attribute__ ((aligned(8)));
-    int id __attribute__ ((aligned(8)));
-    int error __attribute__ ((aligned(8)));
-} __attribute__ ((aligned(8))) cs_ipc_header_response_t;
-#endif
-
-struct crm_ais_msg_s {
-    cs_ipc_header_response_t header __attribute__ ((aligned(8)));
-    uint32_t id;
-    gboolean is_compressed;
-
-    AIS_Host host;
-    AIS_Host sender;
-
-    uint32_t size;
-    uint32_t compressed_size;
-    /* 584 bytes */
-    char data[0];
-
-} __attribute__ ((packed));
-
 /* *INDENT-OFF* */
 enum crm_proc_flag {
     crm_proc_none       = 0x00000001,
@@ -121,20 +81,6 @@ peer2text(enum crm_proc_flag proc)
     }
     return text;
 }
-
-static inline const char *
-ais_dest(const AIS_Host *host)
-{
-    if (host->local) {
-        return "local";
-    } else if (host->size > 0) {
-        return host->uname;
-    } else {
-        return "<all>";
-    }
-}
-
-#  define ais_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
 
 /*
 typedef enum {
@@ -260,46 +206,6 @@ ais_error2text(int error)
             break;
     }
 #  endif
-    return text;
-}
-
-static inline const char *
-msg_type2text(enum crm_ais_msg_types type)
-{
-    const char *text = "unknown";
-
-    switch (type) {
-        case crm_msg_none:
-            text = "unknown";
-            break;
-        case crm_msg_ais:
-            text = "ais";
-            break;
-        case crm_msg_cib:
-            text = "cib";
-            break;
-        case crm_msg_crmd:
-            text = "crmd";
-            break;
-        case crm_msg_pe:
-            text = "pengine";
-            break;
-        case crm_msg_te:
-            text = "tengine";
-            break;
-        case crm_msg_lrmd:
-            text = "lrmd";
-            break;
-        case crm_msg_attrd:
-            text = "attrd";
-            break;
-        case crm_msg_stonithd:
-            text = "stonithd";
-            break;
-        case crm_msg_stonith_ng:
-            text = "stonith-ng";
-            break;
-    }
     return text;
 }
 
