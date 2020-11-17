@@ -10,6 +10,7 @@
 #ifndef CRM_CLUSTER_INTERNAL__H
 #  define CRM_CLUSTER_INTERNAL__H
 
+#  include <stdint.h>       // uint32_t, uint64_t
 #  include <crm/cluster.h>
 
 /* *INDENT-OFF* */
@@ -100,20 +101,22 @@ bool pcmk__corosync_add_nodes(xmlNode *xml_parent);
 
 crm_node_t *crm_update_peer_proc(const char *source, crm_node_t * peer,
                                  uint32_t flag, const char *status);
-crm_node_t *crm_update_peer_state(const char *source, crm_node_t * node,
-                                  const char *state, uint64_t membership);
+crm_node_t *pcmk__update_peer_state(const char *source, crm_node_t *node,
+                                    const char *state, uint64_t membership);
 
-void crm_update_peer_uname(crm_node_t *node, const char *uname);
-void crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected);
-void crm_reap_unseen_nodes(uint64_t ring_id);
+void pcmk__update_peer_expected(const char *source, crm_node_t *node,
+                                const char *expected);
+void pcmk__reap_unseen_nodes(uint64_t ring_id);
 
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
                                    void (*destroy) (gpointer));
-crm_node_t * crm_find_peer_full(unsigned int id, const char *uname, int flags);
-crm_node_t * crm_find_peer(unsigned int id, const char *uname);
+crm_node_t *pcmk__search_node_caches(unsigned int id, const char *uname,
+                                     uint32_t flags);
+crm_node_t *pcmk__search_cluster_node_cache(unsigned int id, const char *uname);
 
-void crm_peer_caches_refresh(xmlNode *cib);
-crm_node_t *crm_find_known_peer_full(unsigned int id, const char *uname, int flags);
+void pcmk__refresh_node_caches_from_cib(xmlNode *cib);
+crm_node_t *pcmk__search_known_node_cache(unsigned int id, const char *uname,
+                                          uint32_t flags);
 
 #endif

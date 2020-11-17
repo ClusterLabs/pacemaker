@@ -319,11 +319,11 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
         }
 
         /* Update the node state (including updating last_seen to ring_id) */
-        crm_update_peer_state(__func__, node, CRM_NODE_MEMBER, ring_id);
+        pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, ring_id);
     }
 
     /* Remove any peer cache entries we didn't update */
-    crm_reap_unseen_nodes(ring_id);
+    pcmk__reap_unseen_nodes(ring_id);
 
     if (quorum_app_callback) {
         quorum_app_callback(ring_id, quorate);

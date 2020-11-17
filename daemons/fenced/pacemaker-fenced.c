@@ -1051,7 +1051,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         stonith_enabled_saved = FALSE; /* Trigger a full refresh below */
     }
 
-    crm_peer_caches_refresh(local_cib);
+    pcmk__refresh_node_caches_from_cib(local_cib);
 
     stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
                                            local_cib, LOG_NEVER);
@@ -1110,7 +1110,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     have_cib_devices = TRUE;
     local_cib = copy_xml(output);
 
-    crm_peer_caches_refresh(local_cib);
+    pcmk__refresh_node_caches_from_cib(local_cib);
 
     fencing_topology_init();
     cib_devices_update();

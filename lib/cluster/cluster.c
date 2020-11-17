@@ -247,7 +247,7 @@ crm_peer_uname(const char *uuid)
         uint32_t id = (uint32_t) crm_parse_ll(uuid, NULL);
 
         if (id != 0) {
-            node = crm_find_peer(id, NULL);
+            node = pcmk__search_cluster_node_cache(id, NULL);
         } else {
             crm_err("Invalid node id: %s", uuid);
         }

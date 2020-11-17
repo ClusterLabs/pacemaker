@@ -135,7 +135,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
              *
              * I'm not happy about this either.
              */
-            crm_update_peer_expected(__func__, member, CRMD_JOINSTATE_DOWN);
+            pcmk__update_peer_expected(__func__, member, CRMD_JOINSTATE_DOWN);
         }
         return;
     }
@@ -383,10 +383,10 @@ do_dc_join_filter_offer(long long action,
 
     if (ack_nack_bool == FALSE) {
         crm_update_peer_join(__func__, join_node, crm_join_nack);
-        crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_NACK);
+        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_NACK);
     } else {
         crm_update_peer_join(__func__, join_node, crm_join_integrated);
-        crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
+        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
     }
 
     count = crmd_join_phase_count(crm_join_integrated);
@@ -645,7 +645,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          *
          * All other NACKs (due to versions etc) should still be processed
          */
-        crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_PENDING);
+        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_PENDING);
         return;
     }
 
@@ -655,7 +655,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     acknak = create_dc_message(CRM_OP_JOIN_ACKNAK, join_to);
     crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_TRUE);
     crm_update_peer_join(__func__, join_node, crm_join_finalized);
-    crm_update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
+    pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
 
     send_cluster_message(crm_get_peer(0, join_to), crm_msg_crmd, acknak, TRUE);
     free_xml(acknak);

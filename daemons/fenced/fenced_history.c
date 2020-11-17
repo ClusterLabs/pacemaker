@@ -409,7 +409,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         target = crm_element_value(dev, F_STONITH_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid = crm_atoi(target, NULL);
-            crm_node_t *node = crm_find_known_peer_full(nodeid, NULL, CRM_GET_PEER_ANY);
+            crm_node_t *node = pcmk__search_known_node_cache(nodeid, NULL,
+                                                             CRM_GET_PEER_ANY);
 
             if (node) {
                 target = node->uname;

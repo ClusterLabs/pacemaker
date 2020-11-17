@@ -2365,7 +2365,8 @@ stonith_fence(xmlNode * msg)
 
         if (cmd->options & st_opt_cs_nodeid) {
             int nodeid = crm_atoi(host, NULL);
-            crm_node_t *node = crm_find_known_peer_full(nodeid, NULL, CRM_GET_PEER_ANY);
+            crm_node_t *node = pcmk__search_known_node_cache(nodeid, NULL,
+                                                             CRM_GET_PEER_ANY);
 
             if (node) {
                 host = node->uname;

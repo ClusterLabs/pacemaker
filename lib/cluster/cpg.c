@@ -640,7 +640,8 @@ pcmk_cpg_membership(cpg_handle_t handle,
           cmp_member_list_nodeid);
 
     for (i = 0; i < left_list_entries; i++) {
-        crm_node_t *peer = crm_find_peer(left_list[i].nodeid, NULL);
+        crm_node_t *peer = pcmk__search_cluster_node_cache(left_list[i].nodeid,
+                                                           NULL);
         const struct cpg_address **rival = NULL;
 
         /* in CPG world, NODE:PROCESS-IN-MEMBERSHIP-OF-G is an 1:N relation
@@ -733,7 +734,7 @@ pcmk_cpg_membership(cpg_handle_t handle,
                 // If it persists for more than a minute, update the state
                 crm_warn("Node %u is member of group %s but was believed offline",
                          member_list[i].nodeid, groupName->value);
-                crm_update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
+                pcmk__update_peer_state(__func__, peer, CRM_NODE_MEMBER, 0);
             }
         }
 
