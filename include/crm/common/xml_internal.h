@@ -235,4 +235,7 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+void
+pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
+
 #endif // PCMK__XML_INTERNAL__H

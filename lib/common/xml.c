@@ -2935,6 +2935,26 @@ pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
     return ret;
 }
 
+void
+pcmk__xe_set_propv(xmlNodePtr node, va_list pairs)
+{
+    while (true) {
+        const char *name, *value;
+
+        name = va_arg(pairs, const char *);
+        if (name == NULL) {
+            return;
+        }
+
+        value = va_arg(pairs, const char *);
+        if (value == NULL) {
+            return;
+        }
+
+        crm_xml_add(node, name, value);
+    }
+}
+
 // Deprecated functions kept only for backward API compatibility
 
 xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
