@@ -169,7 +169,8 @@ get_local_nodeid(cpg_handle_t handle)
     }
 
     if (rc != CS_OK) {
-        crm_err("Could not get local node id from the CPG API: %s (%d)", ais_error2text(rc), rc);
+        crm_err("Could not get local node id from the CPG API: %s (%d)",
+                pcmk__cs_err_str(rc), rc);
     }
 
 bail:
@@ -253,10 +254,10 @@ crm_cs_flush(gpointer data)
     queue_len -= sent;
     if ((sent > 1) || (cs_message_queue != NULL)) {
         crm_info("Sent %u CPG messages  (%d remaining): %s (%d)",
-                 sent, queue_len, ais_error2text(rc), (int) rc);
+                 sent, queue_len, pcmk__cs_err_str(rc), (int) rc);
     } else {
         crm_trace("Sent %u CPG messages  (%d remaining): %s (%d)",
-                  sent, queue_len, ais_error2text(rc), (int) rc);
+                  sent, queue_len, pcmk__cs_err_str(rc), (int) rc);
     }
 
     if (cs_message_queue) {
@@ -285,7 +286,8 @@ pcmk_cpg_dispatch(gpointer user_data)
 
     rc = cpg_dispatch(cluster->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
-        crm_err("Connection to the CPG API failed: %s (%d)", ais_error2text(rc), rc);
+        crm_err("Connection to the CPG API failed: %s (%d)",
+                pcmk__cs_err_str(rc), rc);
         cpg_finalize(cluster->cpg_handle);
         cluster->cpg_handle = 0;
         return -1;

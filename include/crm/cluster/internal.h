@@ -48,131 +48,49 @@ crm_get_cluster_proc(void)
     return crm_proc_none;
 }
 
-/*
-typedef enum {
-   CS_OK = 1,
-   CS_ERR_LIBRARY = 2,
-   CS_ERR_VERSION = 3,
-   CS_ERR_INIT = 4,
-   CS_ERR_TIMEOUT = 5,
-   CS_ERR_TRY_AGAIN = 6,
-   CS_ERR_INVALID_PARAM = 7,
-   CS_ERR_NO_MEMORY = 8,
-   CS_ERR_BAD_HANDLE = 9,
-   CS_ERR_BUSY = 10,
-   CS_ERR_ACCESS = 11,
-   CS_ERR_NOT_EXIST = 12,
-   CS_ERR_NAME_TOO_LONG = 13,
-   CS_ERR_EXIST = 14,
-   CS_ERR_NO_SPACE = 15,
-   CS_ERR_INTERRUPT = 16,
-   CS_ERR_NAME_NOT_FOUND = 17,
-   CS_ERR_NO_RESOURCES = 18,
-   CS_ERR_NOT_SUPPORTED = 19,
-   CS_ERR_BAD_OPERATION = 20,
-   CS_ERR_FAILED_OPERATION = 21,
-   CS_ERR_MESSAGE_ERROR = 22,
-   CS_ERR_QUEUE_FULL = 23,
-   CS_ERR_QUEUE_NOT_AVAILABLE = 24,
-   CS_ERR_BAD_FLAGS = 25,
-   CS_ERR_TOO_BIG = 26,
-   CS_ERR_NO_SECTIONS = 27,
-   CS_ERR_CONTEXT_NOT_FOUND = 28,
-   CS_ERR_TOO_MANY_GROUPS = 30,
-   CS_ERR_SECURITY = 100
-} cs_error_t;
+/*!
+ * \internal
+ * \brief Get log-friendly string description of a Corosync return code
+ *
+ * \param[in] error  Corosync return code
+ *
+ * \return Log-friendly string description corresponding to \p error
  */
 static inline const char *
-ais_error2text(int error)
+pcmk__cs_err_str(int error)
 {
-    const char *text = "unknown";
-
 #  if SUPPORT_COROSYNC
     switch (error) {
-        case CS_OK:
-            text = "OK";
-            break;
-        case CS_ERR_LIBRARY:
-            text = "Library error";
-            break;
-        case CS_ERR_VERSION:
-            text = "Version error";
-            break;
-        case CS_ERR_INIT:
-            text = "Initialization error";
-            break;
-        case CS_ERR_TIMEOUT:
-            text = "Timeout";
-            break;
-        case CS_ERR_TRY_AGAIN:
-            text = "Try again";
-            break;
-        case CS_ERR_INVALID_PARAM:
-            text = "Invalid parameter";
-            break;
-        case CS_ERR_NO_MEMORY:
-            text = "No memory";
-            break;
-        case CS_ERR_BAD_HANDLE:
-            text = "Bad handle";
-            break;
-        case CS_ERR_BUSY:
-            text = "Busy";
-            break;
-        case CS_ERR_ACCESS:
-            text = "Access error";
-            break;
-        case CS_ERR_NOT_EXIST:
-            text = "Doesn't exist";
-            break;
-        case CS_ERR_NAME_TOO_LONG:
-            text = "Name too long";
-            break;
-        case CS_ERR_EXIST:
-            text = "Exists";
-            break;
-        case CS_ERR_NO_SPACE:
-            text = "No space";
-            break;
-        case CS_ERR_INTERRUPT:
-            text = "Interrupt";
-            break;
-        case CS_ERR_NAME_NOT_FOUND:
-            text = "Name not found";
-            break;
-        case CS_ERR_NO_RESOURCES:
-            text = "No resources";
-            break;
-        case CS_ERR_NOT_SUPPORTED:
-            text = "Not supported";
-            break;
-        case CS_ERR_BAD_OPERATION:
-            text = "Bad operation";
-            break;
-        case CS_ERR_FAILED_OPERATION:
-            text = "Failed operation";
-            break;
-        case CS_ERR_MESSAGE_ERROR:
-            text = "Message error";
-            break;
-        case CS_ERR_QUEUE_FULL:
-            text = "Queue full";
-            break;
-        case CS_ERR_QUEUE_NOT_AVAILABLE:
-            text = "Queue not available";
-            break;
-        case CS_ERR_BAD_FLAGS:
-            text = "Bad flags";
-            break;
-        case CS_ERR_TOO_BIG:
-            text = "Too big";
-            break;
-        case CS_ERR_NO_SECTIONS:
-            text = "No sections";
-            break;
+        case CS_OK:                         return "OK";
+        case CS_ERR_LIBRARY:                return "Library error";
+        case CS_ERR_VERSION:                return "Version error";
+        case CS_ERR_INIT:                   return "Initialization error";
+        case CS_ERR_TIMEOUT:                return "Timeout";
+        case CS_ERR_TRY_AGAIN:              return "Try again";
+        case CS_ERR_INVALID_PARAM:          return "Invalid parameter";
+        case CS_ERR_NO_MEMORY:              return "No memory";
+        case CS_ERR_BAD_HANDLE:             return "Bad handle";
+        case CS_ERR_BUSY:                   return "Busy";
+        case CS_ERR_ACCESS:                 return "Access error";
+        case CS_ERR_NOT_EXIST:              return "Doesn't exist";
+        case CS_ERR_NAME_TOO_LONG:          return "Name too long";
+        case CS_ERR_EXIST:                  return "Exists";
+        case CS_ERR_NO_SPACE:               return "No space";
+        case CS_ERR_INTERRUPT:              return "Interrupt";
+        case CS_ERR_NAME_NOT_FOUND:         return "Name not found";
+        case CS_ERR_NO_RESOURCES:           return "No resources";
+        case CS_ERR_NOT_SUPPORTED:          return "Not supported";
+        case CS_ERR_BAD_OPERATION:          return "Bad operation";
+        case CS_ERR_FAILED_OPERATION:       return "Failed operation";
+        case CS_ERR_MESSAGE_ERROR:          return "Message error";
+        case CS_ERR_QUEUE_FULL:             return "Queue full";
+        case CS_ERR_QUEUE_NOT_AVAILABLE:    return "Queue not available";
+        case CS_ERR_BAD_FLAGS:              return "Bad flags";
+        case CS_ERR_TOO_BIG:                return "Too big";
+        case CS_ERR_NO_SECTIONS:            return "No sections";
     }
 #  endif
-    return text;
+    return "Corosync error";
 }
 
 #  if SUPPORT_COROSYNC

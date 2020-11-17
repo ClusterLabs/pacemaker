@@ -496,7 +496,7 @@ pcmk__corosync_detect(void)
 
         default:
             crm_info("Failed to initialize the cmap API: %s (%d)",
-                     ais_error2text(rc), rc);
+                     pcmk__cs_err_str(rc), rc);
             return pcmk_cluster_unknown;
     }
 
