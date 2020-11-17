@@ -1,3 +1,12 @@
+* Mon Nov 16 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5-rc3
+- Changesets: 6
+- Diff: 4 files changed, 28 insertions(+), 10 deletions(-)
+
+- Changes since Pacemaker-2.0.5-rc2
+  + build: Fix python2 vs. python3 packaging problems on openSUSE Tumbleweed
+  + build: Update pkgconfig files for CI testing
+  + tools: Use bash in cibsecret
+
 * Tue Oct 27 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5-rc2
 - Changesets: 16
 - Diff: 19 files changed, 348 insertions(+), 145 deletions(-)

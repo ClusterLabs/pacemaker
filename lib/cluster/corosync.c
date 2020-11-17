@@ -688,6 +688,18 @@ bail:
     return cluster_name;
 }
 
+/*!
+ * \internal
+ * \brief Check whether Corosync has any configuration keys with given prefix
+ *
+ * \param[in] prefix  Configuration key prefix
+ *
+ * \return -1 on error, 0 if no such key present, 1 if any such key present
+ * \note This function always returns the result of the first time it was
+ *       called, even if later called with a different section name (which
+ *       obviously should never be done), and even if the corosync configuration
+ *       has since been reloaded.
+ */
 int
 corosync_cmap_has_config(const char *prefix)
 {
@@ -753,10 +765,9 @@ corosync_cmap_has_config(const char *prefix)
     }
 
     found = 0;
-    while ((rc = cmap_iter_next(cmap_handle, iter_handle, key_name, NULL, NULL)) == CS_OK) {
+    if (cmap_iter_next(cmap_handle, iter_handle, key_name, NULL, NULL) == CS_OK) {
         crm_trace("'%s' is configured in corosync cmap: %s", prefix, key_name);
-        found++;
-        break;
+        found = 1;
     }
     cmap_iter_finalize(cmap_handle, iter_handle);
 
