@@ -57,6 +57,23 @@ unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 static gboolean crm_autoreap  = TRUE;
 
+// Flag setting and clearing for crm_node_t:flags
+
+#define set_peer_flags(peer, flags_to_set) do {                               \
+        (peer)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
+                                           "Peer", (peer)->uname,             \
+                                           (peer)->flags, (flags_to_set),     \
+                                           #flags_to_set);                    \
+    } while (0)
+
+#define clear_peer_flags(peer, flags_to_clear) do {                           \
+        (peer)->flags = pcmk__clear_flags_as(__func__, __LINE__,              \
+                                             LOG_TRACE,                       \
+                                             "Peer", (peer)->uname,           \
+                                             (peer)->flags, (flags_to_clear), \
+                                             #flags_to_clear);                \
+    } while (0)
+
 int
 crm_remote_peer_cache_size(void)
 {
@@ -100,7 +117,7 @@ crm_remote_peer_get(const char *node_name)
     }
 
     /* Populate the essential information */
-    pcmk__set_peer_flags(node, crm_remote_node);
+    set_peer_flags(node, crm_remote_node);
     node->uuid = strdup(node_name);
     if (node->uuid == NULL) {
         free(node);
@@ -191,7 +208,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 
     } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        pcmk__clear_peer_flags(node, crm_node_dirty);
+        clear_peer_flags(node, crm_node_dirty);
         if (state) {
             crm_update_peer_state(__func__, node, state, 0);
         }
@@ -201,7 +218,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 static void
 mark_dirty(gpointer key, gpointer value, gpointer user_data)
 {
-    pcmk__set_peer_flags((crm_node_t *) value, crm_node_dirty);
+    set_peer_flags((crm_node_t *) value, crm_node_dirty);
 }
 
 static gboolean
@@ -1137,7 +1154,7 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         }
 
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        pcmk__clear_peer_flags(node, crm_node_dirty);
+        clear_peer_flags(node, crm_node_dirty);
     }
 
 }
