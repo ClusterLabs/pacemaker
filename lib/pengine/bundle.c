@@ -1663,7 +1663,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             }
 
             if (rc == pcmk_rc_no_output) {
-                pcmk__output_create_xml_node(out, "br");
+                pcmk__output_create_xml_node(out, "br", NULL);
             }
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
@@ -1678,7 +1678,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
                 xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
             }
-            pcmk__output_create_xml_node(out, "br");
+            pcmk__output_create_xml_node(out, "br", NULL);
             out->begin_list(out, NULL, NULL, NULL);
 
             if (print_ip) {

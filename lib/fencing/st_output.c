@@ -132,10 +132,11 @@ stonith__full_history_xml(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_FOOTER(out, rc);
     } else {
-        xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_history");
         char *rc_s = crm_itoa(history_rc);
 
-        xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) rc_s);
+        pcmk__output_create_xml_node(out, "fence_history",
+                                     "status", rc_s,
+                                     NULL);
         free(rc_s);
 
         rc = pcmk_rc_ok;
@@ -182,11 +183,12 @@ stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
-        xmlNodePtr node = pcmk__output_create_xml_node(out, "last-fenced");
         char *buf = time_t_string(when);
 
-        xmlSetProp(node, (pcmkXmlStr) "target", (pcmkXmlStr) target);
-        xmlSetProp(node, (pcmkXmlStr) "when", (pcmkXmlStr) buf);
+        pcmk__output_create_xml_node(out, "last-fenced",
+                                     "target", target,
+                                     "when", buf,
+                                     NULL);
 
         free(buf);
         return pcmk_rc_ok;
@@ -313,12 +315,18 @@ stonith__event_text(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
 int
 stonith__event_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event");
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history G_GNUC_UNUSED = va_arg(args, gboolean);
     gboolean later_succeeded G_GNUC_UNUSED = va_arg(args, gboolean);
 
     char *buf = NULL;
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "fence_event",
+                                                   "action", event->action,
+                                                   "target", event->target,
+                                                   "client", event->client,
+                                                   "origin", event->origin,
+                                                   NULL);
 
     switch (event->state) {
         case st_failed:
@@ -341,11 +349,6 @@ stonith__event_xml(pcmk__output_t *out, va_list args) {
     if (event->delegate != NULL) {
         xmlSetProp(node, (pcmkXmlStr) "delegate", (pcmkXmlStr) event->delegate);
     }
-
-    xmlSetProp(node, (pcmkXmlStr) "action", (pcmkXmlStr) event->action);
-    xmlSetProp(node, (pcmkXmlStr) "target", (pcmkXmlStr) event->target);
-    xmlSetProp(node, (pcmkXmlStr) "client", (pcmkXmlStr) event->client);
-    xmlSetProp(node, (pcmkXmlStr) "origin", (pcmkXmlStr) event->origin);
 
     if (event->state == st_failed || event->state == st_done) {
         buf = time_t_string(event->completed);
@@ -412,19 +415,20 @@ stonith__validate_agent_text(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
 int
 stonith__validate_agent_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "validate");
-
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
     char *output = va_arg(args, char *);
     char *error_output = va_arg(args, char *);
     int rc = va_arg(args, int);
 
-    xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent);
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "validate",
+                                                   "agent", agent,
+                                                   "valid", pcmk__btoa(rc),
+                                                   NULL);
+
     if (device != NULL) {
         xmlSetProp(node, (pcmkXmlStr) "device", (pcmkXmlStr) device);
     }
-    xmlSetProp(node, (pcmkXmlStr) "valid", (pcmkXmlStr) pcmk__btoa(rc));
 
     pcmk__output_xml_push_parent(out, node);
     out->subprocess_output(out, rc, output, error_output);

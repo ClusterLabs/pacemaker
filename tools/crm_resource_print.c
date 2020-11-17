@@ -247,9 +247,9 @@ resource_check_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *parent = uber_parent(checks->rsc);
     int rc = pcmk_rc_no_output;
 
-    xmlNode *node = pcmk__output_create_xml_node(out, "check");
-
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) parent->id);
+    xmlNode *node = pcmk__output_create_xml_node(out, "check",
+                                                 "id", parent->id,
+                                                 NULL);
 
     if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
         xmlSetProp(node, (pcmkXmlStr) "remain_stopped", (pcmkXmlStr) "true");

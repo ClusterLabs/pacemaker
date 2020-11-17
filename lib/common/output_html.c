@@ -370,7 +370,7 @@ html_is_quiet(pcmk__output_t *out) {
 
 static void
 html_spacer(pcmk__output_t *out) {
-    pcmk__output_create_xml_node(out, "br");
+    pcmk__output_create_xml_node(out, "br", NULL);
 }
 
 pcmk__output_t *
