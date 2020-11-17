@@ -1672,7 +1672,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                                      pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
-            pcmk__output_xml_create_parent(out, "li");
+            pcmk__output_xml_create_parent(out, "li", NULL);
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);

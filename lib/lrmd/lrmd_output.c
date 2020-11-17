@@ -46,9 +46,9 @@ lrmd__alternatives_list_xml(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "providers");
-
-    xmlSetProp(node, (pcmkXmlStr) "for", (pcmkXmlStr) agent_spec);
+    pcmk__output_xml_create_parent(out, "providers",
+                                   "for", agent_spec,
+                                   NULL);
     return xml_list(out, list, "provider");
 }
 
@@ -68,8 +68,9 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
     const char *agent_spec = va_arg(args, const char *);
     char *provider = va_arg(args, char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "agents");
-    xmlSetProp(node, (pcmkXmlStr) "standard", (pcmkXmlStr) agent_spec);
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "agents",
+                                                     "standard", agent_spec,
+                                                     NULL);
 
     if (!pcmk__str_empty(provider)) {
         xmlSetProp(node, (pcmkXmlStr) "provider", (pcmkXmlStr) provider);
@@ -99,9 +100,9 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
     lrmd_list_t *list = va_arg(args, lrmd_list_t *);
     const char *agent_spec = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "providers");
-
-    xmlSetProp(node, (pcmkXmlStr) "standard", (pcmkXmlStr) "ocf");
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "providers",
+                                                     "standard", "ocf",
+                                                     NULL);
 
     if (agent_spec != NULL) {
         xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent_spec);

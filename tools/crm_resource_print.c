@@ -324,9 +324,9 @@ resource_search_xml(pcmk__output_t *out, va_list args)
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gchar *requested_name = va_arg(args, gchar *);
 
-    xmlNode *xml_node = pcmk__output_xml_create_parent(out, "nodes");
-
-    xmlSetProp(xml_node, (pcmkXmlStr) "resource", (pcmkXmlStr) requested_name);
+    pcmk__output_xml_create_parent(out, "nodes",
+                                   "resource", requested_name,
+                                   NULL);
 
     for (GListPtr lpc = nodes; lpc != NULL; lpc = lpc->next) {
         pe_node_t *node = (pe_node_t *) lpc->data;
@@ -435,24 +435,23 @@ resource_why_xml(pcmk__output_t *out, va_list args)
 
     const char *host_uname = (node == NULL)? NULL : node->details->uname;
 
-    xmlNode *xml_node = pcmk__output_xml_create_parent(out, "reason");
+    xmlNode *xml_node = pcmk__output_xml_create_parent(out, "reason", NULL);
 
     if ((rsc == NULL) && (host_uname == NULL)) {
         GListPtr lpc = NULL;
         GListPtr hosts = NULL;
 
-        pcmk__output_xml_create_parent(out, "resources");
+        pcmk__output_xml_create_parent(out, "resources", NULL);
 
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-            xmlNode *rsc_node = NULL;
 
             rsc->fns->location(rsc, &hosts, TRUE);
 
-            rsc_node = pcmk__output_xml_create_parent(out, "resource");
-            xmlSetProp(rsc_node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
-            xmlSetProp(rsc_node, (pcmkXmlStr) "running",
-                       (pcmkXmlStr) pcmk__btoa(hosts != NULL));
+            pcmk__output_xml_create_parent(out, "resource",
+                                           "id", rsc->id,
+                                           "running", pcmk__btoa(hosts != NULL),
+                                           NULL);
 
             cli_resource_check(out, cib_conn, rsc);
             pcmk__output_xml_pop_parent(out);
@@ -476,16 +475,16 @@ resource_why_xml(pcmk__output_t *out, va_list args)
         GListPtr unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
         GListPtr lpc = NULL;
 
-        pcmk__output_xml_create_parent(out, "resources");
+        pcmk__output_xml_create_parent(out, "resources", NULL);
 
         for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-            xmlNode *rsc_node = NULL;
 
-            rsc_node = pcmk__output_xml_create_parent(out, "resource");
-            xmlSetProp(rsc_node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
-            xmlSetProp(rsc_node, (pcmkXmlStr) "running", (pcmkXmlStr) "true");
-            xmlSetProp(rsc_node, (pcmkXmlStr) "host", (pcmkXmlStr) host_uname);
+            pcmk__output_xml_create_parent(out, "resource",
+                                           "id", rsc->id,
+                                           "running", "true",
+                                           "host", host_uname,
+                                           NULL);
 
             cli_resource_check(out, cib_conn, rsc);
             pcmk__output_xml_pop_parent(out);
@@ -493,12 +492,12 @@ resource_why_xml(pcmk__output_t *out, va_list args)
 
         for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-            xmlNode *rsc_node = NULL;
 
-            rsc_node = pcmk__output_xml_create_parent(out, "resource");
-            xmlSetProp(rsc_node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
-            xmlSetProp(rsc_node, (pcmkXmlStr) "running", (pcmkXmlStr) "false");
-            xmlSetProp(rsc_node, (pcmkXmlStr) "host", (pcmkXmlStr) host_uname);
+            pcmk__output_xml_create_parent(out, "resource",
+                                           "id", rsc->id,
+                                           "running", "false",
+                                           "host", host_uname,
+                                           NULL);
 
             cli_resource_check(out, cib_conn, rsc);
             pcmk__output_xml_pop_parent(out);

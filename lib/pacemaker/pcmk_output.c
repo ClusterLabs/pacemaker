@@ -158,7 +158,7 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
         if (pcmk_is_set(peer->flags, pe_rsc_allocating)) {
             if (dependents == FALSE) {
                 if (!printed_header) {
-                    pcmk__output_xml_create_parent(out, "colocations");
+                    pcmk__output_xml_create_parent(out, "colocations", NULL);
                     printed_header = true;
                 }
 
@@ -172,7 +172,7 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
 
         if (dependents && recursive) {
             if (!printed_header) {
-                pcmk__output_xml_create_parent(out, "colocations");
+                pcmk__output_xml_create_parent(out, "colocations", NULL);
                 printed_header = true;
             }
 
@@ -180,7 +180,7 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
         }
 
         if (!printed_header) {
-            pcmk__output_xml_create_parent(out, "colocations");
+            pcmk__output_xml_create_parent(out, "colocations", NULL);
             printed_header = true;
         }
 
@@ -252,7 +252,7 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
     GListPtr lpc = NULL;
     GListPtr list = rsc->rsc_location;
 
-    pcmk__output_xml_create_parent(out, "locations");
+    pcmk__output_xml_create_parent(out, "locations", NULL);
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
@@ -323,7 +323,6 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     gboolean recursive = va_arg(args, gboolean);
 
     GListPtr lpc = NULL;
-    xmlNodePtr node = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                data_set->input);
 
@@ -338,12 +337,13 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
         pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
-    pcmk__output_xml_create_parent(out, "constraints");
+    pcmk__output_xml_create_parent(out, "constraints", NULL);
 
     out->message(out, "colocations-list", rsc, TRUE, recursive);
 
-    node = pcmk__output_xml_create_parent(out, "resource");
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
+    pcmk__output_xml_create_parent(out, "resource",
+                                   "id", rsc->id,
+                                   NULL);
     out->message(out, "locations-list", rsc);
     pcmk__output_xml_pop_parent(out);
 

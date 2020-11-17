@@ -1214,8 +1214,9 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
         out->end_list(out);
     } else {
-        xmlNodePtr parent = pcmk__output_xml_create_parent(out, "node");
-        xmlSetProp(parent, (pcmkXmlStr) "name", (pcmkXmlStr) node->details->uname);
+        pcmk__output_xml_create_parent(out, "node",
+                                       "name", node->details->uname,
+                                       NULL);
     }
 
     return pcmk_rc_ok;
@@ -1728,8 +1729,9 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     time_t last_failure = va_arg(args, int);
     gboolean as_header = va_arg(args, gboolean);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history");
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc_id);
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history",
+                                                     "id", rsc_id,
+                                                     NULL);
 
     if (rsc == NULL) {
         xmlSetProp(node, (pcmkXmlStr) "orphan", (pcmkXmlStr) "true");
