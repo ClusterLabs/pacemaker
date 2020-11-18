@@ -20,6 +20,7 @@
 #include <crm/crm.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 static const char *stylesheet_default =
     ".bold { font-weight: bold }\n"
@@ -153,8 +154,9 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
 
     if (stylesheet_link != NULL) {
         htmlNodePtr link_node = create_xml_node(head_node, "link");
-        xmlSetProp(link_node, (pcmkXmlStr) "rel", (pcmkXmlStr) "stylesheet");
-        xmlSetProp(link_node, (pcmkXmlStr) "href", (pcmkXmlStr) stylesheet_link);
+        pcmk__xe_set_props(link_node, "rel", "stylesheet",
+                           "href", stylesheet_link,
+                           NULL);
     }
 
     xmlAddPrevSibling(priv->root->children, head_node);

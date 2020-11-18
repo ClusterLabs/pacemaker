@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/iso8601_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
@@ -994,14 +995,12 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
         crm_time_set_timet(crm_when, &when);
         rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
-        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE, (pcmkXmlStr) rc_change);
-        xmlSetProp(node, (pcmkXmlStr) "queued",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
-        xmlSetProp(node, (pcmkXmlStr) "exec",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-        xmlSetProp(node, (pcmkXmlStr) "interval", (pcmkXmlStr) s);
-        xmlSetProp(node, (pcmkXmlStr) "task",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_TASK));
+        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,
+                           "queued", crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                           "exec", crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+                           "interval", s,
+                           "task", crm_element_value(xml_op, XML_LRM_ATTR_TASK),
+                           NULL);
 
         free(s);
         free(rc_change);
@@ -1364,22 +1363,17 @@ pe__node_and_op_xml(pcmk__output_t *out, va_list args) {
                                         pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider) ? crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER) : "",
                                         kind);
 
-        xmlSetProp(node, (pcmkXmlStr) "rsc", (pcmkXmlStr) rsc_printable_id(rsc));
-        xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent_tuple);
+        pcmk__xe_set_props(node, "rsc", rsc_printable_id(rsc),
+                           "agent", agent_tuple,
+                           NULL);
         free(agent_tuple);
     }
 
-    xmlSetProp(node, (pcmkXmlStr) "op", (pcmkXmlStr) (op_key ? op_key : ID(xml_op)));
-    xmlSetProp(node, (pcmkXmlStr) "node", (pcmkXmlStr) crm_element_value(xml_op, XML_ATTR_UNAME));
-    xmlSetProp(node, (pcmkXmlStr) "call", (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
-    xmlSetProp(node, (pcmkXmlStr) "rc", (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_RC));
-
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
-        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE,
-                   (pcmkXmlStr) crm_strip_trailing_newline(ctime(&last_change)));
-        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_EXEC,
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, crm_strip_trailing_newline(ctime(&last_change)),
+                           XML_RSC_OP_T_EXEC, crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+                           NULL);
     }
 
     return pcmk_rc_ok;
@@ -1679,10 +1673,6 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
         }
     }
 
-    rc_s = crm_itoa(rc);
-    xmlSetProp(node, (pcmkXmlStr) "rc", (pcmkXmlStr) rc_s);
-    xmlSetProp(node, (pcmkXmlStr) "rc_text", (pcmkXmlStr) services_ocf_exitcode_str(rc));
-    free(rc_s);
     return pcmk_rc_ok;
 }
 
@@ -1746,9 +1736,9 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = crm_itoa(rsc->migration_threshold);
 
-        xmlSetProp(node, (pcmkXmlStr) "orphan", (pcmkXmlStr) "false");
-        xmlSetProp(node, (pcmkXmlStr) "migration-threshold",
-                   (pcmkXmlStr) migration_s);
+        pcmk__xe_set_props(node, "orphan", "false",
+                           "migration-threshold", migration_s,
+                           NULL);
         free(migration_s);
 
         if (failcount > 0) {

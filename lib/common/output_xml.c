@@ -157,8 +157,9 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
         char *rc_as_str = crm_itoa(exit_status);
 
         node = create_xml_node(priv->root, "status");
-        xmlSetProp(node, (pcmkXmlStr) "code", (pcmkXmlStr) rc_as_str);
-        xmlSetProp(node, (pcmkXmlStr) "message", (pcmkXmlStr) crm_exit_str(exit_status));
+        pcmk__xe_set_props(node, "code", rc_as_str,
+                           "message", crm_exit_str(exit_status),
+                           NULL);
 
         if (g_slist_length(priv->errors) > 0) {
             xmlNodePtr errors_node = create_xml_node(node, "errors");

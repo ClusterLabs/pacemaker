@@ -235,7 +235,24 @@ pcmk__xe_next(const xmlNode *child)
     return next;
 }
 
+/*!
+ * \internal
+ * \brief Like pcmk__xe_set_props, but takes a va_list instead of
+ *        arguments directly.
+ */
 void
 pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
+
+/*!
+ * \internal
+ * \brief Add a NULL-terminated list of name/value pairs to the given
+ *        XML node as properties.
+ *
+ * \param[in,out] node XML node to add properties to
+ * \param[in]     ...  NULL-terminated list of name/value pairs
+ */
+void
+pcmk__xe_set_props(xmlNodePtr node, ...)
+G_GNUC_NULL_TERMINATED;
 
 #endif // PCMK__XML_INTERNAL__H

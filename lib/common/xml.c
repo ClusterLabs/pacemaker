@@ -2955,6 +2955,15 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs)
     }
 }
 
+void
+pcmk__xe_set_props(xmlNodePtr node, ...)
+{
+    va_list pairs;
+    va_start(pairs, node);
+    pcmk__xe_set_propv(node, pairs);
+    va_end(pairs);
+}
+
 // Deprecated functions kept only for backward API compatibility
 
 xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);

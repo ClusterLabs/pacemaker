@@ -15,6 +15,7 @@
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
 
@@ -339,8 +340,9 @@ stonith__event_xml(pcmk__output_t *out, va_list args) {
 
         default: {
             char *state = crm_itoa(event->state);
-            xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) "pending");
-            xmlSetProp(node, (pcmkXmlStr) "extended-status", (pcmkXmlStr) state);
+            pcmk__xe_set_props(node, "status", "pending",
+                               "extended-status", state,
+                               NULL);
             free(state);
             break;
         }
