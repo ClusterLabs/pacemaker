@@ -346,7 +346,7 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
         }
 
         if (!pcmk__strcase_any_of(type, "ping", "pingd", NULL)) {
-            return FALSE;
+            continue;
         }
 
         name = g_hash_table_lookup(rsc->parameters, "name");
