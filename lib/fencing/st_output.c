@@ -331,11 +331,11 @@ stonith__event_xml(pcmk__output_t *out, va_list args) {
 
     switch (event->state) {
         case st_failed:
-            xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) "failed");
+            crm_xml_add(node, "status", "failed");
             break;
 
         case st_done:
-            xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) "success");
+            crm_xml_add(node, "status", "success");
             break;
 
         default: {
@@ -349,12 +349,12 @@ stonith__event_xml(pcmk__output_t *out, va_list args) {
     }
 
     if (event->delegate != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "delegate", (pcmkXmlStr) event->delegate);
+        crm_xml_add(node, "delegate", event->delegate);
     }
 
     if (event->state == st_failed || event->state == st_done) {
         buf = time_t_string(event->completed);
-        xmlSetProp(node, (pcmkXmlStr) "completed", (pcmkXmlStr) buf);
+        crm_xml_add(node, "completed", buf);
         free(buf);
     }
 
@@ -429,7 +429,7 @@ stonith__validate_agent_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (device != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "device", (pcmkXmlStr) device);
+        crm_xml_add(node, "device", device);
     }
 
     pcmk__output_xml_push_parent(out, node);

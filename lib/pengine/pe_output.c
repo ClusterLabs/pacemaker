@@ -415,7 +415,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
         const char *param_name = va_arg(args, const char *);
         const char *param_value = va_arg(args, const char *);
         if (param_name && param_value) {
-            xmlSetProp(xml_node, (pcmkXmlStr)param_name, (pcmkXmlStr)param_value);
+            crm_xml_add(xml_node, param_name, param_value);
         }
     };
     va_end(args);
@@ -592,19 +592,19 @@ pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
     int nblocked = va_arg(args, int);
 
     char *s = crm_itoa(nnodes);
-    xmlSetProp(nodes_node, (pcmkXmlStr) "number", (pcmkXmlStr) s);
+    crm_xml_add(nodes_node, "number", s);
     free(s);
 
     s = crm_itoa(nresources);
-    xmlSetProp(resources_node, (pcmkXmlStr) "number", (pcmkXmlStr) s);
+    crm_xml_add(resources_node, "number", s);
     free(s);
 
     s = crm_itoa(ndisabled);
-    xmlSetProp(resources_node, (pcmkXmlStr) "disabled", (pcmkXmlStr) s);
+    crm_xml_add(resources_node, "disabled", s);
     free(s);
 
     s = crm_itoa(nblocked);
-    xmlSetProp(resources_node, (pcmkXmlStr) "blocked", (pcmkXmlStr) s);
+    crm_xml_add(resources_node, "blocked", s);
     free(s);
 
     return pcmk_rc_ok;
@@ -1196,8 +1196,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
         if (pe__is_guest_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
-            xmlSetProp(xml_node, (pcmkXmlStr) "id_as_resource",
-                                 (pcmkXmlStr) node->details->remote_rsc->container->id);
+            crm_xml_add(xml_node, "id_as_resource", node->details->remote_rsc->container->id);
         }
 
         if (group_by_node) {
@@ -1395,7 +1394,7 @@ pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
 
     if (add_extra) {
         char *buf = crm_itoa(expected_score);
-        xmlSetProp(node, (pcmkXmlStr) "expected", (pcmkXmlStr) buf);
+        crm_xml_add(node, "expected", buf);
         free(buf);
     }
 
@@ -1635,7 +1634,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
         char *s = crm_strdup_printf("%sms", interval_ms_s);
-        xmlSetProp(node, (pcmkXmlStr) "interval", (pcmkXmlStr) s);
+        crm_xml_add(node, "interval", s);
         free(s);
     }
 
@@ -1646,8 +1645,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
         if (value) {
             time_t int_value = (time_t) crm_parse_int(value, NULL);
             if (int_value > 0) {
-                xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE,
-                           (pcmkXmlStr) pcmk__epoch2str(&int_value));
+                crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, pcmk__epoch2str(&int_value));
             }
         }
 
@@ -1655,21 +1653,20 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
         if (value) {
             time_t int_value = (time_t) crm_parse_int(value, NULL);
             if (int_value > 0) {
-                xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_RUN,
-                           (pcmkXmlStr) pcmk__epoch2str(&int_value));
+                crm_xml_add(node, XML_RSC_OP_LAST_RUN, pcmk__epoch2str(&int_value));
             }
         }
 
         value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_EXEC, (pcmkXmlStr) s);
+            crm_xml_add(node, XML_RSC_OP_T_EXEC, s);
             free(s);
         }
         value = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_QUEUE, (pcmkXmlStr) s);
+            crm_xml_add(node, XML_RSC_OP_T_QUEUE, s);
             free(s);
         }
     }
@@ -1734,7 +1731,7 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (rsc == NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "orphan", (pcmkXmlStr) "true");
+        crm_xml_add(node, "orphan", "true");
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = crm_itoa(rsc->migration_threshold);
 
@@ -1746,14 +1743,12 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
         if (failcount > 0) {
             char *s = crm_itoa(failcount);
 
-            xmlSetProp(node, (pcmkXmlStr) PCMK__FAIL_COUNT_PREFIX,
-                       (pcmkXmlStr) s);
+            crm_xml_add(node, PCMK__FAIL_COUNT_PREFIX, s);
             free(s);
         }
 
         if (last_failure > 0) {
-            xmlSetProp(node, (pcmkXmlStr) PCMK__LAST_FAILURE_PREFIX,
-                       (pcmkXmlStr) pcmk__epoch2str(&last_failure));
+            crm_xml_add(node, PCMK__LAST_FAILURE_PREFIX, pcmk__epoch2str(&last_failure));
         }
     }
 
@@ -1920,8 +1915,7 @@ pe__ticket_xml(pcmk__output_t *out, va_list args) {
                                         NULL);
 
     if (ticket->last_granted > -1) {
-        xmlSetProp(node, (pcmkXmlStr) "last-granted",
-                   (pcmkXmlStr) pcmk__epoch2str(&ticket->last_granted));
+        crm_xml_add(node, "last-granted", pcmk__epoch2str(&ticket->last_granted));
     }
 
     return pcmk_rc_ok;

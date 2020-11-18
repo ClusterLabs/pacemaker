@@ -107,13 +107,13 @@ xml_init(pcmk__output_t *out) {
 
     if (legacy_xml) {
         priv->root = create_xml_node(NULL, "crm_mon");
-        xmlSetProp(priv->root, (pcmkXmlStr) "version", (pcmkXmlStr) VERSION);
+        crm_xml_add(priv->root, "version", VERSION);
     } else {
         priv->root = create_xml_node(NULL, "pacemaker-result");
-        xmlSetProp(priv->root, (pcmkXmlStr) "api-version", (pcmkXmlStr) PCMK__API_VERSION);
+        crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
 
         if (out->request != NULL) {
-            xmlSetProp(priv->root, (pcmkXmlStr) "request", (pcmkXmlStr) out->request);
+            crm_xml_add(priv->root, "request", out->request);
         }
     }
 
@@ -223,12 +223,12 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     if (proc_stdout != NULL) {
         child_node = pcmk_create_xml_text_node(node, "output", proc_stdout);
-        xmlSetProp(child_node, (pcmkXmlStr) "source", (pcmkXmlStr) "stdout");
+        crm_xml_add(child_node, "source", "stdout");
     }
 
     if (proc_stderr != NULL) {
         child_node = pcmk_create_xml_text_node(node, "output", proc_stderr);
-        xmlSetProp(child_node, (pcmkXmlStr) "source", (pcmkXmlStr) "stderr");
+        crm_xml_add(child_node, "source", "stderr");
     }
 
     pcmk__output_xml_add_node(out, node);
@@ -343,7 +343,7 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     item_node = pcmk__output_create_xml_text_node(out, "item", buf);
 
     if (name != NULL) {
-        xmlSetProp(item_node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
+        crm_xml_add(item_node, "name", name);
     }
 
     free(buf);
@@ -368,7 +368,7 @@ xml_end_list(pcmk__output_t *out) {
 
         node = g_queue_pop_tail(priv->parent_q);
         buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
-        xmlSetProp(node, (pcmkXmlStr) "count", (pcmkXmlStr) buf);
+        crm_xml_add(node, "count", buf);
         free(buf);
     }
 }

@@ -98,7 +98,7 @@ html_init(pcmk__output_t *out) {
     priv->root = create_xml_node(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
 
-    xmlSetProp(priv->root, (pcmkXmlStr) "lang", (pcmkXmlStr) "en");
+    crm_xml_add(priv->root, "lang", "en");
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
@@ -137,7 +137,7 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     }
 
     charset_node = create_xml_node(head_node, "meta");
-    xmlSetProp(charset_node, (pcmkXmlStr) "charset", (pcmkXmlStr) "utf-8");
+    crm_xml_add(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
     for (int i = 0; i < g_slist_length(extra_headers); i++) {
@@ -275,7 +275,7 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(priv != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
-    xmlSetProp(node, (pcmkXmlStr) "lang", (pcmkXmlStr) "xml");
+    crm_xml_add(node, "lang", "xml");
 }
 
 G_GNUC_PRINTF(4, 5)
@@ -340,7 +340,7 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     free(buf);
 
     if (name != NULL) {
-        xmlSetProp(item_node, (pcmkXmlStr) "class", (pcmkXmlStr) name);
+        crm_xml_add(item_node, "class", name);
     }
 }
 
@@ -417,11 +417,11 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     htmlNodePtr node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "class", (pcmkXmlStr) class_name);
+        crm_xml_add(node, "class", class_name);
     }
 
     if (id != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) id);
+        crm_xml_add(node, "id", id);
     }
 
     return node;
@@ -444,7 +444,7 @@ pcmk__html_add_header(const char *name, ...) {
         }
 
         value = va_arg(ap, char *);
-        xmlSetProp(header_node, (pcmkXmlStr) key, (pcmkXmlStr) value);
+        crm_xml_add(header_node, key, value);
     }
 
     extra_headers = g_slist_append(extra_headers, header_node);

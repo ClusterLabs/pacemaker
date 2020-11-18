@@ -73,7 +73,7 @@ lrmd__agents_list_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (!pcmk__str_empty(provider)) {
-        xmlSetProp(node, (pcmkXmlStr) "provider", (pcmkXmlStr) provider);
+        crm_xml_add(node, "provider", provider);
     }
 
     return xml_list(out, list, "agent");
@@ -105,7 +105,7 @@ lrmd__providers_list_xml(pcmk__output_t *out, va_list args) {
                                                      NULL);
 
     if (agent_spec != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent_spec);
+        crm_xml_add(node, "agent", agent_spec);
     }
 
     return xml_list(out, list, "provider");
