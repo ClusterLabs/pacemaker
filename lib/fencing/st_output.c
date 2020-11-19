@@ -403,14 +403,7 @@ stonith__validate_agent_text(pcmk__output_t *out, va_list args) {
                               rc ? "failed" : "succeeded");
     }
 
-    if (output) {
-        puts(output);
-    }
-
-    if (error_output) {
-        puts(error_output);
-    }
-
+    out->subprocess_output(out, rc, output, error_output);
     return rc;
 }
 
