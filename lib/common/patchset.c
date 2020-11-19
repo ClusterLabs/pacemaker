@@ -279,15 +279,10 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
         crm_xml_add(diff_child, vfields[lpc], value);
     }
 
-    if (next) {
-        xmlAttrPtr xIter = NULL;
+    for (xmlAttrPtr a = pcmk__xe_first_attr(next); a != NULL; a = a->next) {
+        const char *p_value = crm_element_value(next, (const char *) a->name);
 
-        for (xIter = next->properties; xIter; xIter = xIter->next) {
-            const char *p_name = (const char *) xIter->name;
-            const char *p_value = crm_element_value(next, p_name);
-
-            xmlSetProp(cib, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
-        }
+        xmlSetProp(cib, a->name, (pcmkXmlStr) p_value);
     }
 
     crm_log_xml_explicit(local_diff, "Repaired-diff");

@@ -159,15 +159,11 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
         rule_data.node_hash = node->details->attrs;
     }
 
-    if (rsc->xml) {
-        xmlAttrPtr xIter = NULL;
+    for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->xml); a != NULL; a = a->next) {
+        const char *prop_name = (const char *) a->name;
+        const char *prop_value = crm_element_value(rsc->xml, prop_name);
 
-        for (xIter = rsc->xml->properties; xIter; xIter = xIter->next) {
-            const char *prop_name = (const char *)xIter->name;
-            const char *prop_value = crm_element_value(rsc->xml, prop_name);
-
-            add_hash_param(meta_hash, prop_name, prop_value);
-        }
+        add_hash_param(meta_hash, prop_name, prop_value);
     }
 
     pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, &rule_data,
