@@ -163,7 +163,7 @@ pcmk_xml_attrs2nvpairs(xmlNode *xml)
 {
     GSList *result = NULL;
 
-    for (xmlAttrPtr iter = pcmk__first_xml_attr(xml); iter != NULL;
+    for (xmlAttrPtr iter = pcmk__xe_first_attr(xml); iter != NULL;
          iter = iter->next) {
 
         result = pcmk_prepend_nvpair(result,
@@ -925,7 +925,7 @@ xml2list(xmlNode *parent)
 
     crm_log_xml_trace(nvpair_list, "Unpacking");
 
-    for (pIter = pcmk__first_xml_attr(nvpair_list); pIter != NULL;
+    for (pIter = pcmk__xe_first_attr(nvpair_list); pIter != NULL;
          pIter = pIter->next) {
 
         const char *p_name = (const char *)pIter->name;

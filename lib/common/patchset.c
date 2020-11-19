@@ -112,7 +112,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // Check each of the XML node's attributes for changes
-    for (pIter = pcmk__first_xml_attr(xml); pIter != NULL;
+    for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
          pIter = pIter->next) {
         xmlNode *attr = NULL;
 
@@ -156,7 +156,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         change = create_xml_node(change->parent, XML_DIFF_RESULT);
         result = create_xml_node(change, (const char *)xml->name);
 
-        for (pIter = pcmk__first_xml_attr(xml); pIter != NULL;
+        for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
              pIter = pIter->next) {
             p = pIter->_private;
             if (!pcmk_is_set(p->flags, xpf_deleted)) {
@@ -677,7 +677,7 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
         return;
     }
 
-    for (xIter = pcmk__first_xml_attr(patch); xIter != NULL;
+    for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
          xIter = xIter->next) {
         const char *p_name = (const char *)xIter->name;
 
@@ -745,7 +745,7 @@ process_v1_additions(xmlNode *parent, xmlNode *target, xmlNode *patch)
               return);
     CRM_CHECK(pcmk__str_eq(ID(target), ID(patch), pcmk__str_casei), return);
 
-    for (xIter = pcmk__first_xml_attr(patch); xIter != NULL;
+    for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
          xIter = xIter->next) {
         const char *p_name = (const char *) xIter->name;
         const char *p_value = crm_element_value(patch, p_name);
@@ -1204,7 +1204,7 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
             free_xml(match);
 
         } else if (strcmp(op, "modify") == 0) {
-            xmlAttr *pIter = pcmk__first_xml_attr(match);
+            xmlAttr *pIter = pcmk__xe_first_attr(match);
             xmlNode *attrs = NULL;
 
             attrs = pcmk__xml_first_child(first_named_child(change,
@@ -1220,7 +1220,7 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
                 xml_remove_prop(match, name);
             }
 
-            for (pIter = pcmk__first_xml_attr(attrs); pIter != NULL;
+            for (pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
                  pIter = pIter->next) {
                 const char *name = (const char *) pIter->name;
                 const char *value = crm_element_value(attrs, name);
@@ -1553,7 +1553,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     } else if (full) {
         xmlAttrPtr pIter = NULL;
 
-        for (pIter = pcmk__first_xml_attr(left); pIter != NULL;
+        for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
              pIter = pIter->next) {
             const char *p_name = (const char *)pIter->name;
             const char *p_value = pcmk__xml_attr_value(pIter);
@@ -1566,7 +1566,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
     }
 
     // Changes to name/value pairs
-    for (xIter = pcmk__first_xml_attr(left); xIter != NULL;
+    for (xIter = pcmk__xe_first_attr(left); xIter != NULL;
          xIter = xIter->next) {
         const char *prop_name = (const char *) xIter->name;
         xmlAttrPtr right_attr = NULL;
@@ -1594,7 +1594,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
             if (full) {
                 xmlAttrPtr pIter = NULL;
 
-                for (pIter = pcmk__first_xml_attr(left); pIter != NULL;
+                for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
                      pIter = pIter->next) {
                     const char *p_name = (const char *) pIter->name;
                     const char *p_value = pcmk__xml_attr_value(pIter);
@@ -1624,7 +1624,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
                     crm_trace("Changes detected to %s in <%s id=%s>", prop_name,
                               crm_element_name(left), id);
-                    for (pIter = pcmk__first_xml_attr(left); pIter != NULL;
+                    for (pIter = pcmk__xe_first_attr(left); pIter != NULL;
                          pIter = pIter->next) {
                         const char *p_name = (const char *) pIter->name;
                         const char *p_value = pcmk__xml_attr_value(pIter);

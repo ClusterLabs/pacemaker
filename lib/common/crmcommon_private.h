@@ -141,12 +141,6 @@ void pcmk__mark_xml_attr_dirty(xmlAttr *a);
 G_GNUC_INTERNAL
 bool pcmk__xa_filterable(const char *name);
 
-static inline xmlAttr *
-pcmk__first_xml_attr(const xmlNode *xml)
-{
-    return xml? xml->properties : NULL;
-}
-
 static inline const char *
 pcmk__xml_attr_value(const xmlAttr *attr)
 {
