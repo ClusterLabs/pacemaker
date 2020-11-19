@@ -362,14 +362,14 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     return TRUE;
 }
 
-#define CRM_META_LEN (sizeof(CRM_META) - 1)
+// String length of CRM_META"_"
+#define CRM_META_LEN sizeof(CRM_META)
 
 // Return true if a is an attribute that should be filtered
 static bool
 should_filter_for_digest(xmlAttrPtr a, void *user_data)
 {
-    // @TODO CRM_META check should be case-sensitive
-    return (strncasecmp((const char *) a->name, CRM_META, CRM_META_LEN) == 0)
+    return (strncmp((const char *) a->name, CRM_META "_", CRM_META_LEN) == 0)
            || pcmk__str_any_of((const char *) a->name,
                                XML_ATTR_ID,
                                XML_ATTR_CRM_VERSION,
