@@ -136,6 +136,10 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_match(xmlNode *parent, const char *node_name,
                         const char *attr_n, const char *attr_v);
 
+void pcmk__xe_remove_matching_attrs(xmlNode *element,
+                                    bool (*match)(xmlAttrPtr, void *),
+                                    void *user_data);
+
 /*!
  * \internal
  * \brief Get the root directory to scan XML artefacts of given kind for

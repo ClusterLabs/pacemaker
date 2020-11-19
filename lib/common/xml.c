@@ -618,6 +618,40 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
     return;
 }
 
+/*!
+ * \internal
+ * \brief Remove an XML element's attributes that match some criteria
+ *
+ * \param[in,out] element    XML element to modify
+ * \param[in]     match      If not NULL, only remove attributes for which
+ *                           this function returns true
+ * \param[in]     user_data  Data to pass to \p match
+ */
+void
+pcmk__xe_remove_matching_attrs(xmlNode *element,
+                               bool (*match)(xmlAttrPtr, void *),
+                               void *user_data)
+{
+    xmlAttrPtr next = NULL;
+
+    for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
+        next = a->next; // Grab now because attribute might get removed
+        if ((match == NULL) || match(a, user_data)) {
+            if (!pcmk__check_acl(element, NULL, xpf_acl_write)) {
+                crm_trace("ACLs prevent removal of %s attribute from %s element",
+                          (const char *) a->name, (const char *) element->name);
+
+            } else if (pcmk__tracking_xml_changes(element, false)) {
+                // Leave (marked for removal) until after diff is calculated
+                set_parent_flag(element, xpf_dirty);
+                pcmk__set_xml_flags((xml_private_t *) a->_private, xpf_deleted);
+            } else {
+                xmlRemoveProp(a);
+            }
+        }
+    }
+}
+
 xmlDoc *
 getDocPtr(xmlNode * node)
 {
