@@ -975,7 +975,7 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr node = pcmk__output_create_xml_node(out, "failure");
 
     xmlSetProp(node, (pcmkXmlStr) (op_key ? "op_key" : "id"),
-               (pcmkXmlStr) (op_key ? op_key : "id"));
+               (pcmkXmlStr) (op_key ? op_key : ID(xml_op)));
     xmlSetProp(node, (pcmkXmlStr) "node",
                (pcmkXmlStr) crm_element_value(xml_op, XML_ATTR_UNAME));
     xmlSetProp(node, (pcmkXmlStr) "exitstatus",
