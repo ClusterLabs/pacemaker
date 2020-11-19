@@ -638,13 +638,19 @@ xml_log_patchset(uint8_t log_level, const char *function, xmlNode *patchset)
     }
 }
 
+// Return true if attribute name is not "id"
+static bool
+not_id(xmlAttrPtr attr, void *user_data)
+{
+    return strcmp((const char *) attr->name, XML_ATTR_ID) != 0;
+}
+
 // Apply the removals section of an v1 patchset to an XML node
 static void
 process_v1_removals(xmlNode *target, xmlNode *patch)
 {
     xmlNode *patch_child = NULL;
     xmlNode *cIter = NULL;
-    xmlAttrPtr xIter = NULL;
 
     char *id = NULL;
     const char *name = NULL;
@@ -677,15 +683,8 @@ process_v1_removals(xmlNode *target, xmlNode *patch)
         return;
     }
 
-    for (xIter = pcmk__xe_first_attr(patch); xIter != NULL;
-         xIter = xIter->next) {
-        const char *p_name = (const char *)xIter->name;
-
-        // Removing then restoring id would change ordering of properties
-        if (!pcmk__str_eq(p_name, XML_ATTR_ID, pcmk__str_casei)) {
-            xml_remove_prop(target, p_name);
-        }
-    }
+    // Removing then restoring id would change ordering of properties
+    pcmk__xe_remove_matching_attrs(patch, not_id, NULL);
 
     // Changes to child objects
     cIter = pcmk__xml_first_child(target);
@@ -1204,7 +1203,6 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
             free_xml(match);
 
         } else if (strcmp(op, "modify") == 0) {
-            xmlAttr *pIter = pcmk__xe_first_attr(match);
             xmlNode *attrs = NULL;
 
             attrs = pcmk__xml_first_child(first_named_child(change,
@@ -1213,14 +1211,9 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
                 rc = ENOMSG;
                 continue;
             }
-            while (pIter != NULL) {
-                const char *name = (const char *)pIter->name;
+            pcmk__xe_remove_matching_attrs(match, NULL, NULL); // Remove all
 
-                pIter = pIter->next;
-                xml_remove_prop(match, name);
-            }
-
-            for (pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
+            for (xmlAttrPtr pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
                  pIter = pIter->next) {
                 const char *name = (const char *) pIter->name;
                 const char *value = crm_element_value(attrs, name);

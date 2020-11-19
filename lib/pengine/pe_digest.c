@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
@@ -45,40 +46,36 @@ pe__free_digests(gpointer ptr)
     }
 }
 
-/*!
- * \internal
- * \brief Remove named attributes from an XML element
- *
- * \param[in,out] param_set     XML to be filtered
- * \param[in]     param_string  Space-separated list of attribute names
- * \param[in]     need_present  Whether to remove attributes that match,
- *                              or those that don't match
- */
-static void
-filter_parameters(xmlNode *param_set, const char *param_string,
-                  bool need_present)
+// Return true if XML attribute name is substring of a given string
+static bool
+attr_in_string(xmlAttrPtr a, void *user_data)
 {
-    if ((param_set == NULL) || (param_string == NULL)) {
-        return;
+    bool filter = false;
+    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
+
+    if (strstr((const char *) user_data, name) == NULL) {
+        crm_trace("Filtering %s (not found in '%s')",
+                  (const char *) a->name, (const char *) user_data);
+        filter = true;
     }
-    for (xmlAttrPtr xIter = param_set->properties; xIter; ) {
-        const char *prop_name = (const char *) xIter->name;
-        char *name = crm_strdup_printf(" %s ", prop_name);
-        char *match = strstr(param_string, name);
+    free(name);
+    return filter;
+}
 
-        free(name);
+// Return true if XML attribute name is not substring of a given string
+static bool
+attr_not_in_string(xmlAttrPtr a, void *user_data)
+{
+    bool filter = false;
+    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
 
-        //  Do now, because current entry might get removed below
-        xIter = xIter->next;
-
-        if ((need_present && (match == NULL))
-            || (!need_present && (match != NULL))) {
-
-            crm_trace("Filtering %s (%sfound in '%s')",
-                      prop_name, (need_present? "not " : ""), param_string);
-            xml_remove_prop(param_set, prop_name);
-        }
+    if (strstr((const char *) user_data, name) != NULL) {
+        crm_trace("Filtering %s (found in '%s')",
+                  (const char *) a->name, (const char *) user_data);
+        filter = true;
     }
+    free(name);
+    return filter;
 }
 
 #if ENABLE_VERSIONED_ATTRS
@@ -177,6 +174,13 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
                                                        op_version);
 }
 
+// Return true if XML attribute name is a Pacemaker-defined fencing parameter
+static bool
+is_fence_param(xmlAttrPtr attr, void *user_data)
+{
+    return pcmk_stonith_param((const char *) attr->name);
+}
+
 /*!
  * \internal
  * \brief Add secure digest to a digest cache entry
@@ -209,8 +213,12 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     if (overrides != NULL) {
         g_hash_table_foreach(overrides, hash2field, data->params_secure);
     }
+
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
-    filter_parameters(data->params_secure, secure_list, FALSE);
+    if (secure_list != NULL) {
+        pcmk__xe_remove_matching_attrs(data->params_secure, attr_not_in_string,
+                                       (void *) secure_list);
+    }
     if (pcmk_is_set(pcmk_get_ra_caps(class),
                     pcmk_ra_cap_fence_params)) {
         /* For stonith resources, Pacemaker adds special parameters,
@@ -218,15 +226,8 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
          * controller will not hash them. That means we have to filter
          * them out before calculating our hash for comparison.
          */
-        for (xmlAttrPtr iter = data->params_secure->properties;
-             iter != NULL; ) {
-            const char *prop_name = (const char *) iter->name;
-
-            iter = iter->next; // Grab next now in case we remove current
-            if (pcmk_stonith_param(prop_name)) {
-                xml_remove_prop(data->params_secure, prop_name);
-            }
-        }
+        pcmk__xe_remove_matching_attrs(data->params_secure, is_fence_param,
+                                       NULL);
     }
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
                                                           op_version);
@@ -264,7 +265,10 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
 
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
-    filter_parameters(data->params_restart, value, TRUE);
+    if (value != NULL) {
+        pcmk__xe_remove_matching_attrs(data->params_restart, attr_in_string,
+                                       (void *) value);
+    }
 
     value = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     data->digest_restart_calc = calculate_operation_digest(data->params_restart,

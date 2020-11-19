@@ -328,32 +328,31 @@ pcmk__xml_position(xmlNode *xml, enum xml_private_flags ignore_if_set)
     return position;
 }
 
+// This also clears attribute's flags if not marked as deleted
+static bool
+marked_as_deleted(xmlAttrPtr a, void *user_data)
+{
+    xml_private_t *p = a->_private;
+
+    if (pcmk_is_set(p->flags, xpf_deleted)) {
+        return true;
+    }
+    p->flags = xpf_none;
+    return false;
+}
+
 // Remove all attributes marked as deleted from an XML node
 static void
 accept_attr_deletions(xmlNode *xml)
 {
-    xmlNode *cIter = NULL;
-    xmlAttr *pIter = NULL;
-    xml_private_t *p = xml->_private;
+    // Clear XML node's flags
+    ((xml_private_t *) xml->_private)->flags = xpf_none;
 
-    p->flags = xpf_none;
-    pIter = pcmk__xe_first_attr(xml);
+    // Remove this XML node's attributes that were marked as deleted
+    pcmk__xe_remove_matching_attrs(xml, marked_as_deleted, NULL);
 
-    while (pIter != NULL) {
-        const xmlChar *name = pIter->name;
-
-        p = pIter->_private;
-        pIter = pIter->next;
-
-        if(p->flags & xpf_deleted) {
-            xml_remove_prop(xml, (const char *)name);
-
-        } else {
-            p->flags = xpf_none;
-        }
-    }
-
-    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
+    // Recursively do the same for this XML node's children
+    for (xmlNodePtr cIter = pcmk__xml_first_child(xml); cIter != NULL;
          cIter = pcmk__xml_next(cIter)) {
         accept_attr_deletions(cIter);
     }

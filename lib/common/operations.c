@@ -24,6 +24,7 @@
 #include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/util.h>
 
 static regex_t *notify_migrate_re = NULL;
@@ -361,6 +362,24 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     return TRUE;
 }
 
+#define CRM_META_LEN (sizeof(CRM_META) - 1)
+
+// Return true if a is an attribute that should be filtered
+static bool
+should_filter_for_digest(xmlAttrPtr a, void *user_data)
+{
+    // @TODO CRM_META check should be case-sensitive
+    return (strncasecmp((const char *) a->name, CRM_META, CRM_META_LEN) == 0)
+           || pcmk__str_any_of((const char *) a->name,
+                               XML_ATTR_ID,
+                               XML_ATTR_CRM_VERSION,
+                               XML_LRM_ATTR_OP_DIGEST,
+                               XML_LRM_ATTR_TARGET,
+                               XML_LRM_ATTR_TARGET_UUID,
+                               "pcmk_external_ip",
+                               NULL);
+}
+
 /*!
  * \internal
  * \brief Remove XML attributes not needed for operation digest
@@ -374,52 +393,31 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
     char *timeout = NULL;
     guint interval_ms = 0;
 
-    const char *attr_filter[] = {
-        XML_ATTR_ID,
-        XML_ATTR_CRM_VERSION,
-        XML_LRM_ATTR_OP_DIGEST,
-        XML_LRM_ATTR_TARGET,
-        XML_LRM_ATTR_TARGET_UUID,
-        "pcmk_external_ip"
-    };
-
-    const int meta_len = strlen(CRM_META);
-
     if (param_set == NULL) {
         return;
     }
 
-    // Remove the specific attributes listed in attr_filter
-    for (int lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
-        xml_remove_prop(param_set, attr_filter[lpc]);
-    }
-
+    /* Timeout is useful for recurring operation digests, so grab it before
+     * removing meta-attributes
+     */
     key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
     if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
         interval_ms = 0;
     }
     free(key);
-
-    key = crm_meta_name(XML_ATTR_TIMEOUT);
-    timeout = crm_element_value_copy(param_set, key);
-
-    // Remove all CRM_meta_* attributes
-    for (xmlAttrPtr xIter = param_set->properties; xIter != NULL; ) {
-        const char *prop_name = (const char *) (xIter->name);
-
-        xIter = xIter->next;
-
-        // @TODO Why is this case-insensitive?
-        if (strncasecmp(prop_name, CRM_META, meta_len) == 0) {
-            xml_remove_prop(param_set, prop_name);
-        }
+    key = NULL;
+    if (interval_ms != 0) {
+        key = crm_meta_name(XML_ATTR_TIMEOUT);
+        timeout = crm_element_value_copy(param_set, key);
     }
 
-    if ((interval_ms != 0) && (timeout != NULL)) {
-        // Add the timeout back, it's useful for recurring operation digests
+    // Remove all CRM_meta_* attributes and certain other attributes
+    pcmk__xe_remove_matching_attrs(param_set, should_filter_for_digest, NULL);
+
+    // Add timeout back for recurring operation digests
+    if (timeout != NULL) {
         crm_xml_add(param_set, key, timeout);
     }
-
     free(timeout);
     free(key);
 }
