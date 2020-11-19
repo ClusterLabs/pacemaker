@@ -1027,6 +1027,36 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
 
 /*!
  * \internal
+ * \brief Get correct value according to value-source
+ *
+ * \param[in] value         value given in rule expression
+ * \param[in] value_source  value-source given in rule expressions
+ * \param[in] match_data    If not NULL, resource back-references and params
+ */
+static const char *
+expand_value_source(const char *value, const char *value_source,
+                    pe_match_data_t *match_data)
+{
+    GHashTable *table = NULL;
+
+    if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
+        table = match_data->params;
+
+    } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
+        table = match_data->meta;
+
+    } else { // literal
+        return value;
+    }
+
+    if ((table == NULL) || pcmk__str_empty(value)) {
+        return NULL;
+    }
+    return (const char *) g_hash_table_lookup(table, value);
+}
+
+/*!
+ * \internal
  * \brief Evaluate a node attribute expression based on #uname, #id, #kind,
  *        or a generic node attribute
  *
@@ -1040,8 +1070,6 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 {
     gboolean attr_allocated = FALSE;
     const char *h_val = NULL;
-    GHashTable *table = NULL;
-    bool literal = true;
 
     const char *op = NULL;
     const char *type = NULL;
@@ -1061,36 +1089,19 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
         return FALSE;
     }
 
-    if (rule_data->match_data) {
-        if (rule_data->match_data->re) {
+    if (rule_data->match_data != NULL) {
+        // Expand any regular expression submatches (%0-%9) in attribute name
+        if (rule_data->match_data->re != NULL) {
             char *resolved_attr = pe_expand_re_matches(attr, rule_data->match_data->re);
 
-            if (resolved_attr) {
+            if (resolved_attr != NULL) {
                 attr = (const char *) resolved_attr;
                 attr_allocated = TRUE;
             }
         }
 
-        if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
-            literal = false;
-            table = rule_data->match_data->params;
-        } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
-            literal = false;
-            table = rule_data->match_data->meta;
-        }
-    }
-
-    if (!literal) {
-        const char *param_name = value;
-        const char *param_value = NULL;
-
-        value = NULL;
-        if ((table != NULL) && !pcmk__str_empty(param_name)) {
-            param_value = (const char *)g_hash_table_lookup(table, param_name);
-            if (param_value != NULL) {
-                value = param_value;
-            }
-        }
+        // Get value appropriate to value-source
+        value = expand_value_source(value, value_source, rule_data->match_data);
     }
 
     if (rule_data->node_hash != NULL) {
