@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -142,8 +142,6 @@ extern resource_alloc_functions_t resource_class_alloc_functions[];
 extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set);
 
 extern gboolean unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set);
-
-extern gboolean unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set);
 
 extern gboolean unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set);
 

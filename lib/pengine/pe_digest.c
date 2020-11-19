@@ -45,30 +45,38 @@ pe__free_digests(gpointer ptr)
     }
 }
 
+/*!
+ * \internal
+ * \brief Remove named attributes from an XML element
+ *
+ * \param[in,out] param_set     XML to be filtered
+ * \param[in]     param_string  Space-separated list of attribute names
+ * \param[in]     need_present  Whether to remove attributes that match,
+ *                              or those that don't match
+ */
 static void
-filter_parameters(xmlNode * param_set, const char *param_string, bool need_present)
+filter_parameters(xmlNode *param_set, const char *param_string,
+                  bool need_present)
 {
-    if (param_set && param_string) {
-        xmlAttrPtr xIter = param_set->properties;
+    if ((param_set == NULL) || (param_string == NULL)) {
+        return;
+    }
+    for (xmlAttrPtr xIter = param_set->properties; xIter; ) {
+        const char *prop_name = (const char *) xIter->name;
+        char *name = crm_strdup_printf(" %s ", prop_name);
+        char *match = strstr(param_string, name);
 
-        while (xIter) {
-            const char *prop_name = (const char *)xIter->name;
-            char *name = crm_strdup_printf(" %s ", prop_name);
-            char *match = strstr(param_string, name);
+        free(name);
 
-            free(name);
+        //  Do now, because current entry might get removed below
+        xIter = xIter->next;
 
-            //  Do now, because current entry might get removed below
-            xIter = xIter->next;
+        if ((need_present && (match == NULL))
+            || (!need_present && (match != NULL))) {
 
-            if (need_present && match == NULL) {
-                crm_trace("%s not found in %s", prop_name, param_string);
-                xml_remove_prop(param_set, prop_name);
-
-            } else if (need_present == FALSE && match) {
-                crm_trace("%s found in %s", prop_name, param_string);
-                xml_remove_prop(param_set, prop_name);
-            }
+            crm_trace("Filtering %s (%sfound in '%s')",
+                      prop_name, (need_present? "not " : ""), param_string);
+            xml_remove_prop(param_set, prop_name);
         }
     }
 }
@@ -154,7 +162,6 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     }
     g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
     g_hash_table_foreach(action->extra, hash2field, data->params_all);
-    g_hash_table_foreach(rsc->parameters, hash2field, data->params_all);
     g_hash_table_foreach(action->meta, hash2metafield, data->params_all);
 
 #if ENABLE_VERSIONED_ATTRS
@@ -203,9 +210,7 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         g_hash_table_foreach(overrides, hash2field, data->params_secure);
     }
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
-    if (secure_list != NULL) {
-        filter_parameters(data->params_secure, secure_list, FALSE);
-    }
+    filter_parameters(data->params_secure, secure_list, FALSE);
     if (pcmk_is_set(pcmk_get_ra_caps(class),
                     pcmk_ra_cap_fence_params)) {
         /* For stonith resources, Pacemaker adds special parameters,
@@ -259,9 +264,7 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
 
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
-    if (value != NULL) {
-        filter_parameters(data->params_restart, value, TRUE);
-    }
+    filter_parameters(data->params_restart, value, TRUE);
 
     value = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     data->digest_restart_calc = calculate_operation_digest(data->params_restart,

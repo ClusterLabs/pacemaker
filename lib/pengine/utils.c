@@ -995,6 +995,8 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
 {
     int timeout_ms = 0;
     const char *value = NULL;
+    bool is_probe = pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
+                    && (interval_ms == 0);
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
@@ -1026,8 +1028,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
                                action->meta, NULL, FALSE, data_set);
 
     // Determine probe default timeout differently
-    if (pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
-            && (interval_ms == 0)) {
+    if (is_probe) {
         xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
 
         if (min_interval_mon) {
@@ -1099,8 +1100,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
                     pcmk_ra_cap_fence_params)
             && (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
-                    || (pcmk__str_eq(action->task, RSC_STATUS, pcmk__str_casei)
-                            && (interval_ms == 0)))
+                || is_probe)
             && action->rsc->parameters) {
 
         value = g_hash_table_lookup(action->rsc->parameters,
