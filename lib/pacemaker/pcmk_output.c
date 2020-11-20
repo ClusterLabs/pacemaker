@@ -357,14 +357,14 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("health", "const char *", "const char *", "const char *", "const char *")
 static int
 health_text(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *host_from = va_arg(args, char *);
-    char *fsa_state = va_arg(args, char *);
-    char *result = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *host_from = va_arg(args, const char *);
+    const char *fsa_state = va_arg(args, const char *);
+    const char *result = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
         out->info(out, "Status of %s@%s: %s (%s)", crm_str(sys_from),
@@ -376,14 +376,14 @@ health_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("health", "const char *", "const char *", "const char *", "const char *")
 static int
 health_xml(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *host_from = va_arg(args, char *);
-    char *fsa_state = va_arg(args, char *);
-    char *result = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *host_from = va_arg(args, const char *);
+    const char *fsa_state = va_arg(args, const char *);
+    const char *result = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, crm_str(sys_from),
                                  "node_name", crm_str(host_from),
@@ -393,13 +393,13 @@ health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *state = va_arg(args, char *);
-    char *last_updated = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    const char *last_updated = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
         out->info(out, "Status of %s: '%s' %s %s", crm_str(sys_from),
@@ -412,13 +412,13 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *state = va_arg(args, char *);
-    char *last_updated = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    const char *last_updated = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, crm_str(sys_from),
                                  "state", crm_str(state),
@@ -427,11 +427,11 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("dc", "char *")
+PCMK__OUTPUT_ARGS("dc", "const char *")
 static int
 dc_text(pcmk__output_t *out, va_list args)
 {
-    char *dc = va_arg(args, char *);
+    const char *dc = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
         out->info(out, "Designated Controller is: %s", crm_str(dc));
@@ -442,11 +442,11 @@ dc_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("dc", "char *")
+PCMK__OUTPUT_ARGS("dc", "const char *")
 static int
 dc_xml(pcmk__output_t *out, va_list args)
 {
-    char *dc = va_arg(args, char *);
+    const char *dc = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, "dc",
                                  "node_name", crm_str(dc),
@@ -455,16 +455,16 @@ dc_xml(pcmk__output_t *out, va_list args)
 }
 
 
-PCMK__OUTPUT_ARGS("crmadmin-node-list", "pcmk__output_t *", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("crmadmin-node-list", "xmlNodePtr", "gboolean")
 static int
 crmadmin_node_list(pcmk__output_t *out, va_list args)
 {
     xmlNodePtr xml_node = va_arg(args, xmlNodePtr);
+    gboolean BASH_EXPORT = va_arg(args, gboolean);
 
     int found = 0;
     xmlNode *node = NULL;
     xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
-    gboolean BASH_EXPORT = va_arg(args, gboolean);
 
     out->begin_list(out, NULL, NULL, "nodes");
 
@@ -490,13 +490,13 @@ crmadmin_node_list(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *", "gboolean")
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
 static int
 crmadmin_node_text(pcmk__output_t *out, va_list args)
 {
-    char *type = va_arg(args, char *);
-    char *name = va_arg(args, char *);
-    char *id = va_arg(args, char *);
+    const char *type = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *id = va_arg(args, const char *);
     gboolean BASH_EXPORT = va_arg(args, gboolean);
 
     if (BASH_EXPORT) {
@@ -509,13 +509,13 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *", "gboolean")
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
 static int
 crmadmin_node_xml(pcmk__output_t *out, va_list args)
 {
-    char *type = va_arg(args, char *);
-    char *name = va_arg(args, char *);
-    char *id = va_arg(args, char *);
+    const char *type = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *id = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, "node",
                                  "type", type ? type : "member",
