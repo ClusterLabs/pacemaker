@@ -96,6 +96,46 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
     add_hash_param(user_data, key, value);
 }
 
+static void
+expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_data, GHashTable * meta_hash, pe_working_set_t * data_set)
+{
+    GHashTable *parent_orig_meta = crm_str_table_new();
+    pe_resource_t *p = rsc->parent;
+
+    if (p == NULL) {
+        return ;
+    }
+
+    /* Search all parent resources, get the fixed value of "meta_attributes" set only in the original xml, and stack it in the hash table. */
+    /* The fixed value of the lower parent resource takes precedence and is not overwritten. */
+    while(p != NULL) {
+        /* A hash table for comparison is generated, including the id-ref. */
+        pe__unpack_dataset_nvpairs(p->xml, XML_TAG_META_SETS,
+                               rule_data, parent_orig_meta, NULL, FALSE, data_set);
+        p = p->parent; 
+    }
+
+    /* If there is a fixed value of "meta_attributes" of the parent resource, it will be processed. */
+    if (parent_orig_meta != NULL) {
+        GHashTableIter iter;
+        char *key = NULL;
+        char *value = NULL;
+
+        g_hash_table_iter_init(&iter, parent_orig_meta);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+            /* Parameters set in the original xml of the parent resource will also try to overwrite the child resource. */
+            /* Attributes that already exist in the child lease are not updated. */
+            dup_attr(key, value, meta_hash);
+        }
+    }
+
+    if (parent_orig_meta != NULL) {
+        g_hash_table_destroy(parent_orig_meta);
+    }
+    
+    return ;
+
+}
 void
 get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
                     pe_node_t * node, pe_working_set_t * data_set)
@@ -133,14 +173,21 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
     pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, &rule_data,
                                meta_hash, NULL, FALSE, data_set);
 
-    /* set anything else based on the parent */
+    /* Set the "meta_attributes" explicitly set in the parent resource to the hash table of the child resource. */
+    /* If it is already explicitly set as a child, it will not be overwritten. */
     if (rsc->parent != NULL) {
-        g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
+        expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, data_set);
     }
 
-    /* and finally check the defaults */
+    /* check the defaults */
     pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_META_SETS,
                                &rule_data, meta_hash, NULL, FALSE, data_set);
+
+    /* If there is "meta_attributes" that the parent resource has not explicitly set, set a value that is not set from rsc_default either. */
+    /* The values already set up to this point will not be overwritten. */
+    if (rsc->parent) {
+        g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
+    }
 }
 
 void
