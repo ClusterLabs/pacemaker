@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21844" name="transition_timeout" value="120s"/>
         <nvpair id="nvpair.id21853" name="require_quorum" value="true"/>
-        <nvpair id="nvpair.id21862" name="symetric_cluster" value="true"/>
         <nvpair id="nvpair.id21871" name="suppress_cib_writes" value="true"/>
         <nvpair id="nvpair.id21880" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21889" name="stonith-enabled" value="true"/>
