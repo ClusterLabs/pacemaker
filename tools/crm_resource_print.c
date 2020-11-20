@@ -127,9 +127,9 @@ cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc,
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute", "pe_resource_t *", "char *", "GHashTable *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
 static int
-attribute_default(pcmk__output_t *out, va_list args) {
+attribute_list_default(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     char *attr = va_arg(args, char *);
     GHashTable *params = va_arg(args, GHashTable *);
@@ -147,9 +147,9 @@ attribute_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("attribute", "pe_resource_t *", "char *", "GHashTable *")
+PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
 static int
-attribute_text(pcmk__output_t *out, va_list args) {
+attribute_list_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     char *attr = va_arg(args, char *);
     GHashTable *params = va_arg(args, GHashTable *);
@@ -165,9 +165,9 @@ attribute_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("property", "pe_resource_t *", "char *")
+PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "char *")
 static int
-property_default(pcmk__output_t *out, va_list args) {
+property_list_default(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     char *attr = va_arg(args, char *);
 
@@ -182,9 +182,9 @@ property_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("property", "pe_resource_t *", "char *")
+PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "char *")
 static int
-property_text(pcmk__output_t *out, va_list args) {
+property_list_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     char *attr = va_arg(args, char *);
 
@@ -197,9 +197,9 @@ property_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-check", "resource_checks_t *")
+PCMK__OUTPUT_ARGS("resource-check-list", "resource_checks_t *")
 static int
-resource_check_default(pcmk__output_t *out, va_list args) {
+resource_check_list_default(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     pe_resource_t *parent = uber_parent(checks->rsc);
@@ -239,9 +239,9 @@ resource_check_default(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-check", "resource_checks_t *")
+PCMK__OUTPUT_ARGS("resource-check-list", "resource_checks_t *")
 static int
-resource_check_xml(pcmk__output_t *out, va_list args) {
+resource_check_list_xml(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     pe_resource_t *parent = uber_parent(checks->rsc);
@@ -270,9 +270,9 @@ resource_check_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search", "GList *", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "pe_resource_t *", "gchar *")
 static int
-resource_search_default(pcmk__output_t *out, va_list args)
+resource_search_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
@@ -315,10 +315,9 @@ resource_search_default(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-
-PCMK__OUTPUT_ARGS("resource-search", "GList *", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "pe_resource_t *", "gchar *")
 static int
-resource_search_xml(pcmk__output_t *out, va_list args)
+resource_search_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
@@ -340,10 +339,10 @@ resource_search_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GList *", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("resource-reasons-list", "cib_t *", "GList *", "pe_resource_t *",
                   "pe_node_t *")
 static int
-resource_why_default(pcmk__output_t *out, va_list args)
+resource_reasons_list_default(pcmk__output_t *out, va_list args)
 {
     cib_t *cib_conn = va_arg(args, cib_t *);
     GList *resources = va_arg(args, GList *);
@@ -423,10 +422,10 @@ resource_why_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GList *", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("resource-reasons-list", "cib_t *", "GList *", "pe_resource_t *",
                   "pe_node_t *")
 static int
-resource_why_xml(pcmk__output_t *out, va_list args)
+resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 {
     cib_t *cib_conn = va_arg(args, cib_t *);
     GList *resources = va_arg(args, GList *);
@@ -554,16 +553,16 @@ resource_names(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "attribute", "default", attribute_default },
-    { "attribute", "text", attribute_text },
-    { "property", "default", property_default },
-    { "property", "text", property_text },
-    { "resource-check", "default", resource_check_default },
-    { "resource-check", "xml", resource_check_xml },
-    { "resource-search", "default", resource_search_default },
-    { "resource-search", "xml", resource_search_xml },
-    { "resource-why", "default", resource_why_default },
-    { "resource-why", "xml", resource_why_xml },
+    { "attribute-list", "default", attribute_list_default },
+    { "attribute-list", "text", attribute_list_text },
+    { "property-list", "default", property_list_default },
+    { "property-list", "text", property_list_text },
+    { "resource-check-list", "default", resource_check_list_default },
+    { "resource-check-list", "xml", resource_check_list_xml },
+    { "resource-search-list", "default", resource_search_list_default },
+    { "resource-search-list", "xml", resource_search_list_xml },
+    { "resource-reasons-list", "default", resource_reasons_list_default },
+    { "resource-reasons-list", "xml", resource_reasons_list_xml },
     { "resource-names-list", "default", resource_names },
 
     { NULL, NULL, NULL }

@@ -1816,7 +1816,7 @@ main(int argc, char **argv)
 
         case cmd_locate: {
             GListPtr resources = cli_resource_search(out, rsc, options.rsc_id, data_set);
-            rc = out->message(out, "resource-search", resources, rsc, options.rsc_id);
+            rc = out->message(out, "resource-search-list", resources, rsc, options.rsc_id);
             break;
         }
 
@@ -1839,7 +1839,7 @@ main(int argc, char **argv)
                         goto done;
                     }
                 }
-                out->message(out, "resource-why", cib_conn, data_set->resources, rsc, dest);
+                out->message(out, "resource-reasons-list", cib_conn, data_set->resources, rsc, dest);
                 rc = pcmk_rc_ok;
             }
             break;
@@ -1879,7 +1879,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_get_property:
-            rc = out->message(out, "property", rsc, options.prop_name);
+            rc = out->message(out, "property-list", rsc, options.prop_name);
             if (rc == pcmk_rc_no_output) {
                 rc = ENXIO;
             }
@@ -1916,7 +1916,7 @@ main(int argc, char **argv)
             }
 
             crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
-            rc = out->message(out, "attribute", rsc, options.prop_name, params);
+            rc = out->message(out, "attribute-list", rsc, options.prop_name, params);
             g_hash_table_destroy(params);
             break;
         }

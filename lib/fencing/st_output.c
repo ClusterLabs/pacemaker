@@ -30,7 +30,7 @@ time_t_string(time_t when) {
     return buf;
 }
 
-PCMK__OUTPUT_ARGS("failed-fencing-history", "stonith_history_t *", "GList *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("failed-fencing-list", "stonith_history_t *", "GList *", "gboolean", "gboolean")
 int
 stonith__failed_history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -58,7 +58,7 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("fencing-history", "stonith_history_t *", "GList *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("fencing-list", "stonith_history_t *", "GList *", "gboolean", "gboolean")
 int
 stonith__history(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -84,7 +84,7 @@ stonith__history(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "stonith_history_t *", "GList *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *", "GList *", "gboolean", "gboolean")
 int
 stonith__full_history(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc G_GNUC_UNUSED = va_arg(args, crm_exit_t);
@@ -109,7 +109,7 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
     return rc;
 }
  
-PCMK__OUTPUT_ARGS("full-fencing-history", "crm_exit_t", "stonith_history_t *", "GList *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *", "GList *", "gboolean", "gboolean")
 int
 stonith__full_history_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
@@ -198,7 +198,7 @@ stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
     }
 }
 
-PCMK__OUTPUT_ARGS("pending-fencing-actions", "stonith_history_t *", "GList *", "gboolean", "gboolean")
+PCMK__OUTPUT_ARGS("pending-fencing-list", "stonith_history_t *", "GList *", "gboolean", "gboolean")
 int
 stonith__pending_actions(pcmk__output_t *out, va_list args) {
     stonith_history_t *history = va_arg(args, stonith_history_t *);
@@ -433,15 +433,15 @@ stonith__validate_agent_xml(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "failed-fencing-history", "default", stonith__failed_history },
-    { "fencing-history", "default", stonith__history },
-    { "full-fencing-history", "default", stonith__full_history },
-    { "full-fencing-history", "xml", stonith__full_history_xml },
+    { "failed-fencing-list", "default", stonith__failed_history },
+    { "fencing-list", "default", stonith__history },
+    { "full-fencing-list", "default", stonith__full_history },
+    { "full-fencing-list", "xml", stonith__full_history_xml },
     { "last-fenced", "html", stonith__last_fenced_html },
     { "last-fenced", "log", stonith__last_fenced_text },
     { "last-fenced", "text", stonith__last_fenced_text },
     { "last-fenced", "xml", stonith__last_fenced_xml },
-    { "pending-fencing-actions", "default", stonith__pending_actions },
+    { "pending-fencing-list", "default", stonith__pending_actions },
     { "stonith-event", "html", stonith__event_html },
     { "stonith-event", "log", stonith__event_text },
     { "stonith-event", "text", stonith__event_text },

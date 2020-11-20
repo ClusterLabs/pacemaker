@@ -900,7 +900,7 @@ cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
     checks = cli_check_resource(rsc, role_s, managed);
 
     if (checks->flags != 0 || checks->lock_node != NULL) {
-        rc = out->message(out, "resource-check", checks);
+        rc = out->message(out, "resource-check-list", checks);
     }
 
     free(role_s);
