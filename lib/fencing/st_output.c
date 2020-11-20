@@ -110,8 +110,8 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
 }
  
 PCMK__OUTPUT_ARGS("full-fencing-list", "crm_exit_t", "stonith_history_t *", "GList *", "gboolean", "gboolean")
-int
-stonith__full_history_xml(pcmk__output_t *out, va_list args) {
+static int
+full_history_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t history_rc = va_arg(args, crm_exit_t);
     stonith_history_t *history = va_arg(args, stonith_history_t *);
     GList *only_node = va_arg(args, GList *);
@@ -147,8 +147,8 @@ stonith__full_history_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("last-fenced", "const char *", "time_t")
-int
-stonith__last_fenced_html(pcmk__output_t *out, va_list args) {
+static int
+last_fenced_html(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
     time_t when = va_arg(args, time_t);
 
@@ -163,8 +163,8 @@ stonith__last_fenced_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("last-fenced", "const char *", "time_t")
-int
-stonith__last_fenced_text(pcmk__output_t *out, va_list args) {
+static int
+last_fenced_text(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
     time_t when = va_arg(args, time_t);
 
@@ -178,8 +178,8 @@ stonith__last_fenced_text(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("last-fenced", "const char *", "time_t")
-int
-stonith__last_fenced_xml(pcmk__output_t *out, va_list args) {
+static int
+last_fenced_xml(pcmk__output_t *out, va_list args) {
     const char *target = va_arg(args, const char *);
     time_t when = va_arg(args, time_t);
 
@@ -228,8 +228,8 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
-int
-stonith__event_html(pcmk__output_t *out, va_list args) {
+static int
+stonith_event_html(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean later_succeeded = va_arg(args, gboolean);
@@ -276,8 +276,8 @@ stonith__event_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
-int
-stonith__event_text(pcmk__output_t *out, va_list args) {
+static int
+stonith_event_text(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history = va_arg(args, gboolean);
     gboolean later_succeeded = va_arg(args, gboolean);
@@ -314,8 +314,8 @@ stonith__event_text(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
-int
-stonith__event_xml(pcmk__output_t *out, va_list args) {
+static int
+stonith_event_xml(pcmk__output_t *out, va_list args) {
     stonith_history_t *event = va_arg(args, stonith_history_t *);
     gboolean full_history G_GNUC_UNUSED = va_arg(args, gboolean);
     gboolean later_succeeded G_GNUC_UNUSED = va_arg(args, gboolean);
@@ -362,8 +362,8 @@ stonith__event_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
-int
-stonith__validate_agent_html(pcmk__output_t *out, va_list args) {
+static int
+validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
     char *output = va_arg(args, char *);
@@ -387,8 +387,8 @@ stonith__validate_agent_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
-int
-stonith__validate_agent_text(pcmk__output_t *out, va_list args) {
+static int
+validate_agent_text(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
     char *output = va_arg(args, char *);
@@ -408,8 +408,8 @@ stonith__validate_agent_text(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("validate", "const char *", "const char *", "char *", "char *", "int")
-int
-stonith__validate_agent_xml(pcmk__output_t *out, va_list args) {
+static int
+validate_agent_xml(pcmk__output_t *out, va_list args) {
     const char *agent = va_arg(args, const char *);
     const char *device = va_arg(args, const char *);
     char *output = va_arg(args, char *);
@@ -436,20 +436,20 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "failed-fencing-list", "default", stonith__failed_history },
     { "fencing-list", "default", stonith__history },
     { "full-fencing-list", "default", stonith__full_history },
-    { "full-fencing-list", "xml", stonith__full_history_xml },
-    { "last-fenced", "html", stonith__last_fenced_html },
-    { "last-fenced", "log", stonith__last_fenced_text },
-    { "last-fenced", "text", stonith__last_fenced_text },
-    { "last-fenced", "xml", stonith__last_fenced_xml },
+    { "full-fencing-list", "xml", full_history_xml },
+    { "last-fenced", "html", last_fenced_html },
+    { "last-fenced", "log", last_fenced_text },
+    { "last-fenced", "text", last_fenced_text },
+    { "last-fenced", "xml", last_fenced_xml },
     { "pending-fencing-list", "default", stonith__pending_actions },
-    { "stonith-event", "html", stonith__event_html },
-    { "stonith-event", "log", stonith__event_text },
-    { "stonith-event", "text", stonith__event_text },
-    { "stonith-event", "xml", stonith__event_xml },
-    { "validate", "html", stonith__validate_agent_html },
-    { "validate", "log", stonith__validate_agent_text },
-    { "validate", "text", stonith__validate_agent_text },
-    { "validate", "xml", stonith__validate_agent_xml },
+    { "stonith-event", "html", stonith_event_html },
+    { "stonith-event", "log", stonith_event_text },
+    { "stonith-event", "text", stonith_event_text },
+    { "stonith-event", "xml", stonith_event_xml },
+    { "validate", "html", validate_agent_html },
+    { "validate", "log", validate_agent_text },
+    { "validate", "text", validate_agent_text },
+    { "validate", "xml", validate_agent_xml },
 
     { NULL, NULL, NULL }
 };
