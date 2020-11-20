@@ -308,6 +308,13 @@ AC_ARG_WITH([bundledir],
     [ CRM_BUNDLE_DIR="$withval" ]
 )
 
+AC_ARG_WITH([sanitizers],
+  [AS_HELP_STRING([--with-sanitizers=...,...],
+    [enable SANitizer build, do *NOT* use for production. Only ASAN/UBSAN/TSAN are currently supported])],
+  [ SANITIZERS="$withval" ],
+  [ SANITIZERS="" ])
+
+
 dnl The not-yet-released autoconf 2.70 will have a --runstatedir option.
 dnl Until that's available, emulate it with our own --with-runstatedir.
 pcmk_runstatedir=""
@@ -1640,6 +1647,37 @@ fi
 AC_MSG_RESULT($OPENIPMI_SERVICELOG_EXISTS)
 AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test "$OPENIPMI_SERVICELOG_EXISTS" = "yes")
 
+# --- ASAN/UBSAN/TSAN (see man gcc) ---
+# when using SANitizers, we need to pass the -fsanitize..
+# to both CFLAGS and LDFLAGS. The CFLAGS/LDFLAGS must be
+# specified as first in the list or there will be runtime
+# issues (for example user has to LD_PRELOAD asan for it to work
+# properly).
+
+if test -n "${SANITIZERS}"; then
+  SANITIZERS=$(echo $SANITIZERS | sed -e 's/,/ /g')
+  for SANITIZER in $SANITIZERS; do
+    case $SANITIZER in
+      asan|ASAN)
+	SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=address"
+	SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=address -lasan"
+	AC_CHECK_LIB([asan],[main],,AC_MSG_ERROR([Unable to find libasan]))
+	;;
+      ubsan|UBSAN)
+	SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=undefined"
+	SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=undefined -lubsan"
+	AC_CHECK_LIB([ubsan],[main],,AC_MSG_ERROR([Unable to find libubsan]))
+	;;
+      tsan|TSAN)
+	SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=thread"
+	SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=thread -ltsan"
+	AC_CHECK_LIB([tsan],[main],,AC_MSG_ERROR([Unable to find libtsan]))
+	;;
+    esac
+  done
+fi
+
+
 dnl ========================================================================
 dnl Compiler flags
 dnl ========================================================================
@@ -1871,7 +1909,10 @@ else
     AC_MSG_NOTICE([Hardening: using custom flags])
 fi
 
-CFLAGS="$CFLAGS $CC_EXTRAS"
+CFLAGS="$SANITIZERS_CFLAGS $CFLAGS $CC_EXTRAS"
+LDFLAGS="$SANITIZERS_LDFLAGS $LDFLAGS"
+CFLAGS_HARDENED_EXE="$SANITIZERS_CFLAGS $CFLAGS_HARDENED_EXE"
+LDFLAGS_HARDENED_EXE="$SANITIZERS_LDFLAGS $LDFLAGS_HARDENED_EXE"
 
 NON_FATAL_CFLAGS="$CFLAGS"
 AC_SUBST(NON_FATAL_CFLAGS)
