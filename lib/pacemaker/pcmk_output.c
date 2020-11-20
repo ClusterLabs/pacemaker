@@ -460,6 +460,7 @@ static int
 crmadmin_node_list(pcmk__output_t *out, va_list args)
 {
     xmlNodePtr xml_node = va_arg(args, xmlNodePtr);
+
     int found = 0;
     xmlNode *node = NULL;
     xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);

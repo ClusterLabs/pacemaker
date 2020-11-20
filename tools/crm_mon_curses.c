@@ -369,6 +369,7 @@ PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
 static int
 cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
+
     int rc;
 
     if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
