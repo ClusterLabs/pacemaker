@@ -100,6 +100,27 @@ def sort_diff(result):
     return result[sort_field]
 
 
+def print_results(results, sort_reverse):
+    """ Output the comparison results """
+
+    if results == []:
+        return
+
+    # Sort and print test differences
+    results.sort(reverse=sort_reverse, key=sort_diff)
+    for result in results:
+        print("%-40s %6.2fs vs %6.2fs (%+.2fs = %+6.2f%%)" % (result['test'],
+              result['before'], result['after'], result['diff'],
+              result['percent']))
+
+    # Print average differences
+    diff_total = sum(d['diff'] for d in results)
+    percent_total = sum(d['percent'] for d in results)
+    nresults = len(results)
+    print("\nAverages: %+.2fs %+6.2f%%" % ((diff_total / nresults),
+          (percent_total / nresults)))
+
+
 if __name__ == "__main__":
 
     global sort_field
@@ -117,12 +138,7 @@ if __name__ == "__main__":
             if result is not None:
                 results = results + [ result ]
 
-        # Sort and print
-        results.sort(reverse=args.reverse, key=sort_diff)
-        for result in results:
-            print("%-40s %6.2fs vs %6.2fs (%+.2fs = %+6.2f%%)" % (result['test'],
-                  result['before'], result['after'], result['diff'],
-                  result['percent']))
+        print_results(results, sort_reverse=args.reverse)
 
     except KeyboardInterrupt:
         pass
