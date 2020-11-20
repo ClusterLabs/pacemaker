@@ -56,6 +56,9 @@ Also: GNU make, and Python 2.7 or Python 3.2 or later
 * libvirt-daemon-driver-lxc (if running CTS container tests)
 * libvirt-daemon-lxc (if running CTS container tests)
 * libvirt-login-shell (if running CTS container tests)
+* nmap (if not specifying an IP address base)
+* oprofile (if running CTS profiling tests)
+* dlm (to log DLM debugging info after CTS tests)
 
 ## Simple install
 
