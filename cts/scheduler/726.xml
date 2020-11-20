@@ -3,7 +3,6 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21842" name="cluster-delay" value="120s"/>
-        <nvpair id="nvpair.id21860" name="suppress_cib_writes" value="1"/>
         <nvpair id="nvpair.id21869" name="no-quorum-policy" value="stop"/>
       </cluster_property_set>
     </crm_config>
