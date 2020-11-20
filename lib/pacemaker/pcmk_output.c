@@ -157,23 +157,22 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
 
         if (pcmk_is_set(peer->flags, pe_rsc_allocating)) {
             if (dependents == FALSE) {
-                xmlNodePtr node;
-
                 if (!printed_header) {
-                    pcmk__output_xml_create_parent(out, "colocations");
+                    pcmk__output_xml_create_parent(out, "colocations", NULL);
                     printed_header = true;
                 }
 
-                node = pcmk__output_create_xml_node(out, "colocation");
-                xmlSetProp(node, (pcmkXmlStr) "peer", (pcmkXmlStr) peer->id);
-                xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) cons->id);
+                pcmk__output_create_xml_node(out, "colocation",
+                                             "peer", peer->id,
+                                             "id", cons->id,
+                                             NULL);
             }
             continue;
         }
 
         if (dependents && recursive) {
             if (!printed_header) {
-                pcmk__output_xml_create_parent(out, "colocations");
+                pcmk__output_xml_create_parent(out, "colocations", NULL);
                 printed_header = true;
             }
 
@@ -181,24 +180,25 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
         }
 
         if (!printed_header) {
-            pcmk__output_xml_create_parent(out, "colocations");
+            pcmk__output_xml_create_parent(out, "colocations", NULL);
             printed_header = true;
         }
 
         score = score2char(cons->score);
         if (cons->role_rh > RSC_ROLE_STARTED) {
-            xmlNodePtr node = pcmk__output_create_xml_node(out, "colocation");
-            xmlSetProp(node, (pcmkXmlStr) "peer", (pcmkXmlStr) peer->id);
-            xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) cons->id);
-            xmlSetProp(node, (pcmkXmlStr) "score", (pcmkXmlStr) score);
-            xmlSetProp(node, (pcmkXmlStr) "dependents",
-                       (pcmkXmlStr) (dependents ? "needs" : "with"));
-            xmlSetProp(node, (pcmkXmlStr) "role", (pcmkXmlStr) role2text(cons->role_rh));
+            pcmk__output_create_xml_node(out, "colocation",
+                                         "peer", peer->id,
+                                         "id", cons->id,
+                                         "score", score,
+                                         "dependents", dependents ? "needs" : "with",
+                                         "role", role2text(cons->role_rh),
+                                         NULL);
         } else {
-            xmlNodePtr node = pcmk__output_create_xml_node(out, "colocation");
-            xmlSetProp(node, (pcmkXmlStr) "peer", (pcmkXmlStr) peer->id);
-            xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) cons->id);
-            xmlSetProp(node, (pcmkXmlStr) "score", (pcmkXmlStr) score);
+            pcmk__output_create_xml_node(out, "colocation",
+                                         "peer", peer->id,
+                                         "id", cons->id,
+                                         "score", score,
+                                         NULL);
         }
 
         free(score);
@@ -252,7 +252,7 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
     GListPtr lpc = NULL;
     GListPtr list = rsc->rsc_location;
 
-    pcmk__output_xml_create_parent(out, "locations");
+    pcmk__output_xml_create_parent(out, "locations", NULL);
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
@@ -263,11 +263,11 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
             char *score = score2char(node->weight);
 
-            xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "location");
-            xmlSetProp(xml_node, (pcmkXmlStr) "host", (pcmkXmlStr) node->details->uname);
-            xmlSetProp(xml_node, (pcmkXmlStr) "id", (pcmkXmlStr) cons->id);
-            xmlSetProp(xml_node, (pcmkXmlStr) "score", (pcmkXmlStr) score);
-
+            pcmk__output_create_xml_node(out, "location",
+                                         "host", node->details->uname,
+                                         "id", cons->id,
+                                         "score", score,
+                                         NULL);
             free(score);
         }
     }
@@ -323,7 +323,6 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     gboolean recursive = va_arg(args, gboolean);
 
     GListPtr lpc = NULL;
-    xmlNodePtr node = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                data_set->input);
 
@@ -338,12 +337,13 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
         pe__clear_resource_flags(r, pe_rsc_allocating);
     }
 
-    pcmk__output_xml_create_parent(out, "constraints");
+    pcmk__output_xml_create_parent(out, "constraints", NULL);
 
     out->message(out, "colocations-list", rsc, TRUE, recursive);
 
-    node = pcmk__output_xml_create_parent(out, "resource");
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc->id);
+    pcmk__output_xml_create_parent(out, "resource",
+                                   "id", rsc->id,
+                                   NULL);
     out->message(out, "locations-list", rsc);
     pcmk__output_xml_pop_parent(out);
 
@@ -385,11 +385,11 @@ health_xml(pcmk__output_t *out, va_list args)
     char *fsa_state = va_arg(args, char *);
     char *result = va_arg(args, char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, crm_str(sys_from));
-    xmlSetProp(node, (pcmkXmlStr) "node_name", (pcmkXmlStr) crm_str(host_from));
-    xmlSetProp(node, (pcmkXmlStr) "state", (pcmkXmlStr) crm_str(fsa_state));
-    xmlSetProp(node, (pcmkXmlStr) "result", (pcmkXmlStr) crm_str(result));
-
+    pcmk__output_create_xml_node(out, crm_str(sys_from),
+                                 "node_name", crm_str(host_from),
+                                 "state", crm_str(fsa_state),
+                                 "result", crm_str(result),
+                                 NULL);
     return pcmk_rc_ok;
 }
 
@@ -420,11 +420,10 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     char *state = va_arg(args, char *);
     char *last_updated = va_arg(args, char *);
 
-
-    xmlNodePtr node = pcmk__output_create_xml_node(out, crm_str(sys_from));
-    xmlSetProp(node, (pcmkXmlStr) "state", (pcmkXmlStr) crm_str(state));
-    xmlSetProp(node, (pcmkXmlStr) "last_updated", (pcmkXmlStr) crm_str(last_updated));
-
+    pcmk__output_create_xml_node(out, crm_str(sys_from),
+                                 "state", crm_str(state),
+                                 "last_updated", crm_str(last_updated),
+                                 NULL);
     return pcmk_rc_ok;
 }
 
@@ -449,9 +448,9 @@ dc_xml(pcmk__output_t *out, va_list args)
 {
     char *dc = va_arg(args, char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "dc");
-    xmlSetProp(node, (pcmkXmlStr) "node_name", (pcmkXmlStr) crm_str(dc));
-
+    pcmk__output_create_xml_node(out, "dc",
+                                 "node_name", crm_str(dc),
+                                 NULL);
     return pcmk_rc_ok;
 }
 
@@ -517,11 +516,11 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     char *name = va_arg(args, char *);
     char *id = va_arg(args, char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "node");
-    xmlSetProp(node, (pcmkXmlStr) "type", (pcmkXmlStr) (type ? type : "member"));
-    xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) crm_str(name));
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) crm_str(id));
-
+    pcmk__output_create_xml_node(out, "node",
+                                 "type", type ? type : "member",
+                                 "name", crm_str(name),
+                                 "id", crm_str(id),
+                                 NULL);
     return pcmk_rc_ok;
 }
 

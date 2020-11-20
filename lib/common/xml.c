@@ -703,11 +703,11 @@ pcmk_create_html_node(xmlNode * parent, const char *element_name, const char *id
     xmlNode *node = pcmk_create_xml_text_node(parent, element_name, text);
 
     if (class_name != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "class", (pcmkXmlStr) class_name);
+        crm_xml_add(node, "class", class_name);
     }
 
     if (id != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) id);
+        crm_xml_add(node, "id", id);
     }
 
     return node;
@@ -2933,6 +2933,35 @@ pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
     free(base);
 
     return ret;
+}
+
+void
+pcmk__xe_set_propv(xmlNodePtr node, va_list pairs)
+{
+    while (true) {
+        const char *name, *value;
+
+        name = va_arg(pairs, const char *);
+        if (name == NULL) {
+            return;
+        }
+
+        value = va_arg(pairs, const char *);
+        if (value == NULL) {
+            return;
+        }
+
+        crm_xml_add(node, name, value);
+    }
+}
+
+void
+pcmk__xe_set_props(xmlNodePtr node, ...)
+{
+    va_list pairs;
+    va_start(pairs, node);
+    pcmk__xe_set_propv(node, pairs);
+    va_end(pairs);
 }
 
 // Deprecated functions kept only for backward API compatibility

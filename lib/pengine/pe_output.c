@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/iso8601_internal.h>
+#include <crm/common/xml_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
@@ -414,7 +415,7 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
         const char *param_name = va_arg(args, const char *);
         const char *param_value = va_arg(args, const char *);
         if (param_name && param_value) {
-            xmlSetProp(xml_node, (pcmkXmlStr)param_name, (pcmkXmlStr)param_value);
+            crm_xml_add(xml_node, param_name, param_value);
         }
     };
     va_end(args);
@@ -465,19 +466,19 @@ pe__ban_text(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("ban", "pe_node_t *", "pe__location_t *", "gboolean")
 int
 pe__ban_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "ban");
     pe_node_t *pe_node = va_arg(args, pe_node_t *);
     pe__location_t *location = va_arg(args, pe__location_t *);
     gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
 
     char *weight_s = crm_itoa(pe_node->weight);
 
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) location->id);
-    xmlSetProp(node, (pcmkXmlStr) "resource", (pcmkXmlStr) location->rsc_lh->id);
-    xmlSetProp(node, (pcmkXmlStr) "node", (pcmkXmlStr) pe_node->details->uname);
-    xmlSetProp(node, (pcmkXmlStr) "weight", (pcmkXmlStr) weight_s);
-    xmlSetProp(node, (pcmkXmlStr) "master_only",
-               (pcmkXmlStr) pcmk__btoa(location->role_filter == RSC_ROLE_MASTER));
+    pcmk__output_create_xml_node(out, "ban",
+                                 "id", location->id,
+                                 "resource", location->rsc_lh->id,
+                                 "node", pe_node->details->uname,
+                                 "weight", weight_s,
+                                 "master_only", pcmk__btoa(location->role_filter == RSC_ROLE_MASTER),
+                                 NULL);
 
     free(weight_s);
     return pcmk_rc_ok;
@@ -486,8 +487,8 @@ pe__ban_xml(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
 int
 pe__cluster_counts_html(pcmk__output_t *out, va_list args) {
-    xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "li");
-    xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "li");
+    xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "li", NULL);
+    xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "li", NULL);
 
     unsigned int nnodes = va_arg(args, unsigned int);
     int nresources = va_arg(args, int);
@@ -582,8 +583,8 @@ pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
 int
 pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "nodes_configured");
-    xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured");
+    xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "nodes_configured", NULL);
+    xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured", NULL);
 
     unsigned int nnodes = va_arg(args, unsigned int);
     int nresources = va_arg(args, int);
@@ -591,19 +592,19 @@ pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
     int nblocked = va_arg(args, int);
 
     char *s = crm_itoa(nnodes);
-    xmlSetProp(nodes_node, (pcmkXmlStr) "number", (pcmkXmlStr) s);
+    crm_xml_add(nodes_node, "number", s);
     free(s);
 
     s = crm_itoa(nresources);
-    xmlSetProp(resources_node, (pcmkXmlStr) "number", (pcmkXmlStr) s);
+    crm_xml_add(resources_node, "number", s);
     free(s);
 
     s = crm_itoa(ndisabled);
-    xmlSetProp(resources_node, (pcmkXmlStr) "disabled", (pcmkXmlStr) s);
+    crm_xml_add(resources_node, "disabled", s);
     free(s);
 
     s = crm_itoa(nblocked);
-    xmlSetProp(resources_node, (pcmkXmlStr) "blocked", (pcmkXmlStr) s);
+    crm_xml_add(resources_node, "blocked", s);
     free(s);
 
     return pcmk_rc_ok;
@@ -612,7 +613,7 @@ pe__cluster_counts_xml(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *", "char *")
 int
 pe__cluster_dc_html(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
     pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
@@ -665,22 +666,23 @@ pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *", "char *")
 int
 pe__cluster_dc_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "current_dc");
-
     pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
     char *dc_name G_GNUC_UNUSED = va_arg(args, char *);
 
     if (dc) {
-        xmlSetProp(node, (pcmkXmlStr) "present", (pcmkXmlStr) "true");
-        xmlSetProp(node, (pcmkXmlStr) "version", (pcmkXmlStr) (dc_version_s ? dc_version_s : ""));
-        xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) dc->details->uname);
-        xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) dc->details->id);
-        xmlSetProp(node, (pcmkXmlStr) "with_quorum",
-                   (pcmkXmlStr) pcmk__btoa(crm_is_true(quorum)));
+        pcmk__output_create_xml_node(out, "current_dc",
+                                     "present", "true",
+                                     "version", dc_version_s ? dc_version_s : "",
+                                     "name", dc->details->uname,
+                                     "id", dc->details->id,
+                                     "with_quorum", pcmk__btoa(crm_is_true(quorum)),
+                                     NULL);
     } else {
-        xmlSetProp(node, (pcmkXmlStr) "present", (pcmkXmlStr) "false");
+        pcmk__output_create_xml_node(out, "current_dc",
+                                     "present", "false",
+                                     NULL);
     }
 
     return pcmk_rc_ok;
@@ -741,14 +743,14 @@ pe__cluster_options_html(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
+        xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
         pcmk_create_html_node(node, "span", NULL, "bold", "DISABLED");
         pcmk_create_html_node(node, "span", NULL, NULL,
                               " (the cluster will not attempt to start, stop, or recover services)");
     } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
-        xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
+        xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(node, "span", NULL, NULL, "Resource management: ");
         pcmk_create_html_node(node, "span", NULL, "bold", "STOPPED");
@@ -817,48 +819,45 @@ pe__cluster_options_text(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
 int
 pe__cluster_options_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "cluster_options");
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
-
-    xmlSetProp(node, (pcmkXmlStr) "stonith-enabled",
-               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)));
-    xmlSetProp(node, (pcmkXmlStr) "symmetric-cluster",
-               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)));
+    const char *no_quorum_policy = NULL;
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
-            xmlSetProp(node, (pcmkXmlStr) "no-quorum-policy", (pcmkXmlStr) "freeze");
+            no_quorum_policy = "freeze";
             break;
 
         case no_quorum_stop:
-            xmlSetProp(node, (pcmkXmlStr) "no-quorum-policy", (pcmkXmlStr) "stop");
+            no_quorum_policy = "stop";
             break;
 
         case no_quorum_demote:
-            xmlSetProp(node, (pcmkXmlStr) "no-quorum-policy", (pcmkXmlStr) "demote");
+            no_quorum_policy = "demote";
             break;
 
         case no_quorum_ignore:
-            xmlSetProp(node, (pcmkXmlStr) "no-quorum-policy", (pcmkXmlStr) "ignore");
+            no_quorum_policy = "ignore";
             break;
 
         case no_quorum_suicide:
-            xmlSetProp(node, (pcmkXmlStr) "no-quorum-policy", (pcmkXmlStr) "suicide");
+            no_quorum_policy = "suicide";
             break;
     }
 
-    xmlSetProp(node, (pcmkXmlStr) "maintenance-mode",
-               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)));
-    xmlSetProp(node, (pcmkXmlStr) "stop-all-resources",
-               (pcmkXmlStr) pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)));
-
+    pcmk__output_create_xml_node(out, "cluster_options",
+                                 "stonith-enabled", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)),
+                                 "symmetric-cluster", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_symmetric_cluster)),
+                                 "no-quorum-policy", no_quorum_policy,
+                                 "maintenance-mode", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)),
+                                 "stop-all-resources", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)),
+                                 NULL);
     return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
 int
 pe__cluster_stack_html(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "li");
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "li", NULL);
     const char *stack_s = va_arg(args, const char *);
 
     pcmk_create_html_node(node, "span", NULL, "bold", "Stack: ");
@@ -878,10 +877,11 @@ pe__cluster_stack_text(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
 int
 pe__cluster_stack_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "stack");
     const char *stack_s = va_arg(args, const char *);
 
-    xmlSetProp(node, (pcmkXmlStr) "type", (pcmkXmlStr) stack_s);
+    pcmk__output_create_xml_node(out, "stack",
+                                 "type", stack_s,
+                                 NULL);
 
     return pcmk_rc_ok;
 }
@@ -889,8 +889,8 @@ pe__cluster_stack_xml(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
 int
 pe__cluster_times_html(pcmk__output_t *out, va_list args) {
-    xmlNodePtr updated_node = pcmk__output_create_xml_node(out, "li");
-    xmlNodePtr changed_node = pcmk__output_create_xml_node(out, "li");
+    xmlNodePtr updated_node = pcmk__output_create_xml_node(out, "li", NULL);
+    xmlNodePtr changed_node = pcmk__output_create_xml_node(out, "li", NULL);
 
     const char *last_written = va_arg(args, const char *);
     const char *user = va_arg(args, const char *);
@@ -913,20 +913,20 @@ pe__cluster_times_html(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
 int
 pe__cluster_times_xml(pcmk__output_t *out, va_list args) {
-    xmlNodePtr updated_node = pcmk__output_create_xml_node(out, "last_update");
-    xmlNodePtr changed_node = pcmk__output_create_xml_node(out, "last_change");
-
     const char *last_written = va_arg(args, const char *);
     const char *user = va_arg(args, const char *);
     const char *client = va_arg(args, const char *);
     const char *origin = va_arg(args, const char *);
 
-    xmlSetProp(updated_node, (pcmkXmlStr) "time",
-               (pcmkXmlStr) pcmk__epoch2str(NULL));
-    xmlSetProp(changed_node, (pcmkXmlStr) "time", (pcmkXmlStr) (last_written ? last_written : ""));
-    xmlSetProp(changed_node, (pcmkXmlStr) "user", (pcmkXmlStr) (user ? user : ""));
-    xmlSetProp(changed_node, (pcmkXmlStr) "client", (pcmkXmlStr) (client ? client : ""));
-    xmlSetProp(changed_node, (pcmkXmlStr) "origin", (pcmkXmlStr) (origin ? origin : ""));
+    pcmk__output_create_xml_node(out, "last_update",
+                                 "time", pcmk__epoch2str(NULL),
+                                 NULL);
+    pcmk__output_create_xml_node(out, "last_change",
+                                 "time", last_written ? last_written : "",
+                                 "user", user ? user : "",
+                                 "client", client ? client : "",
+                                 "origin", origin ? origin : "",
+                                 NULL);
 
     return pcmk_rc_ok;
 }
@@ -972,20 +972,15 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
 
     char *rc_s = crm_itoa(rc);
     char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "failure");
-
-    xmlSetProp(node, (pcmkXmlStr) (op_key ? "op_key" : "id"),
-               (pcmkXmlStr) (op_key ? op_key : ID(xml_op)));
-    xmlSetProp(node, (pcmkXmlStr) "node",
-               (pcmkXmlStr) crm_element_value(xml_op, XML_ATTR_UNAME));
-    xmlSetProp(node, (pcmkXmlStr) "exitstatus",
-               (pcmkXmlStr) services_ocf_exitcode_str(rc));
-    xmlSetProp(node, (pcmkXmlStr) "exitreason", (pcmkXmlStr) reason_s);
-    xmlSetProp(node, (pcmkXmlStr) "exitcode", (pcmkXmlStr) rc_s);
-    xmlSetProp(node, (pcmkXmlStr) "call",
-               (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
-    xmlSetProp(node, (pcmkXmlStr) "status",
-               (pcmkXmlStr) services_lrm_status_str(status));
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "failure",
+                                                   op_key ? "op_key" : "id", op_key ? op_key : ID(xml_op),
+                                                   "node", crm_element_value(xml_op, XML_ATTR_UNAME),
+                                                   "exitstatus", services_ocf_exitcode_str(rc),
+                                                   "exitreason", reason_s,
+                                                   "exitcode", rc_s,
+                                                   "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                                   "status", services_lrm_status_str(status),
+                                                   NULL);
 
     if (last) {
         guint interval_ms = 0;
@@ -1000,14 +995,12 @@ pe__failed_action_xml(pcmk__output_t *out, va_list args) {
         crm_time_set_timet(crm_when, &when);
         rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
-        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE, (pcmkXmlStr) rc_change);
-        xmlSetProp(node, (pcmkXmlStr) "queued",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_QUEUE));
-        xmlSetProp(node, (pcmkXmlStr) "exec",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
-        xmlSetProp(node, (pcmkXmlStr) "interval", (pcmkXmlStr) s);
-        xmlSetProp(node, (pcmkXmlStr) "task",
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_TASK));
+        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,
+                           "queued", crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
+                           "exec", crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+                           "interval", s,
+                           "task", crm_element_value(xml_op, XML_LRM_ATTR_TASK),
+                           NULL);
 
         free(s);
         free(rc_change);
@@ -1037,7 +1030,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
     char *buf = crm_strdup_printf("Node: %s", node_name);
 
     if (full) {
-        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
+        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(item_node, "span", NULL, NULL, buf);
 
@@ -1203,8 +1196,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
         if (pe__is_guest_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
-            xmlSetProp(xml_node, (pcmkXmlStr) "id_as_resource",
-                                 (pcmkXmlStr) node->details->remote_rsc->container->id);
+            crm_xml_add(xml_node, "id_as_resource", node->details->remote_rsc->container->id);
         }
 
         if (group_by_node) {
@@ -1221,8 +1213,9 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
         out->end_list(out);
     } else {
-        xmlNodePtr parent = pcmk__output_xml_create_parent(out, "node");
-        xmlSetProp(parent, (pcmkXmlStr) "name", (pcmkXmlStr) node->details->uname);
+        pcmk__output_xml_create_parent(out, "node",
+                                       "name", node->details->uname,
+                                       NULL);
     }
 
     return pcmk_rc_ok;
@@ -1265,7 +1258,7 @@ pe__node_attribute_html(pcmk__output_t *out, va_list args) {
     if (add_extra) {
         int v = crm_parse_int(value, "0");
         char *s = crm_strdup_printf("%s: %s", name, value);
-        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li");
+        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li", NULL);
 
         pcmk_create_html_node(item_node, "span", NULL, NULL, s);
         free(s);
@@ -1351,7 +1344,13 @@ pe__node_and_op_xml(pcmk__output_t *out, va_list args) {
     int status = crm_parse_int(status_s, "0");
     time_t last_change = 0;
 
-    xmlNode *node = pcmk__output_create_xml_node(out, "operation");
+    xmlNode *node = pcmk__output_create_xml_node(out, "operation",
+                                                 "op", op_key ? op_key : ID(xml_op),
+                                                 "node", crm_element_value(xml_op, XML_ATTR_UNAME),
+                                                 "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                                 "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
+                                                 "status", services_lrm_status_str(status),
+                                                 NULL);
 
     rsc = pe_find_resource(data_set->resources, op_rsc);
 
@@ -1364,25 +1363,18 @@ pe__node_and_op_xml(pcmk__output_t *out, va_list args) {
                                         pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider) ? crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER) : "",
                                         kind);
 
-        xmlSetProp(node, (pcmkXmlStr) "rsc", (pcmkXmlStr) rsc_printable_id(rsc));
-        xmlSetProp(node, (pcmkXmlStr) "agent", (pcmkXmlStr) agent_tuple);
+        pcmk__xe_set_props(node, "rsc", rsc_printable_id(rsc),
+                           "agent", agent_tuple,
+                           NULL);
         free(agent_tuple);
     }
 
-    xmlSetProp(node, (pcmkXmlStr) "op", (pcmkXmlStr) (op_key ? op_key : ID(xml_op)));
-    xmlSetProp(node, (pcmkXmlStr) "node", (pcmkXmlStr) crm_element_value(xml_op, XML_ATTR_UNAME));
-    xmlSetProp(node, (pcmkXmlStr) "call", (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
-    xmlSetProp(node, (pcmkXmlStr) "rc", (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_RC));
-
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
-        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE,
-                   (pcmkXmlStr) crm_strip_trailing_newline(ctime(&last_change)));
-        xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_EXEC,
-                   (pcmkXmlStr) crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+        pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, crm_strip_trailing_newline(ctime(&last_change)),
+                           XML_RSC_OP_T_EXEC, crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
+                           NULL);
     }
-
-    xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) services_lrm_status_str(status));
 
     return pcmk_rc_ok;
 }
@@ -1395,13 +1387,14 @@ pe__node_attribute_xml(pcmk__output_t *out, va_list args) {
     gboolean add_extra = va_arg(args, gboolean);
     int expected_score = va_arg(args, int);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute");
-    xmlSetProp(node, (pcmkXmlStr) "name", (pcmkXmlStr) name);
-    xmlSetProp(node, (pcmkXmlStr) "value", (pcmkXmlStr) value);
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "attribute",
+                                                   "name", name,
+                                                   "value", value,
+                                                   NULL);
 
     if (add_extra) {
         char *buf = crm_itoa(expected_score);
-        xmlSetProp(node, (pcmkXmlStr) "expected", (pcmkXmlStr) buf);
+        crm_xml_add(node, "expected", buf);
         free(buf);
     }
 
@@ -1630,17 +1623,18 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
     int rc = va_arg(args, int);
     gboolean print_timing = va_arg(args, gboolean);
 
-    char *rc_s = NULL;
-
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history");
-
-    xmlSetProp(node, (pcmkXmlStr) "call",
-               (pcmkXmlStr) crm_element_value(xml_op, XML_LRM_ATTR_CALLID));
-    xmlSetProp(node, (pcmkXmlStr) "task", (pcmkXmlStr) task);
+    char *rc_s = crm_itoa(rc);
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history",
+                                                   "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                                   "task", task,
+                                                   "rc", rc_s,
+                                                   "rc_text", services_ocf_exitcode_str(rc),
+                                                   NULL);
+    free(rc_s);
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
         char *s = crm_strdup_printf("%sms", interval_ms_s);
-        xmlSetProp(node, (pcmkXmlStr) "interval", (pcmkXmlStr) s);
+        crm_xml_add(node, "interval", s);
         free(s);
     }
 
@@ -1651,8 +1645,7 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
         if (value) {
             time_t int_value = (time_t) crm_parse_int(value, NULL);
             if (int_value > 0) {
-                xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_CHANGE,
-                           (pcmkXmlStr) pcmk__epoch2str(&int_value));
+                crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, pcmk__epoch2str(&int_value));
             }
         }
 
@@ -1660,29 +1653,24 @@ pe__op_history_xml(pcmk__output_t *out, va_list args) {
         if (value) {
             time_t int_value = (time_t) crm_parse_int(value, NULL);
             if (int_value > 0) {
-                xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_LAST_RUN,
-                           (pcmkXmlStr) pcmk__epoch2str(&int_value));
+                crm_xml_add(node, XML_RSC_OP_LAST_RUN, pcmk__epoch2str(&int_value));
             }
         }
 
         value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_EXEC, (pcmkXmlStr) s);
+            crm_xml_add(node, XML_RSC_OP_T_EXEC, s);
             free(s);
         }
         value = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
         if (value) {
             char *s = crm_strdup_printf("%sms", value);
-            xmlSetProp(node, (pcmkXmlStr) XML_RSC_OP_T_QUEUE, (pcmkXmlStr) s);
+            crm_xml_add(node, XML_RSC_OP_T_QUEUE, s);
             free(s);
         }
     }
 
-    rc_s = crm_itoa(rc);
-    xmlSetProp(node, (pcmkXmlStr) "rc", (pcmkXmlStr) rc_s);
-    xmlSetProp(node, (pcmkXmlStr) "rc_text", (pcmkXmlStr) services_ocf_exitcode_str(rc));
-    free(rc_s);
     return pcmk_rc_ok;
 }
 
@@ -1738,30 +1726,29 @@ pe__resource_history_xml(pcmk__output_t *out, va_list args) {
     time_t last_failure = va_arg(args, int);
     gboolean as_header = va_arg(args, gboolean);
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history");
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) rsc_id);
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource_history",
+                                                     "id", rsc_id,
+                                                     NULL);
 
     if (rsc == NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "orphan", (pcmkXmlStr) "true");
+        crm_xml_add(node, "orphan", "true");
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = crm_itoa(rsc->migration_threshold);
 
-        xmlSetProp(node, (pcmkXmlStr) "orphan", (pcmkXmlStr) "false");
-        xmlSetProp(node, (pcmkXmlStr) "migration-threshold",
-                   (pcmkXmlStr) migration_s);
+        pcmk__xe_set_props(node, "orphan", "false",
+                           "migration-threshold", migration_s,
+                           NULL);
         free(migration_s);
 
         if (failcount > 0) {
             char *s = crm_itoa(failcount);
 
-            xmlSetProp(node, (pcmkXmlStr) PCMK__FAIL_COUNT_PREFIX,
-                       (pcmkXmlStr) s);
+            crm_xml_add(node, PCMK__FAIL_COUNT_PREFIX, s);
             free(s);
         }
 
         if (last_failure > 0) {
-            xmlSetProp(node, (pcmkXmlStr) PCMK__LAST_FAILURE_PREFIX,
-                       (pcmkXmlStr) pcmk__epoch2str(&last_failure));
+            crm_xml_add(node, PCMK__LAST_FAILURE_PREFIX, pcmk__epoch2str(&last_failure));
         }
     }
 
@@ -1921,15 +1908,14 @@ pe__ticket_xml(pcmk__output_t *out, va_list args) {
 
     pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
-    node = pcmk__output_create_xml_node(out, "ticket");
-    xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) ticket->id);
-    xmlSetProp(node, (pcmkXmlStr) "status", (pcmkXmlStr) (ticket->granted ? "granted" : "revoked"));
-    xmlSetProp(node, (pcmkXmlStr) "standby",
-               (pcmkXmlStr) pcmk__btoa(ticket->standby));
+    node = pcmk__output_create_xml_node(out, "ticket",
+                                        "id", ticket->id,
+                                        "status", ticket->granted ? "granted" : "revoked",
+                                        "standby", pcmk__btoa(ticket->standby),
+                                        NULL);
 
     if (ticket->last_granted > -1) {
-        xmlSetProp(node, (pcmkXmlStr) "last-granted",
-                   (pcmkXmlStr) pcmk__epoch2str(&ticket->last_granted));
+        crm_xml_add(node, "last-granted", pcmk__epoch2str(&ticket->last_granted));
     }
 
     return pcmk_rc_ok;

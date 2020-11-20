@@ -1663,7 +1663,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             }
 
             if (rc == pcmk_rc_no_output) {
-                pcmk__output_create_xml_node(out, "br");
+                pcmk__output_create_xml_node(out, "br", NULL);
             }
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
@@ -1672,13 +1672,13 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                                      pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
-            pcmk__output_xml_create_parent(out, "li");
+            pcmk__output_xml_create_parent(out, "li", NULL);
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
                 xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
             }
-            pcmk__output_create_xml_node(out, "br");
+            pcmk__output_create_xml_node(out, "br", NULL);
             out->begin_list(out, NULL, NULL, NULL);
 
             if (print_ip) {
