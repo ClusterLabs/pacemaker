@@ -297,7 +297,7 @@ class StopTest(CTSTest):
             for line in output:
                 self.debug(line)
 
-            (rc, output) = self.rsh(node, "/usr/sbin/dlm_tool dump", None)
+            (rc, output) = self.rsh(node, "/usr/sbin/dlm_tool dump 2>/dev/null", None)
             for line in output:
                 self.debug(line)
 
