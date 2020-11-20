@@ -1485,14 +1485,14 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
@@ -1608,14 +1608,14 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_html(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
@@ -1750,14 +1750,14 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_text(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;

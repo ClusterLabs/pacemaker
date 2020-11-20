@@ -247,9 +247,9 @@ resource_check_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *parent = uber_parent(checks->rsc);
     int rc = pcmk_rc_no_output;
 
-    xmlNode *node = pcmk__output_create_xml_node(out, "check",
-                                                 "id", parent->id,
-                                                 NULL);
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
+                                                   "id", parent->id,
+                                                   NULL);
 
     if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
         crm_xml_add(node, "remain_stopped", "true");
@@ -270,11 +270,11 @@ resource_check_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search", "GListPtr", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search", "GList *", "pe_resource_t *", "gchar *")
 static int
 resource_search_default(pcmk__output_t *out, va_list args)
 {
-    GListPtr nodes = va_arg(args, GListPtr);
+    GList *nodes = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gchar *requested_name = va_arg(args, gchar *);
 
@@ -286,7 +286,7 @@ resource_search_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    for (GListPtr lpc = nodes; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
         pe_node_t *node = (pe_node_t *) lpc->data;
 
         if (!printed) {
@@ -316,11 +316,11 @@ resource_search_default(pcmk__output_t *out, va_list args)
 }
 
 
-PCMK__OUTPUT_ARGS("resource-search", "GListPtr", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search", "GList *", "pe_resource_t *", "gchar *")
 static int
 resource_search_xml(pcmk__output_t *out, va_list args)
 {
-    GListPtr nodes = va_arg(args, GListPtr);
+    GList *nodes = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gchar *requested_name = va_arg(args, gchar *);
 
@@ -328,9 +328,9 @@ resource_search_xml(pcmk__output_t *out, va_list args)
                                    "resource", requested_name,
                                    NULL);
 
-    for (GListPtr lpc = nodes; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
         pe_node_t *node = (pe_node_t *) lpc->data;
-        xmlNode *sub_node = pcmk__output_create_xml_text_node(out, "node", node->details->uname);
+        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out, "node", node->details->uname);
 
         if (!pe_rsc_is_clone(rsc) && rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
             crm_xml_add(sub_node, "state", "promoted");
@@ -340,13 +340,13 @@ resource_search_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GListPtr", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GList *", "pe_resource_t *",
                   "pe_node_t *")
 static int
 resource_why_default(pcmk__output_t *out, va_list args)
 {
     cib_t *cib_conn = va_arg(args, cib_t *);
-    GListPtr resources = va_arg(args, GListPtr);
+    GList *resources = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *node = va_arg(args, pe_node_t *);
 
@@ -355,8 +355,8 @@ resource_why_default(pcmk__output_t *out, va_list args)
     out->begin_list(out, NULL, NULL, "Resource Reasons");
 
     if ((rsc == NULL) && (host_uname == NULL)) {
-        GListPtr lpc = NULL;
-        GListPtr hosts = NULL;
+        GList *lpc = NULL;
+        GList *hosts = NULL;
 
         for (lpc = resources; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *rsc = (pe_resource_t *) lpc->data;
@@ -386,10 +386,10 @@ resource_why_default(pcmk__output_t *out, va_list args)
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
         const char* host_uname =  node->details->uname;
-        GListPtr allResources = node->details->allocated_rsc;
-        GListPtr activeResources = node->details->running_rsc;
-        GListPtr unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
-        GListPtr lpc = NULL;
+        GList *allResources = node->details->allocated_rsc;
+        GList *activeResources = node->details->running_rsc;
+        GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
+        GList *lpc = NULL;
 
         for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *rsc = (pe_resource_t *) lpc->data;
@@ -410,7 +410,7 @@ resource_why_default(pcmk__output_t *out, va_list args)
         g_list_free(unactiveResources);
 
     } else if ((rsc != NULL) && (host_uname == NULL)) {
-        GListPtr hosts = NULL;
+        GList *hosts = NULL;
 
         rsc->fns->location(rsc, &hosts, TRUE);
         out->list_item(out, "reason", "Resource %s is %srunning",
@@ -423,23 +423,23 @@ resource_why_default(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GListPtr", "pe_resource_t *",
+PCMK__OUTPUT_ARGS("resource-why", "cib_t *", "GList *", "pe_resource_t *",
                   "pe_node_t *")
 static int
 resource_why_xml(pcmk__output_t *out, va_list args)
 {
     cib_t *cib_conn = va_arg(args, cib_t *);
-    GListPtr resources = va_arg(args, GListPtr);
+    GList *resources = va_arg(args, GList *);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *node = va_arg(args, pe_node_t *);
 
     const char *host_uname = (node == NULL)? NULL : node->details->uname;
 
-    xmlNode *xml_node = pcmk__output_xml_create_parent(out, "reason", NULL);
+    xmlNodePtr xml_node = pcmk__output_xml_create_parent(out, "reason", NULL);
 
     if ((rsc == NULL) && (host_uname == NULL)) {
-        GListPtr lpc = NULL;
-        GListPtr hosts = NULL;
+        GList *lpc = NULL;
+        GList *hosts = NULL;
 
         pcmk__output_xml_create_parent(out, "resources", NULL);
 
@@ -470,10 +470,10 @@ resource_why_xml(pcmk__output_t *out, va_list args)
 
     } else if ((rsc == NULL) && (host_uname != NULL)) {
         const char* host_uname =  node->details->uname;
-        GListPtr allResources = node->details->allocated_rsc;
-        GListPtr activeResources = node->details->running_rsc;
-        GListPtr unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
-        GListPtr lpc = NULL;
+        GList *allResources = node->details->allocated_rsc;
+        GList *activeResources = node->details->running_rsc;
+        GList *unactiveResources = pcmk__subtract_lists(allResources, activeResources, (GCompareFunc) strcmp);
+        GList *lpc = NULL;
 
         pcmk__output_xml_create_parent(out, "resources", NULL);
 
@@ -509,7 +509,7 @@ resource_why_xml(pcmk__output_t *out, va_list args)
         g_list_free(unactiveResources);
 
     } else if ((rsc != NULL) && (host_uname == NULL)) {
-        GListPtr hosts = NULL;
+        GList *hosts = NULL;
 
         rsc->fns->location(rsc, &hosts, TRUE);
         crm_xml_add(xml_node, "running", pcmk__btoa(hosts != NULL));
@@ -532,10 +532,10 @@ add_resource_name(pcmk__output_t *out, pe_resource_t *rsc) {
     }
 }
 
-PCMK__OUTPUT_ARGS("resource-names-list", "GListPtr")
+PCMK__OUTPUT_ARGS("resource-names-list", "GList *")
 static int
 resource_names(pcmk__output_t *out, va_list args) {
-    GListPtr resources = va_arg(args, GListPtr);
+    GList *resources = va_arg(args, GList *);
 
     if (resources == NULL) {
         out->err(out, "NO resources configured\n");
@@ -544,7 +544,7 @@ resource_names(pcmk__output_t *out, va_list args) {
 
     out->begin_list(out, NULL, NULL, "Resource Names");
 
-    for (GListPtr lpc = resources; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = resources; lpc != NULL; lpc = lpc->next) {
         pe_resource_t *rsc = (pe_resource_t *) lpc->data;
         add_resource_name(out, rsc);
     }

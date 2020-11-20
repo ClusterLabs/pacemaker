@@ -53,8 +53,8 @@ static int colocations_list(pcmk__output_t *out, va_list args) {
     gboolean dependents = va_arg(args, gboolean);
     gboolean recursive = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_cons;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_cons;
     bool printed_header = false;
 
     if (dependents) {
@@ -133,8 +133,8 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
     gboolean dependents = va_arg(args, gboolean);
     gboolean recursive = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_cons;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_cons;
     bool printed_header = false;
 
     if (dependents) {
@@ -220,15 +220,15 @@ PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
 static int locations_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc G_GNUC_UNUSED = va_arg(args, pe_resource_t *);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_location;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_location;
 
     out->begin_list(out, NULL, NULL, "Locations");
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
 
-        GListPtr lpc2 = NULL;
+        GList *lpc2 = NULL;
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
@@ -249,15 +249,15 @@ PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
 static int locations_list_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_location;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_location;
 
     pcmk__output_xml_create_parent(out, "locations", NULL);
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
 
-        GListPtr lpc2 = NULL;
+        GList *lpc2 = NULL;
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
@@ -284,9 +284,9 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set G_GNUC_UNUSED = va_arg(args, pe_working_set_t *);
     gboolean recursive G_GNUC_UNUSED = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                               data_set->input);
+    GList *lpc = NULL;
+    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                                 data_set->input);
 
     unpack_constraints(cib_constraints, data_set);
 
@@ -322,9 +322,9 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                               data_set->input);
+    GList *lpc = NULL;
+    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                                 data_set->input);
 
     unpack_constraints(cib_constraints, data_set);
 
@@ -455,11 +455,11 @@ dc_xml(pcmk__output_t *out, va_list args)
 }
 
 
-PCMK__OUTPUT_ARGS("crmadmin-node-list", "pcmk__output_t *", "xmlNode *")
+PCMK__OUTPUT_ARGS("crmadmin-node-list", "pcmk__output_t *", "xmlNodePtr")
 static int
 crmadmin_node_list(pcmk__output_t *out, va_list args)
 {
-    xmlNode *xml_node = va_arg(args, xmlNode *);
+    xmlNodePtr xml_node = va_arg(args, xmlNodePtr);
     int found = 0;
     xmlNode *node = NULL;
     xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);

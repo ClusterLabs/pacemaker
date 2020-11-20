@@ -577,16 +577,16 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__clone_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
@@ -635,23 +635,23 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__clone_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GListPtr master_list = NULL;
-    GListPtr started_list = NULL;
-    GListPtr gIter = rsc->children;
+    GList *master_list = NULL;
+    GList *started_list = NULL;
+    GList *gIter = rsc->children;
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
@@ -751,7 +751,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            GListPtr all = NULL;
+            GList *all = NULL;
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, strdup("*"));
@@ -832,8 +832,8 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
-            GListPtr nIter;
-            GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
+            GList *nIter;
+            GList *list = g_hash_table_get_values(rsc->allowed_nodes);
 
             /* Custom stopped list for non-unique clones */
             free(stopped_list);
@@ -872,23 +872,23 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__clone_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     char *list_text = NULL;
     char *stopped_list = NULL;
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GListPtr master_list = NULL;
-    GListPtr started_list = NULL;
-    GListPtr gIter = rsc->children;
+    GList *master_list = NULL;
+    GList *started_list = NULL;
+    GList *gIter = rsc->children;
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
@@ -988,7 +988,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         }
 
         if (print_full) {
-            GListPtr all = NULL;
+            GList *all = NULL;
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, strdup("*"));
@@ -1067,8 +1067,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
-            GListPtr nIter;
-            GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
+            GList *nIter;
+            GList *list = g_hash_table_get_values(rsc->allowed_nodes);
 
             /* Custom stopped list for non-unique clones */
             free(stopped_list);
