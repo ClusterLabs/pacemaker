@@ -247,6 +247,17 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
                                        NULL);
     }
     pcmk__filter_op_for_digest(data->params_secure);
+
+    /* CRM_meta_timeout *should* be part of a digest for recurring operations.
+     * However, currently the controller does not add timeout to secure digests,
+     * because it only includes parameters declared by the resource agent.
+     * Remove any timeout that made it this far, to match.
+     *
+     * @TODO Update the controller to add the timeout (which will require
+     * bumping the feature set and checking that here).
+     */
+    xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
                                                           op_version);
 }
