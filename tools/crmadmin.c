@@ -487,9 +487,11 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
     } else if (DO_WHOIS_DC) {
         const char *dc = crm_element_value(xml, F_CRM_HOST_FROM);
 
-        printf("Designated Controller is: %s\n", dc);
-        if (BE_SILENT && dc != NULL) {
-            fprintf(stderr, "%s\n", dc);
+        if (dc != NULL) {
+            if (BE_SILENT == FALSE) {
+                printf("Designated Controller is: ");
+            }
+            printf("%s\n", dc);
         }
         crm_exit(pcmk_ok);
     }
