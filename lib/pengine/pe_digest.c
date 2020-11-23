@@ -229,6 +229,7 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         pcmk__xe_remove_matching_attrs(data->params_secure, is_fence_param,
                                        NULL);
     }
+    pcmk__filter_op_for_digest(data->params_secure);
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
                                                           op_version);
 }
