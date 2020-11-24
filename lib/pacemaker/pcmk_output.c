@@ -34,7 +34,6 @@ pcmk__out_prologue(pcmk__output_t **out, xmlNodePtr *xml) {
         return rc;
     }
 
-    stonith__register_messages(*out);
     return rc;
 }
 
