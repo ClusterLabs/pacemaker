@@ -14,8 +14,6 @@
 extern "C" {
 #endif
 
-#ifdef BUILD_PUBLIC_LIBPACEMAKER
-
 /**
  * \file
  * \brief High Level API
@@ -24,6 +22,49 @@ extern "C" {
 
 #  include <crm/stonith-ng.h>
 #  include <libxml/tree.h>
+
+/*!
+ * \brief Get controller status
+ *
+ * \param[in,out] xml                The destination for the result, as an XML tree.
+ * \param[in]     dest_node          Destination node for request
+ * \param[in]     message_timeout_ms Message timeout
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_timeout_ms);
+
+/*!
+ * \brief Get designated controller
+ *
+ * \param[in,out] xml                The destination for the result, as an XML tree.
+ * \param[in]     message_timeout_ms Message timeout
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms);
+
+/*!
+ * \brief Get pacemakerd status
+ *
+ * \param[in,out] xml                The destination for the result, as an XML tree.
+ * \param[in]     ipc_name           IPC name for request
+ * \param[in]     message_timeout_ms Message timeout
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms);
+
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
+
+/*!
+ * \brief Get nodes list
+ *
+ * \param[in,out] xml                The destination for the result, as an XML tree.
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_list_nodes(xmlNodePtr *xml);
 
 /*!
  * \brief Perform a STONITH action.

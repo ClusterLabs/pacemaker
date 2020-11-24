@@ -1,6 +1,7 @@
 #include <glib.h>               // gboolean, GMainLoop, etc.
 #include <libxml/tree.h>        // xmlNode
 
+#include <pacemaker.h>
 #include <pacemaker-internal.h>
 
 #include <crm/crm.h>
@@ -282,6 +283,24 @@ pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_time
 }
 
 int
+pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_timeout_ms)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__controller_status(out, dest_node, (guint) message_timeout_ms);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
+
+int
 pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
 {
     data_t data = {
@@ -306,6 +325,24 @@ pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
     }
 
     return data.rc;
+}
+
+int
+pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__designated_controller(out, (guint) message_timeout_ms);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
 }
 
 int
@@ -335,6 +372,24 @@ pcmk__pacemakerd_status(pcmk__output_t *out, char *ipc_name, guint message_timeo
     return data.rc;
 }
 
+int
+pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
+
 // \return Standard Pacemaker return code
 int
 pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
@@ -360,6 +415,26 @@ pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
     the_cib->cmds->signoff(the_cib);
     return pcmk_legacy2rc(rc);
 }
+
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
+int
+pcmk_list_nodes(xmlNodePtr *xml)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__list_nodes(out, FALSE);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
+#endif
 
 // remove when parameters removed from tools/crmadmin.c
 int
