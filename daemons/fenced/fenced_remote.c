@@ -888,6 +888,9 @@ merge_duplicates(remote_fencing_op_t * op)
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
         const char *other_action = op_requested_action(other);
 
+        if (!strcmp(op->id, other->id)) {
+            continue; // Don't compare against self
+        }
         if (other->state > st_exec) {
             crm_trace("%.8s not duplicate of %.8s: not in progress",
                       op->id, other->id);
