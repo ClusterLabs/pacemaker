@@ -345,10 +345,14 @@ AC_ARG_WITH([ocfdir],
 )
 AC_SUBST(OCF_ROOT_DIR)
 
-PCMK__FENCE_BINDIR="$sbindir"
+dnl Get default from fence-agents if available
+PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
+              [PCMK__FENCE_BINDIR="${FA_PREFIX}/sbin"],
+              [PCMK__FENCE_BINDIR="$sbindir"])
 AC_ARG_WITH([fence-bindir],
-    [AS_HELP_STRING([--with-fence-bindir=DIR],
-        [directory for executable fence agents @<:@SBINDIR@:>@])],
+    [AS_HELP_STRING([--with-fence-bindir=DIR], m4_normalize([
+        directory for executable fence agents @<:@value from fence-agents
+        package if available otherwise SBINDIR@:>@]))],
     [ PCMK__FENCE_BINDIR="$withval" ]
 )
 AC_SUBST(PCMK__FENCE_BINDIR)
