@@ -56,7 +56,9 @@ install:
 before_script:
 # some tests (e.g. cts-exec-helper) require actual system-wide credentials
  -   ./autogen.sh
- -   ./configure --with-daemon-user=nobody --with-daemon-group=nobody
+ -   ./configure --with-daemon-user=nobody --with-daemon-group=nogroup
+      --libexecdir=/usr/lib/pacemaker
+      --with-configdir=/etc/default
 
 script: 
 # Create directories needed by commands used by regression tests
