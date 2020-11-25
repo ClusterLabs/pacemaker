@@ -2,7 +2,7 @@
 #
 # Installer for support files needed by Pacemaker's Cluster Test Suite
 #
-# Copyright 2018-2019 the Pacemaker project contributors
+# Copyright 2018-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -26,7 +26,7 @@ UNIT_DIR="@systemdsystemunitdir@"
 RUNTIME_UNIT_DIR="@runstatedir@/systemd/system"
 LIBEXEC_DIR="@libexecdir@/pacemaker"
 INIT_DIR="@INITDIR@"
-SBIN_DIR="@sbindir@"
+PCMK__FENCE_BINDIR="@PCMK__FENCE_BINDIR@"
 DATA_DIR="@datadir@/pacemaker/tests/cts"
 UPSTART_DIR="/etc/init"
 
@@ -83,7 +83,7 @@ support_uninstall() {
     for FILE in \
         "$LIBEXEC_DIR/$DUMMY_DAEMON" \
         "$UPSTART_DIR/$UPSTART_DUMMY" \
-        "$SBIN_DIR/$FENCE_DUMMY" \
+        "$PCMK__FENCE_BINDIR/$FENCE_DUMMY" \
         "$INIT_DIR/$LSB_DUMMY"
     do
         if [ -e "$FILE" ]; then
@@ -92,7 +92,7 @@ support_uninstall() {
         fi
     done
     for ALIAS in $FENCE_DUMMY_ALIASES; do \
-        FILE="$SBIN_DIR/$ALIAS" 
+        FILE="$PCMK__FENCE_BINDIR/$ALIAS"
         if [ -L "$FILE" ] || [ -e "$FILE" ]; then
             echo "Removing $FILE ..."
             rm -f "$FILE"
@@ -125,12 +125,12 @@ support_install() {
         systemctl daemon-reload # Ignore failure
     fi
 
-    echo "Installing $FENCE_DUMMY to $SBIN_DIR ..."
-    mkdir -p "$SBIN_DIR"
-    install -m 0755 "$FENCE_DUMMY" "$SBIN_DIR" || return $CRM_EX_ERROR
+    echo "Installing $FENCE_DUMMY to $PCMK__FENCE_BINDIR ..."
+    mkdir -p "$PCMK__FENCE_BINDIR"
+    install -m 0755 "$FENCE_DUMMY" "$PCMK__FENCE_BINDIR" || return $CRM_EX_ERROR
     for alias in $FENCE_DUMMY_ALIASES; do \
-        echo "Installing $alias to $SBIN_DIR ..."
-        ln -s "$FENCE_DUMMY" "$SBIN_DIR/$alias" || return $CRM_EX_ERROR
+        echo "Installing $alias to $PCMK__FENCE_BINDIR ..."
+        ln -s "$FENCE_DUMMY" "$PCMK__FENCE_BINDIR/$alias" || return $CRM_EX_ERROR
     done
 
     echo "Installing $LSB_DUMMY to $INIT_DIR ..."

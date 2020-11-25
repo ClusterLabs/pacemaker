@@ -329,6 +329,14 @@ AC_ARG_WITH([ocfdir],
 )
 AC_SUBST(OCF_ROOT_DIR)
 
+PCMK__FENCE_BINDIR="$sbindir"
+AC_ARG_WITH([fence-bindir],
+    [AS_HELP_STRING([--with-fence-bindir=DIR],
+        [directory for executable fence agents @<:@SBINDIR@:>@])],
+    [ PCMK__FENCE_BINDIR="$withval" ]
+)
+AC_SUBST(PCMK__FENCE_BINDIR)
+
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
     [AS_HELP_STRING([--with-daemon-user=USER],
@@ -507,6 +515,9 @@ fi
 AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
 AC_SUBST(CRM_BUNDLE_DIR)
 
+eval PCMK__FENCE_BINDIR="`eval echo ${PCMK__FENCE_BINDIR}`"
+AC_DEFINE_UNQUOTED(PCMK__FENCE_BINDIR,"$PCMK__FENCE_BINDIR",
+                   [Location for executable fence agents])
 
 if test x"${PCMK_GNUTLS_PRIORITIES}" = x""; then
     AC_MSG_ERROR([Empty string not applicable with --with-gnutls-priorities])
@@ -1271,12 +1282,7 @@ OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
-RH_STONITH_DIR="$sbindir"
-AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
-AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir", Location for system binaries)
-
-RH_STONITH_PREFIX="fence_"
-AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)
+AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 
 AC_PATH_PROGS(GIT, git false)
 AC_MSG_CHECKING(build version)

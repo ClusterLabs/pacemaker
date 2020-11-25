@@ -19,6 +19,8 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 
+#define RH_STONITH_PREFIX "fence_"
+
 /*!
  * \internal
  * \brief Add available RHCS-compatible agents to a list
@@ -34,14 +36,14 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
 
     int count = 0, i;
     struct dirent **namelist;
-    const int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
+    const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist, 0, alphasort);
 
 #if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
     char buffer[FILENAME_MAX + 1];
 #elif defined(O_SEARCH)
-    const int dirfd = open(RH_STONITH_DIR, O_SEARCH);
+    const int dirfd = open(PCMK__FENCE_BINDIR, O_SEARCH);
 #else
-    const int dirfd = open(RH_STONITH_DIR, O_PATH);
+    const int dirfd = open(PCMK__FENCE_BINDIR, O_PATH);
 #endif
 
     for (i = 0; i < file_num; i++) {
@@ -49,7 +51,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
 
         if (pcmk__starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
 #if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
-            snprintf(buffer, sizeof(buffer), "%s/%s", RH_STONITH_DIR,
+            snprintf(buffer, sizeof(buffer), "%s/%s", PCMK__FENCE_BINDIR,
                      namelist[i]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
 #else
@@ -231,7 +233,7 @@ bool
 stonith__agent_is_rhcs(const char *agent)
 {
     struct stat prop;
-    char *buffer = crm_strdup_printf(RH_STONITH_DIR "/%s", agent);
+    char *buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", agent);
     int rc = stat(buffer, &prop);
 
     free(buffer);
