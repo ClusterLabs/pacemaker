@@ -515,7 +515,7 @@ class StonithdTest(CTSTest):
             self.templates["Pat:Fencing_start"] % ".*",
             self.templates["Pat:Fencing_ok"] % ".*",
             self.templates["Pat:Fencing_active"],
-            r"error.*: Operation 'reboot' targeting .* on .* for stonith_admin.*: Timer expired",
+            r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired",
         ]
 
     def is_applicable(self):
