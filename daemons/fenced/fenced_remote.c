@@ -1248,7 +1248,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
     do {
         if (op->devices) {
             device = op->devices->data;
-            crm_trace("Checking for someone to fence (%s) %s with %s",
+            crm_trace("Checking for someone to fence (%s) %s using %s",
                       op->action, op->target, device);
         } else {
             crm_trace("Checking for someone to fence (%s) %s",
@@ -1292,7 +1292,7 @@ stonith_choose_peer(remote_fencing_op_t * op)
              && pcmk_is_set(op->call_options, st_opt_topology)
              && (advance_topology_level(op, false) == pcmk_rc_ok));
 
-    crm_notice("Couldn't find anyone to fence (%s) %s with %s",
+    crm_notice("Couldn't find anyone to fence (%s) %s using %s",
                op->action, op->target, (device? device : "any device"));
     return NULL;
 }
@@ -1568,7 +1568,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
             timeout_one = TIMEOUT_MULTIPLY_FACTOR *
                           get_device_timeout(op, peer, device);
             crm_notice("Requesting that %s perform '%s' action targeting %s "
-                       "using '%s' " CRM_XS " for client %s (%ds)",
+                       "using %s " CRM_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
                        op->client_name, timeout_one);
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
@@ -1673,7 +1673,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
     } else {
         crm_info("Waiting for additional peers capable of fencing (%s) %s%s%s "
                  "for client %s " CRM_XS " id=%.8s",
-                 op->action, op->target, (device? " with " : ""),
+                 op->action, op->target, (device? " using " : ""),
                  (device? device : ""), op->client_name, op->id);
     }
 }

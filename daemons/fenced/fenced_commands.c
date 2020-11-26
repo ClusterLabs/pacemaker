@@ -314,9 +314,11 @@ fork_cb(GPid pid, gpointer user_data)
         cmd->activating_on?cmd->activating_on:cmd->active_on;
 
     CRM_ASSERT(device);
-    crm_debug("Operation '%s'%s%s on %s now running with pid=%d, timeout=%ds",
-                  cmd->action, cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
-                  device->id, pid, cmd->timeout);
+    crm_debug("Operation '%s' [%d]%s%s using %s now running with %ds timeout",
+              cmd->action, pid,
+              ((cmd->victim == NULL)? "" : " targeting "),
+              ((cmd->victim == NULL)? "" : cmd->victim),
+              device->id, cmd->timeout);
     cmd->active_on = device;
     cmd->activating_on = NULL;
 }
@@ -351,11 +353,12 @@ stonith_device_execute(stonith_device_t * device)
         gIterNext = gIter->next;
 
         if (pending_op && pending_op->delay_id) {
-            crm_trace
-                ("Operation '%s'%s%s on %s was asked to run too early, waiting for start_delay timeout of %ds",
-                 pending_op->action, pending_op->victim ? " targeting " : "",
-                 pending_op->victim ? pending_op->victim : "",
-                 device->id, pending_op->start_delay);
+            crm_trace("Operation '%s'%s%s using %s was asked to run too early, "
+                      "waiting for start delay of %ds",
+                      pending_op->action,
+                      ((pending_op->victim == NULL)? "" : " targeting "),
+                      ((pending_op->victim == NULL)? "" : pending_op->victim),
+                      device->id, pending_op->start_delay);
             continue;
         }
 
@@ -367,7 +370,7 @@ stonith_device_execute(stonith_device_t * device)
     }
 
     if (cmd == NULL) {
-        crm_trace("Nothing further to do for %s for now", device->id);
+        crm_trace("No actions using %s are needed", device->id);
         return TRUE;
     }
 
@@ -433,7 +436,7 @@ stonith_device_execute(stonith_device_t * device)
                                            cmd->done_cb, fork_cb);
 
     if (exec_rc < 0) {
-        crm_warn("Operation '%s'%s%s on %s failed: %s (%d)",
+        crm_warn("Operation '%s'%s%s using %s failed: %s " CRM_XS " rc=%d",
                  cmd->action, cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
                  device->id, pcmk_strerror(exec_rc), exec_rc);
         cmd->activating_on = NULL;
@@ -496,13 +499,13 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
-        crm_debug("Scheduling '%s' action%s%s on %s for remote peer %s "
+        crm_debug("Scheduling '%s' action%s%s using %s for remote peer %s "
                   "with op id %.8s and timeout %ds",
                   cmd->action,
                   cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
                   device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
     } else {
-        crm_debug("Scheduling '%s' action%s%s on %s for %s (timeout=%ds)",
+        crm_debug("Scheduling '%s' action%s%s using %s for %s with timeout %ds",
                   cmd->action,
                   cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
                   device->id, cmd->client, cmd->timeout);
@@ -523,7 +526,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
     if (delay_max < delay_base) {
         crm_warn(PCMK_STONITH_DELAY_BASE " (%ds) is larger than "
-                 PCMK_STONITH_DELAY_MAX " (%ds) for %s on %s "
+                 PCMK_STONITH_DELAY_MAX " (%ds) for %s using %s "
                  "(limiting to maximum delay)",
                  delay_base, delay_max, cmd->action, device->id);
         delay_base = delay_max;
@@ -536,7 +539,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (cmd->start_delay > 0) {
-        crm_notice("Delaying '%s' action%s%s on %s for %ds " CRM_XS
+        crm_notice("Delaying '%s' action%s%s using %s for %ds " CRM_XS
                    " timeout=%ds requested_delay=%ds base=%ds max=%ds",
                    cmd->action,
                    cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
@@ -1624,8 +1627,8 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
     if (device && action && device->on_target_actions
         && strstr(device->on_target_actions, action)) {
         if (!localhost_is_target) {
-            crm_trace("'%s' operation with %s can only be executed for localhost not %s",
-                      action, device->id, target);
+            crm_trace("Operation '%s' using %s can only be executed for "
+                      "local host, not %s", action, device->id, target);
             return FALSE;
         }
 
@@ -1844,20 +1847,20 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     CRM_CHECK(xml && action && device, return);
 
     if (is_action_required(action, device)) {
-        crm_trace("Action '%s' is required on %s", action, device->id);
+        crm_trace("Action '%s' is required using %s", action, device->id);
         crm_xml_add_int(xml, F_STONITH_DEVICE_REQUIRED, 1);
     }
 
     action_specific_timeout = get_action_timeout(device, action, 0);
     if (action_specific_timeout) {
-        crm_trace("Action '%s' has timeout %dms on %s",
+        crm_trace("Action '%s' has timeout %dms using %s",
                   action, action_specific_timeout, device->id);
         crm_xml_add_int(xml, F_STONITH_ACTION_TIMEOUT, action_specific_timeout);
     }
 
     delay_max = get_action_delay_max(device, action);
     if (delay_max > 0) {
-        crm_trace("Action '%s' has maximum random delay %dms on %s",
+        crm_trace("Action '%s' has maximum random delay %dms using %s",
                   action, delay_max, device->id);
         crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max / 1000);
     }
@@ -1868,14 +1871,14 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     }
 
     if ((delay_max > 0) && (delay_base == 0)) {
-        crm_trace("Action '%s' has maximum random delay %dms on %s",
+        crm_trace("Action '%s' has maximum random delay %dms using %s",
                   action, delay_max, device->id);
     } else if ((delay_max == 0) && (delay_base > 0)) {
-        crm_trace("Action '%s' has a static delay of %dms on %s",
+        crm_trace("Action '%s' has a static delay of %dms using %s",
                   action, delay_base, device->id);
     } else if ((delay_max > 0) && (delay_base > 0)) {
         crm_trace("Action '%s' has a minimum delay of %dms and a randomly chosen "
-                  "maximum delay of %dms on %s",
+                  "maximum delay of %dms using %s",
                   action, delay_base, delay_max, device->id);
     }
 }
@@ -1895,7 +1898,7 @@ add_disallowed(xmlNode *xml, const char *action, stonith_device_t *device,
                const char *target, gboolean allow_suicide)
 {
     if (!localhost_is_eligible(device, action, target, allow_suicide)) {
-        crm_trace("Action '%s' on %s is disallowed for local host",
+        crm_trace("Action '%s' using %s is disallowed for local host",
                   action, device->id);
         crm_xml_add(xml, F_STONITH_ACTION_DISALLOWED, XML_BOOLEAN_TRUE);
     }
@@ -2062,18 +2065,18 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
     }
 
     if (cmd->victim != NULL) {
-        do_crm_log(rc == 0 ? LOG_NOTICE : LOG_ERR,
-                   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' returned%s: %d (%s)%s%s",
-                   cmd->action, pid, cmd->id, cmd->client_name, cmd->victim,
-                   cmd->device, (op_merged? " (merged)" : ""),
-                   rc, pcmk_strerror(rc),
+        do_crm_log(((rc == 0)? LOG_NOTICE : LOG_ERR),
+                   "Operation '%s' [%d] (%scall %d from %s) targeting %s "
+                   "using %s returned %d (%s)%s%s",
+                   cmd->action, pid, (op_merged? "merged " : ""), cmd->id,
+                   cmd->client_name, cmd->victim,
+                   cmd->device, rc, pcmk_strerror(rc),
                    (next? ", retrying with " : ""), (next ? next : ""));
     } else {
-        do_crm_log_unlikely(rc == 0 ? LOG_DEBUG : LOG_NOTICE,
-                            "Operation '%s' [%d] for device '%s' returned%s: %d (%s)%s%s",
-                            cmd->action, pid, cmd->device,
-                            (op_merged? " (merged)" : ""),
-                            rc, pcmk_strerror(rc),
+        do_crm_log_unlikely(((rc == 0)? LOG_DEBUG : LOG_NOTICE),
+                            "Operation '%s' [%d]%s using %s returned %d (%s)%s%s",
+                            cmd->action, pid, (op_merged? " (merged)" : ""),
+                            cmd->device, rc, pcmk_strerror(rc),
                             (next? ", retrying with " : ""), (next ? next : ""));
     }
 
@@ -2162,7 +2165,8 @@ cancel_stonith_command(async_command_t * cmd)
     device = g_hash_table_lookup(device_list, cmd->device);
 
     if (device) {
-        crm_trace("Cancel scheduled '%s' action on %s", cmd->action, device->id);
+        crm_trace("Cancel scheduled '%s' action using %s",
+                  cmd->action, device->id);
         device->pending_ops = g_list_remove(device->pending_ops, cmd);
     }
 }
@@ -2193,7 +2197,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
         mainloop_set_trigger(device->work);
     }
 
-    crm_debug("Operation '%s' on '%s' completed with rc=%d (%d remaining)",
+    crm_debug("Operation '%s' using %s returned %d (%d devices remaining)",
               cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
 
     if (rc == 0) {
