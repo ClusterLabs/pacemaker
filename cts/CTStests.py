@@ -514,7 +514,7 @@ class StonithdTest(CTSTest):
         return [
             self.templates["Pat:Fencing_start"] % ".*",
             self.templates["Pat:Fencing_ok"] % ".*",
-            r"error.*: Resource .*stonith::.* is active on 2 nodes attempting recovery",
+            self.templates["Pat:Fencing_active"],
             r"error.*: Operation 'reboot' targeting .* on .* for stonith_admin.*: Timer expired",
         ]
 
@@ -1386,13 +1386,13 @@ class ComponentFail(CTSTest):
         if chosen.name in [ "corosync", "pacemaker-based", "pacemaker-fenced" ]:
             # Ignore actions for fence devices if fencer will respawn
             # (their registration will be lost, and probes will fail)
+            self.okerrpatterns = [ self.templates["Pat:Fencing_active"] ]
             (rc, lines) = self.rsh(node, "crm_resource -c", None)
             for line in lines:
                 if re.search("^Resource", line):
                     r = AuditResource(self.CM, line)
                     if r.rclass == "stonith":
                         self.okerrpatterns.append(self.templates["Pat:Fencing_recover"] % r.id)
-                        self.okerrpatterns.append(self.templates["Pat:Fencing_active"] % r.id)
                         self.okerrpatterns.append(self.templates["Pat:Fencing_probe"] % r.id)
 
         # supply a copy so self.patterns doesn't end up empty
