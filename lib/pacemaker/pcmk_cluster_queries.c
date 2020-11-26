@@ -395,7 +395,7 @@ int
 pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
 {
     cib_t *the_cib = cib_new();
-    xmlNode *output = NULL;
+    xmlNode *xml_node = NULL;
     int rc;
 
     if (the_cib == NULL) {
@@ -406,11 +406,35 @@ pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
         return pcmk_legacy2rc(rc);
     }
 
-    rc = the_cib->cmds->query(the_cib, NULL, &output,
+    rc = the_cib->cmds->query(the_cib, NULL, &xml_node,
                               cib_scope_local | cib_sync_call);
     if (rc == pcmk_ok) {
-        out->message(out, "crmadmin-node-list", output, BASH_EXPORT);
-        free_xml(output);
+        int found = 0;
+        xmlNode *node = NULL;
+        xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
+
+        out->begin_list(out, NULL, NULL, "nodes");
+
+        for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
+             node = crm_next_same_xml(node)) {
+            const char *node_type = BASH_EXPORT ? NULL :
+                         crm_element_value(node, XML_ATTR_TYPE);
+            out->message(out, "crmadmin-node", node_type,
+                         crm_str(crm_element_value(node, XML_ATTR_UNAME)),
+                         crm_str(crm_element_value(node, XML_ATTR_ID)),
+                         BASH_EXPORT);
+
+            found++;
+        }
+        // @TODO List Pacemaker Remote nodes that don't have a <node> entry
+
+        out->end_list(out);
+
+        if (found == 0) {
+            out->info(out, "No nodes configured");
+        }
+
+        free_xml(xml_node);
     }
     the_cib->cmds->signoff(the_cib);
     return pcmk_legacy2rc(rc);

@@ -469,42 +469,6 @@ dc_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-
-PCMK__OUTPUT_ARGS("crmadmin-node-list", "xmlNodePtr", "gboolean")
-static int
-crmadmin_node_list(pcmk__output_t *out, va_list args)
-{
-    xmlNodePtr xml_node = va_arg(args, xmlNodePtr);
-    gboolean BASH_EXPORT = va_arg(args, gboolean);
-
-    int found = 0;
-    xmlNode *node = NULL;
-    xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
-
-    out->begin_list(out, NULL, NULL, "nodes");
-
-    for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
-         node = crm_next_same_xml(node)) {
-        const char *node_type = BASH_EXPORT ? NULL :
-                     crm_element_value(node, XML_ATTR_TYPE);
-        out->message(out, "crmadmin-node", node_type,
-                     crm_str(crm_element_value(node, XML_ATTR_UNAME)),
-                     crm_str(crm_element_value(node, XML_ATTR_ID)),
-                     BASH_EXPORT);
-
-        found++;
-    }
-    // @TODO List Pacemaker Remote nodes that don't have a <node> entry
-
-    out->end_list(out);
-
-    if (found == 0) {
-        out->info(out, "No nodes configured");
-    }
-
-    return pcmk_rc_ok;
-}
-
 PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
 static int
 crmadmin_node_text(pcmk__output_t *out, va_list args)
@@ -514,7 +478,9 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
     const char *id = va_arg(args, const char *);
     gboolean BASH_EXPORT = va_arg(args, gboolean);
 
-    if (BASH_EXPORT) {
+    if (out->is_quiet(out)) {
+        out->info(out, "%s", crm_str(name));
+    } else if (BASH_EXPORT) {
         out->info(out, "export %s=%s", crm_str(name), crm_str(id));
     } else {
         out->info(out, "%s node: %s (%s)", type ? type : "member",
@@ -657,7 +623,6 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
     { "dc", "default", dc_text },
     { "dc", "xml", dc_xml },
-    { "crmadmin-node-list", "default", crmadmin_node_list },
     { "crmadmin-node", "default", crmadmin_node_text },
     { "crmadmin-node", "xml", crmadmin_node_xml },
     { "digests", "default", digests_text },
