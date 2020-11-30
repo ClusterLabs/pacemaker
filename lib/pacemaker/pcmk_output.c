@@ -52,8 +52,8 @@ static int colocations_list(pcmk__output_t *out, va_list args) {
     gboolean dependents = va_arg(args, gboolean);
     gboolean recursive = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_cons;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_cons;
     bool printed_header = false;
 
     if (dependents) {
@@ -132,8 +132,8 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
     gboolean dependents = va_arg(args, gboolean);
     gboolean recursive = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_cons;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_cons;
     bool printed_header = false;
 
     if (dependents) {
@@ -217,17 +217,17 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
 static int locations_list(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc G_GNUC_UNUSED = va_arg(args, pe_resource_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_location;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_location;
 
     out->begin_list(out, NULL, NULL, "Locations");
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
 
-        GListPtr lpc2 = NULL;
+        GList *lpc2 = NULL;
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
@@ -248,15 +248,15 @@ PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
 static int locations_list_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
-    GListPtr lpc = NULL;
-    GListPtr list = rsc->rsc_location;
+    GList *lpc = NULL;
+    GList *list = rsc->rsc_location;
 
     pcmk__output_xml_create_parent(out, "locations", NULL);
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
 
-        GListPtr lpc2 = NULL;
+        GList *lpc2 = NULL;
 
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
@@ -279,13 +279,13 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
 PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "gboolean")
 static int
 stacks_and_constraints(pcmk__output_t *out, va_list args) {
-    pe_resource_t *rsc G_GNUC_UNUSED = va_arg(args, pe_resource_t *);
-    pe_working_set_t *data_set G_GNUC_UNUSED = va_arg(args, pe_working_set_t *);
-    gboolean recursive G_GNUC_UNUSED = va_arg(args, gboolean);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    gboolean recursive = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                               data_set->input);
+    GList *lpc = NULL;
+    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                                 data_set->input);
 
     unpack_constraints(cib_constraints, data_set);
 
@@ -321,9 +321,9 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    GListPtr lpc = NULL;
-    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
-                                               data_set->input);
+    GList *lpc = NULL;
+    xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                                 data_set->input);
 
     unpack_constraints(cib_constraints, data_set);
 
@@ -356,14 +356,14 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("health", "const char *", "const char *", "const char *", "const char *")
 static int
 health_text(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *host_from = va_arg(args, char *);
-    char *fsa_state = va_arg(args, char *);
-    char *result = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *host_from = va_arg(args, const char *);
+    const char *fsa_state = va_arg(args, const char *);
+    const char *result = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
         out->info(out, "Status of %s@%s: %s (%s)", crm_str(sys_from),
@@ -375,14 +375,14 @@ health_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("health", "char *", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("health", "const char *", "const char *", "const char *", "const char *")
 static int
 health_xml(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *host_from = va_arg(args, char *);
-    char *fsa_state = va_arg(args, char *);
-    char *result = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *host_from = va_arg(args, const char *);
+    const char *fsa_state = va_arg(args, const char *);
+    const char *result = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, crm_str(sys_from),
                                  "node_name", crm_str(host_from),
@@ -392,13 +392,13 @@ health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
 static int
 pacemakerd_health_text(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *state = va_arg(args, char *);
-    char *last_updated = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    const char *last_updated = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
         out->info(out, "Status of %s: '%s' %s %s", crm_str(sys_from),
@@ -411,13 +411,13 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("pacemakerd-health", "char *", "char *", "char *")
+PCMK__OUTPUT_ARGS("pacemakerd-health", "const char *", "const char *", "const char *")
 static int
 pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 {
-    char *sys_from = va_arg(args, char *);
-    char *state = va_arg(args, char *);
-    char *last_updated = va_arg(args, char *);
+    const char *sys_from = va_arg(args, const char *);
+    const char *state = va_arg(args, const char *);
+    const char *last_updated = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, crm_str(sys_from),
                                  "state", crm_str(state),
@@ -426,11 +426,11 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("dc", "char *")
+PCMK__OUTPUT_ARGS("dc", "const char *")
 static int
 dc_text(pcmk__output_t *out, va_list args)
 {
-    char *dc = va_arg(args, char *);
+    const char *dc = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
         out->info(out, "Designated Controller is: %s", crm_str(dc));
@@ -441,11 +441,11 @@ dc_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("dc", "char *")
+PCMK__OUTPUT_ARGS("dc", "const char *")
 static int
 dc_xml(pcmk__output_t *out, va_list args)
 {
-    char *dc = va_arg(args, char *);
+    const char *dc = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, "dc",
                                  "node_name", crm_str(dc),
@@ -454,15 +454,16 @@ dc_xml(pcmk__output_t *out, va_list args)
 }
 
 
-PCMK__OUTPUT_ARGS("crmadmin-node-list", "pcmk__output_t *", "xmlNode *")
+PCMK__OUTPUT_ARGS("crmadmin-node-list", "xmlNodePtr", "gboolean")
 static int
 crmadmin_node_list(pcmk__output_t *out, va_list args)
 {
-    xmlNode *xml_node = va_arg(args, xmlNode *);
+    xmlNodePtr xml_node = va_arg(args, xmlNodePtr);
+    gboolean BASH_EXPORT = va_arg(args, gboolean);
+
     int found = 0;
     xmlNode *node = NULL;
     xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
-    gboolean BASH_EXPORT = va_arg(args, gboolean);
 
     out->begin_list(out, NULL, NULL, "nodes");
 
@@ -488,13 +489,13 @@ crmadmin_node_list(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *", "gboolean")
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
 static int
 crmadmin_node_text(pcmk__output_t *out, va_list args)
 {
-    char *type = va_arg(args, char *);
-    char *name = va_arg(args, char *);
-    char *id = va_arg(args, char *);
+    const char *type = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *id = va_arg(args, const char *);
     gboolean BASH_EXPORT = va_arg(args, gboolean);
 
     if (BASH_EXPORT) {
@@ -507,13 +508,13 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("crmadmin-node", "char *", "char *", "char *", "gboolean")
+PCMK__OUTPUT_ARGS("crmadmin-node", "const char *", "const char *", "const char *", "gboolean")
 static int
 crmadmin_node_xml(pcmk__output_t *out, va_list args)
 {
-    char *type = va_arg(args, char *);
-    char *name = va_arg(args, char *);
-    char *id = va_arg(args, char *);
+    const char *type = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *id = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, "node",
                                  "type", type ? type : "member",
