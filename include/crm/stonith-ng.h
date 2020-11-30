@@ -7,6 +7,9 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef STONITH_NG__H
+#  define STONITH_NG__H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,9 +19,6 @@ extern "C" {
  * \brief Fencing aka. STONITH
  * \ingroup fencing
  */
-
-#ifndef STONITH_NG__H
-#  define STONITH_NG__H
 
 #  include <dlfcn.h>
 #  include <errno.h>

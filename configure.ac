@@ -59,6 +59,20 @@ dnl silent-rules:   allow "--enable-silent-rules" (no-op in 1.13+)
 dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
 AM_INIT_AUTOMAKE([1.11 foreign tar-ustar silent-rules subdir-objects])
 
+dnl Require pkg-config (with a minimum version)
+PKG_PROG_PKG_CONFIG(0.18)
+AS_IF([test "x${PKG_CONFIG}" != x], [],
+      [AC_MSG_ERROR([pkgconfig must be installed to build ${PACKAGE}])])
+dnl PKG_NOARCH_INSTALLDIR is not available prior to pkg-config 0.27 and
+dnl pkgconf 0.8.10 (uncomment next line to mimic that scenario)
+dnl m4_ifdef([PKG_NOARCH_INSTALLDIR], [m4_undefine([PKG_NOARCH_INSTALLDIR])])
+m4_ifndef([PKG_NOARCH_INSTALLDIR], [
+    AC_DEFUN([PKG_NOARCH_INSTALLDIR], [
+        AC_SUBST([noarch_pkgconfigdir], ['${datadir}/pkgconfig'])
+    ])
+])
+PKG_NOARCH_INSTALLDIR
+
 dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
 dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
@@ -127,6 +141,8 @@ dnl ===============================================
 dnl Configure Options
 dnl ===============================================
 
+dnl Actual library checks come later, but pkg-config can be used here to grab
+dnl external values to use as defaults for configure options
 
 dnl --enable-* options
 
@@ -329,6 +345,18 @@ AC_ARG_WITH([ocfdir],
 )
 AC_SUBST(OCF_ROOT_DIR)
 
+dnl Get default from fence-agents if available
+PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
+              [PCMK__FENCE_BINDIR="${FA_PREFIX}/sbin"],
+              [PCMK__FENCE_BINDIR="$sbindir"])
+AC_ARG_WITH([fence-bindir],
+    [AS_HELP_STRING([--with-fence-bindir=DIR], m4_normalize([
+        directory for executable fence agents @<:@value from fence-agents
+        package if available otherwise SBINDIR@:>@]))],
+    [ PCMK__FENCE_BINDIR="$withval" ]
+)
+AC_SUBST(PCMK__FENCE_BINDIR)
+
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
     [AS_HELP_STRING([--with-daemon-user=USER],
@@ -507,6 +535,9 @@ fi
 AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
 AC_SUBST(CRM_BUNDLE_DIR)
 
+eval PCMK__FENCE_BINDIR="`eval echo ${PCMK__FENCE_BINDIR}`"
+AC_DEFINE_UNQUOTED(PCMK__FENCE_BINDIR,"$PCMK__FENCE_BINDIR",
+                   [Location for executable fence agents])
 
 if test x"${PCMK_GNUTLS_PRIORITIES}" = x""; then
     AC_MSG_ERROR([Empty string not applicable with --with-gnutls-priorities])
@@ -694,17 +725,6 @@ AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 dnl BASH is already an environment variable, so use something else
 AC_PATH_PROG([BASH_PATH], [bash])
 
-PKG_PROG_PKG_CONFIG(0.18)
-# PKG_NOARCH_INSTALLDIR not available prior to pkg-config 0.27 and
-# pkgconf 0.8.10, respectively (next line is to mimic that scenario)
-dnl m4_ifdef([PKG_NOARCH_INSTALLDIR], [m4_undefine([PKG_NOARCH_INSTALLDIR])])
-m4_ifndef([PKG_NOARCH_INSTALLDIR], [
-    AC_DEFUN([PKG_NOARCH_INSTALLDIR], [
-        AC_SUBST([noarch_pkgconfigdir], ['${datadir}/pkgconfig'])
-    ])
-])
-PKG_NOARCH_INSTALLDIR
-
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
@@ -864,10 +884,6 @@ AC_CHECK_HEADERS(uuid/uuid.h)
 
 if test "x$ac_cv_func_uuid_unparse" != xyes; then
     AC_MSG_ERROR(You do not have the libuuid development package installed)
-fi
-
-if test x"${PKG_CONFIG}" = x""; then
-    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
 
 # Require glib 2.16.0 (2008-03) or later for g_hash_table_iter_init() etc.
@@ -1271,12 +1287,7 @@ OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
-RH_STONITH_DIR="$sbindir"
-AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
-AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir", Location for system binaries)
-
-RH_STONITH_PREFIX="fence_"
-AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)
+AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 
 AC_PATH_PROGS(GIT, git false)
 AC_MSG_CHECKING(build version)
