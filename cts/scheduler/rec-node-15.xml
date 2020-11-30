@@ -9,7 +9,6 @@
         <nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21913" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21922" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21931" name="short_resource_names" value="true"/>
         <nvpair id="nvpair.id21941" name="cluster-delay" value="5min"/>
       </cluster_property_set>
     </crm_config>

@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21844" name="cluster-delay" value="3m"/>
         <nvpair id="nvpair.id21852" name="symmetric-cluster" value="true"/>
-        <nvpair id="nvpair.id21861" name="short_resource_names" value="1"/>
         <nvpair id="nvpair.id21870" name="stop-orphan-resources" value="false"/>
         <nvpair id="nvpair.id21878" name="stop-orphan-actions" value="false"/>
         <nvpair id="nvpair.id21887" name="remove-after-stop" value="false"/>
