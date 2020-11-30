@@ -247,6 +247,8 @@ pcmk_fence_history(xmlNodePtr *xml, stonith_t *st, char *target, unsigned int ti
         return rc;
     }
 
+    stonith__register_messages(out);
+
     out->quiet = quiet;
 
     rc = pcmk__fence_history(out, st, target, timeout, verbose, broadcast, cleanup);
@@ -287,6 +289,8 @@ pcmk_fence_installed(xmlNodePtr *xml, stonith_t *st, unsigned int timeout) {
         return rc;
     }
 
+    stonith__register_messages(out);
+
     rc = pcmk__fence_installed(out, st, timeout);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
@@ -320,6 +324,8 @@ pcmk_fence_last(xmlNodePtr *xml, const char *target, bool as_nodeid) {
     if (rc != pcmk_rc_ok) {
         return rc;
     }
+
+    stonith__register_messages(out);
 
     rc = pcmk__fence_last(out, target, as_nodeid);
     pcmk__out_epilogue(out, xml, rc);
@@ -364,6 +370,8 @@ pcmk_fence_list_targets(xmlNodePtr *xml, stonith_t *st, const char *device_id,
         return rc;
     }
 
+    stonith__register_messages(out);
+
     rc = pcmk__fence_list_targets(out, st, device_id, timeout);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
@@ -397,6 +405,8 @@ pcmk_fence_metadata(xmlNodePtr *xml, stonith_t *st, char *agent,
     if (rc != pcmk_rc_ok) {
         return rc;
     }
+
+    stonith__register_messages(out);
 
     rc = pcmk__fence_metadata(out, st, agent, timeout);
     pcmk__out_epilogue(out, xml, rc);
@@ -441,6 +451,8 @@ pcmk_fence_registered(xmlNodePtr *xml, stonith_t *st, char *target,
     if (rc != pcmk_rc_ok) {
         return rc;
     }
+
+    stonith__register_messages(out);
 
     rc = pcmk__fence_registered(out, st, target, timeout);
     pcmk__out_epilogue(out, xml, rc);
@@ -500,6 +512,8 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
     if (rc != pcmk_rc_ok) {
         return rc;
     }
+
+    stonith__register_messages(out);
 
     rc = pcmk__fence_validate(out, st, agent, id, params, timeout);
     pcmk__out_epilogue(out, xml, rc);
