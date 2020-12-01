@@ -115,7 +115,6 @@ Expressions are rule conditions based on the values of node attributes.
  indexterm:[XML element,expression element,attribute attribute]
 
 |type
-|+string+
 |The default type for +lt+, +gt+, +lte+, and +gte+ operations is
  +number+ if either value contains a decimal point character, or
  +integer+ otherwise. The default type for all other operations is
