@@ -788,7 +788,8 @@ internal_stonith_action_execute(stonith_action_t * action)
     if (action->args == NULL || action->agent == NULL)
         goto fail;
 
-    buffer = crm_strdup_printf(RH_STONITH_DIR "/%s", basename(action->agent));
+    buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s",
+                               basename(action->agent));
     svc_action = services_action_create_generic(buffer, NULL);
     free(buffer);
     svc_action->timeout = 1000 * action->remaining_timeout;
