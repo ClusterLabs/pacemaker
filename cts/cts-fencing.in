@@ -1102,7 +1102,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5 -V")
 
-            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -H node3", 'status="success" .* action="off" target="node3"')
+            test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -H node3", 'action="off" target="node3" .* status="success"')
 
         # simple test of dynamic list query
         for test_type in test_types:
