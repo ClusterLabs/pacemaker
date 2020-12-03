@@ -1575,13 +1575,13 @@ main(int argc, char **argv)
 
         msg = g_strjoinv("", strv);
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "%s", msg);
+        g_free(msg);
 
         for(i = 0; i < len; i++) {
             free(strv[i]);
         }
+        free(strv);
 
-        g_free(msg);
-        g_free(strv);
         goto done;
     }
 

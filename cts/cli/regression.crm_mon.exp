@@ -2761,7 +2761,7 @@ Active Resources:
   </resources>
   <node_attributes>
     <node name="cluster01">
-      <attribute name="pingd" value="1000"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
     </node>
     <node name="cluster02">
       <attribute name="pingd" value="1000"/>
@@ -3045,7 +3045,7 @@ Full List of Resources:
   </resources>
   <node_attributes>
     <node name="cluster01">
-      <attribute name="pingd" value="1000"/>
+      <attribute name="pingd" value="1000" expected="1000"/>
     </node>
   </node_attributes>
   <node_history>
