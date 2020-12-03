@@ -1,11 +1,12 @@
-* Fri Oct 30 2020 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.24-rc1
-- Changesets: 17
-- Diff:       6 files changed, 223 insertions(+), 100 deletions(-)
+* Wed Dec 02 2020 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.24
+- Changesets: 20
+- Diff:       7 files changed, 228 insertions(+), 103 deletions(-)
 
 - Changes since Pacemaker-1.1.23
   + Prevent the bypassing of ACLs by direct IPC (CVE-2020-25654)
   + PE: don't select instance to be promoted on a guest that can't run
   + PE: don't schedule a dangling migration stop if one already occurred
+  + tools: crmadmin -D/--dc_lookup supports --quiet to print DC name only
 
 * Mon Jun 22 2020 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.23
 - Changesets: 115
