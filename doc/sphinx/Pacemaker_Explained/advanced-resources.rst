@@ -140,7 +140,7 @@ five of which are active, then the group as a whole will prefer its
 current location with a score of 500.
 
 .. index::
-   single: clone resource
+   single: clone
    single: resource; clone
    
 .. _s-resource-clone:
@@ -168,7 +168,7 @@ example, a cloned IP address can use special kernel functionality such that
 each instance handles a subset of requests for the same IP address.
 
 .. index::
-   single: Promotable Clone Resources
+   single: promotable clone
    single: resource; promotable
 
 .. _s-resource-promotable:
@@ -355,6 +355,9 @@ ________________________
 Clones have no instance attributes; however, any that are set here will be
 inherited by the clone's child.
    
+.. index::
+   single: clone; constraint
+
 Clone Constraints
 _________________
    
@@ -391,6 +394,11 @@ with another clone **B**, the set of allowed locations for **A** is limited to
 nodes on which **B** is (or will be) active.  Placement is then performed
 normally.
    
+.. index::
+   single: promotable clone; constraint
+
+.. _promotable-clone-constraints:
+
 Promotable Clone Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    
@@ -399,33 +407,6 @@ for ordering constraints may be set to ``promote`` or ``demote`` to constrain th
 master role, and colocation constraints may contain ``rsc-role`` and/or
 ``with-rsc-role`` fields.
 
-.. index::
-   single: constraint; colocation
-             
-.. table:: **Additional colocation constraint options for promotable clone resources**
-
-   +---------------+---------+-------------------------------------------------------+
-   | Field         | Default | Description                                           |
-   +===============+=========+=======================================================+
-   | rsc-role      | Started | .. index::                                            |
-   |               |         |    single: clone; ordering constraint, rsc-role       |
-   |               |         |    single: ordering constraint; rsc-role (clone)      |
-   |               |         |    single: rsc-role; clone ordering constraint        |
-   |               |         |                                                       |
-   |               |         | An additional attribute of colocation constraints     |
-   |               |         | that specifies the role that ``rsc`` must be in.      |
-   |               |         | Allowed values: **Started**, **Master**, **Slave**.   |
-   +---------------+---------+-------------------------------------------------------+
-   | with-rsc-role | Started | .. index::                                            |
-   |               |         |    single: clone; ordering constraint, with-rsc-role  |
-   |               |         |    single: ordering constraint; with-rsc-role (clone) |
-   |               |         |    single: with-rsc-role; clone ordering constraint   |
-   |               |         |                                                       |
-   |               |         | An additional attribute of colocation constraints     |
-   |               |         | that specifies the role that ``with-rsc`` must be in. |
-   |               |         | Allowed values: **Started**, **Master**, **Slave**.   |
-   +---------------+---------+-------------------------------------------------------+
-   
 .. topic:: Constraints involving promotable clone resources       
 
    .. code-block:: xml
@@ -464,23 +445,8 @@ Placement is then performed as normal.
 Using Promotable Clone Resources in Colocation Sets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. index::
-   single: constraint; colocation
-   single: constraint; resource set
-   
-.. table:: **Additional colocation set options relevant to promotable clone resources**
-
-   +-------+---------+-----------------------------------------------------+
-   | Field | Default | Description                                         |
-   +=======+=========+=====================================================+
-   | role  | Started | .. index::                                          |
-   |       |         |    single: clone; ordering constraint; role         |
-   |       |         |    single: ordering constraint; role (clone)        |
-   |       |         |    single: role; clone ordering constraint          |
-   |       |         |                                                     |
-   |       |         | The role that *all members* of the set must be in.  |
-   |       |         | Allowed values: **Started**, **Master**, **Slave**. |
-   +-------+---------+-----------------------------------------------------+
+When a promotable clone is used in a :ref:`resource set <s-resource-sets>`
+inside a colocation constraint, the resource set may take a ``role`` attribute.
 
 In the following example **B**'s master must be located on the same node as **A**'s master.
 Additionally resources **C** and **D** must be located on the same node as **A**'s
@@ -506,27 +472,10 @@ and **B**'s masters.
 Using Promotable Clone Resources in Ordered Sets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. index::
-   single: constraint; colocation
-   single: constraint; resource set
-   
-.. table:: **Additional ordered set options relevant to promotable clone resources**
-   
-   +--------+------------------+-----------------------------------------------------+
-   | Field  | Default          | Description                                         |
-   +=======++==================+=====================================================+
-   | action | value of         | .. index::                                          |
-   |        | ``first-action`` |    single: clone; ordering constraint; action       |
-   |        |                  |    single: ordering constraintl action (clone)      |
-   |        |                  |    single: action; clone ordering constraint        |
-   |        |                  |                                                     |
-   |        |                  | An additional attribute of ordering constraint      |
-   |        |                  | sets that specifies the action that applies to      |
-   |        |                  | *all members* of the set.                           |
-   |        |                  | Allowed values: **start**, **stop**, **promote**,   |
-   |        |                  | **demote**.                                         |
-   +--------+------------------+-----------------------------------------------------+
-   
+When a promotable clone is used in a :ref:`resource set <s-resource-sets>`
+inside an ordering constraint, the resource set may take an ``action``
+attribute.
+
 .. topic:: Start C and D after first promoting A and B
 
    .. code-block:: xml
