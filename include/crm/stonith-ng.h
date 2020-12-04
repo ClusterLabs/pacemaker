@@ -443,6 +443,7 @@ void stonith_history_free(stonith_history_t *history);
 // Convenience functions
 int stonith_api_connect_retry(stonith_t *st, const char *name,
                               int max_attempts);
+const char *stonith_op_state_str(enum op_state state);
 
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API

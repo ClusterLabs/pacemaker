@@ -449,8 +449,10 @@ handle_duplicates(remote_fencing_op_t * op, xmlNode * data, int rc)
 
         } else {
             // Possible if (for example) it timed out already
-            crm_err("Skipping duplicate notification for %s@%s - %d", other->client_name,
-                    other->originator, other->state);
+            crm_err("Skipping duplicate notification for %s@%s "
+                    CRM_XS " state=%s id=%.8s",
+                    other->client_name, other->originator,
+                    stonith_op_state_str(other->state), other->id);
         }
     }
 }
@@ -493,12 +495,12 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     undo_op_remap(op);
 
     if (op->notify_sent == TRUE) {
-        crm_err("Already sent notifications for '%s' targeting %s on %s for "
-                "client %s@%s.%.8s: %s " CRM_XS " rc=%d state=%d",
+        crm_err("Already sent notifications for '%s' targeting %s by %s for "
+                "client %s@%s: %s " CRM_XS " rc=%d state=%s id=%.8s",
                 op->action, op->target,
                 (op->delegate? op->delegate : "unknown node"),
-                op->client_name, op->originator, op->id, pcmk_strerror(rc),
-                rc, op->state);
+                op->client_name, op->originator, pcmk_strerror(rc),
+                rc, stonith_op_state_str(op->state), op->id);
         goto remote_op_done_cleanup;
     }
 
@@ -643,12 +645,12 @@ remote_op_query_timeout(gpointer data)
         crm_debug("Operation %s targeting %s already in progress",
                   op->id, op->target);
     } else if (op->query_results) {
-        crm_debug("Query %s targeting %s complete (state=%d)",
-                  op->id, op->target, op->state);
+        crm_debug("Query %.8s targeting %s complete (state=%s)",
+                  op->id, op->target, stonith_op_state_str(op->state));
         call_remote_stonith(op, NULL, pcmk_ok);
     } else {
-        crm_debug("Query %s targeting %s timed out (state=%d)",
-                  op->id, op->target, op->state);
+        crm_debug("Query %.8s targeting %s timed out (state=%s)",
+                  op->id, op->target, stonith_op_state_str(op->state));
         if (op->op_timer_total) {
             g_source_remove(op->op_timer_total);
             op->op_timer_total = 0;
@@ -1141,8 +1143,9 @@ initiate_remote_stonith_op(pcmk__client_t *client, xmlNode *request,
 
         default:
             crm_notice("Requesting peer fencing (%s) targeting %s "
-                       CRM_XS " id=%s state=%d",
-                       op->action, op->target, op->id, op->state);
+                       CRM_XS " id=%.8s state=%s base_timeout=%d",
+                       op->action, op->target, op->id,
+                       stonith_op_state_str(op->state), op->base_timeout);
     }
 
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
@@ -1507,7 +1510,9 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
     const char *device = NULL;
     int timeout = op->base_timeout;
 
-    crm_trace("State for %s.%.8s: %s %d", op->target, op->client_name, op->id, op->state);
+    crm_trace("Action %.8s targeting %s for %s is %s",
+              op->id, op->target, op->client_name,
+              stonith_op_state_str(op->state));
     if ((peer == NULL) && !pcmk_is_set(op->call_options, st_opt_topology)) {
         peer = stonith_choose_peer(op);
     }
@@ -1612,8 +1617,8 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
     } else if (op->query_timer == 0) {
         /* We've exhausted all available peers */
         crm_info("No remaining peers capable of fencing (%s) %s for client %s "
-                 CRM_XS " state=%d",
-                 op->action, op->target, op->client_name, op->state);
+                 CRM_XS " state=%s", op->action, op->target, op->client_name,
+                 stonith_op_state_str(op->state));
         CRM_LOG_ASSERT(op->state < st_done);
         remote_op_timeout(op);
 
@@ -1635,9 +1640,9 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
 
         if (op->state == st_query) {
             crm_info("No peers (out of %d) have devices capable of fencing "
-                     "(%s) %s for client %s " CRM_XS " state=%d",
+                     "(%s) %s for client %s " CRM_XS " state=%s",
                      op->replies, op->action, op->target, op->client_name,
-                     op->state);
+                     stonith_op_state_str(op->state));
 
             rc = -ENODEV;
         } else {
@@ -1646,9 +1651,9 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
             } 
 
             crm_info("No peers (out of %d) are capable of fencing (%s) %s "
-                     "for client %s " CRM_XS " state=%d",
+                     "for client %s " CRM_XS " state=%s",
                      op->replies, op->action, op->target, op->client_name,
-                     op->state);
+                     stonith_op_state_str(op->state));
         }
 
         op->state = st_failed;
@@ -1973,9 +1978,9 @@ process_remote_stonith_query(xmlNode * msg)
 
     } else if (result && (op->state == st_done)) {
         crm_info("Discarding query result from %s (%d device%s): "
-                 "Operation is in state %d", result->host,
+                 "Operation is %s", result->host,
                  result->ndevices, pcmk__plural_s(result->ndevices),
-                 op->state);
+                 stonith_op_state_str(op->state));
     }
 
     return pcmk_ok;
