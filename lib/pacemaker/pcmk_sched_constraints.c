@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 
 #include <sys/param.h>
 #include <sys/types.h>
+#include <stdbool.h>
 #include <regex.h>
 #include <glib.h>
 
@@ -1346,7 +1347,7 @@ void
 pcmk__new_colocation(const char *id, const char *node_attr, int score,
                      pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                      const char *state_lh, const char *state_rh,
-                     pe_working_set_t *data_set)
+                     bool influence, pe_working_set_t *data_set)
 {
     pcmk__colocation_t *new_con = NULL;
 
@@ -1376,6 +1377,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
     new_con->role_lh = text2role(state_lh);
     new_con->role_rh = text2role(state_rh);
     new_con->node_attribute = node_attr;
+    new_con->influence = influence;
 
     if (node_attr == NULL) {
         node_attr = CRM_ATTR_UNAME;
@@ -2279,8 +2281,38 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Return the boolean influence corresponding to configuration
+ *
+ * \param[in] coloc_id     Colocation XML ID (for error logging)
+ * \param[in] rsc          Resource involved in constraint (for default)
+ * \param[in] influence_s  String value of influence option
+ *
+ * \return true if string evaluates true, false if string evaluates false,
+ *         or value of resource's critical option if string is NULL or invalid
+ */
+static bool
+unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
+                 const char *influence_s)
+{
+    if (influence_s != NULL) {
+        int influence_i = 0;
+
+        if (crm_str_to_boolean(influence_s, &influence_i) < 0) {
+            pcmk__config_err("Constraint '%s' has invalid value for "
+                             XML_COLOC_ATTR_INFLUENCE " (using default)",
+                             coloc_id);
+        } else {
+            return (influence_i == TRUE);
+        }
+    }
+    return pcmk_is_set(rsc->flags, pe_rsc_critical);
+}
+
 static gboolean
-unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
+unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
+                      const char *influence_s, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pe_resource_t *with = NULL;
@@ -2314,7 +2346,10 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                 if (with != NULL) {
                     pe_rsc_trace(resource, "Colocating %s with %s", resource->id, with->id);
                     pcmk__new_colocation(set_id, NULL, local_score, resource,
-                                         with, role, role, data_set);
+                                         with, role, role,
+                                         unpack_influence(coloc_id, resource,
+                                                          influence_s),
+                                         data_set);
                 }
 
                 with = resource;
@@ -2330,7 +2365,10 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                 if (last != NULL) {
                     pe_rsc_trace(resource, "Colocating %s with %s", last->id, resource->id);
                     pcmk__new_colocation(set_id, NULL, local_score, last,
-                                         resource, role, role, data_set);
+                                         resource, role, role,
+                                         unpack_influence(coloc_id, last,
+                                                          influence_s),
+                                         data_set);
                 }
 
                 last = resource;
@@ -2348,8 +2386,10 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
 
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 xmlNode *xml_rsc_with = NULL;
+                bool influence = true;
 
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+                influence = unpack_influence(coloc_id, resource, influence_s);
 
                 for (xml_rsc_with = pcmk__xe_first_child(set);
                      xml_rsc_with != NULL;
@@ -2364,7 +2404,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                                      with->id);
                         pcmk__new_colocation(set_id, NULL, local_score,
                                              resource, with, role, role,
-                                             data_set);
+                                             influence, data_set);
                     }
                 }
             }
@@ -2376,7 +2416,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
 
 static gboolean
 colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
-                  pe_working_set_t * data_set)
+                  const char *influence_s, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pe_resource_t *rsc_1 = NULL;
@@ -2416,16 +2456,19 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
 
     if (rsc_1 != NULL && rsc_2 != NULL) {
         pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1, role_2,
+                             unpack_influence(id, rsc_1, influence_s),
                              data_set);
 
     } else if (rsc_1 != NULL) {
+        bool influence = unpack_influence(id, rsc_1, influence_s);
+
         for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
              xml_rsc = pcmk__xe_next(xml_rsc)) {
 
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
-                                     role_2, data_set);
+                                     role_2, influence, data_set);
             }
         }
 
@@ -2436,7 +2479,9 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
                 pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
-                                     role_2, data_set);
+                                     role_2,
+                                     unpack_influence(id, rsc_1, influence_s),
+                                     data_set);
             }
         }
 
@@ -2446,8 +2491,10 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
 
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 xmlNode *xml_rsc_2 = NULL;
+                bool influence = true;
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+                influence = unpack_influence(id, rsc_1, influence_s);
 
                 for (xml_rsc_2 = pcmk__xe_first_child(set2);
                      xml_rsc_2 != NULL;
@@ -2456,7 +2503,8 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
                     if (pcmk__str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                         EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
                         pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
-                                             role_1, role_2, data_set);
+                                             role_1, role_2, influence,
+                                             data_set);
                     }
                 }
             }
@@ -2467,13 +2515,12 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
 }
 
 static void
-unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
+unpack_simple_colocation(xmlNode *xml_obj, const char *id,
+                         const char *influence_s, pe_working_set_t *data_set)
 {
     int score_i = 0;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -2542,7 +2589,7 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     pcmk__new_colocation(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh,
-                         data_set);
+                         unpack_influence(id, rsc_lh, influence_s), data_set);
 }
 
 static gboolean
@@ -2675,6 +2722,8 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *influence_s = crm_element_value(xml_obj,
+                                                XML_COLOC_ATTR_INFLUENCE);
 
     if (score) {
         score_i = char2score(score);
@@ -2694,10 +2743,12 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
         if (pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_none)) {
             any_sets = TRUE;
             set = expand_idref(set, data_set->input);
-            if (!unpack_colocation_set(set, score_i, data_set)) {
+            if (!unpack_colocation_set(set, score_i, id, influence_s,
+                                       data_set)) {
                 return;
             }
-            if (last && !colocate_rsc_sets(id, last, set, score_i, data_set)) {
+            if ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
+                                                     influence_s, data_set)) {
                 return;
             }
             last = set;
@@ -2710,7 +2761,7 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     if (!any_sets) {
-        unpack_simple_colocation(xml_obj, data_set);
+        unpack_simple_colocation(xml_obj, id, influence_s, data_set);
     }
 }
 

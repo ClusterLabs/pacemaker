@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
@@ -1692,7 +1694,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
                 score = INFINITY; /* Force them to run on the same host */
             }
             pcmk__new_colocation("resource-with-container", NULL, score, rsc,
-                                 rsc->container, NULL, NULL, data_set);
+                                 rsc->container, NULL, NULL, true, data_set);
         }
     }
 

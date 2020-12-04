@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/msg_xml.h>
 
@@ -193,7 +195,9 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         } else if (group_data->colocated) {
             pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
-                                 child_rsc, last_rsc, NULL, NULL, data_set);
+                                 child_rsc, last_rsc, NULL, NULL,
+                                 pcmk_is_set(child_rsc->flags, pe_rsc_critical),
+                                 data_set);
         }
 
         if (pcmk_is_set(top->flags, pe_rsc_promotable)) {

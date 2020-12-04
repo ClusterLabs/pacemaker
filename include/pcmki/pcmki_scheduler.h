@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 the Pacemaker project contributors
+ * Copyright 2014-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,6 +46,7 @@ typedef struct {
     int role_rh;
 
     int score;
+    bool influence; // Whether rsc_lh should influence active rsc_rh placement
 } pcmk__colocation_t;
 
 enum loss_ticket_policy_e {
