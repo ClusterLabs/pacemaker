@@ -171,120 +171,94 @@ set_format_string(int method, const char *daemon)
 gboolean
 crm_add_logfile(const char *filename)
 {
-    bool is_default = false;
-    static int default_fd = -1;
-    static gboolean have_logfile = FALSE;
-
-    struct stat parent;
-    int fd = 0, rc = 0;
+    int fd = 0;
     FILE *logfile = NULL;
-    char *parent_dir = NULL;
-    char *filename_cp;
+    bool is_default = false;
 
-    if (filename == NULL && have_logfile == FALSE) {
+    static int default_fd = -1;
+    static bool have_logfile = false;
+
+    // Use default if caller didn't specify (and we don't already have one)
+    if ((filename == NULL) && !have_logfile) {
         filename = DEFAULT_LOG_FILE;
     }
 
+    // If the user doesn't want logging, we're done
     if ((filename == NULL)
         || pcmk__str_eq(filename, "none", pcmk__str_casei)
         || pcmk__str_eq(filename, "/dev/null", pcmk__str_none)) {
-        return FALSE; // User doesn't want logging, so there's nothing to do
+        return FALSE;
+    }
 
-    } else if (pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none)) {
+    // If the caller wants the default and we already have it, we're done
+    if (pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none)) {
         is_default = TRUE;
     }
-
-    if(is_default && default_fd >= 0) {
-        return TRUE;           /* Nothing to do */
+    if (is_default && (default_fd >= 0)) {
+        return TRUE;
     }
 
-    /* Check the parent directory */
-    filename_cp = strdup(filename);
-    parent_dir = dirname(filename_cp);
-    rc = stat(parent_dir, &parent);
-
-    if (rc != 0) {
-        crm_err("Directory '%s' does not exist: logging to '%s' is disabled", parent_dir, filename);
-        free(filename_cp);
-        return FALSE;
-    }
-    free(filename_cp);
-
+    // Check whether we have write access to the file
     errno = 0;
     logfile = fopen(filename, "a");
-    if(logfile == NULL) {
-        crm_err("%s (%d): Logging to '%s' as uid=%u, gid=%u is disabled",
-                pcmk_strerror(errno), errno, filename, geteuid(), getegid());
+    if (logfile == NULL) {
+        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " uid=%u gid=%u",
+                 filename, strerror(errno), geteuid(), getegid());
         return FALSE;
     }
 
-    /* Check/Set permissions if we're root */
+    // If we're root, correct the file permissions if needed
     if (geteuid() == 0) {
         struct stat st;
         uid_t pcmk_uid = 0;
         gid_t pcmk_gid = 0;
-        gboolean fix = FALSE;
         int logfd = fileno(logfile);
         const char *modestr;
         mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
-        rc = fstat(logfd, &st);
-        if (rc < 0) {
-            crm_perror(LOG_WARNING, "Cannot stat %s", filename);
+        // Get the log file's current ownership and permissions
+        if (fstat(logfd, &st) < 0) {
+            crm_warn("Logging to '%s' is disabled: %s " CRM_XS " fstat",
+                     filename, strerror(errno));
             fclose(logfile);
             return FALSE;
         }
 
-        if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) == 0) {
-            if (st.st_gid != pcmk_gid) {
-                /* Wrong group */
-                fix = TRUE;
-            } else if ((st.st_mode & S_IRWXG) != (S_IRGRP | S_IWGRP)) {
-                /* Not read/writable by the correct group */
-                fix = TRUE;
+        // Fix ownership if group is wrong or doesn't have read/write access
+        if ((pcmk_daemon_user(&pcmk_uid, &pcmk_gid) == pcmk_ok)
+            && ((st.st_gid != pcmk_gid)
+                || ((st.st_mode & S_IRWXG) != (S_IRGRP|S_IWGRP)))) {
+            if (fchown(logfd, pcmk_uid, pcmk_gid) < 0) {
+                crm_warn("Couldn't change '%s' ownership to user %s gid %d: %s",
+                         filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
             }
         }
 
+        // Reset the permissions (using environment variable if set)
         modestr = getenv("PCMK_logfile_mode");
         if (modestr) {
             long filemode_l = strtol(modestr, NULL, 8);
-            if (filemode_l != LONG_MIN && filemode_l != LONG_MAX) {
-                filemode = (mode_t)filemode_l;
-	    }
+
+            if ((filemode_l != LONG_MIN) && (filemode_l != LONG_MAX)) {
+                filemode = (mode_t) filemode_l;
+            }
         }
-
-        if (fix) {
-            rc = fchown(logfd, pcmk_uid, pcmk_gid);
-            if (rc < 0) {
-                crm_warn("Cannot change the ownership of %s to user %s and gid %d",
-                         filename, CRM_DAEMON_USER, pcmk_gid);
-            }
-	}
-
-	if (filemode) {
-            rc = fchmod(logfd, filemode);
-            if (rc < 0) {
-                crm_warn("Cannot change the mode of %s to %o", filename, filemode);
-            }
-
-            fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
-                    pcmk_uid, pcmk_gid, filename);
-            if (fflush(logfile) < 0 || fsync(logfd) < 0) {
-                crm_err("Couldn't write out logfile: %s", filename);
-            }
+        if ((filemode != 0) && (fchmod(logfd, filemode) < 0)) {
+            crm_warn("Couldn't change '%s' mode to %04o: %s",
+                     filename, filemode, strerror(errno));
         }
     }
 
-    /* Close and reopen with libqb */
+    // Close and reopen as libqb logging target
     fclose(logfile);
     fd = qb_log_file_open(filename);
-
     if (fd < 0) {
-        crm_perror(LOG_WARNING, "Couldn't send additional logging to %s", filename);
+        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " qb_log_file_open",
+                 filename, strerror(-fd));
         return FALSE;
     }
 
-    if(is_default) {
+    if (is_default) {
         default_fd = fd;
 
         // Some resource agents will log only if environment variable is set
@@ -292,12 +266,15 @@ crm_add_logfile(const char *filename)
             pcmk__set_env_option("logfile", filename);
         }
 
-    } else if(default_fd >= 0) {
-        crm_notice("Switching to %s", filename);
+    } else if (default_fd >= 0) {
+        crm_notice("Switching logging to %s", filename);
         qb_log_ctl(default_fd, QB_LOG_CONF_ENABLED, QB_FALSE);
     }
 
+    // This message can show up in other targets (syslog, etc.)
     crm_notice("Additional logging available in %s", filename);
+
+    // Enable logging to the new log file
     qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
     /* qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1);  Turn on synchronous writes */
 
@@ -308,7 +285,7 @@ crm_add_logfile(const char *filename)
 
     /* Enable callsites */
     crm_update_callsites();
-    have_logfile = TRUE;
+    have_logfile = true;
 
     return TRUE;
 }

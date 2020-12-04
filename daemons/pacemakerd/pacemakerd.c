@@ -536,11 +536,13 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     if (reply) {
         if (pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event) !=
                 pcmk_rc_ok) {
-            crm_err("Failed sending ping-reply");
+            crm_err("Failed sending ping reply to client %s",
+                    pcmk__client_name(c));
         }
         free_xml(reply);
     } else {
-        crm_err("Failed building ping-reply");
+        crm_err("Failed building ping reply for client %s",
+                pcmk__client_name(c));
     }
     /* just proceed state on sbd pinging us */
     if (from && strstr(from, "sbd")) {
@@ -601,8 +603,8 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         }
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
-        crm_trace("Ignoring IPC request to purge node "
-                  "because peer cache is not used");
+        crm_trace("Ignoring request from client %s to purge node "
+                  "because peer cache is not used", pcmk__client_name(c));
         pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_OK);
 
     } else if (pcmk__str_eq(task, CRM_OP_PING, pcmk__str_none)) {
@@ -610,8 +612,8 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         pcmk_handle_ping_request(c, msg, id);
 
     } else {
-        crm_debug("Unrecognized IPC command '%s' sent to pacemakerd",
-                  crm_str(task));
+        crm_debug("Unrecognized IPC command '%s' from client %s",
+                  crm_str(task), pcmk__client_name(c));
         pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INVALID_PARAM);
     }
 
@@ -1145,6 +1147,7 @@ main(int argc, char **argv)
     int argerr = 0;
 
     int option_index = 0;
+    bool old_instance_connected = false;
     gboolean shutdown = FALSE;
 
     uid_t pcmk_uid = 0;
@@ -1214,12 +1217,20 @@ main(int argc, char **argv)
 
     crm_debug("Checking for existing Pacemaker instance");
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
-    (void) crm_ipc_connect(old_instance);
+    old_instance_connected = crm_ipc_connect(old_instance);
 
     if (shutdown) {
-        crm_exit(request_shutdown(old_instance));
+        if (old_instance_connected) {
+            crm_exit(request_shutdown(old_instance));
+        } else {
+            crm_err("Could not request shutdown of existing "
+                    "Pacemaker instance: %s", strerror(errno));
+            crm_ipc_close(old_instance);
+            crm_ipc_destroy(old_instance);
+            crm_exit(CRM_EX_DISCONNECT);
+        }
 
-    } else if (crm_ipc_connected(old_instance)) {
+    } else if (old_instance_connected) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("Aborting start-up because active Pacemaker instance found");

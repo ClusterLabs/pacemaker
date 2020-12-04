@@ -2607,15 +2607,15 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         CRM_ASSERT(client);
         flag_name = crm_element_value(request, F_STONITH_NOTIFY_ACTIVATE);
         if (flag_name) {
-            crm_debug("Enabling %s callbacks for %s (%s)",
-                      flag_name, client->name, client->id);
+            crm_debug("Enabling %s callbacks for client %s",
+                      flag_name, pcmk__client_name(client));
             pcmk__set_client_flags(client, get_stonith_flag(flag_name));
         }
 
         flag_name = crm_element_value(request, F_STONITH_NOTIFY_DEACTIVATE);
         if (flag_name) {
-            crm_debug("Disabling %s callbacks for %s (%s)",
-                      flag_name, client->name, client->id);
+            crm_debug("Disabling %s callbacks for client %s",
+                      flag_name, pcmk__client_name(client));
             pcmk__clear_client_flags(client, get_stonith_flag(flag_name));
         }
 
@@ -2625,9 +2625,10 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     } else if (pcmk__str_eq(op, STONITH_OP_RELAY, pcmk__str_none)) {
         xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
 
-        crm_notice("Peer %s has received a forwarded fencing request from %s to fence (%s) peer %s",
-                   stonith_our_uname,
-                   client ? client->name : remote_peer,
+        crm_notice("Received forwarded fencing request from "
+                   "%s%s to fence (%s) peer %s",
+                   ((client == NULL)? "peer" : "client"),
+                   ((client == NULL)? remote_peer : pcmk__client_name(client)),
                    crm_element_value(dev, F_STONITH_ACTION),
                    crm_element_value(dev, F_STONITH_TARGET));
 
@@ -2659,8 +2660,9 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
             if (client) {
                 int tolerance = 0;
 
-                crm_notice("Client %s.%.8s wants to fence (%s) '%s' with device '%s'",
-                           client->name, client->id, action, target, device ? device : "(any)");
+                crm_notice("Client %s wants to fence (%s) %s using %s",
+                           pcmk__client_name(client), action,
+                           target, (device? device : "any device"));
 
                 crm_element_value_int(dev, F_STONITH_TOLERANCE, &tolerance);
 
@@ -2767,8 +2769,9 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         return pcmk_ok;
 
     } else {
-        crm_err("Unknown IPC request %s from %s",
-                op, (client? client->name : remote_peer));
+        crm_err("Unknown IPC request %s from %s %s", op,
+                ((client == NULL)? "peer" : "client"),
+                ((client == NULL)? remote_peer : pcmk__client_name(client)));
     }
 
   done:
@@ -2813,7 +2816,9 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
         /* Reply to a complex fencing op */
         process_remote_stonith_exec(request);
     } else {
-        crm_err("Unknown %s reply from %s", op, client ? client->name : remote_peer);
+        crm_err("Unknown %s reply from %s %s", op,
+                ((client == NULL)? "peer" : "client"),
+                ((client == NULL)? remote_peer : pcmk__client_name(client)));
         crm_log_xml_warn(request, "UnknownOp");
     }
 }
@@ -2842,8 +2847,11 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    crm_debug("Processing %s%s %u from %s (%16x)", op, is_reply ? " reply" : "",
-              id, client ? client->name : remote_peer, call_options);
+    crm_debug("Processing %s%s %u from %s %s with call options 0x%08x",
+              op, (is_reply? " reply" : ""), id,
+              ((client == NULL)? "peer" : "client"),
+              ((client == NULL)? remote_peer : pcmk__client_name(client)),
+              call_options);
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(client == NULL || client->request_id == id);
@@ -2855,9 +2863,10 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
         rc = handle_request(client, id, flags, request, remote_peer);
     }
 
-    crm_debug("Processed %s%s from %s: %s (%d)", op,
-              is_reply ? " reply" : "", client ? client->name : remote_peer,
-              rc > 0 ? "" : pcmk_strerror(rc), rc);
-
+    crm_debug("Processed %s%s from %s %s: %s (rc=%d)",
+              op, (is_reply? " reply" : ""),
+              ((client == NULL)? "peer" : "client"),
+              ((client == NULL)? remote_peer : pcmk__client_name(client)),
+              ((rc > 0)? "" : pcmk_strerror(rc)), rc);
     free(op);
 }

@@ -120,7 +120,7 @@ extern GHashTable *attributes;
 void write_attributes(bool all, bool ignore_delay);
 void attrd_broadcast_protocol(void);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
-void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
+void attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml);
 void attrd_client_clear_failure(xmlNode *xml);
 void attrd_client_update(xmlNode *xml);
 void attrd_client_refresh(void);

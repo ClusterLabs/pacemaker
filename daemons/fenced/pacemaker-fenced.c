@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <inttypes.h>  /* U32T ~ PRIu32, X32T ~ PRIx32 */
+#include <inttypes.h>  // PRIu32, PRIx32
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -120,8 +120,8 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    crm_trace("Flags %" X32T "/%u for command %" U32T " from %s",
-              flags, call_options, id, pcmk__client_name(c));
+    crm_trace("Flags 0x%08" PRIx32 "/0x%08x for command %" PRIu32
+              " from client %s", flags, call_options, id, pcmk__client_name(c));
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);
@@ -240,12 +240,14 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
             rid = client_obj->request_id;
             client_obj->request_id = 0;
 
-            crm_trace("Sending response %d to %s %s",
-                      rid, client_obj->name, from_peer ? "(originator of delegated request)" : "");
+            crm_trace("Sending response %d to client %s%s",
+                      rid, pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
 
         } else {
-            crm_trace("Sending an event to %s %s",
-                      client_obj->name, from_peer ? "(originator of delegated request)" : "");
+            crm_trace("Sending an event to client %s%s",
+                      pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
         }
 
         local_rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
@@ -254,10 +256,9 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
     }
 
     if ((local_rc != pcmk_rc_ok) && (client_obj != NULL)) {
-        crm_warn("%s reply to %s failed: %s",
+        crm_warn("%s reply to client %s failed: %s",
                  (sync_reply? "Synchronous" : "Asynchronous"),
-                 (client_obj? client_obj->name : "unknown client"),
-                 pcmk_rc_str(local_rc));
+                 pcmk__client_name(client_obj), pcmk_rc_str(local_rc));
     }
 }
 
@@ -311,8 +312,8 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
                      CRM_XS " id=%.8s rc=%d", type, pcmk__client_name(client),
                      pcmk_rc_str(rc), client->id, rc);
         } else {
-            crm_trace("Sent %s notification to client %s.%.6s", type,
-                      pcmk__client_name(client), client->id);
+            crm_trace("Sent %s notification to client %s",
+                      type, pcmk__client_name(client));
         }
     }
 }

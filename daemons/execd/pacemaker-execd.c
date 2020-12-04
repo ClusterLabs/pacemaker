@@ -217,7 +217,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
             return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
         default:
-            crm_err("Could not send reply: unknown client type for %s "
+            crm_err("Could not send reply: unknown type for client %s "
                     CRM_XS " flags=0x%llx",
                     pcmk__client_name(client), client->flags);
     }

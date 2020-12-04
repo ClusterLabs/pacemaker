@@ -166,8 +166,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
         crm_element_value_int(op_request, F_CIB_NOTIFY_ACTIVATE, &on_off);
 
-        crm_debug("Setting %s callbacks for %s (%s): %s",
-                  type, cib_client->name, cib_client->id, on_off ? "on" : "off");
+        crm_debug("Setting %s callbacks %s for client %s",
+                  type, (on_off? "on" : "off"), pcmk__client_name(cib_client));
 
         if (pcmk__str_eq(type, T_CIB_POST_NOTIFY, pcmk__str_casei)) {
             bit = cib_notify_post;
@@ -250,8 +250,9 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         const char *qmax = cib_config_lookup("cluster-ipc-limit");
 
         if (pcmk__set_client_queue_max(cib_client, qmax)) {
-            crm_trace("IPC threshold for %s[%u] is now %u",
-                      cib_client->name, cib_client->pid, cib_client->queue_max);
+            crm_trace("IPC threshold for client %s[%u] is now %u",
+                      pcmk__client_name(cib_client), cib_client->pid,
+                      cib_client->queue_max);
         }
     }
 
@@ -384,17 +385,19 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
             rid = client_obj->request_id;
             client_obj->request_id = 0;
 
-            crm_trace("Sending response %d to %s %s",
-                      rid, client_obj->name,
-                      from_peer ? "(originator of delegated request)" : "");
+            crm_trace("Sending response %d to client %s%s",
+                      rid, pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
         } else {
-            crm_trace("Sending response [call %d] to %s %s",
-                      call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
+            crm_trace("Sending response (call %d) to client %s%s",
+                      call_id, pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
         }
 
     } else {
-        crm_trace("Sending event %d to %s %s",
-                  call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
+        crm_trace("Sending event %d to client %s%s",
+                  call_id, pcmk__client_name(client_obj),
+                  (from_peer? " (originator of delegated request)" : ""));
     }
 
     switch (PCMK__CLIENT_TYPE(client_obj)) {
@@ -405,9 +408,10 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
                                              : crm_ipc_server_event));
 
                 if (rc != pcmk_rc_ok) {
-                    crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%d",
+                    crm_warn("%s reply to client %s failed: %s " CRM_XS " rc=%d",
                              (sync_reply? "Synchronous" : "Asynchronous"),
-                             client_obj->name, pcmk_rc_str(rc), rc);
+                             pcmk__client_name(client_obj), pcmk_rc_str(rc),
+                             rc);
                 }
             }
             break;
@@ -418,9 +422,9 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
             pcmk__remote_send_xml(client_obj->remote, notify_src);
             break;
         default:
-            crm_err("Unknown transport for %s " CRM_XS " flags=0x%llx",
-                    pcmk__client_name(client_obj),
-                    (unsigned long long) client_obj->flags);
+            crm_err("Unknown transport for client %s "
+                    CRM_XS " flags=0x%016" PRIx64,
+                    pcmk__client_name(client_obj), client_obj->flags);
     }
 }
 
@@ -489,15 +493,18 @@ parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
     }
 
     if (host == NULL && (call_options & cib_scope_local)) {
-        crm_trace("Processing locally scoped %s op from %s", op, cib_client->name);
+        crm_trace("Processing locally scoped %s op from client %s",
+                  op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
 
     } else if (host == NULL && cib_is_master) {
-        crm_trace("Processing master %s op locally from %s", op, cib_client->name);
+        crm_trace("Processing master %s op locally from client %s",
+                  op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
 
     } else if (pcmk__str_eq(host, cib_our_uname, pcmk__str_casei)) {
-        crm_trace("Processing locally addressed %s op from %s", op, cib_client->name);
+        crm_trace("Processing locally addressed %s op from client %s",
+                  op, pcmk__client_name(cib_client));
         *local_notify = TRUE;
 
     } else if (stand_alone) {
@@ -506,8 +513,9 @@ parse_local_options_v1(pcmk__client_t *cib_client, int call_type,
         *process = TRUE;
 
     } else {
-        crm_trace("%s op from %s needs to be forwarded to %s",
-                  op, cib_client->name, host ? host : "the master instance");
+        crm_trace("%s op from %s needs to be forwarded to client %s",
+                  op, pcmk__client_name(cib_client),
+                  (host? host : "the master instance"));
         *needs_forward = TRUE;
         *process = FALSE;
     }
@@ -533,8 +541,9 @@ parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
             *needs_reply = TRUE;
             *needs_forward = TRUE;
             *process = FALSE;
-            crm_trace("%s op from %s needs to be forwarded to %s",
-                      op, cib_client->name, host ? host : "the master instance");
+            crm_trace("%s op from %s needs to be forwarded to client %s",
+                      op, pcmk__client_name(cib_client),
+                      (host? host : "the master instance"));
             return;
         }
     }
@@ -546,16 +555,20 @@ parse_local_options_v2(pcmk__client_t *cib_client, int call_type,
     *needs_forward = FALSE;
 
     if (stand_alone) {
-        crm_trace("Processing %s op from %s (stand-alone)", op, cib_client->name);
+        crm_trace("Processing %s op from client %s (stand-alone)",
+                  op, pcmk__client_name(cib_client));
 
     } else if (host == NULL) {
-        crm_trace("Processing unaddressed %s op from %s", op, cib_client->name);
+        crm_trace("Processing unaddressed %s op from client %s",
+                  op, pcmk__client_name(cib_client));
 
     } else if (pcmk__str_eq(host, cib_our_uname, pcmk__str_casei)) {
-        crm_trace("Processing locally addressed %s op from %s", op, cib_client->name);
+        crm_trace("Processing locally addressed %s op from client %s",
+                  op, pcmk__client_name(cib_client));
 
     } else {
-        crm_trace("%s op from %s needs to be forwarded to %s", op, cib_client->name, host);
+        crm_trace("%s op from %s needs to be forwarded to client %s",
+                  op, pcmk__client_name(cib_client), host);
         *needs_forward = TRUE;
         *process = FALSE;
     }
@@ -1423,7 +1436,8 @@ disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
 {
     pcmk__client_t *a_client = value;
 
-    crm_err("Disconnecting %s... Not implemented", crm_str(a_client->name));
+    crm_err("Can't disconnect client %s: Not implemented",
+            pcmk__client_name(a_client));
 }
 
 void
