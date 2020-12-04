@@ -1500,7 +1500,7 @@ advance_topology_device_in_level(remote_fencing_op_t *op, const char *device,
     if (op->devices) {
         /* Necessary devices remain, so execute the next one */
         crm_trace("Next targeting %s on behalf of %s@%s (rc was %d)",
-                  op->target, op->originator, op->client_name, rc);
+                  op->target, op->client_name, op->originator, rc);
 
         // The requested delay has been applied for the first device
         if (op->delay > 0) {
