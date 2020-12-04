@@ -928,11 +928,12 @@ merge_duplicates(remote_fencing_op_t * op)
             other->total_timeout = op->total_timeout =
                 TIMEOUT_MULTIPLY_FACTOR * get_op_total_timeout(op, NULL);
         }
-        crm_notice("Merging stonith action '%s' targeting %s originating from "
-                   "client %s.%.8s with identical request from %s@%s.%.8s (%ds)",
-                   op->action, op->target, op->client_name, op->id,
-                   other->client_name, other->originator, other->id,
-                   other->total_timeout);
+        crm_notice("Merging fencing action '%s' targeting %s originating from "
+                   "client %s with identical request from %s@%s "
+                   CRM_XS " original=%.8s duplicate=%.8s total_timeout=%ds",
+                   op->action, op->target, op->client_name,
+                   other->client_name, other->originator,
+                   op->id, other->id, other->total_timeout);
         report_timeout_period(op, other->total_timeout);
         op->state = st_duplicate;
     }
@@ -1057,9 +1058,12 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 
     crm_element_value_int(request, F_STONITH_CALLID, &(op->client_callid));
 
-    crm_trace("%s new stonith op %s ('%s' targeting %s for client %s)",
+    crm_trace("%s new fencing op %s ('%s' targeting %s for client %s, "
+              "base timeout %d, %u %s expected)",
               (peer && dev)? "Recorded" : "Generated", op->id, op->action,
-              op->target, op->client_name);
+              op->target, op->client_name, op->base_timeout,
+              op->replies_expected,
+              pcmk__plural_alt(op->replies_expected, "reply", "replies"));
 
     if (op->call_options & st_opt_cs_nodeid) {
         int nodeid = crm_atoi(op->target, NULL);

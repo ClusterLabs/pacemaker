@@ -1782,13 +1782,14 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     if (devices_needing_async_query) {
         per_device_timeout = timeout / devices_needing_async_query;
         if (!per_device_timeout) {
-            crm_err("STONITH timeout %ds is too low; using %ds, but consider raising to at least %ds",
+            crm_err("Fencing timeout %ds is too low; using %ds, "
+                    "but consider raising to at least %ds",
                     timeout, DEFAULT_QUERY_TIMEOUT,
                     DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
             per_device_timeout = DEFAULT_QUERY_TIMEOUT;
         } else if (per_device_timeout < DEFAULT_QUERY_TIMEOUT) {
-            crm_notice("STONITH timeout %ds is low for the current configuration;"
-                       " consider raising to at least %ds",
+            crm_notice("Fencing timeout %ds is low for the current "
+                       "configuration; consider raising to at least %ds",
                        timeout, DEFAULT_QUERY_TIMEOUT * devices_needing_async_query);
         }
     }
@@ -2263,9 +2264,10 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
          * cmd->action "off" and once with "on", and they will be merged
          * separately with similar requests.
          */
-        crm_notice
-            ("Merging stonith action '%s' targeting %s originating from client %s with identical stonith request from client %s",
-             cmd_other->action, cmd_other->victim, cmd_other->client_name, cmd->client_name);
+        crm_notice("Merging fencing action '%s' targeting %s originating from "
+                   "client %s with identical fencing request from client %s",
+                   cmd_other->action, cmd_other->victim, cmd_other->client_name,
+                   cmd->client_name);
 
         cmd_list = g_list_remove_link(cmd_list, gIter);
 

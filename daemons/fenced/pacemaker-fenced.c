@@ -1086,12 +1086,13 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
-        crm_trace("Ignoring cib updates while stonith is disabled");
+        crm_trace("Ignoring CIB updates while fencing is disabled");
         stonith_enabled_saved = FALSE;
         return;
 
     } else if (stonith_enabled_saved == FALSE) {
-        crm_info("Updating stonith device and topology lists now that stonith is enabled");
+        crm_info("Updating fencing device and topology lists "
+                 "now that fencing is enabled");
         stonith_enabled_saved = TRUE;
         fencing_topology_init();
         cib_devices_update();
@@ -1226,7 +1227,7 @@ setup_cib(void)
         cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL, "init_cib_cache_cb",
                                          init_cib_cache_cb);
         cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
-        crm_info("Watching for stonith topology changes");
+        crm_info("Watching for fencing topology changes");
     }
 }
 
@@ -1375,23 +1376,26 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_DELAY_MAX);
-        printf
-            ("    <shortdesc lang=\"en\">Enable a random delay for stonith actions and specify the maximum of random delay.</shortdesc>\n");
-        printf
-            ("    <longdesc lang=\"en\">This prevents double fencing when using slow devices such as sbd.\n"
-             "Use this to enable a random delay for stonith actions.\n"
-             "The overall delay is derived from this random delay value adding a static delay so that the sum is kept below the maximum delay.</longdesc>\n");
+        printf("    <shortdesc lang=\"en\">Enable a random delay for "
+               "fencing actions and specify the maximum of random "
+               "delay.</shortdesc>\n");
+        printf("    <longdesc lang=\"en\">This prevents double fencing when "
+               "using slow devices such as sbd.\nUse this to enable a random "
+               "delay for fencing actions.\nThe overall delay is derived from "
+               "this random delay value adding a static delay so that the sum "
+               "is kept below the maximum delay.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_DELAY_BASE);
-        printf
-            ("    <shortdesc lang=\"en\">Enable a base delay for stonith actions and specify base delay value.</shortdesc>\n");
-        printf
-            ("    <longdesc lang=\"en\">This prevents double fencing when different delays are configured on the nodes.\n"
-             "Use this to enable a static delay for stonith actions.\n"
-             "The overall delay is derived from a random delay value adding this static delay so that the sum is kept below the maximum delay.</longdesc>\n");
+        printf("    <shortdesc lang=\"en\">Enable a base delay for "
+               "fencing actions and specify base delay value.</shortdesc>\n");
+        printf("    <longdesc lang=\"en\">This prevents double fencing when "
+               "different delays are configured on the nodes.\nUse this to "
+               "enable a static delay for fencing actions.\nThe overall delay "
+               "is derived from a random delay value adding this static delay "
+               "so that the sum is kept below the maximum delay.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
