@@ -1192,8 +1192,9 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
     for (iter = op->query_results; iter != NULL; iter = iter->next) {
         st_query_result_t *peer = iter->data;
 
-        crm_trace("Testing result from %s targeting %s with %d devices: %d %x",
-                  peer->host, op->target, peer->ndevices, peer->tried, options);
+        crm_trace("Testing result from %s targeting %s with %d device%s: %d %x",
+                  peer->host, op->target, peer->ndevices,
+                  pcmk__plural_s(peer->ndevices), peer->tried, options);
         if ((options & FIND_PEER_SKIP_TARGET) && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
             continue;
         }
@@ -1864,8 +1865,8 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
 
     result->ndevices = g_hash_table_size(result->devices);
     CRM_CHECK(ndevices == result->ndevices,
-              crm_err("Query claimed to have %d devices but %d found",
-                      ndevices, result->ndevices));
+              crm_err("Query claimed to have %d device%s but %d found",
+                      ndevices, pcmk__plural_s(ndevices), result->ndevices));
 
     op->query_results = g_list_insert_sorted(op->query_results, result, sort_peers);
     return result;
@@ -1924,9 +1925,9 @@ process_remote_stonith_query(xmlNode * msg)
     host = crm_element_value(msg, F_ORIG);
     host_is_target = pcmk__str_eq(host, op->target, pcmk__str_casei);
 
-    crm_info("Query result %d of %d from %s for %s/%s (%d devices) %s",
+    crm_info("Query result %d of %d from %s for %s/%s (%d device%s) %s",
              op->replies, replies_expected, host,
-             op->target, op->action, ndevices, id);
+             op->target, op->action, ndevices, pcmk__plural_s(ndevices), id);
     if (ndevices > 0) {
         result = add_result(op, host, ndevices, dev);
     }
@@ -1953,7 +1954,8 @@ process_remote_stonith_query(xmlNode * msg)
          * go ahead and start fencing before query timeout */
         if (result && (host_is_target == FALSE) && nverified) {
             /* we have a verified device living on a peer that is not the target */
-            crm_trace("Found %d verified devices", nverified);
+            crm_trace("Found %d verified device%s",
+                      nverified, pcmk__plural_s(nverified));
             call_remote_stonith(op, result, pcmk_ok);
 
         } else if (have_all_replies) {
@@ -1966,8 +1968,10 @@ process_remote_stonith_query(xmlNode * msg)
         }
 
     } else if (result && (op->state == st_done)) {
-        crm_info("Discarding query result from %s (%d devices): Operation is in state %d",
-                 result->host, result->ndevices, op->state);
+        crm_info("Discarding query result from %s (%d device%s): "
+                 "Operation is in state %d", result->host,
+                 result->ndevices, pcmk__plural_s(result->ndevices),
+                 op->state);
     }
 
     return pcmk_ok;

@@ -340,7 +340,8 @@ stonith_device_execute(stonith_device_t * device)
     action_limit = get_action_limit(device);
     if (action_limit > -1 && active_cmds >= action_limit) {
         crm_trace("%s is over its action limit of %d (%u active action%s)",
-                  device->id, action_limit, active_cmds, active_cmds > 1 ? "s" : "");
+                  device->id, action_limit, active_cmds,
+                  pcmk__plural_s(active_cmds));
         return TRUE;
     }
 
@@ -1155,13 +1156,15 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
 {
     stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
+    guint ndevices = 0;
 
     CRM_CHECK(device != NULL, return -ENOMEM);
 
     dup = device_has_duplicate(device);
     if (dup) {
-        crm_debug("Device '%s' already existed in device list (%d active devices)", device->id,
-                   g_hash_table_size(device_list));
+        ndevices = g_hash_table_size(device_list);
+        crm_debug("Device '%s' already in device list (%d active device%s)",
+                  device->id, ndevices, pcmk__plural_s(ndevices));
         free_device(device);
         device = dup;
 
@@ -1183,8 +1186,9 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
         }
         g_hash_table_replace(device_list, device->id, device);
 
-        crm_notice("Added '%s' to the device list (%d active devices)", device->id,
-                   g_hash_table_size(device_list));
+        ndevices = g_hash_table_size(device_list);
+        crm_notice("Added '%s' to device list (%d active device%s)",
+                   device->id, ndevices, pcmk__plural_s(ndevices));
     }
     if (desc) {
         *desc = device->id;
@@ -1203,9 +1207,12 @@ int
 stonith_device_remove(const char *id, gboolean from_cib)
 {
     stonith_device_t *device = g_hash_table_lookup(device_list, id);
+    guint ndevices = 0;
 
     if (!device) {
-        crm_info("Device '%s' not found (%d active devices)", id, g_hash_table_size(device_list));
+        ndevices = g_hash_table_size(device_list);
+        crm_info("Device '%s' not found (%d active device%s)",
+                 id, ndevices, pcmk__plural_s(ndevices));
         return pcmk_ok;
     }
 
@@ -1218,12 +1225,15 @@ stonith_device_remove(const char *id, gboolean from_cib)
 
     if (!device->cib_registered && !device->api_registered) {
         g_hash_table_remove(device_list, id);
-        crm_info("Removed '%s' from the device list (%d active devices)",
-                 id, g_hash_table_size(device_list));
+        ndevices = g_hash_table_size(device_list);
+        crm_info("Removed '%s' from device list (%d active device%s)",
+                 id, ndevices, pcmk__plural_s(ndevices));
     } else {
-        crm_trace("Not removing '%s' from the device list (%d active devices) "
-                  "- still %s%s_registered", id, g_hash_table_size(device_list),
-                  device->cib_registered?"cib":"", device->api_registered?"api":"");
+        crm_trace("Not removing '%s' from device list (%d active) because "
+                  "still registered via:%s%s",
+                  id, g_hash_table_size(device_list),
+                  (device->cib_registered? " cib" : ""),
+                  (device->api_registered? " api" : ""));
     }
     return pcmk_ok;
 }
@@ -1449,8 +1459,12 @@ stonith_level_register(xmlNode *msg, char **desc)
     }
     stonith_key_value_freeall(devices, 1, 1);
 
-    crm_info("Target %s has %d active fencing levels",
-             tp->target, count_active_levels(tp));
+    {
+        int nlevels = count_active_levels(tp);
+
+        crm_info("Target %s has %d active fencing level%s",
+                 tp->target, nlevels, pcmk__plural_s(nlevels));
+    }
     return pcmk_ok;
 }
 
@@ -1480,19 +1494,29 @@ stonith_level_remove(xmlNode *msg, char **desc)
 
     tp = g_hash_table_lookup(topology, target);
     if (tp == NULL) {
-        crm_info("Topology for %s not found (%d active entries)",
-                 target, g_hash_table_size(topology));
+        guint nentries = g_hash_table_size(topology);
+
+        crm_info("No fencing topology found for %s (%d active %s)",
+                 target, nentries,
+                 pcmk__plural_alt(nentries, "entry", "entries"));
 
     } else if (id == 0 && g_hash_table_remove(topology, target)) {
-        crm_info("Removed all %s related entries from the topology (%d active entries)",
-                 target, g_hash_table_size(topology));
+        guint nentries = g_hash_table_size(topology);
+
+        crm_info("Removed all fencing topology entries related to %s "
+                 "(%d active %s remaining)", target, nentries,
+                 pcmk__plural_alt(nentries, "entry", "entries"));
 
     } else if (id > 0 && tp->levels[id] != NULL) {
+        guint nlevels;
+
         g_list_free_full(tp->levels[id], free);
         tp->levels[id] = NULL;
 
-        crm_info("Removed level '%d' from topology for %s (%d active levels remaining)",
-                 id, target, count_active_levels(tp));
+        nlevels = count_active_levels(tp);
+        crm_info("Removed level %d from fencing topology for %s "
+                 "(%d active level%s remaining)",
+                 id, target, nlevels, pcmk__plural_s(nlevels));
     }
 
     free(target);
@@ -1562,10 +1586,12 @@ search_devices_record_result(struct device_search_s *search, const char *device,
 
     if (search->replies_needed == search->replies_received) {
 
-        crm_debug("Finished Search. %d devices can perform action (%s) on node %s",
-                  g_list_length(search->capable),
-                  search->action ? search->action : "<unknown>",
-                  search->host ? search->host : "<anyone>");
+        guint ndevices = g_list_length(search->capable);
+
+        crm_debug("Search found %d device%s that can perform '%s' targeting %s",
+                  ndevices, pcmk__plural_s(ndevices),
+                  (search->action? search->action : "unknown action"),
+                  (search->host? search->host : "any node"));
 
         search->callback(search->capable, search->user_data);
         free(search->host);
@@ -1729,8 +1755,9 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     const char *check_type = NULL;
     GHashTableIter gIter;
     stonith_device_t *device = NULL;
+    guint ndevices = g_hash_table_size(device_list);
 
-    if (!g_hash_table_size(device_list)) {
+    if (ndevices == 0) {
         callback(NULL, user_data);
         return;
     }
@@ -1772,16 +1799,16 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     /* We are guaranteed this many replies. Even if a device gets
      * unregistered some how during the async search, we will get
      * the correct number of replies. */
-    search->replies_needed = g_hash_table_size(device_list);
+    search->replies_needed = ndevices;
     search->allow_suicide = suicide;
     search->callback = callback;
     search->user_data = user_data;
     /* kick off the search */
 
-    crm_debug("Searching through %d devices to see what is capable of action (%s) for target %s",
-              search->replies_needed,
-              search->action ? search->action : "<unknown>",
-              search->host ? search->host : "<anyone>");
+    crm_debug("Searching %d device%s to see which can execute '%s' targeting %s",
+              ndevices, pcmk__plural_s(ndevices),
+              (search->action? search->action : "unknown action"),
+              (search->host? search->host : "any node"));
     g_hash_table_foreach(device_list, search_devices, search);
 }
 
@@ -1962,9 +1989,12 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
     crm_xml_add_int(list, F_STONITH_AVAILABLE_DEVICES, available_devices);
     if (query->target) {
-        crm_debug("Found %d matching devices for '%s'", available_devices, query->target);
+        crm_debug("Found %d matching device%s for target '%s'",
+                  available_devices, pcmk__plural_s(available_devices),
+                  query->target);
     } else {
-        crm_debug("%d devices installed", available_devices);
+        crm_debug("%d device%s installed",
+                  available_devices, pcmk__plural_s(available_devices));
     }
 
     if (list != NULL) {
@@ -2269,8 +2299,10 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 {
     async_command_t *cmd = user_data;
     stonith_device_t *device = NULL;
+    guint ndevices = g_list_length(devices);
 
-    crm_info("Found %d matching devices for '%s'", g_list_length(devices), cmd->victim);
+    crm_info("Found %d matching device%s for target '%s'",
+             ndevices, pcmk__plural_s(ndevices), cmd->victim);
 
     if (devices != NULL) {
         /* Order based on priority */
