@@ -192,8 +192,8 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             }
 
         } else if (group_data->colocated) {
-            rsc_colocation_new("group:internal_colocation", NULL, INFINITY,
-                               child_rsc, last_rsc, NULL, NULL, data_set);
+            pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
+                                 child_rsc, last_rsc, NULL, NULL, data_set);
         }
 
         if (pcmk_is_set(top->flags, pe_rsc_promotable)) {

@@ -1697,8 +1697,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             } else {
                 score = INFINITY; /* Force them to run on the same host */
             }
-            rsc_colocation_new("resource-with-container", NULL, score, rsc,
-                               rsc->container, NULL, NULL, data_set);
+            pcmk__new_colocation("resource-with-container", NULL, score, rsc,
+                                 rsc->container, NULL, NULL, data_set);
         }
     }
 

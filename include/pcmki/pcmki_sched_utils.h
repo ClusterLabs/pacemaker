@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,10 +28,10 @@ pe__location_t *rsc2node_new(const char *id, pe_resource_t *rsc, int weight,
                              const char *discovery_mode, pe_node_t *node,
                              pe_working_set_t *data_set);
 
-extern gboolean rsc_colocation_new(const char *id, const char *node_attr, int score,
-                                   pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                                   const char *state_lh, const char *state_rh,
-                                   pe_working_set_t * data_set);
+void pcmk__new_colocation(const char *id, const char *node_attr, int score,
+                          pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                          const char *state_lh, const char *state_rh,
+                          pe_working_set_t *data_set);
 
 extern gboolean rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
                                const char *state_lh, const char *loss_policy,
