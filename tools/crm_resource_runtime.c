@@ -392,7 +392,7 @@ cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
             crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
             pe__set_resource_flags(rsc, pe_rsc_allocating);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
-                rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+                pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
                 pe_resource_t *peer = cons->rsc_lh;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);

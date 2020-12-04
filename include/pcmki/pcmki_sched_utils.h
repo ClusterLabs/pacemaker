@@ -20,7 +20,7 @@
 #include <pcmki/pcmki_scheduler.h>
 
 /* Constraint helper functions */
-extern rsc_colocation_t *invert_constraint(rsc_colocation_t * constraint);
+pcmk__colocation_t *invert_constraint(pcmk__colocation_t *constraint);
 
 pe__location_t *copy_constraint(pe__location_t *constraint);
 
@@ -71,7 +71,7 @@ enum filter_colocation_res {
 
 extern enum filter_colocation_res
 filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                             rsc_colocation_t * constraint, gboolean preview);
+                             pcmk__colocation_t *constraint, gboolean preview);
 
 extern int compare_capacity(const pe_node_t * node1, const pe_node_t * node2);
 extern void calculate_utilization(GHashTable * current_utilization,

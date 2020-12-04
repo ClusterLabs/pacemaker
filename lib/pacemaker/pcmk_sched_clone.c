@@ -237,7 +237,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
         if(resource1->parent) {
             for (gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
-                rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
                 if (constraint->score == 0) {
                     continue;
@@ -252,7 +252,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             }
 
             for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
-                rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
                 if (constraint->score == 0) {
                     continue;
@@ -269,7 +269,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
         if(resource2->parent) {
             for (gIter = resource2->parent->rsc_cons; gIter; gIter = gIter->next) {
-                rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
                 crm_trace("Applying %s to %s", constraint->id, resource2->id);
 
@@ -281,7 +281,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             }
 
             for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
-                rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
                 crm_trace("Applying %s to %s", constraint->id, resource2->id);
 
@@ -499,7 +499,7 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *cons = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
 
         if (cons->score == 0) {
             continue;
@@ -511,7 +511,7 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
 
     gIter = rsc->rsc_cons_lhs;
     for (; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *cons = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
 
         if (cons->score == 0) {
             continue;
@@ -645,7 +645,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
      * order to allocate clone instances
      */
     for (GListPtr gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (constraint->score == 0) {
             continue;
@@ -656,7 +656,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (constraint->score == 0) {
             continue;
@@ -1055,7 +1055,7 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
 
 void
 clone_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                        rsc_colocation_t *constraint,
+                        pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
     /* -- Never called --
@@ -1067,7 +1067,7 @@ clone_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
 void
 clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                        rsc_colocation_t *constraint,
+                        pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;

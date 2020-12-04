@@ -319,7 +319,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (constraint->score == 0) {
             continue;
@@ -343,7 +343,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     gIter = rsc->rsc_cons_lhs;
     for (; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (constraint->score == 0) {
             continue;
@@ -738,7 +738,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         apply_master_location(child_rsc, rsc->rsc_location, chosen);
 
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
-            rsc_colocation_t *cons = (rsc_colocation_t *) gIter2->data;
+            pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter2->data;
 
             if (cons->score == 0) {
                 continue;
@@ -981,7 +981,7 @@ node_hash_update_one(GHashTable * hash, pe_node_t * other, const char *attr, int
 
 void
 promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                         rsc_colocation_t *constraint,
+                         pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;

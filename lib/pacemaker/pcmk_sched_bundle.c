@@ -425,7 +425,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 
 void
 pcmk__bundle_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
-                               rsc_colocation_t *constraint,
+                               pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
     /* -- Never called --
@@ -469,7 +469,7 @@ int copies_per_node(pe_resource_t * rsc)
 
 void
 pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
-                               rsc_colocation_t *constraint,
+                               pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
     GListPtr allocated_rhs = NULL;

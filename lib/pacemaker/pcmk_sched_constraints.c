@@ -1204,8 +1204,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 static gint
 sort_cons_priority_lh(gconstpointer a, gconstpointer b)
 {
-    const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t *)a;
-    const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t *)b;
+    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
+    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
 
     if (a == NULL) {
         return 1;
@@ -1252,8 +1252,8 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
 static gint
 sort_cons_priority_rh(gconstpointer a, gconstpointer b)
 {
-    const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t *)a;
-    const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t *)b;
+    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
+    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
 
     if (a == NULL) {
         return 1;
@@ -1345,7 +1345,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
                      const char *state_lh, const char *state_rh,
                      pe_working_set_t *data_set)
 {
-    rsc_colocation_t *new_con = NULL;
+    pcmk__colocation_t *new_con = NULL;
 
     if ((rsc_lh == NULL) || (rsc_rh == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
@@ -1353,7 +1353,7 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
         return;
     }
 
-    new_con = calloc(1, sizeof(rsc_colocation_t));
+    new_con = calloc(1, sizeof(pcmk__colocation_t));
     if (new_con == NULL) {
         return;
     }

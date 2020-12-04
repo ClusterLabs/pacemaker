@@ -510,7 +510,8 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
     }
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *colocate_with = (rsc_colocation_t *)gIter->data;
+        pcmk__colocation_t *colocate_with = (pcmk__colocation_t *) gIter->data;
+
         if (colocate_with->score == INFINITY) {
             mark_start_blocked(colocate_with->rsc_lh, action->rsc, data_set);
         }

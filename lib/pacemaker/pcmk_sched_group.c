@@ -282,7 +282,7 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
 void
 group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                        rsc_colocation_t *constraint,
+                        pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
@@ -328,7 +328,7 @@ group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
 void
 group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                        rsc_colocation_t *constraint,
+                        pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
     GListPtr gIter = rsc_rh->children;
@@ -514,7 +514,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
                                                      factor, flags);
 
     for (; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (constraint->score == 0) {
             continue;

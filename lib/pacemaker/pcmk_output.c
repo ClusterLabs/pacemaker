@@ -47,7 +47,7 @@ pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval) {
 }
 
 static char *
-colocations_header(pe_resource_t *rsc, rsc_colocation_t *cons,
+colocations_header(pe_resource_t *rsc, pcmk__colocation_t *cons,
                    gboolean dependents) {
     char *score = NULL;
     char *retval = NULL;
@@ -68,7 +68,7 @@ colocations_header(pe_resource_t *rsc, rsc_colocation_t *cons,
 
 static void
 colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
-                     rsc_colocation_t *cons) {
+                     pcmk__colocation_t *cons) {
     char *score = NULL;
     xmlNodePtr node = NULL;
 
@@ -146,7 +146,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
-        rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+        pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources %s is colocated with", rsc->id);
@@ -189,7 +189,7 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
-        rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+        pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
         if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
             colocations_xml_node(out, cons->rsc_rh, cons);
@@ -221,7 +221,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
-        rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+        pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
         char *hdr = NULL;
 
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
@@ -264,7 +264,7 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     for (GList *lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
-        rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+        pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
         if (pcmk_is_set(cons->rsc_lh->flags, pe_rsc_allocating)) {
             colocations_xml_node(out, cons->rsc_lh, cons);
