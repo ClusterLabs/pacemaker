@@ -233,7 +233,6 @@ free_remote_op(gpointer data)
 {
     remote_fencing_op_t *op = data;
 
-    crm_trace("Free'ing op %s for %s", op->id, op->target);
     crm_log_xml_debug(op->request, "Destroying");
 
     clear_remote_op_timers(op);
@@ -2142,9 +2141,6 @@ stonith_check_fence_tolerance(int tolerance, const char *target, const char *act
     GHashTableIter iter;
     time_t now = time(NULL);
     remote_fencing_op_t *rop = NULL;
-
-    crm_trace("tolerance=%d, stonith_remote_op_list=%p", tolerance,
-              stonith_remote_op_list);
 
     if (tolerance <= 0 || !stonith_remote_op_list || target == NULL ||
         action == NULL) {

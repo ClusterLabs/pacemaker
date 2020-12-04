@@ -232,7 +232,7 @@ stonith_xml_history_to_list(xmlNode *history)
         long long completed;
 
         if (!id) {
-            crm_warn("History to convert to hashtable has no id in entry");
+            crm_warn("Malformed fencing history received from peer");
             continue;
         }
 

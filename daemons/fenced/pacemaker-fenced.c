@@ -765,10 +765,10 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     }
 
     if(needs_update) {
-        crm_info("Updating device list from the cib: %s", reason);
+        crm_info("Updating device list from CIB: %s", reason);
         cib_devices_update();
     } else {
-        crm_trace("No updates for device list found in cib");
+        crm_trace("No updates for device list found in CIB");
     }
     free(reason);
 }
@@ -830,7 +830,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     freeXpathObject(xpath_obj);
 
     if(needs_update) {
-        crm_info("Updating device list from the cib: %s", reason);
+        crm_info("Updating device list from CIB: %s", reason);
         cib_devices_update();
     }
 }
@@ -1041,7 +1041,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     if (local_cib == NULL) {
-        crm_trace("Re-requesting the full cib");
+        crm_trace("Re-requesting full CIB");
         rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_scope_local | cib_sync_call);
         if(rc != pcmk_ok) {
             crm_err("Couldn't retrieve the CIB: %s (%d)", pcmk_strerror(rc), rc);
@@ -1106,7 +1106,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 static void
 init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    crm_info("Updating device list from the cib: init");
+    crm_info("Updating device list from CIB");
     have_cib_devices = TRUE;
     local_cib = copy_xml(output);
 

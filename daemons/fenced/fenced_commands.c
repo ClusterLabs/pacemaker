@@ -392,11 +392,11 @@ stonith_device_execute(stonith_device_t * device)
         /* replacing secrets failed! */
         if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
             /* don't fail on stop! */
-            crm_info("proceeding with the stop operation for %s", device->id);
+            crm_info("Proceeding with stop operation for %s", device->id);
 
         } else {
-            crm_err("failed to get secrets for %s, "
-                    "considering resource not configured", device->id);
+            crm_err("Considering %s unconfigured: Failed to get secrets",
+                    device->id);
             exec_rc = PCMK_OCF_NOT_CONFIGURED;
             cmd->done_cb(0, exec_rc, NULL, cmd);
             goto done;
@@ -522,8 +522,9 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         delay_max = delay_base;
     }
     if (delay_max < delay_base) {
-        crm_warn("Base-delay (%ds) is larger than max-delay (%ds) "
-                 "for %s on %s - limiting to max-delay",
+        crm_warn(PCMK_STONITH_DELAY_BASE " (%ds) is larger than "
+                 PCMK_STONITH_DELAY_MAX " (%ds) for %s on %s "
+                 "(limiting to maximum delay)",
                  delay_base, delay_max, cmd->action, device->id);
         delay_base = delay_max;
     }
@@ -535,8 +536,8 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (cmd->start_delay > 0) {
-        crm_notice("Delaying '%s' action%s%s on %s for %ds (timeout=%ds, "
-                   "requested_delay=%ds, base=%ds, max=%ds)",
+        crm_notice("Delaying '%s' action%s%s on %s for %ds " CRM_XS
+                   " timeout=%ds requested_delay=%ds base=%ds max=%ds",
                    cmd->action,
                    cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
                    device->id, cmd->start_delay, cmd->timeout,
@@ -925,12 +926,12 @@ build_device_from_xml(xmlNode * msg)
     }
 
     if (is_action_required("on", device)) {
-        crm_info("The fencing device '%s' requires unfencing", device->id);
+        crm_info("Fencing device '%s' requires unfencing", device->id);
     }
 
     if (device->on_target_actions) {
-        crm_info("The fencing device '%s' requires actions (%s) to be executed on the target node",
-                 device->id, device->on_target_actions);
+        crm_info("Fencing device '%s' requires actions (%s) to be executed "
+                 "on target", device->id, device->on_target_actions);
     }
 
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
@@ -1067,7 +1068,8 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
     /* If we successfully got the targets earlier, don't disable. */
     if (rc != 0 && !dev->targets) {
-        crm_notice("Disabling port list queries for %s (%d): %s", dev->id, rc, output);
+        crm_notice("Disabling port list queries for %s: %s "
+                   CRM_XS " rc=%d", dev->id, output, rc);
         /* Fall back to status */
         g_hash_table_replace(dev->params,
                              strdup(PCMK_STONITH_HOST_CHECK), strdup("status"));
@@ -1177,7 +1179,7 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
              * copy any pending ops that currently exist on the old entry to the new one.
              * Otherwise the pending ops will be reported as failures
              */
-            crm_info("Overwriting an existing entry for %s from the cib", device->id);
+            crm_info("Overwriting existing entry for %s from CIB", device->id);
             device->pending_ops = old->pending_ops;
             device->api_registered = TRUE;
             old->pending_ops = NULL;
@@ -2076,8 +2078,8 @@ log_operation(async_command_t * cmd, int rc, int pid, const char *next, const ch
     }
 
     if (output) {
-        /* Logging the whole string confuses syslog when the string is xml */
-        char *prefix = crm_strdup_printf("%s:%d", cmd->device, pid);
+        // Output may have multiple lines
+        char *prefix = crm_strdup_printf("%s[%d]", cmd->device, pid);
 
         crm_log_output(rc == 0 ? LOG_DEBUG : LOG_WARNING, prefix, output);
         free(prefix);
@@ -2496,7 +2498,8 @@ check_alternate_host(const char *target)
             }
         }
         if (alternate_host == NULL) {
-            crm_err("No alternate host available to handle complex self fencing request");
+            crm_err("No alternate host available to handle request "
+                    "for self-fencing with topology");
             g_hash_table_iter_init(&gIter, crm_peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
                 crm_notice("Peer[%d] %s", entry->id, entry->uname);
@@ -2560,9 +2563,11 @@ remove_relay_op(xmlNode * request)
                     }
                 }
             }
-            crm_info("Delete the relay op : %s - %s of %s for %s.(replaced by op : %s - %s of %s for %s)",
-                  relay_op->id, relay_op->action, relay_op->target, relay_op->client_name,
-                  op_id, relay_op->action, target, client_name);
+            crm_debug("Deleting relay op %s ('%s' targeting %s for %s), "
+                      "replaced by op %s ('%s' targeting %s for %s)",
+                      relay_op->id, relay_op->action, relay_op->target,
+                      relay_op->client_name, op_id, relay_op->action, target,
+                      client_name);
 
             g_hash_table_remove(stonith_remote_op_list, relay_op_id);
         }
@@ -2717,7 +2722,8 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
                 const char *client_id = NULL;
                 remote_fencing_op_t *op = NULL;
 
-                crm_notice("Forwarding complex self fencing request to peer %s", alternate_host);
+                crm_notice("Forwarding self-fencing request to peer %s"
+                           "due to topology", alternate_host);
 
                 if (client->id) {
                     client_id = client->id;
