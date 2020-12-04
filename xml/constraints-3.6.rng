@@ -112,6 +112,9 @@
         <externalRef href="score.rng"/>
       </optional>
       <optional>
+        <attribute name="influence"><text/></attribute>
+      </optional>
+      <optional>
         <ref name="element-lifetime"/>
       </optional>
       <choice>
