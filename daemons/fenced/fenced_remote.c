@@ -887,7 +887,6 @@ merge_duplicates(remote_fencing_op_t * op)
 
     g_hash_table_iter_init(&iter, stonith_remote_op_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&other)) {
-        crm_node_t *peer = NULL;
         const char *other_action = op_requested_action(other);
 
         if (other->state > st_exec) {
@@ -915,9 +914,7 @@ merge_duplicates(remote_fencing_op_t * op)
                       op->id, other->id, other->target);
             continue;
         }
-
-        peer = crm_get_peer(0, other->originator);
-        if(fencing_peer_active(peer) == FALSE) {
+        if (!fencing_peer_active(crm_get_peer(0, other->originator))) {
             crm_notice("Failing action '%s' targeting %s originating from "
                        "client %s@%s: Originator is dead " CRM_XS " id=%.8s",
                        other->action, other->target, other->client_name,
@@ -1026,6 +1023,7 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     }
 
     op = calloc(1, sizeof(remote_fencing_op_t));
+    CRM_ASSERT(op != NULL);
 
     crm_element_value_int(request, F_STONITH_TIMEOUT, &(op->base_timeout));
     // Value -1 means disable any static/random fencing delays
@@ -1038,7 +1036,6 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
     }
 
     g_hash_table_replace(stonith_remote_op_list, op->id, op);
-    CRM_LOG_ASSERT(g_hash_table_lookup(stonith_remote_op_list, op->id) != NULL);
 
     op->state = st_query;
     op->replies_expected = fencing_active_peers();
