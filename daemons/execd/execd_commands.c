@@ -452,23 +452,24 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     dup->userdata_str = cmd->userdata_str;
     cmd->userdata_str = NULL;
     dup->call_id = cmd->call_id;
-
-    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        /* if we are waiting for the next interval, kick it off now */
-        if (dup_pending) {
-            stop_recurring_timer(cmd);
-            stonith_recurring_op_helper(cmd);
-        }
-
-    } else if (!dup_pending) {
-        /* If dup is in recurring_ops list, that means it has already executed
-         * and is in the interval loop. We can't just remove it in this case.
-         */
-        services_action_kick(rsc->rsc_id,
-                             normalize_action_name(rsc, dup->action),
-                             dup->interval_ms);
-    }
     free_lrmd_cmd(cmd);
+    cmd = NULL;
+
+    /* If dup is not pending, that means it has already executed at least once
+     * and is waiting in the interval. In that case, stop waiting and initiate
+     * a new instance now.
+     */
+    if (!dup_pending) {
+        if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                         pcmk__str_casei)) {
+            stop_recurring_timer(dup);
+            stonith_recurring_op_helper(dup);
+        } else {
+            services_action_kick(rsc->rsc_id,
+                                 normalize_action_name(rsc, dup->action),
+                                 dup->interval_ms);
+        }
+    }
     return true;
 }
 
