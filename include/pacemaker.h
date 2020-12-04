@@ -73,8 +73,6 @@ int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
                           pe_node_t *node, GHashTable *overrides,
                           pe_working_set_t *data_set);
 
-#ifdef BUILD_PUBLIC_LIBPACEMAKER
-
 /*!
  * \brief Get nodes list
  *
@@ -82,7 +80,9 @@ int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_list_nodes(xmlNodePtr *xml);
+int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
+
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!
  * \brief Perform a STONITH action.

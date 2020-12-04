@@ -20,6 +20,7 @@
 #include <string.h>
 #include <glib.h>
 #include <crm/common/ipc.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
@@ -234,22 +235,6 @@ is_dirty(gpointer key, gpointer value, gpointer user_data)
 {
     return pcmk_is_set(((crm_node_t*)value)->flags, crm_node_dirty);
 }
-
-/* search string to find CIB resources entries for guest nodes */
-#define XPATH_GUEST_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
-    "[@name='" XML_RSC_ATTR_REMOTE_NODE "']"
-
-/* search string to find CIB resources entries for remote nodes */
-#define XPATH_REMOTE_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "[@type='remote'][@provider='pacemaker']"
-
-/* search string to find CIB node status entries for pacemaker_remote nodes */
-#define XPATH_REMOTE_NODE_STATUS \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
-    "[@" XML_NODE_IS_REMOTE "='true']"
 
 /*!
  * \brief Repopulate the remote peer cache based on CIB XML

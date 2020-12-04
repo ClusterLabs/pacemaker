@@ -123,6 +123,24 @@ do {                                                                            
     }                                                                           \
 } while (0)
 
+/* XML search strings for guest, remote and pacemaker_remote nodes */
+
+/* search string to find CIB resources entries for guest nodes */
+#define XPATH_GUEST_NODE_CONFIG \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
+    "[@name='" XML_RSC_ATTR_REMOTE_NODE "']"
+
+/* search string to find CIB resources entries for remote nodes */
+#define XPATH_REMOTE_NODE_CONFIG \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "[@type='remote'][@provider='pacemaker']"
+
+/* search string to find CIB node status entries for pacemaker_remote nodes */
+#define XPATH_REMOTE_NODE_STATUS \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
+    "[@" XML_NODE_IS_REMOTE "='true']"
+
 enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_legacy_rng = 1,
     pcmk__xml_artefact_ns_legacy_xslt,

@@ -9,6 +9,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>
@@ -390,9 +391,33 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_tim
     return rc;
 }
 
+/* user data for looping through remote node xpath searches */
+struct node_data {
+    pcmk__output_t *out;
+    int found;
+    const char *field;  /* XML attribute to check for node name */
+    const char *type;
+    gboolean BASH_EXPORT;
+};
+
+static void
+remote_node_print_helper(xmlNode *result, void *user_data)
+{
+    struct node_data *data = user_data;
+    pcmk__output_t *out = data->out;
+    const char *remote = crm_element_value(result, data->field);
+
+    // node name and node id are the same for remote/guest nodes
+    out->message(out, "crmadmin-node", data->type,
+                 remote,
+                 remote,
+                 data->BASH_EXPORT);
+    data->found++;
+}
+
 // \return Standard Pacemaker return code
 int
-pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
+pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
 {
     cib_t *the_cib = cib_new();
     xmlNode *xml_node = NULL;
@@ -409,28 +434,60 @@ pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
     rc = the_cib->cmds->query(the_cib, NULL, &xml_node,
                               cib_scope_local | cib_sync_call);
     if (rc == pcmk_ok) {
-        int found = 0;
         xmlNode *node = NULL;
         xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
+        struct node_data data = {
+            .out = out,
+            .found = 0,
+            .BASH_EXPORT = BASH_EXPORT
+        };
 
         out->begin_list(out, NULL, NULL, "nodes");
 
-        for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
-             node = crm_next_same_xml(node)) {
-            const char *node_type = BASH_EXPORT ? NULL :
-                         crm_element_value(node, XML_ATTR_TYPE);
-            out->message(out, "crmadmin-node", node_type,
-                         crm_str(crm_element_value(node, XML_ATTR_UNAME)),
-                         crm_str(crm_element_value(node, XML_ATTR_ID)),
-                         BASH_EXPORT);
-
-            found++;
+        if (!pcmk__str_empty(node_types) && strstr(node_types, "all")) {
+            node_types = NULL;
         }
-        // @TODO List Pacemaker Remote nodes that don't have a <node> entry
+
+        if (pcmk__str_empty(node_types) || strstr(node_types, "member")) {
+            for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
+                 node = crm_next_same_xml(node)) {
+                const char *node_type = crm_element_value(node, XML_ATTR_TYPE);
+                //if (node_type == NULL || !strcmp(node_type, "member")) {
+                if (node_type == NULL) {
+                    out->message(out, "crmadmin-node", node_type,
+                                 crm_str(crm_element_value(node, XML_ATTR_UNAME)),
+                                 crm_str(crm_element_value(node, XML_ATTR_ID)),
+                                 BASH_EXPORT);
+                    data.found++;
+                }
+
+            }
+        }
+
+        if (pcmk__str_empty(node_types) || strstr(node_types, "pacemaker_remote")) {
+            data.field = "id";
+            data.type = "pacemaker_remote";
+            crm_foreach_xpath_result(xml_node, XPATH_REMOTE_NODE_STATUS,
+                                     remote_node_print_helper, &data);
+        }
+
+        if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
+            data.field = "value";
+            data.type = "guest";
+            crm_foreach_xpath_result(xml_node, XPATH_GUEST_NODE_CONFIG,
+                                     remote_node_print_helper, &data);
+        }
+
+        if (pcmk__str_empty(node_types) || !pcmk__strcmp(node_types, ",|^remote", pcmk__str_regex)) {
+            data.field = "id";
+            data.type = "remote";
+            crm_foreach_xpath_result(xml_node, XPATH_REMOTE_NODE_CONFIG,
+                                     remote_node_print_helper, &data);
+        }
 
         out->end_list(out);
 
-        if (found == 0) {
+        if (data.found == 0) {
             out->info(out, "No nodes configured");
         }
 
@@ -440,9 +497,8 @@ pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
     return pcmk_legacy2rc(rc);
 }
 
-#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_list_nodes(xmlNodePtr *xml)
+pcmk_list_nodes(xmlNodePtr *xml, char *node_types)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -454,11 +510,10 @@ pcmk_list_nodes(xmlNodePtr *xml)
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__list_nodes(out, FALSE);
+    rc = pcmk__list_nodes(out, node_types, FALSE);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
 }
-#endif
 
 // remove when parameters removed from tools/crmadmin.c
 int

@@ -38,10 +38,12 @@ struct {
     gint timeout;
     char *dest_node;
     char *ipc_name;
+    char *node_types;
     gboolean BASH_EXPORT;
 } options = {
     .dest_node = NULL,
     .ipc_name = NULL,
+    .node_types = NULL,
     .BASH_EXPORT = FALSE
 };
 
@@ -91,6 +93,11 @@ static GOptionEntry additional_options[] = {
     { "timeout", 't', 0, G_OPTION_ARG_INT, &options.timeout,
       "Time (in milliseconds) to wait before declaring the"
       "\n                          operation failed",
+      NULL
+    },
+    { "node-types", 'T', 0, G_OPTION_ARG_STRING, &options.node_types,
+      "Node types to list (available options: all, member, pacemaker_remote,"
+      "\n                          guest, remote) (valid with -N/--nodes)",
       NULL
     },
     { "bash-export", 'B', 0, G_OPTION_ARG_NONE, &options.BASH_EXPORT,
@@ -264,7 +271,7 @@ main(int argc, char **argv)
             rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout);
             break;
         case cmd_list_nodes:
-            rc = pcmk__list_nodes(out, options.BASH_EXPORT);
+            rc = pcmk__list_nodes(out, options.node_types, options.BASH_EXPORT);
             break;
         case cmd_whois_dc:
             rc = pcmk__designated_controller(out, options.timeout);
