@@ -355,8 +355,8 @@ stonith_merge_in_history_list(GHashTable *history)
         if ((op->state != st_failed) &&
             (op->state != st_done) &&
             pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
-            crm_warn("received pending action we are supposed to be the "
-                     "owner but it's not in our records -> fail it");
+            crm_warn("Failing pending operation %.8s originated by us but "
+                     "known only from peer history", op->id);
             op->state = st_failed;
             op->completed = time(NULL);
             /* use -EHOSTUNREACH to not introduce a new return-code that might

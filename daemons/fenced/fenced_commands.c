@@ -496,7 +496,8 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
-        crm_debug("Scheduling '%s' action%s%s on %s for remote peer %s with op id (%s) (timeout=%ds)",
+        crm_debug("Scheduling '%s' action%s%s on %s for remote peer %s "
+                  "with op id %.8s and timeout %ds",
                   cmd->action,
                   cmd->victim ? " targeting " : "", cmd->victim ? cmd->victim : "",
                   device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
