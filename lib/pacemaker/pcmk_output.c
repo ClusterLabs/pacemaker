@@ -46,6 +46,26 @@ pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval) {
     pcmk__output_free(out);
 }
 
+static char *
+colocations_header(pe_resource_t *rsc, rsc_colocation_t *cons,
+                   gboolean dependents) {
+    char *score = NULL;
+    char *retval = NULL;
+
+    score = score2char(cons->score);
+    if (cons->role_rh > RSC_ROLE_STARTED) {
+            retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
+                                       rsc->id, score, dependents ? "needs" : "with",
+                                       role2text(cons->role_rh), cons->id);
+    } else {
+        retval = crm_strdup_printf("%s (score=%s, id=%s)",
+                                   rsc->id, score, cons->id);
+    }
+
+    free(score);
+    return retval;
+}
+
 PCMK__OUTPUT_ARGS("colocations-list", "pe_resource_t *", "gboolean", "gboolean")
 static int colocations_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
@@ -67,9 +87,8 @@ static int colocations_list(pcmk__output_t *out, va_list args) {
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
-
-        char *score = NULL;
         pe_resource_t *peer = cons->rsc_rh;
+        char *hdr = NULL;
 
         if (dependents) {
             peer = cons->rsc_lh;
@@ -101,17 +120,10 @@ static int colocations_list(pcmk__output_t *out, va_list args) {
             printed_header = true;
         }
 
-        score = score2char(cons->score);
-        if (cons->role_rh > RSC_ROLE_STARTED) {
-            out->list_item(out, NULL, "%s (score=%s, %s role=%s, id=%s",
-                           peer->id, score, dependents ? "needs" : "with",
-                           role2text(cons->role_rh), cons->id);
-        } else {
-            out->list_item(out, NULL, "%s (score=%s, id=%s",
-                           peer->id, score, cons->id);
-        }
+        hdr = colocations_header(peer, cons, dependents);
+        out->list_item(out, NULL, "%s", hdr);
+        free(hdr);
 
-        free(score);
         out->message(out, "locations-list", peer);
 
         if (!dependents && recursive) {

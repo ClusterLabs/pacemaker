@@ -3507,7 +3507,7 @@ prim2:
   * Locations:
     * Node cluster01 (score=INFINITY, id=prim2-on-cluster1)
 Colocations:
-  * prim3 (score=INFINITY, id=colocation-prim2-prim3-INFINITY
+  * prim3 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim2
@@ -3516,7 +3516,7 @@ prim2:
   * Locations:
     * Node cluster01 (score=INFINITY, id=prim2-on-cluster1)
 Colocations:
-  * prim3 (score=INFINITY, id=colocation-prim2-prim3-INFINITY
+  * prim3 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim2
@@ -3556,26 +3556,26 @@ Colocations:
 * Passed: crm_resource   - Recursively check locations and constraints for prim2 in XML
 =#=#=#= Begin test: Check locations and constraints for prim3 =#=#=#=
 Colocations:
-  * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY
+  * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
   * Locations:
     * Node cluster01 (score=INFINITY, id=prim2-on-cluster1)
 prim3:
   * Locations:
 Colocations:
-  * prim4 (score=INFINITY, id=colocation-prim3-prim4-INFINITY
+  * prim4 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 =#=#=#= End test: Check locations and constraints for prim3 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim3
 =#=#=#= Begin test: Recursively check locations and constraints for prim3 =#=#=#=
 Colocations:
-  * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY
+  * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
   * Locations:
     * Node cluster01 (score=INFINITY, id=prim2-on-cluster1)
 prim3:
   * Locations:
 Colocations:
-  * prim4 (score=INFINITY, id=colocation-prim3-prim4-INFINITY
+  * prim4 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 =#=#=#= End test: Recursively check locations and constraints for prim3 - OK (0) =#=#=#=
@@ -3628,29 +3628,29 @@ Colocations:
 * Passed: crm_resource   - Recursively check locations and constraints for prim3 in XML
 =#=#=#= Begin test: Check locations and constraints for prim4 =#=#=#=
 Colocations:
-  * prim10 (score=INFINITY, id=colocation-prim10-prim4-INFINITY
+  * prim10 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
   * Locations:
-  * prim3 (score=INFINITY, id=colocation-prim3-prim4-INFINITY
+  * prim3 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
   * Locations:
 prim4:
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 Colocations:
-  * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY
+  * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim4 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim4
 =#=#=#= Begin test: Recursively check locations and constraints for prim4 =#=#=#=
 Colocations:
-  * prim10 (score=INFINITY, id=colocation-prim10-prim4-INFINITY
+  * prim10 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
   * Locations:
-  * prim3 (score=INFINITY, id=colocation-prim3-prim4-INFINITY
+  * prim3 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
   * Locations:
 prim4:
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 Colocations:
-  * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY
+  * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim4 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim4
@@ -3702,7 +3702,7 @@ Colocations:
 * Passed: crm_resource   - Recursively check locations and constraints for prim4 in XML
 =#=#=#= Begin test: Check locations and constraints for prim5 =#=#=#=
 Colocations:
-  * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY
+  * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 prim5:
@@ -3711,7 +3711,7 @@ prim5:
 * Passed: crm_resource   - Check locations and constraints for prim5
 =#=#=#= Begin test: Recursively check locations and constraints for prim5 =#=#=#=
 Colocations:
-  * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY
+  * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 prim5:
@@ -3794,7 +3794,7 @@ prim6:
 prim7:
   * Locations:
 Colocations:
-  * group (score=INFINITY, id=colocation-prim7-group-INFINITY
+  * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim7 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim7
@@ -3802,7 +3802,7 @@ Colocations:
 prim7:
   * Locations:
 Colocations:
-  * group (score=INFINITY, id=colocation-prim7-group-INFINITY
+  * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim7 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim7
@@ -3840,7 +3840,7 @@ Colocations:
 prim8:
   * Locations:
 Colocations:
-  * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY
+  * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim8 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim8
@@ -3848,7 +3848,7 @@ Colocations:
 prim8:
   * Locations:
 Colocations:
-  * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY
+  * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim8 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim8
@@ -3886,7 +3886,7 @@ Colocations:
 prim9:
   * Locations:
 Colocations:
-  * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY
+  * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim9 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim9
@@ -3894,7 +3894,7 @@ Colocations:
 prim9:
   * Locations:
 Colocations:
-  * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY
+  * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim9 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim9
@@ -3932,7 +3932,7 @@ Colocations:
 prim10:
   * Locations:
 Colocations:
-  * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY
+  * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 =#=#=#= End test: Check locations and constraints for prim10 - OK (0) =#=#=#=
@@ -3941,7 +3941,7 @@ Colocations:
 prim10:
   * Locations:
 Colocations:
-  * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY
+  * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
   * Locations:
     * Node cluster02 (score=INFINITY, id=prim4-on-cluster2)
 =#=#=#= End test: Recursively check locations and constraints for prim10 - OK (0) =#=#=#=
@@ -3982,23 +3982,23 @@ Colocations:
 * Passed: crm_resource   - Recursively check locations and constraints for prim10 in XML
 =#=#=#= Begin test: Check locations and constraints for prim11 =#=#=#=
 Colocations:
-  * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY
+  * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
   * Locations:
 prim11:
   * Locations:
 Colocations:
-  * prim12 (score=INFINITY, id=colocation-prim11-prim12-INFINITY
+  * prim12 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim11 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim11
 =#=#=#= Begin test: Recursively check locations and constraints for prim11 =#=#=#=
 Colocations:
-  * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY
+  * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
   * Locations:
 prim11:
   * Locations:
 Colocations:
-  * prim12 (score=INFINITY, id=colocation-prim11-prim12-INFINITY
+  * prim12 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim11 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim11
@@ -4042,23 +4042,23 @@ Colocations:
 * Passed: crm_resource   - Recursively check locations and constraints for prim11 in XML
 =#=#=#= Begin test: Check locations and constraints for prim12 =#=#=#=
 Colocations:
-  * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY
+  * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
   * Locations:
 prim12:
   * Locations:
 Colocations:
-  * prim13 (score=INFINITY, id=colocation-prim12-prim13-INFINITY
+  * prim13 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim12 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim12
 =#=#=#= Begin test: Recursively check locations and constraints for prim12 =#=#=#=
 Colocations:
-  * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY
+  * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
   * Locations:
 prim12:
   * Locations:
 Colocations:
-  * prim13 (score=INFINITY, id=colocation-prim12-prim13-INFINITY
+  * prim13 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim12 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim12
@@ -4102,23 +4102,23 @@ Colocations:
 * Passed: crm_resource   - Recursively check locations and constraints for prim12 in XML
 =#=#=#= Begin test: Check locations and constraints for prim13 =#=#=#=
 Colocations:
-  * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY
+  * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
   * Locations:
 prim13:
   * Locations:
 Colocations:
-  * prim11 (score=INFINITY, id=colocation-prim13-prim11-INFINITY
+  * prim11 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
   * Locations:
 =#=#=#= End test: Check locations and constraints for prim13 - OK (0) =#=#=#=
 * Passed: crm_resource   - Check locations and constraints for prim13
 =#=#=#= Begin test: Recursively check locations and constraints for prim13 =#=#=#=
 Colocations:
-  * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY
+  * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
   * Locations:
 prim13:
   * Locations:
 Colocations:
-  * prim11 (score=INFINITY, id=colocation-prim13-prim11-INFINITY
+  * prim11 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
   * Locations:
 =#=#=#= End test: Recursively check locations and constraints for prim13 - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for prim13
@@ -4162,7 +4162,7 @@ Colocations:
 * Passed: crm_resource   - Recursively check locations and constraints for prim13 in XML
 =#=#=#= Begin test: Check locations and constraints for group =#=#=#=
 Colocations:
-  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY
+  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
   * Locations:
 group:
   * Locations:
@@ -4170,7 +4170,7 @@ group:
 * Passed: crm_resource   - Check locations and constraints for group
 =#=#=#= Begin test: Recursively check locations and constraints for group =#=#=#=
 Colocations:
-  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY
+  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
   * Locations:
 group:
   * Locations:
@@ -4208,7 +4208,7 @@ group:
 * Passed: crm_resource   - Recursively check locations and constraints for group in XML
 =#=#=#= Begin test: Check locations and constraints for clone =#=#=#=
 Colocations:
-  * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY
+  * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
   * Locations:
 clone:
   * Locations:
@@ -4216,7 +4216,7 @@ clone:
 * Passed: crm_resource   - Check locations and constraints for clone
 =#=#=#= Begin test: Recursively check locations and constraints for clone =#=#=#=
 Colocations:
-  * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY
+  * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
   * Locations:
 clone:
   * Locations:
