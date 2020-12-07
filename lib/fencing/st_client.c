@@ -2602,6 +2602,26 @@ stonith__sort_history(stonith_history_t *history)
     return new;
 }
 
+/*!
+ * \brief Return string equivalent of an operation state value
+ *
+ * \param[in] state  Fencing operation state value
+ *
+ * \return Human-friendly string equivalent of state
+ */
+const char *
+stonith_op_state_str(enum op_state state)
+{
+    switch (state) {
+        case st_query:      return "querying";
+        case st_exec:       return "executing";
+        case st_done:       return "completed";
+        case st_duplicate:  return "duplicate";
+        case st_failed:     return "failed";
+    }
+    return "unknown";
+}
+
 stonith_history_t *
 stonith__first_matching_event(stonith_history_t *history,
                               bool (*matching_fn)(stonith_history_t *, void *),

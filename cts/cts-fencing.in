@@ -701,10 +701,10 @@ class Tests(object):
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
         ### one merger will happen
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
 
         ### Test that multiple mergers occur
         test = self.new_test("cpg_custom_merge_multiple",
@@ -719,16 +719,16 @@ class Tests(object):
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
 
         ### Test that multiple mergers occur with topologies used
         test = self.new_test("cpg_custom_merge_with_topology",
@@ -746,16 +746,16 @@ class Tests(object):
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node3 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
         ### 4 mergers should occur
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
-        test.add_stonith_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
+        test.add_stonith_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
         ### the pattern below signifies that both the original and duplicate operation completed
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
-        test.add_stonith_log_pattern("Operation 'off' targeting node3 on")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
+        test.add_stonith_log_pattern("Operation 'off' targeting node3 by ")
 
     def build_fence_no_merge_tests(self):
         """ Register tests to verify when fence operations should not be merged """
@@ -770,7 +770,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node3 -i 2 -v true1")
         test.add_cmd_no_wait("stonith_admin", "--output-as=xml -F node2 -t 10")
         test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 10")
-        test.add_stonith_neg_log_pattern("Merging stonith action 'off' targeting node3 originating from client")
+        test.add_stonith_neg_log_pattern("Merging fencing action 'off' targeting node3 originating from client")
 
     def build_standalone_tests(self):
         """ Register a grab bag of tests that can be executed in standalone or corosync mode """
@@ -803,9 +803,9 @@ class Tests(object):
             else:
                 test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -F node3 -t 2", CrmExit.ERROR)
 
-            test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: ")
-            test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: ")
-            test.add_stonith_log_pattern("for host 'node3' with device 'false3' returned: ")
+            test.add_stonith_log_pattern("targeting node3 using false1 returned ")
+            test.add_stonith_log_pattern("targeting node3 using false2 returned ")
+            test.add_stonith_log_pattern("targeting node3 using false3 returned ")
 
         # test what happens when multiple devices can fence a node, but the first device fails.
         for test_type in test_types:
@@ -849,7 +849,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
             test.add_stonith_log_pattern("Total timeout set to 5")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
+            test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
 
         # add topology, delete topology, verify fencing still works
@@ -867,7 +867,7 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
 
             test.add_stonith_log_pattern("Total timeout set to 5")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
+            test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
         # test what happens when the first fencing level has multiple devices.
         for test_type in test_types:
@@ -886,8 +886,8 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
             test.add_stonith_log_pattern("Total timeout set to 40")
-            test.add_stonith_log_pattern("for host 'node3' with device 'false' returned: -201")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
+            test.add_stonith_log_pattern("targeting node3 using false returned -201")
+            test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
         # test what happens when the first fencing level fails.
         for test_type in test_types:
@@ -920,10 +920,10 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 3")
 
             test.add_stonith_log_pattern("Total timeout set to 18")
-            test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -201")
-            test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: -201")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
+            test.add_stonith_log_pattern("targeting node3 using false1 returned -201")
+            test.add_stonith_log_pattern("targeting node3 using false2 returned -201")
+            test.add_stonith_log_pattern("targeting node3 using true3 returned 0")
+            test.add_stonith_log_pattern("targeting node3 using true4 returned 0")
 
 
         # test what happens when the first fencing level had devices that no one has registered
@@ -987,10 +987,10 @@ class Tests(object):
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 20")
 
             test.add_stonith_log_pattern("Total timeout set to 8")
-            test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: -201")
-            test.add_stonith_neg_log_pattern("for host 'node3' with device 'false2' returned: ")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true3' returned: 0")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true4' returned: 0")
+            test.add_stonith_log_pattern("targeting node3 using false1 returned -201")
+            test.add_stonith_neg_log_pattern("targeting node3 using false2 returned ")
+            test.add_stonith_log_pattern("targeting node3 using true3 returned 0")
+            test.add_stonith_log_pattern("targeting node3 using true4 returned 0")
 
         # Test targeting a topology level by node name pattern.
         for test_type in test_types:
@@ -1004,7 +1004,7 @@ class Tests(object):
                          """--output-as=xml -R true -a fence_dummy -o "mode=pass" -o "pcmk_host_list=node1 node2 node3" """)
             test.add_cmd("stonith_admin", """--output-as=xml -r '@node.*' -i 1 -v true""")
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 -t 5")
-            test.add_stonith_log_pattern("for host 'node3' with device 'true' returned: 0")
+            test.add_stonith_log_pattern("targeting node3 using true returned 0")
 
         # test allowing commas and semicolons as delimiters in pcmk_host_list
         for test_type in test_types:
@@ -1017,8 +1017,8 @@ class Tests(object):
                          """--output-as=xml -R true2 -a fence_dummy -o "mode=pass" -o "pcmk_host_list=pcmk1;pcmk2;pcmk3" """)
             test.add_cmd("stonith_admin", "stonith_admin --output-as=xml -F node2 -t 5")
             test.add_cmd("stonith_admin", "stonith_admin --output-as=xml -F pcmk3 -t 5")
-            test.add_stonith_log_pattern("for host 'node2' with device 'true1' returned: 0")
-            test.add_stonith_log_pattern("for host 'pcmk3' with device 'true2' returned: 0")
+            test.add_stonith_log_pattern("targeting node2 using true1 returned 0")
+            test.add_stonith_log_pattern("targeting pcmk3 using true2 returned 0")
 
         # test the stonith builds the correct list of devices that can fence a node.
         for test_type in test_types:
@@ -1147,7 +1147,7 @@ class Tests(object):
                          "--output-as=xml -R true1 -a fence_dummy_no_reboot -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
             test.add_stonith_log_pattern("does not advertise support for 'reboot', performing 'off'")
-            test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)")
+            test.add_stonith_log_pattern("using true1 returned 0 (OK)")
 
         # make sure reboot is used when reboot action is advertised
         for test_type in test_types:
@@ -1158,7 +1158,7 @@ class Tests(object):
                          "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=node1 node2 node3\"")
             test.add_cmd("stonith_admin", "--output-as=xml -B node1 -t 5 -V")
             test.add_stonith_neg_log_pattern("does not advertise support for 'reboot', performing 'off'")
-            test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)")
+            test.add_stonith_log_pattern("using true1 returned 0 (OK)")
 
         # make sure requested fencing delay is applied only for the first device in the first level
         # make sure static delay from pcmk_delay_base is added
@@ -1185,10 +1185,10 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "--output-as=xml -F node3 --delay 1")
 
-            test.add_stonith_log_pattern("Delaying 'off' action targeting node3 on true1 for 2s (timeout=120s, requested_delay=1s, base=1s, max=1s)")
-            test.add_stonith_log_pattern("Delaying 'off' action targeting node3 on false1 for 1s (timeout=120s, requested_delay=0s, base=1s, max=1s)")
-            test.add_stonith_neg_log_pattern("Delaying 'off' action targeting node3 on true2")
-            test.add_stonith_neg_log_pattern("Delaying 'off' action targeting node3 on true3")
+            test.add_stonith_log_pattern("Delaying 'off' action targeting node3 using true1 for 2s | timeout=120s requested_delay=1s base=1s max=1s")
+            test.add_stonith_log_pattern("Delaying 'off' action targeting node3 using false1 for 1s | timeout=120s requested_delay=0s base=1s max=1s")
+            test.add_stonith_neg_log_pattern("Delaying 'off' action targeting node3 using true2")
+            test.add_stonith_neg_log_pattern("Delaying 'off' action targeting node3 using true3")
 
     def build_nodeid_tests(self):
         """ Register tests that use a corosync node id """
@@ -1213,7 +1213,7 @@ class Tests(object):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=regr-test\"")
         test.add_cmd("stonith_admin", "--output-as=xml -F regr-test -t 3")
-        test.add_stonith_neg_log_pattern("For stonith action (off) for victim regr-test, adding nodeid")
+        test.add_stonith_neg_log_pattern("as nodeid with fence action 'off' targeting regr-test")
 
         ### verify nodeid use doesn't explode standalone mode
         test = self.new_test("standalone_do_not_supply_nodeid",
@@ -1223,7 +1223,7 @@ class Tests(object):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -F %s -t 3" % (our_uname))
-        test.add_stonith_neg_log_pattern("For stonith action (off) for victim %s, adding nodeid" % (our_uname))
+        test.add_stonith_neg_log_pattern("as nodeid with fence action 'off' targeting %s" % (our_uname))
 
     def build_unfence_tests(self):
         """ Register tests that verify unfencing """
@@ -1240,8 +1240,8 @@ class Tests(object):
                      '--output-as=xml -R true2 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
         # both devices should be executed
-        test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)")
-        test.add_stonith_log_pattern("with device 'true2' returned: 0 (OK)")
+        test.add_stonith_log_pattern("using true1 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true2 returned 0 (OK)")
 
         ### verify unfencing using automatic unfencing fails if any of the required agents fail
         test = self.new_test("cpg_unfence_required_2",
@@ -1264,8 +1264,8 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 1 -v true1" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)")
-        test.add_stonith_log_pattern("with device 'true2' returned: 0 (OK)")
+        test.add_stonith_log_pattern("using true1 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true2 returned 0 (OK)")
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_4",
@@ -1296,10 +1296,10 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 3 -v false4" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 4 -v true4" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("with device 'true1' returned: 0 (OK)")
-        test.add_stonith_log_pattern("with device 'true2' returned: 0 (OK)")
-        test.add_stonith_log_pattern("with device 'true3' returned: 0 (OK)")
-        test.add_stonith_log_pattern("with device 'true4' returned: 0 (OK)")
+        test.add_stonith_log_pattern("using true1 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true2 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true3 returned 0 (OK)")
+        test.add_stonith_log_pattern("using true4 returned 0 (OK)")
 
     def build_unfence_on_target_tests(self):
         """ Register tests that verify unfencing that runs on the target """
@@ -1312,7 +1312,7 @@ class Tests(object):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s\"" % (our_uname))
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("(on) to be executed on the target node")
+        test.add_stonith_log_pattern("(on) to be executed on target")
 
         ### verify failure of unfencing using on_target device
         test = self.new_test("cpg_unfence_on_target_2",
@@ -1321,7 +1321,7 @@ class Tests(object):
         test.add_cmd("stonith_admin",
                      "--output-as=xml -R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
         test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U node_fake_1234 -t 3", CrmExit.ERROR)
-        test.add_stonith_log_pattern("(on) to be executed on the target node")
+        test.add_stonith_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology
         test = self.new_test("cpg_unfence_on_target_3",
@@ -1337,7 +1337,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r %s -i 2 -v true2" % (our_uname))
 
         test.add_cmd("stonith_admin", "--output-as=xml -U %s -t 3" % (our_uname))
-        test.add_stonith_log_pattern("(on) to be executed on the target node")
+        test.add_stonith_log_pattern("(on) to be executed on target")
 
         ### verify unfencing using on_target device with topology fails when victim node doesn't exist
         test = self.new_test("cpg_unfence_on_target_4",
@@ -1353,7 +1353,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true2")
 
         test.add_expected_fail_cmd("stonith_admin", "--output-as=xml -U node_fake -t 3", CrmExit.ERROR)
-        test.add_stonith_log_pattern("(on) to be executed on the target node")
+        test.add_stonith_log_pattern("(on) to be executed on target")
 
     def build_remap_tests(self):
         """ Register tests that verify remapping of reboots to off-on """
@@ -1371,8 +1371,8 @@ class Tests(object):
         test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
         # timeout should be sum of off timeouts (1+2=3), not reboot timeouts (10+20=30)
         test.add_stonith_log_pattern("Total timeout set to 3 for peer's fencing targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true2'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
         test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
         # fence_dummy sets "on" as an on_target action
         test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
@@ -1390,8 +1390,8 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
         test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true2'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
         test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
         test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
         test.add_stonith_neg_log_pattern("perform 'on' action targeting node_fake using")
@@ -1406,10 +1406,10 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 1 -v false1")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using 'false1'")
+        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using false1")
         test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true2'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true2")
         test.add_stonith_log_pattern("Remapped 'off' targeting node_fake complete, remapping to 'on'")
         test.add_stonith_log_pattern("Ignoring true1 'on' failure (no capable peers) targeting node_fake")
         test.add_stonith_log_pattern("Ignoring true2 'on' failure (no capable peers) targeting node_fake")
@@ -1427,13 +1427,13 @@ class Tests(object):
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 2 -v true1 -v false2 -v true3")
         test.add_cmd("stonith_admin", "--output-as=xml -r node_fake -i 3 -v true2")
         test.add_cmd("stonith_admin", "--output-as=xml -B node_fake -t 5")
-        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using 'false1'")
+        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using false1")
         test.add_stonith_log_pattern("Remapping multiple-device reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'true1'")
-        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using 'false2'")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using true1")
+        test.add_stonith_log_pattern("perform 'off' action targeting node_fake using false2")
         test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (off) the maximum number of times")
         test.add_stonith_log_pattern("Undoing remap of reboot targeting node_fake")
-        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using 'true2'")
+        test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using true2")
         test.add_stonith_neg_log_pattern("node_fake with true3")
 
     def setup_environment(self, use_corosync):
