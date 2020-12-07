@@ -283,7 +283,6 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    GList *lpc = NULL;
     xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                  data_set->input);
 
@@ -292,11 +291,7 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);
 
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-        pe__clear_resource_flags(r, pe_rsc_allocating);
-    }
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
 
     out->message(out, "colocations-list", rsc, TRUE, recursive);
 
@@ -304,11 +299,7 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     out->message(out, "locations-list", rsc);
     out->end_list(out);
 
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-        pe__clear_resource_flags(r, pe_rsc_allocating);
-    }
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
 
     out->message(out, "colocations-list", rsc, FALSE, recursive);
     return pcmk_rc_ok;
@@ -321,7 +312,6 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     gboolean recursive = va_arg(args, gboolean);
 
-    GList *lpc = NULL;
     xmlNodePtr cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                  data_set->input);
 
@@ -330,11 +320,7 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);
 
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-        pe__clear_resource_flags(r, pe_rsc_allocating);
-    }
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
 
     pcmk__output_xml_create_parent(out, "constraints", NULL);
 
@@ -346,11 +332,7 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     out->message(out, "locations-list", rsc);
     pcmk__output_xml_pop_parent(out);
 
-    for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-        pe__clear_resource_flags(r, pe_rsc_allocating);
-    }
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
 
     out->message(out, "colocations-list", rsc, FALSE, recursive);
     return pcmk_rc_ok;

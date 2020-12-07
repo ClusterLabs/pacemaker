@@ -529,6 +529,7 @@ void pe_action_set_flag_reason(const char *function, long line, pe_action_t *act
 
 void pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
+void pe__clear_resource_flags_on_all(pe_working_set_t *data_set, uint64_t flag);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 

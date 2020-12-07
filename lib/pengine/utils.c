@@ -2010,6 +2010,15 @@ pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 }
 
 void
+pe__clear_resource_flags_on_all(pe_working_set_t *data_set, uint64_t flag)
+{
+    for (GList *lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
+        pe_resource_t *r = (pe_resource_t *) lpc->data;
+        pe__clear_resource_flags_recursive(r, flag);
+    }
+}
+
+void
 pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
 {
     pe__set_resource_flags(rsc, flags);

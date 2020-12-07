@@ -386,11 +386,7 @@ cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
                 need_init = FALSE;
                 unpack_constraints(cib_constraints, data_set);
 
-                for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-                    pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-                    pe__clear_resource_flags(r, pe_rsc_allocating);
-                }
+                pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
             }
 
             crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
