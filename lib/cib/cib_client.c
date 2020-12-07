@@ -397,14 +397,10 @@ cib_new_variant(void)
     return new_cib;
 }
 
-/*!
- * \brief Free all callbacks for a CIB connection
- *
- * \param[in] cib  CIB connection to clean up
- */
-void
-cib_free_callbacks(cib_t *cib)
+void 
+cib_free_notify(cib_t *cib)
 {
+
     if (cib) {
         GList *list = cib->notify_list;
 
@@ -416,6 +412,17 @@ cib_free_callbacks(cib_t *cib)
         }
         cib->notify_list = NULL;
     }
+}
+/*!
+ * \brief Free all callbacks for a CIB connection
+ *
+ * \param[in] cib  CIB connection to clean up
+ */
+void
+cib_free_callbacks(cib_t *cib)
+{
+    cib_free_notify(cib);
+
     destroy_op_callback_table();
 }
 
