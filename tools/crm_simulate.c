@@ -385,135 +385,21 @@ get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
 }
 
 static void
-print_cluster_status(pe_working_set_t * data_set, long options)
+print_cluster_status(pe_working_set_t * data_set, unsigned int options)
 {
-    char *online_nodes = NULL;
-    char *online_remote_nodes = NULL;
-    char *online_guest_nodes = NULL;
-    char *offline_nodes = NULL;
-    char *offline_remote_nodes = NULL;
+    pcmk__output_t *out = data_set->priv;
+    int rc = pcmk_rc_no_output;
+    GList *all = NULL;
 
-    size_t online_nodes_len = 0;
-    size_t online_remote_nodes_len = 0;
-    size_t online_guest_nodes_len = 0;
-    size_t offline_nodes_len = 0;
-    size_t offline_remote_nodes_len = 0;
+    all = g_list_prepend(all, strdup("*"));
 
-    GList *gIter = NULL;
+    rc = out->message(out, "node-list", data_set->nodes, all, all, options, FALSE,
+                      FALSE, FALSE);
+    PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
+    out->message(out, "resource-list", data_set, options, FALSE, TRUE, FALSE,
+                 FALSE, all, all, FALSE);
 
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        pe_node_t *node = (pe_node_t *) gIter->data;
-        const char *node_mode = NULL;
-        char *node_name = NULL;
-
-        if (pe__is_guest_node(node)) {
-            node_name = crm_strdup_printf("%s:%s", node->details->uname, node->details->remote_rsc->container->id);
-        } else {
-            node_name = crm_strdup_printf("%s", node->details->uname);
-        }
-
-        if (node->details->unclean) {
-            if (node->details->online && node->details->unclean) {
-                node_mode = "UNCLEAN (online)";
-
-            } else if (node->details->pending) {
-                node_mode = "UNCLEAN (pending)";
-
-            } else {
-                node_mode = "UNCLEAN (offline)";
-            }
-
-        } else if (node->details->pending) {
-            node_mode = "pending";
-
-        } else if (node->details->standby_onfail && node->details->online) {
-            node_mode = "standby (on-fail)";
-
-        } else if (node->details->standby) {
-            if (node->details->online) {
-                node_mode = "standby";
-            } else {
-                node_mode = "OFFLINE (standby)";
-            }
-
-        } else if (node->details->maintenance) {
-            if (node->details->online) {
-                node_mode = "maintenance";
-            } else {
-                node_mode = "OFFLINE (maintenance)";
-            }
-
-        } else if (node->details->online) {
-            if (pe__is_guest_node(node)) {
-                pcmk__add_word(&online_guest_nodes, &online_guest_nodes_len,
-                               node_name);
-            } else if (pe__is_remote_node(node)) {
-                pcmk__add_word(&online_remote_nodes, &online_remote_nodes_len,
-                               node_name);
-            } else {
-                pcmk__add_word(&online_nodes, &online_nodes_len, node_name);
-            }
-            free(node_name);
-            continue;
-
-        } else {
-            if (pe__is_remote_node(node)) {
-                pcmk__add_word(&offline_remote_nodes, &offline_remote_nodes_len,
-                               node_name);
-            } else if (pe__is_guest_node(node)) {
-                /* ignore offline container nodes */
-            } else {
-                pcmk__add_word(&offline_nodes, &offline_nodes_len, node_name);
-            }
-            free(node_name);
-            continue;
-        }
-
-        if (pe__is_guest_node(node)) {
-            printf("GuestNode %s: %s\n", node_name, node_mode);
-        } else if (pe__is_remote_node(node)) {
-            printf("RemoteNode %s: %s\n", node_name, node_mode);
-        } else if (pcmk__str_eq(node->details->uname, node->details->id, pcmk__str_casei)) {
-            printf("Node %s: %s\n", node_name, node_mode);
-        } else {
-            printf("Node %s (%s): %s\n", node_name, node->details->id, node_mode);
-        }
-
-        free(node_name);
-    }
-
-    if (online_nodes) {
-        printf("Online: [ %s ]\n", online_nodes);
-        free(online_nodes);
-    }
-    if (offline_nodes) {
-        printf("OFFLINE: [ %s ]\n", offline_nodes);
-        free(offline_nodes);
-    }
-    if (online_remote_nodes) {
-        printf("RemoteOnline: [ %s ]\n", online_remote_nodes);
-        free(online_remote_nodes);
-    }
-    if (offline_remote_nodes) {
-        printf("RemoteOFFLINE: [ %s ]\n", offline_remote_nodes);
-        free(offline_remote_nodes);
-    }
-    if (online_guest_nodes) {
-        printf("GuestOnline: [ %s ]\n", online_guest_nodes);
-        free(online_guest_nodes);
-    }
-
-    fprintf(stdout, "\n");
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)
-            && rsc->role == RSC_ROLE_STOPPED) {
-            continue;
-        }
-        rsc->fns->print(rsc, NULL, pe_print_printf | options, stdout);
-    }
-    fprintf(stdout, "\n");
+    g_list_free_full(all, free);
 }
 
 static char *
@@ -930,6 +816,12 @@ main(int argc, char **argv)
         goto done;
     }
 
+    if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
+        pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
+    }
+
+    pe__register_messages(out);
+
     out->quiet = args->quiet;
 
     if (args->version) {
@@ -1003,7 +895,7 @@ main(int argc, char **argv)
     cluster_status(data_set);
 
     if (!out->is_quiet(out)) {
-        int opts = options.print_pending ? pe_print_pending : 0;
+        unsigned int opts = options.print_pending ? pe_print_pending : 0;
 
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             printed = out->message(out, "maint-mode", data_set->flags);
