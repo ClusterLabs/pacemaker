@@ -45,7 +45,7 @@ fi
 [ "${CTS_node_list}" = "${CTS_node_list/$HOSTNAME/}" ] \
     || die "This script must be executed on the test exerciser, and the test exerciser cannot be part of the cluster"
 
-printf "+ Bootstraping ssh... "
+printf "+ Bootstrapping ssh... "
 if [ -z "$SSH_AUTH_SOCK" ]; then
     printf "\n + Initializing SSH "
     eval "$(ssh-agent)"
