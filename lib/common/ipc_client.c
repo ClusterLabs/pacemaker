@@ -837,7 +837,7 @@ crm_ipc_connect(crm_ipc_t * client)
         if (rv > 0) {
             errno = rv;
         } else {
-            rv = ENOTCONN;
+            errno = ENOTCONN;
         }
         return FALSE;
     }
