@@ -1376,9 +1376,11 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n",
                PCMK_STONITH_DELAY_MAX);
-        printf("    <shortdesc lang=\"en\">Enable a random delay for "
-               "fencing actions and specify the maximum of random "
-               "delay.</shortdesc>\n");
+        printf("    <shortdesc lang=\"en\">Enable a delay of no more than the "
+               "time specified before executing fencing actions. Pacemaker "
+               "derives the overall delay by taking the value of "
+               PCMK_STONITH_DELAY_BASE " and adding a random delay value such "
+               "that the sum is kept below this maximum.</shortdesc>\n");
         printf("    <longdesc lang=\"en\">This prevents double fencing when "
                "using slow devices such as sbd.\nUse this to enable a random "
                "delay for fencing actions.\nThe overall delay is derived from "
