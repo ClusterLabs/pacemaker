@@ -180,7 +180,7 @@ const char *crm_ipc_name(crm_ipc_t * client);
 unsigned int crm_ipc_default_buffer_size(void);
 
 /*!
- * \brief Check the authenticity of the IPC socket peer process
+ * \brief Check the authenticity of the IPC socket peer process (legacy)
  *
  * If everything goes well, peer's authenticity is verified by the means
  * of comparing against provided referential UID and GID (either satisfies),
