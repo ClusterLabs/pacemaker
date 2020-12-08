@@ -32,7 +32,7 @@ COCCI_FILES ?=	coccinelle/string-any-of.cocci			\
 
 
 dist_noinst_SCRIPTS	= coccinelle/test/testrunner.sh
-EXTRA_DIST		= gdbhelpers $(COCCI_FILES)			\
+EXTRA_DIST		= README gdbhelpers $(COCCI_FILES)		\
 			  coccinelle/ref-passed-variables-inited.cocci	\
 			  coccinelle/string-replacements.cocci		\
 			  coccinelle/test/ref-passed-variables-inited.input.c \
