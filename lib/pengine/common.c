@@ -110,7 +110,14 @@ pe_cluster_option pe_opts[] = {
 	{ "stonith-timeout", NULL, "time", NULL, "60s", &check_timer,
 	  "How long to wait for the STONITH action (reboot,on,off) to complete", NULL },
 	{ XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL, "false", &check_boolean,
-	  "Enable watchdog integration", "Set automatically by the cluster if SBD is detected.  User configured values are ignored." },
+        "Whether watchdog integration is enabled",
+        "This is set automatically by the cluster according to whether SBD "
+            "is detected to be in use. User-configured values are ignored. "
+            "The value `true` is meaningful if diskless SBD is used and "
+            "`stonith-watchdog-timeout` is positive. In that case, if fencing "
+            "is required, watchdog-based self-fencing will be performed via "
+            "SBD without requiring a fencing resource explicitly configured."
+      },
 	{ "concurrent-fencing", NULL, "boolean", NULL,
 #ifdef DEFAULT_CONCURRENT_FENCING_TRUE
       "true",
