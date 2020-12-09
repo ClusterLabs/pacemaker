@@ -1761,6 +1761,21 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+static void
+print_resource_header(pcmk__output_t *out, gboolean group_by_node,
+                      gboolean inactive_resources)
+{
+    if (group_by_node) {
+        /* Active resources have already been printed by node */
+        out->begin_list(out, NULL, NULL, "Inactive Resources");
+    } else if (inactive_resources) {
+        out->begin_list(out, NULL, NULL, "Full List of Resources");
+    } else {
+        out->begin_list(out, NULL, NULL, "Active Resources");
+    }
+}
+
+
 PCMK__OUTPUT_ARGS("resource-list", "pe_working_set_t *", "unsigned int", "gboolean",
                   "gboolean", "gboolean", "gboolean", "GList *", "GList *", "gboolean")
 static int
@@ -1778,6 +1793,7 @@ resource_list(pcmk__output_t *out, va_list args)
 
     GList *rsc_iter;
     int rc = pcmk_rc_no_output;
+    bool printed_header = false;
 
     /* If we already showed active resources by node, and
      * we're not showing inactive resources, we have nothing to do
@@ -1786,21 +1802,14 @@ resource_list(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-
-    if (group_by_node) {
-        /* Active resources have already been printed by node */
-        out->begin_list(out, NULL, NULL, "Inactive Resources");
-    } else if (inactive_resources) {
-        out->begin_list(out, NULL, NULL, "Full List of Resources");
-    } else {
-        out->begin_list(out, NULL, NULL, "Active Resources");
-    }
-
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
     if (brief_output && !group_by_node) {
         GList *rscs = pe__filter_rsc_list(data_set->resources, only_rsc);
+
+        PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+        print_resource_header(out, group_by_node, inactive_resources);
+        printed_header = true;
 
         pe__rscs_brief_output(out, rscs, print_opts, inactive_resources);
         g_list_free(rscs);
@@ -1839,6 +1848,12 @@ resource_list(pcmk__output_t *out, va_list args)
             continue;
         }
 
+        if (!printed_header) {
+            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+            print_resource_header(out, group_by_node, inactive_resources);
+            printed_header = true;
+        }
+
         /* Print this resource */
         x = out->message(out, crm_map_element_name(rsc->xml), print_opts, rsc,
                          only_node, only_rsc);
@@ -1848,6 +1863,12 @@ resource_list(pcmk__output_t *out, va_list args)
     }
 
     if (print_summary && rc != pcmk_rc_ok) {
+        if (!printed_header) {
+            PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+            print_resource_header(out, group_by_node, inactive_resources);
+            printed_header = true;
+        }
+
         if (group_by_node) {
             out->list_item(out, NULL, "No inactive resources");
         } else if (inactive_resources) {
@@ -1857,7 +1878,10 @@ resource_list(pcmk__output_t *out, va_list args)
         }
     }
 
-    out->end_list(out);
+    if (printed_header) {
+        out->end_list(out);
+    }
+
     return rc;
 }
 
