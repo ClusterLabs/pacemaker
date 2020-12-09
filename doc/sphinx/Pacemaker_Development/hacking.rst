@@ -28,7 +28,7 @@ In the GNU userland tradition, preferred way of debugging is based on ``gdb``
 (semi-)supported with Pacemaker itself.
 
 To make some advanced debugging easier, we maintain a script defining some
-useful helpers in ``extra/gdb/gdbhelpers`` file, which you can make available
+useful helpers in ``devel/gdbhelpers`` file, which you can make available
 in the debugging session easily when invoking it as
 ``gdb -x <path-to-gdbhelpers> ...``.
 
