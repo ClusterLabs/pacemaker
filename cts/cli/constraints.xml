@@ -1,0 +1,58 @@
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.3" epoch="1" num_updates="1" admin_epoch="1" cib-last-written="Tue May  5 12:04:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.4-1.e97f9675f.git.el7-e97f9675f"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test-cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="cluster01"/>
+      <node id="2" uname="cluster02"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="prim1" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim2" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim3" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim4" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim5" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim6" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim7" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim8" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim9" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim10" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim11" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim12" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="prim13" provider="pacemaker" type="Dummy"/>
+      <group id="group">
+        <primitive class="ocf" id="gr1" provider="pacemaker" type="Dummy"/>
+        <primitive class="ocf" id="gr2" provider="pacemaker" type="Dummy"/>
+        <primitive class="ocf" id="gr3" provider="pacemaker" type="Dummy"/>
+      </group>
+      <clone id="clone">
+        <primitive class="ocf" id="cl1" provider="pacemaker" type="Dummy"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" score="INFINITY" with-rsc="prim3"/>
+      <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" score="INFINITY" with-rsc="prim4"/>
+      <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" score="INFINITY" with-rsc="prim5"/>
+      <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" score="INFINITY" with-rsc="prim4"/>
+      <rsc_location id="prim2-on-cluster1" rsc="prim2" node="cluster01" score="INFINITY"/>
+      <rsc_location id="prim4-on-cluster2" rsc="prim4" node="cluster02" score="INFINITY"/>
+      <rsc_location id="prim6-not-on-cluster2" rsc="prim6" node="cluster02" score="-INFINITY"/>
+      <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" score="INFINITY" with-rsc="group"/>
+      <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" score="INFINITY" with-rsc="gr2"/>
+      <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" score="INFINITY" with-rsc="clone"/>
+      <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" score="INFINITY" with-rsc="prim12"/>
+      <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" score="INFINITY" with-rsc="prim13"/>
+      <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" score="INFINITY" with-rsc="prim11"/>
+    </constraints>
+    <op_defaults/>
+  </configuration>
+  <status/>
+</cib>
