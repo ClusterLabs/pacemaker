@@ -3529,7 +3529,7 @@ Colocations:
       </locations>
     </resource>
     <colocations>
-      <colocation peer="prim3" id="colocation-prim2-prim3-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3546,7 +3546,7 @@ Colocations:
       </locations>
     </resource>
     <colocations>
-      <colocation peer="prim3" id="colocation-prim2-prim3-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3584,7 +3584,7 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim3 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim2" id="colocation-prim2-prim3-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
       <locations>
         <location host="cluster01" id="prim2-on-cluster1" score="INFINITY"/>
       </locations>
@@ -3593,7 +3593,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim4" id="colocation-prim3-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
       <locations>
         <location host="cluster02" id="prim4-on-cluster2" score="INFINITY"/>
       </locations>
@@ -3607,7 +3607,7 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim3 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim2" id="colocation-prim2-prim3-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
       <locations>
         <location host="cluster01" id="prim2-on-cluster1" score="INFINITY"/>
       </locations>
@@ -3616,7 +3616,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim4" id="colocation-prim3-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
       <locations>
         <location host="cluster02" id="prim4-on-cluster2" score="INFINITY"/>
       </locations>
@@ -3658,9 +3658,9 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim4 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim10" id="colocation-prim10-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
       <locations/>
-      <colocation peer="prim3" id="colocation-prim3-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim4">
@@ -3669,7 +3669,7 @@ Colocations:
       </locations>
     </resource>
     <colocations>
-      <colocation peer="prim5" id="colocation-prim4-prim5-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3681,9 +3681,9 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim4 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim10" id="colocation-prim10-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
       <locations/>
-      <colocation peer="prim3" id="colocation-prim3-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim4">
@@ -3692,7 +3692,7 @@ Colocations:
       </locations>
     </resource>
     <colocations>
-      <colocation peer="prim5" id="colocation-prim4-prim5-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3722,7 +3722,7 @@ prim5:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim5 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim4" id="colocation-prim4-prim5-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
       <locations>
         <location host="cluster02" id="prim4-on-cluster2" score="INFINITY"/>
       </locations>
@@ -3739,7 +3739,7 @@ prim5:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim5 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim4" id="colocation-prim4-prim5-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
       <locations>
         <location host="cluster02" id="prim4-on-cluster2" score="INFINITY"/>
       </locations>
@@ -3813,7 +3813,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="group" id="colocation-prim7-group-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3828,7 +3828,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="group" id="colocation-prim7-group-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3859,7 +3859,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="gr2" id="colocation-prim8-gr2-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3874,7 +3874,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="gr2" id="colocation-prim8-gr2-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3905,7 +3905,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="clone" id="colocation-prim9-clone-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3920,7 +3920,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="clone" id="colocation-prim9-clone-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -3953,7 +3953,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim4" id="colocation-prim10-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
       <locations>
         <location host="cluster02" id="prim4-on-cluster2" score="INFINITY"/>
       </locations>
@@ -3970,7 +3970,7 @@ Colocations:
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim4" id="colocation-prim10-prim4-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
       <locations>
         <location host="cluster02" id="prim4-on-cluster2" score="INFINITY"/>
       </locations>
@@ -4006,14 +4006,14 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim11 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim13" id="colocation-prim13-prim11-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim11">
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim12" id="colocation-prim11-prim12-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -4025,14 +4025,14 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim11 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim13" id="colocation-prim13-prim11-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim11">
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim12" id="colocation-prim11-prim12-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -4066,14 +4066,14 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim12 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim11" id="colocation-prim11-prim12-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim12">
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim13" id="colocation-prim12-prim13-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -4085,14 +4085,14 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim12 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim11" id="colocation-prim11-prim12-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim12">
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim13" id="colocation-prim12-prim13-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -4126,14 +4126,14 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -a -r prim13 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim12" id="colocation-prim12-prim13-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim13">
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim11" id="colocation-prim13-prim11-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -4145,14 +4145,14 @@ Colocations:
 <pacemaker-result api-version="X" request="crm_resource -A -r prim13 --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim12" id="colocation-prim12-prim13-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="prim13">
       <locations/>
     </resource>
     <colocations>
-      <colocation peer="prim11" id="colocation-prim13-prim11-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
       <locations/>
     </colocations>
   </constraints>
@@ -4180,7 +4180,7 @@ group:
 <pacemaker-result api-version="X" request="crm_resource -a -r group --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim7" id="colocation-prim7-group-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="group">
@@ -4195,7 +4195,7 @@ group:
 <pacemaker-result api-version="X" request="crm_resource -A -r group --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim7" id="colocation-prim7-group-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="group">
@@ -4226,7 +4226,7 @@ clone:
 <pacemaker-result api-version="X" request="crm_resource -a -r clone --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim9" id="colocation-prim9-clone-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="clone">
@@ -4241,7 +4241,7 @@ clone:
 <pacemaker-result api-version="X" request="crm_resource -A -r clone --output-as=xml">
   <constraints>
     <colocations>
-      <colocation peer="prim9" id="colocation-prim9-clone-INFINITY" score="INFINITY"/>
+      <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
       <locations/>
     </colocations>
     <resource id="clone">

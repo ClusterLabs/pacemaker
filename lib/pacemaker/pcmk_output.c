@@ -66,6 +66,35 @@ colocations_header(pe_resource_t *rsc, rsc_colocation_t *cons,
     return retval;
 }
 
+static void
+colocations_xml_node(pcmk__output_t *out, pe_resource_t *rsc,
+                     rsc_colocation_t *cons) {
+    char *score = NULL;
+    xmlNodePtr node = NULL;
+
+    score = score2char(cons->score);
+    node = pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_DEPEND,
+                                        "id", cons->id,
+                                        "rsc", cons->rsc_lh->id,
+                                        "with-rsc", cons->rsc_rh->id,
+                                        "score", score,
+                                        NULL);
+
+    if (cons->node_attribute) {
+        xmlSetProp(node, (pcmkXmlStr) "node-attribute", (pcmkXmlStr) cons->node_attribute);
+    }
+
+    if (cons->role_lh != RSC_ROLE_UNKNOWN) {
+        xmlSetProp(node, (pcmkXmlStr) "rsc-role", (pcmkXmlStr) role2text(cons->role_lh));
+    }
+
+    if (cons->role_rh != RSC_ROLE_UNKNOWN) {
+        xmlSetProp(node, (pcmkXmlStr) "with-rsc-role", (pcmkXmlStr) role2text(cons->role_rh));
+    }
+
+    free(score);
+}
+
 PCMK__OUTPUT_ARGS("colocations-list", "pe_resource_t *", "gboolean", "gboolean")
 static int colocations_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
@@ -160,7 +189,6 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
         pe_resource_t *peer = cons->rsc_rh;
-        char *score = NULL;
 
         if (dependents) {
             peer = cons->rsc_lh;
@@ -195,24 +223,7 @@ static int colocations_list_xml(pcmk__output_t *out, va_list args) {
             printed_header = true;
         }
 
-        score = score2char(cons->score);
-        if (cons->role_rh > RSC_ROLE_STARTED) {
-            pcmk__output_create_xml_node(out, "colocation",
-                                         "peer", peer->id,
-                                         "id", cons->id,
-                                         "score", score,
-                                         "dependents", dependents ? "needs" : "with",
-                                         "role", role2text(cons->role_rh),
-                                         NULL);
-        } else {
-            pcmk__output_create_xml_node(out, "colocation",
-                                         "peer", peer->id,
-                                         "id", cons->id,
-                                         "score", score,
-                                         NULL);
-        }
-
-        free(score);
+        colocations_xml_node(out, peer, cons);
         out->message(out, "locations-list", peer);
 
         if (!dependents && recursive) {
