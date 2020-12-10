@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -217,6 +217,7 @@ extern "C" {
 #  define XML_RSC_ATTR_REMOTE_RA_ADDR   "addr"
 #  define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
 #  define XML_RSC_ATTR_REMOTE_RA_PORT   "port"
+#  define XML_RSC_ATTR_CRITICAL         "critical"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 

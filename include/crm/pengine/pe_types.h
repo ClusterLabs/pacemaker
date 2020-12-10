@@ -251,6 +251,7 @@ struct pe_node_s {
 #  define pe_rsc_stop                       0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL
 #  define pe_rsc_allow_remote_remotes       0x00004000ULL
+#  define pe_rsc_critical                   0x00008000ULL
 
 #  define pe_rsc_failed                     0x00010000ULL
 #  define pe_rsc_runnable                   0x00040000ULL
