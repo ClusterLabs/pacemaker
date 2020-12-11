@@ -8,6 +8,10 @@
 #
 include $(top_srcdir)/mk/common.mk
 
+# What formats to use for book uploads (i.e. "make www";
+# use BOOK_FORMATS in sphinx subdirectory to change local builds)
+BOOK_FORMATS		?= html singlehtml pdf epub
+
 # Deprecated plaintext documents (dynamically converted to HTML)
 DEPRECATED_ORIGINAL	= crm_fencing.txt
 DEPRECATED_GENERATED	=
@@ -19,9 +23,7 @@ DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) $(DEPRECATED_GENERATED)
 doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check
 
-# The sphinx docs are not yet built by default, but we still want to distribute
-# them so configure can build the Makefile in a distribution.
-DIST_SUBDIRS	= sphinx
+SUBDIRS		= sphinx
 
 EXTRA_DIST	= $(DEPRECATED_ORIGINAL) pcs-crmsh-quick-ref.md
 
@@ -123,9 +125,17 @@ abi-clean:
 	-rm -rf abi_dumps compat_reports
 
 
-# All HTML documentation (except ABI compatibility, which is run separately)
-.PHONY: www
-www: clean-local deprecated-upload manhtml-upload global-upload doxygen-upload
+# The main documentation books (which are actually in the sphinx subdirectory)
+books-upload:
+	$(MAKE) $(AM_MAKEFLAGS)	-C sphinx clean
+	$(MAKE) $(AM_MAKEFLAGS)	-C sphinx	\
+		RSYNC_DEST="$(RSYNC_DEST)"	\
+		BOOK_FORMATS="$(BOOK_FORMATS)"	\
+		books-upload
 
+
+# All online documentation (except ABI compatibility, which is run separately)
+.PHONY: www
+www: clean-local deprecated-upload manhtml-upload global-upload doxygen-upload books-upload
 
 clean-local: global-clean manhtml-clean doxygen-clean abi-clean deprecated-clean

@@ -285,7 +285,7 @@ BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
 %if %{with doc}
-BuildRequires: inkscape asciidoc
+BuildRequires: inkscape asciidoc python3-sphinx
 %endif
 
 Provides:      pcmk-cluster-manager = %{version}-%{release}

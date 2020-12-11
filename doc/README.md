@@ -57,7 +57,7 @@ The sphinx subdirectory has a subdirectory for each book by title. Each book's
 directory contains .rst files, which are the chapter sources in
 reStructuredText format (with index.rst as the starting point).
 
-Once you have edited the sources as desired, run "make" in the sphinx
+Once you have edited the sources as desired, run "make" here or in the sphinx
 subdirectory to generate all the books locally. You can view the results by
 pointing your web browser to (replacing PATH\_TO\_CHECKOUT and BOOK\_TITLE
 appropriately):

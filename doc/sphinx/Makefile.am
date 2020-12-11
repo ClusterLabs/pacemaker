@@ -78,7 +78,7 @@ BOOK_RSYNC_DEST	= $(RSYNC_DEST)/$(PACKAGE)/doc/$(PACKAGE_SERIES)
 
 TAG	?= $(shell [ -n "`git tag --points-at HEAD | head -1`" ]		\
 	           && ( git tag --points-at HEAD | head -1 )			\
-		   || git log --pretty=format:Pacemaker-2.0.3-%h -n 1 HEAD)
+		   || git log --pretty=format:Pacemaker-$(VERSION)-%h -n 1 HEAD)
 
 BOOK		= none
 
@@ -151,14 +151,33 @@ if BUILD_SPHINX_DOCS
 			$(BOOK_FORMATS:%=$$book/_build/%)		\
 			"$(BOOK_RSYNC_DEST)/$$book/";			\
 	done
-endif
 
 all-local:
-if BUILD_SPHINX_DOCS
 	@for book in $(BOOKS); do					\
 		$(MAKE) $(AM_MAKEFLAGS) BOOK=$$book			\
 			PAPER="$(PAPER)" SPHINXFLAGS="$(SPHINXFLAGS)"	\
 			BOOK_FORMATS="$(BOOK_FORMATS)" $$book/_build;	\
+	done
+
+install-data-local: all-local
+	$(AM_V_AT)for book in $(BOOKS); do				\
+		for format in $(BOOK_FORMATS); do			\
+			formatdir="$$book/_build/$$format";		\
+			for f in `find "$$formatdir" -print`; do	\
+				dname="`echo $$f | sed s:_build/::`";	\
+				dloc="$(DESTDIR)/$(docdir)/$$dname";	\
+				if [ -d "$$f" ]; then			\
+					$(INSTALL) -d -m 755 "$$dloc";	\
+				else					\
+					$(INSTALL_DATA) "$$f" "$$dloc";	\
+				fi					\
+			done;						\
+		done;							\
+	done
+
+uninstall-local:
+	$(AM_V_AT)for book in $(BOOKS); do		\
+		rm -rf "$(DESTDIR)/$(docdir)/$$book";	\
 	done
 endif
 
