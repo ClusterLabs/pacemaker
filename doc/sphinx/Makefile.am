@@ -42,7 +42,33 @@ RSYNC_DEST	?= root@www.clusterlabs.org:/var/www/html
 # End of useful overrides
 
 
-EXTRA_DIST	= $(wildcard */*.rst)
+# Example scheduler transition graphs
+# @TODO The original CIB XML for these is long lost. Ideally, we would recreate
+# something similar and keep those here instead of the DOTs (or use a couple of
+# scheduler regression test inputs instead), then regenerate the SVG
+# equivalents using crm_simulate and dot when making a release.
+DOTS =	$(wildcard shared/images/*.dot)
+
+# Vector sources for generated PNGs (including SVG equivalents of DOTS, created
+# manually using dot)
+SVGS =	$(wildcard shared/images/pcmk-*.svg) $(DOTS:%.dot=%.svg)
+
+# PNG images generated from SVGS
+#
+# These will not be accessible in a VPATH build, which will generate warnings
+# when building the documentation, but the make will still succeed. It is
+# nontrivial to get them working for VPATH builds and not worth the effort.
+PNGS_GENERATED	= $(SVGS:%.svg=%.png)
+
+# Original PNG image sources
+PNGS_Clusters_from_Scratch = $(wildcard Clusters_from_Scratch/images/*.png)
+PNGS_Pacemaker_Explained   = $(wildcard Pacemaker_Explained/images/*.png)
+PNGS_Pacemaker_Remote      = $(wildcard Pacemaker_Remote/images/*.png)
+
+EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)		\
+		  $(PNGS_Clusters_from_Scratch)			\
+		  $(PNGS_Pacemaker_Explained)			\
+		  $(PNGS_Pacemaker_Remote)
 
 # recursive, preserve symlinks/permissions/times, verbose, compress,
 # don't cross filesystems, sparse, show progress
@@ -56,13 +82,27 @@ TAG	?= $(shell [ -n "`git tag --points-at HEAD | head -1`" ]		\
 
 BOOK		= none
 
-DEPS_Clusters_from_Scratch	= shared/pacemaker-intro.rst
-DEPS_Pacemaker_Administration	= shared/pacemaker-intro.rst
+DEPS_intro			= shared/pacemaker-intro.rst $(PNGS_GENERATED)
+
+DEPS_Clusters_from_Scratch	= $(DEPS_intro) $(PNGS_Clusters_from_Scratch)
+DEPS_Pacemaker_Administration	= $(DEPS_intro)
 DEPS_Pacemaker_Development	=
-DEPS_Pacemaker_Explained	= shared/pacemaker-intro.rst
-DEPS_Pacemaker_Remote		= $(wildcard $(srcdir)/Pacemaker_Remote/images/*.png)
+DEPS_Pacemaker_Explained	= $(DEPS_intro) $(PNGS_Pacemaker_Explained)
+DEPS_Pacemaker_Remote		= $(PNGS_Pacemaker_Remote)
 
 if BUILD_SPHINX_DOCS
+
+INKSCAPE_CMD	= $(INKSCAPE) --export-dpi=90 -C
+
+# Pattern rule to generate PNGs from SVGs
+# (--export-png works with Inkscape <1.0, --export-filename with >=1.0;
+# create the destination directory in case this is a VPATH build)
+%.png: %.svg
+	$(AM_V_at)-$(MKDIR_P) "$(shell dirname "$@")"
+	$(AM_V_GEN) {							\
+		$(INKSCAPE_CMD) --export-png="$@" "$<" 2>/dev/null	\
+		|| $(INKSCAPE_CMD) --export-filename="$@" "$<";		\
+	} $(PCMK_quiet)
 
 # Create a book's Sphinx configuration.
 # Create the book directory in case this is a VPATH build.
@@ -72,6 +112,7 @@ $(BOOKS:%=%/conf.py): conf.py.in
 		-e 's/%VERSION%/$(VERSION)/g'				\
 		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'			\
 		-e 's/%BOOK_TITLE%/$(subst _, ,$(@:%/conf.py=%))/g'	\
+		-e 's#%SRC_DIR%#$(abs_srcdir)#g'			\
 		$(<) > "$@"
 
 $(BOOK)/_build: _static/pacemaker.css $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(srcdir)/$(BOOK)/*.rst)
@@ -122,4 +163,7 @@ if BUILD_SPHINX_DOCS
 endif
 
 clean-local:
-	$(AM_V_at)-rm -rf $(BOOKS:%="$(builddir)/%/_build") $(BOOKS:%="$(builddir)/%/conf.py")
+	$(AM_V_at)-rm -rf				\
+		$(BOOKS:%="$(builddir)/%/_build")	\
+		$(BOOKS:%="$(builddir)/%/conf.py")	\
+		$(PNGS_GENERATED)

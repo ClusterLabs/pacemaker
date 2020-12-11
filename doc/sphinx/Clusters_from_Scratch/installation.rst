@@ -14,7 +14,7 @@ boot a physical server from that.
 After starting the installation, select your language and keyboard layout at
 the welcome screen.
 
-.. figure:: ../../shared/en-US/images/Welcome.png
+.. figure:: images/Welcome.png
     :scale: 80%
     :width: 1024
     :height: 800
@@ -28,7 +28,7 @@ ____________________
 
 At this point, you get a chance to tweak the default installation options.
 
-.. figure:: ../../shared/en-US/images/Installer.png
+.. figure:: images/Installer.png
     :scale: 80%
     :width: 1024
     :height: 800
@@ -54,7 +54,7 @@ In the **NETWORK & HOSTNAME** section:
   (with an appropriate netmask, gateway and DNS server).
 - Flip the switch to turn your network device on, and press **Done**.
 
-.. figure:: ../../shared/en-US/images/Editing-eth0.png
+.. figure:: images/Editing-eth0.png
     :scale: 80%
     :width: 1024
     :height: 800
@@ -89,7 +89,7 @@ capacity by 1GiB or so. Select **Modify...** by the volume group name, and chang
 the **Size policy:** to **As large as possible**, to make the reclaimed space
 available inside the LVM volume group. We'll add the additional volume later.
 
-.. figure:: ../../shared/en-US/images/Partitioning.png
+.. figure:: images/Partitioning.png
     :scale: 80%
     :width: 1024
     :height: 800
@@ -119,7 +119,7 @@ as instructed. For the purposes of this document, it is not necessary to create
 any additional users. After the node reboots, you'll see a login prompt on
 the console. Login using **root** and the password you created earlier.
 
-.. figure:: ../../shared/en-US/images/Console.png
+.. figure:: images/Console.png
     :scale: 80%
     :width: 1024
     :height: 768

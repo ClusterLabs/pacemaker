@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2019 the Pacemaker project contributors
+# Copyright 2003-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,11 +17,7 @@ endif
 DEPRECATED_ALL		= $(DEPRECATED_ORIGINAL) $(DEPRECATED_GENERATED)
 
 # Current documentation based on asciidoc, DocBook, and pandoc
-BOOKS		= Clusters_from_Scratch		\
-		  Pacemaker_Administration	\
-		  Pacemaker_Development		\
-		  Pacemaker_Explained		\
-		  Pacemaker_Remote
+BOOKS		=
 
 doc_DATA		= $(DEPRECATED_ALL)
 noinst_SCRIPTS		= abi-check
@@ -30,7 +26,7 @@ noinst_SCRIPTS		= abi-check
 # them so configure can build the Makefile in a distribution.
 DIST_SUBDIRS	= sphinx
 
-EXTRA_DIST	= $(DEPRECATED_ORIGINAL) $(SHARED_TXT) $(PNGS_ORIGINAL) $(DOTS) $(SVGS)
+EXTRA_DIST	= $(DEPRECATED_ORIGINAL) $(SHARED_TXT)
 EXTRA_DIST	+= $(CFS_TXT) $(CFS_XML_ONLY)
 EXTRA_DIST	+= $(PA_TXT) $(PA_XML_ONLY)
 EXTRA_DIST	+= $(PD_TXT) $(PD_XML_ONLY)
@@ -56,52 +52,6 @@ DOCBOOK_FORMATS := html-desktop
 # What languages to build and upload to website by default
 # (currently only en-US because translations are out of date)
 DOCBOOK_LANGS   := en-US
-
-# @TODO We could simplify this (and .gitignore) by establishing a convention
-# that original image source begins with an uppercase letter and generated
-# files with lowercase.
-
-# Scheduler transition graphs
-# @TODO Add original XML, and generate DOTs via crm_simulate
-DOTS = $(wildcard shared/en-US/images/*.dot)
-
-# Vector sources for images
-# @TODO Generate transition SVGs from DOTs via dot
-SVGS =	$(wildcard shared/en-US/images/pcmk-*.svg)	\
-	$(DOTS:%.dot=%.svg)
-
-# Final images (some originally in PNG, others generated from SVG)
-PNGS_ORIGINAL =	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png	\
-		Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png	\
-		shared/en-US/images/Console.png				\
-		shared/en-US/images/Editing-eth0.png			\
-		shared/en-US/images/Installer.png			\
-		shared/en-US/images/Network.png				\
-		shared/en-US/images/Partitioning.png			\
-		shared/en-US/images/Welcome.png				\
-		shared/en-US/images/resource-set.png			\
-		shared/en-US/images/three-sets.png			\
-		shared/en-US/images/two-sets.png
-PNGS_GENERATED =	$(SVGS:%.svg=%-small.png)	\
-			$(SVGS:%.svg=%.png)		\
-			$(SVGS:%.svg=%-large.png)
-PNGS = $(PNGS_ORIGINAL) $(PNGS_GENERATED)
-
-graphics: $(PNGS)
-
-
-# two-phased attempts for Inkscape pre-1.0 and 1.0+ (upcoming) discrepancy
-%.png: %.svg
-	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=90 -C --export-png=$@ $< \
-	  || $(INKSCAPE) --export-dpi=90 -C --export-filename=$@ $<; } $(PCMK_quiet)
-
-%-small.png: %.svg
-	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=45 -C --export-png=$@ $< \
-	  || $(INKSCAPE) --export-dpi=45 -C --export-filename=$@ $<; } $(PCMK_quiet)
-
-%-large.png: %.svg
-	$(AM_V_GEN) { $(INKSCAPE) --export-dpi=180 -C --export-png=$@ $< \
-	  || $(INKSCAPE) --export-dpi=180 -C --export-filename=$@ $<; } $(PCMK_quiet)
 
 if IS_ASCIIDOC
 ASCIIDOC_HTML_ARGS	= --unsafe --backend=xhtml11

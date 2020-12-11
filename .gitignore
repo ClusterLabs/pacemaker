@@ -143,10 +143,9 @@ publican.cfg
 /doc/crm_fencing.html
 /doc/publican-catalog*
 /doc/shared/en-US/*.xml
-/doc/shared/en-US/images/pcmk-*.png
-/doc/shared/en-US/images/Policy-Engine-*.png
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
+/doc/sphinx/shared/images/*.png
 /lib/common/md5.c
 /maint/testcc_helper.cc
 /maint/testcc_*_h
@@ -219,6 +218,8 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /doc/Clusters_from_Scratch.txt
 /doc/Pacemaker_Explained.txt
 /doc/acls.html
+/doc/shared/en-US/images/pcmk-*.png
+/doc/shared/en-US/images/Policy-Engine-*.png
 /fencing
 /lib/common/tests/flags/pcmk__clear_flags_as
 /lib/common/tests/flags/pcmk__set_flags_as

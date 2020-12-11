@@ -820,7 +820,7 @@ AM_CONDITIONAL([BUILD_DOCBOOK],
 AM_CONDITIONAL([PUBLICAN_INTREE_BRAND],
                [test x"${publican_intree_brand}" = x"yes"])
 AM_CONDITIONAL([BUILD_SPHINX_DOCS],
-               [test x"${SPHINX}" != x""])
+               [test x"${SPHINX}" != x"" && test x"${INKSCAPE}" != x""])
 
 dnl Pacemaker's shell scripts (and thus man page builders) rely on GNU getopt
 AC_MSG_CHECKING([for GNU-compatible getopt])
