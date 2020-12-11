@@ -122,9 +122,8 @@ itself, allowing for more sophistication down the road.
    source directory.
 1. The CIB validity regression tests will break after the schema is updated.
    Run `cts/cts-cli -s` to make the referential outcomes reflect the transient
-   changes made so far, `git diff cts/cli/regression.validity.exp` to ensure
-   the these changes look sane, and `git add cts/cli/regression.validity.exp`
-   to enqueue this change for a subsequent commit.
+   changes made so far, `git diff` to ensure the these changes look sane, then
+   commit them.
 1. Similarly, with the new major version `${X}`, it's advisable to refresh
    scheduler tests at some point, see the instructions in `cts/README.md`.
 
