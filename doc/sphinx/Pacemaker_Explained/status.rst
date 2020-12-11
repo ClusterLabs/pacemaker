@@ -235,7 +235,7 @@ this tuple are used to create the id of the ``lrm_rsc_op`` object.
    |                  |    single: action; status, queue-time                    |
    |                  |                                                          |
    |                  | Time, in seconds, that the job was queued for in the     |
-   |                  | LRMd.  For diagnostic purposes.                          |
+   |                  | local executor. For diagnostic purposes.                 |
    +------------------+----------------------------------------------------------+
    | crm_feature_set  | .. index::                                               |
    |                  |    single: crm_feature_set; action status                |
