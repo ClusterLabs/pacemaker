@@ -12,8 +12,8 @@ Pacemaker has multiple forms of documentation:
     * Pacemaker Remote: Configuration and walk-throughs for extended
       clusters
 
-  The source for these is kept beneath this directory. Generated versions
-  are available online in epub, PDF, and HTML format at:
+  The source for these is kept in this directory's sphinx subdirectory.
+  Generated versions are available online in epub, PDF, and HTML format at:
 
     https://clusterlabs.org/pacemaker/doc/
 
@@ -53,38 +53,8 @@ Pacemaker has multiple forms of documentation:
 
 ## Editing the Books
 
-We are currently transitioning from using Publican to Sphinx
-to generate the books.
-
-### Publican
-
-Each book has a subdirectory by book title, containing a en-US subdirectory.
-
-Each book's en-US directory has .txt files, which are the chapter sources in
-asciidoc format. The file asciidoc.reference in this directory has a quick
-guide to asciidoc; search online for more detailed help.
-
-Once you have edited the asciidoc as desired, run "make" in this directory
-to generate all the books locally. You can view the results by pointing your
-web browser to (replacing BOOK\_TITLE appropriately):
-
-    file:///path/to/checkout/doc/BOOK_TITLE/publish/
-
-Each en-US subdirectory also contains some raw XML files of lesser interest:
-
-* Author\_Group.xml: This contains the author listing at the top of the
-  generated book. To avoid clutter, we just put "Pacemaker project
-  contributors" here and list individual authors in the revision history, so
-  this typically does not need to be edited.
-* Book\_Info.xml: Revision numbers, etc. This is generally updated only for
-  official releases.
-* Revision\_History.xml: This can be updated for any change, listing the
-  individual authors.
-
-### Sphinx
-
-There is a sphinx subdirectory here with a subdirectory for each book by title.
-Each book's directory contains .rst files, which are the chapter sources in
+The sphinx subdirectory has a subdirectory for each book by title. Each book's
+directory contains .rst files, which are the chapter sources in
 reStructuredText format (with index.rst as the starting point).
 
 Once you have edited the sources as desired, run "make" in the sphinx

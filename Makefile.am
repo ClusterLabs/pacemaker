@@ -33,21 +33,8 @@ MAINTAINERCLEANFILES	= Makefile.in		\
 			  py-compile		\
 			  test-driver
 
-# Disable building Publican documentation when doing "make distcheck", because
-# some of our book sources are in the source directory, while others are
-# dynamically generated in the build directory, and publican can't handle that.
-#
-# In a non-VPATH build, doc isn't entered with a plain "make" because the
-# GNUmakefile sets "core" as the default target. However in a VPATH build,
-# there is no GNUmakefile, so "all" becomes the default target.
-#
-# Also, don't try to install files outside the build directory.
-#
-# @TODO To support VPATH builds for Publican, we could use the same "copy all
-# static inputs into the build tree" trick that xml/Makefile.am uses for
-# static schema files.
-AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""					\
-				  --prefix="$$dc_install_base/usr"			\
+# Don't try to install files outside build directory for "make distcheck".
+AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --sysconfdir="$$dc_install_base/etc"			\
 				  --with-initdir="$$dc_install_base/etc/init.d"		\
 				  --with-ocfdir="$$dc_install_base/usr/lib/ocf"		\

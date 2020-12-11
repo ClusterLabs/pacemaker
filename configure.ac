@@ -299,14 +299,6 @@ AC_ARG_WITH([coverage],
     [ SUPPORT_COVERAGE=$withval ]
 )
 
-PUBLICAN_BRAND="common"
-AC_ARG_WITH([brand],
-    [AS_HELP_STRING([--with-brand=brand],
-        [brand to use for generated documentation (set empty for no docs) @<:@common@:>@])],
-    [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ]
-)
-AC_SUBST(PUBLICAN_BRAND)
-
 BUG_URL=""
 AC_ARG_WITH([bug-url],
     [AS_HELP_STRING([--with-bug-url=DIR],
@@ -733,7 +725,6 @@ esac
 
 AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
-AC_PATH_PROG([PUBLICAN], [publican])
 AC_PATH_PROG([SPHINX], [sphinx-build])
 AC_PATH_PROG([INKSCAPE], [inkscape])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
@@ -793,32 +784,6 @@ if test "x${ASCIIDOC_CONV}" != x; then
     PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
 
-publican_intree_brand=no
-if test x"${PUBLICAN_BRAND}" != x"" \
-   && test x"${PUBLICAN}" != x"" \
-   && test x"${INKSCAPE}" != x""; then
-
-    dnl special handling for clusterlabs brand (possibly in-tree version used)
-    test "${PUBLICAN_BRAND}" != "clusterlabs" \
-        || test -d /usr/share/publican/Common_Content/clusterlabs
-    if test $? -ne 0; then
-        dnl Unknown option: brand_dir vs. Option brand_dir requires an argument
-        if ${PUBLICAN} build --brand_dir 2>&1 | grep -Eq 'brand_dir$'; then
-            AC_MSG_WARN([Cannot use in-tree clusterlabs brand, resorting to common])
-            PUBLICAN_BRAND=common
-        else
-            publican_intree_brand=yes
-        fi
-    fi
-    AC_MSG_NOTICE([Enabling Publican-generated documentation using ${PUBLICAN_BRAND} brand])
-    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
-fi
-AM_CONDITIONAL([BUILD_DOCBOOK],
-               [test x"${PUBLICAN_BRAND}" != x"" \
-                && test x"${PUBLICAN}" != x"" \
-                && test x"${INKSCAPE}" != x""])
-AM_CONDITIONAL([PUBLICAN_INTREE_BRAND],
-               [test x"${publican_intree_brand}" = x"yes"])
 AM_CONDITIONAL([BUILD_SPHINX_DOCS],
                [test x"${SPHINX}" != x"" && test x"${INKSCAPE}" != x""])
 
@@ -2033,11 +1998,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 devel/Makefile                                      \
                 doc/Doxyfile                                        \
                 doc/Makefile                                        \
-                doc/Clusters_from_Scratch/publican.cfg              \
-                doc/Pacemaker_Administration/publican.cfg           \
-                doc/Pacemaker_Development/publican.cfg              \
-                doc/Pacemaker_Explained/publican.cfg                \
-                doc/Pacemaker_Remote/publican.cfg                   \
                 doc/sphinx/Makefile                                 \
                 extra/Makefile                                      \
                 extra/alerts/Makefile                               \

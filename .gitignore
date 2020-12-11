@@ -95,7 +95,6 @@ ylwrap
 include/config.h
 include/config.h.in
 include/crm_config.h
-publican.cfg
 /tools/cibsecret
 /tools/crm_error
 /tools/crm_failcount
@@ -129,11 +128,6 @@ publican.cfg
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /daemons/schedulerd/pacemaker-schedulerd.xml
-/doc/*/tmp/**
-/doc/*/publish
-/doc/*.build
-/doc/*/en-US/Ap-*.xml
-/doc/*/en-US/Ch-*.xml
 /doc/.ABI-build
 /doc/HTML
 /doc/abi_dumps
@@ -141,8 +135,6 @@ publican.cfg
 /doc/api/*
 /doc/compat_reports
 /doc/crm_fencing.html
-/doc/publican-catalog*
-/doc/shared/en-US/*.xml
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
 /doc/sphinx/shared/images/*.png
@@ -215,9 +207,17 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /coverage.sh
 /crmd
 /cts/HBDummy
+/doc/*.build
+/doc/*/en-US/Ap-*.xml
+/doc/*/en-US/Ch-*.xml
+/doc/*/publican.cfg
+/doc/*/publish
+/doc/*/tmp/**
 /doc/Clusters_from_Scratch.txt
 /doc/Pacemaker_Explained.txt
 /doc/acls.html
+/doc/publican-catalog*
+/doc/shared/en-US/*.xml
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
 /fencing
