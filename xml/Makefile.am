@@ -14,7 +14,7 @@ noarch_pkgconfig_DATA	= $(builddir)/pacemaker-schemas.pc
 # Pacemaker has 3 schemas: the CIB schema, the API schema (for command-line
 # tool XML output), and a legacy schema for crm_mon --as-xml.
 #
-# See Readme.md for details on updating CIB schema files (API is similar)
+# See README.md for details on updating CIB schema files (API is similar)
 
 # The CIB and crm_mon schemas are installed directly in CRM_SCHEMA_DIRECTORY
 # for historical reasons, while the API schema is installed in a subdirectory.
@@ -111,7 +111,7 @@ dist_MON_DATA		= $(MON_files)
 nodist_API_DATA		= $(API_generated)
 nodist_CIB_DATA		= $(CIB_generated)
 
-EXTRA_DIST		= Readme.md			\
+EXTRA_DIST		= README.md			\
 			  best-match.sh			\
 			  cibtr-2.rng			\
 			  context-of.xsl		\
