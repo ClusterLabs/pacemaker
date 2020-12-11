@@ -292,21 +292,19 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
              * monitor the child independently
              */
             crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        /* } else if(child && data->untrusted) {
-         * Support this use-case?
-         *
-         * The ability to have resources started/stopped by us, but
-         * unable to set attributes, etc.
-         *
-         * Arguably better to control API access this with ACLs like
-         * "normal" remote nodes
-         *
-         *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd",
-         *                           "/usr/libexec/pacemaker/pacemaker-execd");
-         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+#if 0
+        /* @TODO Consider supporting the use case where we can start and stop
+         * resources, but not proxy local commands (such as setting node
+         * attributes), by running the local executor in stand-alone mode.
+         * However, this would probably be better done via ACLs as with other
+         * Pacemaker Remote nodes.
          */
+        } else if ((child != NULL) && data->untrusted) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker-execd");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
+#endif
         } else {
             if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
@@ -460,21 +458,19 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
              * monitor the child independently
              */
             crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        /* } else if(child && data->untrusted) {
-         * Support this use-case?
-         *
-         * The ability to have resources started/stopped by us, but
-         * unable to set attributes, etc.
-         *
-         * Arguably better to control API access this with ACLs like
-         * "normal" remote nodes
-         *
-         *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd",
-         *                           "/usr/libexec/pacemaker/pacemaker-execd");
-         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+#if 0
+        /* @TODO Consider supporting the use case where we can start and stop
+         * resources, but not proxy local commands (such as setting node
+         * attributes), by running the local executor in stand-alone mode.
+         * However, this would probably be better done via ACLs as with other
+         * Pacemaker Remote nodes.
          */
+        } else if ((child != NULL) && data->untrusted) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker-execd");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
+#endif
         } else {
             if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
@@ -631,21 +627,19 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
              * monitor the child independently
              */
             crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        /* } else if(child && data->untrusted) {
-         * Support this use-case?
-         *
-         * The ability to have resources started/stopped by us, but
-         * unable to set attributes, etc.
-         *
-         * Arguably better to control API access this with ACLs like
-         * "normal" remote nodes
-         *
-         *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd",
-         *                           "/usr/libexec/pacemaker/pacemaker-execd");
-         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+#if 0
+        /* @TODO Consider supporting the use case where we can start and stop
+         * resources, but not proxy local commands (such as setting node
+         * attributes), by running the local executor in stand-alone mode.
+         * However, this would probably be better done via ACLs as with other
+         * Pacemaker Remote nodes.
          */
+        } else if ((child != NULL) && data->untrusted) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker-execd");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
+#endif
         } else {
             if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
