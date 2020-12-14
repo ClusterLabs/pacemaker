@@ -1589,12 +1589,20 @@ main(int argc, char **argv)
         /* Kind of a hack to display XML lists using a real tag instead of <list>.  This just
          * saves from having to write custom messages to build the lists around all these things
          */
-        if (options.rsc_cmd == cmd_list_resources || options.rsc_cmd == cmd_query_xml ||
-            options.rsc_cmd == cmd_query_raw_xml || options.rsc_cmd == cmd_list_active_ops ||
-            options.rsc_cmd == cmd_list_all_ops) {
-            pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
-        } else {
-            pcmk__force_args(context, &error, "%s --xml-substitute", g_get_prgname());
+        switch (options.rsc_cmd) {
+            case cmd_list_resources:
+            case cmd_query_xml:
+            case cmd_query_raw_xml:
+            case cmd_list_active_ops:
+            case cmd_list_all_ops:
+            case cmd_colocations:
+            case cmd_colocations_deep:
+                pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
+                break;
+
+            default:
+                pcmk__force_args(context, &error, "%s --xml-substitute", g_get_prgname());
+                break;
         }
     } else if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
         if (options.rsc_cmd == cmd_colocations || options.rsc_cmd == cmd_colocations_deep ||
