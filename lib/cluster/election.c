@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2020 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -34,18 +36,18 @@ struct election_s {
     time_t last_election_loss; // When dampening period ends
 };
 
-static void election_complete(election_t *e)
+static void
+election_complete(election_t *e)
 {
     e->state = election_won;
-
-    if(e->cb) {
+    if (e->cb != NULL) {
         e->cb(e);
     }
-
     election_reset(e);
 }
 
-static gboolean election_timer_cb(gpointer user_data)
+static gboolean
+election_timer_cb(gpointer user_data)
 {
     election_t *e = user_data;
 
@@ -54,13 +56,17 @@ static gboolean election_timer_cb(gpointer user_data)
     return FALSE;
 }
 
+/*!
+ * \brief Get current state of an election
+ *
+ * \param[in] e  Election object
+ *
+ * \return Current state of \e
+ */
 enum election_result
 election_state(election_t *e)
 {
-    if(e) {
-        return e->state;
-    }
-    return election_error;
+    return (e == NULL)? election_error : e->state;
 }
 
 /*!
@@ -122,7 +128,7 @@ election_init(const char *name, const char *uname, guint period_ms, GSourceFunc 
 void
 election_remove(election_t *e, const char *uname)
 {
-    if(e && uname && e->voted) {
+    if ((e != NULL) && (uname != NULL) && (e->voted != NULL)) {
         crm_trace("Discarding %s (no-)vote from lost peer %s", e->name, uname);
         g_hash_table_remove(e->voted, uname);
     }
@@ -158,7 +164,7 @@ election_reset(election_t *e)
 void
 election_fini(election_t *e)
 {
-    if(e) {
+    if (e != NULL) {
         election_reset(e);
         crm_trace("Destroying %s", e->name);
         mainloop_timer_del(e->timeout);
@@ -171,7 +177,7 @@ election_fini(election_t *e)
 static void
 election_timeout_start(election_t *e)
 {
-    if(e) {
+    if (e != NULL) {
         mainloop_timer_start(e->timeout);
     }
 }
@@ -184,7 +190,7 @@ election_timeout_start(election_t *e)
 void
 election_timeout_stop(election_t *e)
 {
-    if(e) {
+    if (e != NULL) {
         mainloop_timer_stop(e->timeout);
     }
 }
@@ -198,7 +204,7 @@ election_timeout_stop(election_t *e)
 void
 election_timeout_set_period(election_t *e, guint period)
 {
-    if(e) {
+    if (e != NULL) {
         mainloop_timer_set_period(e->timeout, period);
     } else {
         crm_err("No election defined");
@@ -206,7 +212,7 @@ election_timeout_set_period(election_t *e, guint period)
 }
 
 static int
-crm_uptime(struct timeval *output)
+get_uptime(struct timeval *output)
 {
     static time_t expires = 0;
     static struct rusage info;
@@ -241,11 +247,11 @@ crm_uptime(struct timeval *output)
 }
 
 static int
-crm_compare_age(struct timeval your_age)
+compare_age(struct timeval your_age)
 {
     struct timeval our_age;
 
-    crm_uptime(&our_age); /* If an error occurred, our_age will be compared as {0,0} */
+    get_uptime(&our_age); /* If an error occurred, our_age will be compared as {0,0} */
 
     if (our_age.tv_sec > your_age.tv_sec) {
         crm_debug("Win: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
@@ -306,7 +312,7 @@ election_vote(election_t *e)
     crm_xml_add(vote, F_CRM_ELECTION_OWNER, our_node->uuid);
     crm_xml_add_int(vote, F_CRM_ELECTION_ID, e->count);
 
-    crm_uptime(&age);
+    get_uptime(&age);
     crm_xml_add_timeval(vote, F_CRM_ELECTION_AGE_S, F_CRM_ELECTION_AGE_US, &age);
 
     send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
@@ -338,7 +344,7 @@ election_check(election_t *e)
     int voted_size = 0;
     int num_members = 0;
 
-    if(e == NULL) {
+    if (e == NULL) {
         crm_trace("Election check requested, but no election available");
         return FALSE;
     }
@@ -545,7 +551,7 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
                    && pcmk__str_eq(our_node->uuid, vote.election_owner,
                                    pcmk__str_none);
 
-    if(can_win == FALSE) {
+    if (!can_win) {
         reason = "Not eligible";
         we_lose = TRUE;
 
@@ -588,7 +594,7 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
 
     } else {
         // A peer vote requires a comparison to determine which node is better
-        int age_result = crm_compare_age(vote.age);
+        int age_result = compare_age(vote.age);
         int version_result = compare_version(vote.version, CRM_FEATURE_SET);
 
         if (version_result < 0) {

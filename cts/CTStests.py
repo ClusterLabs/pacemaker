@@ -707,10 +707,8 @@ class PartialStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-#   FIXME!  This should use the CM class to get the pattern
-#       then it would be applicable in general
         watchpats = []
-        watchpats.append("pacemaker-controld.*Connecting to cluster infrastructure")
+        watchpats.append("pacemaker-controld.*Connecting to .* cluster infrastructure")
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
         watch.setwatch()
 

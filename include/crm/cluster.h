@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2018 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,12 +29,10 @@ extern GHashTable *crm_peer_cache;
 extern GHashTable *crm_remote_peer_cache;
 extern unsigned long long crm_peer_seq;
 
-/* *INDENT-OFF* */
 #define CRM_NODE_LOST      "lost"
 #define CRM_NODE_MEMBER    "member"
 
-enum crm_join_phase
-{
+enum crm_join_phase {
     crm_join_nack       = -1,
     crm_join_none       = 0,
     crm_join_welcomed   = 1,
@@ -43,15 +41,13 @@ enum crm_join_phase
     crm_join_confirmed  = 4,
 };
 
-enum crm_node_flags
-{
+enum crm_node_flags {
     /* node is not a cluster node and should not be considered for cluster membership */
     crm_remote_node          = 0x0001,
 
     /* node's cache entry is dirty */
     crm_node_dirty           = 0x0010,
 };
-/* *INDENT-ON* */
 
 typedef struct crm_peer_node_s {
     char *uname;                // Node name as known to cluster
@@ -60,6 +56,11 @@ typedef struct crm_peer_node_s {
     uint64_t flags;             // Bitmask of crm_node_flags
     uint64_t last_seen;         // Only needed by cluster nodes
     uint32_t processes;         // @TODO most not needed, merge into flags
+
+    /* @TODO When we can break public API compatibility, we can make the rest of
+     * these members separate structs and use void *cluster_data and
+     * void *user_data here instead, to abstract the cluster layer further.
+     */
 
     // Currently only needed by corosync stack
     uint32_t id;                // Node ID
@@ -81,6 +82,10 @@ typedef struct crm_cluster_s {
     void (*destroy) (gpointer);
 
 #  if SUPPORT_COROSYNC
+    /* @TODO When we can break public API compatibility, make these members a
+     * separate struct and use void *cluster_data here instead, to abstract the
+     * cluster layer further.
+     */
     struct cpg_name group;
     cpg_callbacks_t cpg;
     cpg_handle_t cpg_handle;
@@ -88,10 +93,9 @@ typedef struct crm_cluster_s {
 
 } crm_cluster_t;
 
-gboolean crm_cluster_connect(crm_cluster_t * cluster);
-void crm_cluster_disconnect(crm_cluster_t * cluster);
+gboolean crm_cluster_connect(crm_cluster_t *cluster);
+void crm_cluster_disconnect(crm_cluster_t *cluster);
 
-/* *INDENT-OFF* */
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
 };
@@ -115,11 +119,9 @@ enum crm_get_peer_flags {
     CRM_GET_PEER_REMOTE    = 0x0002,
     CRM_GET_PEER_ANY       = CRM_GET_PEER_CLUSTER|CRM_GET_PEER_REMOTE,
 };
-/* *INDENT-ON* */
 
-gboolean send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service,
-                              xmlNode * data, gboolean ordered);
-
+gboolean send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
+                              xmlNode *data, gboolean ordered);
 
 int crm_remote_peer_cache_size(void);
 
@@ -137,8 +139,6 @@ crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 guint crm_active_peers(void);
 gboolean crm_is_peer_active(const crm_node_t * node);
 guint reap_crm_member(uint32_t id, const char *name);
-int crm_terminate_member(int nodeid, const char *uname, void *unused);
-int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
 
 #  if SUPPORT_COROSYNC
 uint32_t get_local_nodeid(cpg_handle_t handle);
@@ -173,9 +173,7 @@ enum crm_ais_msg_types text2msg_type(const char *text);
 void crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *));
 void crm_set_autoreap(gboolean autoreap);
 
-/* *INDENT-OFF* */
-enum cluster_type_e
-{
+enum cluster_type_e {
     pcmk_cluster_unknown     = 0x0001,
     pcmk_cluster_invalid     = 0x0002,
     // 0x0004 was heartbeat
@@ -183,7 +181,6 @@ enum cluster_type_e
     pcmk_cluster_corosync    = 0x0020,
     // 0x0040 was corosync 1 with CMAN
 };
-/* *INDENT-ON* */
 
 enum cluster_type_e get_cluster_type(void);
 const char *name_for_cluster_type(enum cluster_type_e type);
@@ -193,6 +190,13 @@ gboolean is_corosync_cluster(void);
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);
 
+/*!
+ * \brief Get log-friendly string equivalent of a join phase
+ *
+ * \param[in] phase  Join phase
+ *
+ * \return Log-friendly string equivalent of \p phase
+ */
 static inline const char *
 crm_join_phase_str(enum crm_join_phase phase)
 {
@@ -206,6 +210,16 @@ crm_join_phase_str(enum crm_join_phase phase)
     }
     return "invalid";
 }
+
+#ifndef PCMK__NO_COMPAT
+/* Everything here is deprecated and kept only for public API backward
+ * compatibility. It will be moved to compatibility.h in a future release.
+ */
+
+int crm_terminate_member(int nodeid, const char *uname, void *unused);
+int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
+                                     int *connection);
+#endif
 
 #ifdef __cplusplus
 }

@@ -99,7 +99,8 @@ crm_connect_corosync(crm_cluster_t * cluster)
         cluster->destroy = crmd_cs_destroy;
 
         if (crm_cluster_connect(cluster)) {
-            cluster_connect_quorum(crmd_quorum_callback, crmd_cs_destroy);
+            pcmk__corosync_quorum_connect(crmd_quorum_callback,
+                                          crmd_cs_destroy);
             return TRUE;
         }
     }

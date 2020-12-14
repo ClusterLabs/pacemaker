@@ -200,7 +200,7 @@ remote_node_up(const char *node_name)
     /* Ensure node is in the remote peer cache with member status */
     node = crm_remote_peer_get(node_name);
     CRM_CHECK(node != NULL, return);
-    crm_update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
+    pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
 
     /* pacemaker_remote nodes don't participate in the membership layer,
      * so cluster nodes don't automatically get notified when they come and go.
@@ -271,7 +271,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     /* Ensure node is in the remote peer cache with lost state */
     node = crm_remote_peer_get(node_name);
     CRM_CHECK(node != NULL, return);
-    crm_update_peer_state(__func__, node, CRM_NODE_LOST, 0);
+    pcmk__update_peer_state(__func__, node, CRM_NODE_LOST, 0);
 
     /* Notify DC */
     send_remote_state_message(node_name, FALSE);
@@ -314,7 +314,7 @@ check_remote_node_state(remote_ra_cmd_t *cmd)
         crm_node_t *node = crm_remote_peer_get(cmd->rsc_id);
 
         CRM_CHECK(node != NULL, return);
-        crm_update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
+        pcmk__update_peer_state(__func__, node, CRM_NODE_MEMBER, 0);
 
     } else if (pcmk__str_eq(cmd->action, "stop", pcmk__str_casei)) {
         lrm_state_t *lrm_state = lrm_state_find(cmd->rsc_id);

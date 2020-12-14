@@ -37,7 +37,7 @@ update_dc_expected(xmlNode *msg)
     if (fsa_our_dc && crm_is_true(crm_element_value(msg, F_CRM_DC_LEAVING))) {
         crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
 
-        crm_update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
+        pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
     }
 }
 

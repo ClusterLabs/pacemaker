@@ -61,7 +61,6 @@ static gboolean shutdown_complete_state_reported_client_closed = FALSE;
 
 typedef struct pcmk_child_s {
     pid_t pid;
-    long flag;
     int start_seq;
     int respawn_count;
     gboolean respawn;
@@ -78,38 +77,31 @@ typedef struct pcmk_child_s {
 
 static pcmk_child_t pcmk_children[] = {
     {
-        0, crm_proc_none,       0, 0, FALSE, "none",
-        NULL, NULL
+        0, 0, 0, FALSE, "none", NULL, NULL, NULL
     },
     {
-        0, crm_proc_execd,      3, 0, TRUE,  "pacemaker-execd",
-        NULL, CRM_DAEMON_DIR "/pacemaker-execd",
-        CRM_SYSTEM_LRMD
+        0, 3, 0, TRUE,  "pacemaker-execd", NULL,
+        CRM_DAEMON_DIR "/pacemaker-execd", CRM_SYSTEM_LRMD
     },
     {
-        0, crm_proc_based,      1, 0, TRUE,  "pacemaker-based",
-        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-based",
-        PCMK__SERVER_BASED_RO
+        0, 1, 0, TRUE,  "pacemaker-based", CRM_DAEMON_USER,
+        CRM_DAEMON_DIR "/pacemaker-based", PCMK__SERVER_BASED_RO
     },
     {
-        0, crm_proc_controld,   6, 0, TRUE, "pacemaker-controld",
-        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-controld",
-        CRM_SYSTEM_CRMD
+        0, 6, 0, TRUE, "pacemaker-controld", CRM_DAEMON_USER,
+        CRM_DAEMON_DIR "/pacemaker-controld", CRM_SYSTEM_CRMD
     },
     {
-        0, crm_proc_attrd,      4, 0, TRUE, "pacemaker-attrd",
-        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-attrd",
-        T_ATTRD
+        0, 4, 0, TRUE, "pacemaker-attrd", CRM_DAEMON_USER,
+        CRM_DAEMON_DIR "/pacemaker-attrd", T_ATTRD
     },
     {
-        0, crm_proc_schedulerd, 5, 0, TRUE, "pacemaker-schedulerd",
-        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-schedulerd",
-        CRM_SYSTEM_PENGINE
+        0, 5, 0, TRUE, "pacemaker-schedulerd", CRM_DAEMON_USER,
+        CRM_DAEMON_DIR "/pacemaker-schedulerd", CRM_SYSTEM_PENGINE
     },
     {
-        0, crm_proc_fenced,     2, 0, TRUE, "pacemaker-fenced",
-        NULL, CRM_DAEMON_DIR "/pacemaker-fenced",
-        "stonith-ng"
+        0, 2, 0, TRUE, "pacemaker-fenced", NULL,
+        CRM_DAEMON_DIR "/pacemaker-fenced", "stonith-ng"
     },
 };
 

@@ -199,7 +199,7 @@ attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
 
         crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID, &nodeid);
         if (nodeid > 0) {
-            crm_node_t *node = crm_find_peer(nodeid, NULL);
+            crm_node_t *node = pcmk__search_cluster_node_cache(nodeid, NULL);
             char *host_alloc = NULL;
 
             if (node && node->uname) {
@@ -709,7 +709,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         /* If we previously assumed this node was an unseen cluster node,
          * remove its entry from the cluster peer cache.
          */
-        crm_node_t *dup = crm_find_peer(0, host);
+        crm_node_t *dup = pcmk__search_cluster_node_cache(0, host);
 
         if (dup && (dup->uuid == NULL)) {
             reap_crm_member(0, host);

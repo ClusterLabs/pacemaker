@@ -296,7 +296,7 @@ mcp_read_config(void)
             rc = cmap_set_uint8(local_handle, key, 1);
             if (rc != CS_OK) {
                 crm_warn("Could not authorize group with Corosync: %s " CRM_XS
-                         " group=%u rc=%d", ais_error2text(rc), gid, rc);
+                         " group=%u rc=%d", pcmk__cs_err_str(rc), gid, rc);
             }
         }
     }
