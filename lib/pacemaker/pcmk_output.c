@@ -123,11 +123,15 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
-        out->message(out, "locations-list", cons->rsc_rh);
+        /* Empty list header just for indentation of information about this resource. */
+        out->begin_list(out, NULL, NULL, NULL);
 
+        out->message(out, "locations-list", cons->rsc_rh);
         if (recursive) {
             out->message(out, "rsc-is-colocated-with-list", cons->rsc_rh, recursive);
         }
+
+        out->end_list(out);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -170,7 +174,7 @@ PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "gboolean")
 static int
 rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    gboolean recursive G_GNUC_UNUSED = va_arg(args, gboolean);
+    gboolean recursive = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
@@ -190,15 +194,19 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (recursive) {
-            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
-        }
-
         hdr = colocations_header(cons->rsc_lh, cons, TRUE);
         out->list_item(out, NULL, "%s", hdr);
         free(hdr);
 
+        /* Empty list header just for indentation of information about this resource. */
+        out->begin_list(out, NULL, NULL, NULL);
+
         out->message(out, "locations-list", cons->rsc_lh);
+        if (recursive) {
+            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
+        }
+
+        out->end_list(out);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -312,12 +320,10 @@ stacks_and_constraints(pcmk__output_t *out, va_list args) {
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);
 
+    out->message(out, "locations-list", rsc);
+
     pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
     out->message(out, "rscs-colocated-with-list", rsc, recursive);
-
-    out->begin_list(out, NULL, NULL, "%s", rsc->id);
-    out->message(out, "locations-list", rsc);
-    out->end_list(out);
 
     pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
@@ -339,14 +345,11 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
     // Constraints apply to group/clone, not member/instance
     rsc = uber_parent(rsc);
 
-    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
     pcmk__output_xml_create_parent(out, "constraints", NULL);
-    out->message(out, "rscs-colocated-with-list", rsc, recursive);
-
-    pcmk__output_xml_create_parent(out, "resource",
-                                   "id", rsc->id,
-                                   NULL);
     out->message(out, "locations-list", rsc);
+
+    pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
+    out->message(out, "rscs-colocated-with-list", rsc, recursive);
 
     pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
