@@ -150,13 +150,8 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "rsc-is-colocated-with");
-
         if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
-            pcmk__output_create_xml_node(out, "colocation",
-                                         "peer", cons->rsc_rh->id,
-                                         "id", cons->id,
-                                         NULL);
+            colocations_xml_node(out, cons->rsc_rh, cons);
             continue;
         }
 
@@ -168,7 +163,6 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
         }
     }
 
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -227,10 +221,9 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
 
         if (pcmk_is_set(cons->rsc_lh->flags, pe_rsc_allocating)) {
+            colocations_xml_node(out, cons->rsc_lh, cons);
             continue;
         }
-
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "rscs-colocated-with");
 
         if (recursive) {
             out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
@@ -240,7 +233,6 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
         out->message(out, "locations-list", cons->rsc_lh);
     }
 
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
@@ -355,9 +347,10 @@ stacks_and_constraints_xml(pcmk__output_t *out, va_list args) {
                                    NULL);
     out->message(out, "locations-list", rsc);
 
-    pcmk__output_xml_pop_parent(out);
     pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
     out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
+
+    pcmk__output_xml_pop_parent(out);
     return pcmk_rc_ok;
 }
 
