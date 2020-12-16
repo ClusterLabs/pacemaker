@@ -246,7 +246,8 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
-static int locations_list(pcmk__output_t *out, va_list args) {
+static int
+locations_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     GList *lpc = NULL;
@@ -263,8 +264,8 @@ static int locations_list(pcmk__output_t *out, va_list args) {
             char *score = score2char(node->weight);
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Locations");
-            out->list_item(out, NULL, "Node %s (score=%s, id=%s)",
-                           node->details->uname, score, cons->id);
+            out->list_item(out, NULL, "Node %s (score=%s, id=%s, rsc=%s)",
+                           node->details->uname, score, cons->id, rsc->id);
             free(score);
         }
     }
@@ -274,7 +275,8 @@ static int locations_list(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
-static int locations_list_xml(pcmk__output_t *out, va_list args) {
+static int
+locations_list_xml(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
 
     GList *lpc = NULL;
@@ -292,8 +294,9 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "locations");
 
-            pcmk__output_create_xml_node(out, "location",
-                                         "host", node->details->uname,
+            pcmk__output_create_xml_node(out, XML_CONS_TAG_RSC_LOCATION,
+                                         "node", node->details->uname,
+                                         "rsc", rsc->id,
                                          "id", cons->id,
                                          "score", score,
                                          NULL);
