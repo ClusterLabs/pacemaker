@@ -170,7 +170,7 @@ PCMK__OUTPUT_ARGS("rscs-colocated-with-list", "pe_resource_t *", "gboolean")
 static int
 rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    gboolean recursive = va_arg(args, gboolean);
+    gboolean recursive G_GNUC_UNUSED = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
@@ -183,11 +183,12 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
         char *hdr = NULL;
 
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
+
         if (pcmk_is_set(cons->rsc_lh->flags, pe_rsc_allocating)) {
+            out->list_item(out, NULL, "%s (id=%s - loop)", cons->rsc_lh->id, cons->id);
             continue;
         }
-
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
 
         if (recursive) {
             out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
