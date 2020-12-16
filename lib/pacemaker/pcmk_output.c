@@ -112,7 +112,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
         char *hdr = NULL;
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Colocations")
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources %s is colocated with", rsc->id);
 
         if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
             out->list_item(out, NULL, "%s (id=%s - loop)", cons->rsc_rh->id, cons->id);
@@ -150,7 +150,7 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *lpc = rsc->rsc_cons; lpc != NULL; lpc = lpc->next) {
         rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Colocations");
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "rsc-is-colocated-with");
 
         if (pcmk_is_set(cons->rsc_rh->flags, pe_rsc_allocating)) {
             pcmk__output_create_xml_node(out, "colocation",
@@ -193,7 +193,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Colocations");
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
 
         if (recursive) {
             out->message(out, "rscs-colocated-with-list", rsc, recursive);
@@ -230,7 +230,7 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Colocations");
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "rscs-colocated-with");
 
         if (recursive) {
             out->message(out, "rscs-colocated-with-list", rsc, recursive);
