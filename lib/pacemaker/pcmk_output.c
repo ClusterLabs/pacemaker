@@ -126,7 +126,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
         out->message(out, "locations-list", cons->rsc_rh);
 
         if (recursive) {
-            out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
+            out->message(out, "rsc-is-colocated-with-list", cons->rsc_rh, recursive);
         }
     }
 
@@ -164,7 +164,7 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
         out->message(out, "locations-list", cons->rsc_rh);
 
         if (recursive) {
-            out->message(out, "rsc-is-colocated-with-list", rsc, recursive);
+            out->message(out, "rsc-is-colocated-with-list", cons->rsc_rh, recursive);
         }
     }
 
@@ -196,7 +196,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources colocated with %s", rsc->id);
 
         if (recursive) {
-            out->message(out, "rscs-colocated-with-list", rsc, recursive);
+            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
         }
 
         hdr = colocations_header(cons->rsc_lh, cons, TRUE);
@@ -233,7 +233,7 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "rscs-colocated-with");
 
         if (recursive) {
-            out->message(out, "rscs-colocated-with-list", rsc, recursive);
+            out->message(out, "rscs-colocated-with-list", cons->rsc_lh, recursive);
         }
 
         colocations_xml_node(out, cons->rsc_lh, cons);
