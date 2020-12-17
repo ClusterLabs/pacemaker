@@ -44,26 +44,16 @@
         </element>
     </define>
 
-    <define name="colocations-list">
-        <element name="colocations">
-            <oneOrMore>
-                <ref name="element-colocation-list"/>
-            </oneOrMore>
-        </element>
-    </define>
-
     <define name="constraints-list">
         <element name="constraints">
-            <optional>
-                <ref name="colocations-list"/>
-            </optional>
-            <element name="resource">
-                <attribute name="id"> <text/> </attribute>
-                <ref name="locations-list"/>
-            </element>
-            <optional>
-                <ref name="colocations-list"/>
-            </optional>
+            <interleave>
+                <zeroOrMore>
+                    <ref name="rsc-location" />
+                </zeroOrMore>
+                <zeroOrMore>
+                    <ref name="rsc-colocation" />
+                </zeroOrMore>
+            </interleave>
         </element>
     </define>
 
@@ -81,15 +71,12 @@
         </element>
     </define>
 
-    <define name="locations-list">
-        <element name="locations">
-            <zeroOrMore>
-                <element name="location">
-                    <attribute name="host"> <text/> </attribute>
-                    <attribute name="id"> <text/> </attribute>
-                    <attribute name="score"> <text/> </attribute>
-                </element>
-            </zeroOrMore>
+    <define name="rsc-location">
+        <element name="rsc_location">
+            <attribute name="node"> <text/> </attribute>
+            <attribute name="rsc"> <text/> </attribute>
+            <attribute name="id"> <text/> </attribute>
+            <externalRef href="../score.rng"/>
         </element>
     </define>
 
@@ -198,39 +185,26 @@
         </element>
     </define>
 
-    <define name="element-colocation-list">
-        <optional>
-            <element name="colocation">
-                <attribute name="peer"> <text/> </attribute>
-                <attribute name="id"> <text/> </attribute>
-            </element>
-        </optional>
-        <optional>
-            <ref name="colocations-list" />
-        </optional>
-        <choice>
-            <element name="colocation">
-                <attribute name="peer"> <text/> </attribute>
-                <attribute name="id"> <text/> </attribute>
-                <attribute name="score"> <text/> </attribute>
-                <attribute name="dependends">
-                    <choice>
-                        <value>needs</value>
-                        <value>with</value>
-                    </choice>
+    <define name="rsc-colocation">
+        <element name="rsc_colocation">
+            <attribute name="id"> <text/> </attribute>
+            <attribute name="rsc"> <text/> </attribute>
+            <attribute name="with-rsc"> <text/> </attribute>
+            <externalRef href="../score.rng"/>
+            <optional>
+                <attribute name="node-attribute"> <text/> </attribute>
+            </optional>
+            <optional>
+                <attribute name="rsc-role">
+                    <ref name="attribute-roles"/>
                 </attribute>
-                <attribute name="role"> <text/> </attribute>
-            </element>
-            <element name="colocation">
-                <attribute name="peer"> <text/> </attribute>
-                <attribute name="id"> <text/> </attribute>
-                <attribute name="score"> <text/> </attribute>
-            </element>
-        </choice>
-        <ref name="locations-list" />
-        <optional>
-            <ref name="colocations-list" />
-        </optional>
+            </optional>
+            <optional>
+                <attribute name="with-rsc-role">
+                    <ref name="attribute-roles"/>
+                </attribute>
+            </optional>
+        </element>
     </define>
 
     <define name="element-operation-list">
@@ -251,5 +225,14 @@
             </optional>
             <attribute name="status"> <text/> </attribute>
         </element>
+    </define>
+
+    <define name="attribute-roles">
+        <choice>
+            <value>Stopped</value>
+            <value>Started</value>
+            <value>Master</value>
+            <value>Slave</value>
+        </choice>
     </define>
 </grammar>
