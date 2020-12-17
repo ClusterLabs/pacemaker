@@ -63,7 +63,11 @@ DEPS_Pacemaker_Explained	= shared/pacemaker-intro.rst
 DEPS_Pacemaker_Remote		= $(wildcard $(srcdir)/Pacemaker_Remote/images/*.png)
 
 if BUILD_SPHINX_DOCS
+
+# Create a book's Sphinx configuration.
+# Create the book directory in case this is a VPATH build.
 $(BOOKS:%=%/conf.py): conf.py.in
+	$(AM_V_at)-$(MKDIR_P) "$(@:%/conf.py=%)"
 	$(AM_V_GEN)sed							\
 		-e 's/%VERSION%/$(VERSION)/g'				\
 		-e 's/%BOOK_ID%/$(@:%/conf.py=%)/g'			\
