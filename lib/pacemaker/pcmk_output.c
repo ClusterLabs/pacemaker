@@ -244,8 +244,7 @@ static int locations_list(pcmk__output_t *out, va_list args) {
 
     GList *lpc = NULL;
     GList *list = rsc->rsc_location;
-
-    out->begin_list(out, NULL, NULL, "Locations");
+    int rc = pcmk_rc_no_output;
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
@@ -256,15 +255,15 @@ static int locations_list(pcmk__output_t *out, va_list args) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
             char *score = score2char(node->weight);
 
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Locations");
             out->list_item(out, NULL, "Node %s (score=%s, id=%s)",
                            node->details->uname, score, cons->id);
             free(score);
         }
     }
 
-    out->end_list(out);
-
-    return pcmk_rc_ok;
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("locations-list", "pe_resource_t *")
@@ -273,8 +272,7 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
 
     GList *lpc = NULL;
     GList *list = rsc->rsc_location;
-
-    pcmk__output_xml_create_parent(out, "locations", NULL);
+    int rc = pcmk_rc_no_output;
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
         pe__location_t *cons = lpc->data;
@@ -284,6 +282,8 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
         for (lpc2 = cons->node_list_rh; lpc2 != NULL; lpc2 = lpc2->next) {
             pe_node_t *node = (pe_node_t *) lpc2->data;
             char *score = score2char(node->weight);
+
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "locations");
 
             pcmk__output_create_xml_node(out, "location",
                                          "host", node->details->uname,
@@ -294,9 +294,8 @@ static int locations_list_xml(pcmk__output_t *out, va_list args) {
         }
     }
 
-    pcmk__output_xml_pop_parent(out);
-
-    return pcmk_rc_ok;
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("stacks-constraints", "pe_resource_t *", "pe_working_set_t *", "gboolean")
