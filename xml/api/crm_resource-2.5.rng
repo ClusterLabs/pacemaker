@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm-resource"/>
+    </start>
+
+    <define name="element-crm-resource">
+        <choice>
+            <ref name="agents-list" />
+            <ref name="alternatives-list" />
+            <ref name="constraints-list" />
+            <externalRef href="generic-list-2.4.rng"/>
+            <element name="metadata"> <text/> </element>
+            <ref name="locate-list" />
+            <ref name="operations-list" />
+            <ref name="providers-list" />
+            <ref name="reasons-list" />
+            <ref name="resource-check" />
+            <ref name="resource-config" />
+            <ref name="resources-list" />
+        </choice>
+    </define>
+
+    <define name="agents-list">
+        <element name="agents">
+            <attribute name="standard"> <text/> </attribute>
+            <optional>
+                <attribute name="provider"> <text/> </attribute>
+            </optional>
+            <zeroOrMore>
+                <element name="agent"> <text/> </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="alternatives-list">
+        <element name="providers">
+            <attribute name="for"> <text/> </attribute>
+            <zeroOrMore>
+                <element name="provider"> <text/> </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="colocations-list">
+        <element name="colocations">
+            <oneOrMore>
+                <ref name="element-colocation-list"/>
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="constraints-list">
+        <element name="constraints">
+            <optional>
+                <ref name="colocations-list"/>
+            </optional>
+            <element name="resource">
+                <attribute name="id"> <text/> </attribute>
+                <ref name="locations-list"/>
+            </element>
+            <optional>
+                <ref name="colocations-list"/>
+            </optional>
+        </element>
+    </define>
+
+    <define name="locate-list">
+        <element name="nodes">
+            <attribute name="resource"> <text/> </attribute>
+            <zeroOrMore>
+                <element name="node">
+                    <optional>
+                        <attribute name="state"><value>promoted</value></attribute>
+                    </optional>
+                    <text/>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="locations-list">
+        <element name="locations">
+            <zeroOrMore>
+                <element name="location">
+                    <attribute name="host"> <text/> </attribute>
+                    <attribute name="id"> <text/> </attribute>
+                    <attribute name="score"> <text/> </attribute>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="operations-list">
+        <element name="operations">
+            <oneOrMore>
+                <ref name="element-operation-list" />
+            </oneOrMore>
+        </element>
+    </define>
+
+    <define name="providers-list">
+        <element name="providers">
+            <attribute name="standard"> <value>ocf</value> </attribute>
+            <optional>
+                <attribute name="agent"> <text/> </attribute>
+            </optional>
+            <zeroOrMore>
+                <element name="provider"> <text/> </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="reasons-list">
+        <choice>
+            <ref name="no-resource-or-uname"/>
+            <ref name="resource-and-uname"/>
+            <ref name="no-resource-but-uname"/>
+            <ref name="resource-but-no-uname"/>
+        </choice>
+    </define>
+
+    <define name="no-resource-or-uname">
+        <element name="reason">
+            <element name="resources">
+                <zeroOrMore>
+                    <element name="resource">
+                        <attribute name="id"> <text/> </attribute>
+                        <attribute name="running"> <data type="boolean"/> </attribute>
+                        <ref name="resource-check"/>
+                    </element>
+                </zeroOrMore>
+            </element>
+        </element>
+    </define>
+
+    <define name="resource-and-uname">
+        <element name="reason">
+            <attribute name="running_on"> <text/> </attribute>
+            <ref name="resource-check"/>
+        </element>
+    </define>
+
+    <define name="no-resource-but-uname">
+        <element name="reason">
+            <element name="resources">
+                <zeroOrMore>
+                    <element name="resource">
+                        <attribute name="id"> <text/> </attribute>
+                        <attribute name="running"> <data type="boolean"/> </attribute>
+                        <attribute name="host"> <text/> </attribute>
+                        <ref name="resource-check"/>
+                    </element>
+                </zeroOrMore>
+            </element>
+        </element>
+    </define>
+
+    <define name="resource-but-no-uname">
+        <element name="reason">
+            <attribute name="running"> <data type="boolean"/> </attribute>
+            <ref name="resource-check"/>
+        </element>
+    </define>
+
+    <define name="resource-config">
+        <element name="resource_config">
+            <externalRef href="resources-2.4.rng" />
+            <element name="xml"> <text/> </element>
+        </element>
+    </define>
+
+    <define name="resource-check">
+        <element name="check">
+            <attribute name="id"> <text/> </attribute>
+            <optional>
+                <choice>
+                    <attribute name="remain_stopped"><value>true</value></attribute>
+                    <attribute name="promotable"><value>false</value></attribute>
+                </choice>
+            </optional>
+            <optional>
+                <attribute name="unmanaged"><value>true</value></attribute>
+            </optional>
+            <optional>
+                <attribute name="locked-to"> <text/> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="resources-list">
+        <element name="resources">
+            <zeroOrMore>
+                <externalRef href="resources-2.4.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-colocation-list">
+        <optional>
+            <element name="colocation">
+                <attribute name="peer"> <text/> </attribute>
+                <attribute name="id"> <text/> </attribute>
+            </element>
+        </optional>
+        <optional>
+            <ref name="colocations-list" />
+        </optional>
+        <choice>
+            <element name="colocation">
+                <attribute name="peer"> <text/> </attribute>
+                <attribute name="id"> <text/> </attribute>
+                <attribute name="score"> <text/> </attribute>
+                <attribute name="dependends">
+                    <choice>
+                        <value>needs</value>
+                        <value>with</value>
+                    </choice>
+                </attribute>
+                <attribute name="role"> <text/> </attribute>
+            </element>
+            <element name="colocation">
+                <attribute name="peer"> <text/> </attribute>
+                <attribute name="id"> <text/> </attribute>
+                <attribute name="score"> <text/> </attribute>
+            </element>
+        </choice>
+        <ref name="locations-list" />
+        <optional>
+            <ref name="colocations-list" />
+        </optional>
+    </define>
+
+    <define name="element-operation-list">
+        <element name="operation">
+            <optional>
+                <group>
+                    <attribute name="rsc"> <text/> </attribute>
+                    <attribute name="agent"> <text/> </attribute>
+                </group>
+            </optional>
+            <attribute name="op"> <text/> </attribute>
+            <attribute name="node"> <text/> </attribute>
+            <attribute name="call"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="rc"> <data type="nonNegativeInteger" /> </attribute>
+            <optional>
+                <attribute name="last-rc-change"> <text/> </attribute>
+                <attribute name="exec-time"> <data type="nonNegativeInteger" /> </attribute>
+            </optional>
+            <attribute name="status"> <text/> </attribute>
+        </element>
+    </define>
+</grammar>
