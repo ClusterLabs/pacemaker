@@ -65,10 +65,14 @@ PNGS_Clusters_from_Scratch = $(wildcard Clusters_from_Scratch/images/*.png)
 PNGS_Pacemaker_Explained   = $(wildcard Pacemaker_Explained/images/*.png)
 PNGS_Pacemaker_Remote      = $(wildcard Pacemaker_Remote/images/*.png)
 
+STATIC_FILES	= $(wildcard _static/*.css)
+
 EXTRA_DIST	= $(wildcard */*.rst) $(DOTS) $(SVGS)		\
 		  $(PNGS_Clusters_from_Scratch)			\
 		  $(PNGS_Pacemaker_Explained)			\
-		  $(PNGS_Pacemaker_Remote)
+		  $(PNGS_Pacemaker_Remote)			\
+		  $(STATIC_FILES)				\
+		  conf.py.in
 
 # recursive, preserve symlinks/permissions/times, verbose, compress,
 # don't cross filesystems, sparse, show progress
@@ -115,7 +119,7 @@ $(BOOKS:%=%/conf.py): conf.py.in
 		-e 's#%SRC_DIR%#$(abs_srcdir)#g'			\
 		$(<) > "$@"
 
-$(BOOK)/_build: _static/pacemaker.css $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(srcdir)/$(BOOK)/*.rst)
+$(BOOK)/_build: $(STATIC_FILES) $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(srcdir)/$(BOOK)/*.rst)
 	@echo 'Building "$(subst _, ,$(BOOK))" because of $?' $(PCMK_quiet)
 	$(AM_V_at)rm -rf "$@"
 	$(AM_V_BOOK)for format in $(BOOK_FORMATS); do			\
