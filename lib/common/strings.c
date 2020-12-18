@@ -56,11 +56,7 @@ scan_ll(const char *text, long long *result, char **end_text)
 
     errno = 0;
     if (text != NULL) {
-#ifdef ANSI_ONLY
-        local_result = (long long) strtol(text, &local_end_text, 10);
-#else
         local_result = strtoll(text, &local_end_text, 10);
-#endif
         if (errno == ERANGE) {
             rc = EOVERFLOW;
             crm_warn("Integer parsed from %s was clipped to %lld",

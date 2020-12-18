@@ -157,11 +157,6 @@ dnl external values to use as defaults for configure options
 
 dnl --enable-* options
 
-AC_ARG_ENABLE([ansi],
-    [AS_HELP_STRING([--enable-ansi],
-        [force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])],
-)
-
 AC_ARG_ENABLE([fatal-warnings],
     [AS_HELP_STRING([--enable-fatal-warnings],
         [enable pedantic and fatal warnings for gcc @<:@yes@:>@])],
@@ -170,11 +165,6 @@ AC_ARG_ENABLE([fatal-warnings],
 AC_ARG_ENABLE([quiet],
     [AS_HELP_STRING([--enable-quiet],
         [suppress make output unless there is an error @<:@no@:>@])],
-)
-
-AC_ARG_ENABLE([no-stack],
-    [AS_HELP_STRING([--enable-no-stack],
-        [build only the scheduler and its requirements @<:@no@:>@])],
 )
 
 AC_ARG_ENABLE([upstart],
@@ -379,19 +369,6 @@ AC_ARG_WITH([daemon-group],
     [AS_HELP_STRING([--with-daemon-group=GROUP],
         [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
     [ CRM_DAEMON_GROUP="$withval" ]
-)
-
-
-dnl Deprecated options
-
-AC_ARG_WITH([pkg-name],
-    [AS_HELP_STRING([--with-pkg-name=name],
-        [deprecated and unused (will be removed in a future release)])],
-)
-
-AC_ARG_WITH([pkgname],
-    [AS_HELP_STRING([--with-pkgname=name],
-        [deprecated and unused (will be removed in a future release)])],
 )
 
 
@@ -1159,10 +1136,6 @@ dnl ========================================================================
 dnl    Cluster infrastructure - LibQB
 dnl ========================================================================
 
-if test x${enable_no_stack} = xyes; then
-    SUPPORT_CS=no
-fi
-
 PKG_CHECK_MODULES(libqb, libqb >= 0.17)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
@@ -1482,17 +1455,12 @@ dnl
 dnl    Cluster stack - Sanity
 dnl
 
-if test x${enable_no_stack} = xyes; then
-    AC_MSG_NOTICE(No cluster stack supported, building only the scheduler)
-    PCMK_FEATURES="$PCMK_FEATURES no-cluster-stack"
-else
-    AC_MSG_CHECKING(for supported stacks)
-    if test x"$STACKS" = x; then
-        AC_MSG_FAILURE(You must support at least one cluster stack)
-    fi
-    AC_MSG_RESULT($STACKS)
-    PCMK_FEATURES="$PCMK_FEATURES $STACKS"
+AC_MSG_CHECKING(for supported stacks)
+if test x"$STACKS" = x; then
+    AC_MSG_FAILURE(You must support at least one cluster stack)
 fi
+AC_MSG_RESULT($STACKS)
+PCMK_FEATURES="$PCMK_FEATURES $STACKS"
 
 PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
@@ -1722,11 +1690,6 @@ dnl otherwise none of both
             CC_EXTRAS="$CC_EXTRAS $j"
         fi
     done
-
-    if test "x${enable_ansi}" = xyes && cc_supports_flag -std=iso9899:199409 ; then
-        AC_MSG_NOTICE(Enabling ANSI Compatibility)
-        CC_EXTRAS="$CC_EXTRAS -ansi -D_GNU_SOURCE -DANSI_ONLY"
-    fi
 
     AC_MSG_NOTICE(Activated additional gcc flags: ${CC_EXTRAS})
 fi
