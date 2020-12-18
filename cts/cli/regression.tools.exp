@@ -2005,9 +2005,8 @@ resource dummy is running on: node1
 =#=#=#= End test: Show where a resource is running - OK (0) =#=#=#=
 * Passed: crm_resource   - Show where a resource is running
 =#=#=#= Begin test: Show constraints on a resource =#=#=#=
-dummy:
-  * Locations:
-    * Node node1 (score=-INFINITY, id=cli-ban-dummy-on-node1)
+Locations:
+  * Node node1 (score=-INFINITY, id=cli-ban-dummy-on-node1, rsc=dummy)
 =#=#=#= End test: Show constraints on a resource - OK (0) =#=#=#=
 * Passed: crm_resource   - Show constraints on a resource
 =#=#=#= Begin test: Ban dummy from node2 =#=#=#=
@@ -3470,3 +3469,553 @@ Removing constraint: cli-prefer-dummy
 
 =#=#=#= End test: Create an XML patchset - Error occurred (1) =#=#=#=
 * Passed: crm_diff       - Create an XML patchset
+=#=#=#= Begin test: Check locations and constraints for prim1 =#=#=#=
+=#=#=#= End test: Check locations and constraints for prim1 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim1
+=#=#=#= Begin test: Recursively check locations and constraints for prim1 =#=#=#=
+=#=#=#= End test: Recursively check locations and constraints for prim1 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim1
+=#=#=#= Begin test: Check locations and constraints for prim1 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim1 --output-as=xml">
+  <constraints/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim1 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim1 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim1 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim1 --output-as=xml">
+  <constraints/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim1 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim1 in XML
+=#=#=#= Begin test: Check locations and constraints for prim2 =#=#=#=
+Locations:
+  * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
+Resources prim2 is colocated with:
+  * prim3 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim2 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim2
+=#=#=#= Begin test: Recursively check locations and constraints for prim2 =#=#=#=
+Locations:
+  * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
+Resources prim2 is colocated with:
+  * prim3 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
+    * Resources prim3 is colocated with:
+      * prim4 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
+        * Locations:
+          * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+        * Resources prim4 is colocated with:
+          * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for prim2 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim2
+=#=#=#= Begin test: Check locations and constraints for prim2 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim2 --output-as=xml">
+  <constraints>
+    <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim2 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim2 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim2 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim2 --output-as=xml">
+  <constraints>
+    <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim2 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim2 in XML
+=#=#=#= Begin test: Check locations and constraints for prim3 =#=#=#=
+Resources colocated with prim3:
+  * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
+    * Locations:
+      * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
+Resources prim3 is colocated with:
+  * prim4 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
+    * Locations:
+      * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+=#=#=#= End test: Check locations and constraints for prim3 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim3
+=#=#=#= Begin test: Recursively check locations and constraints for prim3 =#=#=#=
+Resources colocated with prim3:
+  * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
+    * Locations:
+      * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
+Resources prim3 is colocated with:
+  * prim4 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
+    * Locations:
+      * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+    * Resources prim4 is colocated with:
+      * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for prim3 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim3
+=#=#=#= Begin test: Check locations and constraints for prim3 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim3 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim3 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim3 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim3 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim3 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim3 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim3 in XML
+=#=#=#= Begin test: Check locations and constraints for prim4 =#=#=#=
+Locations:
+  * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+Resources colocated with prim4:
+  * prim10 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
+  * prim3 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
+Resources prim4 is colocated with:
+  * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim4 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim4
+=#=#=#= Begin test: Recursively check locations and constraints for prim4 =#=#=#=
+Locations:
+  * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+Resources colocated with prim4:
+  * prim10 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
+  * prim3 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
+    * Resources colocated with prim3:
+      * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
+        * Locations:
+          * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
+Resources prim4 is colocated with:
+  * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for prim4 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim4
+=#=#=#= Begin test: Check locations and constraints for prim4 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim4 --output-as=xml">
+  <constraints>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim4 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim4 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim4 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim4 --output-as=xml">
+  <constraints>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim4 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim4 in XML
+=#=#=#= Begin test: Check locations and constraints for prim5 =#=#=#=
+Resources colocated with prim5:
+  * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
+    * Locations:
+      * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+=#=#=#= End test: Check locations and constraints for prim5 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim5
+=#=#=#= Begin test: Recursively check locations and constraints for prim5 =#=#=#=
+Resources colocated with prim5:
+  * prim4 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
+    * Locations:
+      * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+    * Resources colocated with prim4:
+      * prim10 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
+      * prim3 (score=INFINITY, id=colocation-prim3-prim4-INFINITY)
+        * Resources colocated with prim3:
+          * prim2 (score=INFINITY, id=colocation-prim2-prim3-INFINITY)
+            * Locations:
+              * Node cluster01 (score=INFINITY, id=prim2-on-cluster1, rsc=prim2)
+=#=#=#= End test: Recursively check locations and constraints for prim5 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim5
+=#=#=#= Begin test: Check locations and constraints for prim5 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim5 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim5 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim5 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim5 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim5 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim3-prim4-INFINITY" rsc="prim3" with-rsc="prim4" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim2-prim3-INFINITY" rsc="prim2" with-rsc="prim3" score="INFINITY"/>
+    <rsc_location node="cluster01" rsc="prim2" id="prim2-on-cluster1" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim5 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim5 in XML
+=#=#=#= Begin test: Check locations and constraints for prim6 =#=#=#=
+Locations:
+  * Node cluster02 (score=-INFINITY, id=prim6-not-on-cluster2, rsc=prim6)
+=#=#=#= End test: Check locations and constraints for prim6 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim6
+=#=#=#= Begin test: Recursively check locations and constraints for prim6 =#=#=#=
+Locations:
+  * Node cluster02 (score=-INFINITY, id=prim6-not-on-cluster2, rsc=prim6)
+=#=#=#= End test: Recursively check locations and constraints for prim6 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim6
+=#=#=#= Begin test: Check locations and constraints for prim6 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim6 --output-as=xml">
+  <constraints>
+    <rsc_location node="cluster02" rsc="prim6" id="prim6-not-on-cluster2" score="-INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim6 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim6 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim6 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim6 --output-as=xml">
+  <constraints>
+    <rsc_location node="cluster02" rsc="prim6" id="prim6-not-on-cluster2" score="-INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim6 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim6 in XML
+=#=#=#= Begin test: Check locations and constraints for prim7 =#=#=#=
+Resources prim7 is colocated with:
+  * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim7 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim7
+=#=#=#= Begin test: Recursively check locations and constraints for prim7 =#=#=#=
+Resources prim7 is colocated with:
+  * group (score=INFINITY, id=colocation-prim7-group-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for prim7 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim7
+=#=#=#= Begin test: Check locations and constraints for prim7 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim7 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim7 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim7 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim7 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim7 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim7 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim7 in XML
+=#=#=#= Begin test: Check locations and constraints for prim8 =#=#=#=
+Resources prim8 is colocated with:
+  * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim8 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim8
+=#=#=#= Begin test: Recursively check locations and constraints for prim8 =#=#=#=
+Resources prim8 is colocated with:
+  * gr2 (score=INFINITY, id=colocation-prim8-gr2-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for prim8 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim8
+=#=#=#= Begin test: Check locations and constraints for prim8 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim8 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim8 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim8 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim8 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim8 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim8-gr2-INFINITY" rsc="prim8" with-rsc="gr2" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim8 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim8 in XML
+=#=#=#= Begin test: Check locations and constraints for prim9 =#=#=#=
+Resources prim9 is colocated with:
+  * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim9 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim9
+=#=#=#= Begin test: Recursively check locations and constraints for prim9 =#=#=#=
+Resources prim9 is colocated with:
+  * clone (score=INFINITY, id=colocation-prim9-clone-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for prim9 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim9
+=#=#=#= Begin test: Check locations and constraints for prim9 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim9 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim9 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim9 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim9 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim9 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim9 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim9 in XML
+=#=#=#= Begin test: Check locations and constraints for prim10 =#=#=#=
+Resources prim10 is colocated with:
+  * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
+    * Locations:
+      * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+=#=#=#= End test: Check locations and constraints for prim10 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim10
+=#=#=#= Begin test: Recursively check locations and constraints for prim10 =#=#=#=
+Resources prim10 is colocated with:
+  * prim4 (score=INFINITY, id=colocation-prim10-prim4-INFINITY)
+    * Locations:
+      * Node cluster02 (score=INFINITY, id=prim4-on-cluster2, rsc=prim4)
+    * Resources prim4 is colocated with:
+      * prim5 (score=INFINITY, id=colocation-prim4-prim5-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for prim10 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim10
+=#=#=#= Begin test: Check locations and constraints for prim10 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim10 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim10 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim10 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim10 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim10 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim10-prim4-INFINITY" rsc="prim10" with-rsc="prim4" score="INFINITY"/>
+    <rsc_location node="cluster02" rsc="prim4" id="prim4-on-cluster2" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim4-prim5-INFINITY" rsc="prim4" with-rsc="prim5" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim10 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim10 in XML
+=#=#=#= Begin test: Check locations and constraints for prim11 =#=#=#=
+Resources colocated with prim11:
+  * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
+Resources prim11 is colocated with:
+  * prim12 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim11 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim11
+=#=#=#= Begin test: Recursively check locations and constraints for prim11 =#=#=#=
+Resources colocated with prim11:
+  * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
+    * Resources colocated with prim13:
+      * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
+        * Resources colocated with prim12:
+          * prim11 (id=colocation-prim11-prim12-INFINITY - loop)
+Resources prim11 is colocated with:
+  * prim12 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
+    * Resources prim12 is colocated with:
+      * prim13 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
+        * Resources prim13 is colocated with:
+          * prim11 (id=colocation-prim13-prim11-INFINITY - loop)
+=#=#=#= End test: Recursively check locations and constraints for prim11 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim11
+=#=#=#= Begin test: Check locations and constraints for prim11 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim11 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim11 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim11 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim11 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim11 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim11 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim11 in XML
+=#=#=#= Begin test: Check locations and constraints for prim12 =#=#=#=
+Resources colocated with prim12:
+  * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
+Resources prim12 is colocated with:
+  * prim13 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim12 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim12
+=#=#=#= Begin test: Recursively check locations and constraints for prim12 =#=#=#=
+Resources colocated with prim12:
+  * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
+    * Resources colocated with prim11:
+      * prim13 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
+        * Resources colocated with prim13:
+          * prim12 (id=colocation-prim12-prim13-INFINITY - loop)
+Resources prim12 is colocated with:
+  * prim13 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
+    * Resources prim13 is colocated with:
+      * prim11 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
+        * Resources prim11 is colocated with:
+          * prim12 (id=colocation-prim11-prim12-INFINITY - loop)
+=#=#=#= End test: Recursively check locations and constraints for prim12 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim12
+=#=#=#= Begin test: Check locations and constraints for prim12 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim12 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim12 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim12 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim12 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim12 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim12 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim12 in XML
+=#=#=#= Begin test: Check locations and constraints for prim13 =#=#=#=
+Resources colocated with prim13:
+  * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
+Resources prim13 is colocated with:
+  * prim11 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
+=#=#=#= End test: Check locations and constraints for prim13 - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim13
+=#=#=#= Begin test: Recursively check locations and constraints for prim13 =#=#=#=
+Resources colocated with prim13:
+  * prim12 (score=INFINITY, id=colocation-prim12-prim13-INFINITY)
+    * Resources colocated with prim12:
+      * prim11 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
+        * Resources colocated with prim11:
+          * prim13 (id=colocation-prim13-prim11-INFINITY - loop)
+Resources prim13 is colocated with:
+  * prim11 (score=INFINITY, id=colocation-prim13-prim11-INFINITY)
+    * Resources prim11 is colocated with:
+      * prim12 (score=INFINITY, id=colocation-prim11-prim12-INFINITY)
+        * Resources prim12 is colocated with:
+          * prim13 (id=colocation-prim12-prim13-INFINITY - loop)
+=#=#=#= End test: Recursively check locations and constraints for prim13 - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim13
+=#=#=#= Begin test: Check locations and constraints for prim13 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r prim13 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for prim13 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for prim13 in XML
+=#=#=#= Begin test: Recursively check locations and constraints for prim13 in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r prim13 --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim13-prim11-INFINITY" rsc="prim13" with-rsc="prim11" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim11-prim12-INFINITY" rsc="prim11" with-rsc="prim12" score="INFINITY"/>
+    <rsc_colocation id="colocation-prim12-prim13-INFINITY" rsc="prim12" with-rsc="prim13" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for prim13 in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for prim13 in XML
+=#=#=#= Begin test: Check locations and constraints for group =#=#=#=
+Resources colocated with group:
+  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
+=#=#=#= End test: Check locations and constraints for group - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group
+=#=#=#= Begin test: Recursively check locations and constraints for group =#=#=#=
+Resources colocated with group:
+  * prim7 (score=INFINITY, id=colocation-prim7-group-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for group - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for group
+=#=#=#= Begin test: Check locations and constraints for group in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r group --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for group in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for group in XML
+=#=#=#= Begin test: Recursively check locations and constraints for group in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r group --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim7-group-INFINITY" rsc="prim7" with-rsc="group" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for group in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for group in XML
+=#=#=#= Begin test: Check locations and constraints for clone =#=#=#=
+Resources colocated with clone:
+  * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
+=#=#=#= End test: Check locations and constraints for clone - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for clone
+=#=#=#= Begin test: Recursively check locations and constraints for clone =#=#=#=
+Resources colocated with clone:
+  * prim9 (score=INFINITY, id=colocation-prim9-clone-INFINITY)
+=#=#=#= End test: Recursively check locations and constraints for clone - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for clone
+=#=#=#= Begin test: Check locations and constraints for clone in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -a -r clone --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check locations and constraints for clone in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Check locations and constraints for clone in XML
+=#=#=#= Begin test: Recursively check locations and constraints for clone in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -A -r clone --output-as=xml">
+  <constraints>
+    <rsc_colocation id="colocation-prim9-clone-INFINITY" rsc="prim9" with-rsc="clone" score="INFINITY"/>
+  </constraints>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Recursively check locations and constraints for clone in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - Recursively check locations and constraints for clone in XML
