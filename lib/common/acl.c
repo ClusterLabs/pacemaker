@@ -266,20 +266,6 @@ pcmk__apply_acl(xmlNode *xml)
             p = match->_private;
             crm_trace("Applying %s ACL to %s matched by %s",
                       acl_to_text(acl->mode), path, acl->xpath);
-
-#ifdef SUSE_ACL_COMPAT
-            if (!pcmk_is_set(p->flags, acl->mode)
-                && pcmk_any_flags_set(p->flags,
-                                      xpf_acl_read|xpf_acl_write|xpf_acl_deny)) {
-                pcmk__config_warn("Configuration element %s is matched by "
-                                  "multiple ACL rules, only the first applies "
-                                  "('%s' wins over '%s')",
-                                  path, acl_to_text(p->flags),
-                                  acl_to_text(acl->mode));
-                free(path);
-                continue;
-            }
-#endif
             pcmk__set_xml_flags(p, acl->mode);
             free(path);
         }
