@@ -188,19 +188,14 @@ AC_ARG_ENABLE([hardening],
     [ HARDENING=try ],
 )
 
-# By default, we add symlinks at the pre-2.0.0 daemon name locations, so that:
-# (1) tools that directly invoke those names for metadata etc. will still work
-# (2) this installation can be used in a bundle container image used with
-#     cluster hosts running Pacemaker 1.1.17+
-# If you know your target systems will not have any need for it, you can
-# disable this option. Once the above use cases are no longer in wide use, we
-# can disable this option by default, and once we no longer want to support
-# them at all, we can drop the option altogether.
+# Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
+# that users and tools can continue to invoke those names directly (e.g., for
+# meta-data). This option will be deprecated in a future release.
 AC_ARG_ENABLE([legacy-links],
     [AS_HELP_STRING([--enable-legacy-links],
-        [add symlinks for old daemon names @<:@yes@:>@])],
+        [add symlinks for old daemon names @<:@no@:>@])],
     [ LEGACY_LINKS="${enableval}" ],
-    [ LEGACY_LINKS=yes ],
+    [ LEGACY_LINKS=no ],
 )
 AM_CONDITIONAL(BUILD_LEGACY_LINKS, test "x${LEGACY_LINKS}" = "xyes")
 
