@@ -690,7 +690,7 @@ resources, such as:
 
 .. topic:: Visual representation of the four resources' start order for the above constraints
 
-   .. image:: ../../shared/en-US/images/resource-set.png
+   .. image:: images/resource-set.png
       :alt: Ordered set
 
 Ordered Set
@@ -752,7 +752,7 @@ and **B** can both start in parallel, as can **C** and **D**, however **C** and
 .. topic:: Visual representation of the start order for two ordered sets of
            unordered resources
 
-   .. image:: ../../shared/en-US/images/two-sets.png
+   .. image:: images/two-sets.png
       :alt: Two ordered sets
 
 Of course either set -- or both sets -- of resources can also be internally
@@ -783,7 +783,7 @@ of sets that can be specified.
 
 .. topic:: Visual representation of the start order for the three sets defined above
 
-   .. image:: ../../shared/en-US/images/three-sets.png
+   .. image:: images/three-sets.png
       :alt: Three ordered sets
 
 .. important::
@@ -972,7 +972,7 @@ resources that are in a specific role, using the set's ``role`` property.
 .. topic:: Visual representation of the above example (resources are placed from
            left to right)
 
-   .. image:: ../../shared/en-US/images/pcmk-colocated-sets.png
+   .. image:: ../shared/images/pcmk-colocated-sets.png
       :alt: Colocation chain
 
 .. note::

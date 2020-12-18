@@ -352,7 +352,7 @@ example, the constraint will behave the same as:
 
       <rsc_order id="order1-1" first="storage" then="vm1" kind="Mandatory" />
       <rsc_order id="order1-2" first="storage" then="vm2" kind="Mandatory" />
-      <rsc_order id="order1-3" first="storage" then="vm2" kind="Mandatory" />
+      <rsc_order id="order1-3" first="storage" then="vm3" kind="Mandatory" />
 
 A tag may be used directly in the constraint, or indirectly by being
 listed in a :ref:`resource set <s-resource-sets>` used in the constraint.

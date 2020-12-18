@@ -1636,7 +1636,7 @@ uses a distinct ``control-port``.
    You may see examples using a **master** tag instead of a **clone** tag with the
    **promotable** meta-attribute set to **true**; the **master** tag is supported, but
    deprecated, and will be removed in a future version. You may also see such
-   services referred to as *multi-state* or *stateful*; these means the same thing
+   services referred to as *multi-state* or *stateful*; these mean the same thing
    as *promotable*.
 
 .. [#] Docker is a trademark of Docker, Inc. No endorsement by or association with

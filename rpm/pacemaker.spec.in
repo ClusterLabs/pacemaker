@@ -94,10 +94,6 @@
 %endif
 %endif
 
-## Heuristic used to infer bleeding-edge deployments that are
-## less likely to have working versions of the documentation tools
-%define bleeding %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
-
 ## Whether this platform defaults to using systemd as an init system
 ## (needs to be evaluated prior to BuildRequires being enumerated and
 ## installed as it's intended to conditionally select some of these, and
@@ -151,7 +147,6 @@
 %global pkgname_gnutls_devel gnutls-devel
 %global pkgname_shadow_utils shadow-utils
 %global pkgname_procps procps-ng
-%global pkgname_publican publican
 %global pkgname_glue_libs cluster-glue-libs
 %global pkgname_pcmk_libs %{name}-libs
 %global hacluster_id 189
@@ -289,11 +284,8 @@ BuildRequires: corosync-devel >= 2.0.0
 BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
-## (note no avoiding effect when building through non-customized mock)
-%if !%{bleeding}
 %if %{with doc}
-BuildRequires: inkscape asciidoc %{?pkgname_publican}
-%endif
+BuildRequires: inkscape asciidoc python3-sphinx
 %endif
 
 Provides:      pcmk-cluster-manager = %{version}-%{release}
@@ -498,7 +490,6 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_profiling:     --with-profiling}                                \
         %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
-        %{!?with_doc:          --with-brand=}                                   \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \

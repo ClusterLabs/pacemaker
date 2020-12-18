@@ -354,9 +354,11 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  | differs from ``is-managed`` in that monitors will    |
    |                            |                                  | not be run. Allowed values: ``true``, ``false``      |
    +----------------------------+----------------------------------+------------------------------------------------------+
-   | resource-stickiness        | 1 for individual clone           | .. index::                                           |
-   |                            | instances, 0 for all             |    single: resource-stickiness; resource option      |
-   |                            | other resources                  |    single: resource; option, resource-stickiness     |
+   | resource-stickiness        | 1 for individual clone           | .. _resource-stickiness:                             |
+   |                            | instances, 0 for all             |                                                      |
+   |                            | other resources                  | .. index::                                           |
+   |                            |                                  |    single: resource-stickiness; resource option      |
+   |                            |                                  |    single: resource; option, resource-stickiness     |
    |                            |                                  |                                                      |
    |                            |                                  | A score that will be added to the current node when  |
    |                            |                                  | a resource is already active. This allows running    |
@@ -364,13 +366,15 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  | would be placed elsewhere if they were being         |
    |                            |                                  | started from a stopped state.                        |
    +----------------------------+----------------------------------+------------------------------------------------------+
-   | requires                   | ``quorum`` for resources         | .. index::                                           |
-   |                            | with a ``class`` of ``stonith``, |    single: requires; resource option                 |
-   |                            | otherwise ``unfencing`` if       |    single: resource; option, requires                |
-   |                            | unfencing is active in the       |                                                      |
-   |                            | cluster, otherwise ``fencing``   | Conditions under which the resource can be           |
-   |                            | if ``stonith-enabled`` is true,  | started. Allowed values:                             |
-   |                            | otherwise ``quorum``             |                                                      |
+   | requires                   | ``quorum`` for resources         | .. _requires:                                        |
+   |                            | with a ``class`` of ``stonith``, |                                                      |
+   |                            | otherwise ``unfencing`` if       | .. index::                                           |
+   |                            | unfencing is active in the       |    single: requires; resource option                 |
+   |                            | cluster, otherwise ``fencing``   |    single: resource; option, requires                |
+   |                            | if ``stonith-enabled`` is true,  |                                                      |
+   |                            | otherwise ``quorum``             | Conditions under which the resource can be           |
+   |                            |                                  | started. Allowed values:                             |
+   |                            |                                  |                                                      |
    |                            |                                  | * ``nothing:`` can always be started                 |
    |                            |                                  | * ``quorum:`` The cluster can only start this        |
    |                            |                                  |   resource if a majority of the configured nodes     |
@@ -604,10 +608,11 @@ attributes, their purpose and default values.
       </actions>
       </resource-agent>
 
-.. _operation:
-
 .. index::
    single: resource; action
+   single: resource; operation
+
+.. _operation:
 
 Resource Operations
 ###################

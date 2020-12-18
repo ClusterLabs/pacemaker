@@ -43,7 +43,6 @@ Also: GNU make, and Python 2.7 or Python 3.2 or later
 | Linux-HA style fencing agents                   |                | cluster-glue-libs-devel | libglue-devel           | cluster-glue-dev        |
 | documentation                                   |                | asciidoc or asciidoctor | asciidoc or asciidoctor | asciidoc or asciidoctor |
 | documentation                                   |                | help2man                | help2man                | help2man                |
-| documentation                                   |                | publican                |                         | publican                |
 | documentation                                   |                | inkscape                | inkscape                | inkscape                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
 | documentation                                   |                | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx |

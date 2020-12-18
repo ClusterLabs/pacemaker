@@ -32,10 +32,8 @@ pacemaker_schedulerd_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la \
 pacemaker_schedulerd_SOURCES	= pacemaker-schedulerd.c
 
 install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
-	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(PE_STATE_DIR)
-	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(PE_STATE_DIR)
-	-chmod 750 $(DESTDIR)/$(PE_STATE_DIR)
+	$(INSTALL) -d -m 750 $(DESTDIR)/$(PE_STATE_DIR)
+	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(PE_STATE_DIR)
 
 if BUILD_LEGACY_LINKS
 install-exec-hook:
@@ -46,5 +44,6 @@ uninstall-hook:
 endif
 
 uninstall-local:
+	-rmdir $(DESTDIR)/$(PE_STATE_DIR)
 
 CLEANFILES = $(man7_MANS)

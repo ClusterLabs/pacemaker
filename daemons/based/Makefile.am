@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -40,9 +40,6 @@ cibmon_SOURCES	= cibmon.c
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 
-install-exec-local:
-#	cp -f $(top_srcdir)/crm/cib/cib.pam $(DESTDIR)/etc/pam.d/cib
-
 if BUILD_LEGACY_LINKS
 install-exec-hook:
 	$(MKDIR_P) -- $(DESTDIR)$(CRM_DAEMON_DIR)
@@ -51,5 +48,3 @@ install-exec-hook:
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f cib
 endif
-
-uninstall-local:

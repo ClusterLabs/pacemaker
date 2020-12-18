@@ -33,21 +33,8 @@ MAINTAINERCLEANFILES	= Makefile.in		\
 			  py-compile		\
 			  test-driver
 
-# Disable building Publican documentation when doing "make distcheck", because
-# some of our book sources are in the source directory, while others are
-# dynamically generated in the build directory, and publican can't handle that.
-#
-# In a non-VPATH build, doc isn't entered with a plain "make" because the
-# GNUmakefile sets "core" as the default target. However in a VPATH build,
-# there is no GNUmakefile, so "all" becomes the default target.
-#
-# Also, don't try to install files outside the build directory.
-#
-# @TODO To support VPATH builds for Publican, we could use the same "copy all
-# static inputs into the build tree" trick that xml/Makefile.am uses for
-# static schema files.
-AM_DISTCHECK_CONFIGURE_FLAGS	= --with-brand=""					\
-				  --prefix="$$dc_install_base/usr"			\
+# Don't try to install files outside build directory for "make distcheck".
+AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
 				  --sysconfdir="$$dc_install_base/etc"			\
 				  --with-initdir="$$dc_install_base/etc/init.d"		\
 				  --with-ocfdir="$$dc_install_base/usr/lib/ocf"		\
@@ -73,6 +60,17 @@ EXTRA_PROGRAMS		= scratch
 nodist_scratch_SOURCES	= scratch.c
 scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
+# Directories that should be created on install and removed on uninstall
+## owned by root:haclient, mode 0750
+ROOT_DIRS	= $(PACEMAKER_CONFIG_DIR)
+## owned by hacluster:haclient, mode 0750
+DAEMON_R_DIRS	= $(CRM_CONFIG_DIR)	\
+		  $(CRM_CORE_DIR)	\
+		  $(CRM_BLACKBOX_DIR)
+## owned by hacluster:haclient, mode 0770
+DAEMON_RW_DIRS	= $(CRM_BUNDLE_DIR)	\
+		  $(CRM_LOG_DIR)
+
 core:
 	@echo "Building only core components and tests: $(CORE)"
 	@for subdir in $(CORE); do \
@@ -95,19 +93,24 @@ core-clean:
 	done
 
 install-exec-local:
-	$(INSTALL) -d -m 750 $(DESTDIR)/$(PACEMAKER_CONFIG_DIR)
-	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
-	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CORE_DIR)
-	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_BLACKBOX_DIR)
-	$(INSTALL) -d -m 770 $(DESTDIR)/$(CRM_LOG_DIR)
-	$(INSTALL) -d -m 770 $(DESTDIR)/$(CRM_BUNDLE_DIR)
-	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(PACEMAKER_CONFIG_DIR)
-	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CONFIG_DIR)
-	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CORE_DIR)
-	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_BLACKBOX_DIR)
-	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_LOG_DIR)
-	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_BUNDLE_DIR)
-# Use chown because the user/group may not exist
+	for DIR in $(ROOT_DIRS) $(DAEMON_R_DIRS); do				\
+		$(INSTALL) -d -m 750 "$(DESTDIR)/$$DIR";			\
+	done
+	for DIR in $(DAEMON_RW_DIRS); do					\
+		$(INSTALL) -d -m 770 "$(DESTDIR)/$$DIR";			\
+	done
+	-for DIR in $(ROOT_DIRS); do						\
+		chgrp $(CRM_DAEMON_GROUP) "$(DESTDIR)/$$DIR";			\
+	done
+	-for DIR in $(DAEMON_R_DIRS) $(DAEMON_RW_DIRS); do			 \
+		chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) "$(DESTDIR)/$$DIR"; \
+	done
+
+# Remove created directories only if they're empty
+uninstall-hook:
+	-for DIR in $(ROOT_DIRS) $(DAEMON_R_DIRS) $(DAEMON_RW_DIRS); do	\
+		rmdir "$(DESTDIR)/$$DIR";				\
+	done
 
 clean-generic:
 	-rm -f *.tar.bz2 *.sed
