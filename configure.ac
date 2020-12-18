@@ -1163,21 +1163,16 @@ if test x${enable_no_stack} = xyes; then
     SUPPORT_CS=no
 fi
 
-PKG_CHECK_MODULES(libqb, libqb >= 0.13)
+PKG_CHECK_MODULES(libqb, libqb >= 0.17)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
-dnl libqb 2.02+ (2020-10)
+dnl libqb 2.0.2+ (2020-10)
 AC_CHECK_FUNCS(qb_ipcc_auth_get,
                AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
                          [Have qb_ipcc_auth_get function]))
 
 PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
-
-dnl libqb 0.17.0+ (2014-02)
-AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size,
-               AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE, 1,
-                         [Have qb_ipcc_get_buffer_size function]))
 
 dnl libqb 2.0.0+ (2020-05)
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
@@ -1508,39 +1503,14 @@ dnl    ACL
 dnl ========================================================================
 
 case $SUPPORT_ACL in
-    1|yes|true)
-        missingisfatal=1
-        ;;
-    try)
-        missingisfatal=0
+    1|yes|true|try)
+        SUPPORT_ACL=1
+        PCMK_FEATURES="$PCMK_FEATURES acls"
         ;;
     *)
-        SUPPORT_ACL=no
+        SUPPORT_ACL=0
         ;;
 esac
-
-AC_MSG_CHECKING(for acl support)
-if test $SUPPORT_ACL = no; then
-    AC_MSG_RESULT(no (disabled))
-    SUPPORT_ACL=0
-else
-    AC_MSG_RESULT($SUPPORT_ACL)
-
-    AC_CHECK_FUNCS(qb_ipcs_connection_auth_set, SUPPORT_ACL=1, SUPPORT_ACL=0)
-
-    if test $SUPPORT_ACL = 0; then
-        if test $missingisfatal = 0; then
-            AC_MSG_WARN(Unable to support ACL. You need to use libqb > 0.13.0)
-        else
-            AC_MSG_FAILURE(Unable to support ACL. You need to use libqb > 0.13.0)
-        fi
-    fi
-fi
-
-if test $SUPPORT_ACL = 1; then
-    PCMK_FEATURES="$PCMK_FEATURES acls"
-fi
-
 AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")
 AC_DEFINE_UNQUOTED(ENABLE_ACL, $SUPPORT_ACL, Build in support for CIB ACL)
 
