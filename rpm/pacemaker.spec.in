@@ -31,9 +31,6 @@
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
 %global commit_abbrev 7
 
-## Python major version to use (2, 3, or 0 for auto-detect)
-%global python_major 0
-
 
 # Define conditionals so that "rpmbuild --with <feature>" and
 # "rpmbuild --without <feature>" can enable and disable specific features
@@ -154,13 +151,6 @@
 
 # Python-related definitions
 
-## Use Python 3 on certain platforms if major version not specified
-%if %{?python_major} == 0
-%if 0%{?fedora} > 26 || 0%{?rhel} > 7
-%global python_major 3
-%endif
-%endif
-
 ## Turn off auto-compilation of Python files outside Python specific paths,
 ## so there's no risk that unexpected "__python" macro gets picked to do the
 ## RPM-native byte-compiling there (only "{_datadir}/pacemaker/tests" affected)
@@ -174,17 +164,11 @@
                             sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g'; })
 %endif
 
-## Values that differ by Python major version
-%if 0%{?python_major} > 2
+## Prefer Python 3 definitions explicitly, in case 2 is also available
+%if %{defined __python3}
 %global python_name python3
-%global python_path %{?__python3}%{!?__python3:/usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}}
+%global python_path %{__python3}
 %define python_site %{?python3_sitelib}%{!?python3_sitelib:%(
-  %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
-%else
-%if 0%{?python_major} > 1
-%global python_name python2
-%global python_path %{?__python2}%{!?__python2:/usr/bin/python%{?python2_pkgversion}%{!?python2_pkgversion:2}}
-%define python_site %{?python2_sitelib}%{!?python2_sitelib:%(
   %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %else
 %if %{defined python_version}
@@ -196,7 +180,6 @@
 %endif
 %define python_site %{?python_sitelib}%{!?python_sitelib:%(
   %{python_name} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
-%endif
 %endif
 
 
@@ -285,7 +268,7 @@ BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
 %if %{with doc}
-BuildRequires: inkscape asciidoc python3-sphinx
+BuildRequires: inkscape asciidoc %{python_name}-sphinx
 %endif
 
 Provides:      pcmk-cluster-manager = %{version}-%{release}
@@ -423,17 +406,11 @@ Requires:      %{pkgname_procps}
 Requires:      psmisc
 BuildArch:     noarch
 
-# systemd python bindings are separate package in some distros
+# systemd Python bindings are a separate package in some distros
 %if %{defined systemd_requires}
-
 %if 0%{?fedora} > 22 || 0%{?rhel} > 7
 Requires:      %{python_name}-systemd
-%else
-%if 0%{?fedora} > 20 || 0%{?rhel} > 6
-Requires:      systemd-python
 %endif
-%endif
-
 %endif
 
 %description   cts

@@ -45,7 +45,7 @@ before_install:
 install:
  - sudo apt-get install -qq
       automake autoconf libtool
-      python python-dev
+      python3 python3-dev
       libbz2-dev libdbus-1-dev libglib2.0-dev libgnutls-dev libltdl-dev
       libncurses5-dev libpam0g-dev libxml2-dev libxslt1-dev uuid-dev
       libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev

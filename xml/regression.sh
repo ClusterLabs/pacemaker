@@ -1,9 +1,11 @@
 #!/bin/sh
-# Copyright 2018-2019 the Pacemaker project contributors
+#
+# Copyright 2018-2020 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
-# SPDX-License-Identifier: GPL-2.0-or-later
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 
 set -eu
 test -d assets && test -d test-2 \
@@ -133,13 +135,7 @@ test_browser() {
 	{ which python3 >/dev/null 2>/dev/null \
 	  && { python3 -m http.server "${HTTPPORT}" -b 127.0.0.1 \
 	       || emit_error "Python3 HTTP server fail"; return; } \
-	  || which python2 >/dev/null 2>/dev/null \
-	       && { printf '%s %s\n' \
-	            'Python 2 backed HTTP server cannot listen at particular' \
-	            'address, discretion regarding firewall rules recommended!'
-	            python2 -m SimpleHTTPServer "${HTTPPORT}" \
-	            || emit_error 'Python2 HTTP server fail'; return; } \
-	       || emit_error 'Cannot run Python based HTTP server' ; } &
+	       || emit_error 'Cannot run Python-based HTTP server' ; } &
 	_tb_serverpid=$!
 	${WEBBROWSER} "http://localhost:${HTTPPORT}/${_tb_first}" &
 	printf "When finished, just press Ctrl+C or kill %d, please\n" \
