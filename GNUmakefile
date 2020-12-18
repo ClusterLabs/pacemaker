@@ -118,12 +118,12 @@ export:
 
 # Where to put RPM artifacts; possible values:
 #
-# - toplevel (default): RPM sources, spec, and source rpm in top-level build
-#   directory (everything else uses the usual defaults)
-#
-# - subtree: RPM sources (i.e. TARFILE) in top-level build directory,
+# - subtree (default): RPM sources (i.e. TARFILE) in top-level build directory,
 #   everything else in dedicated "rpm" subdirectory of build tree
-RPMDEST         	?= toplevel
+#
+# - toplevel (deprecated): RPM sources, spec, and source rpm in top-level build
+#   directory, everything else uses the usual rpmbuild defaults
+RPMDEST         	?= subtree
 
 RPM_SPEC_DIR_toplevel	= $(abs_builddir)
 RPM_SRCRPM_DIR_toplevel	= $(abs_builddir)
