@@ -248,7 +248,7 @@ BuildRequires: coreutils findutils grep sed
 
 # Required for core functionality
 BuildRequires: automake autoconf gcc libtool pkgconfig %{?pkgname_libtool_devel}
-BuildRequires: pkgconfig(glib-2.0) >= 2.16
+BuildRequires: pkgconfig(glib-2.0) >= 2.32
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: %{pkgname_bzip2_devel}
 

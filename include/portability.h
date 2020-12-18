@@ -74,17 +74,6 @@ char *strndup(const char *str, size_t len);
 
 #  include <glib.h>
 
-#  if !GLIB_CHECK_VERSION(2,28,0)
-#    include <string.h>
-/* Since: 2.28 */
-static inline void
-g_list_free_full(GList * list, GDestroyNotify free_func)
-{
-    g_list_foreach(list, (GFunc) free_func, NULL);
-    g_list_free(list);
-}
-#  endif
-
 #  if !GLIB_CHECK_VERSION(2,38,0)
 #    define g_assert_true(expr) g_assert_cmpint((expr), ==, TRUE)
 #    define g_assert_false(expr) g_assert_cmpint((expr), !=, TRUE)

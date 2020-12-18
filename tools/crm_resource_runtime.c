@@ -669,10 +669,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
             }
         }
 
-        /* not available until glib 2.32
         g_hash_table_add(rscs, (gpointer) failed_id);
-        */
-        g_hash_table_insert(rscs, (gpointer) failed_id, (gpointer) failed_id);
     }
 
     g_hash_table_iter_init(&iter, rscs);

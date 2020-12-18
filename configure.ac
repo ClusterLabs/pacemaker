@@ -858,8 +858,8 @@ if test "x$ac_cv_func_uuid_unparse" != xyes; then
     AC_MSG_ERROR(You do not have the libuuid development package installed)
 fi
 
-# Require glib 2.16.0 (2008-03) or later for g_hash_table_iter_init() etc.
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16.0],
+# Require glib 2.32.0 (2012-03) or later
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.32.0],
                   [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
                    LIBS="${LIBS} ${GLIB_LIBS}"])
 
