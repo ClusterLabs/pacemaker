@@ -765,3 +765,34 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     free(key);
     return xml_op;
 }
+
+/*!
+ * \internal
+ * \brief Check whether a colocation constraint should apply
+ *
+ * \param[in] rsc            Resource of interest (for logging)
+ * \param[in] colocation     Colocation constraint to check
+ * \param[in] promoted_only  If true, constraint applies if right-hand is promoted
+ */
+bool
+pcmk__colocation_applies(pe_resource_t *rsc, pcmk__colocation_t *colocation,
+                         bool promoted_only)
+{
+    CRM_CHECK((rsc != NULL) && (colocation != NULL), return false);
+
+    if (colocation->score == 0) {
+        pe_rsc_trace(rsc, "Ignoring colocation constraint %s: 0 score",
+                     colocation->id);
+        return false;
+    }
+    if (promoted_only && (colocation->role_rh != RSC_ROLE_MASTER)) {
+        pe_rsc_trace(rsc, "Ignoring colocation constraint %s: role",
+                     colocation->id);
+        return false;
+    }
+    pe_rsc_trace(rsc, "Applying colocation constraint %s: %s with %s%s (%d)",
+                 colocation->id, colocation->rsc_lh->id,
+                 (promoted_only? "promoted " : ""),
+                 colocation->rsc_rh->id, colocation->score);
+    return true;
+}

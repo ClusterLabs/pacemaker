@@ -516,13 +516,13 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (constraint->score == 0) {
-            continue;
+        if (pcmk__colocation_applies(rsc, constraint, false)) {
+            nodes = pcmk__native_merge_weights(constraint->rsc_lh, rsc->id,
+                                               nodes,
+                                               constraint->node_attribute,
+                                               constraint->score / (float) INFINITY,
+                                               flags);
         }
-        nodes = pcmk__native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
-                                           constraint->node_attribute,
-                                           constraint->score / (float) INFINITY,
-                                           flags);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);

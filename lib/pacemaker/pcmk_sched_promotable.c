@@ -345,23 +345,14 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (constraint->score == 0) {
-            continue;
-        }
-
-        /* (re-)adds location preferences of resource that wish to be
-         * colocated with the master instance
-         */
-        if (constraint->role_rh == RSC_ROLE_MASTER) {
-            pe_rsc_trace(rsc, "LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
-                         constraint->score);
-            rsc->allowed_nodes =
-                constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id,
-                                                        rsc->allowed_nodes,
-                                                        constraint->node_attribute,
-                                                        (float)constraint->score / INFINITY,
-                                                        (pe_weights_rollback |
-                                                         pe_weights_positive));
+        if (pcmk__colocation_applies(rsc, constraint, true)) {
+            /* (Re-)add location preferences of resource that wishes to be
+             * colocated with the promoted instance.
+             */
+            rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh,
+                    rsc->id, rsc->allowed_nodes, constraint->node_attribute,
+                    constraint->score / (float) INFINITY,
+                    pe_weights_rollback|pe_weights_positive);
         }
     }
 
