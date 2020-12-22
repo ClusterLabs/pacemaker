@@ -947,8 +947,7 @@ dnl ========================================================================
 dnl Functions
 dnl ========================================================================
 
-AC_CHECK_FUNCS(getopt, AC_DEFINE(HAVE_DECL_GETOPT,  1, [Have getopt function]))
-AC_CHECK_FUNCS(nanosleep, AC_DEFINE(HAVE_DECL_NANOSLEEP,  1, [Have nanosleep function]))
+AC_CHECK_FUNCS(getopt)
 
 AC_CACHE_CHECK(whether sscanf supports %m,
                pf_cv_var_sscanf,
