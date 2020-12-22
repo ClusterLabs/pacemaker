@@ -316,16 +316,12 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
         goto error;
     }
 
-#ifdef HAVE_GNUTLS_SEC_PARAM_TO_PK_BITS
     dh_bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
                                           GNUTLS_SEC_PARAM_NORMAL);
     if (dh_bits == 0) {
         rc = GNUTLS_E_DH_PRIME_UNACCEPTABLE;
         goto error;
     }
-#else
-    dh_bits = 1024;
-#endif
     dh_bits = get_bound_dh_bits(dh_bits);
 
     crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",

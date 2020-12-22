@@ -1542,16 +1542,11 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-dnl gnutls_priority_set_direct available since 2.1.7 (released 2007-11-29)
-AC_CHECK_LIB(gnutls, gnutls_priority_set_direct)
-if test "$ac_cv_lib_gnutls_gnutls_priority_set_direct" != ""; then
-    AC_CHECK_HEADERS(gnutls/gnutls.h)
-    AC_CHECK_FUNCS([gnutls_sec_param_to_pk_bits]) dnl since 2.12.0 (2011-03-24)
-    if test "$ac_cv_header_gnutls_gnutls_h" != "yes"; then
-        PC_NAME_GNUTLS=""
-    else
-        PC_NAME_GNUTLS="gnutls"
-    fi
+dnl Require GnuTLS >=2.12.0 (2011-03) to support Pacemaker Remote
+AC_CHECK_LIB(gnutls, gnutls_sec_param_to_pk_bits)
+if test "$ac_cv_lib_gnutls_gnutls_sec_param_to_pk_bits" != ""; then
+    AC_CHECK_HEADERS(gnutls/gnutls.h,
+		     [PC_NAME_GNUTLS="gnutls"], [PC_NAME_GNUTLS=""])
     AC_SUBST(PC_NAME_GNUTLS)
 fi
 
