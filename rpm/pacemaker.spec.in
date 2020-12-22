@@ -183,18 +183,6 @@
 %endif
 
 
-# Definitions for backward compatibility with older RPM versions
-
-## Ensure the license macro behaves consistently (older RPM will otherwise
-## overwrite it once it encounters "License:"). Courtesy Jason Tibbitts:
-## https://pkgs.fedoraproject.org/cgit/rpms/epel-rpm-macros.git/tree/macros.zzz-epel?h=el6&id=e1adcb77
-%if !%{defined _licensedir}
-%define description %{lua:
-    rpm.define("license %doc")
-    print("%description")
-}
-%endif
-
 # Keep sane profiling data if requested
 %if %{with profiling}
 

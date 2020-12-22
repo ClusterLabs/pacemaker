@@ -48,6 +48,7 @@ Also: GNU make
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
 | documentation                                   |                | python3-sphinx          | python3-sphinx          | python3-sphinx          |
 | documentation (PDF)                             |                | texlive, texlive-titlesec, texlive-framed, texlive-threeparttable texlive-wrapfig texlive-multirow | texlive, texlive-latex  | texlive, texlive-latex-extra |
+| RPM packages via "make rpm"                     | 4.11 or later  | rpm                     | rpm                     | (n/a)                   |
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)
