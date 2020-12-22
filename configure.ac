@@ -970,16 +970,9 @@ fi
 dnl ========================================================================
 dnl   bzip2
 dnl ========================================================================
-AC_CHECK_HEADERS(bzlib.h)
-AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffCompress)
-
-if test x$ac_cv_lib_bz2_BZ2_bzBuffToBuffCompress != xyes ; then
-    AC_MSG_ERROR(BZ2 libraries not found)
-fi
-
-if test x$ac_cv_header_bzlib_h != xyes; then
-    AC_MSG_ERROR(BZ2 Development headers not found)
-fi
+AC_CHECK_HEADERS(bzlib.h, [], [AC_MSG_ERROR(Could not find bzlib.h)])
+AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffCompress,,
+             [AC_MSG_ERROR(Could not find libbz2)])
 
 dnl ========================================================================
 dnl sighandler_t is missing from Illumos, Solaris11 systems
