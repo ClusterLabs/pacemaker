@@ -749,6 +749,7 @@ fi
 
 AM_CONDITIONAL([BUILD_SPHINX_DOCS],
                [test x"${SPHINX}" != x"" && test x"${INKSCAPE}" != x""])
+AM_COND_IF([BUILD_SPHINX_DOCS], [PCMK_FEATURES="$PCMK_FEATURES books"])
 
 dnl Pacemaker's shell scripts (and thus man page builders) rely on GNU getopt
 AC_MSG_CHECKING([for GNU-compatible getopt])
@@ -930,7 +931,7 @@ dnl ========================================================================
 dnl Generic declarations
 dnl ========================================================================
 
-AC_CHECK_DECLS([CLOCK_MONOTONIC], [], [], [[
+AC_CHECK_DECLS([CLOCK_MONOTONIC], [PCMK_FEATURES="$PCMK_FEATURES monotonic"], [], [[
     #include <time.h>
 ]])
 
@@ -1139,8 +1140,6 @@ AC_CHECK_FUNCS(qb_ipcc_auth_get,
                AC_DEFINE(HAVE_IPCC_AUTH_GET, 1,
                          [Have qb_ipcc_auth_get function]))
 
-PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
-
 dnl libqb 2.0.0+ (2020-05)
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
 CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
@@ -1155,7 +1154,7 @@ if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
     dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
     AC_CHECK_LIB(pils, PILLoadPlugin)
     AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
-    PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
+    PCMK_FEATURES="$PCMK_FEATURES lha"
 fi
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test "$ac_cv_header_stonith_stonith_h" = "yes"])
 
@@ -1438,7 +1437,7 @@ else
     COROSYNC_LIBS="$COROSYNC_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
     PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
-    STACKS="$STACKS corosync-native"
+    STACKS="$STACKS corosync-ge-2"
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, $SUPPORT_CS,    Support the Corosync messaging and membership layer)
@@ -1454,9 +1453,8 @@ if test x"$STACKS" = x; then
     AC_MSG_FAILURE(You must support at least one cluster stack)
 fi
 AC_MSG_RESULT($STACKS)
-PCMK_FEATURES="$PCMK_FEATURES $STACKS"
+PCMK_FEATURES="${PCMK_FEATURES}${STACKS}"
 
-PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
 AC_SUBST(PC_NAME_CLUSTER)
 
@@ -1508,7 +1506,11 @@ dnl Require GnuTLS >=2.12.0 (2011-03) to support Pacemaker Remote
 AC_CHECK_LIB(gnutls, gnutls_sec_param_to_pk_bits)
 if test "$ac_cv_lib_gnutls_gnutls_sec_param_to_pk_bits" != ""; then
     AC_CHECK_HEADERS(gnutls/gnutls.h,
-		     [PC_NAME_GNUTLS="gnutls"], [PC_NAME_GNUTLS=""])
+                     [
+                         PC_NAME_GNUTLS="gnutls"
+                         PCMK_FEATURES="$PCMK_FEATURES remote"
+                     ],
+                     [PC_NAME_GNUTLS=""])
     AC_SUBST(PC_NAME_GNUTLS)
 fi
 
@@ -1531,6 +1533,7 @@ if
 then
     PKG_CHECK_MODULES([SERVICELOG], [servicelog-1])
     SERVICELOG_EXISTS="yes"
+    PCMK_FEATURES="$PCMK_FEATURES servicelog"
 fi
 AC_MSG_RESULT($SERVICELOG_EXISTS)
 AM_CONDITIONAL(BUILD_SERVICELOG, test "$SERVICELOG_EXISTS" = "yes")
@@ -1544,6 +1547,7 @@ if
 then
     PKG_CHECK_MODULES([OPENIPMI_SERVICELOG],[OpenIPMI OpenIPMIposix])
     OPENIPMI_SERVICELOG_EXISTS="yes"
+    PCMK_FEATURES="$PCMK_FEATURES ipmiservicelogd"
 fi
 AC_MSG_RESULT($OPENIPMI_SERVICELOG_EXISTS)
 AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test "$OPENIPMI_SERVICELOG_EXISTS" = "yes")
@@ -1969,6 +1973,9 @@ dnl Now process the entire list of files added by previous
 dnl  calls to AC_CONFIG_FILES()
 AC_OUTPUT()
 
+# Strip leading space from features list
+PCMK_FEATURES=`echo -e "$PCMK_FEATURES" | sed -e 's/^ //'`
+
 dnl *****************
 dnl Configure summary
 dnl *****************
@@ -1976,7 +1983,7 @@ dnl *****************
 AC_MSG_RESULT([])
 AC_MSG_RESULT([$PACKAGE configuration:])
 AC_MSG_RESULT([  Version                  = ${VERSION} (Build: $BUILD_VERSION)])
-AC_MSG_RESULT([  Features                 =${PCMK_FEATURES}])
+AC_MSG_RESULT([  Features                 = ${PCMK_FEATURES}])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  Prefix                   = ${prefix}])
 AC_MSG_RESULT([  Executables              = ${sbindir}])
