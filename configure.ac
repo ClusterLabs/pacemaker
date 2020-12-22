@@ -36,7 +36,7 @@ PCMK_FEATURES=""
 AC_CONFIG_AUX_DIR(.)
 AC_CANONICAL_HOST
 
-dnl Where #defines go (e.g. `AC_CHECK_HEADERS' below)
+dnl Where #defines that autoconf makes (e.g. HAVE_whatever) go
 dnl
 dnl Internal header: include/config.h
 dnl   - Contains ALL defines
@@ -813,6 +813,7 @@ AC_CHECK_LIB(dl, dlopen)                        dnl -ldl (for Linux)
 AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
 AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
+AC_CHECK_LIB(uuid, uuid_parse)                  dnl load the library if necessary
 
 AC_CHECK_FUNCS([sched_setscheduler])
 if test "$ac_cv_func_sched_setscheduler" != yes; then
@@ -821,15 +822,6 @@ else
 	PC_LIBS_RT="-lrt"
 fi
 AC_SUBST(PC_LIBS_RT)
-
-AC_CHECK_LIB(uuid, uuid_parse)                  dnl load the library if necessary
-AC_CHECK_FUNCS(uuid_unparse)                    dnl OSX ships uuid_* as standard functions
-
-AC_CHECK_HEADERS(uuid/uuid.h)
-
-if test "x$ac_cv_func_uuid_unparse" != xyes; then
-    AC_MSG_ERROR(You do not have the libuuid development package installed)
-fi
 
 # Require glib 2.32.0 (2012-03) or later
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.32.0],
@@ -847,6 +839,13 @@ else
     LIBADD_DL=${lt_cv_dlopen_libs}
 fi
 
+PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
+                  [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
+                   LIBS="${LIBS} ${LIBXML2_LIBS}"])
+
+AC_CHECK_LIB(xslt, xsltApplyStylesheet, [],
+             AC_MSG_ERROR(Unsupported libxslt library version))
+
 dnl ========================================================================
 dnl Headers
 dnl ========================================================================
@@ -858,63 +857,58 @@ dnl ========================================================================
 if test "x${enable_fatal_warnings}" = xyes ; then
     cc_temp_flags "$CFLAGS $WERROR"
 fi
-AC_CHECK_HEADERS(arpa/inet.h)
-AC_CHECK_HEADERS(ctype.h)
-AC_CHECK_HEADERS(dirent.h)
-AC_CHECK_HEADERS(errno.h)
-AC_CHECK_HEADERS(getopt.h)
-AC_CHECK_HEADERS(glib.h)
-AC_CHECK_HEADERS(grp.h)
-AC_CHECK_HEADERS(limits.h)
-AC_CHECK_HEADERS(linux/swab.h)
-AC_CHECK_HEADERS(malloc.h)
-AC_CHECK_HEADERS(netdb.h)
-AC_CHECK_HEADERS(netinet/in.h)
-AC_CHECK_HEADERS(netinet/ip.h)
-AC_CHECK_HEADERS(pwd.h)
-AC_CHECK_HEADERS(sgtty.h)
-AC_CHECK_HEADERS(signal.h)
-AC_CHECK_HEADERS(stdarg.h)
-AC_CHECK_HEADERS(stddef.h)
-AC_CHECK_HEADERS(stdio.h)
-AC_CHECK_HEADERS(stdlib.h)
-AC_CHECK_HEADERS(string.h)
-AC_CHECK_HEADERS(strings.h)
-AC_CHECK_HEADERS(sys/dir.h)
-AC_CHECK_HEADERS(sys/ioctl.h)
-AC_CHECK_HEADERS(sys/param.h)
-AC_CHECK_HEADERS(sys/reboot.h)
-AC_CHECK_HEADERS(sys/resource.h)
-AC_CHECK_HEADERS(sys/socket.h)
-AC_CHECK_HEADERS(sys/signalfd.h)
-AC_CHECK_HEADERS(sys/sockio.h)
-AC_CHECK_HEADERS(sys/stat.h)
-AC_CHECK_HEADERS(sys/time.h)
-AC_CHECK_HEADERS(sys/types.h)
-AC_CHECK_HEADERS(sys/utsname.h)
-AC_CHECK_HEADERS(sys/wait.h)
-AC_CHECK_HEADERS(time.h)
-AC_CHECK_HEADERS(unistd.h)
+
+# Optional headers (inclusion of these should be conditional in C code)
+AC_CHECK_HEADERS([getopt.h])
+AC_CHECK_HEADERS([linux/swab.h])
+AC_CHECK_HEADERS([stddef.h])
+AC_CHECK_HEADERS([sys/signalfd.h])
+AC_CHECK_HEADERS([uuid/uuid.h])
+AC_CHECK_HEADERS([security/pam_appl.h pam/pam_appl.h])
+
+# Required headers
+REQUIRE_HEADER([arpa/inet.h])
+REQUIRE_HEADER([ctype.h])
+REQUIRE_HEADER([dirent.h])
+REQUIRE_HEADER([errno.h])
+REQUIRE_HEADER([glib.h])
+REQUIRE_HEADER([grp.h])
+REQUIRE_HEADER([limits.h])
+REQUIRE_HEADER([netdb.h])
+REQUIRE_HEADER([netinet/in.h])
+REQUIRE_HEADER([netinet/ip.h], [
+    #include <sys/types.h>
+    #include <netinet/in.h>
+])
+REQUIRE_HEADER([pwd.h])
+REQUIRE_HEADER([sgtty.h])
+REQUIRE_HEADER([signal.h])
+REQUIRE_HEADER([stdio.h])
+REQUIRE_HEADER([stdlib.h])
+REQUIRE_HEADER([string.h])
+REQUIRE_HEADER([strings.h])
+REQUIRE_HEADER([sys/ioctl.h])
+REQUIRE_HEADER([sys/param.h])
+REQUIRE_HEADER([sys/reboot.h])
+REQUIRE_HEADER([sys/resource.h])
+REQUIRE_HEADER([sys/socket.h])
+REQUIRE_HEADER([sys/stat.h])
+REQUIRE_HEADER([sys/time.h])
+REQUIRE_HEADER([sys/types.h])
+REQUIRE_HEADER([sys/utsname.h])
+REQUIRE_HEADER([sys/wait.h])
+REQUIRE_HEADER([time.h])
+REQUIRE_HEADER([unistd.h])
+REQUIRE_HEADER([libxml/xpath.h])
+REQUIRE_HEADER([libxslt/xslt.h])
+
 if test "x${enable_fatal_warnings}" = xyes ; then
     cc_restore_flags
 fi
 
-dnl These headers need prerequisites before the tests will pass
-dnl AC_CHECK_HEADERS(net/if.h)
-
-PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
-                  [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
-                   LIBS="${LIBS} ${LIBXML2_LIBS}"])
-AC_CHECK_HEADERS(libxml/xpath.h)
-if test "$ac_cv_header_libxml_xpath_h" != "yes"; then
-    AC_MSG_ERROR(libxml development headers not found)
-fi
-
-AC_CHECK_LIB(xslt, xsltApplyStylesheet, [],
-             AC_MSG_ERROR(Unsupported libxslt library version))
-AC_CHECK_HEADERS(libxslt/xslt.h)
-if test "$ac_cv_header_libxslt_xslt_h" != "yes"; then
-    AC_MSG_ERROR(libxslt development headers not found)
+AC_CHECK_FUNCS(uuid_unparse)
+if test "x$ac_cv_func_uuid_unparse" != xyes; then
+    AC_MSG_ERROR(You do not have the libuuid development package installed)
 fi
 
 AC_CACHE_CHECK(whether __progname and __progname_full are available,
@@ -970,7 +964,7 @@ fi
 dnl ========================================================================
 dnl   bzip2
 dnl ========================================================================
-AC_CHECK_HEADERS(bzlib.h, [], [AC_MSG_ERROR(Could not find bzlib.h)])
+REQUIRE_HEADER([bzlib.h])
 AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffCompress,,
              [AC_MSG_ERROR(Could not find libbz2)])
 
@@ -996,12 +990,9 @@ dnl
 dnl However, the source-code recommendation for both is to #include "curses.h"
 dnl (i.e. "ncurses" still wants the include to be simple, no-'n', "curses.h").
 dnl
-dnl ncurse takes precedence.
+dnl ncurses takes precedence.
 dnl
-AC_CHECK_HEADERS(curses.h)
-AC_CHECK_HEADERS(curses/curses.h)
-AC_CHECK_HEADERS(ncurses.h)
-AC_CHECK_HEADERS(ncurses/ncurses.h)
+AC_CHECK_HEADERS([curses.h curses/curses.h ncurses.h ncurses/ncurses.h])
 
 dnl Although n-library is preferred, only look for it if the n-header was found.
 CURSESLIBS=''
@@ -1141,14 +1132,12 @@ dnl Support Linux-HA fence agents if available
 if test "$cross_compiling" != "yes"; then
     CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
 fi
-AC_CHECK_HEADERS(stonith/stonith.h)
-if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
-    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
-    dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
-    AC_CHECK_LIB(pils, PILLoadPlugin)
-    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
-    PCMK_FEATURES="$PCMK_FEATURES lha"
-fi
+AC_CHECK_HEADERS([stonith/stonith.h],
+                 [
+                     AC_CHECK_LIB([pils], [PILLoadPlugin])
+                     AC_CHECK_LIB([plumb], [G_main_add_IPC_Channel])
+                     PCMK_FEATURES="$PCMK_FEATURES lha"
+                 ])
 AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test "$ac_cv_header_stonith_stonith_h" = "yes"])
 
 dnl ===============================================
@@ -1498,7 +1487,7 @@ dnl ========================================================================
 dnl Require GnuTLS >=2.12.0 (2011-03) to support Pacemaker Remote
 AC_CHECK_LIB(gnutls, gnutls_sec_param_to_pk_bits)
 if test "$ac_cv_lib_gnutls_gnutls_sec_param_to_pk_bits" != ""; then
-    AC_CHECK_HEADERS(gnutls/gnutls.h,
+    AC_CHECK_HEADERS([gnutls/gnutls.h],
                      [
                          PC_NAME_GNUTLS="gnutls"
                          PCMK_FEATURES="$PCMK_FEATURES remote"
@@ -1506,12 +1495,6 @@ if test "$ac_cv_lib_gnutls_gnutls_sec_param_to_pk_bits" != ""; then
                      [PC_NAME_GNUTLS=""])
     AC_SUBST(PC_NAME_GNUTLS)
 fi
-
-dnl ========================================================================
-dnl    PAM
-dnl ========================================================================
-
-AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
 
 dnl ========================================================================
 dnl    System Health
@@ -1539,6 +1522,7 @@ if
     $PKG_CONFIG --exists $OPENIPMI $SERVICELOG
 then
     PKG_CHECK_MODULES([OPENIPMI_SERVICELOG],[OpenIPMI OpenIPMIposix])
+    REQUIRE_HEADER([malloc.h])
     OPENIPMI_SERVICELOG_EXISTS="yes"
     PCMK_FEATURES="$PCMK_FEATURES ipmiservicelogd"
 fi
