@@ -33,7 +33,8 @@ AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org], [pacemaker],
 
 PCMK_FEATURES=""
 
-AC_CONFIG_AUX_DIR(.)
+LT_CONFIG_LTDL_DIR([libltdl])
+AC_CONFIG_AUX_DIR([libltdl/config])
 AC_CANONICAL_HOST
 
 dnl Where #defines that autoconf makes (e.g. HAVE_whatever) go
