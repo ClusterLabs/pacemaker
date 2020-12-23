@@ -881,7 +881,6 @@ REQUIRE_HEADER([netinet/ip.h], [
     #include <netinet/in.h>
 ])
 REQUIRE_HEADER([pwd.h])
-REQUIRE_HEADER([sgtty.h])
 REQUIRE_HEADER([signal.h])
 REQUIRE_HEADER([stdio.h])
 REQUIRE_HEADER([stdlib.h])
