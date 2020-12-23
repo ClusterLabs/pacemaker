@@ -397,7 +397,6 @@ if test "x${enable_fatal_warnings}" != "xno" ; then
     fi
 fi
 
-INIT_EXT=""
 echo Our Host OS: $host_os/$host
 
 AC_MSG_NOTICE(Sanitizing prefix: ${prefix})
@@ -586,30 +585,28 @@ if test -z "${us_auth}"; then
     ])
 fi
 
-dnl This OS-based decision-making is poor autotools practice;
-dnl feature-based mechanisms are strongly preferred.
-dnl
-dnl So keep this section to a bare minimum; regard as a "necessary evil".
-
+dnl OS-based decision-making is poor autotools practice; feature-based
+dnl mechanisms are strongly preferred. Keep this section to a bare minimum;
+dnl regard as a "necessary evil".
+INIT_EXT=""
+PROCFS=0
 case "$host_os" in
+    dnl Solaris and some *BSD versions support procfs but not files we need
     *bsd*)
-        AC_DEFINE_UNQUOTED(ON_BSD, 1, Compiling for BSD platform)
         INIT_EXT=".sh"
         ;;
-    *solaris*)
-        AC_DEFINE_UNQUOTED(ON_SOLARIS, 1, Compiling for Solaris platform)
-        ;;
     *linux*)
-        AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
+        PROCFS=1
         ;;
     darwin*)
-        AC_DEFINE_UNQUOTED(ON_DARWIN, 1, Compiling for Darwin platform)
         LIBS="$LIBS -L${prefix}/lib"
         CFLAGS="$CFLAGS -I${prefix}/include"
         ;;
 esac
 
 AC_SUBST(INIT_EXT)
+AC_DEFINE_UNQUOTED([SUPPORT_PROCFS], [$PROCFS],
+		   [Define to 1 if procfs is supported])
 AC_MSG_NOTICE(Host CPU: $host_cpu)
 
 case "$host_cpu" in

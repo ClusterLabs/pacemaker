@@ -65,13 +65,6 @@ char *strndup(const char *str, size_t len);
 #    	define USE_GNU
 #  endif
 
-// This test could be better, but it covers platforms of interest
-#  if defined(ON_BSD) || defined(ON_SOLARIS)
-#    define SUPPORT_PROCFS 0
-#  else
-#    define SUPPORT_PROCFS 1
-#  endif
-
 #  include <glib.h>
 
 #  if !GLIB_CHECK_VERSION(2,38,0)
