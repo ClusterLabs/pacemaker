@@ -765,6 +765,10 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     }
 
     if(needs_update) {
+        if (g_hash_table_size(device_list)) {
+            free_device_list();
+            init_device_list();
+        }
         crm_info("Updating device list from CIB: %s", reason);
         cib_devices_update();
     } else {
