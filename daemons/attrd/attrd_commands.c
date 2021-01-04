@@ -628,6 +628,11 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             /* Synchronize if there is an attribute held only by own node that Writer does not have. */
             attrd_current_only_attribute_update(peer, xml);
         }
+
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_casei)) {
+        /* Ignore. The flush command was removed in 2.0.0 but may be
+         * received from peers running older versions.
+         */
     }
 }
 
