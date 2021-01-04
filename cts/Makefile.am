@@ -60,7 +60,8 @@ cts_SCRIPTS		= CTSlab.py		\
 			  pacemaker-cts-dummyd
 
 clidir		= $(testdir)/cli
-dist_cli_DATA	= cli/crm_diff_new.xml		\
+dist_cli_DATA	= cli/constraints.xml \
+		  cli/crm_diff_new.xml		\
 		  cli/crm_diff_old.xml		\
 		  cli/crm_mon.xml		\
 		  cli/crm_mon-partial.xml	\
