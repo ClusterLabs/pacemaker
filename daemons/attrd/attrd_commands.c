@@ -886,6 +886,17 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         v->current = (value? strdup(value) : NULL);
         a->changed = TRUE;
 
+        if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
+            && pcmk__str_eq(attr, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)) {
+
+            if (!pcmk__str_eq(value, "0", pcmk__str_null_matches)) {
+                attrd_set_requesting_shutdown();
+
+            } else {
+                attrd_clear_requesting_shutdown();
+            }
+        }
+
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {
             crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, attr);

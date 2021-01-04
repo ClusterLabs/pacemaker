@@ -20,6 +20,9 @@
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
+void attrd_set_requesting_shutdown(void);
+void attrd_clear_requesting_shutdown(void);
+gboolean attrd_requesting_shutdown(void);
 gboolean attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(qb_ipcs_service_t **ipcs,
