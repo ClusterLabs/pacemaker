@@ -259,7 +259,11 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
             if (pcmk__str_eq(type, T_ATTRD, pcmk__str_casei)
                 && crm_element_value(request,
-                                     PCMK__XA_ATTR_NODE_NAME) == NULL) {
+                                     PCMK__XA_ATTR_NODE_NAME) == NULL
+                && pcmk__str_any_of(crm_element_value(request, PCMK__XA_TASK),
+                                    PCMK__ATTRD_CMD_UPDATE,
+                                    PCMK__ATTRD_CMD_UPDATE_BOTH,
+                                    PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
                 crm_xml_add(request, PCMK__XA_ATTR_NODE_NAME, proxy->node_name);
             }
 
