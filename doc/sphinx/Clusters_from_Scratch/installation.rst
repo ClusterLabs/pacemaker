@@ -7,14 +7,14 @@ Install |CFS_DISTRO| |CFS_DISTRO_VER|
 Boot the Install Image
 ______________________
 
-Download the 4GB |CFS_DISTRO| |CFS_DISTRO_VER| `DVD ISO <http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso>`_.
+Download the 8.9GB |CFS_DISTRO| |CFS_DISTRO_VER| `DVD ISO <http://mirror.metrocast.net/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20201211-dvd1.iso>`_.
 Use the image to boot a virtual machine, or burn it to a DVD or USB drive and
 boot a physical server from that.
 
 After starting the installation, select your language and keyboard layout at
 the welcome screen.
 
-.. figure:: images/Welcome.png
+.. figure:: images/WelcomeToCentos.png
     :scale: 80%
     :width: 1024
     :height: 800
@@ -28,7 +28,7 @@ ____________________
 
 At this point, you get a chance to tweak the default installation options.
 
-.. figure:: images/Installer.png
+.. figure:: images/InstallationSummary.png
     :scale: 80%
     :width: 1024
     :height: 800
@@ -37,10 +37,19 @@ At this point, you get a chance to tweak the default installation options.
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Installation Summary Screen
 
-Ignore the **SOFTWARE SELECTION** section (try saying that 10 times quickly). The
-**Infrastructure Server** environment does have add-ons with much of the software
-we need, but we will leave it as a **Minimal Install** here, so that we can see
-exactly what software is required later.
+Click on the **SOFTWARE SELECTION** section (try saying that 10 times quickly). The
+default environment, **Server with GUI**, does have add-ons with much of the software
+we need, but we will change the environment to a **Minimal Install** here, so that we
+can see exactly what software is required later, and press **Done**.
+
+.. figure:: images/SoftwareSelection.png
+    :scale: 80%
+    :width: 1024
+    :height: 800
+    :align: center
+    :alt: Software Selection Screen
+
+    |CFS_DISTRO| |CFS_DISTRO_VER| Software Selection Screen
 
 Configure Network
 _________________
@@ -48,18 +57,19 @@ _________________
 In the **NETWORK & HOSTNAME** section:
 
 - Edit **Host Name:** as desired. For this example, we will use
-  **pcmk-1.localdomain**.
-- Select your network device, press **Configure...**, and manually assign a fixed
-  IP address. For this example, we'll use 192.168.122.101 under **IPv4 Settings**
-  (with an appropriate netmask, gateway and DNS server).
+  **pcmk-1.localdomain** and then press **Apply**.
+- Select your network device, press **Configure...**, and use the **Manual** method to
+  assign a fixed IP address. For this example, we'll use 192.168.122.101 under
+  **IPv4 Settings** (with an appropriate netmask, gateway and DNS server).
+- Press **Save**.
 - Flip the switch to turn your network device on, and press **Done**.
 
-.. figure:: images/Editing-eth0.png
+.. figure:: images/NetworkAndHostName.png
     :scale: 80%
     :width: 1024
     :height: 800
     :align: center
-    :alt: Editing eth0
+    :alt: Editing enp0s3
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Network Interface Screen
 
@@ -81,15 +91,16 @@ In order to follow the DRBD and GFS2 portions of this guide, we need to reserve
 space on each machine for a replicated volume.
 
 Enter the **INSTALLATION DESTINATION** section, ensure the hard drive you want to
-install to is selected, select **I will configure partitioning**, and press **Done**.
+install to is selected, select **Custom** to be the **Storage Configuration**, and
+press **Done**.
 
 In the **MANUAL PARTITIONING** screen that comes next, click the option to create
 mountpoints automatically. Select the ``/`` mountpoint, and reduce the desired
-capacity by 1GiB or so. Select **Modify...** by the volume group name, and change
+capacity by 3GiB or so. Select **Modify...** by the volume group name, and change
 the **Size policy:** to **As large as possible**, to make the reclaimed space
 available inside the LVM volume group. We'll add the additional volume later.
 
-.. figure:: images/Partitioning.png
+.. figure:: images/ManualPartitioning.png
     :scale: 80%
     :width: 1024
     :height: 800
@@ -111,15 +122,30 @@ significantly easier.
 settings (such as time zone or NTP server), you can do this in the
 **TIME & DATE** section.
 
+Root Password
+______________________________
+
+In order to continue to the next step, a **Root Password** must be set.
+
+.. figure:: images/RootPassword.png
+    :scale: 80%
+    :width: 1024
+    :height: 800
+    :align: center
+    :alt: Root Password Screen
+
+    |CFS_DISTRO| |CFS_DISTRO_VER| Root Password Screen
+
+Press **Done** (depending on the password you chose, you may need to do so twice).
+
 Finish Install
 ______________
 
-Select **Begin Installation**. Once it completes, set a root password, and reboot
-as instructed. For the purposes of this document, it is not necessary to create
-any additional users. After the node reboots, you'll see a login prompt on
+Select **Begin Installation**. Once it completes, **Reboot System**
+as instructed.  After the node reboots, you'll see a login prompt on
 the console. Login using **root** and the password you created earlier.
 
-.. figure:: images/Console.png
+.. figure:: images/ConsolePrompt.png
     :scale: 80%
     :width: 1024
     :height: 768
@@ -141,20 +167,19 @@ _________________
 Ensure that the machine has the static IP address you configured earlier.
 
 .. code-block:: none
-
     [root@pcmk-1 ~]# ip addr
     1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-        inet 127.0.0.1/8 scope host lo
-           valid_lft forever preferred_lft forever
-        inet6 ::1/128 scope host 
-           valid_lft forever preferred_lft forever
-    2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
-        link/ether 52:54:00:8e:eb:41 brd ff:ff:ff:ff:ff:ff
-        inet 192.168.122.101/24 brd 192.168.122.255 scope global noprefixroute eth0
-           valid_lft forever preferred_lft forever
-        inet6 fe80::e45:c99b:34c0:c657/64 scope link noprefixroute 
-           valid_lft forever preferred_lft forever
+	link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+	inet 127.0.0.1/8 scope host lo
+	   valid_lft forever preferred_lft forever
+	inet6 ::1/128 scope host 
+	   valid_lft forever preferred_lft forever
+    2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+	link/ether 52:54:00:32:cf:a9 brd ff:ff:ff:ff:ff:ff
+	inet 192.168.122.101/24 brd 192.168.122.255 scope global noprefixroute enp1s0
+	   valid_lft forever preferred_lft forever
+	inet6 fe80::c3e1:3ba:959:fa96/64 scope link noprefixroute 
+	   valid_lft forever preferred_lft forever
 
 .. NOTE::
 
@@ -175,8 +200,8 @@ Next, ensure that the routes are as expected:
 .. code-block:: none
 
     [root@pcmk-1 ~]# ip route
-    default via 192.168.122.1 dev eth0 proto static metric 100 
-    192.168.122.0/24 dev eth0 proto kernel scope link src 192.168.122.101 metric 100 
+    default via 192.168.122.1 dev enp1s0 proto static metric 100 
+    192.168.122.0/24 dev enp1s0 proto kernel scope link src 192.168.122.101 metric 100
 
 If there is no line beginning with **default via**, then you may need to add a line such as
 
@@ -192,23 +217,23 @@ testing whether we can reach the gateway we configured.
 
     [root@pcmk-1 ~]# ping -c 1 192.168.122.1
     PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
-    64 bytes from 192.168.122.1: icmp_seq=1 ttl=64 time=0.254 ms
-
+    64 bytes from 192.168.122.1: icmp_seq=1 ttl=64 time=0.492 ms
+    
     --- 192.168.122.1 ping statistics ---
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
-    rtt min/avg/max/mdev = 0.254/0.254/0.254/0.000 ms
+    rtt min/avg/max/mdev = 0.492/0.492/0.492/0.000 ms
 
 Now try something external; choose a location you know should be available.
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# ping -c 1 www.clusterlabs.org
-    PING oss-uk-1.clusterlabs.org (109.74.197.241) 56(84) bytes of data.
-    64 bytes from oss-uk-1.clusterlabs.org (109.74.197.241): icmp_seq=1 ttl=49 time=333 ms
-
-    --- oss-uk-1.clusterlabs.org ping statistics ---
+    PING mx1.clusterlabs.org (95.217.104.78) 56(84) bytes of data.
+    64 bytes from mx1.clusterlabs.org (95.217.104.78): icmp_seq=1 ttl=54 time=134 ms
+    
+    --- mx1.clusterlabs.org ping statistics ---
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
-    rtt min/avg/max/mdev = 333.204/333.204/333.204/0.000 ms
+    rtt min/avg/max/mdev = 133.987/133.987/133.987/0.000 ms
 
 Login Remotely
 ______________
@@ -221,26 +246,26 @@ From another host, check whether we can see the new host at all:
 
 .. code-block:: none
 
-    beekhof@f16 ~ # ping -c 1 192.168.122.101
+    [gchin@gchin ~]$ ping -c 1 192.168.122.101
     PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
-    64 bytes from 192.168.122.101: icmp_req=1 ttl=64 time=1.01 ms
-
+    64 bytes from 192.168.122.101: icmp_seq=1 ttl=64 time=0.344 ms
+    
     --- 192.168.122.101 ping statistics ---
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
-    rtt min/avg/max/mdev = 1.012/1.012/1.012/0.000 ms
-
+    rtt min/avg/max/mdev = 0.344/0.344/0.344/0.000 ms
+    
 Next, login as root via SSH.
 
 .. code-block:: none
 
-    beekhof@f16 ~ # ssh -l root 192.168.122.101
+    [gchin@gchin ~]$ ssh root@192.168.122.101
     The authenticity of host '192.168.122.101 (192.168.122.101)' can't be established.
-    ECDSA key fingerprint is 6e:b7:8f:e2:4c:94:43:54:a8:53:cc:20:0f:29:a4:e0.
-    Are you sure you want to continue connecting (yes/no)? yes
+    ECDSA key fingerprint is SHA256:NBvcRrPDLIt39Rf0Tz4/f2Rd/FA5wUiDOd9bZ9QWWjo.
+    Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     Warning: Permanently added '192.168.122.101' (ECDSA) to the list of known hosts.
-    root@192.168.122.101's password:
-    Last login: Tue Aug 11 13:14:39 2015
-    [root@pcmk-1 ~]#
+    root@192.168.122.101's password: 
+    Last login: Tue Jan 10 20:46:30 2021
+    [root@pcmk-1 ~]# 
 
 Apply Updates
 _____________
@@ -303,13 +328,13 @@ Confirm that you can communicate between the two new nodes:
 
     [root@pcmk-1 ~]# ping -c 3 192.168.122.102
     PING 192.168.122.102 (192.168.122.102) 56(84) bytes of data.
-    64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=0.343 ms
-    64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.402 ms
-    64 bytes from 192.168.122.102: icmp_seq=3 ttl=64 time=0.558 ms
-
+    64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=1.22 ms
+    64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.795 ms
+    64 bytes from 192.168.122.102: icmp_seq=3 ttl=64 time=0.751 ms
+    
     --- 192.168.122.102 ping statistics ---
-    3 packets transmitted, 3 received, 0% packet loss, time 2000ms
-    rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms
+    3 packets transmitted, 3 received, 0% packet loss, time 2054ms
+    rtt min/avg/max/mdev = 0.751/0.923/1.224/0.214 ms
 
 Now we need to make sure we can communicate with the machines by their
 name. If you have a DNS server, add additional entries for the two
@@ -327,15 +352,14 @@ We can now verify the setup by again using ping:
 .. code-block:: none
 
     [root@pcmk-1 ~]# ping -c 3 pcmk-2
-    PING pcmk-2.clusterlabs.org (192.168.122.101) 56(84) bytes of data.
-    64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=1 ttl=64 time=0.164 ms
-    64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=2 ttl=64 time=0.475 ms
-    64 bytes from pcmk-1.clusterlabs.org (192.168.122.101): icmp_seq=3 ttl=64 time=0.186 ms
-
+    PING pcmk-2.clusterlabs.org (192.168.122.102) 56(84) bytes of data.
+    64 bytes from pcmk-2.clusterlabs.org (192.168.122.102): icmp_seq=1 ttl=64 time=0.295 ms
+    64 bytes from pcmk-2.clusterlabs.org (192.168.122.102): icmp_seq=2 ttl=64 time=0.616 ms
+    64 bytes from pcmk-2.clusterlabs.org (192.168.122.102): icmp_seq=3 ttl=64 time=0.809 ms
+    
     --- pcmk-2.clusterlabs.org ping statistics ---
-    3 packets transmitted, 3 received, 0% packet loss, time 2001ms
-    rtt min/avg/max/mdev = 0.164/0.275/0.475/0.141 ms
-
+    3 packets transmitted, 3 received, 0% packet loss, time 2043ms
+    rtt min/avg/max/mdev = 0.295/0.573/0.809/0.212 ms
 
 .. index:: SSH
 
@@ -366,22 +390,23 @@ Create a new key and allow anyone with that key to log in:
 
     [root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
     Generating public/private dsa key pair.
+    Created directory '/root/.ssh'.
     Your identification has been saved in /root/.ssh/id_dsa.
     Your public key has been saved in /root/.ssh/id_dsa.pub.
     The key fingerprint is:
-    91:09:5c:82:5a:6a:50:08:4e:b2:0c:62:de:cc:74:44 root@pcmk-1.clusterlabs.org
+    SHA256:ehR595AVLAVpvFgqYXiayds2qx8emkvnHmfQZMTZ4jM root@pcmk-1
     The key's randomart image is:
-    +--[ DSA 1024]----+
-    |==.ooEo..        |
-    |X O + .o o       |
-    | * A    +        |
-    |  +      .       |
-    | .      S        |
-    |                 |
-    |                 |
-    |                 |
-    |                 |
-    +-----------------+
+    +---[DSA 1024]----+
+    |       . ..+.=+. |
+    |      . +o+ Bo.  |
+    |     . *oo+*+o   |
+    |      = .*E..o   |
+    |       oS..o  .  |
+    |      .o+.       |
+    |      o.*oo      |
+    |     . B.*       |
+    |      ===        |
+    +----[SHA256]-----+
     [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
 
 Install the key on the other node:
@@ -390,19 +415,19 @@ Install the key on the other node:
 
     [root@pcmk-1 ~]# scp -r ~/.ssh pcmk-2:
     The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
-    ECDSA key fingerprint is SHA256:63xNPkPYq98rYznf3T9QYJAzlaGiAsSgFVNHOZjPWqc.
-    ECDSA key fingerprint is MD5:d9:bf:6e:32:88:be:47:3d:96:f1:96:27:65:05:0b:c3.
-    Are you sure you want to continue connecting (yes/no)? yes
+    ECDSA key fingerprint is SHA256:FQ4sVubTiHdQ6IetbN96fixoTVx/LuQUV8qoyiywnfs.
+    Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     Warning: Permanently added 'pcmk-2,192.168.122.102' (ECDSA) to the list of known hosts.
-    root@pcmk-2's password:
-    id_dsa
-    id_dsa.pub
-    authorized_keys
-    known_hosts
+    root@pcmk-2's password: 
+    id_dsa                                                                                                         100% 1385     1.6MB/s   00:00    
+    id_dsa.pub                                                                                                     100%  601     1.0MB/s   00:00    
+    authorized_keys                                                                                                100%  601     1.3MB/s   00:00    
+    known_hosts                                                                                                    100%  184   389.2KB/s   00:00    
 
 Test that you can now run commands remotely, without being prompted:
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# ssh pcmk-2 -- uname -n
+    root@pcmk-2's password: 
     pcmk-2
