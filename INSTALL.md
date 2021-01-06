@@ -15,8 +15,9 @@
 |                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
 |                 | libqb-devel        | libqb-devel        | libqb-dev      |
+| 3.2 or later    | python3            | python3            | python3        |
 
-Also: GNU make, and Python 2.7 or Python 3.2 or later
+Also: GNU make
 
 ### Cluster Stack Dependencies
 
@@ -45,12 +46,12 @@ Also: GNU make, and Python 2.7 or Python 3.2 or later
 | documentation                                   |                | help2man                | help2man                | help2man                |
 | documentation                                   |                | inkscape                | inkscape                | inkscape                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
-| documentation                                   |                | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx |
+| documentation                                   |                | python3-sphinx          | python3-sphinx          | python3-sphinx          |
 | documentation (PDF)                             |                | texlive, texlive-titlesec, texlive-framed, texlive-threeparttable texlive-wrapfig texlive-multirow | texlive, texlive-latex  | texlive, texlive-latex-extra |
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)
-* systemd-python (if using CTS on cluster nodes running systemd)
+* python3-systemd (if using CTS on cluster nodes running systemd)
 * rsync (if running CTS container tests)
 * libvirt-daemon-driver-lxc (if running CTS container tests)
 * libvirt-daemon-lxc (if running CTS container tests)
