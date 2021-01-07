@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -637,10 +637,13 @@ pcmk__xe_remove_matching_attrs(xmlNode *element,
         next = a->next; // Grab now because attribute might get removed
         if ((match == NULL) || match(a, user_data)) {
             if (!pcmk__check_acl(element, NULL, xpf_acl_write)) {
-                crm_trace("ACLs prevent removal of %s attribute from %s element",
+                crm_trace("ACLs prevent removal of attributes (%s and "
+                          "possibly others) from %s element",
                           (const char *) a->name, (const char *) element->name);
+                return; // ACLs apply to element, not particular attributes
+            }
 
-            } else if (pcmk__tracking_xml_changes(element, false)) {
+            if (pcmk__tracking_xml_changes(element, false)) {
                 // Leave (marked for removal) until after diff is calculated
                 set_parent_flag(element, xpf_dirty);
                 pcmk__set_xml_flags((xml_private_t *) a->_private, xpf_deleted);
