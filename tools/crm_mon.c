@@ -827,7 +827,7 @@ cib_connect(gboolean full)
 
         rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
         if (rc == pcmk_ok) {
-            mon_refresh_display(&output_format);
+            mon_refresh_display(NULL);
         }
 
         if (rc == pcmk_ok && full) {
