@@ -340,8 +340,8 @@ struct pe_resource_s {
 
     //!@{
     //! This field should be treated as internal to Pacemaker
-    GListPtr rsc_cons_lhs;      // List of rsc_colocation_t*
-    GListPtr rsc_cons;          // List of rsc_colocation_t*
+    GListPtr rsc_cons_lhs;      // List of pcmk__colocation_t*
+    GListPtr rsc_cons;          // List of pcmk__colocation_t*
     GListPtr rsc_location;      // List of pe__location_t*
     GListPtr actions;           // List of pe_action_t*
     GListPtr rsc_tickets;       // List of rsc_ticket*

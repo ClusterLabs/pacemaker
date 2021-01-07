@@ -140,10 +140,10 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
              * host because pacemaker-remoted only supports a single
              * active connection
              */
-            rsc_colocation_new("child-remote-with-docker-remote", NULL,
-                               INFINITY, replica->remote,
-                               container_host->details->remote_rsc, NULL, NULL,
-                               data_set);
+            pcmk__new_colocation("child-remote-with-docker-remote", NULL,
+                                 INFINITY, replica->remote,
+                                 container_host->details->remote_rsc, NULL,
+                                 NULL, data_set);
         }
 
         if (replica->remote) {
@@ -310,8 +310,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
             new_rsc_order(replica->container, RSC_STOP, replica->ip, RSC_STOP,
                           pe_order_implies_first|pe_order_preserve, data_set);
 
-            rsc_colocation_new("ip-with-docker", NULL, INFINITY, replica->ip,
-                               replica->container, NULL, NULL, data_set);
+            pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
+                                 replica->container, NULL, NULL, data_set);
         }
 
         if (replica->remote) {
@@ -425,7 +425,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 
 void
 pcmk__bundle_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
-                               rsc_colocation_t *constraint,
+                               pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
     /* -- Never called --
@@ -469,7 +469,7 @@ int copies_per_node(pe_resource_t * rsc)
 
 void
 pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
-                               rsc_colocation_t *constraint,
+                               pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
     GListPtr allocated_rhs = NULL;

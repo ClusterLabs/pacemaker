@@ -276,7 +276,7 @@ find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resource_t 
     colocated_rscs = g_list_append(colocated_rscs, rsc);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
         pe_resource_t *rsc_rh = constraint->rsc_rh;
 
         /* Break colocation loop */
@@ -298,7 +298,7 @@ find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resource_t 
     }
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
         pe_resource_t *rsc_lh = constraint->rsc_lh;
 
         /* Break colocation loop */

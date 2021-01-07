@@ -10,7 +10,6 @@
 #ifndef PENGINE__H
 #  define PENGINE__H
 
-typedef struct rsc_colocation_s rsc_colocation_t;
 typedef struct rsc_ticket_s rsc_ticket_t;
 typedef struct lrm_agent_s lrm_agent_t;
 
@@ -37,7 +36,7 @@ enum pe_weights {
     pe_weights_rollback = 0x10,
 };
 
-struct rsc_colocation_s {
+typedef struct {
     const char *id;
     const char *node_attribute;
     pe_resource_t *rsc_lh;
@@ -47,7 +46,7 @@ struct rsc_colocation_s {
     int role_rh;
 
     int score;
-};
+} pcmk__colocation_t;
 
 enum loss_ticket_policy_e {
     loss_ticket_stop,

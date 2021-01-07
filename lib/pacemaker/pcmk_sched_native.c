@@ -434,7 +434,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *other = NULL;
-            rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+            pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
             if (constraint->score == 0) {
                 continue;
@@ -526,7 +526,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         GHashTable *archive = NULL;
         pe_resource_t *rsc_rh = constraint->rsc_rh;
@@ -560,19 +560,13 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (constraint->score == 0) {
-            continue;
+        if (pcmk__colocation_applies(rsc, constraint, false)) {
+            rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh,
+                    rsc->id, rsc->allowed_nodes, constraint->node_attribute,
+                    constraint->score / (float) INFINITY, pe_weights_rollback);
         }
-        pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
-                     constraint->id, constraint->rsc_lh->id,
-                     constraint->rsc_rh->id);
-        rsc->allowed_nodes =
-            constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-                                                    constraint->node_attribute,
-                                                    (float)constraint->score / INFINITY,
-                                                    pe_weights_rollback);
     }
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {
@@ -1697,8 +1691,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             } else {
                 score = INFINITY; /* Force them to run on the same host */
             }
-            rsc_colocation_new("resource-with-container", NULL, score, rsc,
-                               rsc->container, NULL, NULL, data_set);
+            pcmk__new_colocation("resource-with-container", NULL, score, rsc,
+                                 rsc->container, NULL, NULL, data_set);
         }
     }
 
@@ -1712,7 +1706,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
 void
 native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                         rsc_colocation_t *constraint,
+                         pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
     if (rsc_lh == NULL) {
@@ -1735,7 +1729,7 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
 enum filter_colocation_res
 filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                             rsc_colocation_t * constraint, gboolean preview)
+                             pcmk__colocation_t *constraint, gboolean preview)
 {
     if (constraint->score == 0) {
         return influence_nothing;
@@ -1819,7 +1813,8 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
 }
 
 static void
-influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_t * constraint)
+influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                   pcmk__colocation_t *constraint)
 {
     const char *rh_value = NULL;
     const char *lh_value = NULL;
@@ -1860,7 +1855,8 @@ influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocatio
 }
 
 static void
-colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_t * constraint)
+colocation_match(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                 pcmk__colocation_t *constraint)
 {
     const char *attribute = CRM_ATTR_ID;
     const char *value = NULL;
@@ -1928,7 +1924,7 @@ colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_
 
 void
 native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                         rsc_colocation_t *constraint,
+                         pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
     enum filter_colocation_res filter_results;
