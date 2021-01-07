@@ -125,7 +125,7 @@ struct {
 static void clean_up_connections(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
-static gboolean mon_refresh_display(gpointer user_data);
+static int mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
@@ -1925,7 +1925,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     kick_refresh(cib_updated);
 }
 
-static gboolean
+static int
 mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
@@ -1940,7 +1940,7 @@ mon_refresh_display(gpointer user_data)
         }
         out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         clean_up(CRM_EX_CONFIG);
-        return FALSE;
+        return 0;
     }
 
     /* get the stonith-history if there is evidence we need it
@@ -1966,7 +1966,7 @@ mon_refresh_display(gpointer user_data)
         }
         free_xml(cib_copy);
         out->err(out, "Reading stonith-history failed");
-        return FALSE;
+        return 0;
     }
 
     if (mon_data_set == NULL) {
@@ -1995,7 +1995,7 @@ mon_refresh_display(gpointer user_data)
                                   options.only_node, options.only_rsc) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
-                return FALSE;
+                return 0;
             }
             break;
 
@@ -2044,7 +2044,7 @@ mon_refresh_display(gpointer user_data)
     stonith_history_free(stonith_history);
     stonith_history = NULL;
     pe_reset_working_set(mon_data_set);
-    return TRUE;
+    return 1;
 }
 
 static void
