@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -362,22 +362,22 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     return TRUE;
 }
 
-// String length of CRM_META"_"
-#define CRM_META_LEN sizeof(CRM_META)
-
 // Return true if a is an attribute that should be filtered
 static bool
 should_filter_for_digest(xmlAttrPtr a, void *user_data)
 {
-    return (strncmp((const char *) a->name, CRM_META "_", CRM_META_LEN) == 0)
-           || pcmk__str_any_of((const char *) a->name,
-                               XML_ATTR_ID,
-                               XML_ATTR_CRM_VERSION,
-                               XML_LRM_ATTR_OP_DIGEST,
-                               XML_LRM_ATTR_TARGET,
-                               XML_LRM_ATTR_TARGET_UUID,
-                               "pcmk_external_ip",
-                               NULL);
+    if (strncmp((const char *) a->name, CRM_META "_",
+                sizeof(CRM_META " ") - 1) == 0) {
+        return true;
+    }
+    return pcmk__str_any_of((const char *) a->name,
+                            XML_ATTR_ID,
+                            XML_ATTR_CRM_VERSION,
+                            XML_LRM_ATTR_OP_DIGEST,
+                            XML_LRM_ATTR_TARGET,
+                            XML_LRM_ATTR_TARGET_UUID,
+                            "pcmk_external_ip",
+                            NULL);
 }
 
 /*!
