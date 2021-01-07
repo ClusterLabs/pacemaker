@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1039,7 +1039,10 @@ expand_value_source(const char *value, const char *value_source,
 {
     GHashTable *table = NULL;
 
-    if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
+    if (pcmk__str_empty(value)) {
+        return NULL; // value_source is irrelevant
+
+    } else if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
         table = match_data->params;
 
     } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
@@ -1049,7 +1052,7 @@ expand_value_source(const char *value, const char *value_source,
         return value;
     }
 
-    if ((table == NULL) || pcmk__str_empty(value)) {
+    if (table == NULL) {
         return NULL;
     }
     return (const char *) g_hash_table_lookup(table, value);
