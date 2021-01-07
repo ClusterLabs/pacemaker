@@ -1346,7 +1346,7 @@ main(int argc, char **argv)
 
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
-        if (cib && cib->variant == cib_file) {
+        if (cib->variant == cib_file) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
@@ -1370,33 +1370,30 @@ main(int argc, char **argv)
 
     crm_info("Starting %s", crm_system_name);
 
-    if (cib) {
+    do {
+        if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+            print_as(output_format ,"Waiting until cluster is available on this node ...\n");
+        }
+        rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
 
-        do {
-            if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-                print_as(output_format ,"Waiting until cluster is available on this node ...\n");
-            }
-            rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
+        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+            break;
 
-            if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-                break;
-
-            } else if (rc != pcmk_ok) {
-                sleep(options.reconnect_msec / 1000);
+        } else if (rc != pcmk_ok) {
+            sleep(options.reconnect_msec / 1000);
 #if CURSES_ENABLED
-                if (output_format == mon_output_console) {
-                    clear();
-                    refresh();
-                }
-#endif
-            } else {
-                if (output_format == mon_output_html && out->dest != stdout) {
-                    printf("Writing html to %s ...\n", args->output_dest);
-                }
+            if (output_format == mon_output_console) {
+                clear();
+                refresh();
             }
+#endif
+        } else {
+            if (output_format == mon_output_html && out->dest != stdout) {
+                printf("Writing html to %s ...\n", args->output_dest);
+            }
+        }
 
-        } while (rc == -ENOTCONN);
-    }
+    } while (rc == -ENOTCONN);
 
     if (rc != pcmk_ok) {
         if (output_format == mon_output_monitor) {
