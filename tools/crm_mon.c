@@ -834,17 +834,14 @@ cib_connect(gboolean full)
     }
 
     if (rc == pcmk_ok && full) {
-        if (rc == pcmk_ok) {
-            rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
-            if (rc == -EPROTONOSUPPORT) {
-                print_as
-                    (output_format, "Notification setup not supported, won't be able to reconnect after failure");
-                if (output_format == mon_output_console) {
-                    sleep(2);
-                }
-                rc = pcmk_ok;
+        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
+        if (rc == -EPROTONOSUPPORT) {
+            print_as
+                (output_format, "Notification setup not supported, won't be able to reconnect after failure");
+            if (output_format == mon_output_console) {
+                sleep(2);
             }
-
+            rc = pcmk_ok;
         }
 
         if (rc == pcmk_ok) {
