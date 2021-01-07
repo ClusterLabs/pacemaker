@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1451,14 +1451,13 @@ main(int argc, char **argv)
  * \brief Print one-line status suitable for use with monitoring software
  *
  * \param[in] data_set  Working set of CIB state
- * \param[in] history   List of stonith actions
  *
  * \note This function's output (and the return code when the program exits)
  *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
  */
 static void
 print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
-                    stonith_history_t *history, unsigned int mon_ops)
+                    unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
     int nodes_online = 0;
@@ -2012,7 +2011,7 @@ mon_refresh_display(gpointer user_data)
             break;
 
         case mon_output_monitor:
-            print_simple_status(out, mon_data_set, stonith_history, options.mon_ops);
+            print_simple_status(out, mon_data_set, options.mon_ops);
             if (pcmk_is_set(options.mon_ops, mon_op_has_warnings)) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
