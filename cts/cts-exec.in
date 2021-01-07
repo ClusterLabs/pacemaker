@@ -91,30 +91,20 @@ def update_path():
     os.environ['PATH'] = new_path
 
 
-def pipe_output(pipes, stdout=True, stderr=False):
-    """ Wrapper to get text output from pipes regardless of Python version """
-
-    output = ""
-    pipe_outputs = pipes.communicate()
-    if sys.version_info < (3,):
-        if stdout:
-            output = output + pipe_outputs[0]
-        if stderr:
-            output = output + pipe_outputs[1]
-    else:
-        if stdout:
-            output = output + pipe_outputs[0].decode(sys.stdout.encoding)
-        if stderr:
-            output = output + pipe_outputs[1].decode(sys.stderr.encoding)
-    return output
-
-
 def output_from_command(command):
     """ Run a command, and return its standard output. """
 
+    cmd_start_time = time.perf_counter()
     test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     test.wait()
-    return pipe_output(test).split("\n")
+    #print("WOOGA %.4fs for %s" % (time.perf_counter() - cmd_start_time, command))
+    pipe_outputs = []
+    pipe_outputs = test.communicate()
+    #print("WOOGA2 %.4fs communicate" % (time.perf_counter() - cmd_start_time))
+    pipe_stdout = pipe_outputs[0]
+    pipe_stdout_text = pipe_stdout.decode(sys.stdout.encoding)
+    #print("WOOGA3 %.4fs [%s]" % (time.perf_counter() - cmd_start_time, pipe_stdout_text))
+    return pipe_stdout_text.split("\n")
 
 
 class TestError(Exception):
@@ -186,6 +176,7 @@ class Test(object):
 
         if self.verbose and cmd == self.test_tool_location:
             args = args + " -V "
+        #args = args + " -VVVVVV "
 
         if (cmd == self.test_tool_location) and self.tls:
             args = args + " -S "
@@ -316,6 +307,7 @@ class Test(object):
         cmd.insert(0, args['cmd'])
         if self.verbose:
             print("\n\nRunning: "+" ".join(cmd))
+        cmd_start_time = time.perf_counter()
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
         if args['kill']:
@@ -326,14 +318,22 @@ class Test(object):
             ### launched earlier that is listening for the failure may not have
             ### time to connect to pacemaker-execd.
             time.sleep(2)
+            #os.system("ps auxww")
             subprocess.Popen(shlex.split(args['kill']))
+            #print("BOOGA %.4fs after %s" % (time.perf_counter() - cmd_start_time, args['kill']))
 
         if args['no_wait'] == 0:
             test.wait()
         else:
             return CrmExit.OK
 
-        output = pipe_output(test)
+        #print("BOOGA2 %.4fs post-wait" % (time.perf_counter() - cmd_start_time))
+        pipe_outputs = []
+        pipe_outputs = test.communicate()
+        #print("BOOGA3 %.4fs post-communicate" % (time.perf_counter() - cmd_start_time))
+        pipe_stdout = pipe_outputs[0]
+        output = pipe_stdout.decode(sys.stdout.encoding)
+        #print("BOOGA4 %.4fs [%s]" % (time.perf_counter() - cmd_start_time, output))
         args['cmd_output'] = output
 
         if test.returncode != args['expected_exitcode']:
@@ -778,7 +778,8 @@ class Tests(object):
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
             test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
             test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
-            test.add_cmd_and_kill("killall -9 -q pacemaker-cts-dummyd",
+            #test.add_cmd_and_kill("killall -9 -v pacemaker-cts-dummyd",
+            test.add_cmd_and_kill("pkill -9 -f pacemaker-cts-dummyd",
                                   '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self.action_timeout)
             test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s' + self.action_timeout +
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
@@ -1198,6 +1199,7 @@ class TestOptions(object):
             elif args[i] == "-p" or args[i] == "--run-only-pattern":
                 self.options['run-only-pattern'] = args[i+1]
                 skip = 1
+        self.options['run-only'] = "monitor_fail_systemd"
 
     def show_usage(self):
         """ Show command usage """
