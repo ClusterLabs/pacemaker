@@ -1068,7 +1068,7 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 }
 
 static int
-delete()
+delete(void)
 {
     int rc = pcmk_rc_ok;
     xmlNode *msg_data = NULL;
@@ -1295,7 +1295,7 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 }
 
 static int
-set_property()
+set_property(void)
 {
     int rc = pcmk_rc_ok;
     xmlNode *msg_data = NULL;
