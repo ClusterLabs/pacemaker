@@ -136,6 +136,10 @@ const char *pcmk__xe_add_last_written(xmlNode *xe);
 xmlNode *pcmk__xe_match(xmlNode *parent, const char *node_name,
                         const char *attr_n, const char *attr_v);
 
+void pcmk__xe_remove_matching_attrs(xmlNode *element,
+                                    bool (*match)(xmlAttrPtr, void *),
+                                    void *user_data);
+
 /*!
  * \internal
  * \brief Get the root directory to scan XML artefacts of given kind for
@@ -254,5 +258,19 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
 void
 pcmk__xe_set_props(xmlNodePtr node, ...)
 G_GNUC_NULL_TERMINATED;
+
+/*!
+ * \internal
+ * \brief Get first attribute of an XML element
+ *
+ * \param[in] xe  XML element to check
+ *
+ * \return First attribute of \p xe (or NULL if \p xe is NULL or has none)
+ */
+static inline xmlAttr *
+pcmk__xe_first_attr(const xmlNode *xe)
+{
+    return (xe == NULL)? NULL : xe->properties;
+}
 
 #endif // PCMK__XML_INTERNAL__H

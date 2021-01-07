@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
@@ -45,40 +46,36 @@ pe__free_digests(gpointer ptr)
     }
 }
 
-/*!
- * \internal
- * \brief Remove named attributes from an XML element
- *
- * \param[in,out] param_set     XML to be filtered
- * \param[in]     param_string  Space-separated list of attribute names
- * \param[in]     need_present  Whether to remove attributes that match,
- *                              or those that don't match
- */
-static void
-filter_parameters(xmlNode *param_set, const char *param_string,
-                  bool need_present)
+// Return true if XML attribute name is substring of a given string
+static bool
+attr_in_string(xmlAttrPtr a, void *user_data)
 {
-    if ((param_set == NULL) || (param_string == NULL)) {
-        return;
+    bool filter = false;
+    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
+
+    if (strstr((const char *) user_data, name) == NULL) {
+        crm_trace("Filtering %s (not found in '%s')",
+                  (const char *) a->name, (const char *) user_data);
+        filter = true;
     }
-    for (xmlAttrPtr xIter = param_set->properties; xIter; ) {
-        const char *prop_name = (const char *) xIter->name;
-        char *name = crm_strdup_printf(" %s ", prop_name);
-        char *match = strstr(param_string, name);
+    free(name);
+    return filter;
+}
 
-        free(name);
+// Return true if XML attribute name is not substring of a given string
+static bool
+attr_not_in_string(xmlAttrPtr a, void *user_data)
+{
+    bool filter = false;
+    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
 
-        //  Do now, because current entry might get removed below
-        xIter = xIter->next;
-
-        if ((need_present && (match == NULL))
-            || (!need_present && (match != NULL))) {
-
-            crm_trace("Filtering %s (%sfound in '%s')",
-                      prop_name, (need_present? "not " : ""), param_string);
-            xml_remove_prop(param_set, prop_name);
-        }
+    if (strstr((const char *) user_data, name) != NULL) {
+        crm_trace("Filtering %s (found in '%s')",
+                  (const char *) a->name, (const char *) user_data);
+        filter = true;
     }
+    free(name);
+    return filter;
 }
 
 #if ENABLE_VERSIONED_ATTRS
@@ -124,19 +121,19 @@ append_all_versioned_params(pe_resource_t *rsc, pe_node_t *node,
  * \internal
  * \brief Add digest of all parameters to a digest cache entry
  *
- * \param[out] data        Digest cache entry to modify
- * \param[in]  rsc         Resource that action was for
- * \param[in]  node        Node action was performed on
- * \param[in]  task        Name of action performed
- * \param[in]  key         Action's task key
- * \param[in]  xml_op      XML of operation in CIB status (if available)
- * \param[in]  op_version  CRM feature set to use for digest calculation
- * \param[in]  overrides   Key/value hash table to override resource parameters
- * \param[in]  data_set    Cluster working set
+ * \param[out]    data         Digest cache entry to modify
+ * \param[in]     rsc          Resource that action was for
+ * \param[in]     node         Node action was performed on
+ * \param[in]     task         Name of action performed
+ * \param[in,out] interval_ms  Action's interval (will be reset if in overrides)
+ * \param[in]     xml_op       XML of operation in CIB status (if available)
+ * \param[in]     op_version   CRM feature set to use for digest calculation
+ * \param[in]     overrides    Key/value table to override resource parameters
+ * \param[in]     data_set     Cluster working set
  */
 static void
 calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
-                      pe_node_t *node, const char *task, const char *key,
+                      pe_node_t *node, const char *task, guint *interval_ms,
                       xmlNode *xml_op, const char *op_version,
                       GHashTable *overrides, pe_working_set_t *data_set)
 {
@@ -156,7 +153,24 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
                   rsc->id, node->details->uname);
     }
 
-    action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
+    // If interval was overridden, reset it
+    if (overrides != NULL) {
+        const char *interval_s = g_hash_table_lookup(overrides, CRM_META "_"
+                                                     XML_LRM_ATTR_INTERVAL);
+
+        if (interval_s != NULL) {
+            long long value_ll;
+
+            errno = 0;
+            value_ll = crm_parse_ll(interval_s, NULL);
+            if ((errno == 0) && (value_ll >= 0) && (value_ll <= G_MAXUINT)) {
+                *interval_ms = (guint) value_ll;
+            }
+        }
+    }
+
+    action = custom_action(rsc, pcmk__op_key(rsc->id, task, *interval_ms),
+                           task, node, TRUE, FALSE, data_set);
     if (overrides != NULL) {
         g_hash_table_foreach(overrides, hash2field, data->params_all);
     }
@@ -175,6 +189,13 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
 
     data->digest_all_calc = calculate_operation_digest(data->params_all,
                                                        op_version);
+}
+
+// Return true if XML attribute name is a Pacemaker-defined fencing parameter
+static bool
+is_fence_param(xmlAttrPtr attr, void *user_data)
+{
+    return pcmk_stonith_param((const char *) attr->name);
 }
 
 /*!
@@ -209,8 +230,12 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     if (overrides != NULL) {
         g_hash_table_foreach(overrides, hash2field, data->params_secure);
     }
+
     g_hash_table_foreach(rsc->parameters, hash2field, data->params_secure);
-    filter_parameters(data->params_secure, secure_list, FALSE);
+    if (secure_list != NULL) {
+        pcmk__xe_remove_matching_attrs(data->params_secure, attr_not_in_string,
+                                       (void *) secure_list);
+    }
     if (pcmk_is_set(pcmk_get_ra_caps(class),
                     pcmk_ra_cap_fence_params)) {
         /* For stonith resources, Pacemaker adds special parameters,
@@ -218,16 +243,21 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
          * controller will not hash them. That means we have to filter
          * them out before calculating our hash for comparison.
          */
-        for (xmlAttrPtr iter = data->params_secure->properties;
-             iter != NULL; ) {
-            const char *prop_name = (const char *) iter->name;
-
-            iter = iter->next; // Grab next now in case we remove current
-            if (pcmk_stonith_param(prop_name)) {
-                xml_remove_prop(data->params_secure, prop_name);
-            }
-        }
+        pcmk__xe_remove_matching_attrs(data->params_secure, is_fence_param,
+                                       NULL);
     }
+    pcmk__filter_op_for_digest(data->params_secure);
+
+    /* CRM_meta_timeout *should* be part of a digest for recurring operations.
+     * However, currently the controller does not add timeout to secure digests,
+     * because it only includes parameters declared by the resource agent.
+     * Remove any timeout that made it this far, to match.
+     *
+     * @TODO Update the controller to add the timeout (which will require
+     * bumping the feature set and checking that here).
+     */
+    xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
                                                           op_version);
 }
@@ -264,7 +294,10 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
 
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
-    filter_parameters(data->params_restart, value, TRUE);
+    if (value != NULL) {
+        pcmk__xe_remove_matching_attrs(data->params_restart, attr_in_string,
+                                       (void *) value);
+    }
 
     value = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     data->digest_restart_calc = calculate_operation_digest(data->params_restart,
@@ -275,21 +308,21 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
  * \internal
  * \brief Create a new digest cache entry with calculated digests
  *
- * \param[in] rsc          Resource that action was for
- * \param[in] task         Name of action performed
- * \param[in] key          Action's task key
- * \param[in] node         Node action was performed on
- * \param[in] xml_op       XML of operation in CIB status (if available)
- * \param[in] overrides    Key/value hash table to override resource parameters
- * \param[in] calc_secure  Whether to calculate secure digest
- * \param[in] data_set     Cluster working set
+ * \param[in]     rsc          Resource that action was for
+ * \param[in]     task         Name of action performed
+ * \param[in,out] interval_ms  Action's interval (will be reset if in overrides)
+ * \param[in]     node         Node action was performed on
+ * \param[in]     xml_op       XML of operation in CIB status (if available)
+ * \param[in]     overrides    Key/value table to override resource parameters
+ * \param[in]     calc_secure  Whether to calculate secure digest
+ * \param[in]     data_set     Cluster working set
  *
  * \return Pointer to new digest cache entry (or NULL on memory error)
  * \note It is the caller's responsibility to free the result using
  *       pe__free_digests().
  */
 op_digest_cache_t *
-pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
+pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
                       pe_node_t *node, xmlNode *xml_op, GHashTable *overrides,
                       bool calc_secure, pe_working_set_t *data_set)
 {
@@ -302,8 +335,9 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
     if (xml_op != NULL) {
         op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     }
-    calculate_main_digest(data, rsc, node, task, key, xml_op, op_version,
-                          overrides, data_set);
+
+    calculate_main_digest(data, rsc, node, task, interval_ms, xml_op,
+                          op_version, overrides, data_set);
     if (calc_secure) {
         calculate_secure_digest(data, rsc, xml_op, op_version, overrides);
     }
@@ -317,7 +351,7 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
  *
  * \param[in] rsc          Resource that action was for
  * \param[in] task         Name of action performed
- * \param[in] key          Action's task key
+ * \param[in] interval_ms  Action's interval
  * \param[in] node         Node action was performed on
  * \param[in] xml_op       XML of operation in CIB status (if available)
  * \param[in] calc_secure  Whether to calculate secure digest
@@ -326,29 +360,40 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, const char *key,
  * \return Pointer to node's digest cache entry
  */
 static op_digest_cache_t *
-rsc_action_digest(pe_resource_t *rsc, const char *task, const char *key,
+rsc_action_digest(pe_resource_t *rsc, const char *task, guint interval_ms,
                   pe_node_t *node, xmlNode *xml_op, bool calc_secure,
                   pe_working_set_t *data_set)
 {
     op_digest_cache_t *data = NULL;
+    char *key = pcmk__op_key(rsc->id, task, interval_ms);
 
     data = g_hash_table_lookup(node->details->digest_cache, key);
     if (data == NULL) {
-        data = pe__calculate_digests(rsc, task, key, node, xml_op, NULL,
-                                     calc_secure, data_set);
+        data = pe__calculate_digests(rsc, task, &interval_ms, node, xml_op,
+                                     NULL, calc_secure, data_set);
         CRM_ASSERT(data != NULL);
         g_hash_table_insert(node->details->digest_cache, strdup(key), data);
     }
+    free(key);
     return data;
 }
 
+/*!
+ * \internal
+ * \brief Calculate operation digests and compare against an XML history entry
+ *
+ * \param[in] rsc       Resource to check
+ * \param[in] xml_op    Resource history XML
+ * \param[in] node      Node to use for digest calculation
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Pointer to node's digest cache entry, with comparison result set
+ */
 op_digest_cache_t *
 rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
                       pe_working_set_t * data_set)
 {
     op_digest_cache_t *data = NULL;
-
-    char *key = NULL;
     guint interval_ms = 0;
 
     const char *op_version;
@@ -363,17 +408,18 @@ rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-    key = pcmk__op_key(rsc->id, task, interval_ms);
-    data = rsc_action_digest(rsc, task, key, node, xml_op,
+    data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
                              pcmk_is_set(data_set->flags, pe_flag_sanitized),
                              data_set);
 
     data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
-        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
-                 key, node->details->uname,
-                 crm_str(digest_restart), data->digest_restart_calc,
-                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
+                         "changed: hash was %s vs. now %s (restart:%s) %s",
+                    interval_ms, task, rsc->id, node->details->uname,
+                    crm_str(digest_restart), data->digest_restart_calc,
+                    op_version,
+                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_RESTART;
 
     } else if (digest_all == NULL) {
@@ -381,15 +427,15 @@ rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
         data->rc = RSC_DIGEST_UNKNOWN;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
-        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (%s:%s) %s",
-                 key, node->details->uname,
-                 crm_str(digest_all), data->digest_all_calc,
-                 (interval_ms > 0)? "reschedule" : "reload",
-                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        pe_rsc_info(rsc, "Parameters to %ums-interval %s action for %s on %s "
+                         "changed: hash was %s vs. now %s (%s:%s) %s",
+                    interval_ms, task, rsc->id, node->details->uname,
+                    crm_str(digest_all), data->digest_all_calc,
+                    (interval_ms > 0)? "reschedule" : "reload",
+                    op_version,
+                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_ALL;
     }
-
-    free(key);
     return data;
 }
 
@@ -478,11 +524,8 @@ pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
     const char *node_summary = NULL;
 
     // Calculate device's current parameter digests
-    char *key = pcmk__op_key(rsc->id, STONITH_DIGEST_TASK, 0);
-    op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key,
+    op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, 0U,
                                                 node, NULL, TRUE, data_set);
-
-    free(key);
 
     // Check whether node has special unfencing summary node attribute
     node_summary = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);

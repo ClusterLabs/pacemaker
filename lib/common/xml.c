@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -328,32 +328,31 @@ pcmk__xml_position(xmlNode *xml, enum xml_private_flags ignore_if_set)
     return position;
 }
 
+// This also clears attribute's flags if not marked as deleted
+static bool
+marked_as_deleted(xmlAttrPtr a, void *user_data)
+{
+    xml_private_t *p = a->_private;
+
+    if (pcmk_is_set(p->flags, xpf_deleted)) {
+        return true;
+    }
+    p->flags = xpf_none;
+    return false;
+}
+
 // Remove all attributes marked as deleted from an XML node
 static void
 accept_attr_deletions(xmlNode *xml)
 {
-    xmlNode *cIter = NULL;
-    xmlAttr *pIter = NULL;
-    xml_private_t *p = xml->_private;
+    // Clear XML node's flags
+    ((xml_private_t *) xml->_private)->flags = xpf_none;
 
-    p->flags = xpf_none;
-    pIter = pcmk__first_xml_attr(xml);
+    // Remove this XML node's attributes that were marked as deleted
+    pcmk__xe_remove_matching_attrs(xml, marked_as_deleted, NULL);
 
-    while (pIter != NULL) {
-        const xmlChar *name = pIter->name;
-
-        p = pIter->_private;
-        pIter = pIter->next;
-
-        if(p->flags & xpf_deleted) {
-            xml_remove_prop(xml, (const char *)name);
-
-        } else {
-            p->flags = xpf_none;
-        }
-    }
-
-    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
+    // Recursively do the same for this XML node's children
+    for (xmlNodePtr cIter = pcmk__xml_first_child(xml); cIter != NULL;
          cIter = pcmk__xml_next(cIter)) {
         accept_attr_deletions(cIter);
     }
@@ -528,11 +527,9 @@ copy_in_properties(xmlNode * target, xmlNode * src)
         crm_err("No node to copy properties into");
 
     } else {
-        xmlAttrPtr pIter = NULL;
-
-        for (pIter = pcmk__first_xml_attr(src); pIter != NULL; pIter = pIter->next) {
-            const char *p_name = (const char *)pIter->name;
-            const char *p_value = pcmk__xml_attr_value(pIter);
+        for (xmlAttrPtr a = pcmk__xe_first_attr(src); a != NULL; a = a->next) {
+            const char *p_name = (const char *) a->name;
+            const char *p_value = pcmk__xml_attr_value(a);
 
             expand_plus_plus(target, p_name, p_value);
         }
@@ -546,11 +543,10 @@ fix_plus_plus_recursive(xmlNode * target)
 {
     /* TODO: Remove recursion and use xpath searches for value++ */
     xmlNode *child = NULL;
-    xmlAttrPtr pIter = NULL;
 
-    for (pIter = pcmk__first_xml_attr(target); pIter != NULL; pIter = pIter->next) {
-        const char *p_name = (const char *)pIter->name;
-        const char *p_value = pcmk__xml_attr_value(pIter);
+    for (xmlAttrPtr a = pcmk__xe_first_attr(target); a != NULL; a = a->next) {
+        const char *p_name = (const char *) a->name;
+        const char *p_value = pcmk__xml_attr_value(a);
 
         expand_plus_plus(target, p_name, p_value);
     }
@@ -619,6 +615,43 @@ expand_plus_plus(xmlNode * target, const char *name, const char *value)
     }
     crm_xml_add(target, name, value);
     return;
+}
+
+/*!
+ * \internal
+ * \brief Remove an XML element's attributes that match some criteria
+ *
+ * \param[in,out] element    XML element to modify
+ * \param[in]     match      If not NULL, only remove attributes for which
+ *                           this function returns true
+ * \param[in]     user_data  Data to pass to \p match
+ */
+void
+pcmk__xe_remove_matching_attrs(xmlNode *element,
+                               bool (*match)(xmlAttrPtr, void *),
+                               void *user_data)
+{
+    xmlAttrPtr next = NULL;
+
+    for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
+        next = a->next; // Grab now because attribute might get removed
+        if ((match == NULL) || match(a, user_data)) {
+            if (!pcmk__check_acl(element, NULL, xpf_acl_write)) {
+                crm_trace("ACLs prevent removal of attributes (%s and "
+                          "possibly others) from %s element",
+                          (const char *) a->name, (const char *) element->name);
+                return; // ACLs apply to element, not particular attributes
+            }
+
+            if (pcmk__tracking_xml_changes(element, false)) {
+                // Leave (marked for removal) until after diff is calculated
+                set_parent_flag(element, xpf_dirty);
+                pcmk__set_xml_flags((xml_private_t *) a->_private, xpf_deleted);
+            } else {
+                xmlRemoveProp(a);
+            }
+        }
+    }
 }
 
 xmlDoc *
@@ -1429,7 +1462,6 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
     const char *hidden = NULL;
 
     xmlNode *child = NULL;
-    xmlAttrPtr pIter = NULL;
 
     if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
@@ -1449,10 +1481,12 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
             buffer_print(buffer, max, offset, "<%s", name);
 
             hidden = crm_element_value(data, "hidden");
-            for (pIter = pcmk__first_xml_attr(data); pIter != NULL; pIter = pIter->next) {
-                xml_private_t *p = pIter->_private;
-                const char *p_name = (const char *)pIter->name;
-                const char *p_value = pcmk__xml_attr_value(pIter);
+            for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL;
+                 a = a->next) {
+
+                xml_private_t *p = a->_private;
+                const char *p_name = (const char *) a->name;
+                const char *p_value = pcmk__xml_attr_value(a);
                 char *p_copy = NULL;
 
                 if (pcmk_is_set(p->flags, xpf_deleted)) {
@@ -1526,7 +1560,6 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
     xml_private_t *p;
     char *prefix_m = NULL;
     xmlNode *child = NULL;
-    xmlAttrPtr pIter = NULL;
 
     if ((data == NULL) || (log_level == LOG_NEVER)) {
         return;
@@ -1566,10 +1599,10 @@ log_xml_changes(int log_level, const char *file, const char *function, int line,
         pcmk__xe_log(log_level, file, function, line, flags, data, depth,
                      options|xml_log_option_open);
 
-        for (pIter = pcmk__first_xml_attr(data); pIter != NULL; pIter = pIter->next) {
-            const char *aname = (const char*)pIter->name;
+        for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
+            const char *aname = (const char*) a->name;
 
-            p = pIter->_private;
+            p = a->_private;
             if (pcmk_is_set(p->flags, xpf_deleted)) {
                 const char *value = crm_element_value(data, aname);
                 flags = prefix_del;
@@ -1684,11 +1717,9 @@ log_data_element(int log_level, const char *file, const char *function, int line
 static void
 dump_filtered_xml(xmlNode * data, int options, char **buffer, int *offset, int *max)
 {
-    xmlAttrPtr xIter = NULL;
-
-    for (xIter = pcmk__first_xml_attr(data); xIter != NULL; xIter = xIter->next) {
-        if (!pcmk__xa_filterable((const char *) (xIter->name))) {
-            dump_xml_attr(xIter, options, buffer, offset, max);
+    for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
+        if (!pcmk__xa_filterable((const char *) (a->name))) {
+            dump_xml_attr(a, options, buffer, offset, max);
         }
     }
 }
@@ -1722,10 +1753,8 @@ dump_xml_element(xmlNode * data, int options, char **buffer, int *offset, int *m
         dump_filtered_xml(data, options, buffer, offset, max);
 
     } else {
-        xmlAttrPtr xIter = NULL;
-
-        for (xIter = pcmk__first_xml_attr(data); xIter != NULL; xIter = xIter->next) {
-            dump_xml_attr(xIter, options, buffer, offset, max);
+        for (xmlAttrPtr a = pcmk__xe_first_attr(data); a != NULL; a = a->next) {
+            dump_xml_attr(a, options, buffer, offset, max);
         }
     }
 
@@ -2062,7 +2091,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
 static void
 set_attrs_flag(xmlNode *xml, enum xml_private_flags flag)
 {
-    for (xmlAttr *attr = pcmk__first_xml_attr(xml); attr; attr = attr->next) {
+    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr; attr = attr->next) {
         pcmk__set_xml_flags((xml_private_t *) (attr->_private), flag);
     }
 }
@@ -2152,7 +2181,7 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
 static void
 xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
 {
-    xmlAttr *attr_iter = pcmk__first_xml_attr(old_xml);
+    xmlAttr *attr_iter = pcmk__xe_first_attr(old_xml);
 
     while (attr_iter != NULL) {
         xmlAttr *old_attr = attr_iter;
@@ -2194,7 +2223,7 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
 static void
 mark_created_attrs(xmlNode *new_xml)
 {
-    xmlAttr *attr_iter = pcmk__first_xml_attr(new_xml);
+    xmlAttr *attr_iter = pcmk__xe_first_attr(new_xml);
 
     while (attr_iter != NULL) {
         xmlAttr *new_attr = attr_iter;
@@ -2371,7 +2400,6 @@ gboolean
 can_prune_leaf(xmlNode * xml_node)
 {
     xmlNode *cIter = NULL;
-    xmlAttrPtr pIter = NULL;
     gboolean can_prune = TRUE;
     const char *name = crm_element_name(xml_node);
 
@@ -2380,8 +2408,8 @@ can_prune_leaf(xmlNode * xml_node)
         return FALSE;
     }
 
-    for (pIter = pcmk__first_xml_attr(xml_node); pIter != NULL; pIter = pIter->next) {
-        const char *p_name = (const char *)pIter->name;
+    for (xmlAttrPtr a = pcmk__xe_first_attr(xml_node); a != NULL; a = a->next) {
+        const char *p_name = (const char *) a->name;
 
         if (strcmp(p_name, XML_ATTR_ID) == 0) {
             continue;
@@ -2558,15 +2586,13 @@ pcmk__xml_update(xmlNode *parent, xmlNode *target, xmlNode *update,
 
     } else {
         /* No need for expand_plus_plus(), just raw speed */
-        xmlAttrPtr pIter = NULL;
-
-        for (pIter = pcmk__first_xml_attr(update); pIter != NULL; pIter = pIter->next) {
-            const char *p_name = (const char *)pIter->name;
-            const char *p_value = pcmk__xml_attr_value(pIter);
+        for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
+             a = a->next) {
+            const char *p_value = pcmk__xml_attr_value(a);
 
             /* Remove it first so the ordering of the update is preserved */
-            xmlUnsetProp(target, (pcmkXmlStr) p_name);
-            xmlSetProp(target, (pcmkXmlStr) p_name, (pcmkXmlStr) p_value);
+            xmlUnsetProp(target, a->name);
+            xmlSetProp(target, a->name, (pcmkXmlStr) p_value);
         }
     }
 
@@ -2681,11 +2707,10 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
         can_delete = FALSE;
     }
     if (can_delete && delete_only) {
-        xmlAttrPtr pIter = NULL;
-
-        for (pIter = pcmk__first_xml_attr(update); pIter != NULL; pIter = pIter->next) {
-            const char *p_name = (const char *)pIter->name;
-            const char *p_value = pcmk__xml_attr_value(pIter);
+        for (xmlAttrPtr a = pcmk__xe_first_attr(update); a != NULL;
+             a = a->next) {
+            const char *p_name = (const char *) a->name;
+            const char *p_value = pcmk__xml_attr_value(a);
 
             right_val = crm_element_value(child, p_name);
             if (!pcmk__str_eq(p_value, right_val, pcmk__str_casei)) {
