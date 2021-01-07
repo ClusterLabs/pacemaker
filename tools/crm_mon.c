@@ -804,55 +804,57 @@ cib_connect(gboolean full)
         }
     }
 
-    if (cib->state != cib_connected_query && cib->state != cib_connected_command) {
-        crm_trace("Connecting to the CIB");
+    if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
+        return rc;
+    }
 
-        /* Hack: the CIB signon will print the prompt for a password if needed,
-         * but to stderr. If we're in curses, show it on the screen instead.
-         *
-         * @TODO Add a password prompt (maybe including input) function to
-         *       pcmk__output_t and use it in libcib.
-         */
-        if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
-            need_pass = FALSE;
-            print_as(output_format, "Password:");
-        }
+    crm_trace("Connecting to the CIB");
 
-        rc = cib->cmds->signon(cib, crm_system_name, cib_query);
-        if (rc != pcmk_ok) {
-            out->err(out, "Could not connect to the CIB: %s",
-                     pcmk_strerror(rc));
-            return rc;
-        }
+    /* Hack: the CIB signon will print the prompt for a password if needed,
+     * but to stderr. If we're in curses, show it on the screen instead.
+     *
+     * @TODO Add a password prompt (maybe including input) function to
+     *       pcmk__output_t and use it in libcib.
+     */
+    if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
+        need_pass = FALSE;
+        print_as(output_format, "Password:");
+    }
 
-        rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
+    rc = cib->cmds->signon(cib, crm_system_name, cib_query);
+    if (rc != pcmk_ok) {
+        out->err(out, "Could not connect to the CIB: %s",
+                 pcmk_strerror(rc));
+        return rc;
+    }
+
+    rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
+    if (rc == pcmk_ok) {
+        mon_refresh_display(NULL);
+    }
+
+    if (rc == pcmk_ok && full) {
         if (rc == pcmk_ok) {
-            mon_refresh_display(NULL);
+            rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
+            if (rc == -EPROTONOSUPPORT) {
+                print_as
+                    (output_format, "Notification setup not supported, won't be able to reconnect after failure");
+                if (output_format == mon_output_console) {
+                    sleep(2);
+                }
+                rc = pcmk_ok;
+            }
+
         }
 
-        if (rc == pcmk_ok && full) {
-            if (rc == pcmk_ok) {
-                rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
-                if (rc == -EPROTONOSUPPORT) {
-                    print_as
-                        (output_format, "Notification setup not supported, won't be able to reconnect after failure");
-                    if (output_format == mon_output_console) {
-                        sleep(2);
-                    }
-                    rc = pcmk_ok;
-                }
+        if (rc == pcmk_ok) {
+            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
+            rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
+        }
 
-            }
-
-            if (rc == pcmk_ok) {
-                cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
-                rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
-            }
-
-            if (rc != pcmk_ok) {
-                out->err(out, "Notification setup failed, could not monitor CIB actions");
-                clean_up_connections();
-            }
+        if (rc != pcmk_ok) {
+            out->err(out, "Notification setup failed, could not monitor CIB actions");
+            clean_up_connections();
         }
     }
     return rc;
