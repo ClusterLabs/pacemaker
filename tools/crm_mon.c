@@ -128,6 +128,7 @@ static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
 static int mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
+static int fencing_connect(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void kick_refresh(gboolean data_updated);
@@ -668,8 +669,6 @@ static GOptionEntry deprecated_entries[] = {
 static gboolean
 mon_timer_popped(gpointer data)
 {
-    int rc = pcmk_ok;
-
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
         clear();
@@ -683,9 +682,7 @@ mon_timer_popped(gpointer data)
     }
 
     print_as(output_format, "Reconnecting...\n");
-    rc = cib_connect(TRUE);
-
-    if (rc != pcmk_ok) {
+    if (fencing_connect() == pcmk_ok && cib_connect(TRUE) == pcmk_ok) {
         timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
@@ -767,6 +764,37 @@ mon_winresize(int nsig)
 #endif
 
 static int
+fencing_connect(void)
+{
+    int rc = pcmk_ok;
+
+    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
+        st = stonith_api_new();
+    }
+
+    if (!pcmk_is_set(options.mon_ops, mon_op_fence_connect) ||
+        st == NULL || st->state != stonith_disconnected) {
+        return rc;
+    }
+
+    rc = st->cmds->connect(st, crm_system_name, NULL);
+    if (rc == pcmk_ok) {
+        crm_trace("Setting up stonith callbacks");
+        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+                                            mon_st_callback_event);
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
+        } else {
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+                                            mon_st_callback_display);
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
+        }
+    }
+
+    return rc;
+}
+
+static int
 cib_connect(gboolean full)
 {
     int rc = pcmk_ok;
@@ -776,28 +804,6 @@ cib_connect(gboolean full)
 
     if (getenv("CIB_passwd") != NULL) {
         need_pass = FALSE;
-    }
-
-    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
-        st = stonith_api_new();
-    }
-
-    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect)
-        && (st != NULL) && (st->state == stonith_disconnected)) {
-
-        rc = st->cmds->connect(st, crm_system_name, NULL);
-        if (rc == pcmk_ok) {
-            crm_trace("Setting up stonith callbacks");
-            if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
-                                                mon_st_callback_event);
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
-            } else {
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
-                                                mon_st_callback_display);
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
-            }
-        }
     }
 
     if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
@@ -1373,7 +1379,11 @@ main(int argc, char **argv)
         if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
             print_as(output_format ,"Waiting until cluster is available on this node ...\n");
         }
-        rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
+
+        rc = fencing_connect();
+        if (rc == pcmk_ok) {
+            rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
+        }
 
         if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
             break;
