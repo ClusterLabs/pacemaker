@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 the Pacemaker project contributors
+ * Copyright 2017-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -272,5 +272,17 @@ pcmk__xe_first_attr(const xmlNode *xe)
 {
     return (xe == NULL)? NULL : xe->properties;
 }
+
+/*!
+ * \internal
+ * \brief Extract the ID attribute from an XML element
+ *
+ * \param[in] xpath String to search
+ * \param[in] node  Node to get the ID for
+ *
+ * \return ID attribute of \p node in xpath string \p xpath
+ */
+char *
+pcmk__xpath_node_id(const char *xpath, const char *node);
 
 #endif // PCMK__XML_INTERNAL__H

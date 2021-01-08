@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <crm/msg_xml.h>
+#include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
 /*
@@ -296,4 +297,35 @@ xml_get_path(xmlNode *xml)
         return strdup(buffer);
     }
     return NULL;
+}
+
+char *
+pcmk__xpath_node_id(const char *xpath, const char *node)
+{
+    char *retval = NULL;
+    char *patt = NULL;
+    char *start = NULL;
+    char *end = NULL;
+
+    if (node == NULL || xpath == NULL) {
+        return retval;
+    }
+
+    patt = crm_strdup_printf("/%s[@id=", node);
+    start = strstr(xpath, patt);
+
+    if (!start) {
+        free(patt);
+        return retval;
+    }
+
+    start += strlen(patt);
+    start++;
+
+    end = strstr(start, "\'");
+    CRM_ASSERT(end);
+    retval = strndup(start, end-start);
+
+    free(patt);
+    return retval;
 }

@@ -1719,25 +1719,6 @@ mon_trigger_refresh(gpointer user_data)
     return FALSE;
 }
 
-#define NODE_PATT "/lrm[@id="
-static char *
-get_node_from_xpath(const char *xpath)
-{
-    char *nodeid = NULL;
-    char *tmp = strstr(xpath, NODE_PATT);
-
-    if(tmp) {
-        tmp += strlen(NODE_PATT);
-        tmp += 1;
-
-        nodeid = strdup(tmp);
-        tmp = strstr(nodeid, "\'");
-        CRM_ASSERT(tmp);
-        tmp[0] = 0;
-    }
-    return nodeid;
-}
-
 static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
@@ -1822,19 +1803,19 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             handle_rsc_op(match, node);
 
         } else if(strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             handle_rsc_op(match, local_node);
             free(local_node);
 
         } else if(strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             handle_rsc_op(match, local_node);
             free(local_node);
 
         } else if(strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             handle_rsc_op(match, local_node);
             free(local_node);
