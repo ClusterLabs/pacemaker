@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,9 @@ extern "C" {
 #include <crm/pengine/pe_types.h>   // pe_node_t, pe_resource_t, etc.
 
 extern resource_object_functions_t resource_class_functions[];
+
+GHashTable *pe_rsc_params(pe_resource_t *rsc, pe_node_t *node,
+                          pe_working_set_t *data_set);
 void get_meta_attributes(GHashTable * meta_hash, pe_resource_t *rsc,
                          pe_node_t *node, pe_working_set_t *data_set);
 void get_rsc_attributes(GHashTable *meta_hash, pe_resource_t *rsc,

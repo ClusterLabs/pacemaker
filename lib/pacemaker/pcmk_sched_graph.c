@@ -1210,11 +1210,29 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     g_hash_table_foreach(action->extra, hash2field, args_xml);
     if (action->rsc != NULL && action->node) {
-        GHashTable *p = crm_str_table_new();
+        // Get the resource instance attributes, evaluated properly for node
+        GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
 
-        get_rsc_attributes(p, action->rsc, action->node, data_set);
-        g_hash_table_foreach(p, hash2smartfield, args_xml);
-        g_hash_table_destroy(p);
+        /* REMOTE_CONTAINER_HACK: If this is a remote connection resource with
+         * addr="#uname", pull the actual value from the parameters evaluated
+         * without a node (which was put there earlier in stage8() when the
+         * bundle's expand() method was called).
+         */
+        const char *remote_addr = g_hash_table_lookup(params,
+                                                      XML_RSC_ATTR_REMOTE_RA_ADDR);
+
+        if (pcmk__str_eq(remote_addr, "#uname", pcmk__str_none)) {
+            GHashTable *base = pe_rsc_params(action->rsc, NULL, data_set);
+
+            remote_addr = g_hash_table_lookup(base,
+                                              XML_RSC_ATTR_REMOTE_RA_ADDR);
+            if (remote_addr != NULL) {
+                g_hash_table_insert(params, strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
+                                    strdup(remote_addr));
+            }
+        }
+
+        g_hash_table_foreach(params, hash2smartfield, args_xml);
 
 #if ENABLE_VERSIONED_ATTRS
         {
@@ -1230,7 +1248,9 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
 #endif
 
     } else if(action->rsc && action->rsc->variant <= pe_native) {
-        g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
+        GHashTable *params = pe_rsc_params(action->rsc, NULL, data_set);
+
+        g_hash_table_foreach(params, hash2smartfield, args_xml);
 
 #if ENABLE_VERSIONED_ATTRS
         if (xml_has_children(action->rsc->versioned_parameters)) {

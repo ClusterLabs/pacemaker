@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -358,7 +358,7 @@ struct pe_resource_s {
     enum rsc_role_e next_role;
 
     GHashTable *meta;
-    GHashTable *parameters;
+    GHashTable *parameters; //! \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;
 
     GListPtr children;          /* pe_resource_t*   */
@@ -371,6 +371,12 @@ struct pe_resource_s {
     pe_node_t *lock_node;       // Resource is shutdown-locked to this node
     time_t lock_time;           // When shutdown lock started
 
+    /* Resource parameters may have node-attribute-based rules, which means the
+     * values can vary by node. This table is a cache of parameter name/value
+     * tables for each node (as needed). Use pe_rsc_params() to get the table
+     * for a given node.
+     */
+    GHashTable *parameter_cache; // Key = node name, value = parameters table
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
 #endif

@@ -482,13 +482,12 @@ generate_params(void)
         goto param_gen_bail;
     }
 
-    params = crm_str_table_new();
+    params = pe_rsc_params(rsc, NULL, data_set);
     meta = crm_str_table_new();
 
-    get_rsc_attributes(params, rsc, NULL, data_set);
     get_meta_attributes(meta, rsc, NULL, data_set);
 
-    if (params) {
+    if (params != NULL) {
         char *key = NULL;
         char *value = NULL;
 
@@ -496,7 +495,6 @@ generate_params(void)
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
             options.params = lrmd_key_value_add(options.params, key, value);
         }
-        g_hash_table_destroy(params);
     }
 
     if (meta) {

@@ -47,7 +47,7 @@ static pe__location_t *generate_location_rule(pe_resource_t *rsc,
                                               const char *discovery,
                                               crm_time_t *next_change,
                                               pe_working_set_t *data_set,
-                                              pe_match_data_t *match_data);
+                                              pe_re_match_data_t *match_data);
 static void unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 static void unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
@@ -714,7 +714,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
 static void unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh,
                                 const char *role, const char *score,
                                 pe_working_set_t *data_set,
-                                pe_match_data_t *match_data);
+                                pe_re_match_data_t *match_data);
 
 static void
 unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
@@ -769,13 +769,9 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
                                                 .nregs = nregs,
                                                 .pmatch = pmatch
                                                };
-                pe_match_data_t match_data = {
-                                                .re = &re_match_data,
-                                                .params = r->parameters,
-                                                .meta = r->meta,
-                                             };
+
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
-                unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, &match_data);
+                unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, &re_match_data);
 
             } else if (invert && (status != 0)) {
                 crm_debug("'%s' is an inverted match of '%s' for %s", r->id, value, id);
@@ -796,7 +792,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 static void
 unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
                     const char *score, pe_working_set_t *data_set,
-                    pe_match_data_t *match_data)
+                    pe_re_match_data_t *re_match_data)
 {
     pe__location_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
@@ -836,7 +832,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
             empty = FALSE;
             crm_trace("Unpacking %s/%s", id, ID(rule_xml));
             generate_location_rule(rsc_lh, rule_xml, discovery, next_change,
-                                   data_set, match_data);
+                                   data_set, re_match_data);
         }
 
         if (empty) {
@@ -1067,7 +1063,8 @@ get_node_score(const char *rule, const char *score, gboolean raw, pe_node_t * no
 static pe__location_t *
 generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pe_working_set_t *data_set, pe_match_data_t *match_data)
+                       pe_working_set_t *data_set,
+                       pe_re_match_data_t *re_match_data)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -1113,14 +1110,14 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         return NULL;
     }
 
-    if (match_data && match_data->re && match_data->re->nregs > 0 && match_data->re->pmatch[0].rm_so != -1) {
-        if (raw_score == FALSE) {
-            char *result = pe_expand_re_matches(score, match_data->re);
+    if ((re_match_data != NULL) && (re_match_data->nregs > 0)
+        && (re_match_data->pmatch[0].rm_so != -1) && !raw_score) {
 
-            if (result) {
-                score = (const char *) result;
-                score_allocated = TRUE;
-            }
+        char *result = pe_expand_re_matches(score, re_match_data);
+
+        if (result != NULL) {
+            score = result;
+            score_allocated = TRUE;
         }
     }
 
@@ -1148,9 +1145,14 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         int score_f = 0;
         pe_node_t *node = (pe_node_t *) gIter->data;
+        pe_match_data_t match_data = {
+            .re = re_match_data,
+            .params = pe_rsc_params(rsc, node, data_set),
+            .meta = rsc->meta,
+        };
 
         accept = pe_test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN,
-                              data_set->now, next_change, match_data);
+                              data_set->now, next_change, &match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);

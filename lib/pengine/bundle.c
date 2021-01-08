@@ -948,29 +948,33 @@ replica_for_remote(pe_resource_t *remote)
 }
 
 bool
-pe__bundle_needs_remote_name(pe_resource_t *rsc)
+pe__bundle_needs_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     const char *value;
+    GHashTable *params = NULL;
 
     if (rsc == NULL) {
         return false;
     }
 
-    value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_REMOTE_RA_ADDR);
+    // Use NULL node since pcmk__bundle_expand() uses that to set value
+    params = pe_rsc_params(rsc, NULL, data_set);
+    value = g_hash_table_lookup(params, XML_RSC_ATTR_REMOTE_RA_ADDR);
 
     return pcmk__str_eq(value, "#uname", pcmk__str_casei)
            && xml_contains_remote_node(rsc->xml);
 }
 
 const char *
-pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
+pe__add_bundle_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set,
+                           xmlNode *xml, const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
     pe_node_t *node = NULL;
     pe__bundle_replica_t *replica = NULL;
 
-    if (!pe__bundle_needs_remote_name(rsc)) {
+    if (!pe__bundle_needs_remote_name(rsc, data_set)) {
         return NULL;
     }
 

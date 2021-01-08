@@ -1099,12 +1099,12 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
      */
     if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
                     pcmk_ra_cap_fence_params)
-            && (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
-                || is_probe)
-            && action->rsc->parameters) {
+        && (pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)
+            || is_probe)) {
 
-        value = g_hash_table_lookup(action->rsc->parameters,
-                                    "pcmk_monitor_timeout");
+        GHashTable *params = pe_rsc_params(action->rsc, action->node, data_set);
+
+        value = g_hash_table_lookup(params, "pcmk_monitor_timeout");
 
         if (value) {
             crm_trace("\t%s: Setting timeout to pcmk_monitor_timeout '%s', "

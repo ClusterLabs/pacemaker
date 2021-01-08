@@ -911,7 +911,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
         CRM_ASSERT(replica);
         if (replica->remote && replica->container
-            && pe__bundle_needs_remote_name(replica->remote)) {
+            && pe__bundle_needs_remote_name(replica->remote, data_set)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
              * run pacemaker-remoted inside, without needing a separate IP for
@@ -923,12 +923,22 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
                                                replica->remote->xml, LOG_ERR);
             const char *calculated_addr = NULL;
 
+            // Replace the value in replica->remote->xml (if appropriate)
             calculated_addr = pe__add_bundle_remote_name(replica->remote,
+                                                         data_set,
                                                          nvpair, "value");
             if (calculated_addr) {
+                /* Since this is for the bundle as a resource, and not any
+                 * particular action, replace the value in the default
+                 * parameters (not evaluated for node). action2xml() will grab
+                 * it from there to replace it in node-evaluated parameters.
+                 */
+                GHashTable *params = pe_rsc_params(replica->remote,
+                                                   NULL, data_set);
+
                 crm_trace("Set address for bundle connection %s to bundle host %s",
                           replica->remote->id, calculated_addr);
-                g_hash_table_replace(replica->remote->parameters,
+                g_hash_table_replace(params,
                                      strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
                                      strdup(calculated_addr));
             } else {

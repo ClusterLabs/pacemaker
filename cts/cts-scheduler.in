@@ -145,6 +145,7 @@ TESTS = [
         [ "location-date-rules-1", "Use location constraints with ineffective date-based rules" ],
         [ "location-date-rules-2", "Use location constraints with effective date-based rules" ],
         [ "nvpair-date-rules-1", "Use nvpair blocks with a variety of date-based rules" ],
+        [ "value-source", "Use location constraints with node attribute expressions using value-source" ],
         [ "rule-dbl-as-auto-number-match",
           "Floating-point rule values default to number comparison: match" ],
         [ "rule-dbl-as-auto-number-no-match",

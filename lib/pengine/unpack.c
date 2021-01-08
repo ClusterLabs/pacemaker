@@ -3182,7 +3182,7 @@ should_clear_for_param_change(xmlNode *xml_op, const char *task,
 {
     if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
 
-        if (pe__bundle_needs_remote_name(rsc)) {
+        if (pe__bundle_needs_remote_name(rsc, data_set)) {
             /* We haven't allocated resources yet, so we can't reliably
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.

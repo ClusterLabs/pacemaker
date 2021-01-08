@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -435,6 +435,62 @@ detect_promotable(pe_resource_t *rsc)
     return FALSE;
 }
 
+static void
+free_params_table(gpointer data)
+{
+    g_hash_table_destroy((GHashTable *) data);
+}
+
+/*!
+ * \brief Get a table of resource parameters
+ *
+ * \param[in] rsc       Resource to query
+ * \param[in] node      Node for evaluating rules (NULL for defaults)
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Hash table containing resource parameter names and values
+ *         (or NULL if \p rsc or \p data_set is NULL)
+ * \note The returned table will be destroyed when the resource is freed, so
+ *       callers should not destroy it.
+ */
+GHashTable *
+pe_rsc_params(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
+{
+    GHashTable *params_on_node = NULL;
+
+    /* A NULL node is used to request the resource's default parameters
+     * (not evaluated for node), but we always want something non-NULL
+     * as a hash table key.
+     */
+    const char *node_name = "";
+
+    // Sanity check
+    if ((rsc == NULL) || (data_set == NULL)) {
+        return NULL;
+    }
+    if ((node != NULL) && (node->details->uname != NULL)) {
+        node_name = node->details->uname;
+    }
+
+    // Find the parameter table for given node
+    if (rsc->parameter_cache == NULL) {
+        rsc->parameter_cache = g_hash_table_new_full(crm_strcase_hash,
+                                                     crm_strcase_equal, free,
+                                                     free_params_table);
+    } else {
+        params_on_node = g_hash_table_lookup(rsc->parameter_cache, node_name);
+    }
+
+    // If none exists yet, create one with parameters evaluated for node
+    if (params_on_node == NULL) {
+        params_on_node = crm_str_table_new();
+        get_rsc_attributes(params_on_node, rsc, node, data_set);
+        g_hash_table_insert(rsc->parameter_cache, strdup(node_name),
+                            params_on_node);
+    }
+    return params_on_node;
+}
+
 gboolean
 common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
               pe_resource_t * parent, pe_working_set_t * data_set)
@@ -501,8 +557,6 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         return FALSE;
     }
 
-    (*rsc)->parameters = crm_str_table_new();
-
 #if ENABLE_VERSIONED_ATTRS
     (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 #endif
@@ -528,7 +582,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     pe_rsc_trace((*rsc), "Unpacking resource...");
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
-    get_rsc_attributes((*rsc)->parameters, *rsc, NULL, data_set);
+    (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
 #if ENABLE_VERSIONED_ATTRS
     pe_get_versioned_attributes((*rsc)->versioned_parameters, *rsc, NULL, data_set);
 #endif
@@ -752,7 +806,15 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     if (remote_node) {
-        value = g_hash_table_lookup((*rsc)->parameters, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
+        GHashTable *params = pe_rsc_params(*rsc, NULL, data_set);
+
+        /* Grabbing the value now means that any rules based on node attributes
+         * will evaluate to false, so such rules should not be used with
+         * reconnect_interval.
+         *
+         * @TODO Evaluate per node before using
+         */
+        value = g_hash_table_lookup(params, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
@@ -866,8 +928,8 @@ common_free(pe_resource_t * rsc)
     g_list_free(rsc->rsc_tickets);
     g_list_free(rsc->dangling_migrations);
 
-    if (rsc->parameters != NULL) {
-        g_hash_table_destroy(rsc->parameters);
+    if (rsc->parameter_cache != NULL) {
+        g_hash_table_destroy(rsc->parameter_cache);
     }
 #if ENABLE_VERSIONED_ATTRS
     if (rsc->versioned_parameters != NULL) {

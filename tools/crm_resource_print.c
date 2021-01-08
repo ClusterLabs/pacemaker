@@ -134,8 +134,11 @@ attribute_list_default(pcmk__output_t *out, va_list args) {
     char *attr = va_arg(args, char *);
     GHashTable *params = va_arg(args, GHashTable *);
 
-    const char *value = g_hash_table_lookup(params, attr);
+    const char *value = NULL;
 
+    if (params != NULL) {
+        value = g_hash_table_lookup(params, attr);
+    }
     if (value != NULL) {
         out->begin_list(out, NULL, NULL, "Attributes");
         out->list_item(out, attr, "%s", value);
@@ -154,8 +157,11 @@ attribute_list_text(pcmk__output_t *out, va_list args) {
     char *attr = va_arg(args, char *);
     GHashTable *params = va_arg(args, GHashTable *);
 
-    const char *value = g_hash_table_lookup(params, attr);
+    const char *value = NULL;
 
+    if (params != NULL) {
+        value = g_hash_table_lookup(params, attr);
+    }
     if (value != NULL) {
         out->info(out, "%s", value);
     } else {
