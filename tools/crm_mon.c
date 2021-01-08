@@ -1386,10 +1386,8 @@ main(int argc, char **argv)
                 refresh();
             }
 #endif
-        } else {
-            if (output_format == mon_output_html && out->dest != stdout) {
-                printf("Writing html to %s ...\n", args->output_dest);
-            }
+        } else if (output_format == mon_output_html && out->dest != stdout) {
+            printf("Writing html to %s ...\n", args->output_dest);
         }
 
     } while (rc == -ENOTCONN);
