@@ -1520,56 +1520,6 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
     /* coverity[leaked_storage] False positive */
 }
 
-/*!
- * \internal
- * \brief Reduce the stonith-history
- *        for successful actions we keep the last of every action-type & target
- *        for failed actions we record as well who had failed
- *        for actions in progress we keep full track
- *
- * \param[in] history    List of stonith actions
- *
- */
-static stonith_history_t *
-reduce_stonith_history(stonith_history_t *history)
-{
-    stonith_history_t *new = history, *hp, *np;
-
-    if (new) {
-        hp = new->next;
-        new->next = NULL;
-
-        while (hp) {
-            stonith_history_t *hp_next = hp->next;
-
-            hp->next = NULL;
-
-            for (np = new; ; np = np->next) {
-                if ((hp->state == st_done) || (hp->state == st_failed)) {
-                    /* action not in progress */
-                    if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
-                        pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
-                        (hp->state == np->state) &&
-                        ((hp->state == st_done) ||
-                         pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
-                            /* purge older hp */
-                            stonith_history_free(hp);
-                            break;
-                    }
-                }
-
-                if (!np->next) {
-                    np->next = hp;
-                    break;
-                }
-            }
-            hp = hp_next;
-        }
-    }
-
-    return new;
-}
-
 static int
 send_custom_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc,
                  int status, const char *desc)
@@ -1935,7 +1885,7 @@ mon_refresh_display(gpointer user_data)
                 if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
                     && (output_format != mon_output_xml)) {
 
-                    stonith_history = reduce_stonith_history(stonith_history);
+                    stonith_history = pcmk__reduce_fence_history(stonith_history);
                 }
                 break; /* all other cases are errors */
             }
