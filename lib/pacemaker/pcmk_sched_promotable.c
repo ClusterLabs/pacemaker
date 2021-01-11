@@ -341,6 +341,10 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
+        if (!pcmk__colocation_has_influence(constraint, NULL)) {
+            continue;
+        }
+
         /* (re-)adds location preferences of resource that wish to be
          * colocated with the master instance
          */

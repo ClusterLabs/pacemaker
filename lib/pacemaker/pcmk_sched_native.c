@@ -440,6 +440,8 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
             if (pcmk_is_set(flags, pe_weights_forward)) {
                 other = constraint->rsc_rh;
+            } else if (!pcmk__colocation_has_influence(constraint, NULL)) {
+                continue;
             } else {
                 other = constraint->rsc_lh;
             }
@@ -556,6 +558,9 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
+        if (!pcmk__colocation_has_influence(constraint, NULL)) {
+            continue;
+        }
         pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
                      constraint->id, constraint->rsc_lh->id,
                      constraint->rsc_rh->id);

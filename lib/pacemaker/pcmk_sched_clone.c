@@ -251,6 +251,9 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
                 pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
+                if (!pcmk__colocation_has_influence(constraint, resource1)) {
+                    continue;
+                }
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
                 hash1 = pcmk__native_merge_weights(constraint->rsc_lh,
@@ -277,6 +280,9 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
                 pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
+                if (!pcmk__colocation_has_influence(constraint, resource2)) {
+                    continue;
+                }
                 crm_trace("Applying %s to %s", constraint->id, resource2->id);
 
                 hash2 = pcmk__native_merge_weights(constraint->rsc_lh,
@@ -504,6 +510,9 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
 
+        if (!pcmk__colocation_has_influence(cons, child)) {
+           continue;
+        }
         if (all || cons->score < 0) {
             child->rsc_cons_lhs = g_list_prepend(child->rsc_cons_lhs, cons);
         }
@@ -643,6 +652,9 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
+        if (!pcmk__colocation_has_influence(constraint, NULL)) {
+            continue;
+        }
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
