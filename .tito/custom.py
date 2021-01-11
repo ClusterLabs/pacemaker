@@ -1,11 +1,8 @@
 # -*- coding: UTF-8 -*-
 """Tito ad-hoc module for custom git repo -> spec + archive metamorphosis"""
 
-from __future__ import (print_function, unicode_literals, absolute_import,
-                        division)
-
 __author__ = "Jan Pokorný <jpokorny@redhat.com>"
-__copyright__ = "Copyright 2016 Red Hat, Inc."
+__copyright__ = "Copyright 2016-2020 the Pacemaker project contributors"
 __license__ = "LGPLv2.1+ WITHOUT ANY WARRANTY"
 
 

@@ -7,6 +7,9 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+# This directory must be same as in configure.ac's AC_CONFIG_MACRO_DIR
+ACLOCAL_AMFLAGS		= -I m4
+
 # m4/glibtests.m4 is copied from https://gitlab.gnome.org/GNOME/glib/blob/master/m4macros/glibtests.m4.
 EXTRA_DIST		= CONTRIBUTING.md	\
 			  GNUmakefile		\

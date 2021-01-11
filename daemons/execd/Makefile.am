@@ -51,12 +51,17 @@ noinst_HEADERS  = pacemaker-execd.h
 
 CLEANFILES = $(man8_MANS)
 
-if BUILD_LEGACY_LINKS
+# Always create a symlink for the old pacemaker_remoted name, so that bundle
+# container images using a current Pacemaker will run on cluster nodes running
+# Pacemaker 1 (>=1.1.17).
 install-exec-hook:
+if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd && $(LN_S) pacemaker-execd lrmd
+endif
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted && $(LN_S) pacemaker-remoted pacemaker_remoted
 
 uninstall-hook:
+if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd
-	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted
 endif
+	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted

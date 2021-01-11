@@ -959,11 +959,8 @@ static char *
 decompress_file(const char *filename)
 {
     char *buffer = NULL;
-
-#if HAVE_BZLIB_H
     int rc = 0;
     size_t length = 0, read_len = 0;
-
     BZFILE *bz_file = NULL;
     FILE *input = fopen(filename, "r");
 
@@ -1005,11 +1002,6 @@ decompress_file(const char *filename)
 
     BZ2_bzReadClose(&rc, bz_file);
     fclose(input);
-
-#else
-    crm_err("Could not read compressed %s: not built with bzlib support",
-            filename);
-#endif
     return buffer;
 }
 
@@ -1200,7 +1192,6 @@ write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
               goto bail);
 
     if (compress) {
-#if HAVE_BZLIB_H
         unsigned int in = 0;
         BZFILE *bz_file = NULL;
 
@@ -1231,9 +1222,6 @@ write_xml_stream(xmlNode *xml_node, const char *filename, FILE *stream,
             }
         }
         rc = pcmk_rc_ok; // Either true, or we'll retry without compression
-#else
-        crm_warn("Not compressing %s: not built with bzlib support", filename);
-#endif
     }
 
     if (*nbytes == 0) {
