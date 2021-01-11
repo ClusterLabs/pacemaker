@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -321,10 +321,6 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (constraint->score == 0) {
-            continue;
-        }
-
         /* (re-)adds location preferences of resources that the
          * master instance should/must be colocated with
          */
@@ -344,10 +340,6 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     gIter = rsc->rsc_cons_lhs;
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        if (constraint->score == 0) {
-            continue;
-        }
 
         /* (re-)adds location preferences of resource that wish to be
          * colocated with the master instance
@@ -740,9 +732,6 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter2->data;
 
-            if (cons->score == 0) {
-                continue;
-            }
             child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons,
                                                data_set);
         }
@@ -986,9 +975,6 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 {
     GListPtr gIter = NULL;
 
-    if (constraint->score == 0) {
-        return;
-    }
     if (pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
         GListPtr rhs = NULL;
 

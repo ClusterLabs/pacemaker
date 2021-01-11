@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -239,9 +239,6 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             for (gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
                 pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-                if (constraint->score == 0) {
-                    continue;
-                }
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
                 hash1 = pcmk__native_merge_weights(constraint->rsc_rh,
@@ -254,9 +251,6 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
             for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
                 pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-                if (constraint->score == 0) {
-                    continue;
-                }
                 crm_trace("Applying %s to %s", constraint->id, resource1->id);
 
                 hash1 = pcmk__native_merge_weights(constraint->rsc_lh,
@@ -501,9 +495,6 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
 
-        if (cons->score == 0) {
-            continue;
-        }
         if (all || cons->score < 0 || cons->score == INFINITY) {
             child->rsc_cons = g_list_prepend(child->rsc_cons, cons);
         }
@@ -513,9 +504,6 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter->data;
 
-        if (cons->score == 0) {
-            continue;
-        }
         if (all || cons->score < 0) {
             child->rsc_cons_lhs = g_list_prepend(child->rsc_cons_lhs, cons);
         }
@@ -647,9 +635,6 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (GListPtr gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (constraint->score == 0) {
-            continue;
-        }
         pe_rsc_trace(rsc, "%s: Allocating %s first",
                      rsc->id, constraint->rsc_rh->id);
         constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
@@ -658,9 +643,6 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (constraint->score == 0) {
-            continue;
-        }
         rsc->allowed_nodes =
             constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
                                                     constraint->node_attribute,
@@ -1079,9 +1061,6 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     CRM_CHECK(rsc_rh != NULL, pe_err("rsc_rh was NULL for %s", constraint->id); return);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
-    if (constraint->score == 0) {
-        return;
-    }
     pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
 
