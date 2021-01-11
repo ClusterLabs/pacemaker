@@ -564,11 +564,17 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (pcmk__colocation_applies(rsc, constraint, false)) {
-            rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh,
-                    rsc->id, rsc->allowed_nodes, constraint->node_attribute,
-                    constraint->score / (float) INFINITY, pe_weights_rollback);
+        if (constraint->score == 0) {
+            continue;
         }
+        pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
+                     constraint->id, constraint->rsc_lh->id,
+                     constraint->rsc_rh->id);
+        rsc->allowed_nodes =
+            constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
+                                                    constraint->node_attribute,
+                                                    (float)constraint->score / INFINITY,
+                                                    pe_weights_rollback);
     }
 
     if (rsc->next_role == RSC_ROLE_STOPPED) {

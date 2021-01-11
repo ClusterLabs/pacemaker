@@ -658,12 +658,14 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (pcmk__colocation_applies(rsc, constraint, false)) {
-            rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh,
-                    rsc->id, rsc->allowed_nodes, constraint->node_attribute,
-                    constraint->score / (float) INFINITY,
-                    pe_weights_rollback|pe_weights_positive);
+        if (constraint->score == 0) {
+            continue;
         }
+        rsc->allowed_nodes =
+            constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
+                                                    constraint->node_attribute,
+                                                    (float)constraint->score / INFINITY,
+                                                    (pe_weights_rollback | pe_weights_positive));
     }
 
     pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);

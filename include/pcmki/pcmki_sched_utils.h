@@ -72,9 +72,6 @@ enum filter_colocation_res {
 extern enum filter_colocation_res
 filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
                              pcmk__colocation_t *constraint, gboolean preview);
-bool pcmk__colocation_applies(pe_resource_t *rsc,
-                              pcmk__colocation_t *colocation,
-                              bool promoted_only);
 
 extern int compare_capacity(const pe_node_t * node1, const pe_node_t * node2);
 extern void calculate_utilization(GHashTable * current_utilization,
