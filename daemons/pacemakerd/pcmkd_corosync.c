@@ -72,6 +72,9 @@ gboolean
 cluster_disconnect_cfg(void)
 {
     if (cfg_handle) {
+#ifdef HAVE_COROSYNC_CFG_TRACKSTART
+        corosync_cfg_trackstop(cfg_handle);
+#endif
         corosync_cfg_finalize(cfg_handle);
         cfg_handle = 0;
     }
@@ -144,6 +147,15 @@ cluster_connect_cfg(void)
     }
     crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
 
+#ifdef HAVE_COROSYNC_CFG_TRACKSTART
+    rc = corosync_cfg_trackstart(cfg_handle, 0);
+    if (rc != CS_OK) {
+        crm_crit("Could not enable Corosync CFG shutdown tracker: %s " CRM_XS " rc=%d",
+                 cs_strerror(rc), rc);
+        goto bail;
+    }
+#endif
+
     mainloop_add_fd("corosync-cfg", G_PRIORITY_DEFAULT, fd, &cfg_handle, &cfg_fd_callbacks);
     return TRUE;
 
@@ -165,6 +177,9 @@ pcmkd_shutdown_corosync(void)
     rc = corosync_cfg_try_shutdown(cfg_handle,
                                     COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
     if (rc == CS_OK) {
+#ifdef HAVE_COROSYNC_CFG_TRACKSTART
+        corosync_cfg_trackstop(cfg_handle);
+#endif
         corosync_cfg_finalize(cfg_handle);
         cfg_handle = 0;
     } else {
