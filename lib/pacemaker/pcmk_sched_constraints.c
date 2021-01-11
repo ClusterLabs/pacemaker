@@ -1351,6 +1351,10 @@ pcmk__new_colocation(const char *id, const char *node_attr, int score,
 {
     pcmk__colocation_t *new_con = NULL;
 
+    if (score == 0) {
+        crm_trace("Ignoring colocation '%s' because score is 0", id);
+        return;
+    }
     if ((rsc_lh == NULL) || (rsc_rh == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
                          "does not exist", id);
@@ -2328,6 +2332,11 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     if (score_s) {
         local_score = char2score(score_s);
     }
+    if (local_score == 0) {
+        crm_trace("Ignoring colocation '%s' for set '%s' because score is 0",
+                  coloc_id, set_id);
+        return TRUE;
+    }
 
     if(ordering == NULL) {
         ordering = "group";
@@ -2336,7 +2345,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     if (sequential != NULL && crm_is_true(sequential) == FALSE) {
         return TRUE;
 
-    } else if ((local_score >= 0)
+    } else if ((local_score > 0)
                && pcmk__str_eq(ordering, "group", pcmk__str_casei)) {
         for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
              xml_rsc = pcmk__xe_next(xml_rsc)) {
@@ -2355,7 +2364,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                 with = resource;
             }
         }
-    } else if (local_score >= 0) {
+    } else if (local_score > 0) {
         pe_resource_t *last = NULL;
         for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
              xml_rsc = pcmk__xe_next(xml_rsc)) {
@@ -2428,6 +2437,11 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     const char *sequential_1 = crm_element_value(set1, "sequential");
     const char *sequential_2 = crm_element_value(set2, "sequential");
 
+    if (score == 0) {
+        crm_trace("Ignoring colocation '%s' between sets because score is 0",
+                  id);
+        return TRUE;
+    }
     if (sequential_1 == NULL || crm_is_true(sequential_1)) {
         /* get the first one */
         for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
