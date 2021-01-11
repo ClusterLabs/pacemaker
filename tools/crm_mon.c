@@ -682,7 +682,8 @@ mon_timer_popped(gpointer data)
     }
 
     print_as(output_format, "Reconnecting...\n");
-    if (fencing_connect() == pcmk_ok && cib_connect(TRUE) == pcmk_ok) {
+    fencing_connect();
+    if (cib_connect(TRUE) == pcmk_ok) {
         mon_refresh_display(NULL);
         timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
@@ -724,12 +725,6 @@ static void
 mon_cib_connection_destroy_regular(gpointer user_data)
 {
     do_mon_cib_connection_destroy(user_data, false);
-}
-
-static void
-mon_cib_connection_destroy_error(gpointer user_data)
-{
-    do_mon_cib_connection_destroy(user_data, true);
 }
 
 /*
@@ -790,6 +785,8 @@ fencing_connect(void)
                                             mon_st_callback_display);
             st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
         }
+    } else {
+        st = NULL;
     }
 
     return rc;
@@ -1185,12 +1182,15 @@ handle_connection_failures(int rc)
 static void
 one_shot()
 {
-    int rc = fencing_connect();
+    int rc;
 
+    fencing_connect();
+
+    rc = cib_connect(FALSE);
     if (rc == pcmk_rc_ok) {
-        rc = cib_connect(FALSE);
-        handle_connection_failures(rc);
         mon_refresh_display(NULL);
+    } else {
+        handle_connection_failures(rc);
     }
 
     clean_up(CRM_EX_OK);
@@ -1416,10 +1416,8 @@ main(int argc, char **argv)
     do {
         print_as(output_format ,"Waiting until cluster is available on this node ...\n");
 
-        rc = fencing_connect();
-        if (rc == pcmk_ok) {
-            rc = cib_connect(TRUE);
-        }
+        fencing_connect();
+        rc = cib_connect(TRUE);
 
         if (rc != pcmk_ok) {
             sleep(options.reconnect_msec / 1000);
@@ -1896,16 +1894,12 @@ mon_refresh_display(gpointer user_data)
         return 0;
     }
 
-    /* get the stonith-history if there is evidence we need it
-     */
+    /* get the stonith-history if there is evidence we need it */
     while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
         if (st != NULL) {
             history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120);
 
-            if (history_rc != 0) {
-                out->err(out, "Critical: Unable to get stonith-history");
-                mon_cib_connection_destroy_error(NULL);
-            } else {
+            if (history_rc == 0) {
                 stonith_history = stonith__sort_history(stonith_history);
                 if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
                     && (output_format != mon_output_xml)) {
@@ -1915,11 +1909,9 @@ mon_refresh_display(gpointer user_data)
                 break; /* all other cases are errors */
             }
         } else {
-            out->err(out, "Critical: No stonith-API");
+            history_rc = ENOTCONN;
+            break;
         }
-        free_xml(cib_copy);
-        out->err(out, "Reading stonith-history failed");
-        return 0;
     }
 
     if (mon_data_set == NULL) {
