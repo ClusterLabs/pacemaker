@@ -51,6 +51,7 @@ Also: GNU make
 | RPM packages via "make rpm"                     | 4.11 or later  | rpm                     | rpm                     | (n/a)                   |
 
 ## Optional testing dependencies
+* procps and psmisc (if running cts-exec, cts-fencing, or CTS)
 * valgrind (if running CTS valgrind tests)
 * python3-systemd (if using CTS on cluster nodes running systemd)
 * rsync (if running CTS container tests)

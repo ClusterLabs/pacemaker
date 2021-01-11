@@ -758,7 +758,7 @@ class Tests(object):
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
             test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
             test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
-            test.add_cmd_and_kill("killall -9 -q pacemaker-cts-dummyd",
+            test.add_cmd_and_kill("pkill -9 -f pacemaker-cts-dummyd",
                                   '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self.action_timeout)
             test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s' + self.action_timeout +
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
