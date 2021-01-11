@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,6 +40,7 @@ enum rsc_command {
     cmd_cts,
     cmd_delete,
     cmd_delete_param,
+    cmd_digests,
     cmd_execute_agent,
     cmd_fail,
     cmd_get_param,
@@ -66,39 +67,47 @@ enum rsc_command {
 };
 
 struct {
-    enum rsc_command rsc_cmd;   // The crm_resource command to perform
-    const char *attr_set_type;
-    int cib_options;
-    gboolean clear_expired;
-    int find_flags;             /* Flags to use when searching for resource */
-    gboolean force;
-    gchar *host_uname;
-    gchar *interval_spec;
-    gchar *move_lifetime;
-    gchar *operation;
-    GHashTable *override_params;
-    gchar *prop_id;
-    char *prop_name;
-    gchar *prop_set;
-    gchar *prop_value;
-    gboolean recursive;
-    gchar **remainder;
-    gboolean require_cib;           // Whether command requires CIB connection
-    gboolean require_crmd;          /* whether command requires controller connection */
-    gboolean require_dataset;       /* whether command requires populated dataset instance */
-    gboolean require_resource;      /* whether command requires that resource be specified */
-    int resource_verbose;
-    gchar *rsc_id;
-    gchar *rsc_type;
-    gboolean promoted_role_only;
-    int timeout_ms;
-    char *agent_spec;               // Standard and/or provider and/or agent
-    char *v_agent;
-    char *v_class;
-    char *v_provider;
-    gboolean validate_cmdline;      /* whether we are just validating based on command line options */
-    GHashTable *validate_options;
-    gchar *xml_file;
+    enum rsc_command rsc_cmd;     // crm_resource command to perform
+
+    // Infrastructure that given command needs to work
+    gboolean require_cib;         // Whether command requires CIB IPC
+    int cib_options;              // Options to use with CIB IPC calls
+    gboolean require_crmd;        // Whether command requires controller IPC
+    gboolean require_dataset;     // Whether command requires populated data set
+    gboolean require_resource;    // Whether command requires resource specified
+    gboolean require_node;        // Whether command requires node specified
+    int find_flags;               // Flags to use when searching for resource
+
+    // Command-line option values
+    gchar *rsc_id;                // Value of --resource
+    gchar *rsc_type;              // Value of --resource-type
+    gboolean force;               // --force was given
+    gboolean clear_expired;       // --expired was given
+    gboolean recursive;           // --recursive was given
+    gboolean promoted_role_only;  // --master was given
+    gchar *host_uname;            // Value of --node
+    gchar *interval_spec;         // Value of --interval
+    gchar *move_lifetime;         // Value of --lifetime
+    gchar *operation;             // Value of --operation
+    const char *attr_set_type;    // Instance, meta, or utilization attribute
+    gchar *prop_id;               // --nvpair (attribute XML ID)
+    char *prop_name;              // Attribute name
+    gchar *prop_set;              // --set-name (attribute block XML ID)
+    gchar *prop_value;            // --parameter-value (attribute value)
+    int timeout_ms;               // Parsed from --timeout value
+    char *agent_spec;             // Standard and/or provider and/or agent
+    gchar *xml_file;              // Value of (deprecated) --xml-file
+
+    // Resource configuration specified via command-line arguments
+    gboolean cmdline_config;      // Resource configuration was via arguments
+    char *v_agent;                // Value of --agent
+    char *v_class;                // Value of --class
+    char *v_provider;             // Value of --provider
+    GHashTable *cmdline_params;   // Resource parameters specified
+
+    // Positional command-line arguments
+    gchar **remainder;            // Positional arguments as given
+    GHashTable *override_params;  // Resource parameter values that override config
 } options = {
     .attr_set_type = XML_TAG_ATTR_SETS,
     .cib_options = cib_sync_call,
@@ -149,6 +158,8 @@ gboolean timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data
 gboolean validate_or_force_cb(const gchar *option_name, const gchar *optarg,
                               gpointer data, GError **error);
 gboolean restart_cb(const gchar *option_name, const gchar *optarg,
+                    gpointer data, GError **error);
+gboolean digests_cb(const gchar *option_name, const gchar *optarg,
                     gpointer data, GError **error);
 gboolean wait_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -499,6 +510,14 @@ static GOptionEntry advanced_entries[] = {
     { "wait", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, wait_cb,
       "(Advanced) Wait until the cluster settles into a stable state",
       NULL },
+    { "digests", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, digests_cb,
+      "(Advanced) Show parameter hashes that Pacemaker uses to detect\n"
+      INDENT "configuration changes (only accurate if there is resource\n"
+      INDENT "history on the specified node). Required: --resource, --node.\n"
+      INDENT "Optional: any NAME=VALUE parameters will be used to override\n"
+      INDENT "the configuration (to see what the hash would be with those\n"
+      INDENT "changes).",
+      NULL },
     { "force-demote", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
       validate_or_force_cb,
       "(Advanced) Bypass the cluster and demote a resource on the local\n"
@@ -533,28 +552,6 @@ static GOptionEntry advanced_entries[] = {
     { NULL }
 };
 
-static GOptionEntry validate_entries[] = {
-    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, class_cb,
-      "The standard the resource agent confirms to (for example, ocf).\n"
-      INDENT "Use with --agent, --provider, --option, and --validate.",
-      "CLASS" },
-    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
-      "The agent to use (for example, IPaddr). Use with --class,\n"
-      INDENT "--provider, --option, and --validate.",
-      "AGENT" },
-    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
-      "The vendor that supplies the resource agent (for example,\n"
-      INDENT "heartbeat). Use with --class, --agent, --option, and --validate.",
-      "PROVIDER" },
-    { "option", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, option_cb,
-      "Specify a device configuration parameter as NAME=VALUE (may be\n"
-      INDENT "specified multiple times). Use with --validate and without the\n"
-      INDENT "-r option.",
-      "PARAM" },
-
-    { NULL }
-};
-
 static GOptionEntry addl_entries[] = {
     { "node", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.host_uname,
       "Node name",
@@ -582,6 +579,23 @@ static GOptionEntry addl_entries[] = {
     { "interval", 'I', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.interval_spec,
       "Interval of operation to clear (default 0) (with -C -r -n)",
       "N" },
+    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, class_cb,
+      "The standard the resource agent conforms to (for example, ocf).\n"
+      INDENT "Use with --agent, --provider, --option, and --validate.",
+      "CLASS" },
+    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
+      "The agent to use (for example, IPaddr). Use with --class,\n"
+      INDENT "--provider, --option, and --validate.",
+      "AGENT" },
+    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
+      "The vendor that supplies the resource agent (for example,\n"
+      INDENT "heartbeat). Use with --class, --agent, --option, and --validate.",
+      "PROVIDER" },
+    { "option", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, option_cb,
+      "Specify a device configuration parameter as NAME=VALUE (may be\n"
+      INDENT "specified multiple times). Use with --validate and without the\n"
+      INDENT "-r option.",
+      "PARAM" },
     { "set-name", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.prop_set,
       "(Advanced) XML ID of attributes element to use (with -p, -d)",
       "ID" },
@@ -608,7 +622,7 @@ static GOptionEntry addl_entries[] = {
 
 gboolean
 agent_provider_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.validate_cmdline = TRUE;
+    options.cmdline_config = TRUE;
     options.require_resource = FALSE;
 
     if (pcmk__str_eq(option_name, "--provider", pcmk__str_casei)) {
@@ -654,7 +668,7 @@ class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **
         options.v_class = strdup(optarg);
     }
 
-    options.validate_cmdline = TRUE;
+    options.cmdline_config = TRUE;
     options.require_resource = FALSE;
     return TRUE;
 }
@@ -762,16 +776,17 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     if (pcmk_scan_nvpair(optarg, &name, &value) != 2) {
         return FALSE;
     }
-    if (options.validate_options == NULL) {
-        options.validate_options = crm_str_table_new();
+    if (options.cmdline_params == NULL) {
+        options.cmdline_params = crm_str_table_new();
     }
-    g_hash_table_replace(options.validate_options, name, value);
+    g_hash_table_replace(options.cmdline_params, name, value);
     return TRUE;
 }
 
 gboolean
 fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.require_crmd = TRUE;
+    options.require_node = TRUE;
     SET_COMMAND(cmd_fail);
     return TRUE;
 }
@@ -889,7 +904,9 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
     }
     options.operation = g_strdup(option_name + 2); // skip "--"
     options.find_flags = pe_find_renamed|pe_find_anon;
-    options.override_params = crm_str_table_new();
+    if (options.override_params == NULL) {
+        options.override_params = crm_str_table_new();
+    }
     return TRUE;
 }
 
@@ -899,6 +916,20 @@ restart_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 {
     SET_COMMAND(cmd_restart);
     options.find_flags = pe_find_renamed|pe_find_anon;
+    return TRUE;
+}
+
+gboolean
+digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+           GError **error)
+{
+    SET_COMMAND(cmd_digests);
+    options.find_flags = pe_find_renamed|pe_find_anon;
+    if (options.override_params == NULL) {
+        options.override_params = crm_str_table_new();
+    }
+    options.require_node = TRUE;
+    options.require_dataset = TRUE;
     return TRUE;
 }
 
@@ -1365,17 +1396,18 @@ show_metadata(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code
 }
 
 static void
-validate_cmdline(crm_exit_t *exit_code)
+validate_cmdline_config(void)
 {
-    // -r cannot be used with any of --class, --agent, or --provider
+    // Cannot use both --resource and command-line resource configuration
     if (options.rsc_id != NULL) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "--resource cannot be used with --class, --agent, and --provider");
 
-    // If --class, --agent, or --provider are given, --validate must also be given.
+    // Not all commands support command-line resource configuration
     } else if (options.rsc_cmd != cmd_execute_agent) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "--class, --agent, and --provider require --validate");
+                    "--class, --agent, and --provider can only be used with "
+                    "--validate");
 
     // Not all of --class, --agent, and --provider need to be given.  Not all
     // classes support the concept of a provider.  Check that what we were given
@@ -1398,15 +1430,16 @@ validate_cmdline(crm_exit_t *exit_code)
                     options.v_agent ? options.v_agent : "");
     }
 
-    if (error == NULL) {
-        if (options.validate_options == NULL) {
-            options.validate_options = crm_str_table_new();
-        }
-        *exit_code = cli_resource_execute_from_params(out, "test", options.v_class, options.v_provider, options.v_agent,
-                                                      "validate-all", options.validate_options,
-                                                      options.override_params, options.timeout_ms,
-                                                      options.resource_verbose, options.force);
+    if (error != NULL) {
+        return;
     }
+
+    if (options.cmdline_params == NULL) {
+        options.cmdline_params = crm_str_table_new();
+    }
+    options.require_resource = FALSE;
+    options.require_dataset = FALSE;
+    options.require_cib = FALSE;
 }
 
 static GOptionContext *
@@ -1467,8 +1500,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                         "Show command help", command_entries);
     pcmk__add_arg_group(context, "locations", "Locations:",
                         "Show location help", location_entries);
-    pcmk__add_arg_group(context, "validate", "Validate:",
-                        "Show validate help", validate_entries);
     pcmk__add_arg_group(context, "advanced", "Advanced:",
                         "Show advanced option help", advanced_entries);
     pcmk__add_arg_group(context, "additional", "Additional Options:",
@@ -1481,8 +1512,12 @@ main(int argc, char **argv)
 {
     xmlNode *cib_xml_copy = NULL;
     pe_resource_t *rsc = NULL;
-
+    pe_node_t *node = NULL;
     int rc = pcmk_rc_ok;
+
+    /*
+     * Parse command line arguments
+     */
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     GOptionContext *context = NULL;
@@ -1500,6 +1535,10 @@ main(int argc, char **argv)
         goto done;
     }
 
+    /*
+     * Set verbosity
+     */
+
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
     }
@@ -1512,14 +1551,13 @@ main(int argc, char **argv)
         goto done;
     }
 
-    options.resource_verbose = args->verbosity;
     out->quiet = args->quiet;
 
     crm_log_args(argc, argv);
 
-    if (options.host_uname) {
-        crm_trace("Option host => %s", options.host_uname);
-    }
+    /*
+     * Validate option combinations
+     */
 
     // If the user didn't explicitly specify a command, list resources
     if (options.rsc_cmd == cmd_none) {
@@ -1628,33 +1666,45 @@ main(int argc, char **argv)
         goto done;
     }
 
-    // Sanity check validating from command line parameters.  If everything checks out,
-    // go ahead and run the validation.  This way we don't need a CIB connection.
-    if (options.validate_cmdline) {
-        validate_cmdline(&exit_code);
-        goto done;
-    } else if (options.validate_options != NULL) {
+    if (options.cmdline_config) {
+        /* A resource configuration was given on the command line. Sanity-check
+         * the values and set error if they don't make sense.
+         */
+        validate_cmdline_config();
+        if (error != NULL) {
+            exit_code = CRM_EX_USAGE;
+            goto done;
+        }
+
+    } else if (options.cmdline_params != NULL) {
         // @COMPAT @TODO error out here when we can break backward compatibility
-        g_hash_table_destroy(options.validate_options);
-        options.validate_options = NULL;
+        g_hash_table_destroy(options.cmdline_params);
+        options.cmdline_params = NULL;
     }
 
-    if (error != NULL) {
+    if (options.require_resource && (options.rsc_id == NULL)) {
+        rc = ENXIO;
         exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Must supply a resource id with -r");
         goto done;
     }
+    if (options.require_node && (options.host_uname == NULL)) {
+        rc = ENXIO;
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Must supply a node name with -N");
+        goto done;
+    }
+
+    /*
+     * Set up necessary connections
+     */
 
     if (options.force) {
         crm_debug("Forcing...");
         cib__set_call_options(options.cib_options, crm_system_name,
                               cib_quorum_override);
-    }
-
-    if (options.require_resource && !options.rsc_id) {
-        rc = ENXIO;
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Must supply a resource id with -r");
-        goto done;
     }
 
     if (options.find_flags && options.rsc_id) {
@@ -1699,6 +1749,11 @@ main(int argc, char **argv)
         }
     }
 
+    // If user supplied a node name, check whether it exists
+    if ((options.host_uname != NULL) && (data_set != NULL)) {
+        node = pe_find_node(data_set->nodes, options.host_uname);
+    }
+
     // Establish a connection to the controller if needed
     if (options.require_crmd) {
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
@@ -1716,6 +1771,10 @@ main(int argc, char **argv)
             goto done;
         }
     }
+
+    /*
+     * Handle requested command
+     */
 
     switch (options.rsc_cmd) {
         case cmd_list_resources: {
@@ -1773,12 +1832,28 @@ main(int argc, char **argv)
             break;
 
         case cmd_execute_agent:
-            exit_code = cli_resource_execute(out, rsc, options.rsc_id,
-                                             options.operation,
-                                             options.override_params,
-                                             options.timeout_ms, cib_conn,
-                                             data_set, options.resource_verbose,
-                                             options.force);
+            if (options.cmdline_config) {
+                exit_code = cli_resource_execute_from_params(out, "test",
+                    options.v_class, options.v_provider, options.v_agent,
+                    "validate-all", options.cmdline_params,
+                    options.override_params, options.timeout_ms,
+                    args->verbosity, options.force);
+            } else {
+                exit_code = cli_resource_execute(out, rsc, options.rsc_id,
+                    options.operation, options.override_params,
+                    options.timeout_ms, cib_conn, data_set,
+                    args->verbosity, options.force);
+            }
+            break;
+
+        case cmd_digests:
+            node = pe_find_node(data_set->nodes, options.host_uname);
+            if (node == NULL) {
+                rc = pcmk_rc_node_unknown;
+            } else {
+                rc = pcmk__resource_digests(out, rsc, node,
+                                            options.override_params, data_set);
+            }
             break;
 
         case cmd_colocations:
@@ -1837,18 +1912,11 @@ main(int argc, char **argv)
             break;
 
         case cmd_why:
-            {
-                pe_node_t *dest = NULL;
-
-                if (options.host_uname) {
-                    dest = pe_find_node(data_set->nodes, options.host_uname);
-                    if (dest == NULL) {
-                        rc = pcmk_rc_node_unknown;
-                        goto done;
-                    }
-                }
-                out->message(out, "resource-reasons-list", cib_conn, data_set->resources, rsc, dest);
-                rc = pcmk_rc_ok;
+            if ((options.host_uname != NULL) && (node == NULL)) {
+                rc = pcmk_rc_node_unknown;
+            } else {
+                rc = out->message(out, "resource-reasons-list", cib_conn,
+                                  data_set->resources, rsc, node);
             }
             break;
 
@@ -1871,15 +1939,10 @@ main(int argc, char **argv)
         case cmd_ban:
             if (options.host_uname == NULL) {
                 rc = ban_or_move(out, rsc, options.move_lifetime, &exit_code);
+            } else if (node == NULL) {
+                rc = pcmk_rc_node_unknown;
             } else {
-                pe_node_t *dest = pe_find_node(data_set->nodes,
-                                               options.host_uname);
-
-                if (dest == NULL) {
-                    rc = pcmk_rc_node_unknown;
-                    goto done;
-                }
-                rc = cli_resource_ban(out, options.rsc_id, dest->details->uname,
+                rc = cli_resource_ban(out, options.rsc_id, node->details->uname,
                                       options.move_lifetime, NULL, cib_conn,
                                       options.cib_options,
                                       options.promoted_role_only);
@@ -1995,6 +2058,10 @@ main(int argc, char **argv)
             break;
     }
 
+    /*
+     * Clean up and exit
+     */
+
 done:
     if (rc != pcmk_rc_ok) {
         if (rc == pcmk_rc_no_quorum) {
@@ -2038,7 +2105,7 @@ done:
         g_hash_table_destroy(options.override_params);
     }
 
-    /* options.validate_options does not need to be destroyed here.  See the
+    /* options.cmdline_params does not need to be destroyed here.  See the
      * comments in cli_resource_execute_from_params.
      */
 

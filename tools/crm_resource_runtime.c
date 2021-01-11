@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -511,11 +511,7 @@ send_lrm_rsc_op(pcmk__output_t *out, pcmk_ipc_api_t *controld_api, bool do_fail_
         return EINVAL;
     }
 
-    if (host_uname == NULL) {
-        out->err(out, "Please specify a node name");
-        return EINVAL;
-
-    } else {
+    {
         pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node == NULL) {

@@ -4019,3 +4019,37 @@ Resources colocated with clone:
 </pacemaker-result>
 =#=#=#= End test: Recursively check locations and constraints for clone in XML - OK (0) =#=#=#=
 * Passed: crm_resource   - Recursively check locations and constraints for clone in XML
+=#=#=#= Begin test: Show resource digests =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml">
+  <digests resource="rsc1" node="node1" task="start" interval="0ms">
+    <digest type="all" hash="3acdbe4c12734ebeb1251a59545af936">
+      <parameters passwd="secret" fake="0"/>
+    </digest>
+    <digest type="nonprivate" hash="279c477dbc38c621904a00ab9e599b2f">
+      <parameters fake="0"/>
+    </digest>
+    <digest type="nonreloadable" hash="5de1fd72a2e7762ed41543231034f6d7">
+      <parameters passwd="secret"/>
+    </digest>
+  </digests>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Show resource digests - OK (0) =#=#=#=
+* Passed: crm_resource   - Show resource digests
+=#=#=#= Begin test: Show resource digests with overrides =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml CRM_meta_interval=10000 CRM_meta_timeout=20000">
+  <digests resource="rsc1" node="node1" task="start" interval="10000ms">
+    <digest type="all" hash="720718e8d715d5d3be1403cbbcb953bc">
+      <parameters passwd="secret" fake="0" CRM_meta_timeout="20000"/>
+    </digest>
+    <digest type="nonprivate" hash="279c477dbc38c621904a00ab9e599b2f">
+      <parameters fake="0"/>
+    </digest>
+    <digest type="nonreloadable" hash="5de1fd72a2e7762ed41543231034f6d7">
+      <parameters passwd="secret"/>
+    </digest>
+  </digests>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
+* Passed: crm_resource   - Show resource digests with overrides

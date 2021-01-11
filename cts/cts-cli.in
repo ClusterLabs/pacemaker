@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2020 the Pacemaker project contributors
+# Copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -789,6 +789,18 @@ function test_tools() {
         cmd="crm_resource -A -r $rsc --output-as=xml"
         test_assert $CRM_EX_OK 0
     done
+
+    unset CIB_file
+
+    export CIB_file="$test_home/cli/crm_resource_digests.xml"
+
+    desc="Show resource digests"
+    cmd="crm_resource --digests -r rsc1 -N node1 --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    desc="Show resource digests with overrides"
+    cmd="$cmd CRM_meta_interval=10000 CRM_meta_timeout=20000"
+    test_assert $CRM_EX_OK 0
 
     unset CIB_file
 }
