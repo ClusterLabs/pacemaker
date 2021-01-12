@@ -984,7 +984,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', pcmk_is_set(show, mon_show_fencing_all));
+        print_option_help(out, 'm', pcmk_any_flags_set(show,
+                                                       mon_show_fence_failed
+                                                      |mon_show_fence_pending
+                                                      |mon_show_fence_worked));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
