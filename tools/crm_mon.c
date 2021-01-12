@@ -1162,6 +1162,41 @@ reconcile_output_format(pcmk__common_args_t *args) {
     }
 }
 
+static void
+handle_connection_failures(int rc)
+{
+    if (rc == pcmk_ok) {
+        return;
+    }
+
+    if (output_format == mon_output_monitor) {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
+                    pcmk_strerror(rc));
+        rc = MON_STATUS_CRIT;
+    } else if (rc == -ENOTCONN) {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
+        rc = crm_errno2exit(rc);
+    } else {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
+        rc = crm_errno2exit(rc);
+    }
+
+    clean_up(rc);
+}
+
+static void
+one_shot()
+{
+    int rc = fencing_connect();
+
+    if (rc == pcmk_rc_ok) {
+        rc = cib_connect(FALSE);
+        handle_connection_failures(rc);
+    }
+
+    clean_up(CRM_EX_OK);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1375,20 +1410,19 @@ main(int argc, char **argv)
 
     crm_info("Starting %s", crm_system_name);
 
+    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+        one_shot();
+    }
+
     do {
-        if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-            print_as(output_format ,"Waiting until cluster is available on this node ...\n");
-        }
+        print_as(output_format ,"Waiting until cluster is available on this node ...\n");
 
         rc = fencing_connect();
         if (rc == pcmk_ok) {
-            rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
+            rc = cib_connect(TRUE);
         }
 
-        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-            break;
-
-        } else if (rc != pcmk_ok) {
+        if (rc != pcmk_ok) {
             sleep(options.reconnect_msec / 1000);
 #if CURSES_ENABLED
             if (output_format == mon_output_console) {
@@ -1402,24 +1436,7 @@ main(int argc, char **argv)
 
     } while (rc == -ENOTCONN);
 
-    if (rc != pcmk_ok) {
-        if (output_format == mon_output_monitor) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
-                        pcmk_strerror(rc));
-            return clean_up(MON_STATUS_CRIT);
-        } else {
-            if (rc == -ENOTCONN) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
-            } else {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
-            }
-        }
-        return clean_up(crm_errno2exit(rc));
-    }
-
-    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-        return clean_up(CRM_EX_OK);
-    }
+    handle_connection_failures(rc);
 
     mainloop = g_main_loop_new(NULL, FALSE);
 
