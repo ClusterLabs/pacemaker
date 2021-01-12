@@ -122,7 +122,8 @@ struct {
     .mon_ops = mon_op_default
 };
 
-static void clean_up_connections(void);
+static void clean_up_cib_connection(void);
+static void clean_up_fencing_connection(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
 static int mon_refresh_display(gpointer user_data);
@@ -712,12 +713,7 @@ do_mon_cib_connection_destroy(gpointer user_data, bool is_error)
         /* the client API won't properly reconnect notifications
          * if they are still in the table - so remove them
          */
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
-        if (st->state != stonith_disconnected) {
-            st->cmds->disconnect(st);
-        }
+        clean_up_fencing_connection();
     }
     if (cib) {
         cib->cmds->signoff(cib);
@@ -851,7 +847,8 @@ cib_connect(gboolean full)
 
         if (rc != pcmk_ok) {
             out->err(out, "Notification setup failed, could not monitor CIB actions");
-            clean_up_connections();
+            clean_up_cib_connection();
+            clean_up_fencing_connection();
         }
     }
     return rc;
@@ -1866,9 +1863,7 @@ mon_refresh_display(gpointer user_data)
     last_refresh = time(NULL);
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
-        if (cib) {
-            cib->cmds->signoff(cib);
-        }
+        clean_up_cib_connection();
         out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         clean_up(CRM_EX_CONFIG);
         return 0;
@@ -2040,24 +2035,33 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 }
 
 static void
-clean_up_connections(void)
+clean_up_cib_connection(void)
 {
-    if (cib != NULL) {
-        cib->cmds->signoff(cib);
-        cib_delete(cib);
-        cib = NULL;
+    if (cib == NULL) {
+        return;
     }
 
-    if (st != NULL) {
-        if (st->state != stonith_disconnected) {
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
-            st->cmds->disconnect(st);
-        }
-        stonith_api_delete(st);
-        st = NULL;
+    cib->cmds->signoff(cib);
+    cib_delete(cib);
+    cib = NULL;
+}
+
+static void
+clean_up_fencing_connection(void)
+{
+    if (st == NULL) {
+        return;
     }
+
+    if (st->state != stonith_disconnected) {
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
+        st->cmds->disconnect(st);
+    }
+
+    stonith_api_delete(st);
+    st = NULL;
 }
 
 /*
@@ -2074,7 +2078,8 @@ clean_up(crm_exit_t exit_code)
     /* Quitting crm_mon is much more complicated than it ought to be. */
 
     /* (1) Close connections, free things, etc. */
-    clean_up_connections();
+    clean_up_cib_connection();
+    clean_up_fencing_connection();
     free(options.pid_file);
     free(options.neg_location_prefix);
     g_slist_free_full(options.includes_excludes, free);
