@@ -656,6 +656,7 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
  *
  * \param[in] out             The output functions structure.
  * \param[in] data_set        Cluster state to display.
+ * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
  * \param[in] mon_ops         Bitmask of mon_op_*.
  * \param[in] show            Bitmask of mon_show_*.
@@ -663,14 +664,16 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
  */
 void
 print_status(pcmk__output_t *out, pe_working_set_t *data_set,
-             stonith_history_t *stonith_history, unsigned int mon_ops,
-             unsigned int show, char *prefix, char *only_node, char *only_rsc)
+             crm_exit_t history_rc, stonith_history_t *stonith_history,
+             unsigned int mon_ops, unsigned int show, char *prefix,
+             char *only_node, char *only_rsc)
 {
     GListPtr unames = NULL;
     GListPtr resources = NULL;
 
     unsigned int print_opts = get_resource_display_options(mon_ops);
     int rc = pcmk_rc_no_output;
+    bool already_printed_failure = false;
 
     CHECK_RC(rc, out->message(out, "cluster-summary", data_set,
                               pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -731,13 +734,23 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_fence_failed)
         && pcmk_is_set(mon_ops, mon_op_fence_history)) {
 
-        stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
-                                                              GINT_TO_POINTER(st_failed));
+        if (history_rc == 0) {
+            stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
+                                                                  GINT_TO_POINTER(st_failed));
 
-        if (hp) {
-            CHECK_RC(rc, out->message(out, "failed-fencing-list", stonith_history, unames,
-                                      pcmk_is_set(mon_ops, mon_op_fence_full_history),
-                                      rc == pcmk_rc_ok));
+            if (hp) {
+                CHECK_RC(rc, out->message(out, "failed-fencing-list", stonith_history, unames,
+                                          pcmk_is_set(mon_ops, mon_op_fence_full_history),
+                                          rc == pcmk_rc_ok));
+            }
+        } else {
+            PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
+            out->list_item(out, NULL, "Failed to get fencing history: %s",
+                           crm_exit_str(history_rc));
+            out->end_list(out);
+
+            already_printed_failure = true;
         }
     }
 
@@ -754,7 +767,15 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print stonith history */
     if (pcmk_is_set(mon_ops, mon_op_fence_history)) {
-        if (pcmk_is_set(show, mon_show_fence_worked)) {
+        if (history_rc != 0) {
+            if (!already_printed_failure) {
+                PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
+                out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
+                out->list_item(out, NULL, "Failed to get fencing history: %s",
+                               crm_exit_str(history_rc));
+                out->end_list(out);
+            }
+        } else if (pcmk_is_set(show, mon_show_fence_worked)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_neq,
                                                                   GINT_TO_POINTER(st_failed));
 
@@ -783,6 +804,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
  *
  * \param[in] out             The output functions structure.
  * \param[in] data_set        Cluster state to display.
+ * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
  * \param[in] mon_ops         Bitmask of mon_op_*.
  * \param[in] show            Bitmask of mon_show_*.
@@ -878,6 +900,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
  *
  * \param[in] out             The output functions structure.
  * \param[in] data_set        Cluster state to display.
+ * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
  * \param[in] mon_ops         Bitmask of mon_op_*.
  * \param[in] show            Bitmask of mon_show_*.
@@ -885,14 +908,15 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
  */
 int
 print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                  stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int show, char *prefix, char *only_node,
-                  char *only_rsc)
+                  crm_exit_t history_rc, stonith_history_t *stonith_history,
+                  unsigned int mon_ops, unsigned int show, char *prefix,
+                  char *only_node, char *only_rsc)
 {
     GListPtr unames = NULL;
     GListPtr resources = NULL;
 
     unsigned int print_opts = get_resource_display_options(mon_ops);
+    bool already_printed_failure = false;
 
     out->message(out, "cluster-summary", data_set,
                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -950,18 +974,32 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_fence_failed)
         && pcmk_is_set(mon_ops, mon_op_fence_history)) {
 
-        stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
-                                                              GINT_TO_POINTER(st_failed));
+        if (history_rc == 0) {
+            stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
+                                                                  GINT_TO_POINTER(st_failed));
 
-        if (hp) {
-            out->message(out, "failed-fencing-list", stonith_history, unames,
-                         pcmk_is_set(mon_ops, mon_op_fence_full_history), FALSE);
+            if (hp) {
+                out->message(out, "failed-fencing-list", stonith_history, unames,
+                             pcmk_is_set(mon_ops, mon_op_fence_full_history), FALSE);
+            }
+        } else {
+            out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
+            out->list_item(out, NULL, "Failed to get fencing history: %s",
+                           crm_exit_str(history_rc));
+            out->end_list(out);
         }
     }
 
     /* Print stonith history */
     if (pcmk_is_set(mon_ops, mon_op_fence_history)) {
-        if (pcmk_is_set(show, mon_show_fence_worked)) {
+        if (history_rc != 0) {
+            if (!already_printed_failure) {
+                out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
+                out->list_item(out, NULL, "Failed to get fencing history: %s",
+                               crm_exit_str(history_rc));
+                out->end_list(out);
+            }
+        } else if (pcmk_is_set(show, mon_show_fence_worked)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_neq,
                                                                   GINT_TO_POINTER(st_failed));
 

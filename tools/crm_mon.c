@@ -1943,7 +1943,8 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(out, mon_data_set, stonith_history, options.mon_ops,
+            if (print_html_status(out, mon_data_set, crm_errno2exit(history_rc),
+                                  stonith_history, options.mon_ops,
                                   show, options.neg_location_prefix,
                                   options.only_node, options.only_rsc) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
@@ -1974,15 +1975,17 @@ mon_refresh_display(gpointer user_data)
              */
 #if CURSES_ENABLED
             blank_screen();
-            print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node, options.only_rsc);
+            print_status(out, mon_data_set, crm_errno2exit(history_rc), stonith_history,
+                         options.mon_ops, show, options.neg_location_prefix,
+                         options.only_node, options.only_rsc);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
-            print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node, options.only_rsc);
+            print_status(out, mon_data_set, crm_errno2exit(history_rc), stonith_history,
+                         options.mon_ops, show, options.neg_location_prefix,
+                         options.only_node, options.only_rsc);
             break;
 
         case mon_output_unset:
