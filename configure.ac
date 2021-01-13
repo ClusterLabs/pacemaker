@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2020 the Pacemaker project contributors
+dnl Copyright 2009-2021 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -812,8 +812,9 @@ AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
 AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
 
-dnl UUID functions may be in the standard library or a separate -luuid
-AC_CHECK_LIB([uuid], [uuid_parse])
+PKG_CHECK_MODULES([UUID], [uuid],
+                  [CPPFLAGS="${CPPFLAGS} ${UUID_CFLAGS}"
+                   LIBS="${LIBS} ${UUID_LIBS}"])
 
 AC_CHECK_FUNCS([sched_setscheduler])
 if test "$ac_cv_func_sched_setscheduler" != yes; then
