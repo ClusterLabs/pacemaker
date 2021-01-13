@@ -936,7 +936,7 @@ dnl ========================================================================
 dnl Functions
 dnl ========================================================================
 
-AC_CHECK_FUNCS(getopt)
+REQUIRE_FUNC([getopt])
 
 AC_CACHE_CHECK(whether sscanf supports %m,
                pf_cv_var_sscanf,
