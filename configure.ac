@@ -785,12 +785,6 @@ dnl     scandir: Only on BSD.
 dnl             System-V systems may have it, but hidden and/or deprecated.
 dnl             A replacement function is supplied for it.
 dnl
-dnl     setenv: is some bsdish function that should also be avoided (use
-dnl             putenv instead)
-dnl             On the other hand, putenv doesn't provide the right API for the
-dnl             code and has memory leaks designed in (sigh...)  Fortunately this
-dnl             A replacement function is supplied for it.
-dnl
 dnl     strerror: returns a string that corresponds to an errno.
 dnl             A replacement function is supplied for it.
 dnl
@@ -800,7 +794,7 @@ dnl
 dnl     strndup: is a gnu function similar to strdup, but safer.
 dnl            We wrote a tolerably-fast replacement function for it.
 
-AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup)
+AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir strerror strchrnul strnlen strndup)
 
 dnl ===============================================
 dnl Libraries
@@ -937,6 +931,8 @@ dnl Functions
 dnl ========================================================================
 
 REQUIRE_FUNC([getopt])
+REQUIRE_FUNC([setenv])
+REQUIRE_FUNC([unsetenv])
 
 AC_CACHE_CHECK(whether sscanf supports %m,
                pf_cv_var_sscanf,
