@@ -683,6 +683,7 @@ mon_timer_popped(gpointer data)
 
     print_as(output_format, "Reconnecting...\n");
     if (fencing_connect() == pcmk_ok && cib_connect(TRUE) == pcmk_ok) {
+        mon_refresh_display(NULL);
         timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
@@ -831,9 +832,6 @@ cib_connect(gboolean full)
     }
 
     rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
-    if (rc == pcmk_ok) {
-        mon_refresh_display(NULL);
-    }
 
     if (rc == pcmk_ok && full) {
         rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
@@ -1192,6 +1190,7 @@ one_shot()
     if (rc == pcmk_rc_ok) {
         rc = cib_connect(FALSE);
         handle_connection_failures(rc);
+        mon_refresh_display(NULL);
     }
 
     clean_up(CRM_EX_OK);
@@ -1437,6 +1436,7 @@ main(int argc, char **argv)
     } while (rc == -ENOTCONN);
 
     handle_connection_failures(rc);
+    mon_refresh_display(NULL);
 
     mainloop = g_main_loop_new(NULL, FALSE);
 
