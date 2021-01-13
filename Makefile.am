@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2019 the Pacemaker project contributors
+# Copyright 2003-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,9 +16,14 @@ EXTRA_DIST		= CONTRIBUTING.md	\
 			  INSTALL.md		\
 			  README.markdown	\
 			  autogen.sh		\
-			  m4/glibtests.m4 \
+			  m4/CC_CHECK_LDFLAGS.m4	\
+			  m4/CHECK_ENUM_VALUE.m4	\
+			  m4/glibtests.m4	\
 			  m4/gnulib-cache.m4	\
 			  m4/gnulib-tool.m4	\
+			  m4/PKG_CHECK_VAR.m4	\
+			  m4/REQUIRE_HEADER.m4	\
+			  m4/version.m4		\
 			  rpm/rpmlintrc		\
 			  rpm/pacemaker.spec.in
 
