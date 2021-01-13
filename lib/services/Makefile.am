@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2019 the Pacemaker project contributors
+# Copyright 2012-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,7 +17,6 @@ noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h \
 				  services_private.h
 
 libcrmservice_la_LDFLAGS	= -version-info 30:2:2
-libcrmservice_la_CPPFLAGS	= -DOCF_ROOT_DIR=\"@OCF_ROOT_DIR@\" $(AM_CPPFLAGS)
 libcrmservice_la_CFLAGS		=
 
 libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)

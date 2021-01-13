@@ -343,17 +343,24 @@ AC_ARG_WITH([runstatedir],
     [ pcmk_runstatedir="$withval" ]
 )
 
-dnl This defaults to /usr/lib rather than libdir because it's determined by the
-dnl OCF project and not pacemaker. Even if a user wants to install pacemaker to
-dnl /usr/local or such, the OCF agents will be expected in their usual
-dnl location. However, we do give the user the option to override it.
-OCF_ROOT_DIR="/usr/lib/ocf"
+dnl Get default from resource-agents if possible. Otherwise, the default uses
+dnl /usr/lib rather than libdir because it's determined by the OCF project and
+dnl not Pacemaker. Even if a user wants to install Pacemaker to /usr/local or
+dnl such, the OCF agents will be expected in their usual location. However, we
+dnl do give the user the option to override it.
+PKG_CHECK_VAR([OCF_ROOT_DIR], [resource-agents], [ocfrootdir], [],
+              [OCF_ROOT_DIR="/usr/lib/ocf"])
 AC_ARG_WITH([ocfdir],
-    [AS_HELP_STRING([--with-ocfdir=DIR],
-        [OCF resource agent root directory (advanced option: changing this may break other cluster components unless similarly configured) @<:@/usr/lib/ocf@:>@])],
+    [AS_HELP_STRING([--with-ocfdir=DIR], m4_normalize([
+        OCF resource agent root directory (advanced option: changing this
+        may break other cluster components unless similarly configured)
+        @<:@value from resource-agents package if available otherwise
+        /usr/lib/ocf@:>@]))],
     [ OCF_ROOT_DIR="$withval" ]
 )
 AC_SUBST(OCF_ROOT_DIR)
+AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+                   [OCF root directory for resource agents and libraries])
 
 dnl Get default from fence-agents if available
 PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
@@ -1958,6 +1965,7 @@ AC_MSG_NOTICE([  Header files             = ${includedir}])
 AC_MSG_NOTICE([  Arch-independent files   = ${datadir}])
 AC_MSG_NOTICE([  State information        = ${localstatedir}])
 AC_MSG_NOTICE([  System configuration     = ${sysconfdir}])
+AC_MSG_NOTICE([  OCF agents               = ${OCF_ROOT_DIR}])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_NOTICE([  HA user name             = ${CRM_DAEMON_USER}])
