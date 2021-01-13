@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/msg_xml.h>
 
@@ -193,7 +195,9 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         } else if (group_data->colocated) {
             pcmk__new_colocation("group:internal_colocation", NULL, INFINITY,
-                                 child_rsc, last_rsc, NULL, NULL, data_set);
+                                 child_rsc, last_rsc, NULL, NULL,
+                                 pcmk_is_set(child_rsc->flags, pe_rsc_critical),
+                                 data_set);
         }
 
         if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
@@ -296,9 +300,6 @@ group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         pe_err("rsc_rh was NULL for %s", constraint->id);
         return;
     }
-    if (constraint->score == 0) {
-        return;
-    }
 
     gIter = rsc_lh->children;
     pe_rsc_trace(rsc_lh, "Processing constraints from %s", rsc_lh->id);
@@ -337,9 +338,6 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     get_group_variant_data(group_data, rsc_rh);
     CRM_CHECK(rsc_lh->variant == pe_native, return);
 
-    if (constraint->score == 0) {
-        return;
-    }
     pe_rsc_trace(rsc_rh, "Processing RH %s of constraint %s (LH is %s)",
                  rsc_rh->id, constraint->id, rsc_lh->id);
 
@@ -516,13 +514,10 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (pcmk__colocation_applies(rsc, constraint, false)) {
-            nodes = pcmk__native_merge_weights(constraint->rsc_lh, rsc->id,
-                                               nodes,
-                                               constraint->node_attribute,
-                                               constraint->score / (float) INFINITY,
-                                               flags);
-        }
+        nodes = pcmk__native_merge_weights(constraint->rsc_lh, rsc->id, nodes,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           flags);
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_merging);

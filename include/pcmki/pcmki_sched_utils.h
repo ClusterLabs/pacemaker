@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,7 @@ pe__location_t *rsc2node_new(const char *id, pe_resource_t *rsc, int weight,
 void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                           const char *state_lh, const char *state_rh,
-                          pe_working_set_t *data_set);
+                          bool influence, pe_working_set_t *data_set);
 
 extern gboolean rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
                                const char *state_lh, const char *loss_policy,
@@ -72,9 +72,6 @@ enum filter_colocation_res {
 extern enum filter_colocation_res
 filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
                              pcmk__colocation_t *constraint, gboolean preview);
-bool pcmk__colocation_applies(pe_resource_t *rsc,
-                              pcmk__colocation_t *colocation,
-                              bool promoted_only);
 
 extern int compare_capacity(const pe_node_t * node1, const pe_node_t * node2);
 extern void calculate_utilization(GHashTable * current_utilization,

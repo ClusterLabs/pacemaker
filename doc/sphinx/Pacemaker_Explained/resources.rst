@@ -319,6 +319,18 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  | will stop lower priority resources in order to       |
    |                            |                                  | keep higher priority ones active.                    |
    +----------------------------+----------------------------------+------------------------------------------------------+
+   | critical                   | true                             | .. index::                                           |
+   |                            |                                  |    single: critical; resource option                 |
+   |                            |                                  |    single: resource; option, critical                |
+   |                            |                                  |                                                      |
+   |                            |                                  | Use this value as the default for ``influence`` in   |
+   |                            |                                  | all :ref:`colocation constraints                     |
+   |                            |                                  | <s-resource-colocation>` involving this resource,    |
+   |                            |                                  | as well as the implicit colocation constraints       |
+   |                            |                                  | created if this resource is in a :ref:`group         |
+   |                            |                                  | <group-resources>`. For details, see                 |
+   |                            |                                  | :ref:`s-coloc-influence`.                            |
+   +----------------------------+----------------------------------+------------------------------------------------------+
    | target-role                | Started                          | .. index::                                           |
    |                            |                                  |    single: target-role; resource option              |
    |                            |                                  |    single: resource; option, target-role             |

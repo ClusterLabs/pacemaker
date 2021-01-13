@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -217,6 +217,7 @@ extern "C" {
 #  define XML_RSC_ATTR_REMOTE_RA_ADDR   "addr"
 #  define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
 #  define XML_RSC_ATTR_REMOTE_RA_PORT   "port"
+#  define XML_RSC_ATTR_CRITICAL         "critical"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
@@ -327,6 +328,7 @@ extern "C" {
 #  define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
 #  define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
 #  define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
+#  define XML_COLOC_ATTR_INFLUENCE          "influence"
 
 #  define XML_LOC_ATTR_SOURCE           "rsc"
 #  define XML_LOC_ATTR_SOURCE_PATTERN   "rsc-pattern"

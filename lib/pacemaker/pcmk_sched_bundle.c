@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
@@ -143,7 +145,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             pcmk__new_colocation("child-remote-with-docker-remote", NULL,
                                  INFINITY, replica->remote,
                                  container_host->details->remote_rsc, NULL,
-                                 NULL, data_set);
+                                 NULL, true, data_set);
         }
 
         if (replica->remote) {
@@ -311,7 +313,8 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
                           pe_order_implies_first|pe_order_preserve, data_set);
 
             pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
-                                 replica->container, NULL, NULL, data_set);
+                                 replica->container, NULL, NULL, true,
+                                 data_set);
         }
 
         if (replica->remote) {
@@ -480,9 +483,6 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
     CRM_ASSERT(rsc_lh->variant == pe_native);
 
-    if (constraint->score == 0) {
-        return;
-    }
     if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
         return;
