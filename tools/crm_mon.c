@@ -1879,6 +1879,33 @@ crm_diff_update(const char *event, xmlNode * msg)
 }
 
 static int
+get_fencing_history(stonith_history_t **stonith_history)
+{
+    int rc = 0;
+
+    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
+        if (st != NULL) {
+            rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
+
+            if (rc == 0) {
+                *stonith_history = stonith__sort_history(*stonith_history);
+                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
+                    && (output_format != mon_output_xml)) {
+
+                    *stonith_history = pcmk__reduce_fence_history(*stonith_history);
+                }
+                break; /* all other cases are errors */
+            }
+        } else {
+            rc = ENOTCONN;
+            break;
+        }
+    }
+
+    return rc;
+}
+
+static int
 mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
@@ -1895,24 +1922,7 @@ mon_refresh_display(gpointer user_data)
     }
 
     /* get the stonith-history if there is evidence we need it */
-    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
-        if (st != NULL) {
-            history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120);
-
-            if (history_rc == 0) {
-                stonith_history = stonith__sort_history(stonith_history);
-                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
-                    && (output_format != mon_output_xml)) {
-
-                    stonith_history = pcmk__reduce_fence_history(stonith_history);
-                }
-                break; /* all other cases are errors */
-            }
-        } else {
-            history_rc = ENOTCONN;
-            break;
-        }
-    }
+    history_rc = get_fencing_history(&stonith_history);
 
     if (mon_data_set == NULL) {
         mon_data_set = pe_new_working_set();
