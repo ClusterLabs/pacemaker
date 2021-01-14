@@ -691,13 +691,9 @@ mon_timer_popped(gpointer data)
 }
 
 static void
-do_mon_cib_connection_destroy(gpointer user_data, bool is_error)
+mon_cib_connection_destroy(gpointer user_data)
 {
-    if (is_error) {
-        out->err(out, "Connection to the cluster-daemons terminated");
-    } else {
-        out->info(out, "Connection to the cluster-daemons terminated");
-    }
+    out->info(out, "Connection to the cluster-daemons terminated");
 
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
@@ -719,12 +715,6 @@ do_mon_cib_connection_destroy(gpointer user_data, bool is_error)
         timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
     return;
-}
-
-static void
-mon_cib_connection_destroy_regular(gpointer user_data)
-{
-    do_mon_cib_connection_destroy(user_data, false);
 }
 
 /*
@@ -831,7 +821,7 @@ cib_connect(gboolean full)
     rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
 
     if (rc == pcmk_ok && full) {
-        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
+        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
         if (rc == -EPROTONOSUPPORT) {
             print_as
                 (output_format, "Notification setup not supported, won't be able to reconnect after failure");
@@ -890,7 +880,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                     options.mon_ops |= mon_op_fence_history;
                     options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
-                        mon_cib_connection_destroy_regular(NULL);
+                        mon_cib_connection_destroy(NULL);
                     }
                 }
 
@@ -2010,7 +2000,7 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
-        mon_cib_connection_destroy_regular(NULL);
+        mon_cib_connection_destroy(NULL);
     } else if (options.external_agent) {
         char *desc = crm_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
                                     e->operation, e->origin, e->target, pcmk_strerror(e->result),
@@ -2059,7 +2049,7 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
-        mon_cib_connection_destroy_regular(NULL);
+        mon_cib_connection_destroy(NULL);
     } else {
         print_dot(output_format);
         kick_refresh(TRUE);
