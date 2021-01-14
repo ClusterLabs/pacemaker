@@ -66,7 +66,7 @@ static mon_output_format_t output_format = mon_output_unset;
 /* other globals */
 static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
-static guint timer_id = 0;
+static guint reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
 static pe_working_set_t *mon_data_set = NULL;
 
@@ -131,7 +131,7 @@ static int cib_connect(gboolean full);
 static int fencing_connect(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
-static void kick_refresh(gboolean data_updated);
+static void refresh_after_event(gboolean data_updated);
 
 static unsigned int
 all_includes(mon_output_format_t fmt) {
@@ -671,7 +671,7 @@ static GOptionEntry deprecated_entries[] = {
  * mon_cib_connection_destroy.
  */
 static gboolean
-mon_timer_popped(gpointer data)
+reconnect_after_timeout(gpointer data)
 {
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
@@ -680,9 +680,9 @@ mon_timer_popped(gpointer data)
     }
 #endif
 
-    if (timer_id > 0) {
-        g_source_remove(timer_id);
-        timer_id = 0;
+    if (reconnect_timer > 0) {
+        g_source_remove(reconnect_timer);
+        reconnect_timer = 0;
     }
 
     print_as(output_format, "Reconnecting...\n");
@@ -690,7 +690,7 @@ mon_timer_popped(gpointer data)
     if (cib_connect(TRUE) == pcmk_ok) {
         /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
         mon_refresh_display(NULL);
-        timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
+        reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
     }
     return FALSE;
 }
@@ -708,10 +708,10 @@ mon_cib_connection_destroy(gpointer user_data)
         /* we'll trigger a refresh after reconnect */
         mainloop_timer_stop(refresh_timer);
     }
-    if (timer_id) {
+    if (reconnect_timer) {
         /* we'll trigger a new reconnect-timeout at the end */
-        g_source_remove(timer_id);
-        timer_id = 0;
+        g_source_remove(reconnect_timer);
+        reconnect_timer = 0;
     }
     if (st) {
         /* the client API won't properly reconnect notifications
@@ -721,7 +721,7 @@ mon_cib_connection_destroy(gpointer user_data)
     }
     if (cib) {
         cib->cmds->signoff(cib);
-        timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
+        reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
     }
     return;
 }
@@ -1894,7 +1894,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     stale = FALSE;
-    kick_refresh(cib_updated);
+    refresh_after_event(cib_updated);
 }
 
 static int
@@ -2053,7 +2053,7 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
  * fencing event is received or a CIB diff occurrs.
  */
 static void
-kick_refresh(gboolean data_updated)
+refresh_after_event(gboolean data_updated)
 {
     static int updates = 0;
     time_t now = time(NULL);
@@ -2092,7 +2092,7 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
         mon_cib_connection_destroy(NULL);
     } else {
         print_dot(output_format);
-        kick_refresh(TRUE);
+        refresh_after_event(TRUE);
     }
 }
 
