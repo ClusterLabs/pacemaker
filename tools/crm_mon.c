@@ -666,6 +666,10 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
+/* Reconnect to the CIB and fencing agent after reconnect_msec has passed.  This sounds
+ * like it would be more broadly useful, but only ever happens after a disconnect via
+ * mon_cib_connection_destroy.
+ */
 static gboolean
 mon_timer_popped(gpointer data)
 {
@@ -684,12 +688,17 @@ mon_timer_popped(gpointer data)
     print_as(output_format, "Reconnecting...\n");
     fencing_connect();
     if (cib_connect(TRUE) == pcmk_ok) {
+        /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
         mon_refresh_display(NULL);
         timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
 }
 
+/* Called from various places when we are disconnected from the CIB or from the
+ * fencing agent.  If the CIB connection is still valid, this function will also
+ * attempt to sign off and reconnect.
+ */
 static void
 mon_cib_connection_destroy(gpointer user_data)
 {
@@ -717,9 +726,7 @@ mon_cib_connection_destroy(gpointer user_data)
     return;
 }
 
-/*
- * Mainloop signal handler.
- */
+/* Signal handler installed into the mainloop for normal program shutdown */
 static void
 mon_shutdown(int nsig)
 {
@@ -729,6 +736,10 @@ mon_shutdown(int nsig)
 #if CURSES_ENABLED
 static sighandler_t ncurses_winch_handler;
 
+/* Signal handler installed the regular way (not into the main loop) for when
+ * the screen is resized.  Commonly, this happens when running in an xterm and
+ * the user changes its size.
+ */
 static void
 mon_winresize(int nsig)
 {
@@ -743,6 +754,9 @@ mon_winresize(int nsig)
             (*ncurses_winch_handler) (SIGWINCH);
         getmaxyx(stdscr, lines, cols);
         resizeterm(lines, cols);
+        /* Alert the mainloop code we'd like the refresh_trigger to run next
+         * time the mainloop gets around to checking.
+         */
         mainloop_set_trigger(refresh_trigger);
     }
     not_done--;
@@ -863,6 +877,12 @@ get_option_desc(char c)
 #define print_option_help(output_format, option, condition) \
     out->info(out, "%c %c: \t%s", ((condition)? '*': ' '), option, get_option_desc(option));
 
+/* This function is called from the main loop when there is something to be read
+ * on stdin, like an interactive user's keystroke.  All it does is read the keystroke,
+ * set flags (or show the page showing which keystrokes are valid), and redraw the
+ * screen.  It does not do anything with connections to the CIB or fencing agent
+ * agent what would happen in mon_refresh_display.
+ */
 static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_data)
 {
@@ -951,6 +971,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 config_mode = TRUE;
                 break;
             default:
+                /* All other keys just redraw the screen. */
                 goto refresh;
         }
 
@@ -1441,6 +1462,10 @@ main(int argc, char **argv)
         g_io_add_watch(io_channel, G_IO_IN, detect_user_input, NULL);
     }
 #endif
+
+    /* When refresh_trigger->trigger is set to TRUE, call mon_refresh_display.  In
+     * this file, that is anywhere mainloop_set_trigger is called.
+     */
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 
     g_main_loop_run(mainloop);
@@ -1677,6 +1702,10 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     free(task);
 }
 
+/* This function is just a wrapper around mainloop_set_trigger so that it can be
+ * called from a mainloop directly.  It's simply another way of ensuring the screen
+ * gets redrawn.
+ */
 static gboolean
 mon_trigger_refresh(gpointer user_data)
 {
@@ -1995,6 +2024,9 @@ mon_refresh_display(gpointer user_data)
     return 1;
 }
 
+/* This function is called for fencing events (see fencing_connect for which ones) when
+ * --watch-fencing is used on the command line.
+ */
 static void
 mon_st_callback_event(stonith_t * st, stonith_event_t * e)
 {
@@ -2010,6 +2042,16 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
     }
 }
 
+/* Cause the screen to be redrawn (via mainloop_set_trigger) when various conditions are met:
+ *
+ * - If the last update occurred more than reconnect_msec ago (defaults to 5s, but can be
+ *   changed via the -i command line option), or
+ * - After every 10 CIB updates, or
+ * - If it's been 2s since the last update
+ *
+ * This function sounds like it would be more broadly useful, but it is only called when a
+ * fencing event is received or a CIB diff occurrs.
+ */
 static void
 kick_refresh(gboolean data_updated)
 {
@@ -2024,11 +2066,6 @@ kick_refresh(gboolean data_updated)
         refresh_timer = mainloop_timer_add("refresh", 2000, FALSE, mon_trigger_refresh, NULL);
     }
 
-    /* Refresh
-     * - immediately if the last update was more than 5s ago
-     * - every 10 cib-updates
-     * - at most 2s after the last update
-     */
     if ((now - last_refresh) > (options.reconnect_msec / 1000)) {
         mainloop_set_trigger(refresh_trigger);
         mainloop_timer_stop(refresh_timer);
@@ -2044,6 +2081,9 @@ kick_refresh(gboolean data_updated)
     }
 }
 
+/* This function is called for fencing events (see fencing_connect for which ones) when
+ * --watch-fencing is NOT used on the command line.
+ */
 static void
 mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 {
