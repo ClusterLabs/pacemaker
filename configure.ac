@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2020 the Pacemaker project contributors
+dnl Copyright 2009-2021 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -343,17 +343,24 @@ AC_ARG_WITH([runstatedir],
     [ pcmk_runstatedir="$withval" ]
 )
 
-dnl This defaults to /usr/lib rather than libdir because it's determined by the
-dnl OCF project and not pacemaker. Even if a user wants to install pacemaker to
-dnl /usr/local or such, the OCF agents will be expected in their usual
-dnl location. However, we do give the user the option to override it.
-OCF_ROOT_DIR="/usr/lib/ocf"
+dnl Get default from resource-agents if possible. Otherwise, the default uses
+dnl /usr/lib rather than libdir because it's determined by the OCF project and
+dnl not Pacemaker. Even if a user wants to install Pacemaker to /usr/local or
+dnl such, the OCF agents will be expected in their usual location. However, we
+dnl do give the user the option to override it.
+PKG_CHECK_VAR([OCF_ROOT_DIR], [resource-agents], [ocfrootdir], [],
+              [OCF_ROOT_DIR="/usr/lib/ocf"])
 AC_ARG_WITH([ocfdir],
-    [AS_HELP_STRING([--with-ocfdir=DIR],
-        [OCF resource agent root directory (advanced option: changing this may break other cluster components unless similarly configured) @<:@/usr/lib/ocf@:>@])],
+    [AS_HELP_STRING([--with-ocfdir=DIR], m4_normalize([
+        OCF resource agent root directory (advanced option: changing this
+        may break other cluster components unless similarly configured)
+        @<:@value from resource-agents package if available otherwise
+        /usr/lib/ocf@:>@]))],
     [ OCF_ROOT_DIR="$withval" ]
 )
 AC_SUBST(OCF_ROOT_DIR)
+AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
+                   [OCF root directory for resource agents and libraries])
 
 dnl Get default from fence-agents if available
 PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
@@ -785,12 +792,6 @@ dnl     scandir: Only on BSD.
 dnl             System-V systems may have it, but hidden and/or deprecated.
 dnl             A replacement function is supplied for it.
 dnl
-dnl     setenv: is some bsdish function that should also be avoided (use
-dnl             putenv instead)
-dnl             On the other hand, putenv doesn't provide the right API for the
-dnl             code and has memory leaks designed in (sigh...)  Fortunately this
-dnl             A replacement function is supplied for it.
-dnl
 dnl     strerror: returns a string that corresponds to an errno.
 dnl             A replacement function is supplied for it.
 dnl
@@ -800,7 +801,7 @@ dnl
 dnl     strndup: is a gnu function similar to strdup, but safer.
 dnl            We wrote a tolerably-fast replacement function for it.
 
-AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup)
+AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir strerror strchrnul strnlen strndup)
 
 dnl ===============================================
 dnl Libraries
@@ -812,8 +813,9 @@ AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
 AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
 AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
 
-dnl UUID functions may be in the standard library or a separate -luuid
-AC_CHECK_LIB([uuid], [uuid_parse])
+PKG_CHECK_MODULES([UUID], [uuid],
+                  [CPPFLAGS="${CPPFLAGS} ${UUID_CFLAGS}"
+                   LIBS="${LIBS} ${UUID_LIBS}"])
 
 AC_CHECK_FUNCS([sched_setscheduler])
 if test "$ac_cv_func_sched_setscheduler" != yes; then
@@ -935,7 +937,9 @@ dnl ========================================================================
 dnl Functions
 dnl ========================================================================
 
-AC_CHECK_FUNCS(getopt)
+REQUIRE_FUNC([getopt])
+REQUIRE_FUNC([setenv])
+REQUIRE_FUNC([unsetenv])
 
 AC_CACHE_CHECK(whether sscanf supports %m,
                pf_cv_var_sscanf,
@@ -1961,6 +1965,7 @@ AC_MSG_NOTICE([  Header files             = ${includedir}])
 AC_MSG_NOTICE([  Arch-independent files   = ${datadir}])
 AC_MSG_NOTICE([  State information        = ${localstatedir}])
 AC_MSG_NOTICE([  System configuration     = ${sysconfdir}])
+AC_MSG_NOTICE([  OCF agents               = ${OCF_ROOT_DIR}])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_NOTICE([  HA user name             = ${CRM_DAEMON_USER}])

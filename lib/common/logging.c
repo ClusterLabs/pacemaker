@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,6 +32,15 @@
 
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
+
+// Use high-resolution (millisecond) timestamps if libqb supports them
+#ifdef QB_FEATURE_LOG_HIRES_TIMESTAMPS
+#define TIMESTAMP_FORMAT_SPEC "%%T"
+typedef struct timespec *log_time_t;
+#else
+#define TIMESTAMP_FORMAT_SPEC "%%t"
+typedef time_t log_time_t;
+#endif
 
 unsigned int crm_log_level = LOG_INFO;
 unsigned int crm_trace_nonlog = 0;
@@ -146,7 +155,7 @@ set_format_string(int method, const char *daemon)
 
             // If logging to file, prefix with timestamp, node name, daemon ID
             offset += snprintf(fmt + offset, FMT_MAX - offset,
-                               "%%t %s %-20s[%lu] ",
+                               TIMESTAMP_FORMAT_SPEC " %s %-20s[%lu] ",
                                nodename, daemon, (unsigned long) getpid());
         }
 
@@ -292,12 +301,6 @@ crm_add_logfile(const char *filename)
 
 static int blackbox_trigger = 0;
 static volatile char *blackbox_file_prefix = NULL;
-
-#ifdef QB_FEATURE_LOG_HIRES_TIMESTAMPS
-typedef struct timespec *log_time_t;
-#else
-typedef time_t log_time_t;
-#endif
 
 static void
 blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,

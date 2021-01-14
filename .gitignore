@@ -107,7 +107,6 @@ include/crm_config.h
 *.8.html
 /daemons/attrd/pacemaker-attrd
 /daemons/based/pacemaker-based
-/daemons/based/cibmon
 /daemons/controld/pacemaker-controld
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
@@ -200,6 +199,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /coverage.sh
 /crmd
 /cts/HBDummy
+/daemons/based/cibmon
 /depcomp
 /doc/*.build
 /doc/*/en-US/Ap-*.xml

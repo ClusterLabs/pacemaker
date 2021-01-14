@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2020 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,7 +16,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
 		$(top_builddir)/lib/cib/libcib.la
 
-halib_PROGRAMS	= pacemaker-based cibmon
+halib_PROGRAMS	= pacemaker-based
 
 noinst_HEADERS	= pacemaker-based.h
 
@@ -33,9 +33,6 @@ pacemaker_based_SOURCES	= pacemaker-based.c \
 			  based_messages.c \
 			  based_notify.c \
 			  based_remote.c
-
-cibmon_LDADD	= $(COMMONLIBS)
-cibmon_SOURCES	= cibmon.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
