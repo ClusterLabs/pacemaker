@@ -86,17 +86,29 @@ pcmk__find_client_by_id(const char *id)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Get a client identifier for use in log messages
+ *
+ * \param[in] c  Client
+ *
+ * \return Client's name, client's ID, or a string literal, as available
+ * \note This is intended to be used in format strings like "client %s".
+ */
 const char *
 pcmk__client_name(pcmk__client_t *c)
 {
     if (c == NULL) {
-        return "null";
-    } else if (c->name == NULL && c->id == NULL) {
-        return "unknown";
-    } else if (c->name == NULL) {
-        return c->id;
-    } else {
+        return "(unspecified)";
+
+    } else if (c->name != NULL) {
         return c->name;
+
+    } else if (c->id != NULL) {
+        return c->id;
+
+    } else {
+        return "(unidentified)";
     }
 }
 
@@ -785,7 +797,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     if (pcmk_is_set(flags, crm_ipc_client_response)) {
         xmlNode *ack = create_xml_node(NULL, tag);
 
-        crm_trace("Ack'ing IPC message from %s as <%s status=%d>",
+        crm_trace("Ack'ing IPC message from client %s as <%s status=%d>",
                   pcmk__client_name(c), tag, status);
         c->request_id = 0;
         crm_xml_add(ack, "function", function);

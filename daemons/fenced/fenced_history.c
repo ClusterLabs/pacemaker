@@ -232,7 +232,7 @@ stonith_xml_history_to_list(xmlNode *history)
         long long completed;
 
         if (!id) {
-            crm_warn("History to convert to hashtable has no id in entry");
+            crm_warn("Malformed fencing history received from peer");
             continue;
         }
 
@@ -355,8 +355,8 @@ stonith_merge_in_history_list(GHashTable *history)
         if ((op->state != st_failed) &&
             (op->state != st_done) &&
             pcmk__str_eq(op->originator, stonith_our_uname, pcmk__str_casei)) {
-            crm_warn("received pending action we are supposed to be the "
-                     "owner but it's not in our records -> fail it");
+            crm_warn("Failing pending operation %.8s originated by us but "
+                     "known only from peer history", op->id);
             op->state = st_failed;
             op->completed = time(NULL);
             /* use -EHOSTUNREACH to not introduce a new return-code that might
@@ -409,7 +409,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         target = crm_element_value(dev, F_STONITH_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid = crm_atoi(target, NULL);
-            crm_node_t *node = crm_find_known_peer_full(nodeid, NULL, CRM_GET_PEER_ANY);
+            crm_node_t *node = pcmk__search_known_node_cache(nodeid, NULL,
+                                                             CRM_GET_PEER_ANY);
 
             if (node) {
                 target = node->uname;

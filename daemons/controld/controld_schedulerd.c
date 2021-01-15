@@ -150,13 +150,23 @@ pe_subsystem_new(void)
         .dispatch = pe_ipc_dispatch,
         .destroy = pe_ipc_destroy
     };
+    static bool retry_one = TRUE;
 
     controld_set_fsa_input_flags(R_PE_REQUIRED);
+retry:
     pe_subsystem = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE,
                                            G_PRIORITY_DEFAULT,
                                            5 * 1024 * 1024 /* 5MB */,
                                            NULL, &pe_callbacks);
     if (pe_subsystem == NULL) {
+        crm_debug("Could not connect to scheduler : %s(%d)", pcmk_rc_str(errno), errno);
+        if (errno == EAGAIN && retry_one) {
+            /* In rare cases, a SIGTERM may be received and the connection may fail when the cluster shuts down. */
+            /* At this time, the connection will be retried only once. */
+            crm_debug("Scheduler connection attempt.");
+            retry_one = FALSE;
+            goto retry;
+        }
         return FALSE;
     }
     controld_set_fsa_input_flags(R_PE_CONNECTED);
@@ -443,7 +453,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     /* Refresh the remote node cache and the known node cache when the
      * scheduler is invoked */
-    crm_peer_caches_refresh(output);
+    pcmk__refresh_node_caches_from_cib(output);
 
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
     crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);

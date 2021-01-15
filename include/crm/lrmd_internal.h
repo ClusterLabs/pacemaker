@@ -15,6 +15,7 @@
 #include <libxml/tree.h>                // xmlNode
 #include <crm/common/ipc.h>             // crm_ipc_t
 #include <crm/common/mainloop.h>        // mainloop_io_t, ipc_client_callbacks
+#include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/remote_internal.h> // pcmk__remote_t
 #include <crm/lrmd.h>                   // lrmd_t, lrmd_event_data_t
 
@@ -65,5 +66,7 @@ void remote_proxy_free(gpointer data);
 void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
 void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg,
                                  int msg_id);
+
+void lrmd__register_messages(pcmk__output_t *out);
 
 #endif

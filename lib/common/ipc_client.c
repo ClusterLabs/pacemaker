@@ -819,9 +819,9 @@ crm_ipc_connect(crm_ipc_t * client)
         return FALSE;
     }
 
-    if (!(rv = crm_ipc_is_authentic_process(client->pfd.fd, cl_uid, cl_gid,
-                                            &found_pid, &found_uid,
-                                            &found_gid))) {
+    if ((rv = pcmk__crm_ipc_is_authentic_process(client->ipc, client->pfd.fd, cl_uid, cl_gid,
+                                                  &found_pid, &found_uid,
+                                                  &found_gid)) == pcmk_rc_ipc_unauthorized) {
         crm_err("Daemon (IPC %s) is not authentic:"
                 " process %lld (uid: %lld, gid: %lld)",
                 client->name,  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
@@ -830,26 +830,26 @@ crm_ipc_connect(crm_ipc_t * client)
         errno = ECONNABORTED;
         return FALSE;
 
-    } else if (rv < 0) {
-        errno = -rv;
+    } else if (rv != pcmk_rc_ok) {
         crm_perror(LOG_ERR, "Could not verify authenticity of daemon (IPC %s)",
                    client->name);
         crm_ipc_close(client);
-        errno = -rv;
+        if (rv > 0) {
+            errno = rv;
+        } else {
+            errno = ENOTCONN;
+        }
         return FALSE;
     }
 
     qb_ipcc_context_set(client->ipc, client);
 
-#ifdef HAVE_IPCS_GET_BUFFER_SIZE
     client->max_buf_size = qb_ipcc_get_buffer_size(client->ipc);
     if (client->max_buf_size > client->buf_size) {
         free(client->buffer);
         client->buffer = calloc(1, client->max_buf_size);
         client->buf_size = client->max_buf_size;
     }
-#endif
-
     return TRUE;
 }
 
@@ -1291,14 +1291,23 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 }
 
 int
-crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
-                             pid_t *gotpid, uid_t *gotuid, gid_t *gotgid) {
+pcmk__crm_ipc_is_authentic_process(qb_ipcc_connection_t *qb_ipc, int sock, uid_t refuid, gid_t refgid,
+                                   pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
+{
     int ret = 0;
     pid_t found_pid = 0; uid_t found_uid = 0; gid_t found_gid = 0;
 #if defined(US_AUTH_PEERCRED_UCRED)
     struct ucred ucred;
     socklen_t ucred_len = sizeof(ucred);
+#endif
 
+#ifdef HAVE_QB_IPCC_AUTH_GET
+    if (qb_ipc && !qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid)) {
+        goto do_checks;
+    }
+#endif
+
+#if defined(US_AUTH_PEERCRED_UCRED)
     if (!getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
                     &ucred, &ucred_len)
                 && ucred_len == sizeof(ucred)) {
@@ -1335,6 +1344,9 @@ crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
     errno = 0;
     if (0) {
 #endif
+#ifdef HAVE_QB_IPCC_AUTH_GET
+    do_checks:
+#endif
         if (gotpid != NULL) {
             *gotpid = found_pid;
         }
@@ -1344,12 +1356,32 @@ crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
         if (gotgid != NULL) {
             *gotgid = found_gid;
         }
-        ret = (found_uid == 0 || found_uid == refuid || found_gid == refgid);
+        if (found_uid == 0 || found_uid == refuid || found_gid == refgid) {
+		ret = 0;
+        } else {
+                ret = pcmk_rc_ipc_unauthorized;
+        }
     } else {
-        ret = (errno > 0) ? -errno : -pcmk_err_generic;
+        ret = (errno > 0) ? errno : pcmk_rc_error;
     }
-
     return ret;
+}
+
+int
+crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
+                             pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
+{
+    int ret  = pcmk__crm_ipc_is_authentic_process(NULL, sock, refuid, refgid,
+                                                  gotpid, gotuid, gotgid);
+
+    /* The old function had some very odd return codes*/
+    if (ret == 0) {
+        return 1;
+    } else if (ret == pcmk_rc_ipc_unauthorized) {
+        return 0;
+    } else {
+        return pcmk_rc2legacy(ret);
+    }
 }
 
 int
@@ -1379,10 +1411,19 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
         goto bail;
     }
 
-    auth_rc = crm_ipc_is_authentic_process(fd, refuid, refgid, &found_pid,
-                                           &found_uid, &found_gid);
-    if (auth_rc < 0) {
-        rc = pcmk_legacy2rc(auth_rc);
+    auth_rc = pcmk__crm_ipc_is_authentic_process(c, fd, refuid, refgid, &found_pid,
+                                                 &found_uid, &found_gid);
+    if (auth_rc == pcmk_rc_ipc_unauthorized) {
+        crm_err("Daemon (IPC %s) effectively blocked with unauthorized"
+                " process %lld (uid: %lld, gid: %lld)",
+                name, (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) found_gid);
+        rc = pcmk_rc_ipc_unauthorized;
+        goto bail;
+    }
+
+    if (auth_rc != pcmk_rc_ok) {
+        rc = auth_rc;
         crm_err("Could not get peer credentials from %s IPC: %s "
                 CRM_XS " rc=%d", name, pcmk_rc_str(rc), rc);
         goto bail;
@@ -1390,15 +1431,6 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
 
     if (gotpid != NULL) {
         *gotpid = found_pid;
-    }
-
-    if (auth_rc == 0) {
-        crm_err("Daemon (IPC %s) effectively blocked with unauthorized"
-                " process %lld (uid: %lld, gid: %lld)",
-                name, (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) found_gid);
-        rc = pcmk_rc_ipc_unauthorized;
-        goto bail;
     }
 
     rc = pcmk_rc_ok;

@@ -2,10 +2,7 @@
 """ Timing comparisons for crm_simulate profiling output
 """
 
-# Pacemaker targets compatibility with Python 2.7 and 3.2+
-from __future__ import print_function, unicode_literals, absolute_import, division
-
-__copyright__ = "Copyright 2019 the Pacemaker project contributors"
+__copyright__ = "Copyright 2019-2020 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -39,6 +36,12 @@ def parse_args(argv=sys.argv):
     parser.add_argument('-s', '--threshold-seconds', type=float, default=0,
                         help="Don't show tests with less than this seconds difference in times")
 
+    parser.add_argument('-S', '--sort', choices=['test', 'before', 'after', 'diff', 'percent'],
+                        default='test', help="Sort results by this column")
+
+    parser.add_argument('-r', '--reverse', action='store_true',
+                        help="Sort results in descending order")
+
     parser.add_argument('before_file', metavar='BEFORE',
                         type=argparse.FileType('r'),
                         help=BEFORE_HELP)
@@ -69,7 +72,7 @@ def compare_test(test, before, after, args):
     except KeyError:
         if args.verbose > 0:
             print("No previous test " + test + " to compare")
-        return
+        return None
 
     after_time = float(after[test])
 
@@ -78,18 +81,62 @@ def compare_test(test, before, after, args):
 
     if ((abs(time_diff) >= args.threshold_seconds)
         and (abs(time_diff_percent) >= args.threshold_percent)):
-        print("%-40s %.2fs vs %.2fs (%+.2fs = %+6.2f%%)" % (test, before_time,
-              after_time, time_diff, time_diff_percent))
+        return { 'test': test,
+                 'before': before_time,
+                 'after': after_time,
+                 'diff': time_diff,
+                 'percent': time_diff_percent
+               }
+    return None
+
+def sort_diff(result):
+    """ Sort two test results by time difference """
+
+    global sort_field
+
+    return result[sort_field]
+
+
+def print_results(results, sort_reverse):
+    """ Output the comparison results """
+
+    if results == []:
+        return
+
+    # Sort and print test differences
+    results.sort(reverse=sort_reverse, key=sort_diff)
+    for result in results:
+        print("%-40s %6.2fs vs %6.2fs (%+.2fs = %+6.2f%%)" % (result['test'],
+              result['before'], result['after'], result['diff'],
+              result['percent']))
+
+    # Print average differences
+    diff_total = sum(d['diff'] for d in results)
+    percent_total = sum(d['percent'] for d in results)
+    nresults = len(results)
+    print("\nAverages: %+.2fs %+6.2f%%" % ((diff_total / nresults),
+          (percent_total / nresults)))
 
 
 if __name__ == "__main__":
+
+    global sort_field
 
     try:
         args = parse_args()
         before = extract_times(args.before_file)
         after = extract_times(args.after_file)
+        sort_field = args.sort
+
+        # Build a list of test differences
+        results = []
         for test in after.keys():
-            compare_test(test, before, after, args)
+            result = compare_test(test, before, after, args)
+            if result is not None:
+                results = results + [ result ]
+
+        print_results(results, sort_reverse=args.reverse)
+
     except KeyboardInterrupt:
         pass
     except IOError as e:

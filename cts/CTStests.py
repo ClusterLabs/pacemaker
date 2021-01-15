@@ -1,10 +1,7 @@
 """ Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-# Pacemaker targets compatibility with Python 2.7 and 3.2+
-from __future__ import print_function, unicode_literals, absolute_import, division
-
-__copyright__ = "Copyright 2000-2019 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2020 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 #
@@ -297,7 +294,7 @@ class StopTest(CTSTest):
             for line in output:
                 self.debug(line)
 
-            (rc, output) = self.rsh(node, "/usr/sbin/dlm_tool dump", None)
+            (rc, output) = self.rsh(node, "/usr/sbin/dlm_tool dump 2>/dev/null", None)
             for line in output:
                 self.debug(line)
 
@@ -514,8 +511,8 @@ class StonithdTest(CTSTest):
         return [
             self.templates["Pat:Fencing_start"] % ".*",
             self.templates["Pat:Fencing_ok"] % ".*",
-            r"error.*: Resource .*stonith::.* is active on 2 nodes attempting recovery",
-            r"error.*: Operation 'reboot' targeting .* on .* for stonith_admin.*: Timer expired",
+            self.templates["Pat:Fencing_active"],
+            r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired",
         ]
 
     def is_applicable(self):
@@ -707,10 +704,8 @@ class PartialStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-#   FIXME!  This should use the CM class to get the pattern
-#       then it would be applicable in general
         watchpats = []
-        watchpats.append("pacemaker-controld.*Connecting to cluster infrastructure")
+        watchpats.append("pacemaker-controld.*Connecting to .* cluster infrastructure")
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
         watch.setwatch()
 
@@ -1386,13 +1381,13 @@ class ComponentFail(CTSTest):
         if chosen.name in [ "corosync", "pacemaker-based", "pacemaker-fenced" ]:
             # Ignore actions for fence devices if fencer will respawn
             # (their registration will be lost, and probes will fail)
+            self.okerrpatterns = [ self.templates["Pat:Fencing_active"] ]
             (rc, lines) = self.rsh(node, "crm_resource -c", None)
             for line in lines:
                 if re.search("^Resource", line):
                     r = AuditResource(self.CM, line)
                     if r.rclass == "stonith":
                         self.okerrpatterns.append(self.templates["Pat:Fencing_recover"] % r.id)
-                        self.okerrpatterns.append(self.templates["Pat:Fencing_active"] % r.id)
                         self.okerrpatterns.append(self.templates["Pat:Fencing_probe"] % r.id)
 
         # supply a copy so self.patterns doesn't end up empty

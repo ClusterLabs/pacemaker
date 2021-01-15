@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -96,6 +96,46 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
     add_hash_param(user_data, key, value);
 }
 
+static void
+expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_data, GHashTable * meta_hash, pe_working_set_t * data_set)
+{
+    GHashTable *parent_orig_meta = crm_str_table_new();
+    pe_resource_t *p = rsc->parent;
+
+    if (p == NULL) {
+        return ;
+    }
+
+    /* Search all parent resources, get the fixed value of "meta_attributes" set only in the original xml, and stack it in the hash table. */
+    /* The fixed value of the lower parent resource takes precedence and is not overwritten. */
+    while(p != NULL) {
+        /* A hash table for comparison is generated, including the id-ref. */
+        pe__unpack_dataset_nvpairs(p->xml, XML_TAG_META_SETS,
+                               rule_data, parent_orig_meta, NULL, FALSE, data_set);
+        p = p->parent; 
+    }
+
+    /* If there is a fixed value of "meta_attributes" of the parent resource, it will be processed. */
+    if (parent_orig_meta != NULL) {
+        GHashTableIter iter;
+        char *key = NULL;
+        char *value = NULL;
+
+        g_hash_table_iter_init(&iter, parent_orig_meta);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
+            /* Parameters set in the original xml of the parent resource will also try to overwrite the child resource. */
+            /* Attributes that already exist in the child lease are not updated. */
+            dup_attr(key, value, meta_hash);
+        }
+    }
+
+    if (parent_orig_meta != NULL) {
+        g_hash_table_destroy(parent_orig_meta);
+    }
+    
+    return ;
+
+}
 void
 get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
                     pe_node_t * node, pe_working_set_t * data_set)
@@ -119,28 +159,31 @@ get_meta_attributes(GHashTable * meta_hash, pe_resource_t * rsc,
         rule_data.node_hash = node->details->attrs;
     }
 
-    if (rsc->xml) {
-        xmlAttrPtr xIter = NULL;
+    for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->xml); a != NULL; a = a->next) {
+        const char *prop_name = (const char *) a->name;
+        const char *prop_value = crm_element_value(rsc->xml, prop_name);
 
-        for (xIter = rsc->xml->properties; xIter; xIter = xIter->next) {
-            const char *prop_name = (const char *)xIter->name;
-            const char *prop_value = crm_element_value(rsc->xml, prop_name);
-
-            add_hash_param(meta_hash, prop_name, prop_value);
-        }
+        add_hash_param(meta_hash, prop_name, prop_value);
     }
 
     pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_META_SETS, &rule_data,
                                meta_hash, NULL, FALSE, data_set);
 
-    /* set anything else based on the parent */
+    /* Set the "meta_attributes" explicitly set in the parent resource to the hash table of the child resource. */
+    /* If it is already explicitly set as a child, it will not be overwritten. */
     if (rsc->parent != NULL) {
-        g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
+        expand_parents_fixed_nvpairs(rsc, &rule_data, meta_hash, data_set);
     }
 
-    /* and finally check the defaults */
+    /* check the defaults */
     pe__unpack_dataset_nvpairs(data_set->rsc_defaults, XML_TAG_META_SETS,
                                &rule_data, meta_hash, NULL, FALSE, data_set);
+
+    /* If there is "meta_attributes" that the parent resource has not explicitly set, set a value that is not set from rsc_default either. */
+    /* The values already set up to this point will not be overwritten. */
+    if (rsc->parent) {
+        g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
+    }
 }
 
 void
@@ -392,6 +435,62 @@ detect_promotable(pe_resource_t *rsc)
     return FALSE;
 }
 
+static void
+free_params_table(gpointer data)
+{
+    g_hash_table_destroy((GHashTable *) data);
+}
+
+/*!
+ * \brief Get a table of resource parameters
+ *
+ * \param[in] rsc       Resource to query
+ * \param[in] node      Node for evaluating rules (NULL for defaults)
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Hash table containing resource parameter names and values
+ *         (or NULL if \p rsc or \p data_set is NULL)
+ * \note The returned table will be destroyed when the resource is freed, so
+ *       callers should not destroy it.
+ */
+GHashTable *
+pe_rsc_params(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
+{
+    GHashTable *params_on_node = NULL;
+
+    /* A NULL node is used to request the resource's default parameters
+     * (not evaluated for node), but we always want something non-NULL
+     * as a hash table key.
+     */
+    const char *node_name = "";
+
+    // Sanity check
+    if ((rsc == NULL) || (data_set == NULL)) {
+        return NULL;
+    }
+    if ((node != NULL) && (node->details->uname != NULL)) {
+        node_name = node->details->uname;
+    }
+
+    // Find the parameter table for given node
+    if (rsc->parameter_cache == NULL) {
+        rsc->parameter_cache = g_hash_table_new_full(crm_strcase_hash,
+                                                     crm_strcase_equal, free,
+                                                     free_params_table);
+    } else {
+        params_on_node = g_hash_table_lookup(rsc->parameter_cache, node_name);
+    }
+
+    // If none exists yet, create one with parameters evaluated for node
+    if (params_on_node == NULL) {
+        params_on_node = crm_str_table_new();
+        get_rsc_attributes(params_on_node, rsc, node, data_set);
+        g_hash_table_insert(rsc->parameter_cache, strdup(node_name),
+                            params_on_node);
+    }
+    return params_on_node;
+}
+
 gboolean
 common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
               pe_resource_t * parent, pe_working_set_t * data_set)
@@ -458,8 +557,6 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
         return FALSE;
     }
 
-    (*rsc)->parameters = crm_str_table_new();
-
 #if ENABLE_VERSIONED_ATTRS
     (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 #endif
@@ -485,7 +582,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     pe_rsc_trace((*rsc), "Unpacking resource...");
 
     get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
-    get_rsc_attributes((*rsc)->parameters, *rsc, NULL, data_set);
+    (*rsc)->parameters = pe_rsc_params(*rsc, NULL, data_set); // \deprecated
 #if ENABLE_VERSIONED_ATTRS
     pe_get_versioned_attributes((*rsc)->versioned_parameters, *rsc, NULL, data_set);
 #endif
@@ -510,6 +607,11 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
     (*rsc)->priority = crm_parse_int(value, "0");
+
+    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
+    if ((value == NULL) || crm_is_true(value)) {
+        pe__set_resource_flags(*rsc, pe_rsc_critical);
+    }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
     if (crm_is_true(value)) {
@@ -709,7 +811,15 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     }
 
     if (remote_node) {
-        value = g_hash_table_lookup((*rsc)->parameters, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
+        GHashTable *params = pe_rsc_params(*rsc, NULL, data_set);
+
+        /* Grabbing the value now means that any rules based on node attributes
+         * will evaluate to false, so such rules should not be used with
+         * reconnect_interval.
+         *
+         * @TODO Evaluate per node before using
+         */
+        value = g_hash_table_lookup(params, XML_REMOTE_ATTR_RECONNECT_INTERVAL);
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
@@ -823,8 +933,8 @@ common_free(pe_resource_t * rsc)
     g_list_free(rsc->rsc_tickets);
     g_list_free(rsc->dangling_migrations);
 
-    if (rsc->parameters != NULL) {
-        g_hash_table_destroy(rsc->parameters);
+    if (rsc->parameter_cache != NULL) {
+        g_hash_table_destroy(rsc->parameter_cache);
     }
 #if ENABLE_VERSIONED_ATTRS
     if (rsc->versioned_parameters != NULL) {

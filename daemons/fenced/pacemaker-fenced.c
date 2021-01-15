@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <inttypes.h>  /* U32T ~ PRIu32, X32T ~ PRIx32 */
+#include <inttypes.h>  // PRIu32, PRIx32
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -120,8 +120,8 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    crm_trace("Flags %" X32T "/%u for command %" U32T " from %s",
-              flags, call_options, id, pcmk__client_name(c));
+    crm_trace("Flags 0x%08" PRIx32 "/0x%08x for command %" PRIu32
+              " from client %s", flags, call_options, id, pcmk__client_name(c));
 
     if (pcmk_is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);
@@ -240,12 +240,14 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
             rid = client_obj->request_id;
             client_obj->request_id = 0;
 
-            crm_trace("Sending response %d to %s %s",
-                      rid, client_obj->name, from_peer ? "(originator of delegated request)" : "");
+            crm_trace("Sending response %d to client %s%s",
+                      rid, pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
 
         } else {
-            crm_trace("Sending an event to %s %s",
-                      client_obj->name, from_peer ? "(originator of delegated request)" : "");
+            crm_trace("Sending an event to client %s%s",
+                      pcmk__client_name(client_obj),
+                      (from_peer? " (originator of delegated request)" : ""));
         }
 
         local_rc = pcmk__ipc_send_xml(client_obj, rid, notify_src,
@@ -254,10 +256,9 @@ do_local_reply(xmlNode * notify_src, const char *client_id, gboolean sync_reply,
     }
 
     if ((local_rc != pcmk_rc_ok) && (client_obj != NULL)) {
-        crm_warn("%s reply to %s failed: %s",
+        crm_warn("%s reply to client %s failed: %s",
                  (sync_reply? "Synchronous" : "Asynchronous"),
-                 (client_obj? client_obj->name : "unknown client"),
-                 pcmk_rc_str(local_rc));
+                 pcmk__client_name(client_obj), pcmk_rc_str(local_rc));
     }
 }
 
@@ -311,8 +312,8 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
                      CRM_XS " id=%.8s rc=%d", type, pcmk__client_name(client),
                      pcmk_rc_str(rc), client->id, rc);
         } else {
-            crm_trace("Sent %s notification to client %s.%.6s", type,
-                      pcmk__client_name(client), client->id);
+            crm_trace("Sent %s notification to client %s",
+                      type, pcmk__client_name(client));
         }
     }
 }
@@ -642,6 +643,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         /* Our node is allowed, so update the device information */
         int rc;
         xmlNode *data;
+        GHashTable *rsc_params = NULL;
         GHashTableIter gIter;
         stonith_key_value_t *params = NULL;
 
@@ -650,12 +652,12 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         const char *rsc_provides = NULL;
 
         crm_debug("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
-        get_rsc_attributes(rsc->parameters, rsc, node, data_set);
+        rsc_params = pe_rsc_params(rsc, node, data_set);
         get_meta_attributes(rsc->meta, rsc, node, data_set);
 
-        rsc_provides = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROVIDES);
+        rsc_provides = g_hash_table_lookup(rsc->meta, PCMK_STONITH_PROVIDES);
 
-        g_hash_table_iter_init(&gIter, rsc->parameters);
+        g_hash_table_iter_init(&gIter, rsc_params);
         while (g_hash_table_iter_next(&gIter, (gpointer *) & name, (gpointer *) & value)) {
             if (!name || !value) {
                 continue;
@@ -764,10 +766,10 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
     }
 
     if(needs_update) {
-        crm_info("Updating device list from the cib: %s", reason);
+        crm_info("Updating device list from CIB: %s", reason);
         cib_devices_update();
     } else {
-        crm_trace("No updates for device list found in cib");
+        crm_trace("No updates for device list found in CIB");
     }
     free(reason);
 }
@@ -829,7 +831,7 @@ update_cib_stonith_devices_v1(const char *event, xmlNode * msg)
     freeXpathObject(xpath_obj);
 
     if(needs_update) {
-        crm_info("Updating device list from the cib: %s", reason);
+        crm_info("Updating device list from CIB: %s", reason);
         cib_devices_update();
     }
 }
@@ -1040,7 +1042,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     if (local_cib == NULL) {
-        crm_trace("Re-requesting the full cib");
+        crm_trace("Re-requesting full CIB");
         rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_scope_local | cib_sync_call);
         if(rc != pcmk_ok) {
             crm_err("Couldn't retrieve the CIB: %s (%d)", pcmk_strerror(rc), rc);
@@ -1050,7 +1052,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         stonith_enabled_saved = FALSE; /* Trigger a full refresh below */
     }
 
-    crm_peer_caches_refresh(local_cib);
+    pcmk__refresh_node_caches_from_cib(local_cib);
 
     stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
                                            local_cib, LOG_NEVER);
@@ -1085,12 +1087,13 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
-        crm_trace("Ignoring cib updates while stonith is disabled");
+        crm_trace("Ignoring CIB updates while fencing is disabled");
         stonith_enabled_saved = FALSE;
         return;
 
     } else if (stonith_enabled_saved == FALSE) {
-        crm_info("Updating stonith device and topology lists now that stonith is enabled");
+        crm_info("Updating fencing device and topology lists "
+                 "now that fencing is enabled");
         stonith_enabled_saved = TRUE;
         fencing_topology_init();
         cib_devices_update();
@@ -1104,11 +1107,11 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 static void
 init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    crm_info("Updating device list from the cib: init");
+    crm_info("Updating device list from CIB");
     have_cib_devices = TRUE;
     local_cib = copy_xml(output);
 
-    crm_peer_caches_refresh(local_cib);
+    pcmk__refresh_node_caches_from_cib(local_cib);
 
     fencing_topology_init();
     cib_devices_update();
@@ -1225,7 +1228,7 @@ setup_cib(void)
         cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL, "init_cib_cache_cb",
                                          init_cib_cache_cb);
         cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
-        crm_info("Watching for stonith topology changes");
+        crm_info("Watching for fencing topology changes");
     }
 }
 
@@ -1331,7 +1334,8 @@ main(int argc, char **argv)
         printf("  </parameter>\n");
 #endif
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTARG);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_ARGUMENT);
         printf
             ("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
         printf
@@ -1342,7 +1346,8 @@ main(int argc, char **argv)
         printf("    <content type=\"string\" default=\"port\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTMAP);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_MAP);
         printf
             ("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
         printf
@@ -1350,45 +1355,55 @@ main(int argc, char **argv)
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTLIST);
-        printf
-            ("    <shortdesc lang=\"en\">A list of machines controlled by this device (Optional unless %s=static-list).</shortdesc>\n",
-             STONITH_ATTR_HOSTCHECK);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_LIST);
+        printf("    <shortdesc lang=\"en\">A list of machines controlled by "
+               "this device (Optional unless %s=static-list).</shortdesc>\n",
+               PCMK_STONITH_HOST_CHECK);
         printf("    <content type=\"string\" default=\"\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTCHECK);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_HOST_CHECK);
         printf
             ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
         printf("    <longdesc lang=\"en\">Allowed values: dynamic-list "
                "(query the device via the 'list' command), static-list "
-               "(check the " STONITH_ATTR_HOSTLIST " attribute), status "
+               "(check the " PCMK_STONITH_HOST_LIST " attribute), status "
                "(query the device via the 'status' command), none (assume "
                "every device can fence every machine)</longdesc>\n");
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_MAX);
-        printf
-            ("    <shortdesc lang=\"en\">Enable a random delay for stonith actions and specify the maximum of random delay.</shortdesc>\n");
-        printf
-            ("    <longdesc lang=\"en\">This prevents double fencing when using slow devices such as sbd.\n"
-             "Use this to enable a random delay for stonith actions.\n"
-             "The overall delay is derived from this random delay value adding a static delay so that the sum is kept below the maximum delay.</longdesc>\n");
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_DELAY_MAX);
+        printf("    <shortdesc lang=\"en\">Enable a delay of no more than the "
+               "time specified before executing fencing actions. Pacemaker "
+               "derives the overall delay by taking the value of "
+               PCMK_STONITH_DELAY_BASE " and adding a random delay value such "
+               "that the sum is kept below this maximum.</shortdesc>\n");
+        printf("    <longdesc lang=\"en\">This prevents double fencing when "
+               "using slow devices such as sbd.\nUse this to enable a random "
+               "delay for fencing actions.\nThe overall delay is derived from "
+               "this random delay value adding a static delay so that the sum "
+               "is kept below the maximum delay.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_BASE);
-        printf
-            ("    <shortdesc lang=\"en\">Enable a base delay for stonith actions and specify base delay value.</shortdesc>\n");
-        printf
-            ("    <longdesc lang=\"en\">This prevents double fencing when different delays are configured on the nodes.\n"
-             "Use this to enable a static delay for stonith actions.\n"
-             "The overall delay is derived from a random delay value adding this static delay so that the sum is kept below the maximum delay.</longdesc>\n");
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_DELAY_BASE);
+        printf("    <shortdesc lang=\"en\">Enable a base delay for "
+               "fencing actions and specify base delay value.</shortdesc>\n");
+        printf("    <longdesc lang=\"en\">This prevents double fencing when "
+               "different delays are configured on the nodes.\nUse this to "
+               "enable a static delay for fencing actions.\nThe overall delay "
+               "is derived from a random delay value adding this static delay "
+               "so that the sum is kept below the maximum delay.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 
-        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_ACTION_LIMIT);
+        printf("  <parameter name=\"%s\" unique=\"0\">\n",
+               PCMK_STONITH_ACTION_LIMIT);
         printf
             ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
         printf
@@ -1507,7 +1522,8 @@ main(int argc, char **argv)
         xmlNode *xml;
         stonith_key_value_t *params = NULL;
 
-        params = stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, stonith_our_uname);
+        params = stonith_key_value_add(params, PCMK_STONITH_HOST_LIST,
+                                       stonith_our_uname);
 
         xml = create_device_registration_xml("watchdog", st_namespace_internal,
                                              STONITH_WATCHDOG_AGENT, params,

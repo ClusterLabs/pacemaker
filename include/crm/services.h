@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,11 +27,8 @@ extern "C" {
 #  include <stdbool.h>
 #  include <sys/types.h>
 
+#  include <crm_config.h>       // OCF_ROOT_DIR
 #  include "common/results.h"
-
-#  ifndef OCF_ROOT_DIR
-#    define OCF_ROOT_DIR "/usr/lib/ocf"
-#  endif
 
 #  ifndef LSB_ROOT_DIR
 #    define LSB_ROOT_DIR "/etc/init.d"

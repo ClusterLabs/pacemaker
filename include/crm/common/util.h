@@ -32,6 +32,7 @@ extern "C" {
 
 #  include <crm/lrmd.h>
 #  include <crm/common/acl.h>
+#  include <crm/common/agents.h>
 #  include <crm/common/results.h>
 
 #  define ONLINESTATUS  "online"  // Status of an online client
@@ -133,27 +134,6 @@ xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
                            const char *timeout);
 #define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
-// Public resource agent functions (from agents.c)
-
-// Capabilities supported by a resource agent standard
-enum pcmk_ra_caps {
-    pcmk_ra_cap_none         = 0,
-    pcmk_ra_cap_provider     = (1 << 0), // Requires provider
-    pcmk_ra_cap_status       = (1 << 1), // Supports status instead of monitor
-    pcmk_ra_cap_params       = (1 << 2), // Supports parameters
-    pcmk_ra_cap_unique       = (1 << 3), // Supports unique clones
-    pcmk_ra_cap_promotable   = (1 << 4), // Supports promotable clones
-    pcmk_ra_cap_stdin        = (1 << 5), // Reads from standard input
-    pcmk_ra_cap_fence_params = (1 << 6), // Supports pcmk_monitor_timeout, etc.
-};
-
-uint32_t pcmk_get_ra_caps(const char *standard);
-char *crm_generate_ra_key(const char *standard, const char *provider,
-                          const char *type);
-int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
-                         char **type);
-
-
 int compare_version(const char *version1, const char *version2);
 
 /* coverity[+kill] */
@@ -254,9 +234,6 @@ is_set_any(long long word, long long bit)
 {
     return ((word & bit) != 0);
 }
-
-//! \deprecated Use pcmk_get_ra_caps() instead
-bool crm_provider_required(const char *standard);
 
 //! \deprecated Use strcmp or strcasecmp instead
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);

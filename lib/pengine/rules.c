@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -138,37 +138,6 @@ find_expression_type(xmlNode * expr)
     }
 
     return attr_expr;
-}
-
-gboolean
-pe_test_role_expression(xmlNode *expr, enum rsc_role_e role, crm_time_t *now)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = role,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    return pe__eval_role_expr(expr, &rule_data);
-}
-
-gboolean
-pe_test_attr_expression(xmlNode *expr, GHashTable *hash, crm_time_t *now,
-                        pe_match_data_t *match_data)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = hash,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = now,
-        .match_data = match_data,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    return pe__eval_attr_expr(expr, &rule_data);
 }
 
 /* As per the nethack rules:
@@ -331,38 +300,6 @@ pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
     return end;
 }
 
-/*!
- * \internal
- * \brief Test a date expression (pass/fail) for a specific time
- *
- * \param[in]  time_expr    date_expression XML
- * \param[in]  now          Time for which to evaluate expression
- * \param[out] next_change  If not NULL, set to when evaluation will change
- *
- * \return TRUE if date expression is in effect at given time, FALSE otherwise
- */
-gboolean
-pe_test_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    switch (pe__eval_date_expr(expr, &rule_data, next_change)) {
-        case pcmk_rc_within_range:
-        case pcmk_rc_ok:
-            return TRUE;
-
-        default:
-            return FALSE;
-    }
-}
-
 // Set next_change to t if t is earlier
 static void
 crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
@@ -373,31 +310,6 @@ crm_time_set_if_earlier(crm_time_t *next_change, crm_time_t *t)
             crm_time_set(next_change, t);
         }
     }
-}
-
-/*!
- * \internal
- * \brief Evaluate a date expression for a specific time
- *
- * \param[in]  time_expr    date_expression XML
- * \param[in]  now          Time for which to evaluate expression
- * \param[out] next_change  If not NULL, set to when evaluation will change
- *
- * \return Standard Pacemaker return code
- */
-int
-pe_eval_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
-{
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
-        .role = RSC_ROLE_UNKNOWN,
-        .now = now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
-    };
-
-    return pe__eval_date_expr(expr, &rule_data, next_change);
 }
 
 // Information about a block of nvpair elements
@@ -617,31 +529,31 @@ static GList *
 make_pairs(xmlNode *top, xmlNode *xml_obj, const char *set_name,
            const char *always_first)
 {
-    GListPtr unsorted = NULL;
-    const char *score = NULL;
-    sorted_set_t *pair = NULL;
-    xmlNode *attr_set = NULL;
+    GList *unsorted = NULL;
 
     if (xml_obj == NULL) {
         return NULL;
     }
-    for (attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
+    for (xmlNode *attr_set = pcmk__xe_first_child(xml_obj); attr_set != NULL;
          attr_set = pcmk__xe_next(attr_set)) {
 
-        /* Uncertain if set_name == NULL check is strictly necessary here */
-        if (pcmk__str_eq(set_name, (const char *)attr_set->name, pcmk__str_null_matches)) {
-            pair = NULL;
-            attr_set = expand_idref(attr_set, top);
-            if (attr_set == NULL) {
+        if (pcmk__str_eq(set_name, (const char *) attr_set->name,
+                         pcmk__str_null_matches)) {
+            const char *score = NULL;
+            sorted_set_t *pair = NULL;
+            xmlNode *expanded_attr_set = expand_idref(attr_set, top);
+
+            if (expanded_attr_set == NULL) {
+                // Schema (if not "none") prevents this
                 continue;
             }
 
             pair = calloc(1, sizeof(sorted_set_t));
-            pair->name = ID(attr_set);
+            pair->name = ID(expanded_attr_set);
             pair->special_name = always_first;
-            pair->attr_set = attr_set;
+            pair->attr_set = expanded_attr_set;
 
-            score = crm_element_value(attr_set, XML_RULE_ATTR_SCORE);
+            score = crm_element_value(expanded_attr_set, XML_RULE_ATTR_SCORE);
             pair->score = char2score(score);
 
             unsorted = g_list_prepend(unsorted, pair);
@@ -908,7 +820,16 @@ pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_
             break;
 
         case time_expr:
-            accept = pe_test_date_expression(expr, rule_data->now, next_change);
+            switch (pe__eval_date_expr(expr, rule_data, next_change)) {
+                case pcmk_rc_within_range:
+                case pcmk_rc_ok:
+                    accept = TRUE;
+                    break;
+
+                default:
+                    accept = FALSE;
+                    break;
+            }
             break;
 
         case role_expr:
@@ -1104,12 +1025,54 @@ accept_attr_expr(const char *l_val, const char *r_val, const char *type,
     return false;   // Should never reach this point
 }
 
+/*!
+ * \internal
+ * \brief Get correct value according to value-source
+ *
+ * \param[in] value         value given in rule expression
+ * \param[in] value_source  value-source given in rule expressions
+ * \param[in] match_data    If not NULL, resource back-references and params
+ */
+static const char *
+expand_value_source(const char *value, const char *value_source,
+                    pe_match_data_t *match_data)
+{
+    GHashTable *table = NULL;
+
+    if (pcmk__str_empty(value)) {
+        return NULL; // value_source is irrelevant
+
+    } else if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
+        table = match_data->params;
+
+    } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
+        table = match_data->meta;
+
+    } else { // literal
+        return value;
+    }
+
+    if (table == NULL) {
+        return NULL;
+    }
+    return (const char *) g_hash_table_lookup(table, value);
+}
+
+/*!
+ * \internal
+ * \brief Evaluate a node attribute expression based on #uname, #id, #kind,
+ *        or a generic node attribute
+ *
+ * \param[in] expr       XML of rule expression
+ * \param[in] rule_data  The match_data and node_hash members are used
+ *
+ * \return TRUE if rule_data satisfies the expression, FALSE otherwise
+ */
 gboolean
 pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 {
     gboolean attr_allocated = FALSE;
     const char *h_val = NULL;
-    GHashTable *table = NULL;
 
     const char *op = NULL;
     const char *type = NULL;
@@ -1129,32 +1092,19 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
         return FALSE;
     }
 
-    if (rule_data->match_data) {
-        if (rule_data->match_data->re) {
+    if (rule_data->match_data != NULL) {
+        // Expand any regular expression submatches (%0-%9) in attribute name
+        if (rule_data->match_data->re != NULL) {
             char *resolved_attr = pe_expand_re_matches(attr, rule_data->match_data->re);
 
-            if (resolved_attr) {
+            if (resolved_attr != NULL) {
                 attr = (const char *) resolved_attr;
                 attr_allocated = TRUE;
             }
         }
 
-        if (pcmk__str_eq(value_source, "param", pcmk__str_casei)) {
-            table = rule_data->match_data->params;
-        } else if (pcmk__str_eq(value_source, "meta", pcmk__str_casei)) {
-            table = rule_data->match_data->meta;
-        }
-    }
-
-    if (table) {
-        const char *param_name = value;
-        const char *param_value = NULL;
-
-        if (param_name && param_name[0]) {
-            if ((param_value = (const char *)g_hash_table_lookup(table, param_name))) {
-                value = param_value;
-            }
-        }
+        // Get value appropriate to value-source
+        value = expand_value_source(value, value_source, rule_data->match_data);
     }
 
     if (rule_data->node_hash != NULL) {
@@ -1169,8 +1119,16 @@ pe__eval_attr_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
     return accept_attr_expr(h_val, value, type, op);
 }
 
-
-
+/*!
+ * \internal
+ * \brief Evaluate a date_expression
+ *
+ * \param[in]  expr         XML of rule expression
+ * \param[in]  rule_data    Only the now member is used
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code
+ */
 int
 pe__eval_date_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data, crm_time_t *next_change)
 {
@@ -1285,6 +1243,15 @@ pe__eval_op_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data) {
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Evaluate a node attribute expression based on #role
+ *
+ * \param[in] expr       XML of rule expression
+ * \param[in] rule_data  Only the role member is used
+ *
+ * \return TRUE if rule_data->role satisfies the expression, FALSE otherwise
+ */
 gboolean
 pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 {

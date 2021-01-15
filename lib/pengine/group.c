@@ -180,16 +180,16 @@ group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__group_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     char *count = crm_itoa(g_list_length(gIter));
 
     int rc = pcmk_rc_no_output;
@@ -231,14 +231,14 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__group_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
@@ -251,7 +251,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
                        (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
 
     if (options & pe_print_brief) {
-        GListPtr rscs = pe__filter_rsc_list(rsc->children, only_rsc);
+        GList *rscs = pe__filter_rsc_list(rsc->children, only_rsc);
 
         if (rscs != NULL) {
             out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s", rsc->id,
@@ -265,7 +265,7 @@ pe__group_html(pcmk__output_t *out, va_list args)
         }
 
     } else {
-        for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
+        for (GList *gIter = rsc->children; gIter; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
@@ -286,14 +286,14 @@ pe__group_html(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__group_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
@@ -306,7 +306,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
                        (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
 
     if (options & pe_print_brief) {
-        GListPtr rscs = pe__filter_rsc_list(rsc->children, only_rsc);
+        GList *rscs = pe__filter_rsc_list(rsc->children, only_rsc);
 
         if (rscs != NULL) {
             out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s", rsc->id,
@@ -320,7 +320,7 @@ pe__group_text(pcmk__output_t *out, va_list args)
         }
 
     } else {
-        for (GListPtr gIter = rsc->children; gIter; gIter = gIter->next) {
+        for (GList *gIter = rsc->children; gIter; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {

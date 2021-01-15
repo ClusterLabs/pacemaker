@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 
 #include <sys/param.h>
 #include <sys/types.h>
+#include <stdbool.h>
 #include <regex.h>
 #include <glib.h>
 
@@ -47,7 +48,9 @@ static pe__location_t *generate_location_rule(pe_resource_t *rsc,
                                               const char *discovery,
                                               crm_time_t *next_change,
                                               pe_working_set_t *data_set,
-                                              pe_match_data_t *match_data);
+                                              pe_re_match_data_t *match_data);
+static void unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
+static void unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 static bool
 evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
@@ -709,11 +712,13 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
     return TRUE;
 }
 
-static gboolean unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role,
-                             const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data);
+static void unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh,
+                                const char *role, const char *score,
+                                pe_working_set_t *data_set,
+                                pe_re_match_data_t *match_data);
 
-static gboolean
-unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
@@ -721,7 +726,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     if(value) {
         pe_resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, value);
 
-        return unpack_rsc_location(xml_obj, rsc_lh, NULL, NULL, data_set, NULL);
+        unpack_rsc_location(xml_obj, rsc_lh, NULL, NULL, data_set, NULL);
     }
 
     value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
@@ -741,7 +746,7 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
                              " has invalid value '%s'", id, value);
             regfree(r_patt);
             free(r_patt);
-            return FALSE;
+            return;
         }
 
         for (rIter = data_set->resources; rIter; rIter = rIter->next) {
@@ -765,13 +770,9 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
                                                 .nregs = nregs,
                                                 .pmatch = pmatch
                                                };
-                pe_match_data_t match_data = {
-                                                .re = &re_match_data,
-                                                .params = r->parameters,
-                                                .meta = r->meta,
-                                             };
+
                 crm_debug("'%s' matched '%s' for %s", r->id, value, id);
-                unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, &match_data);
+                unpack_rsc_location(xml_obj, r, NULL, NULL, data_set, &re_match_data);
 
             } else if (invert && (status != 0)) {
                 crm_debug("'%s' is an inverted match of '%s' for %s", r->id, value, id);
@@ -787,13 +788,12 @@ unpack_simple_location(xmlNode * xml_obj, pe_working_set_t * data_set)
         regfree(r_patt);
         free(r_patt);
     }
-
-    return FALSE;
 }
 
-static gboolean
-unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role,
-                    const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data)
+static void
+unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
+                    const char *score, pe_working_set_t *data_set,
+                    pe_re_match_data_t *re_match_data)
 {
     pe__location_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
@@ -804,7 +804,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
     if (rsc_lh == NULL) {
         pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                           "does not exist", id, id_lh);
-        return FALSE;
+        return;
     }
 
     if (score == NULL) {
@@ -816,7 +816,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
         pe_node_t *match = pe_find_node(data_set->nodes, node);
 
         if (!match) {
-            return FALSE;
+            return;
         }
         location = rsc2node_new(id, rsc_lh, score_i, discovery, match, data_set);
 
@@ -833,7 +833,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
             empty = FALSE;
             crm_trace("Unpacking %s/%s", id, ID(rule_xml));
             generate_location_rule(rsc_lh, rule_xml, discovery, next_change,
-                                   data_set, match_data);
+                                   data_set, re_match_data);
         }
 
         if (empty) {
@@ -850,7 +850,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
             pe__update_recheck_time(t, data_set);
         }
         crm_time_free(next_change);
-        return TRUE;
+        return;
     }
 
     if (role == NULL) {
@@ -860,7 +860,7 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
     if (location && role) {
         if (text2role(role) == RSC_ROLE_UNKNOWN) {
             pe_err("Invalid constraint %s: Bad role %s", id, role);
-            return FALSE;
+            return;
 
         } else {
             enum rsc_role_e r = text2role(role);
@@ -877,8 +877,6 @@ unpack_rsc_location(xmlNode * xml_obj, pe_resource_t * rsc_lh, const char * role
             }
         }
     }
-
-    return TRUE;
 }
 
 static gboolean
@@ -992,8 +990,8 @@ unpack_location_set(xmlNode * location, xmlNode * set, pe_working_set_t * data_s
     return TRUE;
 }
 
-gboolean
-unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *set = NULL;
     gboolean any_sets = FALSE;
@@ -1002,7 +1000,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *expanded_xml = NULL;
 
     if (unpack_location_tags(xml_obj, &expanded_xml, data_set) == FALSE) {
-        return FALSE;
+        return;
     }
 
     if (expanded_xml) {
@@ -1020,7 +1018,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
                 if (expanded_xml) {
                     free_xml(expanded_xml);
                 }
-                return FALSE;
+                return;
             }
         }
     }
@@ -1031,10 +1029,8 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (any_sets == FALSE) {
-        return unpack_simple_location(xml_obj, data_set);
+        unpack_simple_location(xml_obj, data_set);
     }
-
-    return TRUE;
 }
 
 static int
@@ -1068,7 +1064,8 @@ get_node_score(const char *rule, const char *score, gboolean raw, pe_node_t * no
 static pe__location_t *
 generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pe_working_set_t *data_set, pe_match_data_t *match_data)
+                       pe_working_set_t *data_set,
+                       pe_re_match_data_t *re_match_data)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -1114,14 +1111,14 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         return NULL;
     }
 
-    if (match_data && match_data->re && match_data->re->nregs > 0 && match_data->re->pmatch[0].rm_so != -1) {
-        if (raw_score == FALSE) {
-            char *result = pe_expand_re_matches(score, match_data->re);
+    if ((re_match_data != NULL) && (re_match_data->nregs > 0)
+        && (re_match_data->pmatch[0].rm_so != -1) && !raw_score) {
 
-            if (result) {
-                score = (const char *) result;
-                score_allocated = TRUE;
-            }
+        char *result = pe_expand_re_matches(score, re_match_data);
+
+        if (result != NULL) {
+            score = result;
+            score_allocated = TRUE;
         }
     }
 
@@ -1149,9 +1146,14 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         int score_f = 0;
         pe_node_t *node = (pe_node_t *) gIter->data;
+        pe_match_data_t match_data = {
+            .re = re_match_data,
+            .params = pe_rsc_params(rsc, node, data_set),
+            .meta = rsc->meta,
+        };
 
         accept = pe_test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN,
-                              data_set->now, next_change, match_data);
+                              data_set->now, next_change, &match_data);
 
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);
@@ -1206,8 +1208,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 static gint
 sort_cons_priority_lh(gconstpointer a, gconstpointer b)
 {
-    const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t *)a;
-    const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t *)b;
+    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
+    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
 
     if (a == NULL) {
         return 1;
@@ -1254,8 +1256,8 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
 static gint
 sort_cons_priority_rh(gconstpointer a, gconstpointer b)
 {
-    const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t *)a;
-    const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t *)b;
+    const pcmk__colocation_t *rsc_constraint1 = (const pcmk__colocation_t *) a;
+    const pcmk__colocation_t *rsc_constraint2 = (const pcmk__colocation_t *) b;
 
     if (a == NULL) {
         return 1;
@@ -1341,22 +1343,27 @@ anti_colocation_order(pe_resource_t * first_rsc, int first_role,
     }
 }
 
-gboolean
-rsc_colocation_new(const char *id, const char *node_attr, int score,
-                   pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                   const char *state_lh, const char *state_rh, pe_working_set_t * data_set)
+void
+pcmk__new_colocation(const char *id, const char *node_attr, int score,
+                     pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                     const char *state_lh, const char *state_rh,
+                     bool influence, pe_working_set_t *data_set)
 {
-    rsc_colocation_t *new_con = NULL;
+    pcmk__colocation_t *new_con = NULL;
 
+    if (score == 0) {
+        crm_trace("Ignoring colocation '%s' because score is 0", id);
+        return;
+    }
     if ((rsc_lh == NULL) || (rsc_rh == NULL)) {
         pcmk__config_err("Ignoring colocation '%s' because resource "
                          "does not exist", id);
-        return FALSE;
+        return;
     }
 
-    new_con = calloc(1, sizeof(rsc_colocation_t));
+    new_con = calloc(1, sizeof(pcmk__colocation_t));
     if (new_con == NULL) {
-        return FALSE;
+        return;
     }
 
     if (pcmk__str_eq(state_lh, RSC_ROLE_STARTED_S, pcmk__str_null_matches | pcmk__str_casei)) {
@@ -1374,6 +1381,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     new_con->role_lh = text2role(state_lh);
     new_con->role_rh = text2role(state_rh);
     new_con->node_attribute = node_attr;
+    new_con->influence = influence;
 
     if (node_attr == NULL) {
         node_attr = CRM_ATTR_UNAME;
@@ -1392,8 +1400,6 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
         anti_colocation_order(rsc_lh, new_con->role_lh, rsc_rh, new_con->role_rh, data_set);
         anti_colocation_order(rsc_rh, new_con->role_rh, rsc_lh, new_con->role_lh, data_set);
     }
-
-    return TRUE;
 }
 
 /* LHS before RHS */
@@ -2279,8 +2285,38 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Return the boolean influence corresponding to configuration
+ *
+ * \param[in] coloc_id     Colocation XML ID (for error logging)
+ * \param[in] rsc          Resource involved in constraint (for default)
+ * \param[in] influence_s  String value of influence option
+ *
+ * \return true if string evaluates true, false if string evaluates false,
+ *         or value of resource's critical option if string is NULL or invalid
+ */
+static bool
+unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
+                 const char *influence_s)
+{
+    if (influence_s != NULL) {
+        int influence_i = 0;
+
+        if (crm_str_to_boolean(influence_s, &influence_i) < 0) {
+            pcmk__config_err("Constraint '%s' has invalid value for "
+                             XML_COLOC_ATTR_INFLUENCE " (using default)",
+                             coloc_id);
+        } else {
+            return (influence_i == TRUE);
+        }
+    }
+    return pcmk_is_set(rsc->flags, pe_rsc_critical);
+}
+
 static gboolean
-unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
+unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
+                      const char *influence_s, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pe_resource_t *with = NULL;
@@ -2296,6 +2332,11 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
     if (score_s) {
         local_score = char2score(score_s);
     }
+    if (local_score == 0) {
+        crm_trace("Ignoring colocation '%s' for set '%s' because score is 0",
+                  coloc_id, set_id);
+        return TRUE;
+    }
 
     if(ordering == NULL) {
         ordering = "group";
@@ -2304,7 +2345,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
     if (sequential != NULL && crm_is_true(sequential) == FALSE) {
         return TRUE;
 
-    } else if ((local_score >= 0)
+    } else if ((local_score > 0)
                && pcmk__str_eq(ordering, "group", pcmk__str_casei)) {
         for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
              xml_rsc = pcmk__xe_next(xml_rsc)) {
@@ -2313,14 +2354,17 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
                 if (with != NULL) {
                     pe_rsc_trace(resource, "Colocating %s with %s", resource->id, with->id);
-                    rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
-                                       data_set);
+                    pcmk__new_colocation(set_id, NULL, local_score, resource,
+                                         with, role, role,
+                                         unpack_influence(coloc_id, resource,
+                                                          influence_s),
+                                         data_set);
                 }
 
                 with = resource;
             }
         }
-    } else if (local_score >= 0) {
+    } else if (local_score > 0) {
         pe_resource_t *last = NULL;
         for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
              xml_rsc = pcmk__xe_next(xml_rsc)) {
@@ -2329,8 +2373,11 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
                 if (last != NULL) {
                     pe_rsc_trace(resource, "Colocating %s with %s", last->id, resource->id);
-                    rsc_colocation_new(set_id, NULL, local_score, last, resource, role, role,
-                                       data_set);
+                    pcmk__new_colocation(set_id, NULL, local_score, last,
+                                         resource, role, role,
+                                         unpack_influence(coloc_id, last,
+                                                          influence_s),
+                                         data_set);
                 }
 
                 last = resource;
@@ -2348,8 +2395,10 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
 
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 xmlNode *xml_rsc_with = NULL;
+                bool influence = true;
 
                 EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+                influence = unpack_influence(coloc_id, resource, influence_s);
 
                 for (xml_rsc_with = pcmk__xe_first_child(set);
                      xml_rsc_with != NULL;
@@ -2362,8 +2411,9 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                         EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
                         pe_rsc_trace(resource, "Anti-Colocating %s with %s", resource->id,
                                      with->id);
-                        rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role,
-                                           data_set);
+                        pcmk__new_colocation(set_id, NULL, local_score,
+                                             resource, with, role, role,
+                                             influence, data_set);
                     }
                 }
             }
@@ -2375,7 +2425,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
 
 static gboolean
 colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
-                  pe_working_set_t * data_set)
+                  const char *influence_s, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
     pe_resource_t *rsc_1 = NULL;
@@ -2387,6 +2437,11 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     const char *sequential_1 = crm_element_value(set1, "sequential");
     const char *sequential_2 = crm_element_value(set2, "sequential");
 
+    if (score == 0) {
+        crm_trace("Ignoring colocation '%s' between sets because score is 0",
+                  id);
+        return TRUE;
+    }
     if (sequential_1 == NULL || crm_is_true(sequential_1)) {
         /* get the first one */
         for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
@@ -2414,15 +2469,20 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     }
 
     if (rsc_1 != NULL && rsc_2 != NULL) {
-        rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+        pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1, role_2,
+                             unpack_influence(id, rsc_1, influence_s),
+                             data_set);
 
     } else if (rsc_1 != NULL) {
+        bool influence = unpack_influence(id, rsc_1, influence_s);
+
         for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
              xml_rsc = pcmk__xe_next(xml_rsc)) {
 
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-                rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+                pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
+                                     role_2, influence, data_set);
             }
         }
 
@@ -2432,7 +2492,10 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
 
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-                rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+                pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
+                                     role_2,
+                                     unpack_influence(id, rsc_1, influence_s),
+                                     data_set);
             }
         }
 
@@ -2442,8 +2505,10 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
 
             if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                 xmlNode *xml_rsc_2 = NULL;
+                bool influence = true;
 
                 EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+                influence = unpack_influence(id, rsc_1, influence_s);
 
                 for (xml_rsc_2 = pcmk__xe_first_child(set2);
                      xml_rsc_2 != NULL;
@@ -2451,7 +2516,9 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
 
                     if (pcmk__str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                         EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
-                        rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+                        pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
+                                             role_1, role_2, influence,
+                                             data_set);
                     }
                 }
             }
@@ -2461,14 +2528,13 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     return TRUE;
 }
 
-static gboolean
-unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_simple_colocation(xmlNode *xml_obj, const char *id,
+                         const char *influence_s, pe_working_set_t *data_set)
 {
     int score_i = 0;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -2486,24 +2552,24 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (rsc_lh == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, id_lh);
-        return FALSE;
+        return;
 
     } else if (rsc_rh == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, id_rh);
-        return FALSE;
+        return;
 
     } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
                          id, id_lh, instance_lh);
-        return FALSE;
+        return;
 
     } else if (instance_rh && pe_rsc_is_clone(rsc_rh) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
                          id, id_rh, instance_rh);
-        return FALSE;
+        return;
     }
 
     if (instance_lh) {
@@ -2512,7 +2578,7 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
                               id, id_lh, instance_lh);
-            return FALSE;
+            return;
         }
     }
 
@@ -2522,7 +2588,7 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
                               "'%s'", id, id_rh, instance_rh);
-            return FALSE;
+            return;
         }
     }
 
@@ -2536,8 +2602,8 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         score_i = char2score(score);
     }
 
-    rsc_colocation_new(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
-    return TRUE;
+    pcmk__new_colocation(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh,
+                         unpack_influence(id, rsc_lh, influence_s), data_set);
 }
 
 static gboolean
@@ -2657,8 +2723,8 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     return TRUE;
 }
 
-gboolean
-unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     int score_i = 0;
     xmlNode *set = NULL;
@@ -2670,20 +2736,19 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-
-    gboolean rc = TRUE;
+    const char *influence_s = crm_element_value(xml_obj,
+                                                XML_COLOC_ATTR_INFLUENCE);
 
     if (score) {
         score_i = char2score(score);
     }
 
-    rc = unpack_colocation_tags(xml_obj, &expanded_xml, data_set);
+    if (!unpack_colocation_tags(xml_obj, &expanded_xml, data_set)) {
+        return;
+    }
     if (expanded_xml) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
-
-    } else if (rc == FALSE) {
-        return FALSE;
     }
 
     for (set = pcmk__xe_first_child(xml_obj); set != NULL;
@@ -2692,11 +2757,13 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         if (pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_none)) {
             any_sets = TRUE;
             set = expand_idref(set, data_set->input);
-            if (unpack_colocation_set(set, score_i, data_set) == FALSE) {
-                return FALSE;
-
-            } else if (last && colocate_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
-                return FALSE;
+            if (!unpack_colocation_set(set, score_i, id, influence_s,
+                                       data_set)) {
+                return;
+            }
+            if ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
+                                                     influence_s, data_set)) {
+                return;
             }
             last = set;
         }
@@ -2707,11 +2774,9 @@ unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
         xml_obj = orig_xml;
     }
 
-    if (any_sets == FALSE) {
-        return unpack_simple_colocation(xml_obj, data_set);
+    if (!any_sets) {
+        unpack_simple_colocation(xml_obj, id, influence_s, data_set);
     }
-
-    return TRUE;
 }
 
 gboolean

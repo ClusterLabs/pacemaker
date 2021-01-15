@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
@@ -434,14 +436,12 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *other = NULL;
-            rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
-
-            if (constraint->score == 0) {
-                continue;
-            }
+            pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
             if (pcmk_is_set(flags, pe_weights_forward)) {
                 other = constraint->rsc_rh;
+            } else if (!pcmk__colocation_has_influence(constraint, NULL)) {
+                continue;
             } else {
                 other = constraint->rsc_lh;
             }
@@ -526,14 +526,10 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         GHashTable *archive = NULL;
         pe_resource_t *rsc_rh = constraint->rsc_rh;
-
-        if (constraint->score == 0) {
-            continue;
-        }
 
         if (constraint->role_lh >= RSC_ROLE_MASTER
             || (constraint->score < 0 && constraint->score > -INFINITY)) {
@@ -560,9 +556,9 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes);
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-        rsc_colocation_t *constraint = (rsc_colocation_t *) gIter->data;
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        if (constraint->score == 0) {
+        if (!pcmk__colocation_has_influence(constraint, NULL)) {
             continue;
         }
         pe_rsc_trace(rsc, "Merging score of '%s' constraint (%s with %s)",
@@ -1290,9 +1286,11 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
                        rsc->partial_migration_target->details->uname);
 
         } else {
+            const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
             // Resource was incorrectly multiply active
-            pe_proc_err("Resource %s is active on %u nodes (%s)",
-                        rsc->id, num_all_active,
+            pe_proc_err("%s resource %s is active on %u nodes (%s)",
+                        crm_str(class), rsc->id, num_all_active,
                         recovery2text(rsc->recovery_type));
             crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
         }
@@ -1695,8 +1693,8 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             } else {
                 score = INFINITY; /* Force them to run on the same host */
             }
-            rsc_colocation_new("resource-with-container", NULL, score, rsc,
-                               rsc->container, NULL, NULL, data_set);
+            pcmk__new_colocation("resource-with-container", NULL, score, rsc,
+                                 rsc->container, NULL, NULL, true, data_set);
         }
     }
 
@@ -1710,7 +1708,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
 void
 native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                         rsc_colocation_t *constraint,
+                         pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
     if (rsc_lh == NULL) {
@@ -1722,9 +1720,6 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
     }
 
-    if (constraint->score == 0) {
-        return;
-    }
     pe_rsc_trace(rsc_lh, "Processing colocation constraint between %s and %s", rsc_lh->id,
                  rsc_rh->id);
 
@@ -1733,12 +1728,8 @@ native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
 enum filter_colocation_res
 filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
-                             rsc_colocation_t * constraint, gboolean preview)
+                             pcmk__colocation_t *constraint, gboolean preview)
 {
-    if (constraint->score == 0) {
-        return influence_nothing;
-    }
-
     /* rh side must be allocated before we can process constraint */
     if (!preview && pcmk_is_set(rsc_rh->flags, pe_rsc_provisional)) {
         return influence_nothing;
@@ -1817,16 +1808,14 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
 }
 
 static void
-influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_t * constraint)
+influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                   pcmk__colocation_t *constraint)
 {
     const char *rh_value = NULL;
     const char *lh_value = NULL;
     const char *attribute = CRM_ATTR_ID;
     int score_multiplier = 1;
 
-    if (constraint->score == 0) {
-        return;
-    }
     if (!rsc_rh->allocated_to || !rsc_lh->allocated_to) {
         return;
     }
@@ -1858,7 +1847,8 @@ influence_priority(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocatio
 }
 
 static void
-colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_t * constraint)
+colocation_match(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                 pcmk__colocation_t *constraint)
 {
     const char *attribute = CRM_ATTR_ID;
     const char *value = NULL;
@@ -1866,9 +1856,6 @@ colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_
     GHashTableIter iter;
     pe_node_t *node = NULL;
 
-    if (constraint->score == 0) {
-        return;
-    }
     if (constraint->node_attribute != NULL) {
         attribute = constraint->node_attribute;
     }
@@ -1926,7 +1913,7 @@ colocation_match(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh, rsc_colocation_
 
 void
 native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                         rsc_colocation_t *constraint,
+                         pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
     enum filter_colocation_res filter_results;
@@ -1935,7 +1922,7 @@ native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     CRM_ASSERT(rsc_rh);
     filter_results = filter_colocation_constraint(rsc_lh, rsc_rh, constraint, FALSE);
     pe_rsc_trace(rsc_lh, "%s %s with %s (%s, score=%d, filter=%d)",
-                 ((constraint->score >= 0)? "Colocating" : "Anti-colocating"),
+                 ((constraint->score > 0)? "Colocating" : "Anti-colocating"),
                  rsc_lh->id, rsc_rh->id, constraint->id, constraint->score, filter_results);
 
     switch (filter_results) {

@@ -20,6 +20,7 @@
 #include <crm/crm.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 
 static const char *stylesheet_default =
     ".bold { font-weight: bold }\n"
@@ -97,11 +98,11 @@ html_init(pcmk__output_t *out) {
     priv->root = create_xml_node(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
 
-    xmlSetProp(priv->root, (pcmkXmlStr) "lang", (pcmkXmlStr) "en");
+    crm_xml_add(priv->root, "lang", "en");
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
-    pcmk__output_xml_create_parent(out, "body");
+    pcmk__output_xml_create_parent(out, "body", NULL);
 
     return true;
 }
@@ -136,7 +137,7 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     }
 
     charset_node = create_xml_node(head_node, "meta");
-    xmlSetProp(charset_node, (pcmkXmlStr) "charset", (pcmkXmlStr) "utf-8");
+    crm_xml_add(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
     for (int i = 0; i < g_slist_length(extra_headers); i++) {
@@ -153,8 +154,9 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
 
     if (stylesheet_link != NULL) {
         htmlNodePtr link_node = create_xml_node(head_node, "link");
-        xmlSetProp(link_node, (pcmkXmlStr) "rel", (pcmkXmlStr) "stylesheet");
-        xmlSetProp(link_node, (pcmkXmlStr) "href", (pcmkXmlStr) stylesheet_link);
+        pcmk__xe_set_props(link_node, "rel", "stylesheet",
+                           "href", stylesheet_link,
+                           NULL);
     }
 
     xmlAddPrevSibling(priv->root->children, head_node);
@@ -273,7 +275,7 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     CRM_ASSERT(priv != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
-    xmlSetProp(node, (pcmkXmlStr) "lang", (pcmkXmlStr) "xml");
+    crm_xml_add(node, "lang", "xml");
 }
 
 G_GNUC_PRINTF(4, 5)
@@ -292,7 +294,7 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
      */
     q_len = g_queue_get_length(priv->parent_q);
     if (q_len > 2) {
-        pcmk__output_xml_create_parent(out, "li");
+        pcmk__output_xml_create_parent(out, "li", NULL);
     }
 
     if (format != NULL) {
@@ -314,7 +316,7 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
         free(buf);
     }
 
-    node = pcmk__output_xml_create_parent(out, "ul");
+    node = pcmk__output_xml_create_parent(out, "ul", NULL);
     g_queue_push_tail(priv->parent_q, node);
 }
 
@@ -338,7 +340,7 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     free(buf);
 
     if (name != NULL) {
-        xmlSetProp(item_node, (pcmkXmlStr) "class", (pcmkXmlStr) name);
+        crm_xml_add(item_node, "class", name);
     }
 }
 
@@ -366,6 +368,11 @@ html_end_list(pcmk__output_t *out) {
 static bool
 html_is_quiet(pcmk__output_t *out) {
     return false;
+}
+
+static void
+html_spacer(pcmk__output_t *out) {
+    pcmk__output_create_xml_node(out, "br", NULL);
 }
 
 pcmk__output_t *
@@ -399,6 +406,7 @@ pcmk__mk_html_output(char **argv) {
     retval->end_list = html_end_list;
 
     retval->is_quiet = html_is_quiet;
+    retval->spacer = html_spacer;
 
     return retval;
 }
@@ -409,11 +417,11 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     htmlNodePtr node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "class", (pcmkXmlStr) class_name);
+        crm_xml_add(node, "class", class_name);
     }
 
     if (id != NULL) {
-        xmlSetProp(node, (pcmkXmlStr) "id", (pcmkXmlStr) id);
+        crm_xml_add(node, "id", id);
     }
 
     return node;
@@ -436,7 +444,7 @@ pcmk__html_add_header(const char *name, ...) {
         }
 
         value = va_arg(ap, char *);
-        xmlSetProp(header_node, (pcmkXmlStr) key, (pcmkXmlStr) value);
+        crm_xml_add(header_node, key, value);
     }
 
     extra_headers = g_slist_append(extra_headers, header_node);

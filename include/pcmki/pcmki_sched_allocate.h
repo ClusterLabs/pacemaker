@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2020 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,9 +26,9 @@ struct resource_alloc_functions_s {
     void (*internal_constraints) (pe_resource_t *, pe_working_set_t *);
 
     void (*rsc_colocation_lh) (pe_resource_t *, pe_resource_t *,
-                               rsc_colocation_t *, pe_working_set_t *);
+                               pcmk__colocation_t *, pe_working_set_t *);
     void (*rsc_colocation_rh) (pe_resource_t *, pe_resource_t *,
-                               rsc_colocation_t *, pe_working_set_t *);
+                               pcmk__colocation_t *, pe_working_set_t *);
 
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
@@ -56,10 +56,10 @@ pe_node_t *pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *preferred,
 extern void native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set);
 void native_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
-                              rsc_colocation_t *constraint,
+                              pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
 void native_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
-                              rsc_colocation_t *constraint,
+                              pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
 extern void rsc_ticket_constraint(pe_resource_t * lh_rsc, rsc_ticket_t * rsc_ticket,
                                   pe_working_set_t * data_set);
@@ -76,10 +76,10 @@ pe_node_t *pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *preferred,
 extern void group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set);
 void group_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
-                             rsc_colocation_t *constraint,
+                             pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
 void group_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
-                             rsc_colocation_t *constraint,
+                             pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
 extern enum pe_action_flags group_action_flags(pe_action_t * action, pe_node_t * node);
 void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
@@ -97,11 +97,11 @@ void pcmk__bundle_internal_constraints(pe_resource_t *rsc,
                                        pe_working_set_t *data_set);
 void pcmk__bundle_rsc_colocation_lh(pe_resource_t *lh_rsc,
                                     pe_resource_t *rh_rsc,
-                                    rsc_colocation_t *constraint,
+                                    pcmk__colocation_t *constraint,
                                     pe_working_set_t *data_set);
 void pcmk__bundle_rsc_colocation_rh(pe_resource_t *lh_rsc,
                                     pe_resource_t *rh_rsc,
-                                    rsc_colocation_t *constraint,
+                                    pcmk__colocation_t *constraint,
                                     pe_working_set_t *data_set);
 void pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 enum pe_action_flags pcmk__bundle_action_flags(pe_action_t *action,
@@ -114,10 +114,10 @@ pe_node_t *pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *preferred,
 extern void clone_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set);
 void clone_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
-                             rsc_colocation_t *constraint,
+                             pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
 void clone_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
-                             rsc_colocation_t *constraint,
+                             pcmk__colocation_t *constraint,
                              pe_working_set_t *data_set);
 void clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern enum pe_action_flags clone_action_flags(pe_action_t * action, pe_node_t * node);
@@ -133,17 +133,13 @@ void create_promotable_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
 void promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set);
 void promotable_constraints(pe_resource_t *rsc, pe_working_set_t *data_set);
 void promotable_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
-                              rsc_colocation_t *constraint,
+                              pcmk__colocation_t *constraint,
                               pe_working_set_t *data_set);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_alloc_functions_t resource_class_alloc_functions[];
 
 extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set);
-
-extern gboolean unpack_rsc_colocation(xmlNode * xml_obj, pe_working_set_t * data_set);
-
-extern gboolean unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set);
 
 extern gboolean unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set);
 

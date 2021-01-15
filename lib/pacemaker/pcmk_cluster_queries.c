@@ -1,0 +1,483 @@
+#include <glib.h>               // gboolean, GMainLoop, etc.
+#include <libxml/tree.h>        // xmlNode
+
+#include <pacemaker.h>
+#include <pacemaker-internal.h>
+
+#include <crm/crm.h>
+#include <crm/cib.h>
+#include <crm/msg_xml.h>
+#include <crm/common/output_internal.h>
+#include <crm/common/xml.h>
+#include <crm/common/iso8601.h>
+#include <crm/common/ipc_controld.h>
+#include <crm/common/ipc_pacemakerd.h>
+#include <crm/common/mainloop.h>
+
+#define DEFAULT_MESSAGE_TIMEOUT_MS 30000
+
+
+typedef struct {
+    pcmk__output_t *out;
+    GMainLoop *mainloop;
+    int rc;
+    guint message_timer_id;
+    guint message_timeout_ms;
+} data_t;
+
+static void
+quit_main_loop(data_t *data)
+{
+    if (data->mainloop != NULL) {
+        GMainLoop *mloop = data->mainloop;
+
+        data->mainloop = NULL; // Don't re-enter this block
+        pcmk_quit_main_loop(mloop, 10);
+        g_main_loop_unref(mloop);
+    }
+}
+
+static gboolean
+admin_message_timeout(gpointer user_data)
+{
+    data_t *data = user_data;
+    pcmk__output_t *out = data->out;
+
+    out->err(out, "error: No reply received from controller before timeout (%dms)",
+            data->message_timeout_ms);
+    data->message_timer_id = 0;
+    data->rc = ETIMEDOUT;
+    quit_main_loop(data);
+    return FALSE; // Tells glib to remove source
+}
+
+static void
+start_main_loop(data_t *data)
+{
+    if (data->message_timeout_ms < 1) {
+        data->message_timeout_ms = DEFAULT_MESSAGE_TIMEOUT_MS;
+    }
+
+    data->rc = ECONNRESET; // For unexpected disconnects
+    data->mainloop = g_main_loop_new(NULL, FALSE);
+    data->message_timer_id = g_timeout_add(data->message_timeout_ms,
+                                     admin_message_timeout,
+                                     data);
+    g_main_loop_run(data->mainloop);
+}
+
+static void
+event_done(data_t *data, pcmk_ipc_api_t *api)
+{
+    pcmk_disconnect_ipc(api);
+    quit_main_loop(data);
+}
+
+static pcmk_controld_api_reply_t *
+controld_event_reply(data_t *data, pcmk_ipc_api_t *controld_api, enum pcmk_ipc_event event_type, crm_exit_t status, void *event_data)
+{
+    pcmk__output_t *out = data->out;
+    pcmk_controld_api_reply_t *reply = event_data;
+
+    switch (event_type) {
+        case pcmk_ipc_event_disconnect:
+            if (data->rc == ECONNRESET) { // Unexpected
+                out->err(out, "error: Lost connection to controller");
+            }
+            event_done(data, controld_api);
+            return NULL;
+
+        case pcmk_ipc_event_reply:
+            break;
+
+        default:
+            return NULL;
+    }
+
+    if (data->message_timer_id != 0) {
+        g_source_remove(data->message_timer_id);
+        data->message_timer_id = 0;
+    }
+
+    if (status != CRM_EX_OK) {
+        out->err(out, "error: Bad reply from controller: %s",
+                crm_exit_str(status));
+        data->rc = EBADMSG;
+        event_done(data, controld_api);
+        return NULL;
+    }
+
+    if (reply->reply_type != pcmk_controld_reply_ping) {
+        out->err(out, "error: Unknown reply type %d from controller",
+                reply->reply_type);
+        data->rc = EBADMSG;
+        event_done(data, controld_api);
+        return NULL;
+    }
+
+    return reply;
+}
+
+static void
+controller_status_event_cb(pcmk_ipc_api_t *controld_api,
+                    enum pcmk_ipc_event event_type, crm_exit_t status,
+                    void *event_data, void *user_data)
+{
+    data_t *data = user_data;
+    pcmk__output_t *out = data->out;
+    pcmk_controld_api_reply_t *reply = controld_event_reply(data, controld_api,
+        event_type, status, event_data);
+
+    if (reply != NULL) {
+        out->message(out, "health",
+               reply->data.ping.sys_from,
+               reply->host_from,
+               reply->data.ping.fsa_state,
+               reply->data.ping.result);
+        data->rc = pcmk_rc_ok;
+    }
+
+    event_done(data, controld_api);
+}
+
+static void
+designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
+                    enum pcmk_ipc_event event_type, crm_exit_t status,
+                    void *event_data, void *user_data)
+{
+    data_t *data = user_data;
+    pcmk__output_t *out = data->out;
+    pcmk_controld_api_reply_t *reply = controld_event_reply(data, controld_api,
+        event_type, status, event_data);
+
+    if (reply != NULL) {
+        out->message(out, "dc", reply->host_from);
+        data->rc = pcmk_rc_ok;
+    }
+
+    event_done(data, controld_api);
+}
+
+static void
+pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
+                    enum pcmk_ipc_event event_type, crm_exit_t status,
+                    void *event_data, void *user_data)
+{
+    data_t *data = user_data;
+    pcmk__output_t *out = data->out;
+    pcmk_pacemakerd_api_reply_t *reply = event_data;
+
+    crm_time_t *crm_when;
+    char *pinged_buf = NULL;
+
+    switch (event_type) {
+        case pcmk_ipc_event_disconnect:
+            if (data->rc == ECONNRESET) { // Unexpected
+                out->err(out, "error: Lost connection to pacemakerd");
+            }
+            event_done(data, pacemakerd_api);
+            return;
+
+        case pcmk_ipc_event_reply:
+            break;
+
+        default:
+            return;
+    }
+
+    if (data->message_timer_id != 0) {
+        g_source_remove(data->message_timer_id);
+        data->message_timer_id = 0;
+    }
+
+    if (status != CRM_EX_OK) {
+        out->err(out, "error: Bad reply from pacemakerd: %s",
+                crm_exit_str(status));
+        event_done(data, pacemakerd_api);
+        return;
+    }
+
+    if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
+        out->err(out, "error: Unknown reply type %d from pacemakerd",
+                reply->reply_type);
+        event_done(data, pacemakerd_api);
+        return;
+    }
+
+    // Parse desired information from reply
+    crm_when = crm_time_new(NULL);
+    crm_time_set_timet(crm_when, &reply->data.ping.last_good);
+    pinged_buf = crm_time_as_string(crm_when,
+        crm_time_log_date | crm_time_log_timeofday |
+            crm_time_log_with_timezone);
+
+    out->message(out, "pacemakerd-health",
+        reply->data.ping.sys_from,
+        (reply->data.ping.status == pcmk_rc_ok)?
+            pcmk_pacemakerd_api_daemon_state_enum2text(
+                reply->data.ping.state):"query failed",
+        (reply->data.ping.status == pcmk_rc_ok)?pinged_buf:"");
+    data->rc = pcmk_rc_ok;
+    crm_time_free(crm_when);
+    free(pinged_buf);
+
+    event_done(data, pacemakerd_api);
+}
+
+static pcmk_ipc_api_t *
+ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb)
+{
+    int rc;
+    pcmk__output_t *out = data->out;
+    pcmk_ipc_api_t *api = NULL;
+
+
+    rc = pcmk_new_ipc_api(&api, server);
+    if (api == NULL) {
+        out->err(out, "error: Could not connect to %s: %s",
+                pcmk_ipc_name(api, true),
+                pcmk_rc_str(rc));
+        data->rc = rc;
+        return NULL;
+    }
+    if (cb != NULL) {
+        pcmk_register_ipc_callback(api, cb, data);
+    }
+    rc = pcmk_connect_ipc(api, pcmk_ipc_dispatch_main);
+    if (rc != pcmk_rc_ok) {
+        out->err(out, "error: Could not connect to %s: %s",
+                pcmk_ipc_name(api, true),
+                pcmk_rc_str(rc));
+        data->rc = rc;
+        return NULL;
+    }
+
+    return api;
+}
+
+int
+pcmk__controller_status(pcmk__output_t *out, char *dest_node, guint message_timeout_ms)
+{
+    data_t data = {
+        .out = out,
+        .mainloop = NULL,
+        .rc = pcmk_rc_ok,
+        .message_timer_id = 0,
+        .message_timeout_ms = message_timeout_ms
+    };
+    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, controller_status_event_cb);
+
+    if (controld_api != NULL) {
+        int rc = pcmk_controld_api_ping(controld_api, dest_node);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            data.rc = rc;
+        }
+
+        start_main_loop(&data);
+
+        pcmk_free_ipc_api(controld_api);
+    }
+
+    return data.rc;
+}
+
+int
+pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int message_timeout_ms)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__controller_status(out, dest_node, (guint) message_timeout_ms);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
+
+int
+pcmk__designated_controller(pcmk__output_t *out, guint message_timeout_ms)
+{
+    data_t data = {
+        .out = out,
+        .mainloop = NULL,
+        .rc = pcmk_rc_ok,
+        .message_timer_id = 0,
+        .message_timeout_ms = message_timeout_ms
+    };
+    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, designated_controller_event_cb);
+
+    if (controld_api != NULL) {
+        int rc = pcmk_controld_api_ping(controld_api, NULL);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            data.rc = rc;
+        }
+
+        start_main_loop(&data);
+
+        pcmk_free_ipc_api(controld_api);
+    }
+
+    return data.rc;
+}
+
+int
+pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__designated_controller(out, (guint) message_timeout_ms);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
+
+int
+pcmk__pacemakerd_status(pcmk__output_t *out, char *ipc_name, guint message_timeout_ms)
+{
+    data_t data = {
+        .out = out,
+        .mainloop = NULL,
+        .rc = pcmk_rc_ok,
+        .message_timer_id = 0,
+        .message_timeout_ms = message_timeout_ms
+    };
+    pcmk_ipc_api_t *pacemakerd_api = ipc_connect(&data, pcmk_ipc_pacemakerd, pacemakerd_event_cb);
+
+    if (pacemakerd_api != NULL) {
+        int rc = pcmk_pacemakerd_api_ping(pacemakerd_api, ipc_name);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            data.rc = rc;
+        }
+
+        start_main_loop(&data);
+
+        pcmk_free_ipc_api(pacemakerd_api);
+    }
+
+    return data.rc;
+}
+
+int
+pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_timeout_ms)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__pacemakerd_status(out, ipc_name, (guint) message_timeout_ms);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
+
+// \return Standard Pacemaker return code
+int
+pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
+{
+    cib_t *the_cib = cib_new();
+    xmlNode *output = NULL;
+    int rc;
+
+    if (the_cib == NULL) {
+        return ENOMEM;
+    }
+    rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
+    if (rc != pcmk_ok) {
+        return pcmk_legacy2rc(rc);
+    }
+
+    rc = the_cib->cmds->query(the_cib, NULL, &output,
+                              cib_scope_local | cib_sync_call);
+    if (rc == pcmk_ok) {
+        out->message(out, "crmadmin-node-list", output, BASH_EXPORT);
+        free_xml(output);
+    }
+    the_cib->cmds->signoff(the_cib);
+    return pcmk_legacy2rc(rc);
+}
+
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
+int
+pcmk_list_nodes(xmlNodePtr *xml)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__list_nodes(out, FALSE);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
+#endif
+
+// remove when parameters removed from tools/crmadmin.c
+int
+pcmk__shutdown_controller(pcmk__output_t *out, char *dest_node)
+{
+    data_t data = {
+        .out = out,
+        .mainloop = NULL,
+        .rc = pcmk_rc_ok,
+    };
+    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, NULL);
+
+    if (controld_api != NULL) {
+        int rc = pcmk_controld_api_shutdown(controld_api, dest_node);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            data.rc = rc;
+        }
+        pcmk_free_ipc_api(controld_api);
+    }
+
+    return data.rc;
+}
+
+int
+pcmk__start_election(pcmk__output_t *out)
+{
+    data_t data = {
+        .out = out,
+        .mainloop = NULL,
+        .rc = pcmk_rc_ok,
+    };
+    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, NULL);
+
+    if (controld_api != NULL) {
+        int rc = pcmk_controld_api_start_election(controld_api);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
+            data.rc = rc;
+        }
+
+        pcmk_free_ipc_api(controld_api);
+    }
+
+    return data.rc;
+}

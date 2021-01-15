@@ -20,6 +20,9 @@
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
+void attrd_set_requesting_shutdown(void);
+void attrd_clear_requesting_shutdown(void);
+gboolean attrd_requesting_shutdown(void);
 gboolean attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(qb_ipcs_service_t **ipcs,
@@ -120,7 +123,7 @@ extern GHashTable *attributes;
 void write_attributes(bool all, bool ignore_delay);
 void attrd_broadcast_protocol(void);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
-void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
+void attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml);
 void attrd_client_clear_failure(xmlNode *xml);
 void attrd_client_update(xmlNode *xml);
 void attrd_client_refresh(void);

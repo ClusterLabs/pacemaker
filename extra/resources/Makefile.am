@@ -16,7 +16,6 @@ dist_ocf_SCRIPTS	= attribute	\
 			  HealthCPU	\
 			  HealthIOWait	\
 			  ping		\
-			  pingd		\
 			  remote	\
 			  Stateful	\
 			  SystemHealth

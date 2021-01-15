@@ -3,9 +3,6 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21845" name="cluster-delay" value="3m"/>
-        <nvpair id="nvpair.id21853" name="short_resource_names" value="false"/>
-        <nvpair id="nvpair.id21862" name="symetric_cluster" value="true"/>
-        <nvpair id="nvpair.id21872" name="suppress_cib_writes" value="1"/>
         <nvpair id="nvpair.id21880" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21889" name="stonith-enabled" value="true"/>
       </cluster_property_set>

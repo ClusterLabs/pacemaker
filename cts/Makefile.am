@@ -1,5 +1,5 @@
 #
-# Copyright 2001-2019 the Pacemaker project contributors
+# Copyright 2001-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -60,10 +60,12 @@ cts_SCRIPTS		= CTSlab.py		\
 			  pacemaker-cts-dummyd
 
 clidir		= $(testdir)/cli
-dist_cli_DATA	= cli/crm_diff_new.xml		\
+dist_cli_DATA	= cli/constraints.xml \
+		  cli/crm_diff_new.xml		\
 		  cli/crm_diff_old.xml		\
 		  cli/crm_mon.xml		\
 		  cli/crm_mon-partial.xml	\
+		  cli/crm_resource_digests.xml	\
 		  cli/regression.acls.exp	\
 		  cli/regression.crm_mon.exp	\
 		  cli/regression.dates.exp	\

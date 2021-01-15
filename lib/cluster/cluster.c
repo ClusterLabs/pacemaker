@@ -23,27 +23,34 @@
 
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
+#include "crmcluster_private.h"
 
 CRM_TRACE_INIT_DATA(cluster);
 
+/*!
+ * \brief Get (and set if needed) a node's UUID
+ *
+ * \param[in] peer  Node to check
+ *
+ * \return Node UUID of \p peer, or NULL if unknown
+ */
 const char *
 crm_peer_uuid(crm_node_t *peer)
 {
     char *uuid = NULL;
-    enum cluster_type_e type = get_cluster_type();
 
     // Check simple cases first, to avoid any calls that might block
-    if(peer == NULL) {
+    if (peer == NULL) {
         return NULL;
-
-    } else if (peer->uuid) {
+    }
+    if (peer->uuid != NULL) {
         return peer->uuid;
     }
 
-    switch (type) {
+    switch (get_cluster_type()) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            uuid = get_corosync_uuid(peer);
+            uuid = pcmk__corosync_uuid(peer);
 #endif
             break;
 
@@ -57,19 +64,26 @@ crm_peer_uuid(crm_node_t *peer)
     return peer->uuid;
 }
 
+/*!
+ * \brief Connect to the cluster layer
+ *
+ * \param[in] Initialized cluster object to connect
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
 gboolean
-crm_cluster_connect(crm_cluster_t * cluster)
+crm_cluster_connect(crm_cluster_t *cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
-    crm_notice("Connecting to cluster infrastructure: %s",
+    crm_notice("Connecting to %s cluster infrastructure",
                name_for_cluster_type(type));
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
                 crm_peer_init();
-                return init_cs_connection(cluster);
+                return pcmk__corosync_connect(cluster);
             }
 #endif
             break;
@@ -79,19 +93,24 @@ crm_cluster_connect(crm_cluster_t * cluster)
     return FALSE;
 }
 
+/*!
+ * \brief Disconnect from the cluster layer
+ *
+ * \param[in] cluster  Cluster object to disconnect
+ */
 void
-crm_cluster_disconnect(crm_cluster_t * cluster)
+crm_cluster_disconnect(crm_cluster_t *cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
-    crm_info("Disconnecting from cluster infrastructure: %s",
+    crm_info("Disconnecting from %s cluster infrastructure",
              name_for_cluster_type(type));
     switch (type) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
             if (is_corosync_cluster()) {
                 crm_peer_destroy();
-                terminate_cs_connection(cluster);
+                pcmk__corosync_disconnect(cluster);
             }
 #endif
             break;
@@ -100,14 +119,24 @@ crm_cluster_disconnect(crm_cluster_t * cluster)
     }
 }
 
+/*!
+ * \brief Send an XML message via the cluster messaging layer
+ *
+ * \param[in] node     Cluster node to send message to
+ * \param[in] service  Message type to use in message host info
+ * \param[in] data     XML message to send
+ * \param[in] ordered  Ignored for currently supported messaging layers
+ *
+ * \return TRUE on success, otherwise FALSE
+ */
 gboolean
-send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode * data,
-                     gboolean ordered)
+send_cluster_message(crm_node_t *node, enum crm_ais_msg_types service,
+                     xmlNode *data, gboolean ordered)
 {
     switch (get_cluster_type()) {
         case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-            return send_cluster_message_cs(data, FALSE, node, service);
+            return pcmk__cpg_send_xml(data, node, service);
 #endif
             break;
         default:
@@ -116,29 +145,42 @@ send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode 
     return FALSE;
 }
 
+/*!
+ * \brief Get the local node's name
+ *
+ * \return Local node's name
+ * \note This will fatally exit if local node name cannot be known.
+ */
 const char *
 get_local_node_name(void)
 {
     static char *name = NULL;
 
-    if(name) {
-        return name;
+    if (name == NULL) {
+        name = get_node_name(0);
     }
-    name = get_node_name(0);
     return name;
 }
 
+/*!
+ * \brief Get the node name corresponding to a cluster node ID
+ *
+ * \param[in] nodeid  Node ID to check (or 0 for local node)
+ *
+ * \return Node name corresponding to \p nodeid
+ * \note This will fatally exit if \p nodeid is 0 and local node name cannot be
+ *       known.
+ */
 char *
 get_node_name(uint32_t nodeid)
 {
     char *name = NULL;
-    enum cluster_type_e stack;
+    enum cluster_type_e stack = get_cluster_type();
 
-    stack = get_cluster_type();
     switch (stack) {
 #  if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
-            name = corosync_node_name(0, nodeid);
+            name = pcmk__corosync_name(0, nodeid);
             break;
 #  endif
 
@@ -146,9 +188,10 @@ get_node_name(uint32_t nodeid)
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
     }
 
-    if(name == NULL && nodeid == 0) {
+    if ((name == NULL) && (nodeid == 0)) {
         name = pcmk_hostname();
         if (name == NULL) {
+            // @TODO Maybe let the caller decide what to do
             crm_err("Could not obtain the local %s node name",
                     name_for_cluster_type(stack));
             crm_exit(CRM_EX_FATAL);
@@ -158,7 +201,7 @@ get_node_name(uint32_t nodeid)
     }
 
     if (name == NULL) {
-        crm_notice("Could not obtain a node name for %s nodeid %u",
+        crm_notice("Could not obtain a node name for %s node with id %u",
                    name_for_cluster_type(stack), nodeid);
     }
     return name;
@@ -190,8 +233,8 @@ crm_peer_uname(const char *uuid)
     /* avoid blocking calls where possible */
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if(node->uuid && strcasecmp(node->uuid, uuid) == 0) {
-            if(node->uname) {
+        if (pcmk__str_eq(node->uuid, uuid, pcmk__str_casei)) {
+            if (node->uname != NULL) {
                 return node->uname;
             }
             break;
@@ -204,17 +247,16 @@ crm_peer_uname(const char *uuid)
         uint32_t id = (uint32_t) crm_parse_ll(uuid, NULL);
 
         if (id != 0) {
-            node = crm_find_peer(id, NULL);
+            node = pcmk__search_cluster_node_cache(id, NULL);
         } else {
             crm_err("Invalid node id: %s", uuid);
         }
 
-        if (node) {
-            crm_info("Setting uuid for node %s[%u] to '%s'", node->uname, node->id, uuid);
+        if (node != NULL) {
+            crm_info("Setting uuid for node %s[%u] to %s",
+                     node->uname, node->id, uuid);
             node->uuid = strdup(uuid);
-            if(node->uname) {
-                return node->uname;
-            }
+            return node->uname;
         }
         return NULL;
     }
@@ -223,15 +265,26 @@ crm_peer_uname(const char *uuid)
     return NULL;
 }
 
+/*!
+ * \brief Add a node's UUID as an XML attribute
+ *
+ * \param[in,out] xml   XML element to add UUID to
+ * \param[in]     attr  XML attribute name to set
+ * \param[in]     node  Node whose UUID should be used as attribute value
+ */
 void
 set_uuid(xmlNode *xml, const char *attr, crm_node_t *node)
 {
-    const char *uuid_calc = crm_peer_uuid(node);
-
-    crm_xml_add(xml, attr, uuid_calc);
-    return;
+    crm_xml_add(xml, attr, crm_peer_uuid(node));
 }
 
+/*!
+ * \brief  Get a log-friendly string equivalent of a cluster type
+ *
+ * \param[in] type  Cluster type
+ *
+ * \return Log-friendly string corresponding to \p type
+ */
 const char *
 name_for_cluster_type(enum cluster_type_e type)
 {
@@ -247,35 +300,18 @@ name_for_cluster_type(enum cluster_type_e type)
     return "invalid";
 }
 
-/* Do not expose these two */
-int set_cluster_type(enum cluster_type_e type);
-static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
-
-int
-set_cluster_type(enum cluster_type_e type)
-{
-    if (cluster_type == pcmk_cluster_unknown) {
-        crm_info("Cluster type set to: %s", name_for_cluster_type(type));
-        cluster_type = type;
-        return 0;
-
-    } else if (cluster_type == type) {
-        return 0;
-
-    } else if (pcmk_cluster_unknown == type) {
-        cluster_type = type;
-        return 0;
-    }
-
-    crm_err("Cluster type already set to %s, ignoring %s",
-            name_for_cluster_type(cluster_type), name_for_cluster_type(type));
-    return -1;
-}
+/*!
+ * \brief Get (and validate) the local cluster type
+ *
+ * \return Local cluster type
+ * \note This will fatally exit if the local cluster type is invalid.
+ */
 enum cluster_type_e
 get_cluster_type(void)
 {
-    bool detected = FALSE;
+    bool detected = false;
     const char *cluster = NULL;
+    static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
 
     /* Return the previous calculation, if any */
     if (cluster_type != pcmk_cluster_unknown) {
@@ -286,18 +322,19 @@ get_cluster_type(void)
 
 #if SUPPORT_COROSYNC
     /* If nothing is defined in the environment, try corosync (if supported) */
-    if(cluster == NULL) {
+    if (cluster == NULL) {
         crm_debug("Testing with Corosync");
-        cluster_type = find_corosync_variant();
+        cluster_type = pcmk__corosync_detect();
         if (cluster_type != pcmk_cluster_unknown) {
-            detected = TRUE;
+            detected = true;
             goto done;
         }
     }
 #endif
 
     /* Something was defined in the environment, test it against what we support */
-    crm_info("Verifying cluster type: '%s'", cluster?cluster:"-unspecified-");
+    crm_info("Verifying cluster type: '%s'",
+             ((cluster == NULL)? "-unspecified-" : cluster));
     if (cluster == NULL) {
 
 #if SUPPORT_COROSYNC
@@ -320,35 +357,21 @@ get_cluster_type(void)
         crm_exit(CRM_EX_FATAL);
 
     } else {
-        crm_info("%s an active '%s' cluster", detected?"Detected":"Assuming", name_for_cluster_type(cluster_type));
+        crm_info("%s an active '%s' cluster",
+                 (detected? "Detected" : "Assuming"),
+                 name_for_cluster_type(cluster_type));
     }
 
     return cluster_type;
 }
 
+/*!
+ * \brief Check whether the local cluster is a Corosync cluster
+ *
+ * \return TRUE if the local cluster is a Corosync cluster, otherwise FALSE
+ */
 gboolean
 is_corosync_cluster(void)
 {
     return get_cluster_type() == pcmk_cluster_corosync;
-}
-
-gboolean
-node_name_is_valid(const char *key, const char *name)
-{
-    int octet;
-
-    if (name == NULL) {
-        crm_trace("%s is empty", key);
-        return FALSE;
-
-    } else if (sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
-        crm_trace("%s contains an ipv4 address, ignoring: %s", key, name);
-        return FALSE;
-
-    } else if (strstr(name, ":") != NULL) {
-        crm_trace("%s contains an ipv6 address, ignoring: %s", key, name);
-        return FALSE;
-    }
-    crm_trace("%s is valid", key);
-    return TRUE;
 }

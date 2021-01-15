@@ -1,46 +1,13 @@
 """ Logging classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-# Pacemaker targets compatibility with Python 2.7 and 3.2+
-from __future__ import print_function, unicode_literals, absolute_import, division
-
-__copyright__ = "Copyright 2014-2018 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2020 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
 import os
 import sys
 import time
-
-
-# Wrapper to detect a string under Python 2 or 3
-try:
-    _StringType = basestring
-except NameError:
-    _StringType = str
-
-def _is_string(obj):
-    """ Return True if obj is a simple string. """
-
-    return isinstance(obj, _StringType)
-
-
-def _strip(line):
-    """ Wrapper for strip() that works regardless of Python version """
-
-    if sys.version_info < (3,):
-        return line.decode('utf-8').strip()
-    else:
-        return line.strip()
-
-
-def _rstrip(line):
-    """ Wrapper for rstrip() that works regardless of Python version """
-
-    if sys.version_info < (3,):
-        return line.decode('utf-8').rstrip()
-    else:
-        return line.rstrip()
 
 
 class Logger(object):
@@ -60,7 +27,7 @@ class Logger(object):
     def write(self, line):
         """ Log a single line excluding trailing whitespace """
 
-        return self(_rstrip(line))
+        return self(line.rstrip())
 
     def writelines(self, lines):
         """ Log a series of lines excluding trailing whitespace """
@@ -87,7 +54,7 @@ class StdErrLog(Logger):
 
         timestamp = time.strftime(Logger.TimeFormat,
                                   time.localtime(time.time()))
-        if _is_string(lines):
+        if isinstance(lines, str):
             lines = [lines]
         for line in lines:
             print("%s%s" % (timestamp, line), file=sys.__stderr__)
@@ -112,7 +79,7 @@ class FileLog(Logger):
         logf = io.open(self.logfile, "at")
         timestamp = time.strftime(Logger.TimeFormat,
                                   time.localtime(time.time()))
-        if _is_string(lines):
+        if isinstance(lines, str):
             lines = [lines]
         for line in lines:
             print("%s%s %s%s" % (timestamp, self.hostname, self.source, line),
@@ -143,14 +110,14 @@ class LogFactory(object):
         """ Log a message (to all configured log destinations) """
 
         for logfn in LogFactory.log_methods:
-            logfn(_strip(args))
+            logfn(args.strip())
 
     def debug(self, args):
         """ Log a debug message (to all configured log destinations) """
 
         for logfn in LogFactory.log_methods:
             if logfn.is_debug_target():
-                logfn("debug: %s" % _strip(args))
+                logfn("debug: %s" % args.strip())
 
     def traceback(self, traceback):
         """ Log a stack trace (to all configured log destinations) """

@@ -10,13 +10,14 @@
 |                 | libtool-ltdl-devel |                    | libltdl-dev    |
 |                 | libuuid-devel      | libuuid-devel      | uuid-dev       |
 |                 | pkgconfig          | pkgconfig          | pkg-config     |
-| 2.16.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
+| 2.32.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
 |                 | libxml2-devel      | libxml2-devel      | libxml2-dev    |
 |                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
 |                 | libqb-devel        | libqb-devel        | libqb-dev      |
+| 3.2 or later    | python3            | python3            | python3        |
 
-Also: GNU make, and Python 2.7 or Python 3.2 or later
+Also: GNU make
 
 ### Cluster Stack Dependencies
 
@@ -43,19 +44,23 @@ Also: GNU make, and Python 2.7 or Python 3.2 or later
 | Linux-HA style fencing agents                   |                | cluster-glue-libs-devel | libglue-devel           | cluster-glue-dev        |
 | documentation                                   |                | asciidoc or asciidoctor | asciidoc or asciidoctor | asciidoc or asciidoctor |
 | documentation                                   |                | help2man                | help2man                | help2man                |
-| documentation                                   |                | publican                |                         | publican                |
 | documentation                                   |                | inkscape                | inkscape                | inkscape                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
-| documentation                                   |                | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx | python-sphinx or python3-sphinx |
+| documentation                                   |                | python3-sphinx          | python3-sphinx          | python3-sphinx          |
 | documentation (PDF)                             |                | texlive, texlive-titlesec, texlive-framed, texlive-threeparttable texlive-wrapfig texlive-multirow | texlive, texlive-latex  | texlive, texlive-latex-extra |
+| RPM packages via "make rpm"                     | 4.11 or later  | rpm                     | rpm                     | (n/a)                   |
 
 ## Optional testing dependencies
+* procps and psmisc (if running cts-exec, cts-fencing, or CTS)
 * valgrind (if running CTS valgrind tests)
-* systemd-python (if using CTS on cluster nodes running systemd)
+* python3-systemd (if using CTS on cluster nodes running systemd)
 * rsync (if running CTS container tests)
 * libvirt-daemon-driver-lxc (if running CTS container tests)
 * libvirt-daemon-lxc (if running CTS container tests)
 * libvirt-login-shell (if running CTS container tests)
+* nmap (if not specifying an IP address base)
+* oprofile (if running CTS profiling tests)
+* dlm (to log DLM debugging info after CTS tests)
 
 ## Simple install
 

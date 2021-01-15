@@ -1,0 +1,109 @@
+# Copyright 2018-2020 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+
+# notes:
+# "print"/"set" as "compile code" requires re-including headers/multi-line
+
+define pcmk
+    # shelling avoids necessity to have an inferior around
+    shell printf '%s %s\n\n' 'Available commands' \
+                 '(all require an inferior, just break on main or so):'
+    shell printf '%s\t%s\n' pcmk-follow-daemon \
+                 'Convenient pacemakerd to particular daemon descent'
+    shell printf '%s\t%s\n' pcmk-xmlnode2file \
+                 'Convenient XML node to (specified/temporary) file dump'
+    shell printf '%s\t%s\n' pcmk-terminate \
+                 'Convenient way to shut pacemaker down as a whole'
+end
+document pcmk
+Show possible pcmk namespace rooted user-defined convenience commands.
+end
+
+
+# XXX one would expect that order of pcmk_children naturally matches
+#     the actual sequential ordering, but that's governed with start_seq
+define pcmk-follow-daemon
+    dont-repeat
+    set $d = $arg0
+    eval "set $d_alt = \"pacemaker-%s\"", $d
+    set $cont = 1
+    break start_child
+    cont
+    while ($cont)
+        if (!(int)strcmp(child->name, $d) || !(int)strcmp(child->name, $d_alt))
+            set $cont = 0
+            set follow-fork-mode child
+            break getrlimit
+            continue
+            set follow-fork-mode parent  # restore
+        else
+            if (child->start_seq == sizeof(pcmk_children)/sizeof(*pcmk_children) - 1)
+                set $cont = 0
+                printf "no such daemon: %s (%s)\n", $d, $d_alt
+                set follow-fork-mode parent  # restore
+            else
+                continue
+            end
+        end
+    end
+end
+document pcmk-follow-daemon
+Convenient way to follow into particular daemon when starting debugging
+from the master control process of pacemaker (pacemakerd).
+For "pacemaker-" prefixed daemons, this very prefix is not needed.
+
+Synopsis:  pcmk-follow-daemon CHILD-DAEMON
+Examples:  pcmk-follow-daemon "controld"
+end
+
+
+define pcmk-xmlnode2file
+    dont-repeat
+    set $n = $arg0
+    if ($argc > 1)
+        set $fn = $arg1
+    else
+        set $fn = tmpnam((void *) 0)
+        printf "refer to this file: %s\n", $fn
+    end
+    set $f = (FILE *) fopen($fn, "w")
+    eval "print (xmlElemDump((FILE *) %p, ((xmlNodePtr) %p)->doc, (xmlNodePtr) %p), \"%s\")", \
+          $f, $n, $n, "dump done"
+    eval "print (fprintf((FILE *) %p, \"\\n\"), fclose((FILE *) %p), \"%s\")", \
+          $f, $f, "dump finished"
+end
+document pcmk-xmlnode2file
+Convenient way to dump an XML element to specified file, or a temporary file
+when it's not.
+
+Synopsis:  pcmk-xmlnode2file XMLNODEPTR-EXPR [FILE-NAME]
+Examples:  pcmk-xmlnode2file node "debug-dump.xml"
+           pcmk-xmlnode2file elem
+end
+
+
+define pcmk-terminate
+    dont-repeat
+    eval "set $msg = \"<create_request_adv origin='gdb' %s/>\"", \
+         "t='crmd' subt='request' crm_task='quit' crm_sys_to='pacemakerd'"
+    set $con = crm_ipc_new("pacemakerd", 0)
+    eval "set $con_ok = crm_ipc_connect((crm_ipc_t *) %p)", $con
+    if ($con_ok)
+        eval "print (crm_ipc_send((crm_ipc_t *) %p, (xmlReadMemory(\"%s\", %u, %s))->children, %s), \"%s\")", \
+              $con, $msg, sizeof($msg), "\"gdb.xml\", (void *) 0, 0", "0, 0, (void *) 0", "terminating..."
+    else
+        print "cannot terminate, not running/listening?"
+    end
+    eval "print (crm_ipc_close((crm_ipc_t *) %p), \"connection closed\")", $con
+    eval "print (crm_ipc_destroy((crm_ipc_t *) %p), \"connection destroyed\")", $con
+end
+document pcmk-terminate
+Convenient way to shut pacemaker down as a whole, no matter from
+which process, parent or child, and safely(!).
+
+Synopsis:  pcmk-terminate
+end

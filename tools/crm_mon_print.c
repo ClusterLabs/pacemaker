@@ -38,7 +38,8 @@ static int print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
 static int print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                               pe_node_t *node, xmlNode *node_state, gboolean operations,
                               unsigned int mon_ops, GListPtr only_node, GListPtr only_rsc);
-static gboolean add_extra_info(pcmk__output_t *out, pe_node_t * node, GListPtr rsc_list,
+static gboolean add_extra_info(pcmk__output_t *out, pe_node_t *node,
+                               GListPtr rsc_list, pe_working_set_t *data_set,
                                const char *attrname, int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
 static int print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
@@ -330,7 +331,8 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
  */
 static gboolean
 add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
-               const char *attrname, int *expected_score)
+               pe_working_set_t *data_set, const char *attrname,
+               int *expected_score)
 {
     GListPtr gIter = NULL;
 
@@ -338,9 +340,11 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
         const char *type = g_hash_table_lookup(rsc->meta, "type");
         const char *name = NULL;
+        GHashTable *params = NULL;
 
         if (rsc->children != NULL) {
-            if (add_extra_info(out, node, rsc->children, attrname, expected_score)) {
+            if (add_extra_info(out, node, rsc->children, data_set, attrname,
+                               expected_score)) {
                 return TRUE;
             }
         }
@@ -349,7 +353,8 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
             continue;
         }
 
-        name = g_hash_table_lookup(rsc->parameters, "name");
+        params = pe_rsc_params(rsc, node, data_set);
+        name = g_hash_table_lookup(params, "name");
 
         if (name == NULL) {
             name = "pingd";
@@ -359,8 +364,8 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
         if (pcmk__str_eq(name, attrname, pcmk__str_casei)) {
             int host_list_num = 0;
             /* int value = crm_parse_int(attrvalue, "0"); */
-            const char *hosts = g_hash_table_lookup(rsc->parameters, "host_list");
-            const char *multiplier = g_hash_table_lookup(rsc->parameters, "multiplier");
+            const char *hosts = g_hash_table_lookup(params, "host_list");
+            const char *multiplier = g_hash_table_lookup(params, "multiplier");
 
             if (hosts) {
                 char **host_list = g_strsplit(hosts, " ", 0);
@@ -381,6 +386,7 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
 struct mon_attr_data {
     pcmk__output_t *out;
     pe_node_t *node;
+    pe_working_set_t *data_set;
 };
 
 static void
@@ -394,7 +400,7 @@ print_node_attribute(gpointer name, gpointer user_data)
     value = pe_node_attribute_raw(data->node, name);
 
     add_extra = add_extra_info(data->out, data->node, data->node->details->running_rsc,
-                               name, &expected_score);
+                               data->data_set, name, &expected_score);
 
     /* Print attribute name and value */
     data->out->message(data->out, "node-attribute", name, value, add_extra,
@@ -547,19 +553,13 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
     GListPtr gIter = NULL;
     int rc = pcmk_rc_no_output;
 
-    /* Unpack all resource parameters (it would be more efficient to do this
-     * only when needed for the first time in add_extra_info())
-     */
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        crm_mon_get_parameters(gIter->data, data_set);
-    }
-
     /* Display each node's attributes */
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         struct mon_attr_data data;
 
         data.out = out;
         data.node = (pe_node_t *) gIter->data;
+        data.data_set = data_set;
 
         if (data.node && data.node->details && data.node->details->online) {
             GList *attr_list = NULL;
@@ -735,7 +735,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
                                                               GINT_TO_POINTER(st_failed));
 
         if (hp) {
-            CHECK_RC(rc, out->message(out, "failed-fencing-history", stonith_history, unames,
+            CHECK_RC(rc, out->message(out, "failed-fencing-list", stonith_history, unames,
                                       pcmk_is_set(mon_ops, mon_op_fence_full_history),
                                       rc == pcmk_rc_ok));
         }
@@ -759,7 +759,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
                                                                   GINT_TO_POINTER(st_failed));
 
             if (hp) {
-                CHECK_RC(rc, out->message(out, "fencing-history", hp, unames,
+                CHECK_RC(rc, out->message(out, "fencing-list", hp, unames,
                                           pcmk_is_set(mon_ops, mon_op_fence_full_history),
                                           rc == pcmk_rc_ok));
             }
@@ -767,7 +767,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
-                CHECK_RC(rc, out->message(out, "pending-fencing-actions", hp, unames,
+                CHECK_RC(rc, out->message(out, "pending-fencing-list", hp, unames,
                                           pcmk_is_set(mon_ops, mon_op_fence_full_history),
                                           rc == pcmk_rc_ok));
             }
@@ -853,7 +853,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_fencing_all)
         && pcmk_is_set(mon_ops, mon_op_fence_history)) {
 
-        out->message(out, "full-fencing-history", history_rc, stonith_history,
+        out->message(out, "full-fencing-list", history_rc, stonith_history,
                      unames, pcmk_is_set(mon_ops, mon_op_fence_full_history),
                      FALSE);
     }
@@ -954,7 +954,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                                                               GINT_TO_POINTER(st_failed));
 
         if (hp) {
-            out->message(out, "failed-fencing-history", stonith_history, unames,
+            out->message(out, "failed-fencing-list", stonith_history, unames,
                          pcmk_is_set(mon_ops, mon_op_fence_full_history), FALSE);
         }
     }
@@ -966,7 +966,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
                                                                   GINT_TO_POINTER(st_failed));
 
             if (hp) {
-                out->message(out, "fencing-history", hp, unames,
+                out->message(out, "fencing-list", hp, unames,
                              pcmk_is_set(mon_ops, mon_op_fence_full_history),
                              FALSE);
             }
@@ -974,7 +974,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
-                out->message(out, "pending-fencing-actions", hp, unames,
+                out->message(out, "pending-fencing-list", hp, unames,
                              pcmk_is_set(mon_ops, mon_op_fence_full_history),
                              FALSE);
             }

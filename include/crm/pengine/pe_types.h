@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -251,6 +251,7 @@ struct pe_node_s {
 #  define pe_rsc_stop                       0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL
 #  define pe_rsc_allow_remote_remotes       0x00004000ULL
+#  define pe_rsc_critical                   0x00008000ULL
 
 #  define pe_rsc_failed                     0x00010000ULL
 #  define pe_rsc_runnable                   0x00040000ULL
@@ -340,8 +341,8 @@ struct pe_resource_s {
 
     //!@{
     //! This field should be treated as internal to Pacemaker
-    GListPtr rsc_cons_lhs;      // List of rsc_colocation_t*
-    GListPtr rsc_cons;          // List of rsc_colocation_t*
+    GListPtr rsc_cons_lhs;      // List of pcmk__colocation_t*
+    GListPtr rsc_cons;          // List of pcmk__colocation_t*
     GListPtr rsc_location;      // List of pe__location_t*
     GListPtr actions;           // List of pe_action_t*
     GListPtr rsc_tickets;       // List of rsc_ticket*
@@ -358,7 +359,7 @@ struct pe_resource_s {
     enum rsc_role_e next_role;
 
     GHashTable *meta;
-    GHashTable *parameters;
+    GHashTable *parameters; //! \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;
 
     GListPtr children;          /* pe_resource_t*   */
@@ -371,6 +372,12 @@ struct pe_resource_s {
     pe_node_t *lock_node;       // Resource is shutdown-locked to this node
     time_t lock_time;           // When shutdown lock started
 
+    /* Resource parameters may have node-attribute-based rules, which means the
+     * values can vary by node. This table is a cache of parameter name/value
+     * tables for each node (as needed). Use pe_rsc_params() to get the table
+     * for a given node.
+     */
+    GHashTable *parameter_cache; // Key = node name, value = parameters table
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
 #endif

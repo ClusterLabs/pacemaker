@@ -511,7 +511,8 @@ tengine_stonith_notify(stonith_t *st, stonith_event_t *st_event)
                st_event->origin, st_event->id);
 
     if (st_event->result == pcmk_ok) {
-        crm_node_t *peer = crm_find_known_peer_full(0, st_event->target, CRM_GET_PEER_ANY);
+        crm_node_t *peer = pcmk__search_known_node_cache(0, st_event->target,
+                                                         CRM_GET_PEER_ANY);
         const char *uuid = NULL;
         gboolean we_are_executioner = pcmk__str_eq(st_event->executioner,
                                                    fsa_our_uname,

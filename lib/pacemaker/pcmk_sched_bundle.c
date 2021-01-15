@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
@@ -140,10 +142,10 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
              * host because pacemaker-remoted only supports a single
              * active connection
              */
-            rsc_colocation_new("child-remote-with-docker-remote", NULL,
-                               INFINITY, replica->remote,
-                               container_host->details->remote_rsc, NULL, NULL,
-                               data_set);
+            pcmk__new_colocation("child-remote-with-docker-remote", NULL,
+                                 INFINITY, replica->remote,
+                                 container_host->details->remote_rsc, NULL,
+                                 NULL, true, data_set);
         }
 
         if (replica->remote) {
@@ -310,8 +312,9 @@ pcmk__bundle_internal_constraints(pe_resource_t *rsc,
             new_rsc_order(replica->container, RSC_STOP, replica->ip, RSC_STOP,
                           pe_order_implies_first|pe_order_preserve, data_set);
 
-            rsc_colocation_new("ip-with-docker", NULL, INFINITY, replica->ip,
-                               replica->container, NULL, NULL, data_set);
+            pcmk__new_colocation("ip-with-docker", NULL, INFINITY, replica->ip,
+                                 replica->container, NULL, NULL, true,
+                                 data_set);
         }
 
         if (replica->remote) {
@@ -425,7 +428,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 
 void
 pcmk__bundle_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
-                               rsc_colocation_t *constraint,
+                               pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
     /* -- Never called --
@@ -469,7 +472,7 @@ int copies_per_node(pe_resource_t * rsc)
 
 void
 pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
-                               rsc_colocation_t *constraint,
+                               pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
     GListPtr allocated_rhs = NULL;
@@ -480,9 +483,6 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     CRM_CHECK(rsc != NULL, pe_err("rsc was NULL for %s", constraint->id); return);
     CRM_ASSERT(rsc_lh->variant == pe_native);
 
-    if (constraint->score == 0) {
-        return;
-    }
     if (pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         pe_rsc_trace(rsc, "%s is still provisional", rsc->id);
         return;
@@ -911,7 +911,7 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
 
         CRM_ASSERT(replica);
         if (replica->remote && replica->container
-            && pe__bundle_needs_remote_name(replica->remote)) {
+            && pe__bundle_needs_remote_name(replica->remote, data_set)) {
 
             /* REMOTE_CONTAINER_HACK: Allow remote nodes to run containers that
              * run pacemaker-remoted inside, without needing a separate IP for
@@ -923,12 +923,22 @@ pcmk__bundle_expand(pe_resource_t *rsc, pe_working_set_t * data_set)
                                                replica->remote->xml, LOG_ERR);
             const char *calculated_addr = NULL;
 
+            // Replace the value in replica->remote->xml (if appropriate)
             calculated_addr = pe__add_bundle_remote_name(replica->remote,
+                                                         data_set,
                                                          nvpair, "value");
             if (calculated_addr) {
+                /* Since this is for the bundle as a resource, and not any
+                 * particular action, replace the value in the default
+                 * parameters (not evaluated for node). action2xml() will grab
+                 * it from there to replace it in node-evaluated parameters.
+                 */
+                GHashTable *params = pe_rsc_params(replica->remote,
+                                                   NULL, data_set);
+
                 crm_trace("Set address for bundle connection %s to bundle host %s",
                           replica->remote->id, calculated_addr);
-                g_hash_table_replace(replica->remote->parameters,
+                g_hash_table_replace(params,
                                      strdup(XML_RSC_ATTR_REMOTE_RA_ADDR),
                                      strdup(calculated_addr));
             } else {

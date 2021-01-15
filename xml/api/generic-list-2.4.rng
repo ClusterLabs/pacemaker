@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="generic-list"/>
+    </start>
+
+    <define name="generic-list">
+        <element name="list">
+            <attribute name="name"> <text /> </attribute>
+            <attribute name="count"> <data type="nonNegativeInteger" /> </attribute>
+            <choice>
+                <empty/>
+                <oneOrMore>
+                    <externalRef href="item-1.1.rng"/>
+                </oneOrMore>
+            </choice>
+        </element>
+    </define>
+</grammar>

@@ -456,7 +456,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 #endif
 
         if (host_to) {
-            node_to = crm_find_peer(0, host_to);
+            node_to = pcmk__search_cluster_node_cache(0, host_to);
             if (node_to == NULL) {
                 crm_warn("Cannot route message %s: Unknown node %s",
                          ref, host_to);
@@ -739,9 +739,9 @@ handle_remote_state(xmlNode *msg)
     remote_peer = crm_remote_peer_get(remote_uname);
     CRM_CHECK(remote_peer, return I_NULL);
 
-    crm_update_peer_state(__func__, remote_peer,
-                          crm_is_true(remote_is_up)?
-                          CRM_NODE_MEMBER : CRM_NODE_LOST, 0);
+    pcmk__update_peer_state(__func__, remote_peer,
+                            crm_is_true(remote_is_up)? CRM_NODE_MEMBER : CRM_NODE_LOST,
+                            0);
     return I_NULL;
 }
 
@@ -856,7 +856,7 @@ handle_node_info_request(xmlNode *msg)
         value = fsa_our_uname;
     }
 
-    node = crm_find_peer_full(node_id, value, CRM_GET_PEER_ANY);
+    node = pcmk__search_node_caches(node_id, value, CRM_GET_PEER_ANY);
     if (node) {
         crm_xml_add_int(reply, XML_ATTR_ID, node->id);
         crm_xml_add(reply, XML_ATTR_UUID, node->uuid);
@@ -980,9 +980,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
         const char *from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
-        crm_node_t *node = crm_find_peer(0, from);
+        crm_node_t *node = pcmk__search_cluster_node_cache(0, from);
 
-        crm_update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
+        pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {
             return I_NULL; /* Done */
         }

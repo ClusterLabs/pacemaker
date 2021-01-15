@@ -430,7 +430,7 @@ How to interpret the graphical output:
 
 .. topic:: Small Cluster Transition
 
-   .. image:: ../../shared/en-US/images/Policy-Engine-small.png
+   .. image:: ../shared/images/Policy-Engine-small.png
       :alt: An example transition graph as represented by Graphviz
       :height: 325
       :width: 1161
@@ -449,7 +449,7 @@ perform the start actions. For some reason, the cluster does not want to start
 
 .. topic:: Complex Cluster Transition
 
-   .. image:: ../../shared/en-US/images/Policy-Engine-big.png
+   .. image:: ../shared/images/Policy-Engine-big.png
       :alt: Complex transition graph that you're not expected to be able to read
       :width: 1455
       :height: 1945

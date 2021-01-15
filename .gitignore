@@ -22,7 +22,6 @@ Makefile.in
 *.gcda
 *.gcno
 
-
 # Autobuild
 aclocal.m4
 autoconf
@@ -30,31 +29,22 @@ autoheader
 autom4te.cache/
 automake
 build.counter
-compile
 /confdefs.h
-config.guess
 config.log
 config.status
-config.sub
 configure
 /conftest*
-depcomp
-install-sh
 include/stamp-*
 libtool
 libtool.m4
 ltdl.m4
 libltdl
-ltmain.sh
-missing
-py-compile
 /m4/argz.m4
 /m4/ltargz.m4
 /m4/ltoptions.m4
 /m4/ltsugar.m4
 /m4/ltversion.m4
 /m4/lt~obsolete.m4
-test-driver
 ylwrap
 
 # Configure targets
@@ -95,7 +85,6 @@ ylwrap
 include/config.h
 include/config.h.in
 include/crm_config.h
-publican.cfg
 /tools/cibsecret
 /tools/crm_error
 /tools/crm_failcount
@@ -118,7 +107,6 @@ publican.cfg
 *.8.html
 /daemons/attrd/pacemaker-attrd
 /daemons/based/pacemaker-based
-/daemons/based/cibmon
 /daemons/controld/pacemaker-controld
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
@@ -129,11 +117,6 @@ publican.cfg
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /daemons/schedulerd/pacemaker-schedulerd.xml
-/doc/*/tmp/**
-/doc/*/publish
-/doc/*.build
-/doc/*/en-US/Ap-*.xml
-/doc/*/en-US/Ch-*.xml
 /doc/.ABI-build
 /doc/HTML
 /doc/abi_dumps
@@ -141,12 +124,9 @@ publican.cfg
 /doc/api/*
 /doc/compat_reports
 /doc/crm_fencing.html
-/doc/publican-catalog*
-/doc/shared/en-US/*.xml
-/doc/shared/en-US/images/pcmk-*.png
-/doc/shared/en-US/images/Policy-Engine-*.png
 /doc/sphinx/*/_build
 /doc/sphinx/*/conf.py
+/doc/sphinx/shared/images/*.png
 /lib/common/md5.c
 /maint/testcc_helper.cc
 /maint/testcc_*_h
@@ -211,15 +191,31 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /abi_dumps
 /abi-check
 /compat_reports
+/compile
 /attrd
 /cib
+/config.guess
+/config.sub
 /coverage.sh
 /crmd
 /cts/HBDummy
+/daemons/based/cibmon
+/depcomp
+/doc/*.build
+/doc/*/en-US/Ap-*.xml
+/doc/*/en-US/Ch-*.xml
+/doc/*/publican.cfg
+/doc/*/publish
+/doc/*/tmp/**
 /doc/Clusters_from_Scratch.txt
 /doc/Pacemaker_Explained.txt
 /doc/acls.html
+/doc/publican-catalog*
+/doc/shared/en-US/*.xml
+/doc/shared/en-US/images/pcmk-*.png
+/doc/shared/en-US/images/Policy-Engine-*.png
 /fencing
+/install-sh
 /lib/common/tests/flags/pcmk__clear_flags_as
 /lib/common/tests/flags/pcmk__set_flags_as
 /lib/common/tests/flags/pcmk_all_flags_set
@@ -235,9 +231,13 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /lib/common/tests/utils/pcmk_str_is_minus_infinity
 /lib/pengine/tests/rules/pe_cron_range_satisfied
 /lrmd
+/ltmain.sh
 /mcp
+/missing
 /pacemaker-*.spec
 /pengine
+/py-compile
+/test-driver
 
 #Other 
 coverity-*

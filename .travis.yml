@@ -45,7 +45,7 @@ before_install:
 install:
  - sudo apt-get install -qq
       automake autoconf libtool
-      python python-dev
+      psmisc procps python3 python3-dev
       libbz2-dev libdbus-1-dev libglib2.0-dev libgnutls-dev libltdl-dev
       libncurses5-dev libpam0g-dev libxml2-dev libxslt1-dev uuid-dev
       libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev
@@ -65,7 +65,9 @@ script:
 - sudo make install-exec-local || true
 - make
 - make check
-- ./cts/cts-regression -V cli scheduler exec
+- ./cts/cts-cli -V
+- ./cts/cts-scheduler -V
+- sudo ./cts/cts-exec -V --force-wait
 - test $MAINT_EXTRA -eq 0 ||
   { { echo 'looking for presence of control characters...';
       { git ls-files
@@ -106,5 +108,4 @@ notifications:
 branches:
   only:
     - master
-    - "1.1"
-    - "2.0"
+    - "2.1"

@@ -8,6 +8,8 @@
 #
 include $(top_srcdir)/mk/common.mk
 
+noinst_HEADERS	= crmcluster_private.h
+
 ## libraries
 lib_LTLIBRARIES	= libcrmcluster.la 
 

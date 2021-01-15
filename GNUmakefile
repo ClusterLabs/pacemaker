@@ -118,12 +118,12 @@ export:
 
 # Where to put RPM artifacts; possible values:
 #
-# - toplevel (default): RPM sources, spec, and source rpm in top-level build
-#   directory (everything else uses the usual defaults)
-#
-# - subtree: RPM sources (i.e. TARFILE) in top-level build directory,
+# - subtree (default): RPM sources (i.e. TARFILE) in top-level build directory,
 #   everything else in dedicated "rpm" subdirectory of build tree
-RPMDEST         	?= toplevel
+#
+# - toplevel (deprecated): RPM sources, spec, and source rpm in top-level build
+#   directory, everything else uses the usual rpmbuild defaults
+RPMDEST         	?= subtree
 
 RPM_SPEC_DIR_toplevel	= $(abs_builddir)
 RPM_SRCRPM_DIR_toplevel	= $(abs_builddir)
@@ -416,11 +416,14 @@ CLANG_checkers =
 # --enable={warning,style,performance,portability,information,all}
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
+BASE_CPPCHECK_ARGS = -I include --max-configs=30 --library=posix --library=gnu \
+					 --library=gtk $(GLIB_CFLAGS) -D__GNUC__ --inline-suppr -q
+cppcheck-all:
+	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) -DBUILD_PUBLIC_LIBPACEMAKER \
+		-DDEFAULT_CONCURRENT_FENCING_TRUE replace lib daemons tools
+
 cppcheck:
-	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=30	\
-		--library=posix --library=gnu --library=gtk	\
-		$(GLIB_CFLAGS) -D__GNUC__			\
-		--inline-suppr -q replace lib daemons tools
+	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) replace lib daemons tools
 
 clang:
 	test -e $(CLANG_analyzer)

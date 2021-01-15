@@ -243,6 +243,9 @@ void clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *
 void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
+gchar * pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
+                                   long options, const char *target_role, bool show_nodes);
+
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
 char *pe__node_display_name(pe_node_t *node, bool print_detail);
@@ -253,34 +256,9 @@ pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
     return pcmk__btoa(pcmk_is_set(rsc->flags, rsc_flag));
 }
 
-int pe__ban_html(pcmk__output_t *out, va_list args);
-int pe__ban_text(pcmk__output_t *out, va_list args);
-int pe__ban_xml(pcmk__output_t *out, va_list args);
 int pe__clone_xml(pcmk__output_t *out, va_list args);
 int pe__clone_html(pcmk__output_t *out, va_list args);
 int pe__clone_text(pcmk__output_t *out, va_list args);
-int pe__cluster_counts_html(pcmk__output_t *out, va_list args);
-int pe__cluster_counts_text(pcmk__output_t *out, va_list args);
-int pe__cluster_counts_xml(pcmk__output_t *out, va_list args);
-int pe__cluster_dc_html(pcmk__output_t *out, va_list args);
-int pe__cluster_dc_text(pcmk__output_t *out, va_list args);
-int pe__cluster_dc_xml(pcmk__output_t *out, va_list args);
-int pe__cluster_maint_mode_html(pcmk__output_t *out, va_list args);
-int pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args);
-int pe__cluster_options_html(pcmk__output_t *out, va_list args);
-int pe__cluster_options_log(pcmk__output_t *out, va_list args);
-int pe__cluster_options_text(pcmk__output_t *out, va_list args);
-int pe__cluster_options_xml(pcmk__output_t *out, va_list args);
-int pe__cluster_stack_html(pcmk__output_t *out, va_list args);
-int pe__cluster_stack_text(pcmk__output_t *out, va_list args);
-int pe__cluster_stack_xml(pcmk__output_t *out, va_list args);
-int pe__cluster_summary(pcmk__output_t *out, va_list args);
-int pe__cluster_summary_html(pcmk__output_t *out, va_list args);
-int pe__cluster_times_html(pcmk__output_t *out, va_list args);
-int pe__cluster_times_xml(pcmk__output_t *out, va_list args);
-int pe__cluster_times_text(pcmk__output_t *out, va_list args);
-int pe__failed_action_text(pcmk__output_t *out, va_list args);
-int pe__failed_action_xml(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
 int pe__group_html(pcmk__output_t *out, va_list args);
 int pe__group_text(pcmk__output_t *out, va_list args);
@@ -290,23 +268,25 @@ int pe__bundle_text(pcmk__output_t *out, va_list args);
 int pe__node_html(pcmk__output_t *out, va_list args);
 int pe__node_text(pcmk__output_t *out, va_list args);
 int pe__node_xml(pcmk__output_t *out, va_list args);
-int pe__node_attribute_html(pcmk__output_t *out, va_list args);
-int pe__node_attribute_text(pcmk__output_t *out, va_list args);
-int pe__node_attribute_xml(pcmk__output_t *out, va_list args);
-int pe__node_list_html(pcmk__output_t *out, va_list args);
-int pe__node_list_text(pcmk__output_t *out, va_list args);
-int pe__node_list_xml(pcmk__output_t *out, va_list args);
-int pe__op_history_text(pcmk__output_t *out, va_list args);
-int pe__op_history_xml(pcmk__output_t *out, va_list args);
-int pe__resource_history_text(pcmk__output_t *out, va_list args);
-int pe__resource_history_xml(pcmk__output_t *out, va_list args);
 int pe__resource_xml(pcmk__output_t *out, va_list args);
 int pe__resource_html(pcmk__output_t *out, va_list args);
 int pe__resource_text(pcmk__output_t *out, va_list args);
-int pe__resource_list(pcmk__output_t *out, va_list args);
-int pe__ticket_html(pcmk__output_t *out, va_list args);
+
+/* Exported for crm_mon to reference */
+int pe__ban_text(pcmk__output_t *out, va_list args);
+int pe__cluster_counts_text(pcmk__output_t *out, va_list args);
+int pe__cluster_dc_text(pcmk__output_t *out, va_list args);
+int pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args);
+int pe__cluster_options_text(pcmk__output_t *out, va_list args);
+int pe__cluster_stack_text(pcmk__output_t *out, va_list args);
+int pe__cluster_summary(pcmk__output_t *out, va_list args);
+int pe__cluster_times_text(pcmk__output_t *out, va_list args);
+int pe__failed_action_text(pcmk__output_t *out, va_list args);
+int pe__node_attribute_text(pcmk__output_t *out, va_list args);
+int pe__node_list_text(pcmk__output_t *out, va_list args);
+int pe__op_history_text(pcmk__output_t *out, va_list args);
+int pe__resource_history_text(pcmk__output_t *out, va_list args);
 int pe__ticket_text(pcmk__output_t *out, va_list args);
-int pe__ticket_xml(pcmk__output_t *out, va_list args);
 
 void native_free(pe_resource_t * rsc);
 void group_free(pe_resource_t * rsc);
@@ -522,6 +502,14 @@ typedef struct op_digest_cache_s {
     char *digest_restart_calc;
 } op_digest_cache_t;
 
+op_digest_cache_t *pe__calculate_digests(pe_resource_t *rsc, const char *task,
+                                         guint *interval_ms, pe_node_t *node,
+                                         xmlNode *xml_op, GHashTable *overrides,
+                                         bool calc_secure,
+                                         pe_working_set_t *data_set);
+
+void pe__free_digests(gpointer ptr);
+
 op_digest_cache_t *rsc_action_digest_cmp(pe_resource_t * rsc, xmlNode * xml_op, pe_node_t * node,
                                          pe_working_set_t * data_set);
 
@@ -541,6 +529,7 @@ void pe_action_set_flag_reason(const char *function, long line, pe_action_t *act
 
 void pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
+void pe__clear_resource_flags_on_all(pe_working_set_t *data_set, uint64_t flag);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
@@ -556,9 +545,11 @@ int pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc, const char 
 int pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc, const char *name, pe_node_t *node, long options);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
-bool pe__bundle_needs_remote_name(pe_resource_t *rsc);
-const char *pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml,
-                                       const char *field);
+bool pe__bundle_needs_remote_name(pe_resource_t *rsc,
+                                  pe_working_set_t *data_set);
+const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
+                                       pe_working_set_t *data_set,
+                                       xmlNode *xml, const char *field);
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
                                          const pe_resource_t *rsc);

@@ -292,21 +292,19 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
              * monitor the child independently
              */
             crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        /* } else if(child && data->untrusted) {
-         * Support this use-case?
-         *
-         * The ability to have resources started/stopped by us, but
-         * unable to set attributes, etc.
-         *
-         * Arguably better to control API access this with ACLs like
-         * "normal" remote nodes
-         *
-         *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd",
-         *                           "/usr/libexec/pacemaker/pacemaker-execd");
-         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+#if 0
+        /* @TODO Consider supporting the use case where we can start and stop
+         * resources, but not proxy local commands (such as setting node
+         * attributes), by running the local executor in stand-alone mode.
+         * However, this would probably be better done via ACLs as with other
+         * Pacemaker Remote nodes.
          */
+        } else if ((child != NULL) && data->untrusted) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker-execd");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
+#endif
         } else {
             if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
@@ -460,21 +458,19 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
              * monitor the child independently
              */
             crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        /* } else if(child && data->untrusted) {
-         * Support this use-case?
-         *
-         * The ability to have resources started/stopped by us, but
-         * unable to set attributes, etc.
-         *
-         * Arguably better to control API access this with ACLs like
-         * "normal" remote nodes
-         *
-         *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd",
-         *                           "/usr/libexec/pacemaker/pacemaker-execd");
-         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+#if 0
+        /* @TODO Consider supporting the use case where we can start and stop
+         * resources, but not proxy local commands (such as setting node
+         * attributes), by running the local executor in stand-alone mode.
+         * However, this would probably be better done via ACLs as with other
+         * Pacemaker Remote nodes.
          */
+        } else if ((child != NULL) && data->untrusted) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker-execd");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
+#endif
         } else {
             if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL,
@@ -631,21 +627,19 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
              * monitor the child independently
              */
             crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
-        /* } else if(child && data->untrusted) {
-         * Support this use-case?
-         *
-         * The ability to have resources started/stopped by us, but
-         * unable to set attributes, etc.
-         *
-         * Arguably better to control API access this with ACLs like
-         * "normal" remote nodes
-         *
-         *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd",
-         *                           "/usr/libexec/pacemaker/pacemaker-execd");
-         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
-         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+#if 0
+        /* @TODO Consider supporting the use case where we can start and stop
+         * resources, but not proxy local commands (such as setting node
+         * attributes), by running the local executor in stand-alone mode.
+         * However, this would probably be better done via ACLs as with other
+         * Pacemaker Remote nodes.
          */
+        } else if ((child != NULL) && data->untrusted) {
+            crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker-execd");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+                                  CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
+#endif
         } else {
             if (data->container_command) {
                 crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
@@ -954,44 +948,33 @@ replica_for_remote(pe_resource_t *remote)
 }
 
 bool
-pe__bundle_needs_remote_name(pe_resource_t *rsc)
+pe__bundle_needs_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     const char *value;
+    GHashTable *params = NULL;
 
     if (rsc == NULL) {
-        return FALSE;
+        return false;
     }
 
-    value = g_hash_table_lookup(rsc->parameters, XML_RSC_ATTR_REMOTE_RA_ADDR);
-    if (!pcmk__str_eq(value, "#uname", pcmk__str_casei)) {
-        return FALSE;
+    // Use NULL node since pcmk__bundle_expand() uses that to set value
+    params = pe_rsc_params(rsc, NULL, data_set);
+    value = g_hash_table_lookup(params, XML_RSC_ATTR_REMOTE_RA_ADDR);
 
-    } else {
-        const char *match[3][2] = {
-            { XML_ATTR_TYPE,           "remote"                },
-            { XML_AGENT_ATTR_CLASS,    PCMK_RESOURCE_CLASS_OCF },
-            { XML_AGENT_ATTR_PROVIDER, "pacemaker"             },
-        };
-
-        for (int m = 0; m < 3; m++) {
-            value = crm_element_value(rsc->xml, match[m][0]);
-            if (!pcmk__str_eq(value, match[m][1], pcmk__str_casei)) {
-                return FALSE;
-            }
-        }
-    }
-    return TRUE;
+    return pcmk__str_eq(value, "#uname", pcmk__str_casei)
+           && xml_contains_remote_node(rsc->xml);
 }
 
 const char *
-pe__add_bundle_remote_name(pe_resource_t *rsc, xmlNode *xml, const char *field)
+pe__add_bundle_remote_name(pe_resource_t *rsc, pe_working_set_t *data_set,
+                           xmlNode *xml, const char *field)
 {
     // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
 
     pe_node_t *node = NULL;
     pe__bundle_replica_t *replica = NULL;
 
-    if (!pe__bundle_needs_remote_name(rsc)) {
+    if (!pe__bundle_needs_remote_name(rsc, data_set)) {
         return NULL;
     }
 
@@ -1500,14 +1483,14 @@ bundle_print_xml(pe_resource_t *rsc, const char *pre_text, long options,
     free(child_text);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
@@ -1623,14 +1606,14 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_html(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     char buffer[LINE_MAX];
@@ -1678,7 +1661,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             }
 
             if (rc == pcmk_rc_no_output) {
-                pcmk__output_create_xml_node(out, "br");
+                pcmk__output_create_xml_node(out, "br", NULL);
             }
 
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
@@ -1687,13 +1670,13 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                                      pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
-            pcmk__output_xml_create_parent(out, "li");
+            pcmk__output_xml_create_parent(out, "li", NULL);
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
                 snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
                 xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
             }
-            pcmk__output_create_xml_node(out, "br");
+            pcmk__output_create_xml_node(out, "br", NULL);
             out->begin_list(out, NULL, NULL, NULL);
 
             if (print_ip) {
@@ -1765,14 +1748,14 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
     pe__common_output_text(out, rsc, buffer, node, options);
 }
 
-PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GListPtr", "GListPtr")
+PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
     unsigned int options = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GListPtr only_node = va_arg(args, GListPtr);
-    GListPtr only_rsc = va_arg(args, GListPtr);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;

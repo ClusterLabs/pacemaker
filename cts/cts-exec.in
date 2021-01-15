@@ -2,10 +2,7 @@
 """ Regression tests for Pacemaker's pacemaker-execd
 """
 
-# Pacemaker targets compatibility with Python 2.7 and 3.2+
-from __future__ import print_function, unicode_literals, absolute_import, division
-
-__copyright__ = "Copyright 2012-2019 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2020 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -91,30 +88,13 @@ def update_path():
     os.environ['PATH'] = new_path
 
 
-def pipe_output(pipes, stdout=True, stderr=False):
-    """ Wrapper to get text output from pipes regardless of Python version """
-
-    output = ""
-    pipe_outputs = pipes.communicate()
-    if sys.version_info < (3,):
-        if stdout:
-            output = output + pipe_outputs[0]
-        if stderr:
-            output = output + pipe_outputs[1]
-    else:
-        if stdout:
-            output = output + pipe_outputs[0].decode(sys.stdout.encoding)
-        if stderr:
-            output = output + pipe_outputs[1].decode(sys.stderr.encoding)
-    return output
-
-
 def output_from_command(command):
     """ Run a command, and return its standard output. """
 
     test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     test.wait()
-    return pipe_output(test).split("\n")
+    output = test.communicate()[0].decode(sys.stdout.encoding)
+    return output.split("\n")
 
 
 class TestError(Exception):
@@ -155,10 +135,11 @@ class OutputFoundError(TestError):
 class Test(object):
     """ Executor for a single pacemaker-execd regression test """
 
-    def __init__(self, name, description, verbose=0, tls=0):
+    def __init__(self, name, description, verbose=0, tls=0, timeout=2, force_wait=0):
         self.name = name
         self.description = description
         self.cmds = []
+        self.logpath = "/tmp/pacemaker-execd-regression.log"
 
         if tls:
             self.daemon_location = "pacemaker-remoted"
@@ -168,6 +149,8 @@ class Test(object):
         self.test_tool_location = "cts-exec-helper"
         self.verbose = verbose
         self.tls = tls
+        self.timeout = timeout
+        self.force_wait = force_wait
 
         self.result_txt = ""
         self.cmd_tool_output = ""
@@ -216,10 +199,39 @@ class Test(object):
         if self.verbose:
             additional_args = additional_args + " -V"
 
-        self.execd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/pacemaker-execd-regression.log"
-                                                         % (self.daemon_location, additional_args)))
+        self.execd_process = subprocess.Popen(shlex.split("%s %s -l %s"
+                                                         % (self.daemon_location, additional_args, self.logpath)))
 
-        time.sleep(1)
+        logfile = None
+
+        init_time = time.time()
+        update_time = init_time
+
+        while True:
+            time.sleep(0.1)
+
+            if self.force_wait == 0 and logfile == None \
+               and os.path.exists(self.logpath):
+                logfile = io.open(self.logpath, 'rt', encoding = "ISO-8859-1")
+
+            if self.force_wait == 0 and logfile != None:
+                for line in logfile.readlines():
+                    if "successfully started" in line:
+                        return
+
+            now = time.time()
+
+            if self.timeout > 0 and (now - init_time) >= self.timeout:
+                if self.force_wait == 0:
+                    print("\tDaemon %s doesn't seem to have been initialized within %fs."
+                          "\n\tConsider specifying a longer '--timeout' value."
+                          %(self.daemon_location, self.timeout))
+                return
+
+            if self.verbose and (now - update_time) >= 5:
+                print("Waiting for %s to be initialized: %fs ..."
+                      %(self.daemon_location, now - init_time))
+                update_time = now
 
     def clean_environment(self):
         """ Clean up the host after running a test """
@@ -230,10 +242,10 @@ class Test(object):
 
             if self.verbose:
                 print("Daemon output")
-                logfile = io.open('/tmp/pacemaker-execd-regression.log', 'rt', errors='replace')
+                logfile = io.open(self.logpath, 'rt', errors='replace')
                 for line in logfile:
                     print(line.strip().encode('utf-8', 'replace'))
-            os.remove('/tmp/pacemaker-execd-regression.log')
+            os.remove(self.logpath)
 
         if self.stonith_process:
             self.stonith_process.terminate()
@@ -301,7 +313,7 @@ class Test(object):
         else:
             return CrmExit.OK
 
-        output = pipe_output(test)
+        output = test.communicate()[0].decode(sys.stdout.encoding)
         args['cmd_output'] = output
 
         if test.returncode != args['expected_exitcode']:
@@ -370,10 +382,12 @@ class Test(object):
 class Tests(object):
     """ Collection of all pacemaker-execd regression tests """
 
-    def __init__(self, verbose=0, tls=0):
+    def __init__(self, verbose=0, tls=0, timeout=2, force_wait=0):
         self.tests = []
         self.verbose = verbose
         self.tls = tls
+        self.timeout = timeout
+        self.force_wait = force_wait
         self.rsc_classes = output_from_command("crm_resource --list-standards")
         self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
         self.installed_files = []
@@ -479,7 +493,7 @@ class Tests(object):
     def new_test(self, name, description):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, self.tls)
+        test = Test(name, description, self.verbose, self.tls, self.timeout, self.force_wait)
         self.tests.append(test)
         return test
 
@@ -744,7 +758,7 @@ class Tests(object):
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
             test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
             test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
-            test.add_cmd_and_kill("killall -9 -q pacemaker-cts-dummyd",
+            test.add_cmd_and_kill("pkill -9 -f pacemaker-cts-dummyd",
                                   '-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete"' + self.action_timeout)
             test.add_cmd('-c cancel -r test_rsc -a monitor -i 1s' + self.action_timeout +
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
@@ -1131,6 +1145,8 @@ class TestOptions(object):
         self.options['run-only'] = ""
         self.options['run-only-pattern'] = ""
         self.options['verbose'] = 0
+        self.options['timeout'] = 2
+        self.options['force-wait'] = 0
         self.options['invalid-arg'] = ""
         self.options['show-usage'] = 0
         self.options['pacemaker-remote'] = 0
@@ -1150,6 +1166,10 @@ class TestOptions(object):
                 self.options['list-tests'] = 1
             elif args[i] == "-V" or args[i] == "--verbose":
                 self.options['verbose'] = 1
+            elif args[i] == "-t" or args[i] == "--timeout":
+                self.options['timeout'] = float(args[i+1])
+            elif args[i] == "-w" or args[i] == "--force-wait":
+                self.options['force-wait'] = 1
             elif args[i] == "-R" or args[i] == "--pacemaker-remote":
                 self.options['pacemaker-remote'] = 1
             elif args[i] == "-r" or args[i] == "--run-only":
@@ -1169,6 +1189,11 @@ class TestOptions(object):
         print("\t [--list-tests | -l]                  Print out all registered tests.")
         print("\t [--run-only | -r 'testname']         Run a specific test")
         print("\t [--verbose | -V]                     Verbose output")
+        print("\t [--timeout | -t 'floating point number']"
+              "\n\t\tUp to how many seconds each test case waits for the daemon to be initialized."
+              "\n\t\tDefaults to 2. The value 0 means no limit.")
+        print("\t [--force-wait | -w]"
+              "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
         print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_stop'")
@@ -1185,7 +1210,8 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
-    tests = Tests(opts.options['verbose'], opts.options['pacemaker-remote'])
+    tests = Tests(opts.options['verbose'], opts.options['pacemaker-remote'],
+                  opts.options['timeout'], opts.options['force-wait'])
 
     tests.build_generic_tests()
     tests.build_multi_rsc_tests()

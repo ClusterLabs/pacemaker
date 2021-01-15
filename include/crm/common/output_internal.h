@@ -460,6 +460,14 @@ struct pcmk__output_s {
      * \return true if output should be supressed, false otherwise.
      */
     bool (*is_quiet) (pcmk__output_t *out);
+
+    /*!
+     * \internal
+     * \brief Output a spacer.  Not all formatter will do this.
+     *
+     * \param[in] out The output functions structure.
+     */
+    void (*spacer) (pcmk__output_t *out);
 };
 
 /*!
@@ -618,9 +626,11 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_
  *
  * \param[in,out] out  The output functions structure.
  * \param[in]     name The name of the node to be created.
+ * \param[in]     ...     Name/value pairs to set as XML properties.
  */
 xmlNodePtr
-pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name);
+pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...)
+G_GNUC_NULL_TERMINATED;
 
 /*!
  * \internal
@@ -640,9 +650,11 @@ pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node);
  *
  * \param[in,out] out  The output functions structure.
  * \param[in]     name The name of the node to be created.
+ * \param[in]     ...     Name/value pairs to set as XML properties.
  */
 xmlNodePtr
-pcmk__output_create_xml_node(pcmk__output_t *out, const char *name);
+pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...)
+G_GNUC_NULL_TERMINATED;
 
 /*!
  * \internal
@@ -745,7 +757,7 @@ G_GNUC_NULL_TERMINATED;
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \
-        out_obj->info(out_obj, "%s", "");       \
+        out->spacer(out);                       \
     }
 
 #define PCMK__OUTPUT_LIST_HEADER(out_obj, cond, retcode, title...)  \

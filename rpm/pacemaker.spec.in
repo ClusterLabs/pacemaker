@@ -31,9 +31,6 @@
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
 %global commit_abbrev 7
 
-## Python major version to use (2, 3, or 0 for auto-detect)
-%global python_major 0
-
 
 # Define conditionals so that "rpmbuild --with <feature>" and
 # "rpmbuild --without <feature>" can enable and disable specific features
@@ -94,10 +91,6 @@
 %endif
 %endif
 
-## Heuristic used to infer bleeding-edge deployments that are
-## less likely to have working versions of the documentation tools
-%define bleeding %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
-
 ## Whether this platform defaults to using systemd as an init system
 ## (needs to be evaluated prior to BuildRequires being enumerated and
 ## installed as it's intended to conditionally select some of these, and
@@ -151,20 +144,12 @@
 %global pkgname_gnutls_devel gnutls-devel
 %global pkgname_shadow_utils shadow-utils
 %global pkgname_procps procps-ng
-%global pkgname_publican publican
 %global pkgname_glue_libs cluster-glue-libs
 %global pkgname_pcmk_libs %{name}-libs
 %global hacluster_id 189
 %endif
 
 # Python-related definitions
-
-## Use Python 3 on certain platforms if major version not specified
-%if %{?python_major} == 0
-%if 0%{?fedora} > 26 || 0%{?rhel} > 7
-%global python_major 3
-%endif
-%endif
 
 ## Turn off auto-compilation of Python files outside Python specific paths,
 ## so there's no risk that unexpected "__python" macro gets picked to do the
@@ -179,17 +164,11 @@
                             sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g'; })
 %endif
 
-## Values that differ by Python major version
-%if 0%{?python_major} > 2
+## Prefer Python 3 definitions explicitly, in case 2 is also available
+%if %{defined __python3}
 %global python_name python3
-%global python_path %{?__python3}%{!?__python3:/usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}}
+%global python_path %{__python3}
 %define python_site %{?python3_sitelib}%{!?python3_sitelib:%(
-  %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
-%else
-%if 0%{?python_major} > 1
-%global python_name python2
-%global python_path %{?__python2}%{!?__python2:/usr/bin/python%{?python2_pkgversion}%{!?python2_pkgversion:2}}
-%define python_site %{?python2_sitelib}%{!?python2_sitelib:%(
   %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %else
 %if %{defined python_version}
@@ -202,20 +181,7 @@
 %define python_site %{?python_sitelib}%{!?python_sitelib:%(
   %{python_name} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %endif
-%endif
 
-
-# Definitions for backward compatibility with older RPM versions
-
-## Ensure the license macro behaves consistently (older RPM will otherwise
-## overwrite it once it encounters "License:"). Courtesy Jason Tibbitts:
-## https://pkgs.fedoraproject.org/cgit/rpms/epel-rpm-macros.git/tree/macros.zzz-epel?h=el6&id=e1adcb77
-%if !%{defined _licensedir}
-%define description %{lua:
-    rpm.define("license %doc")
-    print("%description")
-}
-%endif
 
 # Keep sane profiling data if requested
 %if %{with profiling}
@@ -270,7 +236,7 @@ BuildRequires: coreutils findutils grep sed
 
 # Required for core functionality
 BuildRequires: automake autoconf gcc libtool pkgconfig %{?pkgname_libtool_devel}
-BuildRequires: pkgconfig(glib-2.0) >= 2.16
+BuildRequires: pkgconfig(glib-2.0) >= 2.32
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: %{pkgname_bzip2_devel}
 
@@ -289,11 +255,8 @@ BuildRequires: corosync-devel >= 2.0.0
 BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
-## (note no avoiding effect when building through non-customized mock)
-%if !%{bleeding}
 %if %{with doc}
-BuildRequires: inkscape asciidoc %{?pkgname_publican}
-%endif
+BuildRequires: inkscape asciidoc %{python_name}-sphinx
 %endif
 
 Provides:      pcmk-cluster-manager = %{version}-%{release}
@@ -431,17 +394,11 @@ Requires:      %{pkgname_procps}
 Requires:      psmisc
 BuildArch:     noarch
 
-# systemd python bindings are separate package in some distros
+# systemd Python bindings are a separate package in some distros
 %if %{defined systemd_requires}
-
 %if 0%{?fedora} > 22 || 0%{?rhel} > 7
 Requires:      %{python_name}-systemd
-%else
-%if 0%{?fedora} > 20 || 0%{?rhel} > 6
-Requires:      systemd-python
 %endif
-%endif
-
 %endif
 
 %description   cts
@@ -498,7 +455,6 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_profiling:     --with-profiling}                                \
         %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
-        %{!?with_doc:          --with-brand=}                                   \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \

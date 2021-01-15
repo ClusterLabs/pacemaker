@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -14,7 +14,7 @@ noarch_pkgconfig_DATA	= $(builddir)/pacemaker-schemas.pc
 # Pacemaker has 3 schemas: the CIB schema, the API schema (for command-line
 # tool XML output), and a legacy schema for crm_mon --as-xml.
 #
-# See Readme.md for details on updating CIB schema files (API is similar)
+# See README.md for details on updating CIB schema files (API is similar)
 
 # The CIB and crm_mon schemas are installed directly in CRM_SCHEMA_DIRECTORY
 # for historical reasons, while the API schema is installed in a subdirectory.
@@ -44,14 +44,25 @@ version_pairs_last = $(wordlist \
 			    ),$(1),$(2) \
 			  )
 
+# NOTE: All files in API_request_base, CIB_cfg_base, API_base, and CIB_base
+# need to start with a unique prefix.  These variables all get iterated over
+# and globbed, and two files starting with the same prefix will cause
+# problems.
+
 # Names of API schemas that form the choices for pacemaker-result content
-API_request_base	= command-output crm_mon stonith_admin version
+API_request_base	= command-output	\
+			  crm_mon		\
+			  crm_resource		\
+			  crmadmin		\
+			  digests		\
+			  stonith_admin		\
+			  version
 
 # Names of CIB schemas that form the choices for cib/configuration content
 CIB_cfg_base		= options nodes resources constraints fencing acls tags alerts
 
 # Names of all schemas (including top level and those included by others)
-API_base		= $(API_request_base) fence-event item status
+API_base		= $(API_request_base) fence-event generic-list item resources status
 CIB_base		= cib $(CIB_cfg_base) status score rule nvset
 
 # Static schema files and transforms (only CIB has transforms)
@@ -106,7 +117,7 @@ dist_MON_DATA		= $(MON_files)
 nodist_API_DATA		= $(API_generated)
 nodist_CIB_DATA		= $(CIB_generated)
 
-EXTRA_DIST		= Readme.md			\
+EXTRA_DIST		= README.md			\
 			  best-match.sh			\
 			  cibtr-2.rng			\
 			  context-of.xsl		\

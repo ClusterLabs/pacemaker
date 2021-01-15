@@ -75,6 +75,31 @@ mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Evaluate a date expression for a specific time
+ *
+ * \param[in]  time_expr    date_expression XML
+ * \param[in]  now          Time for which to evaluate expression
+ * \param[out] next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+eval_date_expression(xmlNode *expr, crm_time_t *now, crm_time_t *next_change)
+{
+    pe_rule_eval_data_t rule_data = {
+        .node_hash = NULL,
+        .role = RSC_ROLE_UNKNOWN,
+        .now = now,
+        .match_data = NULL,
+        .rsc_data = NULL,
+        .op_data = NULL
+    };
+
+    return pe__eval_date_expr(expr, &rule_data, next_change);
+}
+
 static int
 crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effective_date)
 {
@@ -156,7 +181,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     CRM_ASSERT(match != NULL);
     CRM_ASSERT(find_expression_type(match) == time_expr);
 
-    rc = pe_eval_date_expression(match, effective_date, NULL);
+    rc = eval_date_expression(match, effective_date, NULL);
 
     if (rc == pcmk_rc_within_range) {
         printf("Rule %s is still in effect\n", rule_id);

@@ -498,39 +498,10 @@ build_parameter_list(const lrmd_event_data_t *op,
 {
     char *list = NULL;
     size_t len = 0;
-    size_t max = 0;
-
-    /* Newer resource agents support the "private" parameter attribute to
-     * indicate sensitive parameters. For backward compatibility with older
-     * agents, this list is used if the agent doesn't specify any as "private".
-     */
-    const char *secure_terms[] = {
-        "password",
-        "passwd",
-        "user",
-    };
-
-    if (!pcmk_is_set(metadata->ra_flags, ra_uses_private)
-        && (param_type == ra_param_private)) {
-
-        max = DIMOF(secure_terms);
-    }
 
     for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
-        bool accept = FALSE;
-
-        if (pcmk_is_set(param->rap_flags, param_type)) {
-            accept = TRUE;
-
-        } else if (max) {
-            for (int lpc = 0; lpc < max; lpc++) {
-                if (pcmk__str_eq(secure_terms[lpc], param->rap_name, pcmk__str_casei)) {
-                    accept = TRUE;
-                    break;
-                }
-            }
-        }
+        bool accept = pcmk_is_set(param->rap_flags, param_type);
 
         if (accept) {
             crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));

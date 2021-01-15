@@ -763,6 +763,13 @@ Rules may be used to control a variety of options:
 * :ref:`Operation properties <operation_properties>` (``meta_attributes``
   elements inside an ``op`` or ``op_defaults`` element)
 
+.. note::
+
+   Attribute-based expressions for meta-attributes can only be used within
+   ``operations`` and ``op_defaults``.  They will not work with resource
+   configuration or ``rsc_defaults``.  Additionally, attribute-based
+   expressions cannot be used with cluster options.
+
 Using Rules to Control Resource Options
 _______________________________________
 
@@ -916,11 +923,9 @@ ______________________________________
 Controlling cluster options is achieved in much the same manner as specifying
 different resource options on different nodes.
 
-The difference is that because they are cluster options, one cannot (or should
-not, because they won't work) use attribute-based expressions. The following
-example illustrates how to set ``maintenance_mode`` during a scheduled
-maintenance window. This will keep the cluster running but not monitor, start,
-or stop resources during this time.
+The following example illustrates how to set ``maintenance_mode`` during a
+scheduled maintenance window. This will keep the cluster running but not
+monitor, start, or stop resources during this time.
 
 .. topic:: Schedule a maintenance window for 9 to 11 p.m. CDT Sept. 20, 2019
 

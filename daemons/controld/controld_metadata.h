@@ -12,7 +12,6 @@
 
 enum ra_flags_e {
     ra_supports_reload  = 0x01,
-    ra_uses_private     = 0x02,
 };
 
 enum ra_param_flags_e {

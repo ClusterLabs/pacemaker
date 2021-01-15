@@ -232,16 +232,16 @@ for ``pacemaker-fenced``.
    | pcmk_delay_max       | time    | 0s                 | .. index::                             |
    |                      |         |                    |    single: pcmk_delay_max              |
    |                      |         |                    |                                        |
-   |                      |         |                    | Enable a random delay of up to the     |
+   |                      |         |                    | Enable a delay of no more than the     |
    |                      |         |                    | time specified before executing        |
-   |                      |         |                    | fencing actions. This is sometimes     |
+   |                      |         |                    | fencing actions. Pacemaker derives the |
+   |                      |         |                    | overall delay by taking the value of   |
+   |                      |         |                    | pcmk_delay_base and adding a random    |
+   |                      |         |                    | delay value such that the sum is kept  |
+   |                      |         |                    | below this maximum. This is sometimes  |
    |                      |         |                    | used in two-node clusters to ensure    |
    |                      |         |                    | that the nodes don't fence each other  |
-   |                      |         |                    | at the same time. The overall delay    |
-   |                      |         |                    | introduced by pacemaker is derived     |
-   |                      |         |                    | from this random delay value adding a  |
-   |                      |         |                    | static delay so that the sum is kept   |
-   |                      |         |                    | below the maximum delay.               |
+   |                      |         |                    | at the same time.                      |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_delay_base      | time    | 0s                 | .. index::                             |
    |                      |         |                    |    single: pcmk_delay_base             |

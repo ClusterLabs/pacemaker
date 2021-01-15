@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,46 +12,48 @@
 #include <crm/common/lists_internal.h>
 #include <crm/common/xml_internal.h>
 
-static int
-do_find_resource(const char *rsc, pe_resource_t * the_rsc, pe_working_set_t * data_set)
+resource_checks_t *
+cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
 {
-    int found = 0;
-    GListPtr lpc = NULL;
+    pe_resource_t *parent = uber_parent(rsc);
+    resource_checks_t *rc = calloc(1, sizeof(resource_checks_t));
 
-    for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
-        pe_node_t *node = (pe_node_t *) lpc->data;
+    if (role_s) {
+        enum rsc_role_e role = text2role(role_s);
 
-        if (BE_QUIET) {
-            fprintf(stdout, "%s\n", node->details->uname);
-        } else {
-            const char *state = "";
-
-            if (!pe_rsc_is_clone(the_rsc) && the_rsc->fns->state(the_rsc, TRUE) == RSC_ROLE_MASTER) {
-                state = "Master";
-            }
-            fprintf(stdout, "resource %s is running on: %s %s\n", rsc, node->details->uname, state);
+        if (role == RSC_ROLE_STOPPED) {
+            rc->flags |= rsc_remain_stopped;
+        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable) &&
+                   role == RSC_ROLE_SLAVE) {
+            rc->flags |= rsc_unpromotable;
         }
-
-        found++;
     }
 
-    if (BE_QUIET == FALSE && found == 0) {
-        fprintf(stderr, "resource %s is NOT running\n", rsc);
+    if (managed && !crm_is_true(managed)) {
+        rc->flags |= rsc_unmanaged;
     }
 
-    return found;
+    if (rsc->lock_node) {
+        rc->lock_node = rsc->lock_node->details->uname;
+    }
+
+    rc->rsc = rsc;
+    return rc;
 }
 
-int
-cli_resource_search(pe_resource_t *rsc, const char *requested_name,
+GListPtr
+cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
 {
-    int found = 0;
+    GListPtr found = NULL;
     pe_resource_t *parent = uber_parent(rsc);
 
     if (pe_rsc_is_clone(rsc)) {
         for (GListPtr iter = rsc->children; iter != NULL; iter = iter->next) {
-            found += do_find_resource(requested_name, iter->data, data_set);
+            GListPtr extra = ((pe_resource_t *) iter->data)->running_on;
+            if (extra != NULL) {
+                found = g_list_concat(found, extra);
+            }
         }
 
     /* The anonymous clone children's common ID is supplied */
@@ -62,11 +64,14 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
 
         for (GListPtr iter = parent->children; iter; iter = iter->next) {
-            found += do_find_resource(requested_name, iter->data, data_set);
+            GListPtr extra = ((pe_resource_t *) iter->data)->running_on;
+            if (extra != NULL) {
+                found = g_list_concat(found, extra);
+            }
         }
 
-    } else {
-        found += do_find_resource(requested_name, rsc, data_set);
+    } else if (rsc->running_on != NULL) {
+        found = g_list_concat(found, rsc->running_on);
     }
 
     return found;
@@ -76,8 +81,9 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 static int
-find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const char *attr_set_type,
-                   const char *set_name, const char *attr_id, const char *attr_name, char **value)
+find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
+                   const char *rsc, const char *attr_set_type, const char *set_name,
+                   const char *attr_id, const char *attr_name, char **value)
 {
     int offset = 0;
     int rc = pcmk_rc_ok;
@@ -132,13 +138,15 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
         xmlNode *child = NULL;
 
         rc = EINVAL;
-        printf("Multiple attributes match name=%s\n", attr_name);
+        out->info(out, "Multiple attributes match name=%s", attr_name);
 
         for (child = pcmk__xml_first_child(xml_search); child != NULL;
              child = pcmk__xml_next(child)) {
-            printf("  Value: %s \t(id=%s)\n",
-                   crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+            out->info(out, "  Value: %s \t(id=%s)",
+                      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
         }
+
+        out->spacer(out);
 
     } else if(value) {
         const char *tmp = crm_element_value(xml_search, attr);
@@ -156,9 +164,11 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
 
 /* PRIVATE. Use the find_matching_attr_resources instead. */
 static void
-find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe_resource_t * rsc, const char * rsc_id, 
-                                       const char * attr_set, const char * attr_set_type, const char * attr_id,
-                                       const char * attr_name, cib_t * cib, const char * cmd, int depth)
+find_matching_attr_resources_recursive(pcmk__output_t *out, GList/* <pe_resource_t*> */ ** result,
+                                       pe_resource_t * rsc, const char * rsc_id,
+                                       const char * attr_set, const char * attr_set_type,
+                                       const char * attr_id, const char * attr_name,
+                                       cib_t * cib, const char * cmd, int depth)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = clone_strip(rsc->id);
@@ -166,7 +176,7 @@ find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe
 
     /* visit the children */
     for(GList *gIter = rsc->children; gIter; gIter = gIter->next) {
-        find_matching_attr_resources_recursive(result, (pe_resource_t*)gIter->data,
+        find_matching_attr_resources_recursive(out, result, (pe_resource_t*)gIter->data,
                                                rsc_id, attr_set, attr_set_type,
                                                attr_id, attr_name, cib, cmd, depth+1);
         /* do it only once for clones */
@@ -175,7 +185,8 @@ find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe
         }
     }
 
-    rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+    rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
+                            attr_set, attr_id, attr_name, &local_attr_id);
     /* Post-order traversal. 
      * The root is always on the list and it is the last item. */
     if((0 == depth) || (pcmk_rc_ok == rc)) {
@@ -190,9 +201,11 @@ find_matching_attr_resources_recursive(GList/* <pe_resource_t*> */ ** result, pe
 
 /* The result is a linearized pre-ordered tree of resources. */
 static GList/*<pe_resource_t*>*/ *
-find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const char * attr_set,
+find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
+                             const char * rsc_id, const char * attr_set,
                              const char * attr_set_type, const char * attr_id,
-                             const char * attr_name, cib_t * cib, const char * cmd, gboolean force)
+                             const char * attr_name, cib_t * cib, const char * cmd,
+                             gboolean force)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
@@ -207,13 +220,15 @@ find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const cha
     if(rsc->parent && pe_clone == rsc->parent->variant) {
         int rc = pcmk_rc_ok;
         char *local_attr_id = NULL;
-        rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+        rc = find_resource_attr(out, cib, XML_ATTR_ID, rsc_id, attr_set_type,
+                                attr_set, attr_id, attr_name, &local_attr_id);
         free(local_attr_id);
 
         if(rc != pcmk_rc_ok) {
             rsc = rsc->parent;
-            if (BE_QUIET == FALSE) {
-                printf("Performing %s of '%s' on '%s', the parent of '%s'\n", cmd, attr_name, rsc->id, rsc_id);
+            if (!out->is_quiet(out)) {
+                out->info(out, "Performing %s of '%s' on '%s', the parent of '%s'",
+                          cmd, attr_name, rsc->id, rsc_id);
             }
         }
         return g_list_append(result, rsc);
@@ -222,12 +237,14 @@ find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const cha
 
         if(child->variant == pe_native) {
             lookup_id = clone_strip(child->id); /* Could be a cloned group! */
-            rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+            rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
+                                    attr_set, attr_id, attr_name, &local_attr_id);
 
             if(rc == pcmk_rc_ok) {
                 rsc = child;
-                if (BE_QUIET == FALSE) {
-                    printf("A value for '%s' already exists in child '%s', performing %s on that instead of '%s'\n", attr_name, lookup_id, cmd, rsc_id);
+                if (!out->is_quiet(out)) {
+                    out->info(out, "A value for '%s' already exists in child '%s', performing %s on that instead of '%s'",
+                              attr_name, lookup_id, cmd, rsc_id);
                 }
             }
 
@@ -237,7 +254,7 @@ find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const cha
         return g_list_append(result, rsc);
     }
     /* If the resource is a group ==> children inherit the attribute if defined. */
-    find_matching_attr_resources_recursive(&result, rsc, rsc_id, attr_set,
+    find_matching_attr_resources_recursive(out, &result, rsc, rsc_id, attr_set,
                                            attr_set_type, attr_id, attr_name,
                                            cib, cmd, 0);
     return result;
@@ -245,11 +262,12 @@ find_matching_attr_resources(pe_resource_t * rsc, const char * rsc_id, const cha
 
 // \return Standard Pacemaker return code
 int
-cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
-                              const char *attr_set, const char *attr_set_type,
-                              const char *attr_id, const char *attr_name,
-                              const char *attr_value, gboolean recursive, cib_t *cib,
-                              int cib_options, pe_working_set_t *data_set, gboolean force)
+cli_resource_update_attribute(pcmk__output_t *out, pe_resource_t *rsc,
+                              const char *requested_name, const char *attr_set,
+                              const char *attr_set_type, const char *attr_id,
+                              const char *attr_name, const char *attr_value,
+                              gboolean recursive, cib_t *cib, int cib_options,
+                              pe_working_set_t *data_set, gboolean force)
 {
     int rc = pcmk_rc_ok;
     static bool need_init = TRUE;
@@ -260,23 +278,21 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
     GList/*<pe_resource_t*>*/ *resources = NULL;
     const char *common_attr_id = attr_id;
 
-    if(attr_id == NULL
-       && force == FALSE
-       && find_resource_attr(
-           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
-        printf("\n");
+    if (attr_id == NULL && force == FALSE) {
+        find_resource_attr (out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
+                            NULL, NULL, attr_name, NULL);
     }
 
     if (pcmk__str_eq(attr_set_type, XML_TAG_ATTR_SETS, pcmk__str_casei)) {
         if (force == FALSE) {
-            rc = find_resource_attr(cib, XML_ATTR_ID, uber_parent(rsc)->id,
+            rc = find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id,
                                     XML_TAG_META_SETS, attr_set, attr_id,
                                     attr_name, &local_attr_id);
-            if (rc == pcmk_rc_ok && BE_QUIET == FALSE) {
-                printf("WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)\n",
-                       uber_parent(rsc)->id, attr_name, local_attr_id);
-                printf("         Delete '%s' first or use the force option to override\n",
-                       local_attr_id);
+            if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
+                out->err(out, "WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)",
+                         uber_parent(rsc)->id, attr_name, local_attr_id);
+                out->err(out, "         Delete '%s' first or use the force option to override",
+                         local_attr_id);
             }
             free(local_attr_id);
             if (rc == pcmk_rc_ok) {
@@ -286,7 +302,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         resources = g_list_append(resources, rsc);
 
     } else {
-        resources = find_matching_attr_resources(rsc, requested_name, attr_set, attr_set_type,
+        resources = find_matching_attr_resources(out, rsc, requested_name, attr_set, attr_set_type,
                                                  attr_id, attr_name, cib, "update", force);
     }
 
@@ -306,8 +322,8 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         attr_id = common_attr_id;
 
         lookup_id = clone_strip(rsc->id); /* Could be a cloned group! */
-        rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
-                                &local_attr_id);
+        rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
+                                attr_set, attr_id, attr_name, &local_attr_id);
 
         if (rc == pcmk_rc_ok) {
             crm_debug("Found a match for name=%s: id=%s", attr_name, local_attr_id);
@@ -349,10 +365,10 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
         rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_rc_ok && BE_QUIET == FALSE) {
-            printf("Set '%s' option: id=%s%s%s%s%s value=%s\n", lookup_id, local_attr_id,
-                   attr_set ? " set=" : "", attr_set ? attr_set : "",
-                   attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
+        if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
+            out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s", lookup_id, local_attr_id,
+                      attr_set ? " set=" : "", attr_set ? attr_set : "",
+                      attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
         }
 
         free_xml(xml_top);
@@ -370,24 +386,20 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                 need_init = FALSE;
                 unpack_constraints(cib_constraints, data_set);
 
-                for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
-                    pe_resource_t *r = (pe_resource_t *) lpc->data;
-
-                    pe__clear_resource_flags(r, pe_rsc_allocating);
-                }
+                pe__clear_resource_flags_on_all(data_set, pe_rsc_allocating);
             }
 
             crm_debug("Looking for dependencies %p", rsc->rsc_cons_lhs);
             pe__set_resource_flags(rsc, pe_rsc_allocating);
             for (lpc = rsc->rsc_cons_lhs; lpc != NULL; lpc = lpc->next) {
-                rsc_colocation_t *cons = (rsc_colocation_t *) lpc->data;
+                pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
                 pe_resource_t *peer = cons->rsc_lh;
 
                 crm_debug("Checking %s %d", cons->id, cons->score);
                 if (cons->score > 0 && !pcmk_is_set(peer->flags, pe_rsc_allocating)) {
                     /* Don't get into colocation loops */
                     crm_debug("Setting %s=%s for dependent resource %s", attr_name, attr_value, peer->id);
-                    cli_resource_update_attribute(peer, peer->id, NULL, attr_set_type,
+                    cli_resource_update_attribute(out, peer, peer->id, NULL, attr_set_type,
                                                   NULL, attr_name, attr_value, recursive,
                                                   cib, cib_options, data_set, force);
                 }
@@ -400,23 +412,22 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
-                              const char *attr_set, const char *attr_set_type,
-                              const char *attr_id, const char *attr_name, cib_t *cib,
-                              int cib_options, pe_working_set_t *data_set, gboolean force)
+cli_resource_delete_attribute(pcmk__output_t *out, pe_resource_t *rsc,
+                              const char *requested_name, const char *attr_set,
+                              const char *attr_set_type, const char *attr_id,
+                              const char *attr_name, cib_t *cib, int cib_options,
+                              pe_working_set_t *data_set, gboolean force)
 {
     int rc = pcmk_rc_ok;
     GList/*<pe_resource_t*>*/ *resources = NULL;
 
-    if(attr_id == NULL
-       && force == FALSE
-       && find_resource_attr(
-           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == EINVAL) {
-        printf("\n");
+    if (attr_id == NULL && force == FALSE) {
+        find_resource_attr(out, cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL,
+                           NULL, NULL, attr_name, NULL);
     }
 
     if(pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
-        resources = find_matching_attr_resources(rsc, requested_name, attr_set, attr_set_type,
+        resources = find_matching_attr_resources(out, rsc, requested_name, attr_set, attr_set_type,
                                                  attr_id, attr_name, cib, "delete", force);
     } else {
         resources = g_list_append(resources, rsc);
@@ -430,8 +441,8 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         rsc = (pe_resource_t*)gIter->data;
 
         lookup_id = clone_strip(rsc->id);
-        rc = find_resource_attr(cib, XML_ATTR_ID, lookup_id, attr_set_type, attr_set, attr_id, attr_name,
-                                &local_attr_id);
+        rc = find_resource_attr(out, cib, XML_ATTR_ID, lookup_id, attr_set_type,
+                                attr_set, attr_id, attr_name, &local_attr_id);
 
         if (rc == ENXIO) {
             free(lookup_id);
@@ -455,10 +466,10 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
         rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_rc_ok && BE_QUIET == FALSE) {
-            printf("Deleted '%s' option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,
-                   attr_set ? " set=" : "", attr_set ? attr_set : "",
-                   attr_name ? " name=" : "", attr_name ? attr_name : "");
+        if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
+            out->info(out, "Deleted '%s' option: id=%s%s%s%s%s", lookup_id, local_attr_id,
+                      attr_set ? " set=" : "", attr_set ? attr_set : "",
+                      attr_name ? " name=" : "", attr_name ? attr_name : "");
         }
 
         free(lookup_id);
@@ -471,9 +482,8 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 static int
-send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
-                const char *host_uname, const char *rsc_id,
-                pe_working_set_t *data_set)
+send_lrm_rsc_op(pcmk__output_t *out, pcmk_ipc_api_t *controld_api, bool do_fail_resource,
+                const char *host_uname, const char *rsc_id, pe_working_set_t *data_set)
 {
     const char *router_node = host_uname;
     const char *rsc_api_id = NULL;
@@ -485,11 +495,11 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     if (rsc == NULL) {
-        CMD_ERR("Resource %s not found", rsc_id);
+        out->err(out, "Resource %s not found", rsc_id);
         return ENXIO;
 
     } else if (rsc->variant != pe_native) {
-        CMD_ERR("We can only process primitive resources, not %s", rsc_id);
+        out->err(out, "We can only process primitive resources, not %s", rsc_id);
         return EINVAL;
     }
 
@@ -497,25 +507,21 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
     rsc_provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER),
     rsc_type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     if ((rsc_class == NULL) || (rsc_type == NULL)) {
-        CMD_ERR("Resource %s does not have a class and type", rsc_id);
+        out->err(out, "Resource %s does not have a class and type", rsc_id);
         return EINVAL;
     }
 
-    if (host_uname == NULL) {
-        CMD_ERR("Please specify a node name");
-        return EINVAL;
-
-    } else {
+    {
         pe_node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node == NULL) {
-            CMD_ERR("Node %s not found", host_uname);
+            out->err(out, "Node %s not found", host_uname);
             return pcmk_rc_node_unknown;
         }
 
         if (!(node->details->online)) {
             if (do_fail_resource) {
-                CMD_ERR("Node %s is not online", host_uname);
+                out->err(out, "Node %s is not online", host_uname);
                 return ENOTCONN;
             } else {
                 cib_only = true;
@@ -524,8 +530,8 @@ send_lrm_rsc_op(pcmk_ipc_api_t *controld_api, bool do_fail_resource,
         if (!cib_only && pe__is_guest_or_remote_node(node)) {
             node = pe__current_node(node->details->remote_rsc);
             if (node == NULL) {
-                CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
-                        host_uname);
+                out->err(out, "No cluster connection to Pacemaker Remote node %s detected",
+                         host_uname);
                 return ENOTCONN;
             }
             router_node = node->details->uname;
@@ -568,8 +574,9 @@ rsc_fail_name(pe_resource_t *rsc)
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pe_working_set_t *data_set)
+clear_rsc_history(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
+                  const char *host_uname, const char *rsc_id,
+                  pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
 
@@ -578,7 +585,7 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    rc = send_lrm_rsc_op(controld_api, false, host_uname, rsc_id, data_set);
+    rc = send_lrm_rsc_op(out, controld_api, false, host_uname, rsc_id, data_set);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -594,8 +601,8 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, const char *host_uname,
 
 // \return Standard Pacemaker return code
 static int
-clear_rsc_failures(pcmk_ipc_api_t *controld_api, const char *node_name,
-                   const char *rsc_id, const char *operation,
+clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
+                   const char *node_name, const char *rsc_id, const char *operation,
                    const char *interval_spec, pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
@@ -658,16 +665,13 @@ clear_rsc_failures(pcmk_ipc_api_t *controld_api, const char *node_name,
             }
         }
 
-        /* not available until glib 2.32
         g_hash_table_add(rscs, (gpointer) failed_id);
-        */
-        g_hash_table_insert(rscs, (gpointer) failed_id, (gpointer) failed_id);
     }
 
     g_hash_table_iter_init(&iter, rscs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
         crm_debug("Erasing failures of %s on %s", failed_id, node_name);
-        rc = clear_rsc_history(controld_api, node_name, failed_id, data_set);
+        rc = clear_rsc_history(out, controld_api, node_name, failed_id, data_set);
         if (rc != pcmk_rc_ok) {
             return rc;
         }
@@ -697,8 +701,8 @@ clear_rsc_fail_attrs(pe_resource_t *rsc, const char *operation,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                    pe_resource_t *rsc, const char *operation,
+cli_resource_delete(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
+                    const char *host_uname, pe_resource_t *rsc, const char *operation,
                     const char *interval_spec, bool just_failures,
                     pe_working_set_t *data_set, gboolean force)
 {
@@ -714,7 +718,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *child = (pe_resource_t *) lpc->data;
 
-            rc = cli_resource_delete(controld_api, host_uname, child, operation,
+            rc = cli_resource_delete(out, controld_api, host_uname, child, operation,
                                      interval_spec, just_failures, data_set,
                                      force);
             if (rc != pcmk_rc_ok) {
@@ -749,7 +753,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
             node = (pe_node_t *) lpc->data;
 
             if (node->details->online) {
-                rc = cli_resource_delete(controld_api, node->details->uname,
+                rc = cli_resource_delete(out, controld_api, node->details->uname,
                                          rsc, operation, interval_spec,
                                          just_failures, data_set, force);
             }
@@ -766,58 +770,58 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
     node = pe_find_node(data_set->nodes, host_uname);
 
     if (node == NULL) {
-        printf("Unable to clean up %s because node %s not found\n",
-               rsc->id, host_uname);
+        out->err(out, "Unable to clean up %s because node %s not found",
+                 rsc->id, host_uname);
         return ENODEV;
     }
 
     if (!node->details->rsc_discovery_enabled) {
-        printf("Unable to clean up %s because resource discovery disabled on %s\n",
-               rsc->id, host_uname);
+        out->err(out, "Unable to clean up %s because resource discovery disabled on %s",
+                 rsc->id, host_uname);
         return EOPNOTSUPP;
     }
 
     if (controld_api == NULL) {
-        printf("Dry run: skipping clean-up of %s on %s due to CIB_file\n",
-               rsc->id, host_uname);
+        out->err(out, "Dry run: skipping clean-up of %s on %s due to CIB_file",
+                 rsc->id, host_uname);
         return pcmk_rc_ok;
     }
 
     rc = clear_rsc_fail_attrs(rsc, operation, interval_spec, node);
     if (rc != pcmk_rc_ok) {
-        printf("Unable to clean up %s failures on %s: %s\n",
-                rsc->id, host_uname, pcmk_rc_str(rc));
+        out->err(out, "Unable to clean up %s failures on %s: %s",
+                 rsc->id, host_uname, pcmk_rc_str(rc));
         return rc;
     }
 
     if (just_failures) {
-        rc = clear_rsc_failures(controld_api, host_uname, rsc->id, operation,
+        rc = clear_rsc_failures(out, controld_api, host_uname, rsc->id, operation,
                                 interval_spec, data_set);
     } else {
-        rc = clear_rsc_history(controld_api, host_uname, rsc->id, data_set);
+        rc = clear_rsc_history(out, controld_api, host_uname, rsc->id, data_set);
     }
     if (rc != pcmk_rc_ok) {
-        printf("Cleaned %s failures on %s, but unable to clean history: %s\n",
-               rsc->id, host_uname, pcmk_strerror(rc));
+        out->err(out, "Cleaned %s failures on %s, but unable to clean history: %s",
+                 rsc->id, host_uname, pcmk_strerror(rc));
     } else {
-        printf("Cleaned up %s on %s\n", rsc->id, host_uname);
+        out->info(out, "Cleaned up %s on %s", rsc->id, host_uname);
     }
     return rc;
 }
 
 // \return Standard Pacemaker return code
 int
-cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
-                const char *operation, const char *interval_spec,
-                pe_working_set_t *data_set)
+cli_cleanup_all(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
+                const char *node_name, const char *operation,
+                const char *interval_spec, pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
     int attr_options = pcmk__node_attr_none;
     const char *display_name = node_name? node_name : "all nodes";
 
     if (controld_api == NULL) {
-        printf("Dry run: skipping clean-up of %s due to CIB_file\n",
-               display_name);
+        out->info(out, "Dry run: skipping clean-up of %s due to CIB_file",
+                  display_name);
         return rc;
     }
 
@@ -825,7 +829,7 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
         pe_node_t *node = pe_find_node(data_set->nodes, node_name);
 
         if (node == NULL) {
-            CMD_ERR("Unknown node: %s", node_name);
+            out->err(out, "Unknown node: %s", node_name);
             return ENXIO;
         }
         if (pe__is_guest_or_remote_node(node)) {
@@ -836,132 +840,98 @@ cli_cleanup_all(pcmk_ipc_api_t *controld_api, const char *node_name,
     rc = pcmk__node_attr_request_clear(NULL, node_name, NULL, operation,
                                        interval_spec, NULL, attr_options);
     if (rc != pcmk_rc_ok) {
-        printf("Unable to clean up all failures on %s: %s\n",
-                display_name, pcmk_rc_str(rc));
+        out->err(out, "Unable to clean up all failures on %s: %s",
+                 display_name, pcmk_rc_str(rc));
         return rc;
     }
 
     if (node_name) {
-        rc = clear_rsc_failures(controld_api, node_name, NULL,
+        rc = clear_rsc_failures(out, controld_api, node_name, NULL,
                                 operation, interval_spec, data_set);
         if (rc != pcmk_rc_ok) {
-            printf("Cleaned all resource failures on %s, but unable to clean history: %s\n",
-                   node_name, pcmk_strerror(rc));
+            out->err(out, "Cleaned all resource failures on %s, but unable to clean history: %s",
+                     node_name, pcmk_strerror(rc));
             return rc;
         }
     } else {
         for (GList *iter = data_set->nodes; iter; iter = iter->next) {
             pe_node_t *node = (pe_node_t *) iter->data;
 
-            rc = clear_rsc_failures(controld_api, node->details->uname, NULL,
+            rc = clear_rsc_failures(out, controld_api, node->details->uname, NULL,
                                     operation, interval_spec, data_set);
             if (rc != pcmk_rc_ok) {
-                printf("Cleaned all resource failures on all nodes, but unable to clean history: %s\n",
-                       pcmk_strerror(rc));
+                out->err(out, "Cleaned all resource failures on all nodes, but unable to clean history: %s",
+                         pcmk_strerror(rc));
                 return rc;
             }
         }
     }
 
-    printf("Cleaned up all resources on %s\n", display_name);
+    out->info(out, "Cleaned up all resources on %s", display_name);
     return rc;
 }
 
-void
-cli_resource_check(cib_t * cib_conn, pe_resource_t *rsc)
+int
+cli_resource_check(pcmk__output_t *out, cib_t * cib_conn, pe_resource_t *rsc)
 {
-    bool printed = false;
     char *role_s = NULL;
     char *managed = NULL;
     pe_resource_t *parent = uber_parent(rsc);
+    int rc = pcmk_rc_no_output;
+    resource_checks_t *checks = NULL;
 
-    find_resource_attr(cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
+    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
                        NULL, NULL, NULL, XML_RSC_ATTR_MANAGED, &managed);
 
-    find_resource_attr(cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
+    find_resource_attr(out, cib_conn, XML_NVPAIR_ATTR_VALUE, parent->id,
                        NULL, NULL, NULL, XML_RSC_ATTR_TARGET_ROLE, &role_s);
 
-    if(role_s) {
-        enum rsc_role_e role = text2role(role_s);
+    checks = cli_check_resource(rsc, role_s, managed);
 
-        free(role_s);
-        if(role == RSC_ROLE_UNKNOWN) {
-            // Treated as if unset
-
-        } else if(role == RSC_ROLE_STOPPED) {
-            printf("\n  * Configuration specifies '%s' should remain stopped\n",
-                   parent->id);
-            printed = true;
-
-        } else if (pcmk_is_set(parent->flags, pe_rsc_promotable)
-                   && (role == RSC_ROLE_SLAVE)) {
-            printf("\n  * Configuration specifies '%s' should not be promoted\n",
-                   parent->id);
-            printed = true;
-        }
+    if (checks->flags != 0 || checks->lock_node != NULL) {
+        rc = out->message(out, "resource-check-list", checks);
     }
 
-    if (managed && !crm_is_true(managed)) {
-        printf("%s  * Configuration prevents cluster from stopping or starting unmanaged '%s'\n",
-               (printed? "" : "\n"), parent->id);
-        printed = true;
-    }
+    free(role_s);
     free(managed);
-
-    if (rsc->lock_node) {
-        printf("%s  * '%s' is locked to node %s due to shutdown\n",
-               (printed? "" : "\n"), parent->id, rsc->lock_node->details->uname);
-    }
-
-    if (printed) {
-        printf("\n");
-    }
+    free(checks);
+    return rc;
 }
 
 // \return Standard Pacemaker return code
 int
-cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
-                  const char *rsc_id, pe_working_set_t *data_set)
+cli_resource_fail(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
+                  const char *host_uname, const char *rsc_id,
+                  pe_working_set_t *data_set)
 {
     crm_notice("Failing %s on %s", rsc_id, host_uname);
-    return send_lrm_rsc_op(controld_api, true, host_uname, rsc_id, data_set);
+    return send_lrm_rsc_op(out, controld_api, true, host_uname, rsc_id, data_set);
 }
 
 static GHashTable *
-generate_resource_params(pe_resource_t * rsc, pe_working_set_t * data_set)
+generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
+                         pe_working_set_t *data_set)
 {
     GHashTable *params = NULL;
     GHashTable *meta = NULL;
     GHashTable *combined = NULL;
     GHashTableIter iter;
+    char *key = NULL;
+    char *value = NULL;
 
-    if (!rsc) {
-        crm_err("Resource does not exist in config");
-        return NULL;
-    }
-
-    params = crm_str_table_new();
-    meta = crm_str_table_new();
     combined = crm_str_table_new();
 
-    get_rsc_attributes(params, rsc, NULL /* TODO: Pass in local node */ , data_set);
-    get_meta_attributes(meta, rsc, NULL /* TODO: Pass in local node */ , data_set);
-
-    if (params) {
-        char *key = NULL;
-        char *value = NULL;
-
+    params = pe_rsc_params(rsc, node, data_set);
+    if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
             g_hash_table_insert(combined, strdup(key), strdup(value));
         }
-        g_hash_table_destroy(params);
     }
 
-    if (meta) {
-        char *key = NULL;
-        char *value = NULL;
-
+    meta = crm_str_table_new();
+    get_meta_attributes(meta, rsc, node, data_set);
+    if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
             char *crm_name = crm_meta_name(key);
@@ -974,7 +944,7 @@ generate_resource_params(pe_resource_t * rsc, pe_working_set_t * data_set)
     return combined;
 }
 
-static bool resource_is_running_on(pe_resource_t *rsc, const char *host) 
+bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 {
     bool found = TRUE;
     GListPtr hIter = NULL;
@@ -1055,12 +1025,12 @@ static void dump_list(GList *items, const char *tag)
     }
 }
 
-static void display_list(GList *items, const char *tag) 
+static void display_list(pcmk__output_t *out, GList *items, const char *tag)
 {
     GList *item = NULL;
 
     for (item = items; item != NULL; item = item->next) {
-        fprintf(stdout, "%s%s\n", tag, (const char *)item->data);
+        out->info(out, "%s%s", tag, (const char *)item->data);
     }
 }
 
@@ -1103,7 +1073,8 @@ update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
  *       data_set->input and data_set->now.
  */
 static int
-update_working_set_from_cib(pe_working_set_t * data_set, cib_t *cib)
+update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
+                            cib_t *cib)
 {
     xmlNode *cib_xml_copy = NULL;
     int rc = pcmk_rc_ok;
@@ -1112,12 +1083,12 @@ update_working_set_from_cib(pe_working_set_t * data_set, cib_t *cib)
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not obtain the current CIB: %s (%d)\n", pcmk_strerror(rc), rc);
+        out->err(out, "Could not obtain the current CIB: %s (%d)", pcmk_strerror(rc), rc);
         return rc;
     }
     rc = update_working_set_xml(data_set, &cib_xml_copy);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not upgrade the current CIB XML\n");
+        out->err(out, "Could not upgrade the current CIB XML");
         free_xml(cib_xml_copy);
         return rc;
     }
@@ -1127,7 +1098,8 @@ update_working_set_from_cib(pe_working_set_t * data_set, cib_t *cib)
 
 // \return Standard Pacemaker return code
 static int
-update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
+update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
+               bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
@@ -1135,7 +1107,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     int rc = pcmk_rc_ok;
 
     pe_reset_working_set(data_set);
-    rc = update_working_set_from_cib(data_set, cib);
+    rc = update_working_set_from_cib(out, data_set, cib);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1146,7 +1118,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         shadow_file = get_shadow_file(pid);
 
         if (shadow_cib == NULL) {
-            fprintf(stderr, "Could not create shadow cib: '%s'\n", pid);
+            out->err(out, "Could not create shadow cib: '%s'", pid);
             rc = ENXIO;
             goto cleanup;
         }
@@ -1154,7 +1126,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         rc = write_xml_file(data_set->input, shadow_file, FALSE);
 
         if (rc < 0) {
-            fprintf(stderr, "Could not populate shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
+            out->err(out, "Could not populate shadow cib: %s (%d)", pcmk_strerror(rc), rc);
             goto cleanup;
         }
 
@@ -1162,13 +1134,13 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
         rc = pcmk_legacy2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            fprintf(stderr, "Could not connect to shadow cib: %s (%d)\n", pcmk_strerror(rc), rc);
+            out->err(out, "Could not connect to shadow cib: %s (%d)", pcmk_strerror(rc), rc);
             goto cleanup;
         }
 
         pcmk__schedule_actions(data_set, data_set->input, NULL);
         run_simulation(data_set, shadow_cib, NULL, TRUE);
-        rc = update_dataset(shadow_cib, data_set, FALSE);
+        rc = update_dataset(out, shadow_cib, data_set, FALSE);
 
     } else {
         cluster_status(data_set);
@@ -1260,9 +1232,9 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  * \return Standard Pacemaker return code (exits on certain failures)
  */
 int
-cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_lifetime,
-                     int timeout_ms, cib_t *cib, int cib_options,
-                     gboolean promoted_role_only, gboolean force)
+cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
+                     const char *move_lifetime, int timeout_ms, cib_t *cib,
+                     int cib_options, gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1285,9 +1257,9 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
     if(resource_is_running_on(rsc, host) == FALSE) {
         const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
         if(host) {
-            printf("%s is not running on %s and so cannot be restarted\n", id, host);
+            out->err(out, "%s is not running on %s and so cannot be restarted", id, host);
         } else {
-            printf("%s is not running anywhere and so cannot be restarted\n", id);
+            out->err(out, "%s is not running anywhere and so cannot be restarted", id);
         }
         return ENXIO;
     }
@@ -1322,9 +1294,9 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
         goto done;
     }
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
-    rc = update_dataset(cib, data_set, FALSE);
+    rc = update_dataset(out, cib, data_set, FALSE);
     if(rc != pcmk_rc_ok) {
-        fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
+        out->err(out, "Could not get new resource list: %s (%d)", pcmk_strerror(rc), rc);
         goto done;
     }
 
@@ -1335,8 +1307,8 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
 
     if (stop_via_ban) {
         /* Stop the clone or bundle instance by banning it from the host */
-        BE_QUIET = TRUE;
-        rc = cli_resource_ban(rsc_id, host, move_lifetime, NULL, cib,
+        out->quiet = true;
+        rc = cli_resource_ban(out, rsc_id, host, move_lifetime, NULL, cib,
                               cib_options, promoted_role_only);
 
     } else {
@@ -1346,16 +1318,16 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
          */
         char *lookup_id = clone_strip(rsc->id);
 
-        find_resource_attr(cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
+        find_resource_attr(out, cib, XML_NVPAIR_ATTR_VALUE, lookup_id, NULL, NULL,
                            NULL, XML_RSC_ATTR_TARGET_ROLE, &orig_target_role);
         free(lookup_id);
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
-                                           XML_RSC_ATTR_TARGET_ROLE,
+        rc = cli_resource_update_attribute(out, rsc, rsc_id, NULL, XML_TAG_META_SETS,
+                                           NULL, XML_RSC_ATTR_TARGET_ROLE,
                                            RSC_STOPPED, FALSE, cib, cib_options,
                                            data_set, force);
     }
     if(rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not set target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        out->err(out, "Could not set target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
         if (current_active) {
             g_list_free_full(current_active, free);
         }
@@ -1365,9 +1337,9 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
         goto done;
     }
 
-    rc = update_dataset(cib, data_set, TRUE);
+    rc = update_dataset(out, cib, data_set, TRUE);
     if(rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not determine which resources would be stopped\n");
+        out->err(out, "Could not determine which resources would be stopped");
         goto failure;
     }
 
@@ -1375,8 +1347,8 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
     dump_list(target_active, "Target");
 
     list_delta = pcmk__subtract_lists(current_active, target_active, (GCompareFunc) strcmp);
-    fprintf(stdout, "Waiting for %d resources to stop:\n", g_list_length(list_delta));
-    display_list(list_delta, " * ");
+    out->info(out, "Waiting for %d resources to stop:", g_list_length(list_delta));
+    display_list(out, list_delta, " * ");
 
     step_timeout_s = timeout / sleep_interval;
     while (list_delta != NULL) {
@@ -1392,9 +1364,9 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
                 timeout -= sleep_interval;
                 crm_trace("%ds remaining", timeout);
             }
-            rc = update_dataset(cib, data_set, FALSE);
+            rc = update_dataset(out, cib, data_set, FALSE);
             if(rc != pcmk_rc_ok) {
-                fprintf(stderr, "Could not determine which resources were stopped\n");
+                out->err(out, "Could not determine which resources were stopped");
                 goto failure;
             }
 
@@ -1411,8 +1383,8 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
         crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
-            fprintf(stderr, "Could not complete shutdown of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
-            display_list(list_delta, " * ");
+            out->info(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
+            display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
         }
@@ -1423,20 +1395,20 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
         rc = cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
 
     } else if (orig_target_role) {
-        rc = cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS,
+        rc = cli_resource_update_attribute(out, rsc, rsc_id, NULL, XML_TAG_META_SETS,
                                            NULL, XML_RSC_ATTR_TARGET_ROLE,
                                            orig_target_role, FALSE, cib,
                                            cib_options, data_set, force);
         free(orig_target_role);
         orig_target_role = NULL;
     } else {
-        rc = cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
-                                           XML_RSC_ATTR_TARGET_ROLE, cib,
+        rc = cli_resource_delete_attribute(out, rsc, rsc_id, NULL, XML_TAG_META_SETS,
+                                           NULL, XML_RSC_ATTR_TARGET_ROLE, cib,
                                            cib_options, data_set, force);
     }
 
     if(rc != pcmk_rc_ok) {
-        fprintf(stderr, "Could not unset target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
+        out->err(out, "Could not unset target-role for %s: %s (%d)", rsc_id, pcmk_strerror(rc), rc);
         goto done;
     }
 
@@ -1445,8 +1417,8 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
     }
     target_active = restart_target_active;
     list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
-    fprintf(stdout, "Waiting for %d resources to start again:\n", g_list_length(list_delta));
-    display_list(list_delta, " * ");
+    out->info(out, "Waiting for %d resources to start again:", g_list_length(list_delta));
+    display_list(out, list_delta, " * ");
 
     step_timeout_s = timeout / sleep_interval;
     while (waiting_for_starts(list_delta, rsc, host)) {
@@ -1464,9 +1436,9 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
                 crm_trace("%ds remaining", timeout);
             }
 
-            rc = update_dataset(cib, data_set, FALSE);
+            rc = update_dataset(out, cib, data_set, FALSE);
             if(rc != pcmk_rc_ok) {
-                fprintf(stderr, "Could not determine which resources were started\n");
+                out->err(out, "Could not determine which resources were started");
                 goto failure;
             }
 
@@ -1486,8 +1458,8 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
 
         if(before == g_list_length(list_delta)) {
             /* aborted during start phase, print the contents of list_delta */
-            fprintf(stdout, "Could not complete restart of %s, %d resources remaining\n", rsc_id, g_list_length(list_delta));
-            display_list(list_delta, " * ");
+            out->info(out, "Could not complete restart of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
+            display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
         }
@@ -1501,12 +1473,12 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, const char *move_life
     if (stop_via_ban) {
         cli_resource_clear(rsc_id, host, NULL, cib, cib_options, TRUE, force);
     } else if (orig_target_role) {
-        cli_resource_update_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
+        cli_resource_update_attribute(out, rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                       XML_RSC_ATTR_TARGET_ROLE, orig_target_role,
                                       FALSE, cib, cib_options, data_set, force);
         free(orig_target_role);
     } else {
-        cli_resource_delete_attribute(rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
+        cli_resource_delete_attribute(out, rsc, rsc_id, NULL, XML_TAG_META_SETS, NULL,
                                       XML_RSC_ATTR_TARGET_ROLE, cib, cib_options,
                                       data_set, force);
     }
@@ -1562,29 +1534,23 @@ actions_are_pending(GListPtr actions)
     return FALSE;
 }
 
-/*!
- * \internal
- * \brief Print pending actions to stderr
- *
- * \param[in] actions   List of actions to check
- *
- * \return void
- */
 static void
-print_pending_actions(GListPtr actions)
+print_pending_actions(pcmk__output_t *out, GListPtr actions)
 {
     GListPtr action;
 
-    fprintf(stderr, "Pending actions:\n");
+    out->info(out, "Pending actions:");
     for (action = actions; action != NULL; action = action->next) {
         pe_action_t *a = (pe_action_t *) action->data;
 
-        if (action_is_pending(a)) {
-            fprintf(stderr, "\tAction %d: %s", a->id, a->uuid);
-            if (a->node) {
-                fprintf(stderr, "\ton %s", a->node->details->uname);
-            }
-            fprintf(stderr, "\n");
+        if (!action_is_pending(a)) {
+            continue;
+        }
+
+        if (a->node) {
+            out->info(out, "\tAction %d: %s\ton %s", a->id, a->uuid, a->node->details->uname);
+        } else {
+            out->info(out, "\tAction %d: %s", a->id, a->uuid);
         }
     }
 }
@@ -1610,14 +1576,14 @@ print_pending_actions(GListPtr actions)
  * \return Standard Pacemaker return code
  */
 int
-wait_till_stable(int timeout_ms, cib_t * cib)
+wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
 {
     pe_working_set_t *data_set = NULL;
     int rc = pcmk_rc_ok;
     int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
     time_t expire_time = time(NULL) + timeout_s;
     time_t time_diff;
-    bool printed_version_warning = BE_QUIET; // i.e. don't print if quiet
+    bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
@@ -1632,7 +1598,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
         if (time_diff > 0) {
             crm_info("Waiting up to %ld seconds for cluster actions to complete", time_diff);
         } else {
-            print_pending_actions(data_set->actions);
+            print_pending_actions(out, data_set->actions);
             pe_free_working_set(data_set);
             return ETIME;
         }
@@ -1642,7 +1608,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
 
         /* Get latest transition graph */
         pe_reset_working_set(data_set);
-        rc = update_working_set_from_cib(data_set, cib);
+        rc = update_working_set_from_cib(out, data_set, cib);
         if (rc != pcmk_rc_ok) {
             pe_free_working_set(data_set);
             return rc;
@@ -1662,8 +1628,8 @@ wait_till_stable(int timeout_ms, cib_t * cib)
                                                          "dc-version");
 
             if (!pcmk__str_eq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION, pcmk__str_casei)) {
-                printf("warning: wait option may not work properly in "
-                       "mixed-version cluster\n");
+                out->info(out, "warning: wait option may not work properly in "
+                          "mixed-version cluster");
                 printed_version_warning = TRUE;
             }
         }
@@ -1675,19 +1641,19 @@ wait_till_stable(int timeout_ms, cib_t * cib)
 }
 
 crm_exit_t
-cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
-                                 const char *rsc_prov, const char *rsc_type,
-                                 const char *action, GHashTable *params,
-                                 GHashTable *override_hash, int timeout_ms,
-                                 int resource_verbose, gboolean force)
+cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
+                                 const char *rsc_class, const char *rsc_prov,
+                                 const char *rsc_type, const char *action,
+                                 GHashTable *params, GHashTable *override_hash,
+                                 int timeout_ms, int resource_verbose, gboolean force)
 {
     GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
     if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        CMD_ERR("Sorry, the %s option doesn't support %s resources yet",
-                action, rsc_class);
+        out->err(out, "Sorry, the %s option doesn't support %s resources yet",
+                 action, rsc_class);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
@@ -1749,59 +1715,31 @@ cli_resource_execute_from_params(const char *rsc_name, const char *rsc_class,
 
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            printf("Overriding the cluster configuration for '%s' with '%s' = '%s'\n",
-                   rsc_name, name, value);
+            out->info(out, "Overriding the cluster configuration for '%s' with '%s' = '%s'",
+                      rsc_name, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }
 
     if (services_action_sync(op)) {
-        int more, lpc, last;
-        char *local_copy = NULL;
-
         exit_code = op->rc;
 
         if (op->status == PCMK_LRM_OP_DONE) {
-            printf("Operation %s for %s (%s:%s:%s) returned: '%s' (%d)\n",
-                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                   services_ocf_exitcode_str(op->rc), op->rc);
+            out->info(out, "Operation %s for %s (%s:%s:%s) returned: '%s' (%d)",
+                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
+                      services_ocf_exitcode_str(op->rc), op->rc);
         } else {
-            printf("Operation %s for %s (%s:%s:%s) failed: '%s' (%d)\n",
-                   action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                   services_lrm_status_str(op->status), op->status);
+            out->info(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
+                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
+                      services_lrm_status_str(op->status), op->status);
         }
 
         /* hide output for validate-all if not in verbose */
         if (resource_verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei))
             goto done;
 
-        if (op->stdout_data) {
-            local_copy = strdup(op->stdout_data);
-            more = strlen(local_copy);
-            last = 0;
-
-            for (lpc = 0; lpc < more; lpc++) {
-                if (local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
-                    local_copy[lpc] = 0;
-                    printf(" >  stdout: %s\n", local_copy + last);
-                    last = lpc + 1;
-                }
-            }
-            free(local_copy);
-        }
-        if (op->stderr_data) {
-            local_copy = strdup(op->stderr_data);
-            more = strlen(local_copy);
-            last = 0;
-
-            for (lpc = 0; lpc < more; lpc++) {
-                if (local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
-                    local_copy[lpc] = 0;
-                    printf(" >  stderr: %s\n", local_copy + last);
-                    last = lpc + 1;
-                }
-            }
-            free(local_copy);
+        if (op->stdout_data || op->stderr_data) {
+            out->subprocess_output(out, op->rc, op->stdout_data, op->stderr_data);
         }
     } else {
         exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
@@ -1815,9 +1753,10 @@ done:
 }
 
 crm_exit_t
-cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
-                     const char *rsc_action, GHashTable *override_hash,
-                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
+cli_resource_execute(pcmk__output_t *out, pe_resource_t *rsc,
+                     const char *requested_name, const char *rsc_action,
+                     GHashTable *override_hash, int timeout_ms,
+                     cib_t * cib, pe_working_set_t *data_set,
                      int resource_verbose, gboolean force)
 {
     crm_exit_t exit_code = CRM_EX_OK;
@@ -1842,13 +1781,13 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
         action = rsc_action+6;
 
         if(pe_rsc_is_clone(rsc)) {
-            int rc = cli_resource_search(rsc, requested_name, data_set);
-            if(rc > 0 && force == FALSE) {
-                CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
-                        action, rsc->id);
-                CMD_ERR("Try setting target-role=Stopped first or specifying "
-                        "the force option");
-                crm_exit(CRM_EX_UNSAFE);
+            GListPtr rscs = cli_resource_search(out, rsc, requested_name, data_set);
+            if(rscs != NULL && force == FALSE) {
+                out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
+                         action, rsc->id);
+                out->err(out, "Try setting target-role=Stopped first or specifying "
+                         "the force option");
+                return CRM_EX_UNSAFE;
             }
         }
 
@@ -1862,16 +1801,16 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
     }
 
     if(rsc->variant == pe_group) {
-        CMD_ERR("Sorry, the %s option doesn't support group resources",
-                rsc_action);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+        out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
+        return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
-    params = generate_resource_params(rsc, data_set);
+    params = generate_resource_params(rsc, NULL /* @TODO use local node */,
+                                      data_set);
 
     if (timeout_ms == 0) {
         timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
@@ -1879,7 +1818,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
     rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
 
-    exit_code = cli_resource_execute_from_params(rid, rclass, rprov, rtype, action,
+    exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, action,
                                                  params, override_hash, timeout_ms,
                                                  resource_verbose, force);
     return exit_code;
@@ -1887,10 +1826,10 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
-                  const char *move_lifetime, cib_t *cib, int cib_options,
-                  pe_working_set_t *data_set, gboolean promoted_role_only,
-                  gboolean force)
+cli_resource_move(pcmk__output_t *out, pe_resource_t *rsc, const char *rsc_id,
+                  const char *host_name, const char *move_lifetime, cib_t *cib,
+                  int cib_options, pe_working_set_t *data_set,
+                  gboolean promoted_role_only, gboolean force)
 {
     int rc = pcmk_rc_ok;
     unsigned int count = 0;
@@ -1906,12 +1845,12 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
         pe_resource_t *p = uber_parent(rsc);
 
         if (pcmk_is_set(p->flags, pe_rsc_promotable)) {
-            CMD_ERR("Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
+            out->info(out, "Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
 
         } else {
-            CMD_ERR("Ignoring master option: %s is not promotable", rsc_id);
+            out->info(out, "Ignoring master option: %s is not promotable", rsc_id);
             promoted_role_only = FALSE;
         }
     }
@@ -1966,7 +1905,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
                        cib_options, TRUE, force);
 
     /* Record an explicit preference for 'dest' */
-    rc = cli_resource_prefer(rsc_id, dest->details->uname, move_lifetime,
+    rc = cli_resource_prefer(out, rsc_id, dest->details->uname, move_lifetime,
                              cib, cib_options, promoted_role_only);
 
     crm_trace("%s%s now prefers node %s%s",
@@ -1978,17 +1917,17 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     if(force && (cur_is_dest == FALSE)) {
         /* Ban the original location if possible */
         if(current) {
-            (void)cli_resource_ban(rsc_id, current->details->uname, move_lifetime,
+            (void)cli_resource_ban(out, rsc_id, current->details->uname, move_lifetime,
                                    NULL, cib, cib_options, promoted_role_only);
 
         } else if(count > 1) {
-            CMD_ERR("Resource '%s' is currently %s in %d locations. "
-                    "One may now move to %s",
-                    rsc_id, (promoted_role_only? "promoted" : "active"),
-                    count, dest->details->uname);
-            CMD_ERR("To prevent '%s' from being %s at a specific location, "
-                    "specify a node.",
-                    rsc_id, (promoted_role_only? "promoted" : "active"));
+            out->info(out, "Resource '%s' is currently %s in %d locations. "
+                      "One may now move to %s",
+                      rsc_id, (promoted_role_only? "promoted" : "active"),
+                      count, dest->details->uname);
+            out->info(out, "To prevent '%s' from being %s at a specific location, "
+                      "specify a node.",
+                      rsc_id, (promoted_role_only? "promoted" : "active"));
 
         } else {
             crm_trace("Not banning %s from its current location: not active", rsc_id);
@@ -1996,98 +1935,4 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     }
 
     return rc;
-}
-
-static void
-cli_resource_why_without_rsc_and_host(cib_t *cib_conn,GListPtr resources)
-{
-    GListPtr lpc = NULL;
-    GListPtr hosts = NULL;
-
-    for (lpc = resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-        rsc->fns->location(rsc, &hosts, TRUE);
-
-        if (hosts == NULL) {
-            printf("Resource %s is not running\n", rsc->id);
-        } else {
-            printf("Resource %s is running\n", rsc->id);
-        }
-
-        cli_resource_check(cib_conn, rsc);
-        g_list_free(hosts);
-        hosts = NULL;
-     }
-
-}
-
-static void
-cli_resource_why_with_rsc_and_host(cib_t *cib_conn, GListPtr resources,
-                                   pe_resource_t *rsc, const char *host_uname)
-{
-    if (resource_is_running_on(rsc, host_uname)) {
-        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
-    } else {
-        printf("Resource %s is not running on host %s\n", rsc->id, host_uname);
-    }
-    cli_resource_check(cib_conn, rsc);
-}
-
-static void
-cli_resource_why_without_rsc_with_host(cib_t *cib_conn,GListPtr resources,pe_node_t *node)
-{
-    const char* host_uname =  node->details->uname;
-    GListPtr allResources = node->details->allocated_rsc;
-    GListPtr activeResources = node->details->running_rsc;
-    GListPtr unactiveResources = pcmk__subtract_lists(allResources,activeResources,(GCompareFunc) strcmp);
-    GListPtr lpc = NULL;
-
-    for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
-        cli_resource_check(cib_conn,rsc);
-    }
-
-    for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-        printf("Resource %s is assigned to host %s but not running\n",
-               rsc->id, host_uname);
-        cli_resource_check(cib_conn,rsc);
-     }
-
-     g_list_free(allResources);
-     g_list_free(activeResources);
-     g_list_free(unactiveResources);
-}
-
-static void
-cli_resource_why_with_rsc_without_host(cib_t *cib_conn, GListPtr resources,
-                                       pe_resource_t *rsc)
-{
-    GListPtr hosts = NULL;
-
-    rsc->fns->location(rsc, &hosts, TRUE);
-    printf("Resource %s is %srunning\n", rsc->id, (hosts? "" : "not "));
-    cli_resource_check(cib_conn, rsc);
-    g_list_free(hosts);
-}
-
-void cli_resource_why(cib_t *cib_conn, GListPtr resources, pe_resource_t *rsc,
-                      pe_node_t *node)
-{
-    const char *host_uname = (node == NULL)? NULL : node->details->uname;
-
-    if ((rsc == NULL) && (host_uname == NULL)) {
-        cli_resource_why_without_rsc_and_host(cib_conn, resources);
-
-    } else if ((rsc != NULL) && (host_uname != NULL)) {
-        cli_resource_why_with_rsc_and_host(cib_conn, resources, rsc,
-                                           host_uname);
-
-    } else if ((rsc == NULL) && (host_uname != NULL)) {
-        cli_resource_why_without_rsc_with_host(cib_conn, resources, node);
-
-    } else if ((rsc != NULL) && (host_uname == NULL)) {
-        cli_resource_why_with_rsc_without_host(cib_conn, resources, rsc);
-    }
 }

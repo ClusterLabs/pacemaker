@@ -143,7 +143,8 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
 
     } else if (pcmk__str_eq(task, CRM_OP_SHUTDOWN, pcmk__str_casei)) {
         crm_node_t *peer = crm_get_peer(0, router_node);
-        crm_update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
+
+        pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
     }
 
     cmd = create_request(task, action->xml, router_node, CRM_SYSTEM_CRMD, CRM_SYSTEM_TENGINE, NULL);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 the Pacemaker project contributors
+ * Copyright 2014-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,6 @@
 #ifndef PENGINE__H
 #  define PENGINE__H
 
-typedef struct rsc_colocation_s rsc_colocation_t;
 typedef struct rsc_ticket_s rsc_ticket_t;
 typedef struct lrm_agent_s lrm_agent_t;
 
@@ -37,7 +36,7 @@ enum pe_weights {
     pe_weights_rollback = 0x10,
 };
 
-struct rsc_colocation_s {
+typedef struct {
     const char *id;
     const char *node_attribute;
     pe_resource_t *rsc_lh;
@@ -47,7 +46,8 @@ struct rsc_colocation_s {
     int role_rh;
 
     int score;
-};
+    bool influence; // Whether rsc_lh should influence active rsc_rh placement
+} pcmk__colocation_t;
 
 enum loss_ticket_policy_e {
     loss_ticket_stop,
@@ -106,5 +106,31 @@ bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 extern gboolean show_scores;
 extern gboolean show_utilization;
 extern const char *transition_idle_timeout;
+
+/*!
+ * \internal
+ * \brief Check whether colocation's left-hand preferences should be considered
+ *
+ * \param[in] colocation  Colocation constraint
+ * \param[in] rsc         Right-hand instance (normally this will be
+ *                        colocation->rsc_rh, which NULL will be treated as,
+ *                        but for clones or bundles with multiple instances
+ *                        this can be a particular instance)
+ *
+ * \return true if colocation influence should be effective, otherwise false
+ */
+static inline bool
+pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
+                               const pe_resource_t *rsc)
+{
+    if (rsc == NULL) {
+        rsc = colocation->rsc_rh;
+    }
+
+    /* The left hand of a colocation influences the right hand's location
+     * if the influence option is true, or the right hand is not yet active.
+     */
+    return colocation->influence || (rsc->running_on == NULL);
+}
 
 #endif

@@ -250,6 +250,9 @@ cib_native_signoff(cib_t * cib)
 
     crm_debug("Disconnecting from the CIB manager");
 
+    cib_free_notify(cib);
+    remove_cib_op_callback(0, TRUE);
+
     if (native->source != NULL) {
         /* Attached to mainloop */
         mainloop_del_ipc_client(native->source);

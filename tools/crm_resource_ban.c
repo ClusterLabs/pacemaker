@@ -12,7 +12,7 @@
 #define XPATH_MAX 1024
 
 static char *
-parse_cli_lifetime(const char *move_lifetime)
+parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 {
     char *later_s = NULL;
     crm_time_t *now = NULL;
@@ -25,18 +25,18 @@ parse_cli_lifetime(const char *move_lifetime)
 
     duration = crm_time_parse_duration(move_lifetime);
     if (duration == NULL) {
-        CMD_ERR("Invalid duration specified: %s", move_lifetime);
-        CMD_ERR("Please refer to"
-                " https://en.wikipedia.org/wiki/ISO_8601#Durations"
-                " for examples of valid durations");
+        out->err(out, "Invalid duration specified: %s\n"
+                      "Please refer to https://en.wikipedia.org/wiki/ISO_8601#Durations "
+                      "for examples of valid durations", move_lifetime);
         return NULL;
     }
 
     now = crm_time_new(NULL);
     later = crm_time_add(now, duration);
     if (later == NULL) {
-        CMD_ERR("Unable to add %s to current time", move_lifetime);
-        CMD_ERR("Please report to " PACKAGE_BUGREPORT " as possible bug");
+        out->err(out, "Unable to add %s to current time\n"
+                      "Please report to " PACKAGE_BUGREPORT " as possible bug",
+                      move_lifetime);
         crm_time_free(now);
         crm_time_free(duration);
         return NULL;
@@ -48,7 +48,7 @@ parse_cli_lifetime(const char *move_lifetime)
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     crm_time_log(LOG_INFO, "duration", duration, crm_time_log_date | crm_time_log_timeofday);
     later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    printf("Migration will take effect until: %s\n", later_s);
+    out->info(out, "Migration will take effect until: %s", later_s);
 
     crm_time_free(duration);
     crm_time_free(later);
@@ -58,9 +58,9 @@ parse_cli_lifetime(const char *move_lifetime)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime,
-                 GListPtr allnodes, cib_t * cib_conn, int cib_options,
-                 gboolean promoted_role_only)
+cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
+                 const char *move_lifetime, GListPtr allnodes, cib_t * cib_conn,
+                 int cib_options, gboolean promoted_role_only)
 {
     char *later_s = NULL;
     int rc = pcmk_rc_ok;
@@ -72,13 +72,13 @@ cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime
         for(; n && rc == pcmk_rc_ok; n = n->next) {
             pe_node_t *target = n->data;
 
-            rc = cli_resource_ban(rsc_id, target->details->uname, move_lifetime,
+            rc = cli_resource_ban(out, rsc_id, target->details->uname, move_lifetime,
                                   NULL, cib_conn, cib_options, promoted_role_only);
         }
         return rc;
     }
 
-    later_s = parse_cli_lifetime(move_lifetime);
+    later_s = parse_cli_lifetime(out, move_lifetime);
     if(move_lifetime && later_s == NULL) {
         return EINVAL;
     }
@@ -88,16 +88,16 @@ cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
 
-    if (BE_QUIET == FALSE) {
-        CMD_ERR("WARNING: Creating rsc_location constraint '%s'"
-                " with a score of -INFINITY for resource %s"
-                " on %s.", ID(location), rsc_id, host);
-        CMD_ERR("\tThis will prevent %s from %s on %s until the constraint "
-                "is removed using the clear option or by editing the CIB "
-                "with an appropriate tool",
-                rsc_id, (promoted_role_only? "being promoted" : "running"), host);
-        CMD_ERR("\tThis will be the case even if %s is"
-                " the last node in the cluster", host);
+    if (!out->is_quiet(out)) {
+        out->info(out, "WARNING: Creating rsc_location constraint '%s' with a "
+                       "score of -INFINITY for resource %s on %s.\n\tThis will "
+                       "prevent %s from %s on %s until the constraint is removed "
+                       "using the clear option or by editing the CIB with an "
+                       "appropriate tool\n\tThis will be the case even if %s "
+                       "is the last node in the cluster",
+                       ID(location), rsc_id, host, rsc_id,
+                       (promoted_role_only? "being promoted" : "running"),
+                       host, host);
     }
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
@@ -143,10 +143,11 @@ cli_resource_ban(const char *rsc_id, const char *host, const char *move_lifetime
 
 // \return Standard Pacemaker return code
 int
-cli_resource_prefer(const char *rsc_id, const char *host, const char *move_lifetime,
-                    cib_t * cib_conn, int cib_options, gboolean promoted_role_only)
+cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
+                    const char *move_lifetime, cib_t * cib_conn, int cib_options,
+                    gboolean promoted_role_only)
 {
-    char *later_s = parse_cli_lifetime(move_lifetime);
+    char *later_s = parse_cli_lifetime(out, move_lifetime);
     int rc = pcmk_rc_ok;
     xmlNode *location = NULL;
     xmlNode *fragment = NULL;

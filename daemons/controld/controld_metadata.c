@@ -182,6 +182,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
     xmlNode *metadata = NULL;
     xmlNode *match = NULL;
     struct ra_metadata_s *md = NULL;
+    bool any_private_params = false;
 
     CRM_CHECK(mdc && rsc && metadata_str, return NULL);
 
@@ -238,9 +239,25 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
                 goto err;
             }
             if (pcmk_is_set(p->rap_flags, ra_param_private)) {
-                controld_set_ra_flags(md, key, ra_uses_private);
+                any_private_params = true;
             }
             md->ra_params = g_list_prepend(md->ra_params, p);
+        }
+    }
+
+    /* Newer resource agents support the "private" parameter attribute to
+     * indicate sensitive parameters. For backward compatibility with older
+     * agents, implicitly treat a few common names as private when the agent
+     * doesn't specify any explicitly.
+     */
+    if (!any_private_params) {
+        for (GList *iter = md->ra_params; iter != NULL; iter = iter->next) {
+            struct ra_param_s *p = iter->data;
+
+            if (pcmk__str_any_of(p->rap_name, "password", "passwd", "user",
+                                 NULL)) {
+                controld_set_ra_param_flags(p, ra_param_private);
+            }
         }
     }
 

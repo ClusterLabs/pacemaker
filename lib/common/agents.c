@@ -171,3 +171,42 @@ crm_provider_required(const char *standard)
 {
     return pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }
+
+/*!
+ * \brief Check whether a given stonith parameter is handled by Pacemaker
+ *
+ * Return true if a given string is the name of one of the special resource
+ * instance attributes interpreted directly by Pacemaker for stonith-class
+ * resources.
+ *
+ * \param[in] param  Parameter name to check
+ *
+ * \return true if \p param is a special fencing parameter
+ */
+bool
+pcmk_stonith_param(const char *param)
+{
+    if (param == NULL) {
+        return false;
+    }
+    if (pcmk__str_any_of(param, PCMK_STONITH_PROVIDES,
+                         PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
+        return true;
+    }
+    if (!pcmk__starts_with(param, "pcmk_")) { // Short-circuit common case
+        return false;
+    }
+    if (pcmk__str_any_of(param,
+                         PCMK_STONITH_ACTION_LIMIT,
+                         PCMK_STONITH_DELAY_BASE,
+                         PCMK_STONITH_DELAY_MAX,
+                         PCMK_STONITH_HOST_ARGUMENT,
+                         PCMK_STONITH_HOST_CHECK,
+                         PCMK_STONITH_HOST_LIST,
+                         PCMK_STONITH_HOST_MAP,
+                         NULL)) {
+        return true;
+    }
+    param = strchr(param + 5, '_'); // Skip past "pcmk_ACTION"
+    return pcmk__str_any_of(param, "_action", "_timeout", "_retries", NULL);
+}

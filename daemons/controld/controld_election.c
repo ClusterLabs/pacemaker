@@ -218,7 +218,7 @@ do_dc_takeover(long long action,
 
 #if SUPPORT_COROSYNC
     if (fsa_cluster_name == NULL && is_corosync_cluster()) {
-        char *cluster_name = corosync_cluster_name();
+        char *cluster_name = pcmk__corosync_cluster_name();
 
         if (cluster_name) {
             update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
@@ -257,7 +257,7 @@ do_dc_release(long long action,
             xmlNode *update = NULL;
             crm_node_t *node = crm_get_peer(0, fsa_our_uname);
 
-            crm_update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
+            pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,
                                               __func__);
             /* Don't need a based response because controld will stop. */

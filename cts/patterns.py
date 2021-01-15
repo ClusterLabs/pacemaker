@@ -1,10 +1,7 @@
 """ Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-# Pacemaker targets compatibility with Python 2.7 and 3.2+
-from __future__ import print_function, unicode_literals, absolute_import, division
-
-__copyright__ = "Copyright 2008-2019 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2020 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, os
@@ -67,9 +64,9 @@ class BasePatterns(object):
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
             "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
-            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* targeting %s on .* for .*@.*: OK",
+            "Pat:Fencing_ok"      : r"pacemaker-fenced.*:\s*Operation .* targeting %s by .* for .*@.*: OK",
             "Pat:Fencing_recover" : r"pacemaker-schedulerd.*: Recover %s",
-            "Pat:Fencing_active"  : r"pacemaker-schedulerd.*: Resource %s is active on .* nodes",
+            "Pat:Fencing_active"  : r"stonith resource .* is active on 2 nodes (attempting recovery)",
             "Pat:Fencing_probe"   : r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
             "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
@@ -77,7 +74,7 @@ class BasePatterns(object):
             "Pat:CloneOpFail"   : r"pacemaker-schedulerd.*:.*Unexpected result .* recorded for %s of (%s|%s) ",
             "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
             "Pat:NodeFenced"    : r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
-            "Pat:FenceOpOK"     : "Operation .* for host '%s' with device .* returned: 0",
+            "Pat:FenceOpOK"     : "Operation .* targeting %s using .* returned 0",
         }
 
     def get_component(self, key):
@@ -149,7 +146,7 @@ class crm_corosync(BasePatterns):
             r"update_trace_data",
             r"async_notify:.*strange, client not found",
             r"Parse error: Ignoring unknown option .*nodename",
-            r"error.*: Operation 'reboot' .* with device 'FencingFail' returned:",
+            r"error.*: Operation 'reboot' .* using FencingFail returned ",
             r"getinfo response error: 1$",
             r"sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
             r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* (failed|closed)",
@@ -215,11 +212,8 @@ class crm_corosync(BasePatterns):
             r"Lost connection to the CIB manager",
             r"pacemaker-controld.*:\s*Action A_RECOVER .* not supported",
             r"pacemaker-controld.*:\s*Performing A_EXIT_1 - forcefully exiting ",
-            r".*:\s*Executing .* fencing operation \(.*\) on ",
             r".*:\s*Requesting fencing \([^)]+\) of node ",
             r"(Blackbox dump requested|Problem detected)",
-#           "Resource .*stonith::.* is active on 2 nodes attempting recovery",
-#           "Transition .* ERRORs found during PE processing",
         ]
         
         self.components["corosync-ignore"] = [
@@ -298,7 +292,6 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-controld"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
-#                    "Executing .* fencing operation",
 # Only if the node wasn't the DC:  "State transition S_IDLE",
                     "State transition .* -> S_IDLE",
                     ]

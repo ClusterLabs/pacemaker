@@ -23,6 +23,7 @@
 #include <crm/cluster/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
+#include "crmcluster_private.h"
 
 /* The peer cache remembers cluster nodes that have been seen.
  * This is managed mostly automatically by libcluster, based on
@@ -50,11 +51,36 @@ GHashTable *crm_peer_cache = NULL;
  */
 GHashTable *crm_remote_peer_cache = NULL;
 
-GHashTable *crm_known_peer_cache = NULL;
+/*
+ * The known node cache tracks cluster and remote nodes that have been seen in
+ * the CIB. It is useful mainly when a caller needs to know about a node that
+ * may no longer be in the membership, but doesn't want to add the node to the
+ * main peer cache tables.
+ */
+static GHashTable *known_node_cache = NULL;
 
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 static gboolean crm_autoreap  = TRUE;
+
+// Flag setting and clearing for crm_node_t:flags
+
+#define set_peer_flags(peer, flags_to_set) do {                               \
+        (peer)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
+                                           "Peer", (peer)->uname,             \
+                                           (peer)->flags, (flags_to_set),     \
+                                           #flags_to_set);                    \
+    } while (0)
+
+#define clear_peer_flags(peer, flags_to_clear) do {                           \
+        (peer)->flags = pcmk__clear_flags_as(__func__, __LINE__,              \
+                                             LOG_TRACE,                       \
+                                             "Peer", (peer)->uname,           \
+                                             (peer)->flags, (flags_to_clear), \
+                                             #flags_to_clear);                \
+    } while (0)
+
+static void update_peer_uname(crm_node_t *node, const char *uname);
 
 int
 crm_remote_peer_cache_size(void)
@@ -73,8 +99,8 @@ crm_remote_peer_cache_size(void)
  * \return Cache entry for node on success, NULL (and set errno) otherwise
  *
  * \note When creating a new entry, this will leave the node state undetermined,
- *       so the caller should also call crm_update_peer_state() if the state is
- *       known.
+ *       so the caller should also call pcmk__update_peer_state() if the state
+ *       is known.
  */
 crm_node_t *
 crm_remote_peer_get(const char *node_name)
@@ -99,7 +125,7 @@ crm_remote_peer_get(const char *node_name)
     }
 
     /* Populate the essential information */
-    pcmk__set_peer_flags(node, crm_remote_node);
+    set_peer_flags(node, crm_remote_node);
     node->uuid = strdup(node_name);
     if (node->uuid == NULL) {
         free(node);
@@ -112,7 +138,7 @@ crm_remote_peer_get(const char *node_name)
     crm_trace("added %s to remote cache", node_name);
 
     /* Update the entry's uname, ensuring peer status callbacks are called */
-    crm_update_peer_uname(node, node_name);
+    update_peer_uname(node, node_name);
     return node;
 }
 
@@ -185,14 +211,14 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
         node = crm_remote_peer_get(remote);
         CRM_ASSERT(node);
         if (state) {
-            crm_update_peer_state(__func__, node, state, 0);
+            pcmk__update_peer_state(__func__, node, state, 0);
         }
 
     } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        pcmk__clear_peer_flags(node, crm_node_dirty);
+        clear_peer_flags(node, crm_node_dirty);
         if (state) {
-            crm_update_peer_state(__func__, node, state, 0);
+            pcmk__update_peer_state(__func__, node, state, 0);
         }
     }
 }
@@ -200,7 +226,7 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 static void
 mark_dirty(gpointer key, gpointer value, gpointer user_data)
 {
-    pcmk__set_peer_flags((crm_node_t *) value, crm_node_dirty);
+    set_peer_flags((crm_node_t *) value, crm_node_dirty);
 }
 
 static gboolean
@@ -351,7 +377,7 @@ reap_crm_member(uint32_t id, const char *name)
 }
 
 static void
-crm_count_peer(gpointer key, gpointer value, gpointer user_data)
+count_peer(gpointer key, gpointer value, gpointer user_data)
 {
     guint *count = user_data;
     crm_node_t *node = value;
@@ -367,7 +393,7 @@ crm_active_peers(void)
     guint count = 0;
 
     if (crm_peer_cache) {
-        g_hash_table_foreach(crm_peer_cache, crm_count_peer, &count);
+        g_hash_table_foreach(crm_peer_cache, count_peer, &count);
     }
     return count;
 }
@@ -397,8 +423,10 @@ crm_peer_init(void)
         crm_remote_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, destroy_crm_node);
     }
 
-    if (crm_known_peer_cache == NULL) {
-        crm_known_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, destroy_crm_node);
+    if (known_node_cache == NULL) {
+        known_node_cache = g_hash_table_new_full(crm_strcase_hash,
+                                                 crm_strcase_equal, free,
+                                                 destroy_crm_node);
     }
 }
 
@@ -417,15 +445,17 @@ crm_peer_destroy(void)
         crm_remote_peer_cache = NULL;
     }
 
-    if (crm_known_peer_cache != NULL) {
-        crm_trace("Destroying known peer cache with %d members", g_hash_table_size(crm_known_peer_cache));
-        g_hash_table_destroy(crm_known_peer_cache);
-        crm_known_peer_cache = NULL;
+    if (known_node_cache != NULL) {
+        crm_trace("Destroying known node cache with %d members",
+                  g_hash_table_size(known_node_cache));
+        g_hash_table_destroy(known_node_cache);
+        known_node_cache = NULL;
     }
 
 }
 
-void (*crm_status_callback) (enum crm_status_type, crm_node_t *, const void *) = NULL;
+static void (*peer_status_callback)(enum crm_status_type, crm_node_t *,
+                                    const void *) = NULL;
 
 /*!
  * \brief Set a client function that will be called after peer status changes
@@ -440,14 +470,14 @@ void (*crm_status_callback) (enum crm_status_type, crm_node_t *, const void *) =
 void
 crm_set_status_callback(void (*dispatch) (enum crm_status_type, crm_node_t *, const void *))
 {
-    crm_status_callback = dispatch;
+    peer_status_callback = dispatch;
 }
 
 /*!
  * \brief Tell the library whether to automatically reap lost nodes
  *
  * If TRUE (the default), calling crm_update_peer_proc() will also update the
- * peer state to CRM_NODE_MEMBER or CRM_NODE_LOST, and crm_update_peer_state()
+ * peer state to CRM_NODE_MEMBER or CRM_NODE_LOST, and pcmk__update_peer_state()
  * will reap peers whose state changes to anything other than CRM_NODE_MEMBER.
  * Callers should leave this enabled unless they plan to manage the cache
  * separately on their own.
@@ -460,7 +490,8 @@ crm_set_autoreap(gboolean autoreap)
     crm_autoreap = autoreap;
 }
 
-static void crm_dump_peer_hash(int level, const char *caller)
+static void
+dump_peer_hash(int level, const char *caller)
 {
     GHashTableIter iter;
     const char *id = NULL;
@@ -472,16 +503,24 @@ static void crm_dump_peer_hash(int level, const char *caller)
     }
 }
 
-static gboolean crm_hash_find_by_data(gpointer key, gpointer value, gpointer user_data)
+static gboolean
+hash_find_by_data(gpointer key, gpointer value, gpointer user_data)
 {
-    if(value == user_data) {
-        return TRUE;
-    }
-    return FALSE;
+    return value == user_data;
 }
 
+/*!
+ * \internal
+ * \brief Search caches for a node (cluster or Pacemaker Remote)
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ *
+ * \return Node cache entry if found, otherwise NULL
+ */
 crm_node_t *
-crm_find_peer_full(unsigned int id, const char *uname, int flags)
+pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
 {
     crm_node_t *node = NULL;
 
@@ -489,16 +528,25 @@ crm_find_peer_full(unsigned int id, const char *uname, int flags)
 
     crm_peer_init();
 
-    if ((uname != NULL) && (flags & CRM_GET_PEER_REMOTE)) {
+    if ((uname != NULL) && pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
     }
 
-    if (node == NULL && (flags & CRM_GET_PEER_CLUSTER)) {
-        node = crm_find_peer(id, uname);
+    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
+        node = pcmk__search_cluster_node_cache(id, uname);
     }
     return node;
 }
 
+/*!
+ * \brief Get a node cache entry (cluster or Pacemaker Remote)
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ *
+ * \return (Possibly newly created) node cache entry
+ */
 crm_node_t *
 crm_get_peer_full(unsigned int id, const char *uname, int flags)
 {
@@ -508,18 +556,27 @@ crm_get_peer_full(unsigned int id, const char *uname, int flags)
 
     crm_peer_init();
 
-    if (flags & CRM_GET_PEER_REMOTE) {
+    if (pcmk_is_set(flags, CRM_GET_PEER_REMOTE)) {
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
     }
 
-    if (node == NULL && (flags & CRM_GET_PEER_CLUSTER)) {
+    if ((node == NULL) && pcmk_is_set(flags, CRM_GET_PEER_CLUSTER)) {
         node = crm_get_peer(id, uname);
     }
     return node;
 }
 
+/*!
+ * \internal
+ * \brief Search cluster node cache
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ *
+ * \return Cluster node cache entry if found, otherwise NULL
+ */
 crm_node_t *
-crm_find_peer(unsigned int id, const char *uname)
+pcmk__search_cluster_node_cache(unsigned int id, const char *uname)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -561,7 +618,7 @@ crm_find_peer(unsigned int id, const char *uname)
         crm_trace("Only one: %p for %u/%s", by_name, id, uname);
 
         if(id && by_name->id) {
-            crm_dump_peer_hash(LOG_WARNING, __func__);
+            dump_peer_hash(LOG_WARNING, __func__);
             crm_crit("Node %u and %u share the same name '%s'",
                      id, by_name->id, uname);
             node = NULL; /* Create a new one */
@@ -574,7 +631,7 @@ crm_find_peer(unsigned int id, const char *uname)
         crm_trace("Only one: %p for %u/%s", by_id, id, uname);
 
         if(uname && by_id->uname) {
-            crm_dump_peer_hash(LOG_WARNING, __func__);
+            dump_peer_hash(LOG_WARNING, __func__);
             crm_crit("Node '%s' and '%s' share the same cluster nodeid %u: assuming '%s' is correct",
                      uname, by_id->uname, id, uname);
         }
@@ -582,11 +639,11 @@ crm_find_peer(unsigned int id, const char *uname)
     } else if(uname && by_id->uname) {
         if(pcmk__str_eq(uname, by_id->uname, pcmk__str_casei)) {
             crm_notice("Node '%s' has changed its ID from %u to %u", by_id->uname, by_name->id, by_id->id);
-            g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
+            g_hash_table_foreach_remove(crm_peer_cache, hash_find_by_data, by_name);
 
         } else {
             crm_warn("Node '%s' and '%s' share the same cluster nodeid: %u %s", by_id->uname, by_name->uname, id, uname);
-            crm_dump_peer_hash(LOG_INFO, __func__);
+            dump_peer_hash(LOG_INFO, __func__);
             crm_abort(__FILE__, __func__, __LINE__, "member weirdness", TRUE,
                       TRUE);
         }
@@ -598,13 +655,13 @@ crm_find_peer(unsigned int id, const char *uname)
         /* Simple merge */
 
         /* Only corosync-based clusters use node IDs. The functions that call
-         * crm_update_peer_state() and crm_update_peer_proc() only know nodeid,
-         * so 'by_id' is authoritative when merging.
+         * pcmk__update_peer_state() and crm_update_peer_proc() only know
+         * nodeid, so 'by_id' is authoritative when merging.
          */
-        crm_dump_peer_hash(LOG_DEBUG, __func__);
+        dump_peer_hash(LOG_DEBUG, __func__);
 
         crm_info("Merging %p into %p", by_name, by_id);
-        g_hash_table_foreach_remove(crm_peer_cache, crm_hash_find_by_data, by_name);
+        g_hash_table_foreach_remove(crm_peer_cache, hash_find_by_data, by_name);
     }
 
     return node;
@@ -612,7 +669,7 @@ crm_find_peer(unsigned int id, const char *uname)
 
 #if SUPPORT_COROSYNC
 static guint
-crm_remove_conflicting_peer(crm_node_t *node)
+remove_conflicting_peer(crm_node_t *node)
 {
     int matches = 0;
     GHashTableIter iter;
@@ -622,7 +679,7 @@ crm_remove_conflicting_peer(crm_node_t *node)
         return 0;
     }
 
-    if (corosync_cmap_has_config("nodelist") != 0) {
+    if (!pcmk__corosync_has_nodelist()) {
         return 0;
     }
 
@@ -649,6 +706,14 @@ crm_remove_conflicting_peer(crm_node_t *node)
 }
 #endif
 
+/*!
+ * \brief Get a cluster node cache entry
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ *
+ * \return (Possibly newly created) cluster node cache entry
+ */
 /* coverity[-alloc] Memory is referenced in one or both hashtables */
 crm_node_t *
 crm_get_peer(unsigned int id, const char *uname)
@@ -660,7 +725,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
     crm_peer_init();
 
-    node = crm_find_peer(id, uname);
+    node = pcmk__search_cluster_node_cache(id, uname);
 
     /* if uname wasn't provided, and find_peer did not turn up a uname based on id.
      * we need to do a lookup of the node name using the id in the cluster membership. */
@@ -674,7 +739,7 @@ crm_get_peer(unsigned int id, const char *uname)
 
         /* try to turn up the node one more time now that we know the uname. */
         if (node == NULL) {
-            node = crm_find_peer(id, uname);
+            node = pcmk__search_cluster_node_cache(id, uname);
         }
     }
 
@@ -699,7 +764,7 @@ crm_get_peer(unsigned int id, const char *uname)
     }
 
     if (uname && (node->uname == NULL)) {
-        crm_update_peer_uname(node, uname);
+        update_peer_uname(node, uname);
     }
 
     if(node->uuid == NULL) {
@@ -729,8 +794,8 @@ crm_get_peer(unsigned int id, const char *uname)
  *       because in some cases it can remove conflicting cache entries,
  *       which would invalidate the iterator.
  */
-void
-crm_update_peer_uname(crm_node_t *node, const char *uname)
+static void
+update_peer_uname(crm_node_t *node, const char *uname)
 {
     CRM_CHECK(uname != NULL,
               crm_err("Bug: can't update node name without name"); return);
@@ -755,15 +820,57 @@ crm_update_peer_uname(crm_node_t *node, const char *uname)
     node->uname = strdup(uname);
     CRM_ASSERT(node->uname != NULL);
 
-    if (crm_status_callback) {
-        crm_status_callback(crm_status_uname, node, NULL);
+    if (peer_status_callback != NULL) {
+        peer_status_callback(crm_status_uname, node, NULL);
     }
 
 #if SUPPORT_COROSYNC
     if (is_corosync_cluster() && !pcmk_is_set(node->flags, crm_remote_node)) {
-        crm_remove_conflicting_peer(node);
+        remove_conflicting_peer(node);
     }
 #endif
+}
+
+/*!
+ * \internal
+ * \brief Get log-friendly string equivalent of a process flag
+ *
+ * \param[in] proc  Process flag
+ *
+ * \return Log-friendly string equivalent of \p proc
+ */
+static inline const char *
+proc2text(enum crm_proc_flag proc)
+{
+    const char *text = "unknown";
+
+    switch (proc) {
+        case crm_proc_none:
+            text = "none";
+            break;
+        case crm_proc_based:
+            text = "pacemaker-based";
+            break;
+        case crm_proc_controld:
+            text = "pacemaker-controld";
+            break;
+        case crm_proc_schedulerd:
+            text = "pacemaker-schedulerd";
+            break;
+        case crm_proc_execd:
+            text = "pacemaker-execd";
+            break;
+        case crm_proc_attrd:
+            text = "pacemaker-attrd";
+            break;
+        case crm_proc_fenced:
+            text = "pacemaker-fenced";
+            break;
+        case crm_proc_cpg:
+            text = "corosync-cpg";
+            break;
+    }
+    return text;
 }
 
 /*!
@@ -789,7 +896,8 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
     gboolean changed = FALSE;
 
     CRM_CHECK(node != NULL, crm_err("%s: Could not set %s to %s for NULL",
-                                    source, peer2text(flag), status); return NULL);
+                                    source, proc2text(flag), status);
+                            return NULL);
 
     /* Pacemaker doesn't spawn processes on remote nodes */
     if (pcmk_is_set(node->flags, crm_remote_node)) {
@@ -826,14 +934,14 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
                      node->id);
         } else {
             crm_info("%s: Node %s[%u] - %s is now %s", source, node->uname, node->id,
-                     peer2text(flag), status);
+                     proc2text(flag), status);
         }
 
         /* Call the client callback first, then update the peer state,
          * in case the node will be reaped
          */
-        if (crm_status_callback) {
-            crm_status_callback(crm_status_processes, node, &last);
+        if (peer_status_callback != NULL) {
+            peer_status_callback(crm_status_processes, node, &last);
         }
 
         /* The client callback shouldn't touch the peer caches,
@@ -851,17 +959,26 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
             } else {
                 peer_state = CRM_NODE_LOST;
             }
-            node = crm_update_peer_state(__func__, node, peer_state, 0);
+            node = pcmk__update_peer_state(__func__, node, peer_state, 0);
         }
     } else {
         crm_trace("%s: Node %s[%u] - %s is unchanged (%s)", source, node->uname, node->id,
-                  peer2text(flag), status);
+                  proc2text(flag), status);
     }
     return node;
 }
 
+/*!
+ * \internal
+ * \brief Update a cluster node cache entry's expected join state
+ *
+ * \param[in]     source    Caller's function name (for logging)
+ * \param[in,out] node      Node to update
+ * \param[in]     expected  Node's new join state
+ */
 void
-crm_update_peer_expected(const char *source, crm_node_t * node, const char *expected)
+pcmk__update_peer_expected(const char *source, crm_node_t *node,
+                           const char *expected)
 {
     char *last = NULL;
     gboolean changed = FALSE;
@@ -907,7 +1024,8 @@ crm_update_peer_expected(const char *source, crm_node_t * node, const char *expe
  *       within a peer cache iteration if the iterator is supplied.
  */
 static crm_node_t *
-crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *state, uint64_t membership, GHashTableIter *iter)
+update_peer_state_iter(const char *source, crm_node_t *node, const char *state,
+                       uint64_t membership, GHashTableIter *iter)
 {
     gboolean is_member;
 
@@ -931,8 +1049,8 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
         crm_notice("Node %s state is now %s " CRM_XS
                    " nodeid=%u previous=%s source=%s", node->uname, state,
                    node->id, (last? last : "unknown"), source);
-        if (crm_status_callback) {
-            crm_status_callback(crm_status_nstate, node, last);
+        if (peer_status_callback != NULL) {
+            peer_status_callback(crm_status_nstate, node, last);
         }
         free(last);
 
@@ -975,9 +1093,10 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
  *       otherwise reaping could invalidate the iterator.
  */
 crm_node_t *
-crm_update_peer_state(const char *source, crm_node_t * node, const char *state, uint64_t membership)
+pcmk__update_peer_state(const char *source, crm_node_t *node,
+                        const char *state, uint64_t membership)
 {
-    return crm_update_peer_state_iter(source, node, state, membership, NULL);
+    return update_peer_state_iter(source, node, state, membership, NULL);
 }
 
 /*!
@@ -987,7 +1106,7 @@ crm_update_peer_state(const char *source, crm_node_t * node, const char *state, 
  * \param[in] membership  Membership ID of nodes to keep
  */
 void
-crm_reap_unseen_nodes(uint64_t membership)
+pcmk__reap_unseen_nodes(uint64_t membership)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -998,11 +1117,11 @@ crm_reap_unseen_nodes(uint64_t membership)
         if (node->last_seen != membership) {
             if (node->state) {
                 /*
-                 * Calling crm_update_peer_state_iter() allows us to
+                 * Calling update_peer_state_iter() allows us to
                  * remove the node from crm_peer_cache without
                  * invalidating our iterator
                  */
-                crm_update_peer_state_iter(__func__, node, CRM_NODE_LOST,
+                update_peer_state_iter(__func__, node, CRM_NODE_LOST,
                                            membership, &iter);
 
             } else {
@@ -1013,21 +1132,8 @@ crm_reap_unseen_nodes(uint64_t membership)
     }
 }
 
-int
-crm_terminate_member(int nodeid, const char *uname, void *unused)
-{
-    /* Always use the synchronous, non-mainloop version */
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
-int
-crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
-{
-    return stonith_api_kick(nodeid, uname, 120, TRUE);
-}
-
 static crm_node_t *
-crm_find_known_peer(const char *id, const char *uname)
+find_known_node(const char *id, const char *uname)
 {
     GHashTableIter iter;
     crm_node_t *node = NULL;
@@ -1035,7 +1141,7 @@ crm_find_known_peer(const char *id, const char *uname)
     crm_node_t *by_name = NULL;
 
     if (uname) {
-        g_hash_table_iter_init(&iter, crm_known_peer_cache);
+        g_hash_table_iter_init(&iter, known_node_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if (node->uname && strcasecmp(node->uname, uname) == 0) {
                 crm_trace("Name match: %s = %p", node->uname, node);
@@ -1046,7 +1152,7 @@ crm_find_known_peer(const char *id, const char *uname)
     }
 
     if (id) {
-        g_hash_table_iter_init(&iter, crm_known_peer_cache);
+        g_hash_table_iter_init(&iter, known_node_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             if(strcasecmp(node->uuid, id) == 0) {
                 crm_trace("ID match: %s= %p", id, node);
@@ -1105,14 +1211,14 @@ crm_find_known_peer(const char *id, const char *uname)
 }
 
 static void
-known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
+known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 {
     const char *id = crm_element_value(xml_node, XML_ATTR_ID);
     const char *uname = crm_element_value(xml_node, XML_ATTR_UNAME);
     crm_node_t * node =  NULL;
 
     CRM_CHECK(id != NULL && uname !=NULL, return);
-    node = crm_find_known_peer(id, uname);
+    node = find_known_node(id, uname);
 
     if (node == NULL) {
         char *uniqueid = crm_generate_uuid();
@@ -1126,7 +1232,7 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         node->uuid = strdup(id);
         CRM_ASSERT(node->uuid != NULL);
 
-        g_hash_table_replace(crm_known_peer_cache, uniqueid, node);
+        g_hash_table_replace(known_node_cache, uniqueid, node);
 
     } else if (pcmk_is_set(node->flags, crm_node_dirty)) {
         if (!pcmk__str_eq(uname, node->uname, pcmk__str_casei)) {
@@ -1136,7 +1242,7 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
         }
 
         /* Node is in cache and hasn't been updated already, so mark it clean */
-        pcmk__clear_peer_flags(node, crm_node_dirty);
+        clear_peer_flags(node, crm_node_dirty);
     }
 
 }
@@ -1146,35 +1252,46 @@ known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
     "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
 
 static void
-crm_known_peer_cache_refresh(xmlNode *cib)
+refresh_known_node_cache(xmlNode *cib)
 {
     crm_peer_init();
 
-    g_hash_table_foreach(crm_known_peer_cache, mark_dirty, NULL);
+    g_hash_table_foreach(known_node_cache, mark_dirty, NULL);
 
     crm_foreach_xpath_result(cib, XPATH_MEMBER_NODE_CONFIG,
-                             known_peer_cache_refresh_helper, NULL);
+                             known_node_cache_refresh_helper, NULL);
 
     /* Remove all old cache entries that weren't seen in the CIB */
-    g_hash_table_foreach_remove(crm_known_peer_cache, is_dirty, NULL);
+    g_hash_table_foreach_remove(known_node_cache, is_dirty, NULL);
 }
 
 void
-crm_peer_caches_refresh(xmlNode *cib)
+pcmk__refresh_node_caches_from_cib(xmlNode *cib)
 {
     crm_remote_peer_cache_refresh(cib);
-    crm_known_peer_cache_refresh(cib);
+    refresh_known_node_cache(cib);
 }
 
+/*!
+ * \internal
+ * \brief Search known node cache
+ *
+ * \param[in] id     If not 0, cluster node ID to search for
+ * \param[in] uname  If not NULL, node name to search for
+ * \param[in] flags  Bitmask of enum crm_get_peer_flags
+ *
+ * \return Known node cache entry if found, otherwise NULL
+ */
 crm_node_t *
-crm_find_known_peer_full(unsigned int id, const char *uname, int flags)
+pcmk__search_known_node_cache(unsigned int id, const char *uname,
+                              uint32_t flags)
 {
     crm_node_t *node = NULL;
     char *id_str = NULL;
 
     CRM_ASSERT(id > 0 || uname != NULL);
 
-    node = crm_find_peer_full(id, uname, flags);
+    node = pcmk__search_node_caches(id, uname, flags);
 
     if (node || !(flags & CRM_GET_PEER_CLUSTER)) {
         return node;
@@ -1184,8 +1301,33 @@ crm_find_known_peer_full(unsigned int id, const char *uname, int flags)
         id_str = crm_strdup_printf("%u", id);
     }
 
-    node = crm_find_known_peer(id_str, uname);
+    node = find_known_node(id_str, uname);
 
     free(id_str);
     return node;
+}
+
+
+// Deprecated functions kept only for backward API compatibility
+
+int crm_terminate_member(int nodeid, const char *uname, void *unused);
+int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
+                                     int *connection);
+/*!
+ * \deprecated Use stonith_api_kick() from libstonithd instead
+ */
+int
+crm_terminate_member(int nodeid, const char *uname, void *unused)
+{
+    /* Always use the synchronous, non-mainloop version */
+    return stonith_api_kick(nodeid, uname, 120, TRUE);
+}
+
+/*!
+ * \deprecated Use stonith_api_kick() from libstonithd instead
+ */
+int
+crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
+{
+    return stonith_api_kick(nodeid, uname, 120, TRUE);
 }

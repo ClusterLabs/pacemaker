@@ -254,7 +254,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     if (pcmk__str_eq(op, PCMK__ATTRD_CMD_PEER_REMOVE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
-        attrd_client_peer_remove(client->name, xml);
+        attrd_client_peer_remove(client, xml);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_CLEAR_FAILURE, pcmk__str_casei)) {
         attrd_send_ack(client, id, flags);
@@ -282,7 +282,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 
     } else {
         crm_info("Ignoring request from client %s with unknown operation %s",
-                 client->name, op);
+                 pcmk__client_name(client), op);
     }
 
     free_xml(xml);

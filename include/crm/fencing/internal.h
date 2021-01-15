@@ -152,14 +152,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define T_STONITH_TIMEOUT_VALUE "st-async-timeout-value"
 #  define T_STONITH_NOTIFY    "st_notify"
 
-#  define STONITH_ATTR_HOSTARG   "pcmk_host_argument"
-#  define STONITH_ATTR_HOSTMAP   "pcmk_host_map"
-#  define STONITH_ATTR_HOSTLIST  "pcmk_host_list"
-#  define STONITH_ATTR_HOSTCHECK "pcmk_host_check"
-#  define STONITH_ATTR_DELAY_MAX "pcmk_delay_max"
-#  define STONITH_ATTR_DELAY_BASE   "pcmk_delay_base"
-#  define STONITH_ATTR_ACTION_LIMIT "pcmk_action_limit"
-
 #  define STONITH_ATTR_ACTION_OP   "action"
 
 #  define STONITH_OP_EXEC        "st_execute"
@@ -193,20 +185,11 @@ int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
                            const char *agent, GHashTable *params, const char *host_arg,
                            int timeout, char **output, char **error_output);
 
+/* Exported for crm_mon to reference */
 int stonith__failed_history(pcmk__output_t *out, va_list args);
 int stonith__history(pcmk__output_t *out, va_list args);
 int stonith__full_history(pcmk__output_t *out, va_list args);
-int stonith__full_history_xml(pcmk__output_t *out, va_list args);
-int stonith__last_fenced_html(pcmk__output_t *out, va_list args);
-int stonith__last_fenced_text(pcmk__output_t *out, va_list args);
-int stonith__last_fenced_xml(pcmk__output_t *out, va_list args);
 int stonith__pending_actions(pcmk__output_t *out, va_list args);
-int stonith__event_html(pcmk__output_t *out, va_list args);
-int stonith__event_text(pcmk__output_t *out, va_list args);
-int stonith__event_xml(pcmk__output_t *out, va_list args);
-int stonith__validate_agent_html(pcmk__output_t *out, va_list args);
-int stonith__validate_agent_text(pcmk__output_t *out, va_list args);
-int stonith__validate_agent_xml(pcmk__output_t *out, va_list args);
 
 stonith_history_t *stonith__first_matching_event(stonith_history_t *history,
                                                  bool (*matching_fn)(stonith_history_t *, void *),

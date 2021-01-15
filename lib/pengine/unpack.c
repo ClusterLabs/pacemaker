@@ -169,7 +169,7 @@ pe_fence_node(pe_working_set_t * data_set, pe_node_t * node,
 
 // nvpair with provides or requires set to unfencing
 #define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR                \
-    "[(@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_PROVIDES "'"    \
+    "[(@" XML_NVPAIR_ATTR_NAME "='" PCMK_STONITH_PROVIDES "'"    \
     "or @" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_REQUIRES "') " \
     "and @" XML_NVPAIR_ATTR_VALUE "='unfencing']"
 
@@ -376,22 +376,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     return TRUE;
 }
 
-static void
-destroy_digest_cache(gpointer ptr)
-{
-    op_digest_cache_t *data = ptr;
-
-    free_xml(data->params_all);
-    free_xml(data->params_secure);
-    free_xml(data->params_restart);
-
-    free(data->digest_all_calc);
-    free(data->digest_restart_calc);
-    free(data->digest_secure_calc);
-
-    free(data);
-}
-
 pe_node_t *
 pe_create_node(const char *id, const char *uname, const char *type,
                const char *score, pe_working_set_t * data_set)
@@ -446,7 +430,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->details->digest_cache = g_hash_table_new_full(crm_str_hash,
                                                             g_str_equal, free,
-                                                            destroy_digest_cache);
+                                                            pe__free_digests);
 
     data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
     return new_node;
@@ -3198,7 +3182,7 @@ should_clear_for_param_change(xmlNode *xml_op, const char *task,
 {
     if (!strcmp(task, "start") || !strcmp(task, "monitor")) {
 
-        if (pe__bundle_needs_remote_name(rsc)) {
+        if (pe__bundle_needs_remote_name(rsc, data_set)) {
             /* We haven't allocated resources yet, so we can't reliably
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.

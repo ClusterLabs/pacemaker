@@ -743,7 +743,7 @@ update_dc(xmlNode * msg)
         crm_node_t *dc_node = crm_get_peer(0, fsa_our_dc);
 
         crm_info("Set DC to %s (%s)", crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
-        crm_update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_MEMBER);
+        pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_MEMBER);
 
     } else if (last_dc != NULL) {
         crm_info("Unset DC. Was %s", crm_str(last_dc));
@@ -756,11 +756,11 @@ update_dc(xmlNode * msg)
 void crmd_peer_down(crm_node_t *peer, bool full) 
 {
     if(full && peer->state == NULL) {
-        crm_update_peer_state(__func__, peer, CRM_NODE_LOST, 0);
+        pcmk__update_peer_state(__func__, peer, CRM_NODE_LOST, 0);
         crm_update_peer_proc(__func__, peer, crm_proc_none, NULL);
     }
     crm_update_peer_join(__func__, peer, crm_join_none);
-    crm_update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
+    pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
 }
 
 #define MIN_CIB_OP_TIMEOUT (30)

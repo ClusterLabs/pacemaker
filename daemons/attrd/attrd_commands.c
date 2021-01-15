@@ -188,7 +188,7 @@ create_attribute(xmlNode *xml)
  * \return void
  */
 void
-attrd_client_peer_remove(const char *client_name, xmlNode *xml)
+attrd_client_peer_remove(pcmk__client_t *client, xmlNode *xml)
 {
     // Host and ID are not used in combination, rather host has precedence
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
@@ -199,7 +199,7 @@ attrd_client_peer_remove(const char *client_name, xmlNode *xml)
 
         crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID, &nodeid);
         if (nodeid > 0) {
-            crm_node_t *node = crm_find_peer(nodeid, NULL);
+            crm_node_t *node = pcmk__search_cluster_node_cache(nodeid, NULL);
             char *host_alloc = NULL;
 
             if (node && node->uname) {
@@ -216,12 +216,12 @@ attrd_client_peer_remove(const char *client_name, xmlNode *xml)
 
     if (host) {
         crm_info("Client %s is requesting all values for %s be removed",
-                 client_name, host);
+                 pcmk__client_name(client), host);
         send_attrd_message(NULL, xml); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
         crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
-                 client_name);
+                 pcmk__client_name(client));
     }
 }
 
@@ -628,6 +628,11 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             /* Synchronize if there is an attribute held only by own node that Writer does not have. */
             attrd_current_only_attribute_update(peer, xml);
         }
+
+    } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_casei)) {
+        /* Ignore. The flush command was removed in 2.0.0 but may be
+         * received from peers running older versions.
+         */
     }
 }
 
@@ -709,7 +714,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         /* If we previously assumed this node was an unseen cluster node,
          * remove its entry from the cluster peer cache.
          */
-        crm_node_t *dup = crm_find_peer(0, host);
+        crm_node_t *dup = pcmk__search_cluster_node_cache(0, host);
 
         if (dup && (dup->uuid == NULL)) {
             reap_crm_member(0, host);
@@ -885,6 +890,17 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         free(v->current);
         v->current = (value? strdup(value) : NULL);
         a->changed = TRUE;
+
+        if (pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)
+            && pcmk__str_eq(attr, XML_CIB_ATTR_SHUTDOWN, pcmk__str_none)) {
+
+            if (!pcmk__str_eq(value, "0", pcmk__str_null_matches)) {
+                attrd_set_requesting_shutdown();
+
+            } else {
+                attrd_clear_requesting_shutdown();
+            }
+        }
 
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {

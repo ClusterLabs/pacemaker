@@ -151,9 +151,8 @@ lrmd_remote_client_destroy(gpointer user_data)
         return;
     }
 
-    crm_notice("Cleaning up after remote client %s disconnected "
-               CRM_XS " id=%s",
-               (client->name? client->name : ""), client->id);
+    crm_notice("Cleaning up after remote client %s disconnected",
+               pcmk__client_name(client));
 
     ipc_proxy_remove_provider(client);
 

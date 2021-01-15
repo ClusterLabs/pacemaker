@@ -73,7 +73,7 @@ open-source cluster filesystems make use of a common *Distributed Lock
 Manager* (DLM), which makes direct use of Corosync for its messaging and
 membership capabilities and Pacemaker for the ability to fence nodes.
 
-.. image:: ../../shared/en-US/images/pcmk-stack.png
+.. image:: ../shared/images/pcmk-stack.png
    :alt: Example cluster stack
    :scale: 75 %
    :align: center
@@ -91,7 +91,7 @@ Pacemaker itself is composed of multiple daemons that work together:
 * pacemaker-fenced
 * pacemaker-schedulerd
 
-.. image:: ../../shared/en-US/images/pcmk-internals.png
+.. image:: ../shared/images/pcmk-internals.png
    :alt: Pacemaker software components
    :scale: 65 %
    :align: center
@@ -171,7 +171,7 @@ a cost-effective high-availability solution for many situations. One of the
 nodes provides the desired services, and if it fails, the other node takes
 over.
 
-.. image:: ../../shared/en-US/images/pcmk-active-passive.png
+.. image:: ../shared/images/pcmk-active-passive.png
    :alt: Active/Passive Redundancy
    :align: center
    :scale: 75 %
@@ -180,7 +180,7 @@ Pacemaker also supports multiple nodes in a shared-failover design, reducing
 hardware costs by allowing several active/passive clusters to be combined and
 share a common backup node.
 
-.. image:: ../../shared/en-US/images/pcmk-shared-failover.png
+.. image:: ../shared/images/pcmk-shared-failover.png
    :alt: Shared Failover
    :align: center
    :scale: 75 %
@@ -189,7 +189,7 @@ When shared storage is available, every node can potentially be used for
 failover. Pacemaker can even run multiple copies of services to spread out the
 workload. This is sometimes called N to N Redundancy.
 
-.. image:: ../../shared/en-US/images/pcmk-active-active.png
+.. image:: ../shared/images/pcmk-active-active.png
    :alt: N to N Redundancy
    :align: center
    :scale: 75 %
