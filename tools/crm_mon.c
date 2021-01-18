@@ -126,6 +126,7 @@ static void clean_up_cib_connection(void);
 static void clean_up_fencing_connection(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
+static void handle_connection_failures(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
 static int fencing_connect(void);
@@ -690,9 +691,11 @@ reconnect_after_timeout(gpointer data)
     if (cib_connect(TRUE) == pcmk_ok) {
         /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
         mon_refresh_display(NULL);
-        reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
+        return FALSE;
     }
-    return FALSE;
+
+    reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
+    return TRUE;
 }
 
 /* Called from various places when we are disconnected from the CIB or from the
@@ -887,6 +890,7 @@ static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_data)
 {
     int c;
+    int rc;
     gboolean config_mode = FALSE;
 
     while (1) {
@@ -1001,7 +1005,14 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
     }
 
 refresh:
-    mon_refresh_display(NULL);
+    fencing_connect();
+    rc = cib_connect(FALSE);
+    if (rc == pcmk_rc_ok) {
+        mon_refresh_display(NULL);
+    } else {
+        handle_connection_failures(rc);
+    }
+
     return TRUE;
 }
 #endif
