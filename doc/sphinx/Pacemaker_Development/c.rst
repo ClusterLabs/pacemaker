@@ -5,20 +5,15 @@
 C Coding Guidelines
 -------------------
 
-.. index::
-   pair: C; style
+Pacemaker is a large project accepting contributions from developers with a
+wide range of skill levels and organizational affiliations, and maintained by
+multiple people over long periods of time. Following consistent guidelines
+makes reading, writing, and reviewing code easier, and helps avoid common
+mistakes.
 
-Style Guidelines
-################
+Some existing Pacemaker code does not follow these guidelines, for historical
+reasons and API backward compatibility, but new code should.
 
-Pacemaker is a large, distributed project accepting contributions from
-developers with a wide range of skill levels and organizational affiliations,
-and maintained by multiple people over long periods of time. The guidelines in
-this section are not technically better than alternative approaches, but make
-project management easier.
-
-Many of these simply ensure stylistic consistency, which makes reading,
-writing, and reviewing code easier.
 
 .. index::
    pair: C; boilerplate
@@ -26,7 +21,7 @@ writing, and reviewing code easier.
    pair: copyright; C
 
 C Boilerplate
-_____________
+#############
 
 Every C file should start with a short copyright notice:
 
@@ -82,7 +77,7 @@ inclusion by C++, and give a Doxygen file description. For example:
    pair: C; whitespace
 
 Line Formatting
-_______________
+###############
 
 * Indentation must be 4 spaces, no tabs.
 * Do not leave trailing whitespace.
@@ -93,7 +88,7 @@ _______________
    pair: C; pointer
 
 Pointers
-________
+########
 
 * The ``*`` goes by the variable name, not the type:
 
@@ -112,7 +107,7 @@ ________
    pair: C; function
 
 Function Definitions
-____________________
+####################
 
 * In the function definition, put the return type on its own line, and place
   the opening brace by itself on a line.
@@ -139,7 +134,7 @@ ____________________
    {
 
 Control Statements (if, else, while, for, switch)
-_________________________________________________
+#################################################
 
 * The keyword is followed by one space, then left parenthesis without space,
   condition, right parenthesis, space, opening bracket on the same line.
@@ -185,7 +180,7 @@ _________________________________________________
    pair: C; operator
 
 Operators
-_________
+#########
 
 * Operators have spaces from both sides.
 * Do not rely on operator precedence; use parentheses when mixing operators
@@ -197,17 +192,14 @@ _________
    x = a + b - (c * d);
 
 
-Best Practices
-##############
 
-The guidelines in this section offer technical advantages.
 
 .. index::
    pair: C; struct
    pair: C; enum
 
 New Struct and Enum Members
-___________________________
+###########################
 
 In the public APIs, always add new ``struct`` members to the end of the
 ``struct``. This allows us to maintain backward API/ABI compatibility (as long
@@ -223,7 +215,7 @@ specified rather than left to the compiler, new values can be added anywhere.
    pair: C; API documentation
 
 API documentation
-_________________
+#################
 
 All public API header files, functions, structs, enums, etc.,
 should be documented with Doxygen comment blocks, as Pacemaker's
@@ -236,7 +228,7 @@ Doxygen comment.
    pair: C; naming
 
 Symbol Naming
-_____________
+#############
 
 * All file and function names should be unique across the entire project,
   to allow for individual tracing via ``PCMK_trace_files`` and
@@ -256,7 +248,7 @@ _____________
    pair: C; memory
 
 Memory Allocation
-_________________
+#################
 
 * Always use ``calloc()`` rather than ``malloc()``. It has no additional cost on
   modern operating systems, and reduces the severity and security risks of
@@ -266,7 +258,7 @@ _________________
    pair: C; logging
 
 Logging
-_______
+#######
 
 * When format strings are used for derived data types whose implementation may
   vary across platforms (``pid_t``, ``time_t``, etc.), the safest approach is
@@ -282,15 +274,17 @@ _______
    pair: C; regular expression
 
 Regular Expressions
-___________________
+###################
 
 - Use ``REG_NOSUB`` with ``regcomp()`` whenever possible, for efficiency.
 - Be sure to use ``regfree()`` appropriately.
 
-vim Settings
-____________
 
-.. index:: vim
+.. index::
+   pair: C; vim settings
+
+vim Settings
+############
 
 Developers who use ``vim`` to edit source code can add the following settings
 to their ``~/.vimrc`` file to follow Pacemaker C coding guidelines:
