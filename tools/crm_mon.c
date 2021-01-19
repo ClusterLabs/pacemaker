@@ -66,7 +66,7 @@ static mon_output_format_t output_format = mon_output_unset;
 /* other globals */
 static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
-static guint timer_id = 0;
+static guint reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
 static pe_working_set_t *mon_data_set = NULL;
 
@@ -122,14 +122,17 @@ struct {
     .mon_ops = mon_op_default
 };
 
-static void clean_up_connections(void);
+static void clean_up_cib_connection(void);
+static void clean_up_fencing_connection(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
+static void handle_connection_failures(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
+static int fencing_connect(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
-static void kick_refresh(gboolean data_updated);
+static void refresh_after_event(gboolean data_updated);
 
 static unsigned int
 all_includes(mon_output_format_t fmt) {
@@ -664,11 +667,13 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
+/* Reconnect to the CIB and fencing agent after reconnect_msec has passed.  This sounds
+ * like it would be more broadly useful, but only ever happens after a disconnect via
+ * mon_cib_connection_destroy.
+ */
 static gboolean
-mon_timer_popped(gpointer data)
+reconnect_after_timeout(gpointer data)
 {
-    int rc = pcmk_ok;
-
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
         clear();
@@ -676,71 +681,55 @@ mon_timer_popped(gpointer data)
     }
 #endif
 
-    if (timer_id > 0) {
-        g_source_remove(timer_id);
-        timer_id = 0;
+    if (reconnect_timer > 0) {
+        g_source_remove(reconnect_timer);
+        reconnect_timer = 0;
     }
 
     print_as(output_format, "Reconnecting...\n");
-    rc = cib_connect(TRUE);
-
-    if (rc != pcmk_ok) {
-        timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
+    fencing_connect();
+    if (cib_connect(TRUE) == pcmk_ok) {
+        /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
+        mon_refresh_display(NULL);
+        return FALSE;
     }
-    return FALSE;
+
+    reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
+    return TRUE;
 }
 
+/* Called from various places when we are disconnected from the CIB or from the
+ * fencing agent.  If the CIB connection is still valid, this function will also
+ * attempt to sign off and reconnect.
+ */
 static void
-do_mon_cib_connection_destroy(gpointer user_data, bool is_error)
+mon_cib_connection_destroy(gpointer user_data)
 {
-    if (is_error) {
-        out->err(out, "Connection to the cluster-daemons terminated");
-    } else {
-        out->info(out, "Connection to the cluster-daemons terminated");
-    }
+    out->info(out, "Connection to the cluster-daemons terminated");
 
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
         mainloop_timer_stop(refresh_timer);
     }
-    if (timer_id) {
+    if (reconnect_timer) {
         /* we'll trigger a new reconnect-timeout at the end */
-        g_source_remove(timer_id);
-        timer_id = 0;
+        g_source_remove(reconnect_timer);
+        reconnect_timer = 0;
     }
     if (st) {
         /* the client API won't properly reconnect notifications
          * if they are still in the table - so remove them
          */
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
-        if (st->state != stonith_disconnected) {
-            st->cmds->disconnect(st);
-        }
+        clean_up_fencing_connection();
     }
     if (cib) {
         cib->cmds->signoff(cib);
-        timer_id = g_timeout_add(options.reconnect_msec, mon_timer_popped, NULL);
+        reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
     }
     return;
 }
 
-static void
-mon_cib_connection_destroy_regular(gpointer user_data)
-{
-    do_mon_cib_connection_destroy(user_data, false);
-}
-
-static void
-mon_cib_connection_destroy_error(gpointer user_data)
-{
-    do_mon_cib_connection_destroy(user_data, true);
-}
-
-/*
- * Mainloop signal handler.
- */
+/* Signal handler installed into the mainloop for normal program shutdown */
 static void
 mon_shutdown(int nsig)
 {
@@ -750,6 +739,10 @@ mon_shutdown(int nsig)
 #if CURSES_ENABLED
 static sighandler_t ncurses_winch_handler;
 
+/* Signal handler installed the regular way (not into the main loop) for when
+ * the screen is resized.  Commonly, this happens when running in an xterm and
+ * the user changes its size.
+ */
 static void
 mon_winresize(int nsig)
 {
@@ -764,11 +757,47 @@ mon_winresize(int nsig)
             (*ncurses_winch_handler) (SIGWINCH);
         getmaxyx(stdscr, lines, cols);
         resizeterm(lines, cols);
+        /* Alert the mainloop code we'd like the refresh_trigger to run next
+         * time the mainloop gets around to checking.
+         */
         mainloop_set_trigger(refresh_trigger);
     }
     not_done--;
 }
 #endif
+
+static int
+fencing_connect(void)
+{
+    int rc = pcmk_ok;
+
+    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
+        st = stonith_api_new();
+    }
+
+    if (!pcmk_is_set(options.mon_ops, mon_op_fence_connect) ||
+        st == NULL || st->state != stonith_disconnected) {
+        return rc;
+    }
+
+    rc = st->cmds->connect(st, crm_system_name, NULL);
+    if (rc == pcmk_ok) {
+        crm_trace("Setting up stonith callbacks");
+        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+                                            mon_st_callback_event);
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
+        } else {
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
+                                            mon_st_callback_display);
+            st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
+        }
+    } else {
+        st = NULL;
+    }
+
+    return rc;
+}
 
 static int
 cib_connect(gboolean full)
@@ -780,28 +809,6 @@ cib_connect(gboolean full)
 
     if (getenv("CIB_passwd") != NULL) {
         need_pass = FALSE;
-    }
-
-    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
-        st = stonith_api_new();
-    }
-
-    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect)
-        && (st != NULL) && (st->state == stonith_disconnected)) {
-
-        rc = st->cmds->connect(st, crm_system_name, NULL);
-        if (rc == pcmk_ok) {
-            crm_trace("Setting up stonith callbacks");
-            if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
-                                                mon_st_callback_event);
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
-            } else {
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
-                                                mon_st_callback_display);
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
-            }
-        }
     }
 
     if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
@@ -829,12 +836,9 @@ cib_connect(gboolean full)
     }
 
     rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
-    if (rc == pcmk_ok) {
-        mon_refresh_display(NULL);
-    }
 
     if (rc == pcmk_ok && full) {
-        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
+        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
         if (rc == -EPROTONOSUPPORT) {
             print_as
                 (output_format, "Notification setup not supported, won't be able to reconnect after failure");
@@ -851,7 +855,8 @@ cib_connect(gboolean full)
 
         if (rc != pcmk_ok) {
             out->err(out, "Notification setup failed, could not monitor CIB actions");
-            clean_up_connections();
+            clean_up_cib_connection();
+            clean_up_fencing_connection();
         }
     }
     return rc;
@@ -875,10 +880,17 @@ get_option_desc(char c)
 #define print_option_help(output_format, option, condition) \
     out->info(out, "%c %c: \t%s", ((condition)? '*': ' '), option, get_option_desc(option));
 
+/* This function is called from the main loop when there is something to be read
+ * on stdin, like an interactive user's keystroke.  All it does is read the keystroke,
+ * set flags (or show the page showing which keystrokes are valid), and redraw the
+ * screen.  It does not do anything with connections to the CIB or fencing agent
+ * agent what would happen in mon_refresh_display.
+ */
 static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_data)
 {
     int c;
+    int rc;
     gboolean config_mode = FALSE;
 
     while (1) {
@@ -892,7 +904,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                     options.mon_ops |= mon_op_fence_history;
                     options.mon_ops |= mon_op_fence_connect;
                     if (st == NULL) {
-                        mon_cib_connection_destroy_regular(NULL);
+                        mon_cib_connection_destroy(NULL);
                     }
                 }
 
@@ -963,6 +975,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 config_mode = TRUE;
                 break;
             default:
+                /* All other keys just redraw the screen. */
                 goto refresh;
         }
 
@@ -992,7 +1005,14 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
     }
 
 refresh:
-    mon_refresh_display(NULL);
+    fencing_connect();
+    rc = cib_connect(FALSE);
+    if (rc == pcmk_rc_ok) {
+        mon_refresh_display(NULL);
+    } else {
+        handle_connection_failures(rc);
+    }
+
     return TRUE;
 }
 #endif
@@ -1157,6 +1177,45 @@ reconcile_output_format(pcmk__common_args_t *args) {
         g_propagate_error(&error, err);
         clean_up(CRM_EX_USAGE);
     }
+}
+
+static void
+handle_connection_failures(int rc)
+{
+    if (rc == pcmk_ok) {
+        return;
+    }
+
+    if (output_format == mon_output_monitor) {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
+                    pcmk_strerror(rc));
+        rc = MON_STATUS_CRIT;
+    } else if (rc == -ENOTCONN) {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
+        rc = crm_errno2exit(rc);
+    } else {
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
+        rc = crm_errno2exit(rc);
+    }
+
+    clean_up(rc);
+}
+
+static void
+one_shot()
+{
+    int rc;
+
+    fencing_connect();
+
+    rc = cib_connect(FALSE);
+    if (rc == pcmk_rc_ok) {
+        mon_refresh_display(NULL);
+    } else {
+        handle_connection_failures(rc);
+    }
+
+    clean_up(CRM_EX_OK);
 }
 
 int
@@ -1372,16 +1431,17 @@ main(int argc, char **argv)
 
     crm_info("Starting %s", crm_system_name);
 
+    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+        one_shot();
+    }
+
     do {
-        if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-            print_as(output_format ,"Waiting until cluster is available on this node ...\n");
-        }
-        rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
+        print_as(output_format ,"Waiting until cluster is available on this node ...\n");
 
-        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-            break;
+        fencing_connect();
+        rc = cib_connect(TRUE);
 
-        } else if (rc != pcmk_ok) {
+        if (rc != pcmk_ok) {
             sleep(options.reconnect_msec / 1000);
 #if CURSES_ENABLED
             if (output_format == mon_output_console) {
@@ -1395,24 +1455,8 @@ main(int argc, char **argv)
 
     } while (rc == -ENOTCONN);
 
-    if (rc != pcmk_ok) {
-        if (output_format == mon_output_monitor) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
-                        pcmk_strerror(rc));
-            return clean_up(MON_STATUS_CRIT);
-        } else {
-            if (rc == -ENOTCONN) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
-            } else {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
-            }
-        }
-        return clean_up(crm_errno2exit(rc));
-    }
-
-    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-        return clean_up(CRM_EX_OK);
-    }
+    handle_connection_failures(rc);
+    mon_refresh_display(NULL);
 
     mainloop = g_main_loop_new(NULL, FALSE);
 
@@ -1429,6 +1473,10 @@ main(int argc, char **argv)
         g_io_add_watch(io_channel, G_IO_IN, detect_user_input, NULL);
     }
 #endif
+
+    /* When refresh_trigger->trigger is set to TRUE, call mon_refresh_display.  In
+     * this file, that is anywhere mainloop_set_trigger is called.
+     */
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 
     g_main_loop_run(mainloop);
@@ -1665,6 +1713,10 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     free(task);
 }
 
+/* This function is just a wrapper around mainloop_set_trigger so that it can be
+ * called from a mainloop directly.  It's simply another way of ensuring the screen
+ * gets redrawn.
+ */
 static gboolean
 mon_trigger_refresh(gpointer user_data)
 {
@@ -1853,7 +1905,34 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     stale = FALSE;
-    kick_refresh(cib_updated);
+    refresh_after_event(cib_updated);
+}
+
+static int
+get_fencing_history(stonith_history_t **stonith_history)
+{
+    int rc = 0;
+
+    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
+        if (st != NULL) {
+            rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
+
+            if (rc == 0) {
+                *stonith_history = stonith__sort_history(*stonith_history);
+                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
+                    && (output_format != mon_output_xml)) {
+
+                    *stonith_history = pcmk__reduce_fence_history(*stonith_history);
+                }
+                break; /* all other cases are errors */
+            }
+        } else {
+            rc = ENOTCONN;
+            break;
+        }
+    }
+
+    return rc;
 }
 
 static int
@@ -1866,39 +1945,14 @@ mon_refresh_display(gpointer user_data)
     last_refresh = time(NULL);
 
     if (cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
-        if (cib) {
-            cib->cmds->signoff(cib);
-        }
+        clean_up_cib_connection();
         out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         clean_up(CRM_EX_CONFIG);
         return 0;
     }
 
-    /* get the stonith-history if there is evidence we need it
-     */
-    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
-        if (st != NULL) {
-            history_rc = st->cmds->history(st, st_opt_sync_call, NULL, &stonith_history, 120);
-
-            if (history_rc != 0) {
-                out->err(out, "Critical: Unable to get stonith-history");
-                mon_cib_connection_destroy_error(NULL);
-            } else {
-                stonith_history = stonith__sort_history(stonith_history);
-                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
-                    && (output_format != mon_output_xml)) {
-
-                    stonith_history = pcmk__reduce_fence_history(stonith_history);
-                }
-                break; /* all other cases are errors */
-            }
-        } else {
-            out->err(out, "Critical: No stonith-API");
-        }
-        free_xml(cib_copy);
-        out->err(out, "Reading stonith-history failed");
-        return 0;
-    }
+    /* get the stonith-history if there is evidence we need it */
+    history_rc = get_fencing_history(&stonith_history);
 
     if (mon_data_set == NULL) {
         mon_data_set = pe_new_working_set();
@@ -1921,7 +1975,8 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(out, mon_data_set, stonith_history, options.mon_ops,
+            if (print_html_status(out, mon_data_set, crm_errno2exit(history_rc),
+                                  stonith_history, options.mon_ops,
                                   show, options.neg_location_prefix,
                                   options.only_node, options.only_rsc) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
@@ -1952,15 +2007,17 @@ mon_refresh_display(gpointer user_data)
              */
 #if CURSES_ENABLED
             blank_screen();
-            print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node, options.only_rsc);
+            print_status(out, mon_data_set, crm_errno2exit(history_rc), stonith_history,
+                         options.mon_ops, show, options.neg_location_prefix,
+                         options.only_node, options.only_rsc);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
-            print_status(out, mon_data_set, stonith_history, options.mon_ops, show,
-                         options.neg_location_prefix, options.only_node, options.only_rsc);
+            print_status(out, mon_data_set, crm_errno2exit(history_rc), stonith_history,
+                         options.mon_ops, show, options.neg_location_prefix,
+                         options.only_node, options.only_rsc);
             break;
 
         case mon_output_unset:
@@ -1978,12 +2035,15 @@ mon_refresh_display(gpointer user_data)
     return 1;
 }
 
+/* This function is called for fencing events (see fencing_connect for which ones) when
+ * --watch-fencing is used on the command line.
+ */
 static void
 mon_st_callback_event(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
-        mon_cib_connection_destroy_regular(NULL);
+        mon_cib_connection_destroy(NULL);
     } else if (options.external_agent) {
         char *desc = crm_strdup_printf("Operation %s requested by %s for peer %s: %s (ref=%s)",
                                     e->operation, e->origin, e->target, pcmk_strerror(e->result),
@@ -1993,8 +2053,18 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
     }
 }
 
+/* Cause the screen to be redrawn (via mainloop_set_trigger) when various conditions are met:
+ *
+ * - If the last update occurred more than reconnect_msec ago (defaults to 5s, but can be
+ *   changed via the -i command line option), or
+ * - After every 10 CIB updates, or
+ * - If it's been 2s since the last update
+ *
+ * This function sounds like it would be more broadly useful, but it is only called when a
+ * fencing event is received or a CIB diff occurrs.
+ */
 static void
-kick_refresh(gboolean data_updated)
+refresh_after_event(gboolean data_updated)
 {
     static int updates = 0;
     time_t now = time(NULL);
@@ -2007,11 +2077,6 @@ kick_refresh(gboolean data_updated)
         refresh_timer = mainloop_timer_add("refresh", 2000, FALSE, mon_trigger_refresh, NULL);
     }
 
-    /* Refresh
-     * - immediately if the last update was more than 5s ago
-     * - every 10 cib-updates
-     * - at most 2s after the last update
-     */
     if ((now - last_refresh) > (options.reconnect_msec / 1000)) {
         mainloop_set_trigger(refresh_trigger);
         mainloop_timer_stop(refresh_timer);
@@ -2027,37 +2092,49 @@ kick_refresh(gboolean data_updated)
     }
 }
 
+/* This function is called for fencing events (see fencing_connect for which ones) when
+ * --watch-fencing is NOT used on the command line.
+ */
 static void
 mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
-        mon_cib_connection_destroy_regular(NULL);
+        mon_cib_connection_destroy(NULL);
     } else {
         print_dot(output_format);
-        kick_refresh(TRUE);
+        refresh_after_event(TRUE);
     }
 }
 
 static void
-clean_up_connections(void)
+clean_up_cib_connection(void)
 {
-    if (cib != NULL) {
-        cib->cmds->signoff(cib);
-        cib_delete(cib);
-        cib = NULL;
+    if (cib == NULL) {
+        return;
     }
 
-    if (st != NULL) {
-        if (st->state != stonith_disconnected) {
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
-            st->cmds->disconnect(st);
-        }
-        stonith_api_delete(st);
-        st = NULL;
+    cib->cmds->signoff(cib);
+    cib_delete(cib);
+    cib = NULL;
+}
+
+static void
+clean_up_fencing_connection(void)
+{
+    if (st == NULL) {
+        return;
     }
+
+    if (st->state != stonith_disconnected) {
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
+        st->cmds->disconnect(st);
+    }
+
+    stonith_api_delete(st);
+    st = NULL;
 }
 
 /*
@@ -2074,7 +2151,8 @@ clean_up(crm_exit_t exit_code)
     /* Quitting crm_mon is much more complicated than it ought to be. */
 
     /* (1) Close connections, free things, etc. */
-    clean_up_connections();
+    clean_up_cib_connection();
+    clean_up_fencing_connection();
     free(options.pid_file);
     free(options.neg_location_prefix);
     g_slist_free_full(options.includes_excludes, free);
