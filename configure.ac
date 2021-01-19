@@ -1422,7 +1422,15 @@ AS_IF([test $SUPPORT_CS = no],
           CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
           PC_NAME_CLUSTER="$PC_CLUSTER_NAME libcfg libcmap libcorosync_common libcpg libquorum"
           STACKS="$STACKS corosync-ge-2"
-      ])
+
+          dnl Shutdown tracking added (back) to corosync Jan 2021
+          saved_LIBS="$LIBS"
+          LIBS="$LIBS $COROSYNC_LIBS"
+          AC_CHECK_FUNCS(corosync_cfg_trackstart,
+          AC_DEFINE(HAVE_COROSYNC_CFG_TRACKSTART, 1,
+                         [Have corosync_cfg_trackstart function]))
+          LIBS="$saved_LIBS"
+     ])
 
 AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, $SUPPORT_CS,    Support the Corosync messaging and membership layer)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
