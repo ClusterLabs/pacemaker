@@ -8,7 +8,7 @@ Abstract
 --------
 This document has guidelines and tips for developers interested in editing
 Pacemaker source code and submitting changes for inclusion in the project.
-Start with the FAQ, the rest is optional detail.
+Start with the FAQ; the rest is optional detail.
 
 
 Table of Contents
@@ -20,8 +20,8 @@ Table of Contents
 
    faq
    general
-   c
    python
+   c
    evolution
    hacking
 
