@@ -83,6 +83,8 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
 
+int interactive_fence_level = 0;
+
 static pcmk__supported_format_t formats[] = {
 #if CURSES_ENABLED
     CRM_MON_SUPPORTED_FORMAT_CURSES,
@@ -382,9 +384,9 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
 static gboolean
 fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    int rc = crm_atoi(optarg, "2");
+    interactive_fence_level = crm_atoi(optarg, "2");
 
-    switch (rc) {
+    switch (interactive_fence_level) {
         case 3:
             options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
             return include_exclude_cb("--include", "fencing", data, err);
@@ -862,6 +864,38 @@ cib_connect(gboolean full)
     return rc;
 }
 
+/* This is used to set up the fencing options after the interactive UI has been stared.
+ * fence_history_cb can't be used because it builds up a list of includes/excludes that
+ * then have to be processed with apply_include_exclude and that could affect other
+ * things.
+ */
+static void
+set_fencing_options(int level)
+{
+    switch (level) {
+        case 3:
+            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
+            show |= mon_show_fencing_all;
+            break;
+
+        case 2:
+            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            show |= mon_show_fencing_all;
+            break;
+
+        case 1:
+            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            show |= mon_show_fence_failed | mon_show_fence_pending;
+            break;
+
+        default:
+            level = 0;
+            options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
+            show &= ~mon_show_fencing_all;
+            break;
+    }
+}
+
 #if CURSES_ENABLED
 static const char *
 get_option_desc(char c)
@@ -900,23 +934,12 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 
         switch (c) {
             case 'm':
-                if (!pcmk_is_set(show, mon_show_fencing_all)) {
-                    options.mon_ops |= mon_op_fence_history;
-                    options.mon_ops |= mon_op_fence_connect;
-                    if (st == NULL) {
-                        mon_cib_connection_destroy(NULL);
-                    }
+                interactive_fence_level++;
+                if (interactive_fence_level > 3) {
+                    interactive_fence_level = 0;
                 }
 
-                if (pcmk_any_flags_set(show,
-                                       mon_show_fence_failed
-                                       |mon_show_fence_pending
-                                       |mon_show_fence_worked)) {
-                    show &= ~mon_show_fencing_all;
-                } else {
-                    show |= mon_show_fencing_all;
-                }
-
+                set_fencing_options(interactive_fence_level);
                 break;
             case 'c':
                 show ^= mon_show_tickets;
@@ -997,10 +1020,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', pcmk_any_flags_set(show,
-                                                       mon_show_fence_failed
-                                                      |mon_show_fence_pending
-                                                      |mon_show_fence_worked));
+        out->info(out, "%d m: \t%s", interactive_fence_level, get_option_desc('m'));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
@@ -1400,6 +1420,19 @@ main(int argc, char **argv)
         return clean_up(CRM_EX_USAGE);
     }
 
+    /* Sync up the initial value of interactive_fence_level with whatever was set with
+     * --include/--exclude= options.
+     */
+    if (pcmk_is_set(show, mon_show_fencing_all)) {
+        interactive_fence_level = 3;
+    } else if (pcmk_is_set(show, mon_show_fence_worked)) {
+        interactive_fence_level = 2;
+    } else if (pcmk_any_flags_set(show, mon_show_fence_failed | mon_show_fence_pending)) {
+        interactive_fence_level = 1;
+    } else {
+        interactive_fence_level = 0;
+    }
+
     crm_mon_register_messages(out);
     pe__register_messages(out);
     stonith__register_messages(out);
@@ -1460,6 +1493,7 @@ main(int argc, char **argv)
     } while (rc == -ENOTCONN);
 
     handle_connection_failures(rc);
+    set_fencing_options(interactive_fence_level);
     mon_refresh_display(NULL);
 
     mainloop = g_main_loop_new(NULL, FALSE);
