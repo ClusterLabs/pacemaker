@@ -1928,6 +1928,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/operations/Makefile                \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
+                lib/common/tests/xpath/Makefile                     \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
                 lib/gnu/Makefile                                    \

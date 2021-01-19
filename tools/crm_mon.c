@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -125,7 +125,7 @@ struct {
 static void clean_up_connections(void);
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
-static gboolean mon_refresh_display(gpointer user_data);
+static int mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
@@ -804,55 +804,54 @@ cib_connect(gboolean full)
         }
     }
 
-    if (cib->state != cib_connected_query && cib->state != cib_connected_command) {
-        crm_trace("Connecting to the CIB");
+    if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
+        return rc;
+    }
 
-        /* Hack: the CIB signon will print the prompt for a password if needed,
-         * but to stderr. If we're in curses, show it on the screen instead.
-         *
-         * @TODO Add a password prompt (maybe including input) function to
-         *       pcmk__output_t and use it in libcib.
-         */
-        if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
-            need_pass = FALSE;
-            print_as(output_format, "Password:");
+    crm_trace("Connecting to the CIB");
+
+    /* Hack: the CIB signon will print the prompt for a password if needed,
+     * but to stderr. If we're in curses, show it on the screen instead.
+     *
+     * @TODO Add a password prompt (maybe including input) function to
+     *       pcmk__output_t and use it in libcib.
+     */
+    if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
+        need_pass = FALSE;
+        print_as(output_format, "Password:");
+    }
+
+    rc = cib->cmds->signon(cib, crm_system_name, cib_query);
+    if (rc != pcmk_ok) {
+        out->err(out, "Could not connect to the CIB: %s",
+                 pcmk_strerror(rc));
+        return rc;
+    }
+
+    rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
+    if (rc == pcmk_ok) {
+        mon_refresh_display(NULL);
+    }
+
+    if (rc == pcmk_ok && full) {
+        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
+        if (rc == -EPROTONOSUPPORT) {
+            print_as
+                (output_format, "Notification setup not supported, won't be able to reconnect after failure");
+            if (output_format == mon_output_console) {
+                sleep(2);
+            }
+            rc = pcmk_ok;
         }
 
-        rc = cib->cmds->signon(cib, crm_system_name, cib_query);
-        if (rc != pcmk_ok) {
-            out->err(out, "Could not connect to the CIB: %s",
-                     pcmk_strerror(rc));
-            return rc;
-        }
-
-        rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
         if (rc == pcmk_ok) {
-            mon_refresh_display(&output_format);
+            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
+            rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
         }
 
-        if (rc == pcmk_ok && full) {
-            if (rc == pcmk_ok) {
-                rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy_regular);
-                if (rc == -EPROTONOSUPPORT) {
-                    print_as
-                        (output_format, "Notification setup not supported, won't be able to reconnect after failure");
-                    if (output_format == mon_output_console) {
-                        sleep(2);
-                    }
-                    rc = pcmk_ok;
-                }
-
-            }
-
-            if (rc == pcmk_ok) {
-                cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
-                rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
-            }
-
-            if (rc != pcmk_ok) {
-                out->err(out, "Notification setup failed, could not monitor CIB actions");
-                clean_up_connections();
-            }
+        if (rc != pcmk_ok) {
+            out->err(out, "Notification setup failed, could not monitor CIB actions");
+            clean_up_connections();
         }
     }
     return rc;
@@ -985,7 +984,10 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
-        print_option_help(out, 'm', pcmk_is_set(show, mon_show_fencing_all));
+        print_option_help(out, 'm', pcmk_any_flags_set(show,
+                                                       mon_show_fence_failed
+                                                      |mon_show_fence_pending
+                                                      |mon_show_fence_worked));
         out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
     }
 
@@ -1346,7 +1348,7 @@ main(int argc, char **argv)
 
     /* Extra sanity checks when in CGI mode */
     if (output_format == mon_output_cgi) {
-        if (cib && cib->variant == cib_file) {
+        if (cib->variant == cib_file) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "CGI mode used with CIB file");
             return clean_up(CRM_EX_USAGE);
         } else if (options.external_agent != NULL) {
@@ -1370,33 +1372,28 @@ main(int argc, char **argv)
 
     crm_info("Starting %s", crm_system_name);
 
-    if (cib) {
+    do {
+        if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+            print_as(output_format ,"Waiting until cluster is available on this node ...\n");
+        }
+        rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
 
-        do {
-            if (!pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-                print_as(output_format ,"Waiting until cluster is available on this node ...\n");
-            }
-            rc = cib_connect(!pcmk_is_set(options.mon_ops, mon_op_one_shot));
+        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+            break;
 
-            if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
-                break;
-
-            } else if (rc != pcmk_ok) {
-                sleep(options.reconnect_msec / 1000);
+        } else if (rc != pcmk_ok) {
+            sleep(options.reconnect_msec / 1000);
 #if CURSES_ENABLED
-                if (output_format == mon_output_console) {
-                    clear();
-                    refresh();
-                }
-#endif
-            } else {
-                if (output_format == mon_output_html && out->dest != stdout) {
-                    printf("Writing html to %s ...\n", args->output_dest);
-                }
+            if (output_format == mon_output_console) {
+                clear();
+                refresh();
             }
+#endif
+        } else if (output_format == mon_output_html && out->dest != stdout) {
+            printf("Writing html to %s ...\n", args->output_dest);
+        }
 
-        } while (rc == -ENOTCONN);
-    }
+    } while (rc == -ENOTCONN);
 
     if (rc != pcmk_ok) {
         if (output_format == mon_output_monitor) {
@@ -1451,14 +1448,13 @@ main(int argc, char **argv)
  * \brief Print one-line status suitable for use with monitoring software
  *
  * \param[in] data_set  Working set of CIB state
- * \param[in] history   List of stonith actions
  *
  * \note This function's output (and the return code when the program exits)
  *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
  */
 static void
 print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
-                    stonith_history_t *history, unsigned int mon_ops)
+                    unsigned int mon_ops)
 {
     GListPtr gIter = NULL;
     int nodes_online = 0;
@@ -1525,56 +1521,6 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
         free(nodes_maint_s);
     }
     /* coverity[leaked_storage] False positive */
-}
-
-/*!
- * \internal
- * \brief Reduce the stonith-history
- *        for successful actions we keep the last of every action-type & target
- *        for failed actions we record as well who had failed
- *        for actions in progress we keep full track
- *
- * \param[in] history    List of stonith actions
- *
- */
-static stonith_history_t *
-reduce_stonith_history(stonith_history_t *history)
-{
-    stonith_history_t *new = history, *hp, *np;
-
-    if (new) {
-        hp = new->next;
-        new->next = NULL;
-
-        while (hp) {
-            stonith_history_t *hp_next = hp->next;
-
-            hp->next = NULL;
-
-            for (np = new; ; np = np->next) {
-                if ((hp->state == st_done) || (hp->state == st_failed)) {
-                    /* action not in progress */
-                    if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
-                        pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
-                        (hp->state == np->state) &&
-                        ((hp->state == st_done) ||
-                         pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
-                            /* purge older hp */
-                            stonith_history_free(hp);
-                            break;
-                    }
-                }
-
-                if (!np->next) {
-                    np->next = hp;
-                    break;
-                }
-            }
-            hp = hp_next;
-        }
-    }
-
-    return new;
 }
 
 static int
@@ -1726,25 +1672,6 @@ mon_trigger_refresh(gpointer user_data)
     return FALSE;
 }
 
-#define NODE_PATT "/lrm[@id="
-static char *
-get_node_from_xpath(const char *xpath)
-{
-    char *nodeid = NULL;
-    char *tmp = strstr(xpath, NODE_PATT);
-
-    if(tmp) {
-        tmp += strlen(NODE_PATT);
-        tmp += 1;
-
-        nodeid = strdup(tmp);
-        tmp = strstr(nodeid, "\'");
-        CRM_ASSERT(tmp);
-        tmp[0] = 0;
-    }
-    return nodeid;
-}
-
 static void
 crm_diff_update_v2(const char *event, xmlNode * msg)
 {
@@ -1829,19 +1756,19 @@ crm_diff_update_v2(const char *event, xmlNode * msg)
             handle_rsc_op(match, node);
 
         } else if(strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             handle_rsc_op(match, local_node);
             free(local_node);
 
         } else if(strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             handle_rsc_op(match, local_node);
             free(local_node);
 
         } else if(strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             handle_rsc_op(match, local_node);
             free(local_node);
@@ -1929,7 +1856,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     kick_refresh(cib_updated);
 }
 
-static gboolean
+static int
 mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
@@ -1944,7 +1871,7 @@ mon_refresh_display(gpointer user_data)
         }
         out->err(out, "Upgrade failed: %s", pcmk_strerror(-pcmk_err_schema_validation));
         clean_up(CRM_EX_CONFIG);
-        return FALSE;
+        return 0;
     }
 
     /* get the stonith-history if there is evidence we need it
@@ -1961,7 +1888,7 @@ mon_refresh_display(gpointer user_data)
                 if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
                     && (output_format != mon_output_xml)) {
 
-                    stonith_history = reduce_stonith_history(stonith_history);
+                    stonith_history = pcmk__reduce_fence_history(stonith_history);
                 }
                 break; /* all other cases are errors */
             }
@@ -1970,7 +1897,7 @@ mon_refresh_display(gpointer user_data)
         }
         free_xml(cib_copy);
         out->err(out, "Reading stonith-history failed");
-        return FALSE;
+        return 0;
     }
 
     if (mon_data_set == NULL) {
@@ -1999,7 +1926,7 @@ mon_refresh_display(gpointer user_data)
                                   options.only_node, options.only_rsc) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
-                return FALSE;
+                return 0;
             }
             break;
 
@@ -2012,7 +1939,7 @@ mon_refresh_display(gpointer user_data)
             break;
 
         case mon_output_monitor:
-            print_simple_status(out, mon_data_set, stonith_history, options.mon_ops);
+            print_simple_status(out, mon_data_set, options.mon_ops);
             if (pcmk_is_set(options.mon_ops, mon_op_has_warnings)) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
@@ -2048,7 +1975,7 @@ mon_refresh_display(gpointer user_data)
     stonith_history_free(stonith_history);
     stonith_history = NULL;
     pe_reset_working_set(mon_data_set);
-    return TRUE;
+    return 1;
 }
 
 static void

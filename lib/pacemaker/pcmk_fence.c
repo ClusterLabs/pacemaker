@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -520,3 +520,46 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
     return rc;
 }
 #endif
+
+stonith_history_t *
+pcmk__reduce_fence_history(stonith_history_t *history)
+{
+    stonith_history_t *new, *hp, *np;
+
+    if (!history) {
+        return history;
+    }
+
+    new = history;
+    hp = new->next;
+    new->next = NULL;
+
+    while (hp) {
+        stonith_history_t *hp_next = hp->next;
+
+        hp->next = NULL;
+
+        for (np = new; ; np = np->next) {
+            if ((hp->state == st_done) || (hp->state == st_failed)) {
+                /* action not in progress */
+                if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
+                    pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
+                    (hp->state == np->state) &&
+                    ((hp->state == st_done) ||
+                     pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
+                        /* purge older hp */
+                        stonith_history_free(hp);
+                        break;
+                }
+            }
+
+            if (!np->next) {
+                np->next = hp;
+                break;
+            }
+        }
+        hp = hp_next;
+    }
+
+    return new;
+}
