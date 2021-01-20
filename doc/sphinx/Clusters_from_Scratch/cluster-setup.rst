@@ -32,18 +32,25 @@ what comes with (and perhaps is supported by) your choice of operating system.
 Install the Cluster Software
 ############################
 
-Fire up a shell on both nodes and run the following to install pacemaker, pcs,
-and some other command-line tools that will make our lives easier:
+Fire up a shell on both nodes and run the following to activate the High
+Availability repo.
 
 .. code-block:: none
 
-    # yum install -y pacemaker pcs psmisc policycoreutils-python
+    # dnf config-manager --set-enabled ha
 
 .. IMPORTANT::
 
     This document will show commands that need to be executed on both nodes
     with a simple ``#`` prompt. Be sure to run them on each node individually.
 
+Now, we'll install pacemaker, pcs, and some other command-line tools that will
+make our lives easier:
+
+.. code-block:: none
+
+    # yum install -y pacemaker pcs psmisc policycoreutils-python3
+    
 .. NOTE::
 
     This document uses ``pcs`` for cluster management. Other alternatives,
@@ -139,77 +146,35 @@ On either node, use ``pcs cluster auth`` to authenticate as the **hacluster** us
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs cluster auth pcmk-1 pcmk-2
+    [root@pcmk-1 ~]# pcs host auth pcmk-1 pcmk-2
     Username: hacluster
     Password:
     pcmk-2: Authorized
     pcmk-1: Authorized
-
-.. NOTE::
-
-    In Fedora 29 and CentOS 8.0, the command has been changed to ``pcs host auth``:
-
-    .. code-block:: none
-
-        [root@pcmk-1 ~]# pcs host auth pcmk-1 pcmk-2
-        Username: hacluster
-        Password:
-        pcmk-2: Authorized
-        pcmk-1: Authorized
 
 Next, use ``pcs cluster setup`` on the same node to generate and synchronize the
 corosync configuration:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs cluster setup --name mycluster pcmk-1 pcmk-2
-    Destroying cluster on nodes: pcmk-1, pcmk-2...
-    pcmk-2: Stopping Cluster (pacemaker)...
-    pcmk-1: Stopping Cluster (pacemaker)...
-    pcmk-1: Successfully destroyed cluster
+    [root@pcmk-1 ~]# pcs cluster setup mycluster pcmk-1 pcmk-2
+    No addresses specified for host 'pcmk-1', using 'pcmk-1'
+    No addresses specified for host 'pcmk-2', using 'pcmk-2'
+    Destroying cluster on hosts: 'pcmk-1', 'pcmk-2'...
     pcmk-2: Successfully destroyed cluster
-
-    Sending 'pacemaker_remote authkey' to 'pcmk-1', 'pcmk-2'
-    pcmk-2: successful distribution of the file 'pacemaker_remote authkey'
-    pcmk-1: successful distribution of the file 'pacemaker_remote authkey'
-    Sending cluster config files to the nodes...
-    pcmk-1: Succeeded
-    pcmk-2: Succeeded
-
-    Synchronizing pcsd certificates on nodes pcmk-1, pcmk-2...
-    pcmk-2: Success
-    pcmk-1: Success
-    Restarting pcsd on the nodes in order to reload the certificates...
-    pcmk-2: Success
-    pcmk-1: Success
-
-.. NOTE ::
-    In Fedora 29 and CentOS 8.0, the syntax has been changed and the ``--name`` option
-    has been dropped:
-
-    .. code-block:: none
-
-        [root@pcmk-1 ~]# pcs cluster setup mycluster pcmk-1 pcmk-2
-        No addresses specified for host 'pcmk-1', using 'pcmk-1'
-        No addresses specified for host 'pcmk-2', using 'pcmk-2'
-        Destroying cluster on hosts: 'pcmk-1', 'pcmk-2'...
-        pcmk-1: Successfully destroyed cluster
-        pcmk-2: Successfully destroyed cluster
-        Requesting remove 'pcsd settings' from 'pcmk-1', 'pcmk-2'
-        pcmk-1: successful removal of the file 'pcsd settings'
-        pcmk-2: successful removal of the file 'pcsd settings'
-        Sending 'corosync authkey', 'pacemaker authkey' to 'pcmk-1', 'pcmk-2'
-        pcmk-2: successful distribution of the file 'corosync authkey'
-        pcmk-2: successful distribution of the file 'pacemaker authkey'
-        pcmk-1: successful distribution of the file 'corosync authkey'
-        pcmk-1: successful distribution of the file 'pacemaker authkey'
-        Synchronizing pcsd SSL certificates on nodes 'pcmk-1', 'pcmk-2'...
-        pcmk-1: Success
-        pcmk-2: Success
-        Sending 'corosync.conf' to 'pcmk-1', 'pcmk-2'
-        pcmk-2: successful distribution of the file 'corosync.conf'
-        pcmk-1: successful distribution of the file 'corosync.conf'
-        Cluster has been successfully set up.
+    pcmk-1: Successfully destroyed cluster
+    Requesting remove 'pcsd settings' from 'pcmk-1', 'pcmk-2'
+    pcmk-1: successful removal of the file 'pcsd settings'
+    pcmk-2: successful removal of the file 'pcsd settings'
+    Sending 'corosync authkey', 'pacemaker authkey' to 'pcmk-1', 'pcmk-2'
+    pcmk-1: successful distribution of the file 'corosync authkey'
+    pcmk-1: successful distribution of the file 'pacemaker authkey'
+    pcmk-2: successful distribution of the file 'corosync authkey'
+    pcmk-2: successful distribution of the file 'pacemaker authkey'
+    Sending 'corosync.conf' to 'pcmk-1', 'pcmk-2'
+    pcmk-1: successful distribution of the file 'corosync.conf'
+    pcmk-2: successful distribution of the file 'corosync.conf'
+    Cluster has been successfully set up.
 
 If you received an authorization error for either of those commands, make
 sure you configured the **hacluster** user account on each node
@@ -327,8 +292,9 @@ available with your Pacemaker installation, run:
 .. code-block:: none
 
     [root@pcmk-1 ~]# pacemakerd --features
-    Pacemaker 1.1.18-11.el7_5.3 (Build: 2b07d5c5a9)
-     Supporting v3.0.14:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls
+    Pacemaker 2.0.5-4.el8 (Build: ba59be7122)
+    Supporting v3.6.1:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls cibsecrets
+
 
 .. [#] For some subtle issues, see `Topics in High-Performance Messaging: Multicast Address Assignment <http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html>`_
        or the more detailed treatment in `Cisco's Guidelines for Enterprise IP Multicast Address Allocation <https://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf>`_.
