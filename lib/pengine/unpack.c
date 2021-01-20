@@ -1041,11 +1041,15 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
          state != NULL; state = crm_next_same_xml(state)) {
 
         const char *id = ID(state);
-        const char *uname = NULL;
+        const char *uname = crm_element_value(state, XML_ATTR_UNAME);
         pe_node_t *this_node = NULL;
         bool process = FALSE;
 
-        uname = crm_element_value(state, XML_ATTR_UNAME);
+        if ((id == NULL) || (uname == NULL)) {
+            // Warning already logged in first pass through status section
+            continue;
+        }
+
         this_node = pe_find_node_any(data_set->nodes, id, uname);
 
         if (this_node == NULL) {
@@ -1150,19 +1154,27 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             const char *resource_discovery_enabled = NULL;
 
             id = crm_element_value(state, XML_ATTR_ID);
-            uname = crm_element_value(state, XML_ATTR_UNAME);
-            this_node = pe_find_node_any(data_set->nodes, id, uname);
-
-            if (uname == NULL) {
-                /* error */
+            if (id == NULL) {
+                crm_warn("Ignoring malformed " XML_CIB_TAG_STATE
+                         " entry without " XML_ATTR_ID);
                 continue;
+            }
 
-            } else if (this_node == NULL) {
+            uname = crm_element_value(state, XML_ATTR_UNAME);
+            if (uname == NULL) {
+                crm_warn("Ignoring malformed " XML_CIB_TAG_STATE
+                         " entry without " XML_ATTR_UNAME);
+                continue;
+            }
+
+            this_node = pe_find_node_any(data_set->nodes, id, uname);
+            if (this_node == NULL) {
                 pcmk__config_warn("Ignoring recorded node status for '%s' "
                                   "because no longer in configuration", uname);
                 continue;
+            }
 
-            } else if (pe__is_guest_or_remote_node(this_node)) {
+            if (pe__is_guest_or_remote_node(this_node)) {
                 /* online state for remote nodes is determined by the
                  * rsc state after all the unpacking is done. we do however
                  * need to mark whether or not the node has been fenced as this plays
