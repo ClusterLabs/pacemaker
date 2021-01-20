@@ -486,6 +486,58 @@ Enumerations
   ``#define`` or ``const`` when possible. This allows type checking without
   consuming memory.
 
+Flag groups
+___________
+
+Pacemaker often uses flag groups (also called bit fields or bitmasks) for a
+collection of boolean options (flags/bits).
+
+This is more efficient for storage and manipulation than individual booleans,
+but its main advantage is when used in public APIs, because using another bit
+in a bitmask is backward compatible, whereas adding a new function argument (or
+sometimes even a structure member) is not.
+
+.. code-block:: c
+
+   #include <stdint.h>
+
+   /* (1) Define an enumeration to name the individual flags, for readability.
+    *     An enumeration is preferred to a series of "#define" constants
+    *     because it is typed, and logically groups the related names.
+    * (2) Define the values using left-shifting, which is more readable and
+    *     less error-prone than hexadecimal literals (0x0001, 0x0002, 0x0004,
+    *     etc.).
+    * (3) Using a comma after the last entry makes diffs smaller for reviewing
+    *     if a new value needs to be added or removed later.
+    */
+   enum pcmk__some_bitmask_type {
+       pcmk__some_value    = (1 << 0),
+       pcmk__other_value   = (1 << 1),
+       pcmk__another_value = (1 << 2),
+   };
+
+   /* The flag group itself should be an unsigned type from stdint.h (not
+    * the enum type, since it will be a mask of the enum values and not just
+    * one of them). uint32_t is the most common, since we rarely need more than
+    * 32 flags, but a smaller or larger type could be appropriate in some
+    * cases.
+    */
+   uint32_t flags = pcmk__some_value|pcmk__other_value;
+
+   /* If the values will be used only with uint64_t, define them accordingly,
+    * to make compilers happier.
+    */
+   enum pcmk__something_else {
+       pcmk__whatever    = (UINT64_C(1) << 0),
+   };
+
+We have convenience functions for checking flags (see ``pcmk_any_flags_set()``,
+``pcmk_all_flags_set()``, and ``pcmk_is_set()``) as well as setting and
+clearing them (see ``pcmk__set_flags_as()`` and ``pcmk__clear_flags_as()``,
+usually used via wrapper macros defined for specific flag groups). These
+convenience functions should be preferred to direct bitwise arithmetic, for
+readability and logging consistency.
+
 
 .. index::
    pair: C; function
