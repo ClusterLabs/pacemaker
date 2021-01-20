@@ -52,15 +52,16 @@ First, use ``corosync-cfgtool`` to check whether cluster communication is happy:
 .. code-block:: none
 
     [root@pcmk-1 ~]# corosync-cfgtool -s
-    Printing ring status.
+    Printing link status.
     Local node ID 1
-    RING ID 0
-        id	= 192.168.122.101
-        status	= ring 0 active with no faults
+    LINK ID 0
+	    addr	= 192.168.122.101
+	    status:
+		    nodeid  1:	localhost
+		    nodeid  2:	connected
 
 We can see here that everything appears normal with our fixed IP
-address (not a 127.0.0.x loopback address) listed as the **id**, and **no
-faults** for the status.
+address (not a 127.0.0.x loopback address) listed as the **addr**, and **localhost** and **connected** for the statuses of nodeid 1 and nodeid 2, respectively.
 
 If you see something different, you might want to start by checking
 the node's network, firewall and SELinux configurations.
@@ -117,19 +118,23 @@ If that looks OK, check the ``pcs status`` output:
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    WARNING: no stonith devices and stonith-enabled is not false
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 16:37:34 2018
-    Last change: Mon Sep 10 16:30:53 2018 by hacluster via crmd on pcmk-2
-
-    2 nodes configured
-    0 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    No resources
-
+    
+    WARNINGS:
+    No stonith devices and stonith-enabled is not false
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Jan 20 07:54:02 2021
+      * Last change:  Wed Jan 20 07:48:25 2021 by hacluster via crmd on pcmk-2
+      * 2 nodes configured
+      * 0 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * No resources
 
     Daemon Status:
       corosync: active/disabled
