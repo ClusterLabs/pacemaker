@@ -1013,10 +1013,27 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     }
 }
 
-static bool
+/*!
+ * \internal
+ * \brief Unpack nodes' resource history as much as possible
+ *
+ * Unpack as many nodes' resource history as possible in one pass through the
+ * status. We need to process Pacemaker Remote nodes' connections/containers
+ * before unpacking their history; the connection/container history will be
+ * in another node's history, so it might take multiple passes to unpack
+ * everything.
+ *
+ * \param[in] status    CIB XML status section
+ * \param[in] fence     If true, treat any not-yet-unpacked nodes as unseen
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Standard Pacemaker return code (specifically pcmk_rc_ok if done,
+ *         or EAGAIN if more unpacking remains to be done)
+ */
+static int
 unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set) 
 {
-    bool changed = false;
+    int rc = pcmk_rc_ok;
     xmlNode *lrm_rsc = NULL;
 
     // Loop through all node_state entries in CIB status
@@ -1091,15 +1108,16 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
                       fence?"un":"",
                       (pe__is_guest_or_remote_node(this_node)? " remote" : ""),
                       this_node->details->uname);
-            changed = TRUE;
             this_node->details->unpacked = TRUE;
 
             lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
             lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
             unpack_lrm_resources(this_node, lrm_rsc, data_set);
+
+            rc = EAGAIN; // Other node histories might depend on this one
         }
     }
-    return changed;
+    return rc;
 }
 
 /* remove nodes that are down, stopping */
@@ -1195,9 +1213,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
     }
 
-
-    while(unpack_node_loop(status, FALSE, data_set)) {
-        crm_trace("Start another loop");
+    while (unpack_node_loop(status, FALSE, data_set) == EAGAIN) {
+        crm_trace("Another pass through node resource histories is needed");
     }
 
     // Now catch any nodes we didn't see
