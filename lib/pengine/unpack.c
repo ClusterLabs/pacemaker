@@ -1031,7 +1031,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
  *         or EAGAIN if more unpacking remains to be done)
  */
 static int
-unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set) 
+unpack_node_loop(xmlNode *status, bool fence, pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
     xmlNode *lrm_rsc = NULL;
@@ -1043,7 +1043,6 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
         const char *id = ID(state);
         const char *uname = crm_element_value(state, XML_ATTR_UNAME);
         pe_node_t *this_node = NULL;
-        bool process = FALSE;
 
         if ((id == NULL) || (uname == NULL)) {
             // Warning already logged in first pass through status section
@@ -1066,53 +1065,56 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             continue;
         }
 
-        if (!pe__is_guest_or_remote_node(this_node)
-            && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            // A redundant test, but preserves the order for regression tests
-            process = TRUE;
+        if (fence) {
+            // We're processing all remaining nodes
 
-        } else if (pe__is_guest_or_remote_node(this_node)) {
-            bool check = FALSE;
+        } else if (pe__is_guest_node(this_node)) {
+            /* We can unpack a guest node's history only after we've unpacked
+             * other resource history to the point that we know that the node's
+             * connection and containing resource are both up.
+             */
             pe_resource_t *rsc = this_node->details->remote_rsc;
 
-            if(fence) {
-                check = TRUE;
-
-            } else if(rsc == NULL) {
-                /* Not ready yet */
-
-            } else if (pe__is_guest_node(this_node)
-                       && rsc->role == RSC_ROLE_STARTED
-                       && rsc->container->role == RSC_ROLE_STARTED) {
-                /* Both the connection and its containing resource need to be
-                 * known to be up before we process resources running in it.
-                 */
-                check = TRUE;
-
-            } else if (!pe__is_guest_node(this_node)
-                       && ((rsc->role == RSC_ROLE_STARTED)
-                           || pcmk_is_set(data_set->flags, pe_flag_shutdown_lock))) {
-                check = TRUE;
+            if ((rsc == NULL) || (rsc->role != RSC_ROLE_STARTED)
+                || (rsc->container->role != RSC_ROLE_STARTED)) {
+                crm_trace("Not unpacking resource history for guest node %s "
+                          "because container and connection are not known to "
+                          "be up", id);
+                continue;
             }
 
-            if (check) {
-                determine_remote_online_status(data_set, this_node);
-                unpack_handle_remote_attrs(this_node, state, data_set);
-                process = TRUE;
+        } else if (pe__is_remote_node(this_node)) {
+            /* We can unpack a remote node's history only after we've unpacked
+             * other resource history to the point that we know that the node's
+             * connection is up, with the exception of when shutdown locks are
+             * in use.
+             */
+            pe_resource_t *rsc = this_node->details->remote_rsc;
+
+            if ((rsc == NULL)
+                || (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)
+                    && (rsc->role != RSC_ROLE_STARTED))) {
+                crm_trace("Not unpacking resource history for remote node %s "
+                          "because connection is not known to be up", id);
+                continue;
             }
 
-        } else if (this_node->details->online) {
-            process = TRUE;
-
-        } else if (fence) {
-            process = TRUE;
-
-        } else if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
-            process = TRUE;
+        /* If fencing and shutdown locks are disabled and we're not processing
+         * unseen nodes, then we don't want to unpack offline nodes until online
+         * nodes have been unpacked. This allows us to number active clone
+         * instances first.
+         */
+        } else if (!pcmk_any_flags_set(data_set->flags, pe_flag_stonith_enabled
+                                                        |pe_flag_shutdown_lock)
+                   && !this_node->details->online) {
+            crm_trace("Not unpacking resource history for offline "
+                      "cluster node %s", id);
+            continue;
         }
 
-        if (!process) {
-            continue;
+        if (pe__is_guest_or_remote_node(this_node)) {
+            determine_remote_online_status(data_set, this_node);
+            unpack_handle_remote_attrs(this_node, state, data_set);
         }
 
         crm_trace("Unpacking resource history for %snode %s",
