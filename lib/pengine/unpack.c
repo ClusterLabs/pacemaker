@@ -1047,21 +1047,27 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
 
         if ((id == NULL) || (uname == NULL)) {
             // Warning already logged in first pass through status section
+            crm_trace("Not unpacking resource history from malformed "
+                      XML_CIB_TAG_STATE " without id and/or uname");
             continue;
         }
 
         this_node = pe_find_node_any(data_set->nodes, id, uname);
-
         if (this_node == NULL) {
-            crm_info("Node %s is unknown", id);
+            // Warning already logged in first pass through status section
+            crm_trace("Not unpacking resource history for node %s because "
+                      "no longer in configuration", id);
             continue;
+        }
 
-        } else if (this_node->details->unpacked) {
-            crm_trace("Node %s was already processed", id);
+        if (this_node->details->unpacked) {
+            crm_trace("Not unpacking resource history for node %s because "
+                      "already unpacked", id);
             continue;
+        }
 
-        } else if (!pe__is_guest_or_remote_node(this_node)
-                   && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        if (!pe__is_guest_or_remote_node(this_node)
+            && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
             // A redundant test, but preserves the order for regression tests
             process = TRUE;
 
@@ -1082,13 +1088,11 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
                  * known to be up before we process resources running in it.
                  */
                 check = TRUE;
-                crm_trace("Checking node %s/%s/%s status %d/%d/%d", id, rsc->id, rsc->container->id, fence, rsc->role, RSC_ROLE_STARTED);
 
             } else if (!pe__is_guest_node(this_node)
                        && ((rsc->role == RSC_ROLE_STARTED)
                            || pcmk_is_set(data_set->flags, pe_flag_shutdown_lock))) {
                 check = TRUE;
-                crm_trace("Checking node %s/%s status %d/%d/%d", id, rsc->id, fence, rsc->role, RSC_ROLE_STARTED);
             }
 
             if (check) {
@@ -1108,10 +1112,8 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
         }
 
         if(process) {
-            crm_trace("Processing lrm resource entries on %shealthy%s node: %s",
-                      fence?"un":"",
-                      (pe__is_guest_or_remote_node(this_node)? " remote" : ""),
-                      this_node->details->uname);
+            crm_trace("Unpacking resource history for %snode %s",
+                      (fence? "unseen " : ""), id);
             this_node->details->unpacked = TRUE;
 
             lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
