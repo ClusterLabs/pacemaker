@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1019,19 +1019,15 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
     bool changed = false;
     xmlNode *lrm_rsc = NULL;
 
-    for (xmlNode *state = pcmk__xe_first_child(status); state != NULL;
-         state = pcmk__xe_next(state)) {
+    // Loop through all node_state entries in CIB status
+    for (xmlNode *state = first_named_child(status, XML_CIB_TAG_STATE);
+         state != NULL; state = crm_next_same_xml(state)) {
 
-        const char *id = NULL;
+        const char *id = ID(state);
         const char *uname = NULL;
         pe_node_t *this_node = NULL;
         bool process = FALSE;
 
-        if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
-            continue;
-        }
-
-        id = crm_element_value(state, XML_ATTR_ID);
         uname = crm_element_value(state, XML_ATTR_UNAME);
         this_node = pe_find_node_any(data_set->nodes, id, uname);
 
