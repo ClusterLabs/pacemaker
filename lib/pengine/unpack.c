@@ -1111,17 +1111,19 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             process = TRUE;
         }
 
-        if(process) {
-            crm_trace("Unpacking resource history for %snode %s",
-                      (fence? "unseen " : ""), id);
-            this_node->details->unpacked = TRUE;
-
-            lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-            unpack_lrm_resources(this_node, lrm_rsc, data_set);
-
-            rc = EAGAIN; // Other node histories might depend on this one
+        if (!process) {
+            continue;
         }
+
+        crm_trace("Unpacking resource history for %snode %s",
+                  (fence? "unseen " : ""), id);
+
+        this_node->details->unpacked = TRUE;
+        lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
+        lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+        unpack_lrm_resources(this_node, lrm_rsc, data_set);
+
+        rc = EAGAIN; // Other node histories might depend on this one
     }
     return rc;
 }
