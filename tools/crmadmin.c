@@ -186,7 +186,6 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
     int rc;
     int argerr = 0;
-    pcmk_ipc_api_t *controld_api = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
 
@@ -286,12 +285,6 @@ main(int argc, char **argv)
     }
 
 done:
-
-    if (controld_api != NULL) {
-        pcmk_ipc_api_t *capi = controld_api;
-        controld_api = NULL; // Ensure we can't free this twice
-        pcmk_free_ipc_api(capi);
-    }
 
     g_strfreev(processed_args);
     g_clear_error(&error);
