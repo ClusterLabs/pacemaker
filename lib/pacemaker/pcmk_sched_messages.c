@@ -79,8 +79,6 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 {
     GListPtr gIter = NULL;
 
-/*	pe_debug_on(); */
-
     CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
 
     if (!pcmk_is_set(data_set->flags, pe_flag_have_status)) {
