@@ -2339,8 +2339,13 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
     enum action_fail_response on_fail = action_fail_ignore;
     enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 
-    crm_trace("[%s] Processing %s on %s",
-              crm_element_name(lrm_resource), rsc_id, node->details->uname);
+    if (rsc_id == NULL) {
+        crm_warn("Ignoring malformed " XML_LRM_TAG_RESOURCE
+                 " entry without id");
+        return NULL;
+    }
+    crm_trace("Unpacking " XML_LRM_TAG_RESOURCE " for %s on %s",
+              rsc_id, node->details->uname);
 
     // Build a list of individual lrm_rsc_op entries, so we can sort them
     for (rsc_op = first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP);
