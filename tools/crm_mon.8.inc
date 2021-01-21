@@ -12,3 +12,6 @@ crm_mon mode [options]
 
 /command line arguments./
 .SH TIME SPECIFICATION
+
+/or --exclude=list./
+.SH INTERACTIVE USE
