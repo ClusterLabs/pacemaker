@@ -60,6 +60,7 @@ log_resource_details(pe_working_set_t *data_set)
         }
     }
 
+    out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);
     g_list_free_full(all, free);
 }
