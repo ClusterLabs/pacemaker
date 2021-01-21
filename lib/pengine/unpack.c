@@ -1142,7 +1142,7 @@ unpack_node_state(xmlNode *state, pe_working_set_t *data_set)
  *         or EAGAIN if more unpacking remains to be done)
  */
 static int
-unpack_node_loop(xmlNode *status, bool fence, pe_working_set_t *data_set)
+unpack_node_history(xmlNode *status, bool fence, pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
     xmlNode *lrm_rsc = NULL;
@@ -1267,14 +1267,14 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         }
     }
 
-    while (unpack_node_loop(status, FALSE, data_set) == EAGAIN) {
+    while (unpack_node_history(status, FALSE, data_set) == EAGAIN) {
         crm_trace("Another pass through node resource histories is needed");
     }
 
     // Now catch any nodes we didn't see
-    unpack_node_loop(status,
-                     pcmk_is_set(data_set->flags, pe_flag_stonith_enabled),
-                     data_set);
+    unpack_node_history(status,
+                        pcmk_is_set(data_set->flags, pe_flag_stonith_enabled),
+                        data_set);
 
     /* Now that we know where resources are, we can schedule stops of containers
      * with failed bundle connections
@@ -3448,7 +3448,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
              *
              * We could limit this to remote_node->details->unclean, but at
              * this point, that's always true (it won't be reliable until
-             * after unpack_node_loop() is done).
+             * after unpack_node_history() is done).
              */
             crm_info("Clearing %s failure will wait until any scheduled "
                      "fencing of %s completes", task, rsc->id);
