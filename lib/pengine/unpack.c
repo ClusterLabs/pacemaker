@@ -2306,8 +2306,19 @@ unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
     }
 }
 
+/*!
+ * \internal
+ * \brief Unpack one lrm_resource entry from a node's CIB status
+ *
+ * \param[in] node       Node whose status is being unpacked
+ * \param[in] rsc_entry  lrm_resource XML being unpacked
+ * \param[in] data_set   Cluster working set
+ *
+ * \return Resource corresponding to the entry, or NULL if no operation history
+ */
 static pe_resource_t *
-unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * data_set)
+unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
+                    pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     int stop_index = -1;
@@ -2315,7 +2326,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
 
     const char *task = NULL;
-    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+    const char *rsc_id = crm_element_value(lrm_resource, XML_ATTR_ID);
 
     pe_resource_t *rsc = NULL;
     GListPtr op_list = NULL;
@@ -2329,13 +2340,13 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 
     crm_trace("[%s] Processing %s on %s",
-              crm_element_name(rsc_entry), rsc_id, node->details->uname);
+              crm_element_name(lrm_resource), rsc_id, node->details->uname);
 
     /* extract operations */
     op_list = NULL;
     sorted_op_list = NULL;
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
+    for (rsc_op = pcmk__xe_first_child(lrm_resource); rsc_op != NULL;
          rsc_op = pcmk__xe_next(rsc_op)) {
 
         if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP,
@@ -2352,20 +2363,20 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     }
 
     /* find the resource */
-    rsc = unpack_find_resource(data_set, node, rsc_id, rsc_entry);
+    rsc = unpack_find_resource(data_set, node, rsc_id, lrm_resource);
     if (rsc == NULL) {
         if (op_list == NULL) {
             // If there are no operations, there is nothing to do
             return NULL;
         } else {
-            rsc = process_orphan_resource(rsc_entry, node, data_set);
+            rsc = process_orphan_resource(lrm_resource, node, data_set);
         }
     }
     CRM_ASSERT(rsc != NULL);
 
     // Check whether the resource is "shutdown-locked" to this node
     if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
-        unpack_shutdown_lock(rsc_entry, rsc, node, data_set);
+        unpack_shutdown_lock(lrm_resource, rsc, node, data_set);
     }
 
     /* process operations */
@@ -2482,7 +2493,7 @@ unpack_node_lrm(pe_node_t *node, xmlNode *xml, pe_working_set_t *data_set)
     for (xmlNode *rsc_entry = first_named_child(xml, XML_LRM_TAG_RESOURCE);
          rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
 
-        pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
+        pe_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, data_set);
 
         if ((rsc != NULL)
             && pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
