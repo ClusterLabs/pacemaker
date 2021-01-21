@@ -1015,6 +1015,117 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
 
 /*!
  * \internal
+ * \brief Unpack a cluster node's transient attributes
+ *
+ * \param[in] state     CIB node state XML
+ * \param[in] node      Cluster node whose attributes are being unpacked
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_transient_attributes(xmlNode *state, pe_node_t *node,
+                            pe_working_set_t *data_set)
+{
+    const char *discovery = NULL;
+    xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+
+    add_node_attrs(attrs, node, TRUE, data_set);
+
+    if (crm_is_true(pe_node_attribute_raw(node, "standby"))) {
+        crm_info("Node %s is in standby-mode", node->details->uname);
+        node->details->standby = TRUE;
+    }
+
+    if (crm_is_true(pe_node_attribute_raw(node, "maintenance"))) {
+        crm_info("Node %s is in maintenance-mode", node->details->uname);
+        node->details->maintenance = TRUE;
+    }
+
+    discovery = pe_node_attribute_raw(node, XML_NODE_ATTR_RSC_DISCOVERY);
+    if ((discovery != NULL) && !crm_is_true(discovery)) {
+        crm_warn("Ignoring %s attribute for node %s because disabling "
+                 "resource discovery is not allowed for cluster nodes",
+                 XML_NODE_ATTR_RSC_DISCOVERY, node->details->uname);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Unpack a node state entry (first pass)
+ *
+ * Unpack one node state entry from status. This unpacks information from the
+ * node_state element itself and node attributes inside it, but not the
+ * resource history inside it. Multiple passes through the status are needed to
+ * fully unpack everything.
+ *
+ * \param[in] state     CIB node state XML
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_node_state(xmlNode *state, pe_working_set_t *data_set)
+{
+    const char *id = NULL;
+    const char *uname = NULL;
+    pe_node_t *this_node = NULL;
+
+    id = crm_element_value(state, XML_ATTR_ID);
+    if (id == NULL) {
+        crm_warn("Ignoring malformed " XML_CIB_TAG_STATE " entry without "
+                 XML_ATTR_ID);
+        return;
+    }
+
+    uname = crm_element_value(state, XML_ATTR_UNAME);
+    if (uname == NULL) {
+        crm_warn("Ignoring malformed " XML_CIB_TAG_STATE " entry without "
+                 XML_ATTR_UNAME);
+        return;
+    }
+
+    this_node = pe_find_node_any(data_set->nodes, id, uname);
+    if (this_node == NULL) {
+        pcmk__config_warn("Ignoring recorded node state for '%s' because "
+                          "it is no longer in the configuration", uname);
+        return;
+    }
+
+    if (pe__is_guest_or_remote_node(this_node)) {
+        /* We can't determine the online status of Pacemaker Remote nodes until
+         * after all resource history has been unpacked. In this first pass, we
+         * do need to mark whether the node has been fenced, as this plays a
+         * role during unpacking cluster node resource state.
+         */
+        const char *is_fenced = crm_element_value(state, XML_NODE_IS_FENCED);
+
+        this_node->details->remote_was_fenced = crm_atoi(is_fenced, "0");
+        return;
+    }
+
+    unpack_transient_attributes(state, this_node, data_set);
+
+    /* Provisionally mark this cluster node as clean. We have at least seen it
+     * in the current cluster's lifetime.
+     */
+    this_node->details->unclean = FALSE;
+    this_node->details->unseen = FALSE;
+
+    crm_trace("Determining online status of cluster node %s (id %s)",
+              this_node->details->uname, id);
+    determine_online_status(state, this_node, data_set);
+
+    if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
+        && this_node->details->online
+        && (data_set->no_quorum_policy == no_quorum_suicide)) {
+        /* Everything else should flow from this automatically
+         * (at least until the scheduler becomes able to migrate off
+         * healthy resources)
+         */
+        pe_fence_node(data_set, this_node, "cluster does not have quorum",
+                      FALSE);
+    }
+}
+
+/*!
+ * \internal
  * \brief Unpack nodes' resource history as much as possible
  *
  * Unpack as many nodes' resource history as possible in one pass through the
@@ -1136,11 +1247,7 @@ unpack_node_loop(xmlNode *status, bool fence, pe_working_set_t *data_set)
 gboolean
 unpack_status(xmlNode * status, pe_working_set_t * data_set)
 {
-    const char *id = NULL;
-    const char *uname = NULL;
-
     xmlNode *state = NULL;
-    pe_node_t *this_node = NULL;
 
     crm_trace("Beginning unpack");
 
@@ -1156,78 +1263,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             unpack_tickets_state((xmlNode *) state, data_set);
 
         } else if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
-            xmlNode *attrs = NULL;
-            const char *resource_discovery_enabled = NULL;
-
-            id = crm_element_value(state, XML_ATTR_ID);
-            if (id == NULL) {
-                crm_warn("Ignoring malformed " XML_CIB_TAG_STATE
-                         " entry without " XML_ATTR_ID);
-                continue;
-            }
-
-            uname = crm_element_value(state, XML_ATTR_UNAME);
-            if (uname == NULL) {
-                crm_warn("Ignoring malformed " XML_CIB_TAG_STATE
-                         " entry without " XML_ATTR_UNAME);
-                continue;
-            }
-
-            this_node = pe_find_node_any(data_set->nodes, id, uname);
-            if (this_node == NULL) {
-                pcmk__config_warn("Ignoring recorded node status for '%s' "
-                                  "because no longer in configuration", uname);
-                continue;
-            }
-
-            if (pe__is_guest_or_remote_node(this_node)) {
-                /* online state for remote nodes is determined by the
-                 * rsc state after all the unpacking is done. we do however
-                 * need to mark whether or not the node has been fenced as this plays
-                 * a role during unpacking cluster node resource state */
-                this_node->details->remote_was_fenced = 
-                    crm_atoi(crm_element_value(state, XML_NODE_IS_FENCED), "0");
-                continue;
-            }
-
-            crm_trace("Processing node id=%s, uname=%s", id, uname);
-
-            /* Mark the node as provisionally clean
-             * - at least we have seen it in the current cluster's lifetime
-             */
-            this_node->details->unclean = FALSE;
-            this_node->details->unseen = FALSE;
-            attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
-            add_node_attrs(attrs, this_node, TRUE, data_set);
-
-            if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
-                crm_info("Node %s is in standby-mode", this_node->details->uname);
-                this_node->details->standby = TRUE;
-            }
-
-            if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance"))) {
-                crm_info("Node %s is in maintenance-mode", this_node->details->uname);
-                this_node->details->maintenance = TRUE;
-            }
-
-            resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
-            if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
-                crm_warn("ignoring %s attribute on node %s, disabling resource discovery is not allowed on cluster nodes",
-                    XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
-            }
-
-            crm_trace("determining node state");
-            determine_online_status(state, this_node, data_set);
-
-            if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-                && this_node->details->online
-                && (data_set->no_quorum_policy == no_quorum_suicide)) {
-                /* Everything else should flow from this automatically
-                 * (at least until the scheduler becomes able to migrate off
-                 * healthy resources)
-                 */
-                pe_fence_node(data_set, this_node, "cluster does not have quorum", FALSE);
-            }
+            unpack_node_state(state, data_set);
         }
     }
 
