@@ -60,8 +60,8 @@ static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
 static void determine_online_status(xmlNode *node_state, pe_node_t *this_node,
                                     pe_working_set_t *data_set);
 
-static void unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_state,
-                                 pe_working_set_t *data_set);
+static void unpack_node_lrm(pe_node_t *node, xmlNode *xml,
+                            pe_working_set_t *data_set);
 
 
 // Bitmask for warnings we only want to print once
@@ -1145,7 +1145,6 @@ static int
 unpack_node_history(xmlNode *status, bool fence, pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *lrm_rsc = NULL;
 
     // Loop through all node_state entries in CIB status
     for (xmlNode *state = first_named_child(status, XML_CIB_TAG_STATE);
@@ -1232,9 +1231,7 @@ unpack_node_history(xmlNode *status, bool fence, pe_working_set_t *data_set)
                   (fence? "unseen " : ""), id);
 
         this_node->details->unpacked = TRUE;
-        lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
-        lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-        unpack_lrm_resources(this_node, lrm_rsc, data_set);
+        unpack_node_lrm(this_node, state, data_set);
 
         rc = EAGAIN; // Other node histories might depend on this one
     }
@@ -2458,32 +2455,46 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
     }
 }
 
+/*!
+ * \internal
+ * \brief Unpack one node's lrm status section
+ *
+ * \param[in] node      Node whose status is being unpacked
+ * \param[in] xml       CIB node state XML
+ * \param[in] data_set  Cluster working set
+ */
 static void
-unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_rsc_list,
-                     pe_working_set_t *data_set)
+unpack_node_lrm(pe_node_t *node, xmlNode *xml, pe_working_set_t *data_set)
 {
-    xmlNode *rsc_entry = NULL;
-    gboolean found_orphaned_container_filler = FALSE;
+    bool found_orphaned_container_filler = false;
 
-    for (rsc_entry = pcmk__xe_first_child(lrm_rsc_list); rsc_entry != NULL;
-         rsc_entry = pcmk__xe_next(rsc_entry)) {
+    // Drill down to lrm_resources section
+    xml = find_xml_node(xml, XML_CIB_TAG_LRM, FALSE);
+    if (xml == NULL) {
+        return;
+    }
+    xml = find_xml_node(xml, XML_LRM_TAG_RESOURCES, FALSE);
+    if (xml == NULL) {
+        return;
+    }
 
-        if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
-            pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
-            if (!rsc) {
-                continue;
-            }
-            if (pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
-                found_orphaned_container_filler = TRUE;
-            }
+    // Unpack each lrm_resource entry
+    for (xmlNode *rsc_entry = first_named_child(xml, XML_LRM_TAG_RESOURCE);
+         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+
+        pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
+
+        if ((rsc != NULL)
+            && pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
+            found_orphaned_container_filler = true;
         }
     }
 
-    /* now that all the resource state has been unpacked for this node
-     * we have to go back and map any orphaned container fillers to their
-     * container resource */
+    /* Now that all resource state has been unpacked for this node, map any
+     * orphaned container fillers to their container resource.
+     */
     if (found_orphaned_container_filler) {
-        handle_orphaned_container_fillers(lrm_rsc_list, data_set);
+        handle_orphaned_container_fillers(xml, data_set);
     }
 }
 
