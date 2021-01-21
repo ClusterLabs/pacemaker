@@ -2326,7 +2326,7 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
     enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
 
     const char *task = NULL;
-    const char *rsc_id = crm_element_value(lrm_resource, XML_ATTR_ID);
+    const char *rsc_id = ID(lrm_resource);
 
     pe_resource_t *rsc = NULL;
     GListPtr op_list = NULL;
@@ -2342,17 +2342,11 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
     crm_trace("[%s] Processing %s on %s",
               crm_element_name(lrm_resource), rsc_id, node->details->uname);
 
-    /* extract operations */
-    op_list = NULL;
-    sorted_op_list = NULL;
+    // Build a list of individual lrm_rsc_op entries, so we can sort them
+    for (rsc_op = first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP);
+         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
 
-    for (rsc_op = pcmk__xe_first_child(lrm_resource); rsc_op != NULL;
-         rsc_op = pcmk__xe_next(rsc_op)) {
-
-        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP,
-                         pcmk__str_none)) {
-            op_list = g_list_prepend(op_list, rsc_op);
-        }
+        op_list = g_list_prepend(op_list, rsc_op);
     }
 
     if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
