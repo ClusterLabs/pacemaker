@@ -324,8 +324,8 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 
 Current cluster status:
 
- dummy1	(ocf::pacemaker:Dummy):	 Stopped
- dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped
+ dummy2	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
@@ -336,8 +336,8 @@ Executing cluster transition:
 
 Revised cluster status:
 
- dummy1	(ocf::pacemaker:Dummy):	 Stopped
- dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped
+ dummy2	(ocf:pacemaker:Dummy):	 Stopped
 
 =#=#=#= End test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)
@@ -367,8 +367,8 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 
 Current cluster status:
 
- dummy1	(ocf::pacemaker:Dummy):	 Stopped
- dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped
+ dummy2	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
@@ -379,8 +379,8 @@ Executing cluster transition:
 
 Revised cluster status:
 
- dummy1	(ocf::pacemaker:Dummy):	 Stopped
- dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped
+ dummy2	(ocf:pacemaker:Dummy):	 Stopped
 
 =#=#=#= End test: Run crm_simulate with valid CIB, but without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with valid CIB, but without validate-with attribute
@@ -499,8 +499,8 @@ unpack_simple_rsc_order 	error: Cannot invert constraint 'ord_1-2' (please speci
 
 Current cluster status:
 
- dummy1	(ocf::pacemaker:Dummy):	 Stopped
- dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped
+ dummy2	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
@@ -511,8 +511,8 @@ Executing cluster transition:
 
 Revised cluster status:
 
- dummy1	(ocf::pacemaker:Dummy):	 Stopped
- dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped
+ dummy2	(ocf:pacemaker:Dummy):	 Stopped
 
 =#=#=#= End test: Run crm_simulate with invalid CIB, also without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB, also without validate-with attribute
