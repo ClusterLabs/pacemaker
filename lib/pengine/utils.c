@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -450,7 +450,8 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
             case RSC_ROLE_MASTER:
             case RSC_ROLE_SLAVE:
                 if (rsc->next_role > RSC_ROLE_SLAVE) {
-                    rsc->next_role = RSC_ROLE_SLAVE;
+                    pe__set_next_role(rsc, RSC_ROLE_SLAVE,
+                                      "no-quorum-policy=demote");
                 }
                 policy = no_quorum_ignore;
                 break;

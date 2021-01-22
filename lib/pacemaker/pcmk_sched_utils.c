@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -287,7 +287,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
             crm_debug("All nodes for resource %s are unavailable"
                       ", unclean or shutting down (%s: %d, %d)",
                       rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
-            rsc->next_role = RSC_ROLE_STOPPED;
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
             chosen = NULL;
         }
     }
@@ -304,7 +304,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
         char *rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
 
         crm_debug("Could not allocate a node for %s", rsc->id);
-        rsc->next_role = RSC_ROLE_STOPPED;
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to allocate");
 
         for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;

@@ -980,7 +980,7 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
         crm_info("Node %s is shutting down", this_node->details->uname);
         this_node->details->shutdown = TRUE;
         if (rsc) {
-            rsc->next_role = RSC_ROLE_STOPPED;
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "remote shutdown");
         }
     }
  
@@ -2060,7 +2060,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case action_fail_stop:
-            rsc->next_role = RSC_ROLE_STOPPED;
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "on-fail=stop");
             break;
 
         case action_fail_recover:
@@ -2114,7 +2114,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
             if (rsc->remote_reconnect_ms) {
-                rsc->next_role = RSC_ROLE_STOPPED;
+                pe__set_next_role(rsc, RSC_ROLE_STOPPED, "remote reset");
             }
             break;
     }
@@ -2405,10 +2405,7 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
 
     if (get_target_role(rsc, &req_role)) {
         if (rsc->next_role == RSC_ROLE_UNKNOWN || req_role < rsc->next_role) {
-            pe_rsc_debug(rsc, "%s: Overwriting calculated next role %s"
-                         " with requested next role %s",
-                         rsc->id, role2text(rsc->next_role), role2text(req_role));
-            rsc->next_role = req_role;
+            pe__set_next_role(rsc, req_role, XML_RSC_ATTR_TARGET_ROLE);
 
         } else if (req_role > rsc->next_role) {
             pe_rsc_info(rsc, "%s: Not overwriting calculated next role %s"
@@ -3052,7 +3049,8 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
     } else if (!strcmp(task, CRMD_ACTION_DEMOTE)) {
         if (action->on_fail == action_fail_block) {
             rsc->role = RSC_ROLE_MASTER;
-            rsc->next_role = RSC_ROLE_STOPPED;
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED,
+                              "demote with on-fail=block");
 
         } else if(rc == PCMK_OCF_NOT_RUNNING) {
             rsc->role = RSC_ROLE_STOPPED;
@@ -3083,7 +3081,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
                  fail2text(action->on_fail), role2text(action->fail_role));
 
     if (action->fail_role != RSC_ROLE_STARTED && rsc->next_role < action->fail_role) {
-        rsc->next_role = action->fail_role;
+        pe__set_next_role(rsc, action->fail_role, "failure");
     }
 
     if (action->fail_role == RSC_ROLE_STOPPED) {
@@ -3200,7 +3198,7 @@ determine_op_status(
 
                 /* clear any previous failure actions */
                 *on_fail = action_fail_ignore;
-                rsc->next_role = RSC_ROLE_UNKNOWN;
+                pe__set_next_role(rsc, RSC_ROLE_UNKNOWN, "not running");
             }
             break;
 
@@ -3595,7 +3593,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
             case action_fail_recover:
             case action_fail_restart_container:
                 *on_fail = action_fail_ignore;
-                rsc->next_role = RSC_ROLE_UNKNOWN;
+                pe__set_next_role(rsc, RSC_ROLE_UNKNOWN, "clear past failures");
                 break;
             case action_fail_reset_remote:
                 if (rsc->remote_reconnect_ms == 0) {
@@ -3606,7 +3604,8 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
                      * to reconnect.)
                      */
                     *on_fail = action_fail_ignore;
-                    rsc->next_role = RSC_ROLE_UNKNOWN;
+                    pe__set_next_role(rsc, RSC_ROLE_UNKNOWN,
+                                      "clear past failures and reset remote");
                 }
                 break;
         }
