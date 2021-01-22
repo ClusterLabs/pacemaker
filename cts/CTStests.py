@@ -1,7 +1,7 @@
 """ Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 #
@@ -2266,7 +2266,7 @@ class BSC_AddResource(CTSTest):
         return ip.strip()
 
     def make_ip_resource(self, node, id, rclass, type, ip):
-        self.logger.log("Creating %s::%s:%s (%s) on %s" % (rclass,type,id,ip,node))
+        self.logger.log("Creating %s:%s:%s (%s) on %s" % (rclass,type,id,ip,node))
         rsc_xml="""
 <primitive id="%s" class="%s" type="%s"  provider="heartbeat">
     <instance_attributes id="%s"><attributes>

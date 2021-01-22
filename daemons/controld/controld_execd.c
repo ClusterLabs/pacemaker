@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -704,7 +704,8 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     crm_xml_add(xml_op, XML_ATTR_RA_VERSION, metadata->ra_version);
 #endif
 
-    crm_trace("Including additional digests for %s::%s:%s", rsc->standard, rsc->provider, rsc->type);
+    crm_trace("Including additional digests for %s:%s:%s",
+              rsc->standard, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
