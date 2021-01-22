@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -535,4 +535,48 @@ pcmk_str_is_infinity(const char *s) {
 bool
 pcmk_str_is_minus_infinity(const char *s) {
     return pcmk__str_eq(s, CRM_MINUS_INFINITY_S, pcmk__str_none);
+}
+
+/*!
+ * \internal
+ * \brief Sleep for given milliseconds
+ *
+ * \param[in] ms  Time to sleep
+ *
+ * \note The full time might not be slept if a signal is received.
+ */
+void
+pcmk__sleep_ms(unsigned int ms)
+{
+    // @TODO Impose a sane maximum sleep to avoid hanging a process for long
+    //CRM_CHECK(ms <= MAX_SLEEP, ms = MAX_SLEEP);
+
+    // Use sleep() for any whole seconds
+    if (ms >= 1000) {
+        sleep(ms / 1000);
+        ms -= ms / 1000;
+    }
+
+    if (ms == 0) {
+        return;
+    }
+
+#if defined(HAVE_NANOSLEEP)
+    // nanosleep() is POSIX-2008, so prefer that
+    {
+        struct timespec req = { .tv_sec = 0, .tv_nsec = (long) (ms * 1000000) };
+
+        nanosleep(&req, NULL);
+    }
+#elif defined(HAVE_USLEEP)
+    // usleep() is widely available, though considered obsolete
+    usleep((useconds_t) ms);
+#else
+    // Otherwise use a trick with select() timeout
+    {
+        struct timeval tv = { .tv_sec = 0, .tv_usec = (suseconds_t) ms };
+
+        select(0, NULL, NULL, NULL, &tv);
+    }
+#endif
 }

@@ -902,6 +902,9 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.32.0],
                   [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
                    LIBS="${LIBS} ${GLIB_LIBS}"])
 
+# Check whether high-resolution sleep function is available
+AC_CHECK_FUNCS([nanosleep usleep])
+
 #
 # Where is dlopen?
 #
