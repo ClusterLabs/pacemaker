@@ -20,6 +20,9 @@ matrix:
     - compiler: gcc
       env:      MAINT_EXTRA=0
       arch:     ppc64le  
+    - compiler: gcc
+      env:      MAINT_EXTRA=0
+      arch:     arm64
 
 cache:
   directories:
@@ -27,7 +30,7 @@ cache:
 
 # sudo add-apt-repository ppa:hotot-team
 before_install:
-- if [ "$TRAVIS_ARCH" == "ppc64le" ]; then sudo add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports/ trusty main"; sudo apt-get update -qq; fi
+- if [ "$TRAVIS_ARCH" == "ppc64le" -o "$TRAVIS_ARCH" == "aarch64" ]; then sudo add-apt-repository "deb http://ports.ubuntu.com/ubuntu-ports/ trusty main"; sudo apt-get update -qq; fi
 - if [ "$TRAVIS_ARCH" == "amd64" ]; then sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ trusty main"; sudo apt-get update -qq; fi
 
 # To switch to Travis-CI's containerized (non-sudo) architecture,
