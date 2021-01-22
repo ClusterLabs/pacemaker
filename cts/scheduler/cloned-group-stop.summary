@@ -5,9 +5,9 @@ Online: [ rhos4-node3 rhos4-node4 ]
 
  virt-fencing	(stonith:fence_xvm):	 Started rhos4-node3
  Resource Group: mysql-group
-     mysql-vip	(ocf::heartbeat:IPaddr2):	 Started rhos4-node3
-     mysql-fs	(ocf::heartbeat:Filesystem):	 Started rhos4-node3
-     mysql-db	(ocf::heartbeat:mysql):	 Started rhos4-node3
+     mysql-vip	(ocf:heartbeat:IPaddr2):	 Started rhos4-node3
+     mysql-fs	(ocf:heartbeat:Filesystem):	 Started rhos4-node3
+     mysql-db	(ocf:heartbeat:mysql):	 Started rhos4-node3
  Clone Set: qpidd-clone [qpidd]
      Started: [ rhos4-node3 rhos4-node4 ]
  Clone Set: keystone-clone [keystone]
@@ -74,9 +74,9 @@ Online: [ rhos4-node3 rhos4-node4 ]
 
  virt-fencing	(stonith:fence_xvm):	 Started rhos4-node3
  Resource Group: mysql-group
-     mysql-vip	(ocf::heartbeat:IPaddr2):	 Started rhos4-node3
-     mysql-fs	(ocf::heartbeat:Filesystem):	 Started rhos4-node3
-     mysql-db	(ocf::heartbeat:mysql):	 Started rhos4-node3
+     mysql-vip	(ocf:heartbeat:IPaddr2):	 Started rhos4-node3
+     mysql-fs	(ocf:heartbeat:Filesystem):	 Started rhos4-node3
+     mysql-db	(ocf:heartbeat:mysql):	 Started rhos4-node3
  Clone Set: qpidd-clone [qpidd]
      Stopped (disabled): [ rhos4-node3 rhos4-node4 ]
  Clone Set: keystone-clone [keystone]

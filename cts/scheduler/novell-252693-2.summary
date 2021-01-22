@@ -17,7 +17,7 @@ Online: [ node1 node2 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ node2 ]
      Stopped: [ node1 ]
- sles10	(ocf::heartbeat:Xen):	 Started node2
+ sles10	(ocf:heartbeat:Xen):	 Started node2
 
 Transition Summary:
  * Start      stonithclone:1        (          node1 )  
@@ -97,5 +97,5 @@ Online: [ node1 node2 ]
      Started: [ node1 node2 ]
  Clone Set: configstorecloneset [configstoreclone]
      Started: [ node1 node2 ]
- sles10	(ocf::heartbeat:Xen):	 Started node1
+ sles10	(ocf:heartbeat:Xen):	 Started node1
 

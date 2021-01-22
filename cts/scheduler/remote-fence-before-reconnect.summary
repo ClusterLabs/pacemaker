@@ -4,12 +4,12 @@ RemoteNode c7auto4: UNCLEAN (offline)
 Online: [ c7auto1 c7auto2 c7auto3 ]
 
  shooter	(stonith:fence_phd_kvm):	 Started c7auto2
- c7auto4	(ocf::pacemaker:remote):	 FAILED c7auto1
- fake1	(ocf::heartbeat:Dummy):	 Started c7auto3
- fake2	(ocf::heartbeat:Dummy):	 Started c7auto4 (UNCLEAN)
- fake3	(ocf::heartbeat:Dummy):	 Started c7auto1
- fake4	(ocf::heartbeat:Dummy):	 Started c7auto2
- fake5	(ocf::heartbeat:Dummy):	 Started c7auto3
+ c7auto4	(ocf:pacemaker:remote):	 FAILED c7auto1
+ fake1	(ocf:heartbeat:Dummy):	 Started c7auto3
+ fake2	(ocf:heartbeat:Dummy):	 Started c7auto4 (UNCLEAN)
+ fake3	(ocf:heartbeat:Dummy):	 Started c7auto1
+ fake4	(ocf:heartbeat:Dummy):	 Started c7auto2
+ fake5	(ocf:heartbeat:Dummy):	 Started c7auto3
 
 Transition Summary:
  * Fence (reboot) c7auto4 'remote connection is unrecoverable'
@@ -28,10 +28,10 @@ RemoteNode c7auto4: UNCLEAN (offline)
 Online: [ c7auto1 c7auto2 c7auto3 ]
 
  shooter	(stonith:fence_phd_kvm):	 Started c7auto2
- c7auto4	(ocf::pacemaker:remote):	 FAILED
- fake1	(ocf::heartbeat:Dummy):	 Started c7auto3
- fake2	(ocf::heartbeat:Dummy):	 Started c7auto1
- fake3	(ocf::heartbeat:Dummy):	 Started c7auto1
- fake4	(ocf::heartbeat:Dummy):	 Started c7auto2
- fake5	(ocf::heartbeat:Dummy):	 Started c7auto3
+ c7auto4	(ocf:pacemaker:remote):	 FAILED
+ fake1	(ocf:heartbeat:Dummy):	 Started c7auto3
+ fake2	(ocf:heartbeat:Dummy):	 Started c7auto1
+ fake3	(ocf:heartbeat:Dummy):	 Started c7auto1
+ fake4	(ocf:heartbeat:Dummy):	 Started c7auto2
+ fake5	(ocf:heartbeat:Dummy):	 Started c7auto3
 

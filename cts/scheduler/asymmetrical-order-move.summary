@@ -5,8 +5,8 @@ Current cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]
 
  st_sbd	(stonith:external/sbd):	 Started sle12sp2-2
- dummy1	(ocf::pacemaker:Dummy):	 Stopped (disabled)
- dummy2	(ocf::pacemaker:Dummy):	 Started sle12sp2-1
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+ dummy2	(ocf:pacemaker:Dummy):	 Started sle12sp2-1
 
 Transition Summary:
  * Stop       dummy2     ( sle12sp2-1 )   due to unrunnable dummy1 start
@@ -19,6 +19,6 @@ Revised cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]
 
  st_sbd	(stonith:external/sbd):	 Started sle12sp2-2
- dummy1	(ocf::pacemaker:Dummy):	 Stopped (disabled)
- dummy2	(ocf::pacemaker:Dummy):	 Stopped
+ dummy1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+ dummy2	(ocf:pacemaker:Dummy):	 Stopped
 

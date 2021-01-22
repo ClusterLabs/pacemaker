@@ -5,13 +5,13 @@ Online: [ rhel7-auto2 rhel7-auto3 ]
 OFFLINE: [ rhel7-auto1 ]
 
  shooter	(stonith:fence_xvm):	 Started rhel7-auto3
- rhel7-auto4	(ocf::pacemaker:remote):	 FAILED rhel7-auto2
- FAKE1	(ocf::heartbeat:Dummy):	 Stopped
- FAKE2	(ocf::heartbeat:Dummy):	 Started rhel7-auto4 (UNCLEAN)
- FAKE3	(ocf::heartbeat:Dummy):	 Started rhel7-auto2
- FAKE4	(ocf::heartbeat:Dummy):	 Started rhel7-auto3
- FAKE5	(ocf::heartbeat:Dummy):	 Started rhel7-auto3
- FAKE6	(ocf::heartbeat:Dummy):	 Started rhel7-auto4 (UNCLEAN)
+ rhel7-auto4	(ocf:pacemaker:remote):	 FAILED rhel7-auto2
+ FAKE1	(ocf:heartbeat:Dummy):	 Stopped
+ FAKE2	(ocf:heartbeat:Dummy):	 Started rhel7-auto4 (UNCLEAN)
+ FAKE3	(ocf:heartbeat:Dummy):	 Started rhel7-auto2
+ FAKE4	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
+ FAKE5	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
+ FAKE6	(ocf:heartbeat:Dummy):	 Started rhel7-auto4 (UNCLEAN)
 
 Transition Summary:
  * Fence (reboot) rhel7-auto4 'FAKE2 is thought to be active there'
@@ -42,11 +42,11 @@ OFFLINE: [ rhel7-auto1 ]
 RemoteOnline: [ rhel7-auto4 ]
 
  shooter	(stonith:fence_xvm):	 Started rhel7-auto3
- rhel7-auto4	(ocf::pacemaker:remote):	 Started rhel7-auto2
- FAKE1	(ocf::heartbeat:Dummy):	 Started rhel7-auto2
- FAKE2	(ocf::heartbeat:Dummy):	 Started rhel7-auto3
- FAKE3	(ocf::heartbeat:Dummy):	 Started rhel7-auto2
- FAKE4	(ocf::heartbeat:Dummy):	 Started rhel7-auto3
- FAKE5	(ocf::heartbeat:Dummy):	 Started rhel7-auto3
- FAKE6	(ocf::heartbeat:Dummy):	 Started rhel7-auto2
+ rhel7-auto4	(ocf:pacemaker:remote):	 Started rhel7-auto2
+ FAKE1	(ocf:heartbeat:Dummy):	 Started rhel7-auto2
+ FAKE2	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
+ FAKE3	(ocf:heartbeat:Dummy):	 Started rhel7-auto2
+ FAKE4	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
+ FAKE5	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
+ FAKE6	(ocf:heartbeat:Dummy):	 Started rhel7-auto2
 

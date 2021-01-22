@@ -3,8 +3,8 @@ Current cluster status:
 Online: [ sles11-1 sles11-2 ]
 
  st_sbd	(stonith:external/sbd):	 Started sles11-1
- rsc1	(ocf::pacemaker:Dummy):	 FAILED sles11-1
- rsc2	(ocf::pacemaker:Dummy):	 FAILED sles11-1
+ rsc1	(ocf:pacemaker:Dummy):	 FAILED sles11-1
+ rsc2	(ocf:pacemaker:Dummy):	 FAILED sles11-1
 
 Transition Summary:
  * Recover    rsc1    ( sles11-1 -> sles11-2 )  
@@ -22,6 +22,6 @@ Revised cluster status:
 Online: [ sles11-1 sles11-2 ]
 
  st_sbd	(stonith:external/sbd):	 Started sles11-1
- rsc1	(ocf::pacemaker:Dummy):	 Started sles11-2
- rsc2	(ocf::pacemaker:Dummy):	 Started sles11-2
+ rsc1	(ocf:pacemaker:Dummy):	 Started sles11-2
+ rsc2	(ocf:pacemaker:Dummy):	 Started sles11-2
 

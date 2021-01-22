@@ -7,8 +7,8 @@ Online: [ node1 node2 node3 ]
  Clone Set: clone2 [group1]
      Stopped: [ node1 node2 node3 ]
  Resource Group: group2
-     rsc4	(ocf::pacemaker:Dummy):	 Stopped
-     rsc5	(ocf::pacemaker:Dummy):	 Stopped
+     rsc4	(ocf:pacemaker:Dummy):	 Stopped
+     rsc5	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
  * Start      rsc1:0     ( node2 )  
@@ -66,6 +66,6 @@ Online: [ node1 node2 node3 ]
  Clone Set: clone2 [group1]
      Started: [ node2 node3 ]
  Resource Group: group2
-     rsc4	(ocf::pacemaker:Dummy):	 Started node3
-     rsc5	(ocf::pacemaker:Dummy):	 Started node3
+     rsc4	(ocf:pacemaker:Dummy):	 Started node3
+     rsc5	(ocf:pacemaker:Dummy):	 Started node3
 

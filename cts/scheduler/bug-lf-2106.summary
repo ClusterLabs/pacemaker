@@ -6,30 +6,30 @@ Online: [ cl-virt-1 cl-virt-2 ]
  Clone Set: pingdclone [pingd]
      Started: [ cl-virt-1 cl-virt-2 ]
  Resource Group: ssh
-     ssh-ip1	(ocf::heartbeat:IPaddr2):	 Started cl-virt-2
-     ssh-ip2	(ocf::heartbeat:IPaddr2):	 Started cl-virt-2
-     ssh-bin	(ocf::dk:opensshd):	 Started cl-virt-2
- itwiki	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+     ssh-ip1	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+     ssh-ip2	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+     ssh-bin	(ocf:dk:opensshd):	 Started cl-virt-2
+ itwiki	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-itwiki [drbd-itwiki] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- bugtrack	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ bugtrack	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-bugtrack [drbd-bugtrack] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- servsyslog	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ servsyslog	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-servsyslog [drbd-servsyslog] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- smsprod2	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ smsprod2	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-smsprod2 [drbd-smsprod2] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- medomus-cvs	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ medomus-cvs	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-medomus-cvs [drbd-medomus-cvs] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- infotos	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ infotos	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-infotos [drbd-infotos] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
@@ -59,30 +59,30 @@ Online: [ cl-virt-1 cl-virt-2 ]
  Clone Set: pingdclone [pingd]
      Started: [ cl-virt-1 cl-virt-2 ]
  Resource Group: ssh
-     ssh-ip1	(ocf::heartbeat:IPaddr2):	 Started cl-virt-2
-     ssh-ip2	(ocf::heartbeat:IPaddr2):	 Started cl-virt-2
-     ssh-bin	(ocf::dk:opensshd):	 Started cl-virt-2
- itwiki	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+     ssh-ip1	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+     ssh-ip2	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+     ssh-bin	(ocf:dk:opensshd):	 Started cl-virt-2
+ itwiki	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-itwiki [drbd-itwiki] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- bugtrack	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ bugtrack	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-bugtrack [drbd-bugtrack] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- servsyslog	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ servsyslog	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-servsyslog [drbd-servsyslog] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- smsprod2	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ smsprod2	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-smsprod2 [drbd-smsprod2] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- medomus-cvs	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ medomus-cvs	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-medomus-cvs [drbd-medomus-cvs] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
- infotos	(ocf::heartbeat:VirtualDomain):	 Started cl-virt-2
+ infotos	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
  Clone Set: ms-infotos [drbd-infotos] (promotable)
      Masters: [ cl-virt-2 ]
      Slaves: [ cl-virt-1 ]

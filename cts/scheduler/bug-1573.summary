@@ -4,11 +4,11 @@ Online: [ xen-b ]
 OFFLINE: [ xen-c ]
 
  Resource Group: group_1
-     IPaddr_192_168_1_101	(ocf::heartbeat:IPaddr):	 Stopped
-     apache_2	(ocf::heartbeat:apache):	 Stopped
+     IPaddr_192_168_1_101	(ocf:heartbeat:IPaddr):	 Stopped
+     apache_2	(ocf:heartbeat:apache):	 Stopped
  Resource Group: group_11
-     IPaddr_192_168_1_102	(ocf::heartbeat:IPaddr):	 Started xen-b
-     apache_6	(ocf::heartbeat:apache):	 Stopped
+     IPaddr_192_168_1_102	(ocf:heartbeat:IPaddr):	 Started xen-b
+     apache_6	(ocf:heartbeat:apache):	 Stopped
 
 Transition Summary:
  * Shutdown xen-b
@@ -25,9 +25,9 @@ Online: [ xen-b ]
 OFFLINE: [ xen-c ]
 
  Resource Group: group_1
-     IPaddr_192_168_1_101	(ocf::heartbeat:IPaddr):	 Stopped
-     apache_2	(ocf::heartbeat:apache):	 Stopped
+     IPaddr_192_168_1_101	(ocf:heartbeat:IPaddr):	 Stopped
+     apache_2	(ocf:heartbeat:apache):	 Stopped
  Resource Group: group_11
-     IPaddr_192_168_1_102	(ocf::heartbeat:IPaddr):	 Stopped
-     apache_6	(ocf::heartbeat:apache):	 Stopped
+     IPaddr_192_168_1_102	(ocf:heartbeat:IPaddr):	 Stopped
+     apache_6	(ocf:heartbeat:apache):	 Stopped
 

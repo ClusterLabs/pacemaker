@@ -4,8 +4,8 @@ Current cluster status:
 Online: [ yingying.site ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	 Started yingying.site (disabled)
-     rsc2	(ocf::pacemaker:Dummy):	 FAILED yingying.site (disabled, blocked)
+     rsc1	(ocf:pacemaker:Dummy):	 Started yingying.site (disabled)
+     rsc2	(ocf:pacemaker:Dummy):	 FAILED yingying.site (disabled, blocked)
 
 Transition Summary:
  * Stop       rsc1    ( yingying.site )   due to node availability (blocked)
@@ -17,6 +17,6 @@ Revised cluster status:
 Online: [ yingying.site ]
 
  Resource Group: group1
-     rsc1	(ocf::pacemaker:Dummy):	 Started yingying.site (disabled)
-     rsc2	(ocf::pacemaker:Dummy):	 FAILED yingying.site (disabled, blocked)
+     rsc1	(ocf:pacemaker:Dummy):	 Started yingying.site (disabled)
+     rsc2	(ocf:pacemaker:Dummy):	 FAILED yingying.site (disabled, blocked)
 

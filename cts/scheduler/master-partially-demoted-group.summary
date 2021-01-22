@@ -5,8 +5,8 @@ Online: [ sd01-0 sd01-1 ]
  stonith-xvm-sd01-0	(stonith:fence_xvm):	 Started sd01-1
  stonith-xvm-sd01-1	(stonith:fence_xvm):	 Started sd01-0
  Resource Group: cdev-pool-0-iscsi-export
-     cdev-pool-0-iscsi-target	(ocf::vds-ok:iSCSITarget):	 Started sd01-1
-     cdev-pool-0-iscsi-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	 Started sd01-1
+     cdev-pool-0-iscsi-target	(ocf:vds-ok:iSCSITarget):	 Started sd01-1
+     cdev-pool-0-iscsi-lun-1	(ocf:vds-ok:iSCSILogicalUnit):	 Started sd01-1
  Clone Set: ms-cdev-pool-0-drbd [cdev-pool-0-drbd] (promotable)
      Masters: [ sd01-1 ]
      Slaves: [ sd01-0 ]
@@ -15,8 +15,8 @@ Online: [ sd01-0 sd01-1 ]
  Clone Set: cl-vlan1-net [vlan1-net]
      Started: [ sd01-0 sd01-1 ]
  Resource Group: cdev-pool-0-iscsi-vips
-     vip-164	(ocf::heartbeat:IPaddr2):	 Started sd01-1
-     vip-165	(ocf::heartbeat:IPaddr2):	 Started sd01-1
+     vip-164	(ocf:heartbeat:IPaddr2):	 Started sd01-1
+     vip-165	(ocf:heartbeat:IPaddr2):	 Started sd01-1
  Clone Set: ms-cdev-pool-0-iscsi-vips-fw [cdev-pool-0-iscsi-vips-fw] (promotable)
      Masters: [ sd01-1 ]
      Slaves: [ sd01-0 ]
@@ -98,8 +98,8 @@ Online: [ sd01-0 sd01-1 ]
  stonith-xvm-sd01-0	(stonith:fence_xvm):	 Started sd01-1
  stonith-xvm-sd01-1	(stonith:fence_xvm):	 Started sd01-0
  Resource Group: cdev-pool-0-iscsi-export
-     cdev-pool-0-iscsi-target	(ocf::vds-ok:iSCSITarget):	 Started sd01-0
-     cdev-pool-0-iscsi-lun-1	(ocf::vds-ok:iSCSILogicalUnit):	 Started sd01-0
+     cdev-pool-0-iscsi-target	(ocf:vds-ok:iSCSITarget):	 Started sd01-0
+     cdev-pool-0-iscsi-lun-1	(ocf:vds-ok:iSCSILogicalUnit):	 Started sd01-0
  Clone Set: ms-cdev-pool-0-drbd [cdev-pool-0-drbd] (promotable)
      Masters: [ sd01-0 ]
      Slaves: [ sd01-1 ]
@@ -108,8 +108,8 @@ Online: [ sd01-0 sd01-1 ]
  Clone Set: cl-vlan1-net [vlan1-net]
      Started: [ sd01-0 sd01-1 ]
  Resource Group: cdev-pool-0-iscsi-vips
-     vip-164	(ocf::heartbeat:IPaddr2):	 Started sd01-0
-     vip-165	(ocf::heartbeat:IPaddr2):	 Started sd01-0
+     vip-164	(ocf:heartbeat:IPaddr2):	 Started sd01-0
+     vip-165	(ocf:heartbeat:IPaddr2):	 Started sd01-0
  Clone Set: ms-cdev-pool-0-iscsi-vips-fw [cdev-pool-0-iscsi-vips-fw] (promotable)
      Masters: [ sd01-0 ]
      Slaves: [ sd01-1 ]

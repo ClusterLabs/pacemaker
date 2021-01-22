@@ -4,9 +4,9 @@ Node rhel7-1 (1): UNCLEAN (offline)
 Online: [ rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-4
- rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	 Started rhel7-1 (UNCLEAN)
- container1	(ocf::heartbeat:VirtualDomain):	 FAILED rhel7-1 (UNCLEAN)
- container2	(ocf::heartbeat:VirtualDomain):	 FAILED rhel7-1 (UNCLEAN)
+ rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Started rhel7-1 (UNCLEAN)
+ container1	(ocf:heartbeat:VirtualDomain):	 FAILED rhel7-1 (UNCLEAN)
+ container2	(ocf:heartbeat:VirtualDomain):	 FAILED rhel7-1 (UNCLEAN)
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
@@ -71,9 +71,9 @@ OFFLINE: [ rhel7-1 ]
 GuestOnline: [ lxc1:container1 lxc2:container2 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-4
- rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	 Started rhel7-5
- container1	(ocf::heartbeat:VirtualDomain):	 Started rhel7-2
- container2	(ocf::heartbeat:VirtualDomain):	 Started rhel7-3
+ rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Started rhel7-5
+ container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-2
+ container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Masters: [ lxc1 ]
      Slaves: [ lxc2 ]

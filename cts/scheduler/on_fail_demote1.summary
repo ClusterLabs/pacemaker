@@ -7,22 +7,22 @@ GuestOnline: [ lxc1:container1 lxc2:container2 stateful-bundle-0:stateful-bundle
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-4
  Clone Set: rsc1-clone [rsc1] (promotable)
-     rsc1	(ocf::pacemaker:Stateful):	 FAILED Master rhel7-4
+     rsc1	(ocf:pacemaker:Stateful):	 FAILED Master rhel7-4
      Slaves: [ lxc1 lxc2 remote-rhel7-2 rhel7-1 rhel7-3 rhel7-5 ]
  Clone Set: rsc2-master [rsc2] (promotable)
-     rsc2	(ocf::pacemaker:Stateful):	 FAILED Master remote-rhel7-2
+     rsc2	(ocf:pacemaker:Stateful):	 FAILED Master remote-rhel7-2
      Slaves: [ lxc1 lxc2 rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
- remote-rhel7-2	(ocf::pacemaker:remote):	 Started rhel7-1
- container1	(ocf::heartbeat:VirtualDomain):	 Started rhel7-3
- container2	(ocf::heartbeat:VirtualDomain):	 Started rhel7-3
+ remote-rhel7-2	(ocf:pacemaker:remote):	 Started rhel7-1
+ container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
+ container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
-     lxc-ms	(ocf::pacemaker:Stateful):	 FAILED Master lxc2
+     lxc-ms	(ocf:pacemaker:Stateful):	 FAILED Master lxc2
      Slaves: [ lxc1 ]
      Stopped: [ remote-rhel7-2 rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
  Container bundle set: stateful-bundle [pcmktest:http]
-   stateful-bundle-0 (192.168.122.131)	(ocf::pacemaker:Stateful):	 FAILED Master rhel7-5
-   stateful-bundle-1 (192.168.122.132)	(ocf::pacemaker:Stateful):	 Slave rhel7-1
-   stateful-bundle-2 (192.168.122.133)	(ocf::pacemaker:Stateful):	 Slave rhel7-4
+   stateful-bundle-0 (192.168.122.131)	(ocf:pacemaker:Stateful):	 FAILED Master rhel7-5
+   stateful-bundle-1 (192.168.122.132)	(ocf:pacemaker:Stateful):	 Slave rhel7-1
+   stateful-bundle-2 (192.168.122.133)	(ocf:pacemaker:Stateful):	 Slave rhel7-4
 
 Transition Summary:
  * Re-promote   rsc1:0        (           Master rhel7-4 )  
@@ -73,14 +73,14 @@ GuestOnline: [ lxc1:container1 lxc2:container2 stateful-bundle-0:stateful-bundle
  Clone Set: rsc2-master [rsc2] (promotable)
      Masters: [ remote-rhel7-2 ]
      Slaves: [ lxc1 lxc2 rhel7-1 rhel7-3 rhel7-4 rhel7-5 ]
- remote-rhel7-2	(ocf::pacemaker:remote):	 Started rhel7-1
- container1	(ocf::heartbeat:VirtualDomain):	 Started rhel7-3
- container2	(ocf::heartbeat:VirtualDomain):	 Started rhel7-3
+ remote-rhel7-2	(ocf:pacemaker:remote):	 Started rhel7-1
+ container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
+ container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-3
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Masters: [ lxc2 ]
      Slaves: [ lxc1 ]
  Container bundle set: stateful-bundle [pcmktest:http]
-   stateful-bundle-0 (192.168.122.131)	(ocf::pacemaker:Stateful):	 Master rhel7-5
-   stateful-bundle-1 (192.168.122.132)	(ocf::pacemaker:Stateful):	 Slave rhel7-1
-   stateful-bundle-2 (192.168.122.133)	(ocf::pacemaker:Stateful):	 Slave rhel7-4
+   stateful-bundle-0 (192.168.122.131)	(ocf:pacemaker:Stateful):	 Master rhel7-5
+   stateful-bundle-1 (192.168.122.132)	(ocf:pacemaker:Stateful):	 Slave rhel7-1
+   stateful-bundle-2 (192.168.122.133)	(ocf:pacemaker:Stateful):	 Slave rhel7-4
 

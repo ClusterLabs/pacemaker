@@ -6,8 +6,8 @@ Online: [ xenserver1 xenserver2 ]
  Clone Set: cl_res_Dummy1 [res_Dummy1]
      Started: [ xenserver1 xenserver2 ]
  Resource Group: gr_Dummy
-     res_Dummy2	(ocf::heartbeat:Dummy):	 Started xenserver1
-     res_Dummy3	(ocf::heartbeat:Dummy):	 Started xenserver1
+     res_Dummy2	(ocf:heartbeat:Dummy):	 Started xenserver1
+     res_Dummy3	(ocf:heartbeat:Dummy):	 Started xenserver1
 
 Transition Summary:
  * Stop       res_Dummy1:0     ( xenserver1 )   due to node availability
@@ -31,6 +31,6 @@ Online: [ xenserver1 xenserver2 ]
  Clone Set: cl_res_Dummy1 [res_Dummy1]
      Stopped (disabled): [ xenserver1 xenserver2 ]
  Resource Group: gr_Dummy
-     res_Dummy2	(ocf::heartbeat:Dummy):	 Stopped
-     res_Dummy3	(ocf::heartbeat:Dummy):	 Stopped
+     res_Dummy2	(ocf:heartbeat:Dummy):	 Stopped
+     res_Dummy3	(ocf:heartbeat:Dummy):	 Stopped
 

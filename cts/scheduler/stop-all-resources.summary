@@ -6,18 +6,18 @@ Online: [ cluster01 cluster02 ]
  Clone Set: ping-clone [ping]
      Stopped: [ cluster01 cluster02 ]
  Fencing	(stonith:fence_xvm):	 Stopped
- dummy	(ocf::pacemaker:Dummy):	 Stopped
+ dummy	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: inactive-clone [inactive-dhcpd]
      Stopped (disabled): [ cluster01 cluster02 ]
  Resource Group: inactive-group
-     inactive-dummy-1	(ocf::pacemaker:Dummy):	 Stopped (disabled)
-     inactive-dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled)
+     inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+     inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
  Container bundle set: httpd-bundle [pcmk:http]
-   httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Stopped
-   httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
-   httpd-bundle-2 (192.168.122.133)	(ocf::heartbeat:apache):	 Stopped
+   httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Stopped
+   httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped
+   httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
  Resource Group: exim-group
-     Public-IP	(ocf::heartbeat:IPaddr):	 Stopped
+     Public-IP	(ocf:heartbeat:IPaddr):	 Stopped
      Email	(lsb:exim):	 Stopped
  Clone Set: mysql-clone-group [mysql-group]
      Stopped: [ cluster01 cluster02 ]
@@ -62,18 +62,18 @@ Online: [ cluster01 cluster02 ]
  Clone Set: ping-clone [ping]
      Stopped: [ cluster01 cluster02 ]
  Fencing	(stonith:fence_xvm):	 Stopped
- dummy	(ocf::pacemaker:Dummy):	 Stopped
+ dummy	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: inactive-clone [inactive-dhcpd]
      Stopped (disabled): [ cluster01 cluster02 ]
  Resource Group: inactive-group
-     inactive-dummy-1	(ocf::pacemaker:Dummy):	 Stopped (disabled)
-     inactive-dummy-2	(ocf::pacemaker:Dummy):	 Stopped (disabled)
+     inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+     inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
  Container bundle set: httpd-bundle [pcmk:http]
-   httpd-bundle-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Stopped
-   httpd-bundle-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Stopped
-   httpd-bundle-2 (192.168.122.133)	(ocf::heartbeat:apache):	 Stopped
+   httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Stopped
+   httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped
+   httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
  Resource Group: exim-group
-     Public-IP	(ocf::heartbeat:IPaddr):	 Stopped
+     Public-IP	(ocf:heartbeat:IPaddr):	 Stopped
      Email	(lsb:exim):	 Stopped
  Clone Set: mysql-clone-group [mysql-group]
      Stopped: [ cluster01 cluster02 ]

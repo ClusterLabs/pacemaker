@@ -5,24 +5,24 @@ Online: [ hex-1 hex-2 hex-3 ]
  fencing	(stonith:external/sbd):	 Started hex-1
  Clone Set: baseclone [basegrp]
      Started: [ hex-1 hex-2 hex-3 ]
- fs-xfs-1	(ocf::heartbeat:Filesystem):	 Started hex-2
+ fs-xfs-1	(ocf:heartbeat:Filesystem):	 Started hex-2
  Clone Set: fs2 [fs-ocfs-2]
      Started: [ hex-1 hex-2 hex-3 ]
  Clone Set: ms-r0 [drbd-r0] (promotable)
      Masters: [ hex-1 ]
      Slaves: [ hex-2 ]
  Resource Group: md0-group
-     md0	(ocf::heartbeat:Raid1):	 Started hex-3
-     vg-md0	(ocf::heartbeat:LVM):	 Started hex-3
-     fs-md0	(ocf::heartbeat:Filesystem):	 Started hex-3
-     dummy1	(ocf::heartbeat:Delay):	 Started hex-3
- dummy3	(ocf::heartbeat:Delay):	 Started hex-1
- dummy4	(ocf::heartbeat:Delay):	 Started hex-2
- dummy5	(ocf::heartbeat:Delay):	 Started hex-1
- dummy6	(ocf::heartbeat:Delay):	 Started hex-2
+     md0	(ocf:heartbeat:Raid1):	 Started hex-3
+     vg-md0	(ocf:heartbeat:LVM):	 Started hex-3
+     fs-md0	(ocf:heartbeat:Filesystem):	 Started hex-3
+     dummy1	(ocf:heartbeat:Delay):	 Started hex-3
+ dummy3	(ocf:heartbeat:Delay):	 Started hex-1
+ dummy4	(ocf:heartbeat:Delay):	 Started hex-2
+ dummy5	(ocf:heartbeat:Delay):	 Started hex-1
+ dummy6	(ocf:heartbeat:Delay):	 Started hex-2
  Resource Group: r0-group
-     fs-r0	(ocf::heartbeat:Filesystem):	 Started hex-1
-     dummy2	(ocf::heartbeat:Delay):	 Started hex-1
+     fs-r0	(ocf:heartbeat:Filesystem):	 Started hex-1
+     dummy2	(ocf:heartbeat:Delay):	 Started hex-1
  Clone Set: ms-r1 [drbd-r1] (promotable)
      Slaves: [ hex-2 hex-3 ]
 
@@ -50,24 +50,24 @@ Online: [ hex-1 hex-2 hex-3 ]
  fencing	(stonith:external/sbd):	 Started hex-1
  Clone Set: baseclone [basegrp]
      Started: [ hex-1 hex-2 hex-3 ]
- fs-xfs-1	(ocf::heartbeat:Filesystem):	 Started hex-2
+ fs-xfs-1	(ocf:heartbeat:Filesystem):	 Started hex-2
  Clone Set: fs2 [fs-ocfs-2]
      Started: [ hex-1 hex-2 hex-3 ]
  Clone Set: ms-r0 [drbd-r0] (promotable)
      Masters: [ hex-1 ]
      Slaves: [ hex-2 ]
  Resource Group: md0-group
-     md0	(ocf::heartbeat:Raid1):	 Started hex-3
-     vg-md0	(ocf::heartbeat:LVM):	 Started hex-3
-     fs-md0	(ocf::heartbeat:Filesystem):	 Started hex-3
-     dummy1	(ocf::heartbeat:Delay):	 Started hex-3
- dummy3	(ocf::heartbeat:Delay):	 Started hex-1
- dummy4	(ocf::heartbeat:Delay):	 Started hex-2
- dummy5	(ocf::heartbeat:Delay):	 Started hex-1
- dummy6	(ocf::heartbeat:Delay):	 Started hex-2
+     md0	(ocf:heartbeat:Raid1):	 Started hex-3
+     vg-md0	(ocf:heartbeat:LVM):	 Started hex-3
+     fs-md0	(ocf:heartbeat:Filesystem):	 Started hex-3
+     dummy1	(ocf:heartbeat:Delay):	 Started hex-3
+ dummy3	(ocf:heartbeat:Delay):	 Started hex-1
+ dummy4	(ocf:heartbeat:Delay):	 Started hex-2
+ dummy5	(ocf:heartbeat:Delay):	 Started hex-1
+ dummy6	(ocf:heartbeat:Delay):	 Started hex-2
  Resource Group: r0-group
-     fs-r0	(ocf::heartbeat:Filesystem):	 Started hex-1
-     dummy2	(ocf::heartbeat:Delay):	 Started hex-1
+     fs-r0	(ocf:heartbeat:Filesystem):	 Started hex-1
+     dummy2	(ocf:heartbeat:Delay):	 Started hex-1
  Clone Set: ms-r1 [drbd-r1] (promotable)
      Masters: [ hex-3 ]
      Slaves: [ hex-2 ]

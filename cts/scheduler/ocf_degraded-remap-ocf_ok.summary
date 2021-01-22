@@ -4,7 +4,7 @@ Current cluster status:
 Online: [ rhel8-1 rhel8-2 ]
 
  xvmfence	(stonith:fence_xvm):	 Started rhel8-1
- dummy	(ocf::pacemaker:Dummy):	 Started rhel8-1
+ dummy	(ocf:pacemaker:Dummy):	 Started rhel8-1
 
 Transition Summary:
 
@@ -15,5 +15,5 @@ Revised cluster status:
 Online: [ rhel8-1 rhel8-2 ]
 
  xvmfence	(stonith:fence_xvm):	 Started rhel8-1
- dummy	(ocf::pacemaker:Dummy):	 Started rhel8-1
+ dummy	(ocf:pacemaker:Dummy):	 Started rhel8-1
 

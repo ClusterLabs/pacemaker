@@ -4,10 +4,10 @@ Current cluster status:
 Online: [ cluster01 cluster02 ]
 
  fencing	(stonith:fence_xvm):	 Stopped
- ip-rsc	(ocf::heartbeat:IPaddr2):	 Stopped (disabled)
- ip-rsc2	(ocf::heartbeat:IPaddr2):	 Stopped (disabled)
- dummy-rsc	(ocf::pacemaker:Dummy):	 Stopped (unmanaged)
- ping-rsc-ping	(ocf::pacemaker:ping):	 Stopped
+ ip-rsc	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+ ip-rsc2	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+ dummy-rsc	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+ ping-rsc-ping	(ocf:pacemaker:ping):	 Stopped
 
 Transition Summary:
  * Start      fencing           ( cluster01 )  
@@ -31,8 +31,8 @@ Revised cluster status:
 Online: [ cluster01 cluster02 ]
 
  fencing	(stonith:fence_xvm):	 Started cluster01
- ip-rsc	(ocf::heartbeat:IPaddr2):	 Stopped (disabled)
- ip-rsc2	(ocf::heartbeat:IPaddr2):	 Stopped (disabled)
- dummy-rsc	(ocf::pacemaker:Dummy):	 Stopped (unmanaged)
- ping-rsc-ping	(ocf::pacemaker:ping):	 Started cluster02
+ ip-rsc	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+ ip-rsc2	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+ dummy-rsc	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+ ping-rsc-ping	(ocf:pacemaker:ping):	 Started cluster02
 

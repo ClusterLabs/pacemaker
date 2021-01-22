@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ hb1 hb2 ]
 OFFLINE: [ hb3 ]
 
- the-future-of-vaj	(ocf::heartbeat:Dummy):	 FAILED hb2
+ the-future-of-vaj	(ocf:heartbeat:Dummy):	 FAILED hb2
 
 Transition Summary:
  * Stop       the-future-of-vaj     (   hb2 )   due to node availability
@@ -15,5 +15,5 @@ Revised cluster status:
 Online: [ hb1 hb2 ]
 OFFLINE: [ hb3 ]
 
- the-future-of-vaj	(ocf::heartbeat:Dummy):	 Stopped
+ the-future-of-vaj	(ocf:heartbeat:Dummy):	 Stopped
 

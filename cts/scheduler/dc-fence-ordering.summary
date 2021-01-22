@@ -8,12 +8,12 @@ OFFLINE: [ rhel7-3 ]
  Fencing	(stonith:fence_xvm):	 Stopped
  FencingPass	(stonith:fence_dummy):	 Stopped
  FencingFail	(stonith:fence_dummy):	 Stopped
- rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-2	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-3	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-4	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-5	(ocf::heartbeat:IPaddr2):	 Stopped
- migrator	(ocf::pacemaker:Dummy):	 Stopped
+ rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-2	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-3	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-4	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-5	(ocf:heartbeat:IPaddr2):	 Stopped
+ migrator	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: Connectivity [ping-1]
      Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
  Clone Set: promotable-1 [stateful-1] (promotable)
@@ -21,9 +21,9 @@ OFFLINE: [ rhel7-3 ]
      Slaves: [ rhel7-2 rhel7-4 rhel7-5 ]
      Stopped: [ rhel7-3 ]
  Resource Group: group-1
-     r192.168.122.207	(ocf::heartbeat:IPaddr2):	 Started rhel7-1
+     r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-1
      petulant	(service:pacemaker-cts-dummyd@10):	 FAILED rhel7-1
-     r192.168.122.208	(ocf::heartbeat:IPaddr2):	 Stopped
+     r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Stopped
  lsb-dummy	(lsb:LSBDummy):	 Stopped
 
 Transition Summary:
@@ -65,19 +65,19 @@ OFFLINE: [ rhel7-1 rhel7-3 ]
  Fencing	(stonith:fence_xvm):	 Stopped
  FencingPass	(stonith:fence_dummy):	 Stopped
  FencingFail	(stonith:fence_dummy):	 Stopped
- rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-2	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-3	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-4	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-5	(ocf::heartbeat:IPaddr2):	 Stopped
- migrator	(ocf::pacemaker:Dummy):	 Stopped
+ rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-2	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-3	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-4	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-5	(ocf:heartbeat:IPaddr2):	 Stopped
+ migrator	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: Connectivity [ping-1]
      Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
  Clone Set: promotable-1 [stateful-1] (promotable)
      Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
  Resource Group: group-1
-     r192.168.122.207	(ocf::heartbeat:IPaddr2):	 Stopped
+     r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Stopped
      petulant	(service:pacemaker-cts-dummyd@10):	 Stopped
-     r192.168.122.208	(ocf::heartbeat:IPaddr2):	 Stopped
+     r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Stopped
  lsb-dummy	(lsb:LSBDummy):	 Stopped
 

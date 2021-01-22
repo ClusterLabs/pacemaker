@@ -7,13 +7,13 @@ Online: [ node1 ]
 GuestOnline: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 ]
 
  Container bundle set: rabbitmq-bundle [192.168.122.139:8787/rhosp13/openstack-rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started node1
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 FAILED node2 (UNCLEAN)
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 FAILED node3 (UNCLEAN)
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started node1
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node2 (UNCLEAN)
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node3 (UNCLEAN)
  Container bundle set: galera-bundle [192.168.122.139:8787/rhosp13/openstack-mariadb:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 FAILED Master node1
-   galera-bundle-1	(ocf::heartbeat:galera):	 FAILED Master node2 (UNCLEAN)
-   galera-bundle-2	(ocf::heartbeat:galera):	 FAILED Master node3 (UNCLEAN)
+   galera-bundle-0	(ocf:heartbeat:galera):	 FAILED Master node1
+   galera-bundle-1	(ocf:heartbeat:galera):	 FAILED Master node2 (UNCLEAN)
+   galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Master node3 (UNCLEAN)
  stonith-fence_ipmilan-node1	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
  stonith-fence_ipmilan-node3	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
  stonith-fence_ipmilan-node2	(stonith:fence_ipmilan):	 Started node3 (UNCLEAN)
@@ -76,13 +76,13 @@ Node node3 (3): UNCLEAN (offline)
 Online: [ node1 ]
 
  Container bundle set: rabbitmq-bundle [192.168.122.139:8787/rhosp13/openstack-rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Stopped
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 FAILED node2 (UNCLEAN)
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 FAILED node3 (UNCLEAN)
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Stopped
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node2 (UNCLEAN)
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node3 (UNCLEAN)
  Container bundle set: galera-bundle [192.168.122.139:8787/rhosp13/openstack-mariadb:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Stopped
-   galera-bundle-1	(ocf::heartbeat:galera):	 FAILED Master node2 (UNCLEAN)
-   galera-bundle-2	(ocf::heartbeat:galera):	 FAILED Master node3 (UNCLEAN)
+   galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
+   galera-bundle-1	(ocf:heartbeat:galera):	 FAILED Master node2 (UNCLEAN)
+   galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Master node3 (UNCLEAN)
  stonith-fence_ipmilan-node1	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
  stonith-fence_ipmilan-node3	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
  stonith-fence_ipmilan-node2	(stonith:fence_ipmilan):	 Started node3 (UNCLEAN)

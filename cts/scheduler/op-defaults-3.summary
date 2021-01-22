@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ cluster01 cluster02 ]
 
  fencing	(stonith:fence_xvm):	 Stopped
- dummy-rsc	(ocf::pacemaker:Dummy):	 Stopped
+ dummy-rsc	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
  * Start      fencing     ( cluster01 )  
@@ -22,5 +22,5 @@ Revised cluster status:
 Online: [ cluster01 cluster02 ]
 
  fencing	(stonith:fence_xvm):	 Started cluster01
- dummy-rsc	(ocf::pacemaker:Dummy):	 Started cluster02
+ dummy-rsc	(ocf:pacemaker:Dummy):	 Started cluster02
 

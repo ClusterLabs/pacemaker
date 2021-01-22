@@ -4,14 +4,14 @@ Current cluster status:
 Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
  Fencing	(stonith:fence_xvm):	 Stopped
- rsc1	(ocf::pacemaker:Dummy):	 Stopped
- rsc2	(ocf::pacemaker:Dummy):	 Stopped
- invert-match	(ocf::pacemaker:Dummy):	 Stopped
- single-rsc	(ocf::pacemaker:Dummy):	 Stopped
- set-rsc1	(ocf::pacemaker:Dummy):	 Stopped
- set-rsc2	(ocf::pacemaker:Dummy):	 Stopped
- meta-rsc	(ocf::pacemaker:Dummy):	 Stopped
- insane-rsc	(ocf::pacemaker:Dummy):	 Stopped
+ rsc1	(ocf:pacemaker:Dummy):	 Stopped
+ rsc2	(ocf:pacemaker:Dummy):	 Stopped
+ invert-match	(ocf:pacemaker:Dummy):	 Stopped
+ single-rsc	(ocf:pacemaker:Dummy):	 Stopped
+ set-rsc1	(ocf:pacemaker:Dummy):	 Stopped
+ set-rsc2	(ocf:pacemaker:Dummy):	 Stopped
+ meta-rsc	(ocf:pacemaker:Dummy):	 Stopped
+ insane-rsc	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
  * Start      Fencing          ( rhel7-1 )  
@@ -49,12 +49,12 @@ Revised cluster status:
 Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-1
- rsc1	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc2	(ocf::pacemaker:Dummy):	 Started rhel7-5
- invert-match	(ocf::pacemaker:Dummy):	 Started rhel7-1
- single-rsc	(ocf::pacemaker:Dummy):	 Started rhel7-2
- set-rsc1	(ocf::pacemaker:Dummy):	 Started rhel7-3
- set-rsc2	(ocf::pacemaker:Dummy):	 Started rhel7-4
- meta-rsc	(ocf::pacemaker:Dummy):	 Started rhel7-5
- insane-rsc	(ocf::pacemaker:Dummy):	 Started rhel7-4
+ rsc1	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-5
+ invert-match	(ocf:pacemaker:Dummy):	 Started rhel7-1
+ single-rsc	(ocf:pacemaker:Dummy):	 Started rhel7-2
+ set-rsc1	(ocf:pacemaker:Dummy):	 Started rhel7-3
+ set-rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ meta-rsc	(ocf:pacemaker:Dummy):	 Started rhel7-5
+ insane-rsc	(ocf:pacemaker:Dummy):	 Started rhel7-4
 

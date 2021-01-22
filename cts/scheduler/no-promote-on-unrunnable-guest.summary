@@ -5,26 +5,26 @@ Online: [ controller-0 controller-1 controller-2 ]
 GuestOnline: [ galera-bundle-0:galera-bundle-podman-0 galera-bundle-1:galera-bundle-podman-1 galera-bundle-2:galera-bundle-podman-2 ovn-dbs-bundle-0:ovn-dbs-bundle-podman-0 ovn-dbs-bundle-1:ovn-dbs-bundle-podman-1 ovn-dbs-bundle-2:ovn-dbs-bundle-podman-2 rabbitmq-bundle-0:rabbitmq-bundle-podman-0 rabbitmq-bundle-1:rabbitmq-bundle-podman-1 rabbitmq-bundle-2:rabbitmq-bundle-podman-2 redis-bundle-0:redis-bundle-podman-0 redis-bundle-1:redis-bundle-podman-1 redis-bundle-2:redis-bundle-podman-2 ]
 
  Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Master controller-0
-   galera-bundle-1	(ocf::heartbeat:galera):	 Master controller-1
-   galera-bundle-2	(ocf::heartbeat:galera):	 Master controller-2
+   galera-bundle-0	(ocf:heartbeat:galera):	 Master controller-0
+   galera-bundle-1	(ocf:heartbeat:galera):	 Master controller-1
+   galera-bundle-2	(ocf:heartbeat:galera):	 Master controller-2
  Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-2
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
  Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Master controller-0
-   redis-bundle-1	(ocf::heartbeat:redis):	 Slave controller-1
-   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-2
+   redis-bundle-0	(ocf:heartbeat:redis):	 Master controller-0
+   redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-1
+   redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-2
  Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]
-   ovn-dbs-bundle-0	(ocf::ovn:ovndb-servers):	 Slave controller-0
-   ovn-dbs-bundle-1	(ocf::ovn:ovndb-servers):	 Slave controller-1
-   ovn-dbs-bundle-2	(ocf::ovn:ovndb-servers):	 Slave controller-2
+   ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Slave controller-0
+   ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Slave controller-1
+   ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Slave controller-2
  stonith-fence_ipmilan-5254005e097a	(stonith:fence_ipmilan):	 Started controller-0
  stonith-fence_ipmilan-525400afe30e	(stonith:fence_ipmilan):	 Started controller-2
  stonith-fence_ipmilan-525400985679	(stonith:fence_ipmilan):	 Started controller-1
  Container bundle: openstack-cinder-volume [cluster.common.tag/rhosp16-openstack-cinder-volume:pcmklatest]
-   openstack-cinder-volume-podman-0	(ocf::heartbeat:podman):	 Started controller-0
+   openstack-cinder-volume-podman-0	(ocf:heartbeat:podman):	 Started controller-0
 
 Only 'private' parameters to stonith-fence_ipmilan-5254005e097a_start_0 on controller-0 changed: 0:0;217:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
 Only 'private' parameters to stonith-fence_ipmilan-5254005e097a_monitor_60000 on controller-0 changed: 0:0;218:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
@@ -84,24 +84,24 @@ Online: [ controller-0 controller-1 controller-2 ]
 GuestOnline: [ galera-bundle-0:galera-bundle-podman-0 galera-bundle-1:galera-bundle-podman-1 galera-bundle-2:galera-bundle-podman-2 ovn-dbs-bundle-1:ovn-dbs-bundle-podman-1 ovn-dbs-bundle-2:ovn-dbs-bundle-podman-2 rabbitmq-bundle-0:rabbitmq-bundle-podman-0 rabbitmq-bundle-1:rabbitmq-bundle-podman-1 rabbitmq-bundle-2:rabbitmq-bundle-podman-2 redis-bundle-0:redis-bundle-podman-0 redis-bundle-1:redis-bundle-podman-1 redis-bundle-2:redis-bundle-podman-2 ]
 
  Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Master controller-0
-   galera-bundle-1	(ocf::heartbeat:galera):	 Master controller-1
-   galera-bundle-2	(ocf::heartbeat:galera):	 Master controller-2
+   galera-bundle-0	(ocf:heartbeat:galera):	 Master controller-0
+   galera-bundle-1	(ocf:heartbeat:galera):	 Master controller-1
+   galera-bundle-2	(ocf:heartbeat:galera):	 Master controller-2
  Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-2
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
  Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Master controller-0
-   redis-bundle-1	(ocf::heartbeat:redis):	 Slave controller-1
-   redis-bundle-2	(ocf::heartbeat:redis):	 Slave controller-2
+   redis-bundle-0	(ocf:heartbeat:redis):	 Master controller-0
+   redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-1
+   redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-2
  Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]
-   ovn-dbs-bundle-0	(ocf::ovn:ovndb-servers):	 Stopped
-   ovn-dbs-bundle-1	(ocf::ovn:ovndb-servers):	 Master controller-1
-   ovn-dbs-bundle-2	(ocf::ovn:ovndb-servers):	 Slave controller-2
+   ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Stopped
+   ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Master controller-1
+   ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Slave controller-2
  stonith-fence_ipmilan-5254005e097a	(stonith:fence_ipmilan):	 Started controller-0
  stonith-fence_ipmilan-525400afe30e	(stonith:fence_ipmilan):	 Started controller-2
  stonith-fence_ipmilan-525400985679	(stonith:fence_ipmilan):	 Started controller-1
  Container bundle: openstack-cinder-volume [cluster.common.tag/rhosp16-openstack-cinder-volume:pcmklatest]
-   openstack-cinder-volume-podman-0	(ocf::heartbeat:podman):	 Started controller-0
+   openstack-cinder-volume-podman-0	(ocf:heartbeat:podman):	 Started controller-0
 

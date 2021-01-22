@@ -3,7 +3,7 @@
 Current cluster status:
 Online: [ domu1 domu2 ]
 
- PrimitiveResource1	(ocf::heartbeat:IPaddr2):	 Started domu1
+ PrimitiveResource1	(ocf:heartbeat:IPaddr2):	 Started domu1
  Clone Set: CloneResource1 [apache]
      Started: [ domu1 domu2 ]
  Clone Set: CloneResource2 [DummyResource]
@@ -30,7 +30,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ domu1 domu2 ]
 
- PrimitiveResource1	(ocf::heartbeat:IPaddr2):	 Stopped
+ PrimitiveResource1	(ocf:heartbeat:IPaddr2):	 Stopped
  Clone Set: CloneResource1 [apache]
      Stopped (disabled): [ domu1 domu2 ]
  Clone Set: CloneResource2 [DummyResource]

@@ -10,7 +10,7 @@ Online: [ pcmk-1 pcmk-2 ]
  Clone Set: clvm-clone [clvm]
      clvm	(lsb:clvmd):	 FAILED pcmk-3 (UNCLEAN, blocked)
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
- ClusterIP	(ocf::heartbeat:IPaddr2):	 Stopped
+ ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
 
 Transition Summary:
 
@@ -26,5 +26,5 @@ Online: [ pcmk-1 pcmk-2 ]
  Clone Set: clvm-clone [clvm]
      clvm	(lsb:clvmd):	 FAILED pcmk-3 (UNCLEAN, blocked)
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
- ClusterIP	(ocf::heartbeat:IPaddr2):	 Stopped
+ ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
 

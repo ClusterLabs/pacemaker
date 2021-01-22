@@ -3,12 +3,12 @@ Current cluster status:
 Node raki.linbit: standby
 Online: [ sambuca.linbit ]
 
- ip_float_right	(ocf::heartbeat:IPaddr2):	 Stopped
+ ip_float_right	(ocf:heartbeat:IPaddr2):	 Stopped
  Clone Set: ms_drbd_float [drbd_float] (promotable)
      Slaves: [ sambuca.linbit ]
  Resource Group: nfsexport
-     ip_nfs	(ocf::heartbeat:IPaddr2):	 Stopped
-     fs_float	(ocf::heartbeat:Filesystem):	 Stopped
+     ip_nfs	(ocf:heartbeat:IPaddr2):	 Stopped
+     fs_float	(ocf:heartbeat:Filesystem):	 Stopped
 
 Transition Summary:
  * Start      ip_float_right     (                 sambuca.linbit )  
@@ -49,10 +49,10 @@ Revised cluster status:
 Node raki.linbit: standby
 Online: [ sambuca.linbit ]
 
- ip_float_right	(ocf::heartbeat:IPaddr2):	 Started sambuca.linbit
+ ip_float_right	(ocf:heartbeat:IPaddr2):	 Started sambuca.linbit
  Clone Set: ms_drbd_float [drbd_float] (promotable)
      Masters: [ sambuca.linbit ]
  Resource Group: nfsexport
-     ip_nfs	(ocf::heartbeat:IPaddr2):	 Started sambuca.linbit
-     fs_float	(ocf::heartbeat:Filesystem):	 Stopped
+     ip_nfs	(ocf:heartbeat:IPaddr2):	 Started sambuca.linbit
+     fs_float	(ocf:heartbeat:Filesystem):	 Stopped
 

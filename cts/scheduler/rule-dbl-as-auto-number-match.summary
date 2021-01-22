@@ -3,7 +3,7 @@ Current cluster status:
 Node node2 (2): standby
 Online: [ node1 ]
 
- dummy	(ocf::heartbeat:Dummy):	 Started node1
+ dummy	(ocf:heartbeat:Dummy):	 Started node1
 
 Transition Summary:
  * Stop       dummy   ( node1 )   due to node availability
@@ -15,5 +15,5 @@ Revised cluster status:
 Node node2 (2): standby
 Online: [ node1 ]
 
- dummy	(ocf::heartbeat:Dummy):	 Stopped
+ dummy	(ocf:heartbeat:Dummy):	 Stopped
 

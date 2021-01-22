@@ -4,7 +4,7 @@ Node sle12sp2-2 (1084783156): OFFLINE (maintenance)
 Online: [ sle12sp2-1 ]
 
  st-sbd	(stonith:external/sbd):	 Started sle12sp2-1
- dummy1	(ocf::pacemaker:Dummy):	 Started sle12sp2-2 (unmanaged)
+ dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-2 (unmanaged)
 
 Transition Summary:
 
@@ -15,5 +15,5 @@ Node sle12sp2-2 (1084783156): OFFLINE (maintenance)
 Online: [ sle12sp2-1 ]
 
  st-sbd	(stonith:external/sbd):	 Started sle12sp2-1
- dummy1	(ocf::pacemaker:Dummy):	 Started sle12sp2-2 (unmanaged)
+ dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-2 (unmanaged)
 

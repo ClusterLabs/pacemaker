@@ -4,11 +4,11 @@ Online: [ 18builder 18node1 18node2 ]
 RemoteOnline: [ remote1 ]
 
  shooter	(stonith:fence_xvm):	 Started 18node1
- remote1	(ocf::pacemaker:remote):	 Started 18builder
- FAKE1	(ocf::heartbeat:Dummy):	 Started 18node2
- FAKE2	(ocf::heartbeat:Dummy):	 Started remote1
- FAKE3	(ocf::heartbeat:Dummy):	 Started 18builder
- FAKE4	(ocf::heartbeat:Dummy):	 Started 18node1
+ remote1	(ocf:pacemaker:remote):	 Started 18builder
+ FAKE1	(ocf:heartbeat:Dummy):	 Started 18node2
+ FAKE2	(ocf:heartbeat:Dummy):	 Started remote1
+ FAKE3	(ocf:heartbeat:Dummy):	 Started 18builder
+ FAKE4	(ocf:heartbeat:Dummy):	 Started 18node1
 
 Transition Summary:
  * Move       shooter     ( 18node1 -> 18builder )  
@@ -29,9 +29,9 @@ Online: [ 18builder 18node1 18node2 ]
 RemoteOnline: [ remote1 ]
 
  shooter	(stonith:fence_xvm):	 Started 18builder
- remote1	(ocf::pacemaker:remote):	 Started 18node1
- FAKE1	(ocf::heartbeat:Dummy):	 Started 18node2
- FAKE2	(ocf::heartbeat:Dummy):	 Started remote1
- FAKE3	(ocf::heartbeat:Dummy):	 Started 18builder
- FAKE4	(ocf::heartbeat:Dummy):	 Started 18node1
+ remote1	(ocf:pacemaker:remote):	 Started 18node1
+ FAKE1	(ocf:heartbeat:Dummy):	 Started 18node2
+ FAKE2	(ocf:heartbeat:Dummy):	 Started remote1
+ FAKE3	(ocf:heartbeat:Dummy):	 Started 18builder
+ FAKE4	(ocf:heartbeat:Dummy):	 Started 18node1
 

@@ -3,8 +3,8 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	 Started node1
- rsc1	(ocf::pacemaker:Dummy):	 Stopped
- rsc2	(ocf::pacemaker:Dummy):	 Started node2
+ rsc1	(ocf:pacemaker:Dummy):	 Stopped
+ rsc2	(ocf:pacemaker:Dummy):	 Started node2
 
 Transition Summary:
  * Start      rsc1    ( node2 )  
@@ -18,6 +18,6 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	 Started node1
- rsc1	(ocf::pacemaker:Dummy):	 Started node2
- rsc2	(ocf::pacemaker:Dummy):	 Started node2
+ rsc1	(ocf:pacemaker:Dummy):	 Started node2
+ rsc2	(ocf:pacemaker:Dummy):	 Started node2
 

@@ -8,7 +8,7 @@ Online: [ c7auto3 c7auto4 ]
  Clone Set: FAKECLONE-clone [FAKECLONE]
      Started: [ c7auto1 c7auto2 c7auto3 ]
      Stopped: [ c7auto4 ]
- FAKE	(ocf::heartbeat:Dummy):	 Started c7auto4
+ FAKE	(ocf:heartbeat:Dummy):	 Started c7auto4
 
 Transition Summary:
  * Move       shooter         ( c7auto1 -> c7auto3 )  
@@ -37,5 +37,5 @@ Online: [ c7auto3 c7auto4 ]
  Clone Set: FAKECLONE-clone [FAKECLONE]
      Started: [ c7auto3 ]
      Stopped: [ c7auto1 c7auto2 c7auto4 ]
- FAKE	(ocf::heartbeat:Dummy):	 Stopped
+ FAKE	(ocf:heartbeat:Dummy):	 Stopped
 

@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ bl460g1n13 bl460g1n14 ]
 
  Resource Group: grpDRBD
-     dummy01	(ocf::pacemaker:Dummy):	 FAILED bl460g1n13
-     dummy02	(ocf::pacemaker:Dummy):	 Started bl460g1n13
-     dummy03	(ocf::pacemaker:Dummy):	 Stopped
+     dummy01	(ocf:pacemaker:Dummy):	 FAILED bl460g1n13
+     dummy02	(ocf:pacemaker:Dummy):	 Started bl460g1n13
+     dummy03	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: msDRBD [prmDRBD] (promotable)
      Masters: [ bl460g1n13 ]
      Slaves: [ bl460g1n14 ]
@@ -61,9 +61,9 @@ Revised cluster status:
 Online: [ bl460g1n13 bl460g1n14 ]
 
  Resource Group: grpDRBD
-     dummy01	(ocf::pacemaker:Dummy):	 Started bl460g1n14
-     dummy02	(ocf::pacemaker:Dummy):	 Started bl460g1n14
-     dummy03	(ocf::pacemaker:Dummy):	 Started bl460g1n14
+     dummy01	(ocf:pacemaker:Dummy):	 Started bl460g1n14
+     dummy02	(ocf:pacemaker:Dummy):	 Started bl460g1n14
+     dummy03	(ocf:pacemaker:Dummy):	 Started bl460g1n14
  Clone Set: msDRBD [prmDRBD] (promotable)
      Masters: [ bl460g1n14 ]
      Slaves: [ bl460g1n13 ]

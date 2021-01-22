@@ -5,21 +5,21 @@ Online: [ controller-0 controller-1 controller-2 ]
 GuestOnline: [ rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 ]
 
  Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-2
- ip-192.168.24.12	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-10.0.0.101	(ocf::heartbeat:IPaddr2):	 Started controller-1
- ip-172.17.1.20	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.3.16	(ocf::heartbeat:IPaddr2):	 Started controller-1
- ip-172.17.4.15	(ocf::heartbeat:IPaddr2):	 Started controller-2
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
+ ip-192.168.24.12	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-10.0.0.101	(ocf:heartbeat:IPaddr2):	 Started controller-1
+ ip-172.17.1.20	(ocf:heartbeat:IPaddr2):	 Started controller-2
+ ip-172.17.1.11	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-172.17.3.16	(ocf:heartbeat:IPaddr2):	 Started controller-1
+ ip-172.17.4.15	(ocf:heartbeat:IPaddr2):	 Started controller-2
  Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Started controller-0
-   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	 Started controller-1
-   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	 Started controller-2
+   haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started controller-0
+   haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started controller-1
+   haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started controller-2
  Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]
-   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	 Started controller-0
+   openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started controller-0
 
 Transition Summary:
  * Shutdown controller-0
@@ -79,19 +79,19 @@ Online: [ controller-0 controller-1 controller-2 ]
 GuestOnline: [ rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 ]
 
  Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Stopped
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started controller-2
- ip-192.168.24.12	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-10.0.0.101	(ocf::heartbeat:IPaddr2):	 Started controller-1
- ip-172.17.1.20	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	 Started controller-1
- ip-172.17.3.16	(ocf::heartbeat:IPaddr2):	 Started controller-1
- ip-172.17.4.15	(ocf::heartbeat:IPaddr2):	 Started controller-2
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Stopped
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
+ ip-192.168.24.12	(ocf:heartbeat:IPaddr2):	 Started controller-2
+ ip-10.0.0.101	(ocf:heartbeat:IPaddr2):	 Started controller-1
+ ip-172.17.1.20	(ocf:heartbeat:IPaddr2):	 Started controller-2
+ ip-172.17.1.11	(ocf:heartbeat:IPaddr2):	 Started controller-1
+ ip-172.17.3.16	(ocf:heartbeat:IPaddr2):	 Started controller-1
+ ip-172.17.4.15	(ocf:heartbeat:IPaddr2):	 Started controller-2
  Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Stopped
-   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	 Started controller-1
-   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	 Started controller-2
+   haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Stopped
+   haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started controller-1
+   haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started controller-2
  Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]
-   openstack-cinder-volume-docker-0	(ocf::heartbeat:docker):	 Started controller-2
+   openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started controller-2
 

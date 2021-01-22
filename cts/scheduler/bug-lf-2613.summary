@@ -3,26 +3,26 @@ Current cluster status:
 Online: [ act1 act2 act3 sby1 sby2 ]
 
  Resource Group: grpPostgreSQLDB1
-     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	 Started act1
-     prmFsPostgreSQLDB1-1	(ocf::pacemaker:Dummy):	 Started act1
-     prmFsPostgreSQLDB1-2	(ocf::pacemaker:Dummy):	 Started act1
-     prmFsPostgreSQLDB1-3	(ocf::pacemaker:Dummy):	 Started act1
-     prmIpPostgreSQLDB1	(ocf::pacemaker:Dummy):	 Started act1
-     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	 FAILED act1
+     prmExPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started act1
+     prmFsPostgreSQLDB1-1	(ocf:pacemaker:Dummy):	 Started act1
+     prmFsPostgreSQLDB1-2	(ocf:pacemaker:Dummy):	 Started act1
+     prmFsPostgreSQLDB1-3	(ocf:pacemaker:Dummy):	 Started act1
+     prmIpPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started act1
+     prmApPostgreSQLDB1	(ocf:pacemaker:Dummy):	 FAILED act1
  Resource Group: grpPostgreSQLDB2
-     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started act2
-     prmFsPostgreSQLDB2-1	(ocf::pacemaker:Dummy):	 Started act2
-     prmFsPostgreSQLDB2-2	(ocf::pacemaker:Dummy):	 Started act2
-     prmFsPostgreSQLDB2-3	(ocf::pacemaker:Dummy):	 Started act2
-     prmIpPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started act2
-     prmApPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started act2
+     prmExPostgreSQLDB2	(ocf:pacemaker:Dummy):	 Started act2
+     prmFsPostgreSQLDB2-1	(ocf:pacemaker:Dummy):	 Started act2
+     prmFsPostgreSQLDB2-2	(ocf:pacemaker:Dummy):	 Started act2
+     prmFsPostgreSQLDB2-3	(ocf:pacemaker:Dummy):	 Started act2
+     prmIpPostgreSQLDB2	(ocf:pacemaker:Dummy):	 Started act2
+     prmApPostgreSQLDB2	(ocf:pacemaker:Dummy):	 Started act2
  Resource Group: grpPostgreSQLDB3
-     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started act3
-     prmFsPostgreSQLDB3-1	(ocf::pacemaker:Dummy):	 Started act3
-     prmFsPostgreSQLDB3-2	(ocf::pacemaker:Dummy):	 Started act3
-     prmFsPostgreSQLDB3-3	(ocf::pacemaker:Dummy):	 Started act3
-     prmIpPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started act3
-     prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started act3
+     prmExPostgreSQLDB3	(ocf:pacemaker:Dummy):	 Started act3
+     prmFsPostgreSQLDB3-1	(ocf:pacemaker:Dummy):	 Started act3
+     prmFsPostgreSQLDB3-2	(ocf:pacemaker:Dummy):	 Started act3
+     prmFsPostgreSQLDB3-3	(ocf:pacemaker:Dummy):	 Started act3
+     prmIpPostgreSQLDB3	(ocf:pacemaker:Dummy):	 Started act3
+     prmApPostgreSQLDB3	(ocf:pacemaker:Dummy):	 Started act3
 
 Transition Summary:
  * Move       prmExPostgreSQLDB1     ( act1 -> sby1 )  
@@ -65,24 +65,24 @@ Revised cluster status:
 Online: [ act1 act2 act3 sby1 sby2 ]
 
  Resource Group: grpPostgreSQLDB1
-     prmExPostgreSQLDB1	(ocf::pacemaker:Dummy):	 Started sby1
-     prmFsPostgreSQLDB1-1	(ocf::pacemaker:Dummy):	 Started sby1
-     prmFsPostgreSQLDB1-2	(ocf::pacemaker:Dummy):	 Started sby1
-     prmFsPostgreSQLDB1-3	(ocf::pacemaker:Dummy):	 Started sby1
-     prmIpPostgreSQLDB1	(ocf::pacemaker:Dummy):	 Started sby1
-     prmApPostgreSQLDB1	(ocf::pacemaker:Dummy):	 Started sby1
+     prmExPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started sby1
+     prmFsPostgreSQLDB1-1	(ocf:pacemaker:Dummy):	 Started sby1
+     prmFsPostgreSQLDB1-2	(ocf:pacemaker:Dummy):	 Started sby1
+     prmFsPostgreSQLDB1-3	(ocf:pacemaker:Dummy):	 Started sby1
+     prmIpPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started sby1
+     prmApPostgreSQLDB1	(ocf:pacemaker:Dummy):	 Started sby1
  Resource Group: grpPostgreSQLDB2
-     prmExPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started act2
-     prmFsPostgreSQLDB2-1	(ocf::pacemaker:Dummy):	 Started act2
-     prmFsPostgreSQLDB2-2	(ocf::pacemaker:Dummy):	 Started act2
-     prmFsPostgreSQLDB2-3	(ocf::pacemaker:Dummy):	 Started act2
-     prmIpPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started act2
-     prmApPostgreSQLDB2	(ocf::pacemaker:Dummy):	 Started act2
+     prmExPostgreSQLDB2	(ocf:pacemaker:Dummy):	 Started act2
+     prmFsPostgreSQLDB2-1	(ocf:pacemaker:Dummy):	 Started act2
+     prmFsPostgreSQLDB2-2	(ocf:pacemaker:Dummy):	 Started act2
+     prmFsPostgreSQLDB2-3	(ocf:pacemaker:Dummy):	 Started act2
+     prmIpPostgreSQLDB2	(ocf:pacemaker:Dummy):	 Started act2
+     prmApPostgreSQLDB2	(ocf:pacemaker:Dummy):	 Started act2
  Resource Group: grpPostgreSQLDB3
-     prmExPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started act3
-     prmFsPostgreSQLDB3-1	(ocf::pacemaker:Dummy):	 Started act3
-     prmFsPostgreSQLDB3-2	(ocf::pacemaker:Dummy):	 Started act3
-     prmFsPostgreSQLDB3-3	(ocf::pacemaker:Dummy):	 Started act3
-     prmIpPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started act3
-     prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	 Started act3
+     prmExPostgreSQLDB3	(ocf:pacemaker:Dummy):	 Started act3
+     prmFsPostgreSQLDB3-1	(ocf:pacemaker:Dummy):	 Started act3
+     prmFsPostgreSQLDB3-2	(ocf:pacemaker:Dummy):	 Started act3
+     prmFsPostgreSQLDB3-3	(ocf:pacemaker:Dummy):	 Started act3
+     prmIpPostgreSQLDB3	(ocf:pacemaker:Dummy):	 Started act3
+     prmApPostgreSQLDB3	(ocf:pacemaker:Dummy):	 Started act3
 

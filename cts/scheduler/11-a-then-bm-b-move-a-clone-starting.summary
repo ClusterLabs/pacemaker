@@ -6,7 +6,7 @@ Online: [ f20node2 ]
  Clone Set: myclone-clone [myclone]
      Started: [ f20node1 ]
      Stopped: [ f20node2 ]
- vm	(ocf::heartbeat:Dummy):	 Started f20node1
+ vm	(ocf:heartbeat:Dummy):	 Started f20node1
 
 Transition Summary:
  * Move       myclone:0     ( f20node1 -> f20node2 )  
@@ -30,5 +30,5 @@ Online: [ f20node2 ]
  Clone Set: myclone-clone [myclone]
      Started: [ f20node2 ]
      Stopped: [ f20node1 ]
- vm	(ocf::heartbeat:Dummy):	 Started f20node2
+ vm	(ocf:heartbeat:Dummy):	 Started f20node2
 

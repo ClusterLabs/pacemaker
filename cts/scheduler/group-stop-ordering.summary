@@ -5,10 +5,10 @@ Online: [ fastvm-rhel-7-5-73 fastvm-rhel-7-5-74 ]
 
  fence-fastvm-rhel-7-5-73	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-74
  fence-fastvm-rhel-7-5-74	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-73
- outside_resource	(ocf::pacemaker:Dummy):	 FAILED fastvm-rhel-7-5-73 (blocked)
+ outside_resource	(ocf:pacemaker:Dummy):	 FAILED fastvm-rhel-7-5-73 (blocked)
  Resource Group: grp
-     inside_resource_2	(ocf::pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
-     inside_resource_3	(ocf::pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
+     inside_resource_2	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
+     inside_resource_3	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
 
 Transition Summary:
 
@@ -19,8 +19,8 @@ Online: [ fastvm-rhel-7-5-73 fastvm-rhel-7-5-74 ]
 
  fence-fastvm-rhel-7-5-73	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-74
  fence-fastvm-rhel-7-5-74	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-73
- outside_resource	(ocf::pacemaker:Dummy):	 FAILED fastvm-rhel-7-5-73 (blocked)
+ outside_resource	(ocf:pacemaker:Dummy):	 FAILED fastvm-rhel-7-5-73 (blocked)
  Resource Group: grp
-     inside_resource_2	(ocf::pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
-     inside_resource_3	(ocf::pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
+     inside_resource_2	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
+     inside_resource_3	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
 

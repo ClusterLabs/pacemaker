@@ -3,10 +3,10 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	 Started node1
- rsc1	(ocf::pacemaker:Dummy):	 Started node2
+ rsc1	(ocf:pacemaker:Dummy):	 Started node2
  Resource Group: group2
-     rsc2	(ocf::pacemaker:Dummy):	 Started node1
-     rsc3	(ocf::pacemaker:Dummy):	 Started node1
+     rsc2	(ocf:pacemaker:Dummy):	 Started node1
+     rsc3	(ocf:pacemaker:Dummy):	 Started node1
  Clone Set: clone4 [rsc4]
      Stopped: [ node1 node2 ]
  Clone Set: ms5 [rsc5] (promotable)
@@ -32,10 +32,10 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	 Started node1
- rsc1	(ocf::pacemaker:Dummy):	 Started node2
+ rsc1	(ocf:pacemaker:Dummy):	 Started node2
  Resource Group: group2
-     rsc2	(ocf::pacemaker:Dummy):	 Started node1
-     rsc3	(ocf::pacemaker:Dummy):	 Started node1
+     rsc2	(ocf:pacemaker:Dummy):	 Started node1
+     rsc3	(ocf:pacemaker:Dummy):	 Started node1
  Clone Set: clone4 [rsc4]
      Started: [ node1 node2 ]
  Clone Set: ms5 [rsc5] (promotable)

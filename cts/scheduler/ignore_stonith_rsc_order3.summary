@@ -5,7 +5,7 @@ Online: [ fc16-builder ]
  Clone Set: S_CLONE [S_A]
      Stopped: [ fc16-builder ]
  Resource Group: MIXED_GROUP
-     A	(ocf::pacemaker:Dummy):	 Stopped
+     A	(ocf:pacemaker:Dummy):	 Stopped
      S_B	(stonith:fence_xvm):	 Stopped
 
 Transition Summary:
@@ -31,6 +31,6 @@ Online: [ fc16-builder ]
  Clone Set: S_CLONE [S_A]
      Started: [ fc16-builder ]
  Resource Group: MIXED_GROUP
-     A	(ocf::pacemaker:Dummy):	 Started fc16-builder
+     A	(ocf:pacemaker:Dummy):	 Started fc16-builder
      S_B	(stonith:fence_xvm):	 Started fc16-builder
 
