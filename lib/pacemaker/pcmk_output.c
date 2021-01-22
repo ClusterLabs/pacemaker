@@ -483,7 +483,7 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
     } else if (BASH_EXPORT) {
         out->info(out, "export %s=%s", crm_str(name), crm_str(id));
     } else {
-        out->info(out, "%s node: %s (%s)", type ? type : "member",
+        out->info(out, "%s node: %s (%s)", type ? type : "cluster",
                   crm_str(name), crm_str(id));
     }
 
@@ -499,7 +499,7 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
     const char *id = va_arg(args, const char *);
 
     pcmk__output_create_xml_node(out, "node",
-                                 "type", type ? type : "member",
+                                 "type", type ? type : "cluster",
                                  "name", crm_str(name),
                                  "id", crm_str(id),
                                  NULL);

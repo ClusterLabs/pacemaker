@@ -448,11 +448,10 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
             node_types = NULL;
         }
 
-        if (pcmk__str_empty(node_types) || strstr(node_types, "member")) {
+        if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
             for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
                  node = crm_next_same_xml(node)) {
                 const char *node_type = crm_element_value(node, XML_ATTR_TYPE);
-                //if (node_type == NULL || !strcmp(node_type, "member")) {
                 if (node_type == NULL) {
                     out->message(out, "crmadmin-node", node_type,
                                  crm_str(crm_element_value(node, XML_ATTR_UNAME)),
@@ -462,13 +461,6 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
                 }
 
             }
-        }
-
-        if (pcmk__str_empty(node_types) || strstr(node_types, "pacemaker_remote")) {
-            data.field = "id";
-            data.type = "pacemaker_remote";
-            crm_foreach_xpath_result(xml_node, PCMK__XP_REMOTE_NODE_STATUS,
-                                     remote_node_print_helper, &data);
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {

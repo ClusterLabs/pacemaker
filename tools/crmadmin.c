@@ -96,8 +96,8 @@ static GOptionEntry additional_options[] = {
       NULL
     },
     { "node-types", 'T', 0, G_OPTION_ARG_STRING, &options.node_types,
-      "Node types to list (available options: all, member, pacemaker_remote,"
-      "\n                          guest, remote) (valid with -N/--nodes)",
+      "Node types to list (available options: all, cluster, guest, remote)"
+      "\n                          (valid with -N/--nodes)",
       NULL
     },
     { "bash-export", 'B', 0, G_OPTION_ARG_NONE, &options.BASH_EXPORT,

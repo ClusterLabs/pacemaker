@@ -77,6 +77,7 @@ int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
  * \brief Get nodes list
  *
  * \param[in,out] xml                The destination for the result, as an XML tree.
+ * \param[in]     node_types         Node type(s) to return (default: all)
  *
  * \return Standard Pacemaker return code
  */

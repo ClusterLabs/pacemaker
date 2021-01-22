@@ -1244,7 +1244,7 @@ refresh_known_node_cache(xmlNode *cib)
     g_hash_table_foreach(known_node_cache, mark_dirty, NULL);
 
     crm_foreach_xpath_result(cib, PCMK__XP_MEMBER_NODE_CONFIG,
-                             known_peer_cache_refresh_helper, NULL);
+                             known_node_cache_refresh_helper, NULL);
 
     /* Remove all old cache entries that weren't seen in the CIB */
     g_hash_table_foreach_remove(known_node_cache, is_dirty, NULL);
