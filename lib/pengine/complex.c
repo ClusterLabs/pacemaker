@@ -1109,3 +1109,22 @@ pe__count_common(pe_resource_t *rsc)
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Update a resource's next role
+ *
+ * \param[in,out] rsc   Resource to be updated
+ * \param[in]     role  Resource's new next role
+ * \param[in]     why   Human-friendly reason why role is changing (for logs)
+ */
+void
+pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role, const char *why)
+{
+    CRM_ASSERT((rsc != NULL) && (why != NULL));
+    if (rsc->next_role != role) {
+        pe_rsc_trace(rsc, "Resetting next role for %s from %s to %s (%s)",
+                     rsc->id, role2text(rsc->next_role), role2text(role), why);
+        rsc->next_role = role;
+    }
+}
