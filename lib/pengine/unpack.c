@@ -979,9 +979,6 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     if (pe__shutdown_requested(this_node)) {
         crm_info("Node %s is shutting down", this_node->details->uname);
         this_node->details->shutdown = TRUE;
-        if (rsc) {
-            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "remote shutdown");
-        }
     }
  
     if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
@@ -1289,17 +1286,24 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         data_set->stop_needed = NULL;
     }
 
+    /* Now that we know status of all Pacemaker Remote connections and nodes,
+     * we can stop connections for node shutdowns, and check the online status
+     * of remote/guest nodes that didn't have any node history to unpack.
+     */
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *this_node = gIter->data;
 
-        if (this_node == NULL) {
-            continue;
-        } else if (!pe__is_guest_or_remote_node(this_node)) {
-            continue;
-        } else if(this_node->details->unpacked) {
+        if (!pe__is_guest_or_remote_node(this_node)) {
             continue;
         }
-        determine_remote_online_status(data_set, this_node);
+        if (this_node->details->shutdown
+            && (this_node->details->remote_rsc != NULL)) {
+            pe__set_next_role(this_node->details->remote_rsc, RSC_ROLE_STOPPED,
+                              "remote shutdown");
+        }
+        if (!this_node->details->unpacked) {
+            determine_remote_online_status(data_set, this_node);
+        }
     }
 
     return TRUE;
