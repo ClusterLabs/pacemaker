@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2019 the Pacemaker project contributors
+# Copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -382,8 +382,9 @@ rc-changes:
 
 changes: summary
 	@printf "\n- Features added since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
-	@printf "\n- Changes since $(LAST_RELEASE)\n"
+	@git log --pretty=format:'  +%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
+		| grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
+	@printf "\n- Fixes since $(LAST_RELEASE)\n"
 	@git log --pretty=format:'  +%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
 		| grep -e High: -e Fix: -e Bug | sed \
 			-e 's@\(Fix\|High\|Bug\):@@' \
@@ -393,6 +394,9 @@ changes: summary
 			-e 's@\(Fencing\|stonithd\|stonith\|pacemaker-fenced\|fenced\):@fencing:@' \
 			-e 's@\(PE\|pengine\|pacemaker-schedulerd\|schedulerd\):@scheduler:@' \
 		| sort -uf
+	@printf "\n- Public API changes since $(LAST_RELEASE)\n"
+	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
+		| sed -n -e 's/^ *API: */  + /p' | sort -uf
 
 authors:
 	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u
