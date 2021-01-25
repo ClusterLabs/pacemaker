@@ -1,3 +1,12 @@
+/*
+ * Copyright 2020-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
+
 #include <glib.h>
 
 #include <crm/common/xml.h>
@@ -11,7 +20,7 @@ run_one_test(const char *t, const char *x, int expected) {
     g_assert_cmpint(pe_cron_range_satisfied(tm, xml), ==, expected);
 
     crm_time_free(tm);
-    xmlFreeNode(xml);
+    free_xml(xml);
 }
 
 static void
