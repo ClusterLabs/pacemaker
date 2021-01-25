@@ -121,6 +121,8 @@ main(int argc, char **argv)
     cib_t *cib_conn = NULL;
     int rc = pcmk_rc_ok;
 
+    GError *error = NULL;
+
     bool verbose = FALSE;
     const char *xml_tag = NULL;
 
@@ -208,50 +210,50 @@ main(int argc, char **argv)
         }
 
         if (rc != pcmk_rc_ok) {
-            fprintf(stderr, "Live CIB query failed: %s\n", pcmk_rc_str(rc));
+            g_set_error(&error, PCMK__RC_ERROR, rc, "Live CIB query failed: %s", pcmk_rc_str(rc));
             goto done;
         }
         if (cib_object == NULL) {
-            fprintf(stderr, "Live CIB query failed: empty result\n");
             rc = ENOMSG;
+            g_set_error(&error, PCMK__RC_ERROR, rc, "Live CIB query failed: empty result");
             goto done;
         }
 
     } else if (options.xml_file != NULL) {
         cib_object = filename2xml(options.xml_file);
         if (cib_object == NULL) {
-            fprintf(stderr, "Couldn't parse input file: %s\n", options.xml_file);
             rc = ENODATA;
+            g_set_error(&error, PCMK__RC_ERROR, rc, "Couldn't parse input file: %s", options.xml_file);
             goto done;
         }
 
     } else if (options.xml_string != NULL) {
         cib_object = string2xml(options.xml_string);
         if (cib_object == NULL) {
-            fprintf(stderr, "Couldn't parse input string: %s\n", options.xml_string);
             rc = ENODATA;
+            g_set_error(&error, PCMK__RC_ERROR, rc, "Couldn't parse input string: %s", options.xml_string);
             goto done;
         }
     } else if (options.xml_stdin) {
         cib_object = stdin2xml();
         if (cib_object == NULL) {
-            fprintf(stderr, "Couldn't parse input from STDIN.\n");
             rc = ENODATA;
+            g_set_error(&error, PCMK__RC_ERROR, rc, "Couldn't parse input from STDIN.");
             goto done;
         }
 
     } else {
-        fprintf(stderr, "No configuration source specified."
-                "  Use --help for usage information.\n");
         rc = ENODATA;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "No configuration source specified.  Use --help for usage information.");
         goto done;
     }
 
     xml_tag = crm_element_name(cib_object);
     if (!pcmk__str_eq(xml_tag, XML_TAG_CIB, pcmk__str_casei)) {
-        fprintf(stderr,
-                "This tool can only check complete configurations (i.e. those starting with <cib>).\n");
         rc = EBADMSG;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "This tool can only check complete configurations (i.e. those starting with <cib>).");
         goto done;
     }
 
@@ -299,18 +301,26 @@ main(int argc, char **argv)
     pe_free_working_set(data_set);
 
     if (pcmk__config_error) {
-        fprintf(stderr, "Errors found during check: config not valid\n");
-        if (verbose == FALSE) {
-            fprintf(stderr, "  -V may provide more details\n");
-        }
         rc = pcmk_rc_schema_validation;
 
-    } else if (pcmk__config_warning) {
-        fprintf(stderr, "Warnings found during check: config may not be valid\n");
-        if (verbose == FALSE) {
-            fprintf(stderr, "  Use -V -V for more details\n");
+        if (verbose) {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Errors found during check: config not valid");
+        } else {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Errors found during check: config not valid\n-V may provide more details");
         }
+
+    } else if (pcmk__config_warning) {
         rc = pcmk_rc_schema_validation;
+
+        if (verbose) {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Warnings found during check: config may not be valid");
+        } else {
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Warnings found during check: config may not be valid\n-V may provide more details");
+        }
     }
 
     if (options.use_live_cib && cib_conn) {
@@ -319,8 +329,14 @@ main(int argc, char **argv)
     }
 
   done:
+    if (error != NULL) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        g_clear_error(&error);
+    }
+
     free(options.cib_save);
     free(options.xml_file);
     free(options.xml_string);
+
     crm_exit(pcmk_rc2exitc(rc));
 }
