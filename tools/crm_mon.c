@@ -690,7 +690,7 @@ reconnect_after_timeout(gpointer data)
 
     print_as(output_format, "Reconnecting...\n");
     fencing_connect();
-    if (cib_connect(TRUE) == pcmk_ok) {
+    if (cib_connect(TRUE) == pcmk_rc_ok) {
         /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
         mon_refresh_display(NULL);
         return FALSE;
@@ -804,16 +804,17 @@ fencing_connect(void)
 static int
 cib_connect(gboolean full)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     static gboolean need_pass = TRUE;
 
-    CRM_CHECK(cib != NULL, return -EINVAL);
+    CRM_CHECK(cib != NULL, return EINVAL);
 
     if (getenv("CIB_passwd") != NULL) {
         need_pass = FALSE;
     }
 
-    if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
+    if (cib->state == cib_connected_query ||
+        cib->state == cib_connected_command) {
         return rc;
     }
 
@@ -825,37 +826,44 @@ cib_connect(gboolean full)
      * @TODO Add a password prompt (maybe including input) function to
      *       pcmk__output_t and use it in libcib.
      */
-    if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
+    if ((output_format == mon_output_console) &&
+         need_pass &&
+         (cib->variant == cib_remote)) {
         need_pass = FALSE;
         print_as(output_format, "Password:");
     }
 
-    rc = cib->cmds->signon(cib, crm_system_name, cib_query);
-    if (rc != pcmk_ok) {
+    rc = pcmk_legacy2rc(cib->cmds->signon(cib, crm_system_name, cib_query));
+    if (rc != pcmk_rc_ok) {
         out->err(out, "Could not connect to the CIB: %s",
-                 pcmk_strerror(rc));
+                 pcmk_rc_str(rc));
         return rc;
     }
 
-    rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
+    rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
+                                         cib_scope_local | cib_sync_call));
 
-    if (rc == pcmk_ok && full) {
-        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
-        if (rc == -EPROTONOSUPPORT) {
-            print_as
-                (output_format, "Notification setup not supported, won't be able to reconnect after failure");
+    if (rc == pcmk_rc_ok && full) {
+        rc = pcmk_legacy2rc(cib->cmds->set_connection_dnotify(cib,
+            mon_cib_connection_destroy));
+        if (rc == EPROTONOSUPPORT) {
+            print_as(output_format,
+                     "Notification setup not supported, won't be "
+                     "able to reconnect after failure");
             if (output_format == mon_output_console) {
                 sleep(2);
             }
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
 
-        if (rc == pcmk_ok) {
-            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
-            rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
+        if (rc == pcmk_rc_ok) {
+            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY,
+                                           crm_diff_update);
+            rc = pcmk_legacy2rc(cib->cmds->add_notify_callback(cib,
+                                    T_CIB_DIFF_NOTIFY, crm_diff_update));
         }
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             out->err(out, "Notification setup failed, could not monitor CIB actions");
             clean_up_cib_connection();
             clean_up_fencing_connection();
@@ -1206,20 +1214,20 @@ reconcile_output_format(pcmk__common_args_t *args) {
 static void
 handle_connection_failures(int rc)
 {
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         return;
     }
 
     if (output_format == mon_output_monitor) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
-                    pcmk_strerror(rc));
+                    pcmk_rc_str(rc));
         rc = MON_STATUS_CRIT;
-    } else if (rc == -ENOTCONN) {
+    } else if (rc == ENOTCONN) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
-        rc = crm_errno2exit(rc);
+        rc = pcmk_rc2exitc(rc);
     } else {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
-        rc = crm_errno2exit(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_rc_str(rc));
+        rc = pcmk_rc2exitc(rc);
     }
 
     clean_up(rc);
@@ -1478,7 +1486,7 @@ main(int argc, char **argv)
         fencing_connect();
         rc = cib_connect(TRUE);
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             sleep(options.reconnect_msec / 1000);
 #if CURSES_ENABLED
             if (output_format == mon_output_console) {
@@ -1490,7 +1498,7 @@ main(int argc, char **argv)
             printf("Writing html to %s ...\n", args->output_dest);
         }
 
-    } while (rc == -ENOTCONN);
+    } while (rc == ENOTCONN);
 
     handle_connection_failures(rc);
     set_fencing_options(interactive_fence_level);
