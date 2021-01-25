@@ -244,7 +244,7 @@ try_connect(void)
 
     lrmd_conn->cmds->set_callback(lrmd_conn, connection_events);
     for (; num_tries < tries; num_tries++) {
-        rc = lrmd_conn->cmds->connect_async(lrmd_conn, "pacemaker-execd", 3000);
+        rc = lrmd_conn->cmds->connect_async(lrmd_conn, crm_system_name, 3000);
 
         if (!rc) {
             return;             /* we'll hear back in async callback */
@@ -443,7 +443,7 @@ generate_params(void)
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     cib_conn = cib_new();
-    rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);
+    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_query);
     if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
         rc = -1;
