@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -113,7 +113,7 @@ main(int argc, char **argv)
 
     pe_working_set_t *data_set = NULL;
     cib_t *cib_conn = NULL;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     bool verbose = FALSE;
     gboolean xml_stdin = FALSE;
@@ -192,23 +192,25 @@ main(int argc, char **argv)
     if (USE_LIVE_CIB) {
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
+        rc = pcmk_legacy2rc(rc);
     }
 
     if (USE_LIVE_CIB) {
-        if (rc == pcmk_ok) {
+        if (rc == pcmk_rc_ok) {
             int options = cib_scope_local | cib_sync_call;
 
             crm_info("Reading XML from: live cluster");
             rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, options);
+            rc = pcmk_legacy2rc(rc);
         }
 
-        if (rc != pcmk_ok) {
-            fprintf(stderr, "Live CIB query failed: %s\n", pcmk_strerror(rc));
+        if (rc != pcmk_rc_ok) {
+            fprintf(stderr, "Live CIB query failed: %s\n", pcmk_rc_str(rc));
             goto done;
         }
         if (cib_object == NULL) {
             fprintf(stderr, "Live CIB query failed: empty result\n");
-            rc = -ENOMSG;
+            rc = ENOMSG;
             goto done;
         }
 
@@ -216,7 +218,7 @@ main(int argc, char **argv)
         cib_object = filename2xml(xml_file);
         if (cib_object == NULL) {
             fprintf(stderr, "Couldn't parse input file: %s\n", xml_file);
-            rc = -ENODATA;
+            rc = ENODATA;
             goto done;
         }
 
@@ -224,21 +226,21 @@ main(int argc, char **argv)
         cib_object = string2xml(xml_string);
         if (cib_object == NULL) {
             fprintf(stderr, "Couldn't parse input string: %s\n", xml_string);
-            rc = -ENODATA;
+            rc = ENODATA;
             goto done;
         }
     } else if (xml_stdin) {
         cib_object = stdin2xml();
         if (cib_object == NULL) {
             fprintf(stderr, "Couldn't parse input from STDIN.\n");
-            rc = -ENODATA;
+            rc = ENODATA;
             goto done;
         }
 
     } else {
         fprintf(stderr, "No configuration source specified."
                 "  Use --help for usage information.\n");
-        rc = -ENODATA;
+        rc = ENODATA;
         goto done;
     }
 
@@ -246,7 +248,7 @@ main(int argc, char **argv)
     if (!pcmk__str_eq(xml_tag, XML_TAG_CIB, pcmk__str_casei)) {
         fprintf(stderr,
                 "This tool can only check complete configurations (i.e. those starting with <cib>).\n");
-        rc = -EBADMSG;
+        rc = EBADMSG;
         goto done;
     }
 
@@ -275,7 +277,7 @@ main(int argc, char **argv)
 
     data_set = pe_new_working_set();
     if (data_set == NULL) {
-        rc = -errno;
+        rc = errno;
         crm_perror(LOG_CRIT, "Unable to allocate working set");
         goto done;
     }
@@ -298,14 +300,14 @@ main(int argc, char **argv)
         if (verbose == FALSE) {
             fprintf(stderr, "  -V may provide more details\n");
         }
-        rc = -pcmk_err_schema_validation;
+        rc = pcmk_rc_schema_validation;
 
     } else if (pcmk__config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
         if (verbose == FALSE) {
             fprintf(stderr, "  Use -V -V for more details\n");
         }
-        rc = -pcmk_err_schema_validation;
+        rc = pcmk_rc_schema_validation;
     }
 
     if (USE_LIVE_CIB && cib_conn) {
@@ -314,5 +316,5 @@ main(int argc, char **argv)
     }
 
   done:
-    crm_exit(crm_errno2exit(rc));
+    crm_exit(pcmk_rc2exitc(rc));
 }
