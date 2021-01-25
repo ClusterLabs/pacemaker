@@ -1226,7 +1226,7 @@ handle_connection_failures(int rc)
 }
 
 static void
-one_shot()
+one_shot(void)
 {
     int rc;
 
