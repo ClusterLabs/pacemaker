@@ -132,6 +132,7 @@ static void handle_connection_failures(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
 static int fencing_connect(void);
+static int pacemakerd_status(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
 static void refresh_after_event(gboolean data_updated);
@@ -689,11 +690,13 @@ reconnect_after_timeout(gpointer data)
     }
 
     print_as(output_format, "Reconnecting...\n");
-    fencing_connect();
-    if (cib_connect(TRUE) == pcmk_rc_ok) {
-        /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
-        mon_refresh_display(NULL);
-        return FALSE;
+    if (pacemakerd_status() == pcmk_rc_ok) {
+        fencing_connect();
+        if (cib_connect(TRUE) == pcmk_rc_ok) {
+            /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
+            mon_refresh_display(NULL);
+            return FALSE;
+        }
     }
 
     reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
@@ -840,6 +843,13 @@ cib_connect(gboolean full)
         return rc;
     }
 
+#if CURSES_ENABLED
+    /* just show this if refresh is gonna remove all traces */
+    if (output_format == mon_output_console) {
+        print_as(output_format ,"Waiting for CIB ...\n");
+    }
+#endif
+
     rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
                                          cib_scope_local | cib_sync_call));
 
@@ -902,6 +912,121 @@ set_fencing_options(int level)
             show &= ~mon_show_fencing_all;
             break;
     }
+}
+
+/* Before trying to connect to fencer or cib check for state of
+   pacemakerd - just no sense in trying till pacemakerd has
+   taken care of starting all the sub-processes
+
+   Only noteworthy thing to show here is when pacemakerd is
+   waiting for startup-trigger from SBD.
+ */
+static void
+pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
+                    enum pcmk_ipc_event event_type, crm_exit_t status,
+                    void *event_data, void *user_data)
+{
+    pcmk_pacemakerd_api_reply_t *reply = event_data;
+    enum pcmk_pacemakerd_state *state =
+        (enum pcmk_pacemakerd_state *) user_data;
+
+    /* we are just interested in the latest reply */
+    *state = pcmk_pacemakerd_state_invalid;
+
+    switch (event_type) {
+        case pcmk_ipc_event_reply:
+            break;
+
+        default:
+            return;
+    }
+
+    if (status != CRM_EX_OK) {
+        out->err(out, "Bad reply from pacemakerd: %s",
+                 crm_exit_str(status));
+        return;
+    }
+
+    if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
+        out->err(out, "Unknown reply type %d from pacemakerd",
+                 reply->reply_type);
+    } else {
+        if ((reply->data.ping.last_good != (time_t) 0) &&
+            (reply->data.ping.status == pcmk_rc_ok)) {
+            *state = reply->data.ping.state;
+        }
+    }
+}
+
+static int
+pacemakerd_status(void)
+{
+    int rc = pcmk_rc_ok;
+    pcmk_ipc_api_t *pacemakerd_api = NULL;
+    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
+
+    if (!pcmk_is_set(options.mon_ops, mon_op_cib_native)) {
+        /* we don't need fully functional pacemakerd otherwise */
+        return rc;
+    }
+    if (cib != NULL &&
+        (cib->state == cib_connected_query ||
+         cib->state == cib_connected_command)) {
+        /* As long as we have a cib-connection let's go with
+         * that to fetch further cluster-status and avoid
+         * unnecessary pings to pacemakerd.
+         * If cluster is going down and fencer is down already
+         * this will lead to a silently failing fencer reconnect.
+         * On cluster startup we shouldn't see this situation
+         * as first we do is wait for pacemakerd to report all
+         * daemons running.
+         */
+        return rc;
+    }
+    rc = pcmk_new_ipc_api(&pacemakerd_api, pcmk_ipc_pacemakerd);
+    if (pacemakerd_api == NULL) {
+        out->err(out, "Could not connect to pacemakerd: %s",
+                 pcmk_rc_str(rc));
+        /* this is unrecoverable so return with rc we have */
+        return rc;
+    }
+    pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb, (void *) &state);
+    rc = pcmk_connect_ipc(pacemakerd_api, pcmk_ipc_dispatch_poll);
+    if (rc == pcmk_rc_ok) {
+        rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
+        if (rc == pcmk_rc_ok) {
+            rc = pcmk_poll_ipc(pacemakerd_api, options.reconnect_msec/2);
+            if (rc == pcmk_rc_ok) {
+                pcmk_dispatch_ipc(pacemakerd_api);
+                rc = ENOTCONN;
+                switch (state) {
+                    case pcmk_pacemakerd_state_running:
+                        rc = pcmk_rc_ok;
+                        break;
+                    case pcmk_pacemakerd_state_starting_daemons:
+                        print_as(output_format ,"Pacemaker daemons starting ...\n");
+                        break;
+                    case pcmk_pacemakerd_state_wait_for_ping:
+                        print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
+                        break;
+                    case pcmk_pacemakerd_state_shutting_down:
+                        print_as(output_format ,"Pacemaker daemons shutting down ...\n");
+                        break;
+                    case pcmk_pacemakerd_state_shutdown_complete:
+                        /* assuming pacemakerd doesn't dispatch any pings after entering
+                         * that state unless it is waiting for SBD
+                         */
+                        print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+    pcmk_free_ipc_api(pacemakerd_api);
+    /* returning with ENOTCONN triggers a retry */
+    return (rc == pcmk_rc_ok)?rc:ENOTCONN;
 }
 
 #if CURSES_ENABLED
@@ -1033,8 +1158,11 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
     }
 
 refresh:
-    fencing_connect();
-    rc = cib_connect(FALSE);
+    rc = pacemakerd_status();
+    if (rc == pcmk_rc_ok) {
+        fencing_connect();
+        rc = cib_connect(FALSE);
+    }
     if (rc == pcmk_rc_ok) {
         mon_refresh_display(NULL);
     } else {
@@ -1238,9 +1366,13 @@ one_shot(void)
 {
     int rc;
 
-    fencing_connect();
+    rc = pacemakerd_status();
 
-    rc = cib_connect(FALSE);
+    if (rc == pcmk_rc_ok) {
+        fencing_connect();
+        rc = cib_connect(FALSE);
+    }
+
     if (rc == pcmk_rc_ok) {
         mon_refresh_display(NULL);
     } else {
@@ -1316,6 +1448,7 @@ main(int argc, char **argv)
 
                 case cib_native:
                     /* cib & fencing - everything available */
+                    options.mon_ops |= mon_op_cib_native;
                     break;
 
                 case cib_file:
@@ -1483,8 +1616,11 @@ main(int argc, char **argv)
     do {
         print_as(output_format ,"Waiting until cluster is available on this node ...\n");
 
-        fencing_connect();
-        rc = cib_connect(TRUE);
+        rc = pacemakerd_status();
+        if (rc == pcmk_rc_ok) {
+            fencing_connect();
+            rc = cib_connect(TRUE);
+        }
 
         if (rc != pcmk_rc_ok) {
             sleep(options.reconnect_msec / 1000);
