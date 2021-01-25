@@ -330,9 +330,19 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     crm_trace("Orphan resource actions are %s",
               pcmk_is_set(data_set->flags, pe_flag_stop_action_orphans)? "stopped" : "ignored");
 
-    set_config_flag(data_set, "remove-after-stop", pe_flag_remove_after_stop);
-    crm_trace("Stopped resources are removed from the status section: %s",
-              pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)));
+    value = pe_pref(data_set->config_hash, "remove-after-stop");
+    if (value != NULL) {
+        if (crm_is_true(value)) {
+            pe__set_working_set_flags(data_set, pe_flag_remove_after_stop);
+#ifndef PCMK__COMPAT_2_0
+            pe_warn_once(pe_wo_remove_after,
+                         "Support for the remove-after-stop cluster property is"
+                         " deprecated and will be removed in a future release");
+#endif
+        } else {
+            pe__clear_working_set_flags(data_set, pe_flag_remove_after_stop);
+        }
+    }
 
     set_config_flag(data_set, "maintenance-mode", pe_flag_maintenance_mode);
     crm_trace("Maintenance mode: %s",

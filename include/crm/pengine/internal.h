@@ -146,6 +146,7 @@ enum pe_warn_once_e {
     pe_wo_require_all   = (1 << 4),
     pe_wo_order_score   = (1 << 5),
     pe_wo_neg_threshold = (1 << 6),
+    pe_wo_remove_after  = (1 << 7),
 };
 
 extern uint32_t pe_wo;
