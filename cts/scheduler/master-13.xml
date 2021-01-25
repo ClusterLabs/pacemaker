@@ -8,7 +8,6 @@
         <nvpair id="nvpair.id21896" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21905" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21914" name="stop-orphan-actions" value="true"/>
-        <nvpair id="nvpair.id21933" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21942" name="transition-idle-timeout" value="5min"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21970" value="1190117208"/>
       </cluster_property_set>

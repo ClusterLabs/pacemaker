@@ -2,7 +2,6 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="nvpair.id21848" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21858" name="startup-fencing" value="true"/>
         <nvpair id="nvpair.id21867" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21876" name="symmetric-cluster" value="true"/>
