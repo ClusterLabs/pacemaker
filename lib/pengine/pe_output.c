@@ -176,7 +176,8 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 }
 
 static char *
-failed_action_string(xmlNodePtr xml_op) {
+failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
+{
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     int rc;
     int status;
@@ -1159,22 +1160,26 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "unsigned int")
 static int
-failed_action_text(pcmk__output_t *out, va_list args) {
+failed_action_text(pcmk__output_t *out, va_list args)
+{
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
+    unsigned int show_opts = va_arg(args, unsigned int);
 
-    char *s = failed_action_string(xml_op);
+    gboolean show_detail = pcmk_is_set(show_opts, pcmk_show_failed_detail);
+    char *s = failed_action_string(xml_op, show_detail);
 
     out->list_item(out, NULL, "%s", s);
     free(s);
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr")
+PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "unsigned int")
 static int
 failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
+    unsigned int show_opts G_GNUC_UNUSED = va_arg(args, unsigned int);
 
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     int rc;
@@ -1233,12 +1238,13 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("failed-action-list", "pe_working_set_t *", "GList *",
-                  "GList *", "gboolean")
+                  "GList *", "unsigned int", "gboolean")
 static int
 failed_action_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
+    unsigned int show_opts = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
     xmlNode *xml_op = NULL;
@@ -1272,7 +1278,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
         free(rsc);
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Resource Actions");
-        out->message(out, "failed-action", xml_op);
+        out->message(out, "failed-action", xml_op, show_opts);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
