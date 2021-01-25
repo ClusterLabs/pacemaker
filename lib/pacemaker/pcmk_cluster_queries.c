@@ -405,12 +405,13 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 {
     struct node_data *data = user_data;
     pcmk__output_t *out = data->out;
-    const char *remote = crm_element_value(result, data->field);
+    const char *name = crm_element_value(result, XML_ATTR_UNAME);
+    const char *id = crm_element_value(result, data->field);
 
     // node name and node id are the same for remote/guest nodes
     out->message(out, "crmadmin-node", data->type,
-                 remote,
-                 remote,
+                 name ? name : id,
+                 id,
                  data->BASH_EXPORT);
     data->found++;
 }
@@ -434,8 +435,6 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
     rc = the_cib->cmds->query(the_cib, NULL, &xml_node,
                               cib_scope_local | cib_sync_call);
     if (rc == pcmk_ok) {
-        xmlNode *node = NULL;
-        xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
         struct node_data data = {
             .out = out,
             .found = 0,
@@ -449,18 +448,10 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
-            for (node = first_named_child(nodes, XML_CIB_TAG_NODE); node != NULL;
-                 node = crm_next_same_xml(node)) {
-                const char *node_type = crm_element_value(node, XML_ATTR_TYPE);
-                if (node_type == NULL) {
-                    out->message(out, "crmadmin-node", node_type,
-                                 crm_str(crm_element_value(node, XML_ATTR_UNAME)),
-                                 crm_str(crm_element_value(node, XML_ATTR_ID)),
-                                 BASH_EXPORT);
-                    data.found++;
-                }
-
-            }
+            data.field = "id";
+            data.type = "cluster";
+            crm_foreach_xpath_result(xml_node, PCMK__XP_MEMBER_NODE_CONFIG,
+                                     remote_node_print_helper, &data);
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {

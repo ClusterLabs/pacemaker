@@ -125,6 +125,11 @@ do {                                                                            
 
 /* XML search strings for guest, remote and pacemaker_remote nodes */
 
+/* search string to find CIB resources entries for cluster nodes */
+#define PCMK__XP_MEMBER_NODE_CONFIG \
+    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
+    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
+
 /* search string to find CIB resources entries for guest nodes */
 #define PCMK__XP_GUEST_NODE_CONFIG \
     "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \

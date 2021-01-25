@@ -1232,10 +1232,6 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 
 }
 
-#define PCMK__XP_MEMBER_NODE_CONFIG \
-    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
-
 static void
 refresh_known_node_cache(xmlNode *cib)
 {
