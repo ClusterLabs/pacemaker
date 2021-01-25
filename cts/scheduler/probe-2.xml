@@ -8,7 +8,6 @@
         <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="false"/>
         <nvpair id="stop-orphan-actions" name="stop-orphan-actions" value="true"/>
-        <nvpair id="remove-after-stop" name="remove-after-stop" value="false"/>
         <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
       </cluster_property_set>

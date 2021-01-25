@@ -9,7 +9,6 @@
         <nvpair name="stonith-action" value="reboot" id="nvpair.id21886"/>
         <nvpair name="stop-orphan-resources" value="true" id="nvpair.id21930"/>
         <nvpair name="stop-orphan-actions" value="true" id="nvpair.id21939"/>
-        <nvpair name="remove-after-stop" value="false" id="nvpair.id21948"/>
         <nvpair name="startup-fencing" value="true" id="nvpair.id21957"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21965" value="1204805697"/>
       </cluster_property_set>

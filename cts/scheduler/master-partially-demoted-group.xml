@@ -26,7 +26,6 @@
         <nvpair name="node-health-strategy" value="none" id="cib-bootstrap-options-node-health-strategy"/>
         <nvpair name="node-health-yellow" value="0" id="cib-bootstrap-options-node-health-yellow"/>
         <nvpair name="placement-strategy" value="utilization" id="cib-bootstrap-options-placement-strategy"/>
-        <nvpair name="remove-after-stop" value="false" id="cib-bootstrap-options-remove-after-stop"/>
         <nvpair name="shutdown-escalation" value="20m" id="cib-bootstrap-options-shutdown-escalation"/>
         <nvpair name="start-failure-is-fatal" value="true" id="cib-bootstrap-options-start-failure-is-fatal"/>
         <nvpair name="startup-fencing" value="true" id="cib-bootstrap-options-startup-fencing"/>
