@@ -20,6 +20,7 @@
 #include <string.h>
 #include <glib.h>
 #include <crm/common/ipc.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
@@ -235,22 +236,6 @@ is_dirty(gpointer key, gpointer value, gpointer user_data)
     return pcmk_is_set(((crm_node_t*)value)->flags, crm_node_dirty);
 }
 
-/* search string to find CIB resources entries for guest nodes */
-#define XPATH_GUEST_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
-    "[@name='" XML_RSC_ATTR_REMOTE_NODE "']"
-
-/* search string to find CIB resources entries for remote nodes */
-#define XPATH_REMOTE_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "[@type='remote'][@provider='pacemaker']"
-
-/* search string to find CIB node status entries for pacemaker_remote nodes */
-#define XPATH_REMOTE_NODE_STATUS \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
-    "[@" XML_NODE_IS_REMOTE "='true']"
-
 /*!
  * \brief Repopulate the remote peer cache based on CIB XML
  *
@@ -272,7 +257,7 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
     /* Look for guest nodes and remote nodes in the status section */
     data.field = "id";
     data.has_state = TRUE;
-    crm_foreach_xpath_result(cib, XPATH_REMOTE_NODE_STATUS,
+    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_STATUS,
                              remote_cache_refresh_helper, &data);
 
     /* Look for guest nodes and remote nodes in the configuration section,
@@ -283,11 +268,11 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
      */
     data.field = "value";
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, XPATH_GUEST_NODE_CONFIG,
+    crm_foreach_xpath_result(cib, PCMK__XP_GUEST_NODE_CONFIG,
                              remote_cache_refresh_helper, &data);
     data.field = "id";
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, XPATH_REMOTE_NODE_CONFIG,
+    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_CONFIG,
                              remote_cache_refresh_helper, &data);
 
     /* Remove all old cache entries that weren't seen in the CIB */
@@ -1247,10 +1232,6 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 
 }
 
-#define XPATH_MEMBER_NODE_CONFIG \
-    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
-
 static void
 refresh_known_node_cache(xmlNode *cib)
 {
@@ -1258,7 +1239,7 @@ refresh_known_node_cache(xmlNode *cib)
 
     g_hash_table_foreach(known_node_cache, mark_dirty, NULL);
 
-    crm_foreach_xpath_result(cib, XPATH_MEMBER_NODE_CONFIG,
+    crm_foreach_xpath_result(cib, PCMK__XP_MEMBER_NODE_CONFIG,
                              known_node_cache_refresh_helper, NULL);
 
     /* Remove all old cache entries that weren't seen in the CIB */

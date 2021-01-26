@@ -4053,3 +4053,27 @@ Resources colocated with clone:
 </pacemaker-result>
 =#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
 * Passed: crm_resource   - Show resource digests with overrides
+=#=#=#= Begin test: List all nodes =#=#=#=
+11
+=#=#=#= End test: List all nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List all nodes
+=#=#=#= Begin test: List cluster nodes =#=#=#=
+6
+=#=#=#= End test: List cluster nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List cluster nodes
+=#=#=#= Begin test: List guest nodes =#=#=#=
+2
+=#=#=#= End test: List guest nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List guest nodes
+=#=#=#= Begin test: List remote nodes =#=#=#=
+3
+=#=#=#= End test: List remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List remote nodes
+=#=#=#= Begin test: List cluster,remote nodes =#=#=#=
+9
+=#=#=#= End test: List cluster,remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List cluster,remote nodes
+=#=#=#= Begin test: List guest,remote nodes =#=#=#=
+5
+=#=#=#= End test: List guest,remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List guest,remote nodes

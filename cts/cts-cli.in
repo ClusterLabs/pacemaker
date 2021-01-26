@@ -501,15 +501,15 @@ function test_tools() {
     desc="Default standby value"
     cmd="crm_standby -N node1 -G"
     test_assert $CRM_EX_OK
- 
+
     desc="Set standby status"
     cmd="crm_standby -N node1 -v true"
     test_assert $CRM_EX_OK
- 
+
     desc="Query standby value"
     cmd="crm_standby -N node1 -G"
     test_assert $CRM_EX_OK
- 
+
     desc="Delete standby value"
     cmd="crm_standby -N node1 -D"
     test_assert $CRM_EX_OK
@@ -657,7 +657,7 @@ function test_tools() {
     desc="Drop the status section"
     cmd="cibadmin -R -o status --xml-text '<status/>'"
     test_assert $CRM_EX_OK 0
-    
+
     desc="Create a clone"
     cmd="cibadmin -C -o resources --xml-text '<clone id=\"test-clone\"><primitive id=\"test-primitive\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/></clone>'"
     test_assert $CRM_EX_OK 0
@@ -697,7 +697,7 @@ function test_tools() {
     desc="Update existing resource meta attribute"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true"
     test_assert $CRM_EX_OK
-    
+
     desc="Create a resource meta attribute in the parent"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
     test_assert $CRM_EX_OK
@@ -803,6 +803,34 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     unset CIB_file
+
+    export CIB_file="$test_home/cli/crmadmin-cluster-remote-guest-nodes.xml"
+
+    desc="List all nodes"
+    cmd="crmadmin -N | wc -l | grep 11"
+    test_assert $CRM_EX_OK 0
+
+    desc="List cluster nodes"
+    cmd="crmadmin -N cluster | wc -l | grep 6"
+    test_assert $CRM_EX_OK 0
+
+    desc="List guest nodes"
+    cmd="crmadmin -N guest | wc -l | grep 2"
+    test_assert $CRM_EX_OK 0
+
+    desc="List remote nodes"
+    cmd="crmadmin -N remote | wc -l | grep 3"
+    test_assert $CRM_EX_OK 0
+
+    desc="List cluster,remote nodes"
+    cmd="crmadmin -N cluster,remote | wc -l | grep 9"
+    test_assert $CRM_EX_OK 0
+
+    desc="List guest,remote nodes"
+    cmd="crmadmin -N guest,remote | wc -l | grep 5"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
 }
 
 INVALID_PERIODS=(
@@ -822,7 +850,7 @@ INVALID_PERIODS=(
     "P1Z/2019-02-20 00:00:00Z"          # Invalid duration unit
     "P1YM/2019-02-20 00:00:00Z"         # No number for duration unit
 )
-        
+
 function test_dates() {
     # Ensure invalid period specifications are rejected
     for spec in '' "${INVALID_PERIODS[@]}"; do
@@ -1665,7 +1693,7 @@ for t in $tests; do
 done
 
 rm -rf "${shadow_dir}"
-    
+
 failed=0
 
 if [ $verbose -eq 1 ]; then

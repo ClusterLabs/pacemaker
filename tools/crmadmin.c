@@ -36,11 +36,11 @@ static enum {
 struct {
     gboolean health;
     gint timeout;
-    char *dest_node;
+    char *optarg;
     char *ipc_name;
     gboolean BASH_EXPORT;
 } options = {
-    .dest_node = NULL,
+    .optarg = NULL,
     .ipc_name = NULL,
     .BASH_EXPORT = FALSE
 };
@@ -67,9 +67,10 @@ static GOptionEntry command_options[] = {
       "\n                          node to examine the logs.",
       NULL
     },
-    { "nodes", 'N', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Display the uname of all member nodes",
-      NULL
+    { "nodes", 'N', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, command_cb,
+      "Display the uname of all member nodes [optionally filtered by type (comma-separated)]"
+      "\n                          Types: all (default), cluster, guest, remote",
+      "TYPE"
     },
     { "election", 'E', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "(Advanced) Start an election for the cluster co-ordinator",
@@ -135,10 +136,10 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
     }
 
     if (optarg) {
-        if (options.dest_node != NULL) {
-            free(options.dest_node);
+        if (options.optarg != NULL) {
+            free(options.optarg);
         }
-        options.dest_node = strdup(optarg);
+        options.optarg = strdup(optarg);
     }
 
     return TRUE;
@@ -258,19 +259,19 @@ main(int argc, char **argv)
 
     switch (command) {
         case cmd_health:
-            rc = pcmk__controller_status(out, options.dest_node, options.timeout);
+            rc = pcmk__controller_status(out, options.optarg, options.timeout);
             break;
         case cmd_pacemakerd_health:
             rc = pcmk__pacemakerd_status(out, options.ipc_name, options.timeout);
             break;
         case cmd_list_nodes:
-            rc = pcmk__list_nodes(out, options.BASH_EXPORT);
+            rc = pcmk__list_nodes(out, options.optarg, options.BASH_EXPORT);
             break;
         case cmd_whois_dc:
             rc = pcmk__designated_controller(out, options.timeout);
             break;
         case cmd_shutdown:
-            rc = pcmk__shutdown_controller(out, options.dest_node);
+            rc = pcmk__shutdown_controller(out, options.optarg);
             break;
         case cmd_elect_dc:
             rc = pcmk__start_election(out);
