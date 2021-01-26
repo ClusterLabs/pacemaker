@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -445,7 +445,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
 
             if (rc != pcmk_rc_ok) {
                 free(xpath_string);
-                goto bail;
+                goto done;
             }
 
             free_xml(fragment);
@@ -455,7 +455,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
         free(xpath_string);
     }
 
-bail:
+done:
     freeXpathObject(xpathObj);
     crm_time_free(now);
     return rc;

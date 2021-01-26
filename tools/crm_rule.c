@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -128,11 +128,11 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     if (max == 0) {
         CMD_ERR("No rule found with ID=%s", rule_id);
         rc = ENXIO;
-        goto bail;
+        goto done;
     } else if (max > 1) {
         CMD_ERR("More than one rule with ID=%s found", rule_id);
         rc = ENXIO;
-        goto bail;
+        goto done;
     }
 
     free(xpath);
@@ -146,7 +146,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
     if (max != 1) {
         CMD_ERR("Can't check rule %s because it does not have exactly one date_expression", rule_id);
         rc = EOPNOTSUPP;
-        goto bail;
+        goto done;
     }
 
     free(xpath);
@@ -169,7 +169,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
         if (max == 0) {
             CMD_ERR("Rule either must not use date_spec, or use date_spec with years= but not moon=");
             rc = ENXIO;
-            goto bail;
+            goto done;
         }
     }
 
@@ -198,7 +198,7 @@ crm_rule_check(pe_working_set_t *data_set, const char *rule_id, crm_time_t *effe
         printf("Could not determine whether rule %s is expired\n", rule_id);
     }
 
-bail:
+done:
     free(xpath);
     freeXpathObject(xpathObj);
     return rc;
@@ -250,7 +250,7 @@ main(int argc, char **argv)
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         CMD_ERR("%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
-        goto bail;
+        goto done;
     }
 
     for (int i = 0; i < args->verbosity; i++) {
@@ -270,7 +270,7 @@ main(int argc, char **argv)
         CMD_ERR("%s", help);
         g_free(help);
         exit_code = CRM_EX_USAGE;
-        goto bail;
+        goto done;
     }
 
     /* Check command line arguments before opening a connection to
@@ -281,7 +281,7 @@ main(int argc, char **argv)
             if (options.rule == NULL) {
                 CMD_ERR("--check requires use of --rule=");
                 exit_code = CRM_EX_USAGE;
-                goto bail;
+                goto done;
             }
 
             break;
@@ -289,7 +289,7 @@ main(int argc, char **argv)
         default:
             CMD_ERR("No mode operation given");
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
             break;
     }
 
@@ -298,7 +298,7 @@ main(int argc, char **argv)
     if (rule_date == NULL) {
         CMD_ERR("No --date given and can't determine current date");
         exit_code = CRM_EX_DATAERR;
-        goto bail;
+        goto done;
     }
 
     /* Where does the XML come from?  If one of various command line options were
@@ -310,7 +310,7 @@ main(int argc, char **argv)
         if (input == NULL) {
             CMD_ERR("Couldn't parse input from STDIN\n");
             exit_code = CRM_EX_DATAERR;
-            goto bail;
+            goto done;
         }
     } else if (options.input_xml != NULL) {
         input = string2xml(options.input_xml);
@@ -319,7 +319,7 @@ main(int argc, char **argv)
             CMD_ERR("Couldn't parse input string: %s\n", options.input_xml);
 
             exit_code = CRM_EX_DATAERR;
-            goto bail;
+            goto done;
         }
     } else {
         // Establish a connection to the CIB
@@ -328,7 +328,7 @@ main(int argc, char **argv)
         if (rc != pcmk_ok) {
             CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
             exit_code = crm_errno2exit(rc);
-            goto bail;
+            goto done;
         }
     }
 
@@ -337,7 +337,7 @@ main(int argc, char **argv)
         rc = cib_conn->cmds->query(cib_conn, NULL, &input, cib_scope_local | cib_sync_call);
         if (rc != pcmk_ok) {
             exit_code = crm_errno2exit(rc);
-            goto bail;
+            goto done;
         }
     }
 
@@ -345,7 +345,7 @@ main(int argc, char **argv)
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         exit_code = crm_errno2exit(ENOMEM);
-        goto bail;
+        goto done;
     }
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
@@ -374,7 +374,7 @@ main(int argc, char **argv)
             break;
     }
 
-bail:
+done:
     if (cib_conn != NULL) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);

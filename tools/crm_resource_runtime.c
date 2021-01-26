@@ -130,7 +130,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        goto bail;
+        goto done;
     }
 
     crm_log_xml_debug(xml_search, "Match");
@@ -156,7 +156,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
         }
     }
 
-  bail:
+  done:
     free(xpath_string);
     free_xml(xml_search);
     return rc;
@@ -977,7 +977,6 @@ bool resource_is_running_on(pe_resource_t *rsc, const char *host)
     }
 
   done:
-
     g_list_free(hosts);
     return found;
 }
@@ -1120,14 +1119,14 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
         if (shadow_cib == NULL) {
             out->err(out, "Could not create shadow cib: '%s'", pid);
             rc = ENXIO;
-            goto cleanup;
+            goto done;
         }
 
         rc = write_xml_file(data_set->input, shadow_file, FALSE);
 
         if (rc < 0) {
             out->err(out, "Could not populate shadow cib: %s (%d)", pcmk_strerror(rc), rc);
-            goto cleanup;
+            goto done;
         }
 
         rc = shadow_cib->cmds->signon(shadow_cib, crm_system_name, cib_command);
@@ -1135,7 +1134,7 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
 
         if (rc != pcmk_rc_ok) {
             out->err(out, "Could not connect to shadow cib: %s (%d)", pcmk_strerror(rc), rc);
-            goto cleanup;
+            goto done;
         }
 
         pcmk__schedule_actions(data_set, data_set->input, NULL);
@@ -1146,7 +1145,7 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
         cluster_status(data_set);
     }
 
-  cleanup:
+  done:
     /* Do not free data_set->input here, we need rsc->xml to be valid later on */
     cib_delete(shadow_cib);
     free(pid);
