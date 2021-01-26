@@ -191,7 +191,8 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
 
     const char *exit_status = NULL;
     const char *lrm_status = NULL;
-    time_t last_change = 0;
+    const char *last_change_str = NULL;
+    time_t last_change_epoch = 0;
     GString *str = NULL;
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
@@ -229,19 +230,12 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
     }
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
-                                &last_change) == pcmk_ok) {
-        crm_time_t *crm_when = crm_time_new(NULL);
-        char *time_s = NULL;
-
-        crm_time_set_timet(crm_when, &last_change);
-        time_s = crm_time_as_string(crm_when,
-                                    crm_time_log_date
-                                    |crm_time_log_timeofday
-                                    |crm_time_log_with_timezone);
-        g_string_append_printf(str, ", " XML_RSC_OP_LAST_CHANGE "='%s'",
-                               time_s);
-        crm_time_free(crm_when);
-        free(time_s);
+                                &last_change_epoch) == pcmk_ok) {
+        last_change_str = pcmk__epoch2str(&last_change_epoch);
+        if (last_change_str != NULL) {
+            g_string_append_printf(str, ", " XML_RSC_OP_LAST_CHANGE "='%s'",
+                                   last_change_str);
+        }
     }
     if (!pcmk__str_empty(queue_time)) {
         g_string_append_printf(str, ", queued=%sms", queue_time);
