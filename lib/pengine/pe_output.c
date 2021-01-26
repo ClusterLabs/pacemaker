@@ -224,33 +224,31 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
                              + strlen(exit_status) + strlen(call_id)
                              + strlen(lrm_status) + strlen(exit_reason) + 50);
 
+    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s, "
+                         "exitreason='%s'",
+                    op_key, node_name, exit_status, rc, call_id,
+                    lrm_status, exit_reason);
+
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
         crm_time_t *crm_when = crm_time_new(NULL);
         char *time_s = NULL;
 
         crm_time_set_timet(crm_when, &last_change);
-        time_s = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-
-        if (pcmk__str_empty(queue_time)) {
-            queue_time = "unknown ";
-        }
-        if (pcmk__str_empty(exec_time)) {
-            exec_time = "unknown ";
-        }
-        g_string_printf(str, "%s on %s '%s' (%d): call=%s, status='%s', "
-                        "exitreason='%s', " XML_RSC_OP_LAST_CHANGE
-                        "='%s', queued=%sms, exec=%sms",
-                        op_key, node_name, exit_status, rc, call_id,
-                        lrm_status, exit_reason, time_s, queue_time,
-                        exec_time);
-
+        time_s = crm_time_as_string(crm_when,
+                                    crm_time_log_date
+                                    |crm_time_log_timeofday
+                                    |crm_time_log_with_timezone);
+        g_string_append_printf(str, ", " XML_RSC_OP_LAST_CHANGE "='%s'",
+                               time_s);
         crm_time_free(crm_when);
         free(time_s);
-    } else {
-        g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
-                        op_key, node_name, exit_status, rc, call_id,
-                        lrm_status, exit_reason);
+    }
+    if (!pcmk__str_empty(queue_time)) {
+        g_string_append_printf(str, ", queued=%sms", queue_time);
+    }
+    if (!pcmk__str_empty(exec_time)) {
+        g_string_append_printf(str, ", exec=%sms", exec_time);
     }
     return str;
 }
