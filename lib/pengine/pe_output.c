@@ -210,9 +210,6 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
     if (pcmk__str_empty(node_name)) {
         node_name = "unknown node";
     }
-    if (pcmk__str_empty(exit_reason)) {
-        exit_reason = "none";
-    }
     if (pcmk__str_empty(exit_status)) {
         exit_status = "unknown exit status";
     }
@@ -222,12 +219,14 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
 
     str = g_string_sized_new(strlen(op_key) + strlen(node_name)
                              + strlen(exit_status) + strlen(call_id)
-                             + strlen(lrm_status) + strlen(exit_reason) + 50);
+                             + strlen(lrm_status) + 50); // rough estimate
 
-    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s, "
-                         "exitreason='%s'",
-                    op_key, node_name, exit_status, rc, call_id,
-                    lrm_status, exit_reason);
+    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s",
+                    op_key, node_name, exit_status, rc, call_id, lrm_status);
+
+    if (!pcmk__str_empty(exit_reason)) {
+        g_string_append_printf(str, ", exitreason='%s'", exit_reason);
+    }
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
