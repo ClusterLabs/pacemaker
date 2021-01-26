@@ -178,16 +178,46 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 static char *
 failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
 {
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
     int rc;
     int status;
-    const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
 
+    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
+    const char *exit_reason = crm_element_value(xml_op,
+                                                XML_LRM_ATTR_EXIT_REASON);
+    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
+    const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
+
+    const char *exit_status = NULL;
+    const char *lrm_status = NULL;
     time_t last_change = 0;
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+    exit_status = services_ocf_exitcode_str(rc);
+
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
                        &status, 0);
+    lrm_status = services_lrm_status_str(status);
+
+    if (pcmk__str_empty(op_key)) {
+        op_key = ID(xml_op);
+        if (pcmk__str_empty(op_key)) {
+            op_key = "unknown operation";
+        }
+    }
+    if (pcmk__str_empty(node_name)) {
+        node_name = "unknown node";
+    }
+    if (pcmk__str_empty(exit_reason)) {
+        exit_reason = "none";
+    }
+    if (pcmk__str_empty(exit_status)) {
+        exit_status = "unknown exit status";
+    }
+    if (pcmk__str_empty(call_id)) {
+        call_id = "unknown";
+    }
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
@@ -198,30 +228,26 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
         crm_time_set_timet(crm_when, &last_change);
         time_s = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
+        if (pcmk__str_empty(queue_time)) {
+            queue_time = "unknown ";
+        }
+        if (pcmk__str_empty(exec_time)) {
+            exec_time = "unknown ";
+        }
         buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', "
                                 "exitreason='%s', " XML_RSC_OP_LAST_CHANGE
                                 "='%s', queued=%sms, exec=%sms",
-                                op_key ? op_key : ID(xml_op),
-                                crm_element_value(xml_op, XML_ATTR_UNAME),
-                                services_ocf_exitcode_str(rc), rc,
-                                crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                services_lrm_status_str(status),
-                                exit_reason ? exit_reason : "none",
-                                time_s,
-                                crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
-                                crm_element_value(xml_op, XML_RSC_OP_T_EXEC));
+                                op_key, node_name, exit_status, rc, call_id,
+                                lrm_status, exit_reason, time_s, queue_time,
+                                exec_time);
 
         crm_time_free(crm_when);
         free(time_s);
         return buf;
     } else {
         return crm_strdup_printf("%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
-                                 op_key ? op_key : ID(xml_op),
-                                 crm_element_value(xml_op, XML_ATTR_UNAME),
-                                 services_ocf_exitcode_str(rc), rc,
-                                 crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                 services_lrm_status_str(status),
-                                 exit_reason ? exit_reason : "none");
+                                 op_key, node_name, exit_status, rc, call_id,
+                                 lrm_status, exit_reason);
     }
 }
 
