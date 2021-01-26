@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,6 +25,7 @@ pcmk__time_hr_t *pcmk__time_hr_new(const char *date_time);
 void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
 char *pcmk__time_format_hr(const char *format, pcmk__time_hr_t *hr_dt);
 const char *pcmk__epoch2str(time_t *when);
+const char *pcmk__readable_interval(guint interval_ms);
 
 struct pcmk__time_us {
     int years;
