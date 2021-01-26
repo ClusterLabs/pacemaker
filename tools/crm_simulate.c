@@ -923,9 +923,10 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
         /* FIXME:  When crm_simulate is converted to use formatted output, this can go. */
         pcmk__cli_help('v', CRM_EX_USAGE);
-        goto done;
     }
 
     if (optind > argc) {
