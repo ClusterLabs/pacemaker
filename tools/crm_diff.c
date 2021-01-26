@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2018 the Pacemaker project contributors
+ * Copyright 2005-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -300,7 +300,7 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
     xmlNode *object_1 = NULL;
     xmlNode *object_2 = NULL;
 
@@ -318,7 +318,7 @@ main(int argc, char **argv)
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        rc = CRM_EX_USAGE;
+        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
@@ -338,7 +338,7 @@ main(int argc, char **argv)
 
         fprintf(stderr, "%s", help);
         g_free(help);
-        rc = CRM_EX_USAGE;
+        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
@@ -346,7 +346,7 @@ main(int argc, char **argv)
         fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
     } else if (options.as_cib && options.no_version) {
         fprintf(stderr, "error: -u/--no-version incompatible with -c/--cib\n");
-        rc = CRM_EX_USAGE;
+        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
@@ -374,19 +374,21 @@ main(int argc, char **argv)
 
     if (object_1 == NULL) {
         fprintf(stderr, "Could not parse the first XML fragment\n");
-        rc = CRM_EX_DATAERR;
+        exit_code = CRM_EX_DATAERR;
         goto done;
     }
     if (object_2 == NULL) {
         fprintf(stderr, "Could not parse the second XML fragment\n");
-        rc = CRM_EX_DATAERR;
+        exit_code = CRM_EX_DATAERR;
         goto done;
     }
 
     if (options.apply) {
-        rc = apply_patch(object_1, object_2, options.as_cib);
+        int ret = apply_patch(object_1, object_2, options.as_cib);
+        exit_code = crm_errno2exit(ret);
     } else {
-        rc = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
+        int ret = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
+        exit_code = crm_errno2exit(ret);
     }
 
 done:
@@ -397,5 +399,5 @@ done:
     free(options.xml_file_2);
     free_xml(object_1);
     free_xml(object_2);
-    return crm_errno2exit(rc);
+    return exit_code;
 }
