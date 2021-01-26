@@ -61,6 +61,7 @@ cts_SCRIPTS		= CTSlab.py		\
 
 clidir		= $(testdir)/cli
 dist_cli_DATA	= cli/constraints.xml \
+		  cli/crmadmin-cluster-remote-guest-nodes.xml \
 		  cli/crm_diff_new.xml		\
 		  cli/crm_diff_old.xml		\
 		  cli/crm_mon.xml		\
