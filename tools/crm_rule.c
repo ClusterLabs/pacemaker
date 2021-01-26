@@ -234,24 +234,19 @@ main(int argc, char **argv)
 
     int rc = pcmk_ok;
     crm_exit_t exit_code = CRM_EX_OK;
+    GError *error = NULL;
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-
-    GError *error = NULL;
-    GOptionContext *context = NULL;
-    gchar **processed_args = NULL;
-
-    context = build_arg_context(args);
-
-    crm_log_cli_init("crm_rule");
-
-    processed_args = pcmk__cmdline_preproc(argv, "nopNO");
+    GOptionContext *context = build_arg_context(args);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         CMD_ERR("%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
+
+    crm_log_cli_init("crm_rule");
 
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);

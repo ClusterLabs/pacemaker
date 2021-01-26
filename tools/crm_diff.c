@@ -300,27 +300,23 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    crm_exit_t exit_code = CRM_EX_OK;
     xmlNode *object_1 = NULL;
     xmlNode *object_2 = NULL;
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-
+    crm_exit_t exit_code = CRM_EX_OK;
     GError *error = NULL;
-    GOptionContext *context = NULL;
-    gchar **processed_args = NULL;
 
-    context = build_arg_context(args);
-
-    crm_log_cli_init("crm_diff");
-
-    processed_args = pcmk__cmdline_preproc(argv, "nopNO");
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
+    GOptionContext *context = build_arg_context(args);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
+
+    crm_log_cli_init("crm_diff");
 
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);

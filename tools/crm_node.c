@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -530,24 +530,20 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
 int
 main(int argc, char **argv)
 {
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-
     GError *error = NULL;
-    GOptionContext *context = NULL;
+
     GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
-
-    context = build_arg_context(args, output_group);
-
-    crm_log_cli_init("crm_node");
-
-    processed_args = pcmk__cmdline_preproc(argv, "NR");
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "NR");
+    GOptionContext *context = build_arg_context(args, output_group);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
+
+    crm_log_cli_init("crm_node");
 
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);

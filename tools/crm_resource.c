@@ -1519,21 +1519,19 @@ main(int argc, char **argv)
      * Parse command line arguments
      */
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = NULL;
     GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
+    GOptionContext *context = build_arg_context(args, &output_group);
 
-    context = build_arg_context(args, &output_group);
     pcmk__register_formats(output_group, formats);
-    crm_log_cli_init("crm_resource");
-
-    processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
+
+    crm_log_cli_init("crm_resource");
 
     /*
      * Set verbosity

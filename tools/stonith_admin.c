@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -334,37 +334,34 @@ int
 main(int argc, char **argv)
 {
     int rc = 0;
+    crm_exit_t exit_code = CRM_EX_OK;
     bool no_connect = false;
     bool required_agent = false;
 
     char *target = NULL;
     const char *device = NULL;
-
-    crm_exit_t exit_code = CRM_EX_OK;
     stonith_t *st = NULL;
 
     pcmk__output_t *out = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
 
     GError *error = NULL;
-    GOptionContext *context = NULL;
+
     GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
-
-    context = build_arg_context(args, &output_group);
-    pcmk__register_formats(output_group, formats);
-
-    crm_log_cli_init("stonith_admin");
-
-    name = strdup(crm_system_name);
-
-    processed_args = pcmk__cmdline_preproc(argv, "adehilorstvBCDFHQRTU");
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "adehilorstvBCDFHQRTU");
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
+
+    pcmk__register_formats(output_group, formats);
+
+    crm_log_cli_init("stonith_admin");
+
+    name = strdup(crm_system_name);
 
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
