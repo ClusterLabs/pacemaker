@@ -2191,8 +2191,10 @@ clean_up(crm_exit_t exit_code)
     /* (1) Close connections, free things, etc. */
     clean_up_cib_connection();
     clean_up_fencing_connection();
-    free(options.pid_file);
     free(options.neg_location_prefix);
+    free(options.only_node);
+    free(options.only_rsc);
+    free(options.pid_file);
     g_slist_free_full(options.includes_excludes, free);
 
     pe_free_working_set(mon_data_set);
