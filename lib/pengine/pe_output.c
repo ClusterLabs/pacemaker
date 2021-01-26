@@ -175,7 +175,7 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
-static char *
+static GString *
 failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
 {
     int rc;
@@ -192,6 +192,7 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
     const char *exit_status = NULL;
     const char *lrm_status = NULL;
     time_t last_change = 0;
+    GString *str = NULL;
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
     exit_status = services_ocf_exitcode_str(rc);
@@ -219,11 +220,14 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
         call_id = "unknown";
     }
 
+    str = g_string_sized_new(strlen(op_key) + strlen(node_name)
+                             + strlen(exit_status) + strlen(call_id)
+                             + strlen(lrm_status) + strlen(exit_reason) + 50);
+
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
         crm_time_t *crm_when = crm_time_new(NULL);
         char *time_s = NULL;
-        char *buf = NULL;
 
         crm_time_set_timet(crm_when, &last_change);
         time_s = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
@@ -234,21 +238,21 @@ failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
         if (pcmk__str_empty(exec_time)) {
             exec_time = "unknown ";
         }
-        buf = crm_strdup_printf("%s on %s '%s' (%d): call=%s, status='%s', "
-                                "exitreason='%s', " XML_RSC_OP_LAST_CHANGE
-                                "='%s', queued=%sms, exec=%sms",
-                                op_key, node_name, exit_status, rc, call_id,
-                                lrm_status, exit_reason, time_s, queue_time,
-                                exec_time);
+        g_string_printf(str, "%s on %s '%s' (%d): call=%s, status='%s', "
+                        "exitreason='%s', " XML_RSC_OP_LAST_CHANGE
+                        "='%s', queued=%sms, exec=%sms",
+                        op_key, node_name, exit_status, rc, call_id,
+                        lrm_status, exit_reason, time_s, queue_time,
+                        exec_time);
 
         crm_time_free(crm_when);
         free(time_s);
-        return buf;
     } else {
-        return crm_strdup_printf("%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
-                                 op_key, node_name, exit_status, rc, call_id,
-                                 lrm_status, exit_reason);
+        g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s, exitreason='%s'",
+                        op_key, node_name, exit_status, rc, call_id,
+                        lrm_status, exit_reason);
     }
+    return str;
 }
 
 static const char *
@@ -1194,10 +1198,10 @@ failed_action_text(pcmk__output_t *out, va_list args)
     unsigned int show_opts = va_arg(args, unsigned int);
 
     gboolean show_detail = pcmk_is_set(show_opts, pcmk_show_failed_detail);
-    char *s = failed_action_string(xml_op, show_detail);
+    GString *s = failed_action_string(xml_op, show_detail);
 
-    out->list_item(out, NULL, "%s", s);
-    free(s);
+    out->list_item(out, NULL, "%s", s->str);
+    g_string_free(s, TRUE);
     return pcmk_rc_ok;
 }
 
