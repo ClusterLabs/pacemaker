@@ -183,25 +183,25 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
-    pcmk__output_t *out = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     int rc;
     int argerr = 0;
 
     GError *error = NULL;
 
+    pcmk__output_t *out = NULL;
+
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "itBDEHKNPS");
     GOptionContext *context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
-
-    pcmk__register_formats(output_group, formats);
 
     crm_log_cli_init("crmadmin");
 
@@ -217,9 +217,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    out->quiet = args->quiet;
-
     pcmk__register_lib_messages(out);
+
+    out->quiet = args->quiet;
 
     if (!pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname())) {
         goto done;

@@ -1525,7 +1525,6 @@ main(int argc, char **argv)
     GOptionContext *context = build_arg_context(args, &output_group);
 
     pcmk__register_formats(output_group, formats);
-
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -1548,6 +1547,11 @@ main(int argc, char **argv)
         exit_code = CRM_EX_ERROR;
         goto done;
     }
+
+    pe__register_messages(out);
+    crm_resource_register_messages(out);
+    lrmd__register_messages(out);
+    pcmk__register_lib_messages(out);
 
     out->quiet = args->quiet;
 
@@ -1646,11 +1650,6 @@ main(int argc, char **argv)
             pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
         }
     }
-
-    pe__register_messages(out);
-    crm_resource_register_messages(out);
-    lrmd__register_messages(out);
-    pcmk__register_lib_messages(out);
 
     if (args->version) {
         out->version(out, false);
