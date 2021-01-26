@@ -85,6 +85,8 @@ main(int argc, char **argv)
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
         return CRM_EX_USAGE;
     }
 
@@ -93,6 +95,8 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
         /* FIXME:  When crm_error is converted to use formatted output, this can go. */
         pcmk__cli_help('v', CRM_EX_USAGE);
     }
@@ -131,6 +135,8 @@ main(int argc, char **argv)
             char *help = g_option_context_get_help(context, TRUE, NULL);
             fprintf(stderr, "%s", help);
             g_free(help);
+            g_strfreev(processed_args);
+            pcmk__free_arg_context(context);
             return CRM_EX_USAGE;
         }
 
@@ -145,5 +151,8 @@ main(int argc, char **argv)
             }
         }
     }
+
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
     return CRM_EX_OK;
 }

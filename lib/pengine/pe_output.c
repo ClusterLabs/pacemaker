@@ -1146,7 +1146,9 @@ pe__node_text(pcmk__output_t *out, va_list args) {
         free(buf);
         free(node_name);
     } else {
-        out->begin_list(out, NULL, NULL, "Node: %s", pe__node_display_name(node, print_clone_detail));
+        char *node_name = pe__node_display_name(node, print_clone_detail);
+        out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+        free(node_name);
     }
 
     return pcmk_rc_ok;

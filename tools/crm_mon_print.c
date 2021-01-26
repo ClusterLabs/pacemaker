@@ -796,6 +796,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     }
 
     g_list_free_full(unames, free);
+    g_list_free_full(resources, free);
 }
 
 /*!

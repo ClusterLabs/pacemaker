@@ -27,8 +27,15 @@ not_present(void) {
 
 static void
 present(void) {
-    g_assert_cmpint(strcmp(pcmk__xpath_node_id("/some/xpath/containing/lrm[@id='xyz']", "lrm"), "xyz"), ==, 0);
-    g_assert_cmpint(strcmp(pcmk__xpath_node_id("/some/other/lrm[@id='xyz']/xpath", "lrm"), "xyz"), ==, 0);
+    char *s = NULL;
+
+    s = pcmk__xpath_node_id("/some/xpath/containing/lrm[@id='xyz']", "lrm");
+    g_assert_cmpint(strcmp(s, "xyz"), ==, 0);
+    free(s);
+
+    s = pcmk__xpath_node_id("/some/other/lrm[@id='xyz']/xpath", "lrm");
+    g_assert_cmpint(strcmp(s, "xyz"), ==, 0);
+    free(s);
 }
 
 int
