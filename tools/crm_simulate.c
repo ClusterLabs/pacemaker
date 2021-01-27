@@ -915,11 +915,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_log_cli_init("crm_simulate");
-
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_simulate", args->verbosity);
 
     if (args->version) {
         g_strfreev(processed_args);

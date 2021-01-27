@@ -358,13 +358,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_log_cli_init("stonith_admin");
+    pcmk__cli_init_logging("stonith_admin", args->verbosity);
 
     name = strdup(crm_system_name);
-
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {

@@ -1530,15 +1530,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_log_cli_init("crm_resource");
-
-    /*
-     * Set verbosity
-     */
-
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_resource", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {

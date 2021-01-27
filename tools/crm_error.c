@@ -87,11 +87,7 @@ main(int argc, char **argv)
         return CRM_EX_USAGE;
     }
 
-    crm_log_cli_init("crm_error");
-
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_error", args->verbosity);
 
     if (args->version) {
         g_strfreev(processed_args);

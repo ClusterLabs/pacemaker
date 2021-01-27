@@ -64,6 +64,17 @@ extern "C" {
         }                                                                   \
     } while(0)
 
+/*!
+ * \internal
+ * \brief Initialize logging for command line tools
+ *
+ * \param[in] name      The name of the program
+ * \param[in] verbosity How verbose to be in logging
+ *
+ * \note \p verbosity is not the same as the logging level (LOG_ERR, etc.).
+ */
+void pcmk__cli_init_logging(const char *name, unsigned int verbosity);
+
 #ifdef __cplusplus
 }
 #endif

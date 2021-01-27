@@ -974,3 +974,14 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
 
     } while (next != NULL && next[0] != 0);
 }
+
+void
+pcmk__cli_init_logging(const char *name, unsigned int verbosity)
+{
+    crm_log_cli_init(name);
+
+    for (int i = 0; i < verbosity; i++) {
+        /* These arguments are ignored, so pass placeholders. */
+        crm_bump_log_level(0, NULL);
+    }
+}
