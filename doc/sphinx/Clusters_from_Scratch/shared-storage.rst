@@ -29,17 +29,18 @@ repository:
 .. code-block:: none
 
     # rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
-    # rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
-    Retrieving http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
+    # rpm -Uvh https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm
+    Retrieving https://www.elrepo.org/elrepo-release-8.el8.elrepo.noarch.rpm
+    Verifying...                          ################################# [100%]
     Preparing...                          ################################# [100%]
     Updating / installing...
-       1:elrepo-release-7.0-3.el7.elrepo  ################################# [100%]
+       1:elrepo-release-8.2-1.el8.elrepo  ################################# [100%]
 
 Now, we can install the DRBD kernel module and utilities:
 
 .. code-block:: none
 
-    # yum install -y kmod-drbd84 drbd84-utils
+    # yum install -y kmod-drbd90 drbd90-utils
 
 DRBD will not be able to run under the default SELinux security policies.
 If you are familiar with SELinux, you can modify the policies in a more
@@ -48,6 +49,7 @@ control:
 
 .. code-block:: none
 
+    # yum install -y policycoreutils-python-utils
     # semanage permissive -a drbd_t
 
 We will configure DRBD to use port 7789, so allow that port from each host to
@@ -88,8 +90,8 @@ which is more than sufficient for a single HTML file and (later) GFS2 metadata.
 
     [root@pcmk-1 ~]# vgdisplay | grep -e Name -e Free
       VG Name               centos_pcmk-1
-      Free  PE / Size       255 / 1020.00 MiB
-    [root@pcmk-1 ~]# lvcreate --name drbd-demo --size 512M centos_pcmk-1
+      Free  PE / Size       3583 / <14.00 GiB
+    [root@pcmk-1 ~]# lvcreate --name drbd-demo --size 512M cs_pcmk-1
      Logical volume "drbd-demo" created.
     [root@pcmk-1 ~]# lvs
       LV        VG            Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
@@ -101,7 +103,7 @@ Repeat for the second node, making sure to use the same size:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# ssh pcmk-2 -- lvcreate --name drbd-demo --size 512M centos_pcmk-2
+    [root@pcmk-1 ~]# ssh pcmk-2 -- lvcreate --name drbd-demo --size 512M cs_pcmk-2
      Logical volume "drbd-demo" created.
 
 Configure DRBD
@@ -112,27 +114,29 @@ run this on both nodes to use this sample configuration:
 
 .. code-block:: none
 
-    # cat <<END >/etc/drbd.d/wwwdata.res
-    resource wwwdata {
-     protocol C;
-     meta-disk internal;
-     device /dev/drbd1;
-     syncer {
-      verify-alg sha1;
-     }
-     net {
-      allow-two-primaries;
-     }
-     on pcmk-1 {
-      disk   /dev/centos_pcmk-1/drbd-demo;
-      address  192.168.122.101:7789;
-     }
-     on pcmk-2 {
-      disk   /dev/centos_pcmk-2/drbd-demo;
-      address  192.168.122.102:7789;
-     }
-    }
-    END
+ORIGINAL CFS
+
+# cat <<END >/etc/drbd.d/wwwdata.res
+resource wwwdata {
+ protocol C;
+ meta-disk internal;
+ device /dev/drbd1;
+ syncer {
+  verify-alg sha1;
+ }
+ net {
+  allow-two-primaries;
+ }
+ on pcmk-1 {
+  disk   /dev/cs_pcmk-1/drbd-demo;
+  address  192.168.122.101:7789;
+ }
+ on pcmk-2 {
+  disk   /dev/cs_pcmk-2/drbd-demo;
+  address  192.168.122.102:7789;
+ }
+}
+END
 
 .. IMPORTANT::
 
@@ -160,89 +164,62 @@ Run them on one node:
 .. code-block:: none
 
     [root@pcmk-1 ~]# drbdadm create-md wwwdata
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      --==  Thank you for participating in the global usage survey  ==--
-    The server's response is:
-
-    you are the 2147th user to install this version
     initializing activity log
     initializing bitmap (16 KB) to all zero
     Writing meta data...
     New drbd meta data block successfully created.
-    success
     [root@pcmk-1 ~]# modprobe drbd
     [root@pcmk-1 ~]# drbdadm up wwwdata
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
       --==  Thank you for participating in the global usage survey  ==--
     The server's response is:
-
-We can confirm DRBD's status on this node:
-
+    
+    you are the 801th user to install this version
+    
+    We can confirm DRBD's status on this node:
+    
 .. code-block:: none
 
-    [root@pcmk-1 ~]# cat /proc/drbd
-    version: 8.4.11-1 (api:1/proto:86-101)
-    GIT-hash: 66145a308421e9c124ec391a7848ac20203bb03c build by mockbuild@, 2018-04-26 12:10:42
-
-     1: cs:WFConnection ro:Secondary/Unknown ds:Inconsistent/DUnknown C r----s
-        ns:0 nr:0 dw:0 dr:0 al:8 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:524236
+    [root@pcmk-1 ~]# drbdadm status
+    wwwdata role:Secondary
+      disk:Inconsistent
+      pcmk-2 connection:Connecting
 
 Because we have not yet initialized the data, this node's data
 is marked as **Inconsistent**. Because we have not yet initialized
-the second node, the local state is **WFConnection** (waiting for connection),
-and the partner node's status is marked as **Unknown**.
+the second node, the pcmk-2 connection is **Connecting** (waiting for connection).
 
 Now, repeat the above commands on the second node, starting with creating
-wwwdata.res. After giving it time to connect, when we check the status, it
-shows:
+wwwdata.res. After giving it time to connect, when we check the status of the first
+node, it shows:
 
 .. code-block:: none
 
-    [root@pcmk-2 ~]# cat /proc/drbd
-    version: 8.4.11-1 (api:1/proto:86-101)
-    GIT-hash: 66145a308421e9c124ec391a7848ac20203bb03c build by mockbuild@, 2018-04-26 12:10:42
+    [root@pcmk-1 ~]# drbdadm status
+    wwwdata role:Secondary
+      disk:Inconsistent
+      pcmk-2 role:Secondary
+        peer-disk:Inconsistent
 
-     1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r-----
-        ns:0 nr:0 dw:0 dr:0 al:8 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:524236
-
-You can see the state has changed to **Connected**, meaning the two DRBD nodes
-are communicating properly, and both nodes are in **Secondary** role
-with **Inconsistent** data.
+You can see that **pcmk-2 connection:Connecting** longer appears in the
+output, meaning the two DRBD nodes are communicating properly, and both
+nodes are in **Secondary** role with **Inconsistent** data.
 
 To make the data consistent, we need to tell DRBD which node should be
 considered to have the correct data. In this case, since we are creating
@@ -258,34 +235,39 @@ and run this command on it:
     If you are using a different version of DRBD, the required syntax may be different.
     See the documentation for your version for how to perform these commands.
 
-If we check the status immediately, we'll see something like this:
+If we check the status of both nodes immediately, we'll see something like this:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# cat /proc/drbd
-    version: 8.4.11-1 (api:1/proto:86-101)
-    GIT-hash: 66145a308421e9c124ec391a7848ac20203bb03c build by mockbuild@, 2018-04-26 12:10:42
+    [root@pcmk-1 ~]# drbdadm status
+    wwwdata role:Primary
+      disk:UpToDate
+      pcmk-1 role:Secondary
+        peer-disk:UpToDate
+    [root@pcmk-2 ~]# drbdadm status
+    wwwdata role:Secondary
+      disk:UpToDate
+      pcmk-1 role:Primary
+        peer-disk:Inconsistent
 
-     1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/Inconsistent C r-----
-        ns:43184 nr:0 dw:0 dr:45312 al:8 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:481052
-        [>...................] sync'ed:  8.6% (481052/524236)K
-        finish: 0:01:51 speed: 4,316 (4,316) K/sec
-
-We can see that this node has the **Primary** role, the partner node has
-the **Secondary** role, this node's data is now considered **UpToDate**,
-the partner node's data is still **Inconsistent**, and a progress bar
-shows how far along the partner node is in synchronizing the data.
+We can see that the first node has the **Primary** role, its partner node has
+the **Secondary** role, the first node's data is now considered **UpToDate**,
+the partner node's data is still **Inconsistent**.
 
 After a while, the sync should finish, and you'll see something like:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# cat /proc/drbd
-    version: 8.4.11-1 (api:1/proto:86-101)
-    GIT-hash: 66145a308421e9c124ec391a7848ac20203bb03c build by mockbuild@, 2018-04-26 12:10:42
-
-     1: cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate C r-----
-        ns:524236 nr:0 dw:0 dr:526364 al:8 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:f oos:0
+    [root@pcmk-1 ~]# drbdadm status
+    wwwdata role:Primary
+      disk:UpToDate
+      pcmk-1 role:Secondary
+        peer-disk:UpToDate
+    [root@pcmk-2 ~]# drbdadm status
+    wwwdata role:Secondary
+      disk:UpToDate
+      pcmk-1 role:Primary
+        peer-disk:UpToDate
 
 Both sets of data are now **UpToDate**, and we can proceed to creating
 and populating a filesystem for our WebSite resource's documents.
@@ -301,13 +283,15 @@ create a filesystem on the DRBD device:
     [root@pcmk-1 ~]# mkfs.xfs /dev/drbd1
     meta-data=/dev/drbd1             isize=512    agcount=4, agsize=32765 blks
              =                       sectsz=512   attr=2, projid32bit=1
-             =                       crc=1        finobt=0, sparse=0
+             =                       crc=1        finobt=1, sparse=1, rmapbt=0
+             =                       reflink=1
     data     =                       bsize=4096   blocks=131059, imaxpct=25
              =                       sunit=0      swidth=0 blks
-    naming   =version 2              bsize=4096   ascii-ci=0 ftype=1
-    log      =internal log           bsize=4096   blocks=855, version=2
+    naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+    log      =internal log           bsize=4096   blocks=1368, version=2
              =                       sectsz=512   sunit=0 blks, lazy-count=1
     realtime =none                   extsz=4096   blocks=0, rtextents=0
+    Discarding blocks...Done.
 
 .. NOTE::
 
@@ -352,36 +336,23 @@ resource to allow the resource to run on both nodes at the same time.
 
     [root@pcmk-1 ~]# pcs -f drbd_cfg resource create WebData ocf:linbit:drbd \
              drbd_resource=wwwdata op monitor interval=60s
-    [root@pcmk-1 ~]# pcs -f drbd_cfg resource master WebDataClone WebData \
-             master-max=1 master-node-max=1 clone-max=2 clone-node-max=1 \
-             notify=true
-    [root@pcmk-1 ~]# pcs -f drbd_cfg resource show
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
-     Master/Slave Set: WebDataClone [WebData]
-         Stopped: [ pcmk-1 pcmk-2 ]
-
-.. NOTE::
-
-    In Fedora 29 and CentOS 8.0, 'master' resources have been renamed to
-    'promotable clone' resources and the `pcs` command has been changed
-    accordingly:
-
-    .. code-block:: none
-
-        [root@pcmk-1 ~]# pcs -f drbd_cfg resource promotable WebData \
-                 promoted-max=1 promoted-node-max=1 clone-max=2 clone-node-max=1 \
-                 notify=true
-
-    The new command does not allow to set a custom name for the resulting
-    promotable resource. ``pcs`` automatically creates a name for the resource in
-    the form of **<RESOURCE_NAME>-clone**, that is **WebData-clone** in this case.
-
-    To avoid confusion whether the ``pcs resource show`` command displays resources'
-    status or configuration, the command has been deprecated in Fedora 29 and
-    CentOS 8.0. Two new commands have been introduced for displaying resources'
-    status and configuration: ``pcs resource status`` and ``pcs resource config``,
-    respectively.
+    [root@pcmk-1 ~]# pcs -f drbd_cfg resource promotable WebData \
+         promoted-max=1 promoted-node-max=1 clone-max=2 clone-node-max=1 \
+         notify=true
+    [root@pcmk-1 ~]# pcs resource status
+     * ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+     * WebSite	(ocf::heartbeat:apache):		Started pcmk-1
+    [root@pcmk-1 ~]# pcs resource config
+     Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
+      Attributes: cidr_netmask=24 ip=192.168.122.120
+      Operations: monitor interval=30s (ClusterIP-monitor-interval-30s)
+                  start interval=0s timeout=20s (ClusterIP-start-interval-0s)
+                  stop interval=0s timeout=20s (ClusterIP-stop-interval-0s)
+     Resource: WebSite (class=ocf provider=heartbeat type=apache)
+      Attributes: configfile=/etc/httpd/conf/httpd.conf statusurl=http://localhost/server-status
+      Operations: monitor interval=1min (WebSite-monitor-interval-1min)
+                  start interval=0s timeout=40s (WebSite-start-interval-0s)
+                  stop interval=0s timeout=60s (WebSite-stop-interval-0s)
 
 After you are satisfied with all the changes, you can commit
 them all at once by pushing the drbd_cfg file into the live CIB.
@@ -397,30 +368,30 @@ Let's see what the cluster did with the new configuration:
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 17:58:07 2018
-    Last change: Mon Sep 10 17:57:53 2018 by root via cibadmin on pcmk-1
-
-    2 nodes configured
-    4 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-1 ]
-         Slaves: [ pcmk-2 ]
-
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Feb  3 09:04:23 2021
+      * Last change:  Wed Feb  3 09:04:18 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 4 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-1 ]
+        * Slaves: [ pcmk-2 ]
+    
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
 
-We can see that **WebDataClone** (our DRBD device) is running as master (DRBD's
+We can see that **WebData-clone** (our DRBD device) is running as master (DRBD's
 primary role) on **pcmk-1** and slave (DRBD's secondary role) on **pcmk-2**.
 
 .. IMPORTANT::
@@ -461,10 +432,10 @@ new configuration to the cluster as the final step.
         device="/dev/drbd1" directory="/var/www/html" fstype="xfs"
     Assumed agent name 'ocf:heartbeat:Filesystem' (deduced from 'Filesystem')
     [root@pcmk-1 ~]# pcs -f fs_cfg constraint colocation add \
-        WebFS with WebDataClone INFINITY with-rsc-role=Master
+        WebFS with WebData-clone INFINITY with-rsc-role=Master
     [root@pcmk-1 ~]# pcs -f fs_cfg constraint order \
-        promote WebDataClone then start WebFS
-    Adding WebDataClone WebFS (kind: Mandatory) (Options: first-action=promote then-action=start)
+        promote WebData-clone then start WebFS
+    Adding WebData-clone WebFS (kind: Mandatory) (Options: first-action=promote then-action=start)
 
 We also need to tell the cluster that Apache needs to run on the same
 machine as the filesystem and that it must be active before Apache can
@@ -483,23 +454,43 @@ Review the updated configuration.
     [root@pcmk-1 ~]# pcs -f fs_cfg constraint
     Location Constraints:
       Resource: WebSite
-        Enabled on: pcmk-1 (score:50)
+        Enabled on:
+          Node: pcmk-1 (score:50)
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
-      promote WebDataClone then start WebFS (kind:Mandatory)
-      start WebFS then start WebSite (kind:Mandatory)
+      promote WebData-clone then start WebFS (kind:Mandatory)
     Colocation Constraints:
       WebSite with ClusterIP (score:INFINITY)
-      WebFS with WebDataClone (score:INFINITY) (with-rsc-role:Master)
-      WebSite with WebFS (score:INFINITY)
+      WebFS with WebData-clone (score:INFINITY) (with-rsc-role:Master)
     Ticket Constraints:
-    [root@pcmk-1 ~]# pcs -f fs_cfg resource show
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-1 ]
-         Slaves: [ pcmk-2 ]
-     WebFS	(ocf::heartbeat:Filesystem):	Stopped
+    [root@pcmk-1 ~]# pcs resource status
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-1 ]
+        * Slaves: [ pcmk-2 ]
+    [root@pcmk-1 ~]# pcs resource config
+     Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
+      Attributes: cidr_netmask=24 ip=192.168.122.120
+      Operations: monitor interval=30s (ClusterIP-monitor-interval-30s)
+                  start interval=0s timeout=20s (ClusterIP-start-interval-0s)
+                  stop interval=0s timeout=20s (ClusterIP-stop-interval-0s)
+     Resource: WebSite (class=ocf provider=heartbeat type=apache)
+      Attributes: configfile=/etc/httpd/conf/httpd.conf statusurl=http://localhost/server-status
+      Operations: monitor interval=1min (WebSite-monitor-interval-1min)
+                  start interval=0s timeout=40s (WebSite-start-interval-0s)
+                  stop interval=0s timeout=60s (WebSite-stop-interval-0s)
+     Clone: WebData-clone
+      Meta Attrs: clone-max=2 clone-node-max=1 notify=true promotable=true promoted-max=1 promoted-node-max=1
+      Resource: WebData (class=ocf provider=linbit type=drbd)
+       Attributes: drbd_resource=wwwdata
+       Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)
+                   monitor interval=60s (WebData-monitor-interval-60s)
+                   notify interval=0s timeout=90 (WebData-notify-interval-0s)
+                   promote interval=0s timeout=90 (WebData-promote-interval-0s)
+                   reload interval=0s timeout=30 (WebData-reload-interval-0s)
+                   start interval=0s timeout=240 (WebData-start-interval-0s)
+                   stop interval=0s timeout=100 (WebData-stop-interval-0s)
 
 After reviewing the new configuration, upload it and watch the
 cluster put it into effect.
@@ -510,25 +501,25 @@ cluster put it into effect.
     CIB updated
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 18:02:24 2018
-    Last change: Mon Sep 10 18:02:14 2018 by root via cibadmin on pcmk-1
-
-    2 nodes configured
-    5 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-1 ]
-         Slaves: [ pcmk-2 ]
-     WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
-
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Feb  3 09:17:24 2021
+      * Last change:  Wed Feb  3 09:17:19 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 5 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-1 ]
+        * Slaves: [ pcmk-2 ]
+      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-1
+    
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
@@ -553,29 +544,29 @@ it can no longer host resources, and eventually all the resources will move.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs cluster standby pcmk-1
+    [root@pcmk-1 ~]# pcs node standby pcmk-1
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 18:04:22 2018
-    Last change: Mon Sep 10 18:03:43 2018 by root via cibadmin on pcmk-1
-
-    2 nodes configured
-    5 resources configured
-
-    Node pcmk-1: standby
-    Online: [ pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-2
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-2 ]
-         Stopped: [ pcmk-1 ]
-     WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2
-
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Feb  3 09:18:45 2021
+      * Last change:  Wed Feb  3 09:18:35 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 5 resource instances configured
+    
+    Node List:
+      * Node pcmk-1: standby
+      * Online: [ pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-2
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-2 ]
+        * Stopped: [ pcmk-1 ]
+      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-2
+    
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
@@ -587,28 +578,28 @@ full cluster member again.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs cluster unstandby pcmk-1
+    [root@pcmk-1 ~]# pcs node unstandby pcmk-1
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 18:05:22 2018
-    Last change: Mon Sep 10 18:05:21 2018 by root via cibadmin on pcmk-1
-
-    2 nodes configured
-    5 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-2
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-2 ]
-         Slaves: [ pcmk-1 ]
-     WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2
-
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Feb  3 09:19:47 2021
+      * Last change:  Wed Feb  3 09:19:29 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 5 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-1 ]
+        * Slaves: [ pcmk-2 ]
+      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-1
+    
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
@@ -616,11 +607,6 @@ full cluster member again.
 
 Notice that **pcmk-1** is back to the **Online** state, and that the cluster resources
 stay where they are due to our resource stickiness settings configured earlier.
-
-.. NOTE::
-
-    Since Fedora 29 and CentOS 8.0, the commands for controlling standby mode are
-    ``pcs node standby`` and ``pcs node unstandby``.
 
 .. [#] See http://www.drbd.org for details.
 
