@@ -241,7 +241,6 @@ main(int argc, char **argv)
     gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        CMD_ERR("%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
@@ -372,8 +371,13 @@ done:
     }
 
     g_strfreev(processed_args);
-    g_clear_error(&error);
     pcmk__free_arg_context(context);
     pe_free_working_set(data_set);
+
+    if (error != NULL) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        g_clear_error(&error);
+    }
+
     crm_exit(exit_code);
 }

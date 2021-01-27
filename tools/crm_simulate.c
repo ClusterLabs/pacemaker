@@ -911,7 +911,6 @@ main(int argc, char **argv)
     options.xml_file = strdup("-");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         goto done;
     }
 
@@ -1100,7 +1099,7 @@ main(int argc, char **argv)
 
   done:
     if (error != NULL) {
-        fprintf(stderr, "%s\n", error->message);
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         g_clear_error(&error);
     }
 

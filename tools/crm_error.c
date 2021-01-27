@@ -68,6 +68,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
+    crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
     int lpc;
     const char *name = NULL;
@@ -81,10 +82,8 @@ main(int argc, char **argv)
     GOptionContext *context = build_arg_context(args, &output_group);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        return CRM_EX_USAGE;
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
     pcmk__cli_init_logging("crm_error", args->verbosity);
@@ -130,9 +129,8 @@ main(int argc, char **argv)
             char *help = g_option_context_get_help(context, TRUE, NULL);
             fprintf(stderr, "%s", help);
             g_free(help);
-            g_strfreev(processed_args);
-            pcmk__free_arg_context(context);
-            return CRM_EX_USAGE;
+            exit_code = CRM_EX_USAGE;
+            goto done;
         }
 
         /* Skip #1 because that's the program name. */
@@ -147,7 +145,14 @@ main(int argc, char **argv)
         }
     }
 
+ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
-    return CRM_EX_OK;
+
+    if (error != NULL) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        g_clear_error(&error);
+    }
+
+    return exit_code;
 }

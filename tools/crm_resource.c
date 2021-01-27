@@ -1534,9 +1534,9 @@ main(int argc, char **argv)
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Error creating output format %s: %s\n",
-                args->output_ty, pcmk_rc_str(rc));
         exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -2052,7 +2052,7 @@ main(int argc, char **argv)
      */
 
 done:
-    if (rc != pcmk_rc_ok) {
+    if (rc != pcmk_rc_ok || exit_code != CRM_EX_OK) {
         if (rc == pcmk_rc_no_quorum) {
             g_prefix_error(&error, "To ignore quorum, use the force option.\n");
         }

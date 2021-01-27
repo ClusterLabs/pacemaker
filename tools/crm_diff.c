@@ -311,7 +311,6 @@ main(int argc, char **argv)
     GOptionContext *context = build_arg_context(args);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
@@ -385,11 +384,16 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    g_clear_error(&error);
     pcmk__free_arg_context(context);
     free(options.xml_file_1);
     free(options.xml_file_2);
     free_xml(object_1);
     free_xml(object_2);
+
+    if (error != NULL) {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        g_clear_error(&error);
+    }
+
     return exit_code;
 }

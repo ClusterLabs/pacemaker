@@ -198,7 +198,6 @@ main(int argc, char **argv)
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
@@ -207,9 +206,9 @@ main(int argc, char **argv)
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Error creating output format %s: %s\n",
-                args->output_ty, pcmk_rc_str(rc));
         exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -281,8 +280,18 @@ main(int argc, char **argv)
 done:
 
     g_strfreev(processed_args);
-    g_clear_error(&error);
     pcmk__free_arg_context(context);
+
+    if (error != NULL) {
+        if (out != NULL) {
+            out->err(out, "%s: %s", g_get_prgname(), error->message);
+        } else {
+            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+        }
+
+        g_clear_error(&error);
+    }
+
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
