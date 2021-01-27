@@ -1648,13 +1648,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (optind > argc) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Invalid option(s) supplied, use --help for valid usage");
-        exit_code = CRM_EX_USAGE;
-        goto done;
-    }
-
     if (options.cmdline_config) {
         /* A resource configuration was given on the command line. Sanity-check
          * the values and set error if they don't make sense.

@@ -324,15 +324,6 @@ main(int argc, char **argv)
         pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
-    if (optind > argc) {
-        char *help = g_option_context_get_help(context, TRUE, NULL);
-
-        fprintf(stderr, "%s", help);
-        g_free(help);
-        exit_code = CRM_EX_USAGE;
-        goto done;
-    }
-
     if (options.apply && options.no_version) {
         fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
     } else if (options.as_cib && options.no_version) {

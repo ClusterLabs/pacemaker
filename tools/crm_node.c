@@ -551,7 +551,7 @@ main(int argc, char **argv)
         pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
-    if (optind > argc || options.command == 0) {
+    if (options.command == 0) {
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
         fprintf(stderr, "%s", help);

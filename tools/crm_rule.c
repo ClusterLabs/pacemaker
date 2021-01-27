@@ -254,15 +254,6 @@ main(int argc, char **argv)
         pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
-    if (optind > argc) {
-        char *help = g_option_context_get_help(context, TRUE, NULL);
-
-        CMD_ERR("%s", help);
-        g_free(help);
-        exit_code = CRM_EX_USAGE;
-        goto done;
-    }
-
     /* Check command line arguments before opening a connection to
      * the CIB manager or doing anything else important.
      */

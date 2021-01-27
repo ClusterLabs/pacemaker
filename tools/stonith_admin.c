@@ -470,7 +470,7 @@ main(int argc, char **argv)
         target = options.unregister_level;
     }
 
-    if (optind > argc || action == 0) {
+    if (action == 0) {
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
         out->err(out, "%s", help);

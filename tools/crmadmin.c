@@ -230,10 +230,6 @@ main(int argc, char **argv)
         ++argerr;
     }
 
-    if (optind > argc) {
-        ++argerr;
-    }
-
     if (command == cmd_none) {
         out->err(out, "error: Must specify a command option");
         ++argerr;

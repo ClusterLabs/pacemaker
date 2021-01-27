@@ -924,13 +924,6 @@ main(int argc, char **argv)
         pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
-    if (optind > argc) {
-        gchar *help = g_option_context_get_help(context, TRUE, NULL);
-        fprintf(stderr, "%s", help);
-        g_free(help);
-        goto done;
-    }
-
     if (args->verbosity > 0) {
         /* Redirect stderr to stdout so we can grep the output */
         close(STDERR_FILENO);
