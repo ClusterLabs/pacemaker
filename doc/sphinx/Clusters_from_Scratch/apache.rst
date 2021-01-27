@@ -102,7 +102,7 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs resource op defaults timeout=240s
+    [root@pcmk-1 ~]# pcs resource op defaults update timeout=240s
     Warning: Defaults do not apply to resources which override them with their own defined values
     [root@pcmk-1 ~]# pcs resource op defaults
     timeout: 240s
@@ -120,20 +120,20 @@ After a short delay, we should see the cluster start Apache.
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 17:06:22 2018
-    Last change: Mon Sep 10 17:05:41 2018 by root via cibadmin on pcmk-1
-
-    2 nodes configured
-    2 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:38:22 2021
+      * Last change:  Tue Jan 26 19:38:19 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -199,20 +199,21 @@ active anywhere, WebSite will not be permitted to run.
     Ticket Constraints:
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 17:08:54 2018
-    Last change: Mon Sep 10 17:08:27 2018 by root via cibadmin on pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:45:11 2021
+      * Last change:  Tue Jan 26 19:44:30 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
 
-    2 nodes configured
-    2 resources configured
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-2
 
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
@@ -292,20 +293,20 @@ how strongly we'd like the resource to run at this location.
     Ticket Constraints:
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 17:21:41 2018
-    Last change: Mon Sep 10 17:21:14 2018 by root via cibadmin on pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:46:52 2021
+      * Last change:  Tue Jan 26 19:46:40 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
 
-    2 nodes configured
-    2 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-2
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
@@ -370,20 +371,20 @@ expire automatically -- but we don't do that in this example.
     Ticket Constraints:
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 17:28:55 2018
-    Last change: Mon Sep 10 17:28:27 2018 by root via crm_resource on pcmk-1
-
-    2 nodes configured
-    2 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:49:27 2021
+      * Last change:  Tue Jan 26 19:49:10 2021 by root via crm_resource on pcmk-1
+      * 2 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -420,20 +421,20 @@ on pcmk-1.
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 17:31:47 2018
-    Last change: Mon Sep 10 17:31:04 2018 by root via crm_resource on pcmk-1
-
-    2 nodes configured
-    2 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:50:52 2021
+      * Last change:  Tue Jan 26 19:50:24 2021 by root via crm_resource on pcmk-1
+      * 2 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite		(ocf::heartbeat:apache):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
