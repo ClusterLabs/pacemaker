@@ -258,7 +258,7 @@ main(int argc, char **argv)
     bool try_attrd = true;
     int attrd_opts = pcmk__node_attr_none;
 
-    crm_log_cli_init("crm_attribute");
+    pcmk__cli_init_logging("crm_attribute", 0);
     pcmk__set_cli_options(NULL, "-n <attribute> <command> [options]",
                           long_options,
                           "query and update Pacemaker cluster options "

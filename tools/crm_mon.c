@@ -1391,7 +1391,7 @@ main(int argc, char **argv)
     pcmk__register_formats(output_group, formats);
 
     options.pid_file = strdup("/tmp/ClusterMon.pid");
-    crm_log_cli_init("crm_mon");
+    pcmk__cli_init_logging("crm_mon", 0);
 
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
     avoid_zombies();

@@ -103,7 +103,7 @@ main(int argc, char *argv[])
     struct sl_event *event = NULL;
     uint64_t event_id = 0;
 
-    crm_log_cli_init("notifyServicelogEvent");
+    pcmk__cli_init_logging("notifyServicelogEvent", 0);
     pcmk__set_cli_options(NULL, "<event_id>", long_options,
                           "handle events written to servicelog database");
 
