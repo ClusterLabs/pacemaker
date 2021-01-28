@@ -20,6 +20,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cib.h>
@@ -381,10 +382,6 @@ done:
     free_xml(object_1);
     free_xml(object_2);
 
-    if (error != NULL) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        g_clear_error(&error);
-    }
-
+    pcmk__output_and_clear_error(error, NULL);
     return exit_code;
 }

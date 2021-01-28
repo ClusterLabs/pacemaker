@@ -11,6 +11,7 @@
 
 #include <crm/cib.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/rules_internal.h>
@@ -365,10 +366,6 @@ done:
     pcmk__free_arg_context(context);
     pe_free_working_set(data_set);
 
-    if (error != NULL) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        g_clear_error(&error);
-    }
-
+    pcmk__output_and_clear_error(error, NULL);
     crm_exit(exit_code);
 }

@@ -797,6 +797,17 @@ void
 pcmk__html_add_header(const char *name, ...)
 G_GNUC_NULL_TERMINATED;
 
+/*!
+ * \internal
+ * \brief Handle end-of-program error reporting
+ *
+ * \param[in,out] error A GError object potentially containing some error.
+ *                      If NULL, do nothing.
+ * \param[in]     out   The output functions structure.  If NULL, any errors
+ *                      will simply be printed to stderr.
+ */
+void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
+
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \
         out->spacer(out);                       \

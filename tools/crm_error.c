@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/strings_internal.h>
 
 #include <crm/crm.h>
@@ -149,10 +150,6 @@ main(int argc, char **argv)
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    if (error != NULL) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        g_clear_error(&error);
-    }
-
+    pcmk__output_and_clear_error(error, NULL);
     return exit_code;
 }

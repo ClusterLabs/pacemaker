@@ -10,6 +10,7 @@
 #include <crm_resource.h>
 #include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/lists_internal.h>
 #include <pacemaker-internal.h>
 
@@ -189,15 +190,7 @@ static pcmk__supported_format_t formats[] = {
 static crm_exit_t
 bye(crm_exit_t ec)
 {
-    if (error != NULL) {
-        if (out != NULL) {
-            out->err(out, "%s: %s", g_get_prgname(), error->message);
-        } else {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        }
-
-        g_clear_error(&error);
-    }
+    pcmk__output_and_clear_error(error, out);
 
     if (out != NULL) {
         out->finish(out, ec, true, NULL);

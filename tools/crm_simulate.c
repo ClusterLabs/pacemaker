@@ -22,6 +22,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
@@ -1092,10 +1093,7 @@ main(int argc, char **argv)
     }
 
   done:
-    if (error != NULL) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        g_clear_error(&error);
-    }
+    pcmk__output_and_clear_error(error, NULL);
 
     /* There sure is a lot to free in options. */
     free(options.dot_file);

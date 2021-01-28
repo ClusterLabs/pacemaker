@@ -16,6 +16,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
@@ -592,10 +593,6 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    if (error != NULL) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        g_clear_error(&error);
-    }
-
+    pcmk__output_and_clear_error(error, NULL);
     return crm_exit(exit_code);
 }
