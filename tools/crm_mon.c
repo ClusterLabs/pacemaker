@@ -2056,7 +2056,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     gboolean cib_updated = FALSE;
     xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    print_dot(output_format);
+    out->progress(out, false);
 
     if (current_cib != NULL) {
         rc = xml_apply_patchset(current_cib, diff, TRUE);
@@ -2311,7 +2311,7 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
         /* disconnect cib as well and have everything reconnect */
         mon_cib_connection_destroy(NULL);
     } else {
-        print_dot(output_format);
+        out->progress(out, false);
         refresh_after_event(TRUE, FALSE);
     }
 }

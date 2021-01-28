@@ -20,18 +20,6 @@
                      "#", NULL }
 
 #if CURSES_ENABLED
-#  define print_dot(output_format) if (output_format == mon_output_console) { \
-	printw(".");				\
-	clrtoeol();				\
-	refresh();				\
-    } else {					\
-	fprintf(stdout, ".");			\
-    }
-#else
-#  define print_dot(output_format) fprintf(stdout, ".");
-#endif
-
-#if CURSES_ENABLED
 #  define print_as(output_format, fmt, args...) if (output_format == mon_output_console) { \
 	printw(fmt, ##args);				\
 	clrtoeol();					\

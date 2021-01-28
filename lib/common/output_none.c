@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -95,6 +95,16 @@ none_is_quiet(pcmk__output_t *out) {
     return out->quiet;
 }
 
+static void
+none_spacer(pcmk__output_t *out) {
+    /* This function intentionally left blank */
+}
+
+static void
+none_progress(pcmk__output_t *out, bool end) {
+    /* This function intentionally left blank */
+}
+
 pcmk__output_t *
 pcmk__mk_none_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -126,6 +136,8 @@ pcmk__mk_none_output(char **argv) {
     retval->end_list = none_end_list;
 
     retval->is_quiet = none_is_quiet;
+    retval->spacer = none_spacer;
+    retval->progress = none_progress;
 
     return retval;
 }

@@ -463,11 +463,23 @@ struct pcmk__output_s {
 
     /*!
      * \internal
-     * \brief Output a spacer.  Not all formatter will do this.
+     * \brief Output a spacer.  Not all formatters will do this.
      *
      * \param[in] out The output functions structure.
      */
     void (*spacer) (pcmk__output_t *out);
+
+    /*!
+     * \internal
+     * \brief Output a progress indicator.  This is likely only useful for
+     *        plain text, console based formatters.
+     *
+     * \param[in] out The output functions structure.
+     * \param[in] end If true, output a newline afterwards.  This should
+     *                only be used the last time this function is called.
+     *
+     */
+    void (*progress) (pcmk__output_t *out, bool end);
 };
 
 /*!

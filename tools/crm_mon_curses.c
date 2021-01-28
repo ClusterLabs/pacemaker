@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -252,6 +252,15 @@ curses_spacer(pcmk__output_t *out) {
     addch('\n');
 }
 
+static void
+curses_progress(pcmk__output_t *out, bool end) {
+    if (end) {
+        printw(".\n");
+    } else {
+        addch('.');
+    }
+}
+
 pcmk__output_t *
 crm_mon_mk_curses_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -284,6 +293,7 @@ crm_mon_mk_curses_output(char **argv) {
 
     retval->is_quiet = curses_is_quiet;
     retval->spacer = curses_spacer;
+    retval->progress = curses_progress;
 
     return retval;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -249,6 +249,17 @@ text_spacer(pcmk__output_t *out) {
     fprintf(out->dest, "\n");
 }
 
+static void
+text_progress(pcmk__output_t *out, bool end) {
+    if (out->dest == stdout) {
+        fprintf(out->dest, ".");
+
+        if (end) {
+            fprintf(out->dest, "\n");
+        }
+    }
+}
+
 pcmk__output_t *
 pcmk__mk_text_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -281,6 +292,7 @@ pcmk__mk_text_output(char **argv) {
 
     retval->is_quiet = text_is_quiet;
     retval->spacer = text_spacer;
+    retval->progress = text_progress;
 
     return retval;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -375,6 +375,11 @@ html_spacer(pcmk__output_t *out) {
     pcmk__output_create_xml_node(out, "br", NULL);
 }
 
+static void
+html_progress(pcmk__output_t *out, bool end) {
+    /* This function intentially left blank */
+}
+
 pcmk__output_t *
 pcmk__mk_html_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -407,6 +412,7 @@ pcmk__mk_html_output(char **argv) {
 
     retval->is_quiet = html_is_quiet;
     retval->spacer = html_spacer;
+    retval->progress = html_progress;
 
     return retval;
 }
