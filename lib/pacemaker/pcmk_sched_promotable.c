@@ -622,13 +622,8 @@ set_role_slave(pe_resource_t * rsc, gboolean current)
         GListPtr allocated = NULL;
 
         rsc->fns->location(rsc, &allocated, FALSE);
-
-        if (allocated) {
-            rsc->next_role = RSC_ROLE_SLAVE;
-
-        } else {
-            rsc->next_role = RSC_ROLE_STOPPED;
-        }
+        pe__set_next_role(rsc, (allocated? RSC_ROLE_SLAVE : RSC_ROLE_STOPPED),
+                          "unpromoted instance");
         g_list_free(allocated);
     }
 
@@ -645,7 +640,7 @@ set_role_master(pe_resource_t * rsc)
     GListPtr gIter = rsc->children;
 
     if (rsc->next_role == RSC_ROLE_UNKNOWN) {
-        rsc->next_role = RSC_ROLE_MASTER;
+        pe__set_next_role(rsc, RSC_ROLE_MASTER, "promoted instance");
     }
 
     for (; gIter != NULL; gIter = gIter->next) {

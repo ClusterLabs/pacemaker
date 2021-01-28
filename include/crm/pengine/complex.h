@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,6 +34,9 @@ void pe_get_versioned_attributes(xmlNode *meta_hash, pe_resource_t *rsc,
 
 gboolean is_parent(pe_resource_t *child, pe_resource_t *rsc);
 pe_resource_t *uber_parent(pe_resource_t *rsc);
+
+void pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role,
+                       const char *why);
 
 #ifdef __cplusplus
 }

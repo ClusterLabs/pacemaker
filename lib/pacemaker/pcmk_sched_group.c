@@ -68,7 +68,8 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
     }
 
-    rsc->next_role = group_data->first_child->next_role;
+    pe__set_next_role(rsc, group_data->first_child->next_role,
+                      "first group member");
     pe__clear_resource_flags(rsc, pe_rsc_allocating|pe_rsc_provisional);
 
     if (group_data->colocated) {

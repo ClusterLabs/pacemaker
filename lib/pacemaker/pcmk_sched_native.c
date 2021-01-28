@@ -581,7 +581,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
               && data_set->no_quorum_policy == no_quorum_freeze) {
         crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                    rsc->id, role2text(rsc->role), role2text(rsc->next_role));
-        rsc->next_role = rsc->role;
+        pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
     pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
@@ -594,7 +594,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         const char *reason = NULL;
         pe_node_t *assign_to = NULL;
 
-        rsc->next_role = rsc->role;
+        pe__set_next_role(rsc, rsc->role, "unmanaged");
         assign_to = pe__current_node(rsc);
         if (assign_to == NULL) {
             reason = "inactive";
@@ -1226,7 +1226,9 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
     chosen = rsc->allocated_to;
     next_role = rsc->next_role;
     if (next_role == RSC_ROLE_UNKNOWN) {
-        rsc->next_role = (chosen == NULL)? RSC_ROLE_STOPPED : RSC_ROLE_STARTED;
+        pe__set_next_role(rsc,
+                          (chosen == NULL)? RSC_ROLE_STOPPED : RSC_ROLE_STARTED,
+                          "allocation");
     }
     pe_rsc_trace(rsc, "Creating all actions for %s transition from %s to %s (%s) on %s",
                  rsc->id, role2text(rsc->role), role2text(rsc->next_role),

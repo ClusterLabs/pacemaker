@@ -1,0 +1,402 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="98" operation="stop" operation_key="compute-0_stop_0" on_node="controller-0" on_node_uuid="1">
+        <primitive id="compute-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  server="172.17.1.105"/>
+        <downed>
+          <node id="compute-0"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="305" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:0_stop_0" on_node="compute-0" on_node_uuid="compute-0" router_node="controller-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="304" operation="monitor" operation_key="stonith-fence_compute-fence-nova_monitor_60000" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="303" operation="start" operation_key="stonith-fence_compute-fence-nova_start_0" on_node="database-0" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="303" operation="start" operation_key="stonith-fence_compute-fence-nova_start_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <crm_event id="73" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <crm_event id="53" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="messaging-0" on_node_uuid="7">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="messaging-0" CRM_meta_on_node_uuid="7" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <crm_event id="48" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="messaging-1" on_node_uuid="8">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="messaging-1" CRM_meta_on_node_uuid="8" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <crm_event id="42" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <crm_event id="34" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <crm_event id="24" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="controller-0" on_node_uuid="1">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <crm_event id="13" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="database-2" on_node_uuid="6">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="database-2" CRM_meta_on_node_uuid="6" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <crm_event id="9" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="database-1" on_node_uuid="5">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="database-1" CRM_meta_on_node_uuid="5" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <crm_event id="4" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="305" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:0_stop_0" on_node="compute-0" on_node_uuid="compute-0" router_node="controller-0">
+        <primitive id="compute-unfence-trigger" long-id="compute-unfence-trigger:0" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="23" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_on_node="compute-0" CRM_meta_on_node_uuid="compute-0" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="310" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13" priority="1000000">
+    <action_set>
+      <pseudo_event id="311" operation="stopped" operation_key="compute-unfence-trigger-clone_stopped_0">
+        <attributes CRM_meta_clone_max="23" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="305" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:0_stop_0" on_node="compute-0" on_node_uuid="compute-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="310" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="310" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0">
+        <attributes CRM_meta_clone_max="23" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="314" operation="monitor" operation_key="nova-evacuate_monitor_10000" on_node="database-1" on_node_uuid="5">
+        <primitive id="nova-evacuate" class="ocf" provider="openstack" type="NovaEvacuate"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="database-1" CRM_meta_on_node_uuid="5" CRM_meta_timeout="600000" auth_url="https://overcloud.redhat.local:13000"  no_shared_storage="true" password="****" project_domain="Default" region_name="regionOne" tenant_name="admin" user_domain="Default" username="admin"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="313" operation="start" operation_key="nova-evacuate_start_0" on_node="database-1" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="313" operation="start" operation_key="nova-evacuate_start_0" on_node="database-1" on_node_uuid="5">
+        <primitive id="nova-evacuate" class="ocf" provider="openstack" type="NovaEvacuate"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="database-1" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" auth_url="https://overcloud.redhat.local:13000"  no_shared_storage="true" password="****" project_domain="Default" region_name="regionOne" tenant_name="admin" user_domain="Default" username="admin"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="312" operation="stop" operation_key="nova-evacuate_stop_0" on_node="database-0" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="312" operation="stop" operation_key="nova-evacuate_stop_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="nova-evacuate" class="ocf" provider="openstack" type="NovaEvacuate"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="20000" auth_url="https://overcloud.redhat.local:13000"  no_shared_storage="true" password="****" project_domain="Default" region_name="regionOne" tenant_name="admin" user_domain="Default" username="admin"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="317" operation="monitor" operation_key="stonith-fence_ipmilan-52540033df9c_monitor_60000" on_node="database-2" on_node_uuid="6">
+        <primitive id="stonith-fence_ipmilan-52540033df9c" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="database-2" CRM_meta_on_node_uuid="6" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="316" operation="start" operation_key="stonith-fence_ipmilan-52540033df9c_start_0" on_node="database-2" on_node_uuid="6"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="316" operation="start" operation_key="stonith-fence_ipmilan-52540033df9c_start_0" on_node="database-2" on_node_uuid="6">
+        <primitive id="stonith-fence_ipmilan-52540033df9c" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-2" CRM_meta_on_node_uuid="6" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="315" operation="stop" operation_key="stonith-fence_ipmilan-52540033df9c_stop_0" on_node="database-1" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="315" operation="stop" operation_key="stonith-fence_ipmilan-52540033df9c_stop_0" on_node="database-1" on_node_uuid="5">
+        <primitive id="stonith-fence_ipmilan-52540033df9c" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-1" CRM_meta_on_node_uuid="5" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="320" operation="monitor" operation_key="stonith-fence_ipmilan-5254001f5f3c_monitor_60000" on_node="messaging-0" on_node_uuid="7">
+        <primitive id="stonith-fence_ipmilan-5254001f5f3c" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="messaging-0" CRM_meta_on_node_uuid="7" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6240" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="319" operation="start" operation_key="stonith-fence_ipmilan-5254001f5f3c_start_0" on_node="messaging-0" on_node_uuid="7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="319" operation="start" operation_key="stonith-fence_ipmilan-5254001f5f3c_start_0" on_node="messaging-0" on_node_uuid="7">
+        <primitive id="stonith-fence_ipmilan-5254001f5f3c" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-0" CRM_meta_on_node_uuid="7" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6240" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="318" operation="stop" operation_key="stonith-fence_ipmilan-5254001f5f3c_stop_0" on_node="database-2" on_node_uuid="6"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="318" operation="stop" operation_key="stonith-fence_ipmilan-5254001f5f3c_stop_0" on_node="database-2" on_node_uuid="6">
+        <primitive id="stonith-fence_ipmilan-5254001f5f3c" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-2" CRM_meta_on_node_uuid="6" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6240" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="323" operation="monitor" operation_key="stonith-fence_ipmilan-5254003f88b4_monitor_60000" on_node="messaging-1" on_node_uuid="8">
+        <primitive id="stonith-fence_ipmilan-5254003f88b4" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="messaging-1" CRM_meta_on_node_uuid="8" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6237" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="322" operation="start" operation_key="stonith-fence_ipmilan-5254003f88b4_start_0" on_node="messaging-1" on_node_uuid="8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="322" operation="start" operation_key="stonith-fence_ipmilan-5254003f88b4_start_0" on_node="messaging-1" on_node_uuid="8">
+        <primitive id="stonith-fence_ipmilan-5254003f88b4" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-1" CRM_meta_on_node_uuid="8" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6237" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="321" operation="stop" operation_key="stonith-fence_ipmilan-5254003f88b4_stop_0" on_node="messaging-0" on_node_uuid="7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="321" operation="stop" operation_key="stonith-fence_ipmilan-5254003f88b4_stop_0" on_node="messaging-0" on_node_uuid="7">
+        <primitive id="stonith-fence_ipmilan-5254003f88b4" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-0" CRM_meta_on_node_uuid="7" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6237" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="326" operation="monitor" operation_key="stonith-fence_ipmilan-5254007b7920_monitor_60000" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-5254007b7920" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="325" operation="start" operation_key="stonith-fence_ipmilan-5254007b7920_start_0" on_node="messaging-2" on_node_uuid="9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="325" operation="start" operation_key="stonith-fence_ipmilan-5254007b7920_start_0" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-5254007b7920" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="324" operation="stop" operation_key="stonith-fence_ipmilan-5254007b7920_stop_0" on_node="messaging-1" on_node_uuid="8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="324" operation="stop" operation_key="stonith-fence_ipmilan-5254007b7920_stop_0" on_node="messaging-1" on_node_uuid="8">
+        <primitive id="stonith-fence_ipmilan-5254007b7920" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-1" CRM_meta_on_node_uuid="8" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="335" operation="monitor" operation_key="stonith-fence_ipmilan-525400ffc780_monitor_60000" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-525400ffc780" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6241" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="334" operation="start" operation_key="stonith-fence_ipmilan-525400ffc780_start_0" on_node="database-0" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="334" operation="start" operation_key="stonith-fence_ipmilan-525400ffc780_start_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-525400ffc780" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6241" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="333" operation="stop" operation_key="stonith-fence_ipmilan-525400ffc780_stop_0" on_node="messaging-2" on_node_uuid="9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="333" operation="stop" operation_key="stonith-fence_ipmilan-525400ffc780_stop_0" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-525400ffc780" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6241" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="338" operation="monitor" operation_key="stonith-fence_ipmilan-5254009cb549_monitor_60000" on_node="database-1" on_node_uuid="5">
+        <primitive id="stonith-fence_ipmilan-5254009cb549" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="database-1" CRM_meta_on_node_uuid="5" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6233" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="337" operation="start" operation_key="stonith-fence_ipmilan-5254009cb549_start_0" on_node="database-1" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="337" operation="start" operation_key="stonith-fence_ipmilan-5254009cb549_start_0" on_node="database-1" on_node_uuid="5">
+        <primitive id="stonith-fence_ipmilan-5254009cb549" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-1" CRM_meta_on_node_uuid="5" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6233" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="336" operation="stop" operation_key="stonith-fence_ipmilan-5254009cb549_stop_0" on_node="database-0" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="336" operation="stop" operation_key="stonith-fence_ipmilan-5254009cb549_stop_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-5254009cb549" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.15" ipport="6233" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

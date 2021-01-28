@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -60,8 +60,8 @@ static void add_node_attrs(xmlNode *attrs, pe_node_t *node, bool overwrite,
 static void determine_online_status(xmlNode *node_state, pe_node_t *this_node,
                                     pe_working_set_t *data_set);
 
-static void unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_state,
-                                 pe_working_set_t *data_set);
+static void unpack_node_lrm(pe_node_t *node, xmlNode *xml,
+                            pe_working_set_t *data_set);
 
 
 // Bitmask for warnings we only want to print once
@@ -979,9 +979,6 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     if (pe__shutdown_requested(this_node)) {
         crm_info("Node %s is shutting down", this_node->details->uname);
         this_node->details->shutdown = TRUE;
-        if (rsc) {
-            rsc->next_role = RSC_ROLE_STOPPED;
-        }
     }
  
     if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
@@ -1013,97 +1010,229 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     }
 }
 
-static bool
-unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set) 
+/*!
+ * \internal
+ * \brief Unpack a cluster node's transient attributes
+ *
+ * \param[in] state     CIB node state XML
+ * \param[in] node      Cluster node whose attributes are being unpacked
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_transient_attributes(xmlNode *state, pe_node_t *node,
+                            pe_working_set_t *data_set)
 {
-    bool changed = false;
-    xmlNode *lrm_rsc = NULL;
+    const char *discovery = NULL;
+    xmlNode *attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
 
-    for (xmlNode *state = pcmk__xe_first_child(status); state != NULL;
-         state = pcmk__xe_next(state)) {
+    add_node_attrs(attrs, node, TRUE, data_set);
 
-        const char *id = NULL;
-        const char *uname = NULL;
+    if (crm_is_true(pe_node_attribute_raw(node, "standby"))) {
+        crm_info("Node %s is in standby-mode", node->details->uname);
+        node->details->standby = TRUE;
+    }
+
+    if (crm_is_true(pe_node_attribute_raw(node, "maintenance"))) {
+        crm_info("Node %s is in maintenance-mode", node->details->uname);
+        node->details->maintenance = TRUE;
+    }
+
+    discovery = pe_node_attribute_raw(node, XML_NODE_ATTR_RSC_DISCOVERY);
+    if ((discovery != NULL) && !crm_is_true(discovery)) {
+        crm_warn("Ignoring %s attribute for node %s because disabling "
+                 "resource discovery is not allowed for cluster nodes",
+                 XML_NODE_ATTR_RSC_DISCOVERY, node->details->uname);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Unpack a node state entry (first pass)
+ *
+ * Unpack one node state entry from status. This unpacks information from the
+ * node_state element itself and node attributes inside it, but not the
+ * resource history inside it. Multiple passes through the status are needed to
+ * fully unpack everything.
+ *
+ * \param[in] state     CIB node state XML
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_node_state(xmlNode *state, pe_working_set_t *data_set)
+{
+    const char *id = NULL;
+    const char *uname = NULL;
+    pe_node_t *this_node = NULL;
+
+    id = crm_element_value(state, XML_ATTR_ID);
+    if (id == NULL) {
+        crm_warn("Ignoring malformed " XML_CIB_TAG_STATE " entry without "
+                 XML_ATTR_ID);
+        return;
+    }
+
+    uname = crm_element_value(state, XML_ATTR_UNAME);
+    if (uname == NULL) {
+        crm_warn("Ignoring malformed " XML_CIB_TAG_STATE " entry without "
+                 XML_ATTR_UNAME);
+        return;
+    }
+
+    this_node = pe_find_node_any(data_set->nodes, id, uname);
+    if (this_node == NULL) {
+        pcmk__config_warn("Ignoring recorded node state for '%s' because "
+                          "it is no longer in the configuration", uname);
+        return;
+    }
+
+    if (pe__is_guest_or_remote_node(this_node)) {
+        /* We can't determine the online status of Pacemaker Remote nodes until
+         * after all resource history has been unpacked. In this first pass, we
+         * do need to mark whether the node has been fenced, as this plays a
+         * role during unpacking cluster node resource state.
+         */
+        const char *is_fenced = crm_element_value(state, XML_NODE_IS_FENCED);
+
+        this_node->details->remote_was_fenced = crm_atoi(is_fenced, "0");
+        return;
+    }
+
+    unpack_transient_attributes(state, this_node, data_set);
+
+    /* Provisionally mark this cluster node as clean. We have at least seen it
+     * in the current cluster's lifetime.
+     */
+    this_node->details->unclean = FALSE;
+    this_node->details->unseen = FALSE;
+
+    crm_trace("Determining online status of cluster node %s (id %s)",
+              this_node->details->uname, id);
+    determine_online_status(state, this_node, data_set);
+
+    if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
+        && this_node->details->online
+        && (data_set->no_quorum_policy == no_quorum_suicide)) {
+        /* Everything else should flow from this automatically
+         * (at least until the scheduler becomes able to migrate off
+         * healthy resources)
+         */
+        pe_fence_node(data_set, this_node, "cluster does not have quorum",
+                      FALSE);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Unpack nodes' resource history as much as possible
+ *
+ * Unpack as many nodes' resource history as possible in one pass through the
+ * status. We need to process Pacemaker Remote nodes' connections/containers
+ * before unpacking their history; the connection/container history will be
+ * in another node's history, so it might take multiple passes to unpack
+ * everything.
+ *
+ * \param[in] status    CIB XML status section
+ * \param[in] fence     If true, treat any not-yet-unpacked nodes as unseen
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Standard Pacemaker return code (specifically pcmk_rc_ok if done,
+ *         or EAGAIN if more unpacking remains to be done)
+ */
+static int
+unpack_node_history(xmlNode *status, bool fence, pe_working_set_t *data_set)
+{
+    int rc = pcmk_rc_ok;
+
+    // Loop through all node_state entries in CIB status
+    for (xmlNode *state = first_named_child(status, XML_CIB_TAG_STATE);
+         state != NULL; state = crm_next_same_xml(state)) {
+
+        const char *id = ID(state);
+        const char *uname = crm_element_value(state, XML_ATTR_UNAME);
         pe_node_t *this_node = NULL;
-        bool process = FALSE;
 
-        if (!pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
+        if ((id == NULL) || (uname == NULL)) {
+            // Warning already logged in first pass through status section
+            crm_trace("Not unpacking resource history from malformed "
+                      XML_CIB_TAG_STATE " without id and/or uname");
             continue;
         }
 
-        id = crm_element_value(state, XML_ATTR_ID);
-        uname = crm_element_value(state, XML_ATTR_UNAME);
         this_node = pe_find_node_any(data_set->nodes, id, uname);
-
         if (this_node == NULL) {
-            crm_info("Node %s is unknown", id);
+            // Warning already logged in first pass through status section
+            crm_trace("Not unpacking resource history for node %s because "
+                      "no longer in configuration", id);
             continue;
+        }
 
-        } else if (this_node->details->unpacked) {
-            crm_trace("Node %s was already processed", id);
+        if (this_node->details->unpacked) {
+            crm_trace("Not unpacking resource history for node %s because "
+                      "already unpacked", id);
             continue;
+        }
 
-        } else if (!pe__is_guest_or_remote_node(this_node)
-                   && pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            // A redundant test, but preserves the order for regression tests
-            process = TRUE;
+        if (fence) {
+            // We're processing all remaining nodes
 
-        } else if (pe__is_guest_or_remote_node(this_node)) {
-            bool check = FALSE;
+        } else if (pe__is_guest_node(this_node)) {
+            /* We can unpack a guest node's history only after we've unpacked
+             * other resource history to the point that we know that the node's
+             * connection and containing resource are both up.
+             */
             pe_resource_t *rsc = this_node->details->remote_rsc;
 
-            if(fence) {
-                check = TRUE;
-
-            } else if(rsc == NULL) {
-                /* Not ready yet */
-
-            } else if (pe__is_guest_node(this_node)
-                       && rsc->role == RSC_ROLE_STARTED
-                       && rsc->container->role == RSC_ROLE_STARTED) {
-                /* Both the connection and its containing resource need to be
-                 * known to be up before we process resources running in it.
-                 */
-                check = TRUE;
-                crm_trace("Checking node %s/%s/%s status %d/%d/%d", id, rsc->id, rsc->container->id, fence, rsc->role, RSC_ROLE_STARTED);
-
-            } else if (!pe__is_guest_node(this_node)
-                       && ((rsc->role == RSC_ROLE_STARTED)
-                           || pcmk_is_set(data_set->flags, pe_flag_shutdown_lock))) {
-                check = TRUE;
-                crm_trace("Checking node %s/%s status %d/%d/%d", id, rsc->id, fence, rsc->role, RSC_ROLE_STARTED);
+            if ((rsc == NULL) || (rsc->role != RSC_ROLE_STARTED)
+                || (rsc->container->role != RSC_ROLE_STARTED)) {
+                crm_trace("Not unpacking resource history for guest node %s "
+                          "because container and connection are not known to "
+                          "be up", id);
+                continue;
             }
 
-            if (check) {
-                determine_remote_online_status(data_set, this_node);
-                unpack_handle_remote_attrs(this_node, state, data_set);
-                process = TRUE;
+        } else if (pe__is_remote_node(this_node)) {
+            /* We can unpack a remote node's history only after we've unpacked
+             * other resource history to the point that we know that the node's
+             * connection is up, with the exception of when shutdown locks are
+             * in use.
+             */
+            pe_resource_t *rsc = this_node->details->remote_rsc;
+
+            if ((rsc == NULL)
+                || (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)
+                    && (rsc->role != RSC_ROLE_STARTED))) {
+                crm_trace("Not unpacking resource history for remote node %s "
+                          "because connection is not known to be up", id);
+                continue;
             }
 
-        } else if (this_node->details->online) {
-            process = TRUE;
-
-        } else if (fence) {
-            process = TRUE;
-
-        } else if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
-            process = TRUE;
+        /* If fencing and shutdown locks are disabled and we're not processing
+         * unseen nodes, then we don't want to unpack offline nodes until online
+         * nodes have been unpacked. This allows us to number active clone
+         * instances first.
+         */
+        } else if (!pcmk_any_flags_set(data_set->flags, pe_flag_stonith_enabled
+                                                        |pe_flag_shutdown_lock)
+                   && !this_node->details->online) {
+            crm_trace("Not unpacking resource history for offline "
+                      "cluster node %s", id);
+            continue;
         }
 
-        if(process) {
-            crm_trace("Processing lrm resource entries on %shealthy%s node: %s",
-                      fence?"un":"",
-                      (pe__is_guest_or_remote_node(this_node)? " remote" : ""),
-                      this_node->details->uname);
-            changed = TRUE;
-            this_node->details->unpacked = TRUE;
-
-            lrm_rsc = find_xml_node(state, XML_CIB_TAG_LRM, FALSE);
-            lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-            unpack_lrm_resources(this_node, lrm_rsc, data_set);
+        if (pe__is_guest_or_remote_node(this_node)) {
+            determine_remote_online_status(data_set, this_node);
+            unpack_handle_remote_attrs(this_node, state, data_set);
         }
+
+        crm_trace("Unpacking resource history for %snode %s",
+                  (fence? "unseen " : ""), id);
+
+        this_node->details->unpacked = TRUE;
+        unpack_node_lrm(this_node, state, data_set);
+
+        rc = EAGAIN; // Other node histories might depend on this one
     }
-    return changed;
+    return rc;
 }
 
 /* remove nodes that are down, stopping */
@@ -1112,11 +1241,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
 gboolean
 unpack_status(xmlNode * status, pe_working_set_t * data_set)
 {
-    const char *id = NULL;
-    const char *uname = NULL;
-
     xmlNode *state = NULL;
-    pe_node_t *this_node = NULL;
 
     crm_trace("Beginning unpack");
 
@@ -1132,82 +1257,18 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             unpack_tickets_state((xmlNode *) state, data_set);
 
         } else if (pcmk__str_eq((const char *)state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
-            xmlNode *attrs = NULL;
-            const char *resource_discovery_enabled = NULL;
-
-            id = crm_element_value(state, XML_ATTR_ID);
-            uname = crm_element_value(state, XML_ATTR_UNAME);
-            this_node = pe_find_node_any(data_set->nodes, id, uname);
-
-            if (uname == NULL) {
-                /* error */
-                continue;
-
-            } else if (this_node == NULL) {
-                pcmk__config_warn("Ignoring recorded node status for '%s' "
-                                  "because no longer in configuration", uname);
-                continue;
-
-            } else if (pe__is_guest_or_remote_node(this_node)) {
-                /* online state for remote nodes is determined by the
-                 * rsc state after all the unpacking is done. we do however
-                 * need to mark whether or not the node has been fenced as this plays
-                 * a role during unpacking cluster node resource state */
-                this_node->details->remote_was_fenced = 
-                    crm_atoi(crm_element_value(state, XML_NODE_IS_FENCED), "0");
-                continue;
-            }
-
-            crm_trace("Processing node id=%s, uname=%s", id, uname);
-
-            /* Mark the node as provisionally clean
-             * - at least we have seen it in the current cluster's lifetime
-             */
-            this_node->details->unclean = FALSE;
-            this_node->details->unseen = FALSE;
-            attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
-            add_node_attrs(attrs, this_node, TRUE, data_set);
-
-            if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
-                crm_info("Node %s is in standby-mode", this_node->details->uname);
-                this_node->details->standby = TRUE;
-            }
-
-            if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance"))) {
-                crm_info("Node %s is in maintenance-mode", this_node->details->uname);
-                this_node->details->maintenance = TRUE;
-            }
-
-            resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
-            if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
-                crm_warn("ignoring %s attribute on node %s, disabling resource discovery is not allowed on cluster nodes",
-                    XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
-            }
-
-            crm_trace("determining node state");
-            determine_online_status(state, this_node, data_set);
-
-            if (!pcmk_is_set(data_set->flags, pe_flag_have_quorum)
-                && this_node->details->online
-                && (data_set->no_quorum_policy == no_quorum_suicide)) {
-                /* Everything else should flow from this automatically
-                 * (at least until the scheduler becomes able to migrate off
-                 * healthy resources)
-                 */
-                pe_fence_node(data_set, this_node, "cluster does not have quorum", FALSE);
-            }
+            unpack_node_state(state, data_set);
         }
     }
 
-
-    while(unpack_node_loop(status, FALSE, data_set)) {
-        crm_trace("Start another loop");
+    while (unpack_node_history(status, FALSE, data_set) == EAGAIN) {
+        crm_trace("Another pass through node resource histories is needed");
     }
 
     // Now catch any nodes we didn't see
-    unpack_node_loop(status,
-                     pcmk_is_set(data_set->flags, pe_flag_stonith_enabled),
-                     data_set);
+    unpack_node_history(status,
+                        pcmk_is_set(data_set->flags, pe_flag_stonith_enabled),
+                        data_set);
 
     /* Now that we know where resources are, we can schedule stops of containers
      * with failed bundle connections
@@ -1225,17 +1286,24 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         data_set->stop_needed = NULL;
     }
 
+    /* Now that we know status of all Pacemaker Remote connections and nodes,
+     * we can stop connections for node shutdowns, and check the online status
+     * of remote/guest nodes that didn't have any node history to unpack.
+     */
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *this_node = gIter->data;
 
-        if (this_node == NULL) {
-            continue;
-        } else if (!pe__is_guest_or_remote_node(this_node)) {
-            continue;
-        } else if(this_node->details->unpacked) {
+        if (!pe__is_guest_or_remote_node(this_node)) {
             continue;
         }
-        determine_remote_online_status(data_set, this_node);
+        if (this_node->details->shutdown
+            && (this_node->details->remote_rsc != NULL)) {
+            pe__set_next_role(this_node->details->remote_rsc, RSC_ROLE_STOPPED,
+                              "remote shutdown");
+        }
+        if (!this_node->details->unpacked) {
+            determine_remote_online_status(data_set, this_node);
+        }
     }
 
     return TRUE;
@@ -1996,7 +2064,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             break;
 
         case action_fail_stop:
-            rsc->next_role = RSC_ROLE_STOPPED;
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "on-fail=stop");
             break;
 
         case action_fail_recover:
@@ -2050,7 +2118,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
             if (rsc->remote_reconnect_ms) {
-                rsc->next_role = RSC_ROLE_STOPPED;
+                pe__set_next_role(rsc, RSC_ROLE_STOPPED, "remote reset");
             }
             break;
     }
@@ -2242,8 +2310,19 @@ unpack_shutdown_lock(xmlNode *rsc_entry, pe_resource_t *rsc, pe_node_t *node,
     }
 }
 
+/*!
+ * \internal
+ * \brief Unpack one lrm_resource entry from a node's CIB status
+ *
+ * \param[in] node       Node whose status is being unpacked
+ * \param[in] rsc_entry  lrm_resource XML being unpacked
+ * \param[in] data_set   Cluster working set
+ *
+ * \return Resource corresponding to the entry, or NULL if no operation history
+ */
 static pe_resource_t *
-unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * data_set)
+unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
+                    pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     int stop_index = -1;
@@ -2251,7 +2330,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
 
     const char *task = NULL;
-    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+    const char *rsc_id = ID(lrm_resource);
 
     pe_resource_t *rsc = NULL;
     GListPtr op_list = NULL;
@@ -2264,20 +2343,19 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     enum action_fail_response on_fail = action_fail_ignore;
     enum rsc_role_e saved_role = RSC_ROLE_UNKNOWN;
 
-    crm_trace("[%s] Processing %s on %s",
-              crm_element_name(rsc_entry), rsc_id, node->details->uname);
+    if (rsc_id == NULL) {
+        crm_warn("Ignoring malformed " XML_LRM_TAG_RESOURCE
+                 " entry without id");
+        return NULL;
+    }
+    crm_trace("Unpacking " XML_LRM_TAG_RESOURCE " for %s on %s",
+              rsc_id, node->details->uname);
 
-    /* extract operations */
-    op_list = NULL;
-    sorted_op_list = NULL;
+    // Build a list of individual lrm_rsc_op entries, so we can sort them
+    for (rsc_op = first_named_child(lrm_resource, XML_LRM_TAG_RSC_OP);
+         rsc_op != NULL; rsc_op = crm_next_same_xml(rsc_op)) {
 
-    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
-         rsc_op = pcmk__xe_next(rsc_op)) {
-
-        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP,
-                         pcmk__str_none)) {
-            op_list = g_list_prepend(op_list, rsc_op);
-        }
+        op_list = g_list_prepend(op_list, rsc_op);
     }
 
     if (!pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
@@ -2288,20 +2366,20 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
     }
 
     /* find the resource */
-    rsc = unpack_find_resource(data_set, node, rsc_id, rsc_entry);
+    rsc = unpack_find_resource(data_set, node, rsc_id, lrm_resource);
     if (rsc == NULL) {
         if (op_list == NULL) {
             // If there are no operations, there is nothing to do
             return NULL;
         } else {
-            rsc = process_orphan_resource(rsc_entry, node, data_set);
+            rsc = process_orphan_resource(lrm_resource, node, data_set);
         }
     }
     CRM_ASSERT(rsc != NULL);
 
     // Check whether the resource is "shutdown-locked" to this node
     if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
-        unpack_shutdown_lock(rsc_entry, rsc, node, data_set);
+        unpack_shutdown_lock(lrm_resource, rsc, node, data_set);
     }
 
     /* process operations */
@@ -2331,10 +2409,7 @@ unpack_lrm_rsc_state(pe_node_t * node, xmlNode * rsc_entry, pe_working_set_t * d
 
     if (get_target_role(rsc, &req_role)) {
         if (rsc->next_role == RSC_ROLE_UNKNOWN || req_role < rsc->next_role) {
-            pe_rsc_debug(rsc, "%s: Overwriting calculated next role %s"
-                         " with requested next role %s",
-                         rsc->id, role2text(rsc->next_role), role2text(req_role));
-            rsc->next_role = req_role;
+            pe__set_next_role(rsc, req_role, XML_RSC_ATTR_TARGET_ROLE);
 
         } else if (req_role > rsc->next_role) {
             pe_rsc_info(rsc, "%s: Not overwriting calculated next role %s"
@@ -2391,32 +2466,46 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
     }
 }
 
+/*!
+ * \internal
+ * \brief Unpack one node's lrm status section
+ *
+ * \param[in] node      Node whose status is being unpacked
+ * \param[in] xml       CIB node state XML
+ * \param[in] data_set  Cluster working set
+ */
 static void
-unpack_lrm_resources(pe_node_t *node, xmlNode *lrm_rsc_list,
-                     pe_working_set_t *data_set)
+unpack_node_lrm(pe_node_t *node, xmlNode *xml, pe_working_set_t *data_set)
 {
-    xmlNode *rsc_entry = NULL;
-    gboolean found_orphaned_container_filler = FALSE;
+    bool found_orphaned_container_filler = false;
 
-    for (rsc_entry = pcmk__xe_first_child(lrm_rsc_list); rsc_entry != NULL;
-         rsc_entry = pcmk__xe_next(rsc_entry)) {
+    // Drill down to lrm_resources section
+    xml = find_xml_node(xml, XML_CIB_TAG_LRM, FALSE);
+    if (xml == NULL) {
+        return;
+    }
+    xml = find_xml_node(xml, XML_LRM_TAG_RESOURCES, FALSE);
+    if (xml == NULL) {
+        return;
+    }
 
-        if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
-            pe_resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
-            if (!rsc) {
-                continue;
-            }
-            if (pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
-                found_orphaned_container_filler = TRUE;
-            }
+    // Unpack each lrm_resource entry
+    for (xmlNode *rsc_entry = first_named_child(xml, XML_LRM_TAG_RESOURCE);
+         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
+
+        pe_resource_t *rsc = unpack_lrm_resource(node, rsc_entry, data_set);
+
+        if ((rsc != NULL)
+            && pcmk_is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
+            found_orphaned_container_filler = true;
         }
     }
 
-    /* now that all the resource state has been unpacked for this node
-     * we have to go back and map any orphaned container fillers to their
-     * container resource */
+    /* Now that all resource state has been unpacked for this node, map any
+     * orphaned container fillers to their container resource.
+     */
     if (found_orphaned_container_filler) {
-        handle_orphaned_container_fillers(lrm_rsc_list, data_set);
+        handle_orphaned_container_fillers(xml, data_set);
     }
 }
 
@@ -2964,7 +3053,8 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
     } else if (!strcmp(task, CRMD_ACTION_DEMOTE)) {
         if (action->on_fail == action_fail_block) {
             rsc->role = RSC_ROLE_MASTER;
-            rsc->next_role = RSC_ROLE_STOPPED;
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED,
+                              "demote with on-fail=block");
 
         } else if(rc == PCMK_OCF_NOT_RUNNING) {
             rsc->role = RSC_ROLE_STOPPED;
@@ -2995,7 +3085,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
                  fail2text(action->on_fail), role2text(action->fail_role));
 
     if (action->fail_role != RSC_ROLE_STARTED && rsc->next_role < action->fail_role) {
-        rsc->next_role = action->fail_role;
+        pe__set_next_role(rsc, action->fail_role, "failure");
     }
 
     if (action->fail_role == RSC_ROLE_STOPPED) {
@@ -3112,7 +3202,7 @@ determine_op_status(
 
                 /* clear any previous failure actions */
                 *on_fail = action_fail_ignore;
-                rsc->next_role = RSC_ROLE_UNKNOWN;
+                pe__set_next_role(rsc, RSC_ROLE_UNKNOWN, "not running");
             }
             break;
 
@@ -3381,7 +3471,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
              *
              * We could limit this to remote_node->details->unclean, but at
              * this point, that's always true (it won't be reliable until
-             * after unpack_node_loop() is done).
+             * after unpack_node_history() is done).
              */
             crm_info("Clearing %s failure will wait until any scheduled "
                      "fencing of %s completes", task, rsc->id);
@@ -3507,7 +3597,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
             case action_fail_recover:
             case action_fail_restart_container:
                 *on_fail = action_fail_ignore;
-                rsc->next_role = RSC_ROLE_UNKNOWN;
+                pe__set_next_role(rsc, RSC_ROLE_UNKNOWN, "clear past failures");
                 break;
             case action_fail_reset_remote:
                 if (rsc->remote_reconnect_ms == 0) {
@@ -3518,7 +3608,8 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
                      * to reconnect.)
                      */
                     *on_fail = action_fail_ignore;
-                    rsc->next_role = RSC_ROLE_UNKNOWN;
+                    pe__set_next_role(rsc, RSC_ROLE_UNKNOWN,
+                                      "clear past failures and reset remote");
                 }
                 break;
         }
