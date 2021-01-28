@@ -995,27 +995,38 @@ pacemakerd_status(void)
             if (rc == pcmk_rc_ok) {
                 pcmk_dispatch_ipc(pacemakerd_api);
                 rc = ENOTCONN;
-                switch (state) {
-                    case pcmk_pacemakerd_state_running:
-                        rc = pcmk_rc_ok;
-                        break;
-                    case pcmk_pacemakerd_state_starting_daemons:
-                        print_as(output_format ,"Pacemaker daemons starting ...\n");
-                        break;
-                    case pcmk_pacemakerd_state_wait_for_ping:
-                        print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
-                        break;
-                    case pcmk_pacemakerd_state_shutting_down:
-                        print_as(output_format ,"Pacemaker daemons shutting down ...\n");
-                        break;
-                    case pcmk_pacemakerd_state_shutdown_complete:
-                        /* assuming pacemakerd doesn't dispatch any pings after entering
-                         * that state unless it is waiting for SBD
-                         */
-                        print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
-                        break;
-                    default:
-                        break;
+                if ((output_format == mon_output_console) ||
+                    (output_format == mon_output_plain)) {
+                    switch (state) {
+                        case pcmk_pacemakerd_state_running:
+                            rc = pcmk_rc_ok;
+                            break;
+                        case pcmk_pacemakerd_state_starting_daemons:
+                            print_as(output_format ,"Pacemaker daemons starting ...\n");
+                            break;
+                        case pcmk_pacemakerd_state_wait_for_ping:
+                            print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
+                            break;
+                        case pcmk_pacemakerd_state_shutting_down:
+                            print_as(output_format ,"Pacemaker daemons shutting down ...\n");
+                            break;
+                        case pcmk_pacemakerd_state_shutdown_complete:
+                            /* assuming pacemakerd doesn't dispatch any pings after entering
+                            * that state unless it is waiting for SBD
+                            */
+                            print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    switch (state) {
+                        case pcmk_pacemakerd_state_running:
+                            rc = pcmk_rc_ok;
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }
