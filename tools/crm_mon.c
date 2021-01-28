@@ -798,7 +798,7 @@ fencing_connect(void)
             st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
         }
     } else {
-        st = NULL;
+        clean_up_fencing_connection();
     }
 
     return rc;
@@ -2254,6 +2254,12 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
         mainloop_timer_stop(refresh_timer);
         return;
     }
+
+    /* as we're not handling initial failure of fencer-connection as
+     * fatal give it a retry here
+     * not getting here if cib-reconnection is already on the way
+     */
+    fencing_connect();
 
     if (enforce ||
         now - last_refresh > options.reconnect_msec / 1000 ||
