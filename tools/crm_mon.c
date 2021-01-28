@@ -684,23 +684,19 @@ reconnect_after_timeout(gpointer data)
     }
 #endif
 
-    if (reconnect_timer > 0) {
-        g_source_remove(reconnect_timer);
-        reconnect_timer = 0;
-    }
-
     print_as(output_format, "Reconnecting...\n");
     if (pacemakerd_status() == pcmk_rc_ok) {
         fencing_connect();
         if (cib_connect(TRUE) == pcmk_rc_ok) {
-            /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
+            /* trigger redrawing the screen (needs reconnect_timer == 0) */
+            reconnect_timer = 0;
             refresh_after_event(FALSE, TRUE);
-            return FALSE;
+            return G_SOURCE_REMOVE;
         }
     }
 
     reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /* Called from various places when we are disconnected from the CIB or from the
