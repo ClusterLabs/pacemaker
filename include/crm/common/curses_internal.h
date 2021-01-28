@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CURSES_INTERNAL_H
-#  define CURSES_INTERNAL_H
+#ifndef PCMK__CURSES_INTERNAL__H
+#  define PCMK__CURSES_INTERNAL__H
 
 #  include <stdio.h>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef ALERT_INTERNAL_H
-#define ALERT_INTERNAL_H
+#ifndef PCMK__ALERT_INTERNAL__H
+#define PCMK__ALERT_INTERNAL__H
 
 #include <glib.h>
 #include <stdbool.h>

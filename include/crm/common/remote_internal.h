@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2020 the Pacemaker project contributors
+ * Copyright 2008-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK__REMOTE__H
-#  define PCMK__REMOTE__H
+#ifndef PCMK__REMOTE_INTERNAL__H
+#  define PCMK__REMOTE_INTERNAL__H
 
 // internal functions from remote.c
 
@@ -45,4 +45,4 @@ int pcmk__read_handshake_data(pcmk__client_t *client);
 int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms);
 
 #  endif    // HAVE_GNUTLS_GNUTLS_H
-#endif      // PCMK__REMOTE__H
+#endif      // PCMK__REMOTE_INTERNAL__H
