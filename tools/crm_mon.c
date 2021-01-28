@@ -135,7 +135,7 @@ static int fencing_connect(void);
 static int pacemakerd_status(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
-static void refresh_after_event(gboolean data_updated);
+static void refresh_after_event(gboolean data_updated, gboolean enforce);
 
 static unsigned int
 all_includes(mon_output_format_t fmt) {
@@ -694,13 +694,13 @@ reconnect_after_timeout(gpointer data)
         fencing_connect();
         if (cib_connect(TRUE) == pcmk_rc_ok) {
             /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
-            mon_refresh_display(NULL);
+            refresh_after_event(FALSE, TRUE);
             return FALSE;
         }
     }
 
     reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
-    return TRUE;
+    return FALSE;
 }
 
 /* Called from various places when we are disconnected from the CIB or from the
@@ -1057,7 +1057,6 @@ static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_data)
 {
     int c;
-    int rc;
     gboolean config_mode = FALSE;
 
     while (1) {
@@ -1158,16 +1157,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
     }
 
 refresh:
-    rc = pacemakerd_status();
-    if (rc == pcmk_rc_ok) {
-        fencing_connect();
-        rc = cib_connect(FALSE);
-    }
-    if (rc == pcmk_rc_ok) {
-        mon_refresh_display(NULL);
-    } else {
-        handle_connection_failures(rc);
-    }
+    refresh_after_event(FALSE, TRUE);
 
     return TRUE;
 }
@@ -2087,7 +2077,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     stale = FALSE;
-    refresh_after_event(cib_updated);
+    refresh_after_event(cib_updated, FALSE);
 }
 
 static int
@@ -2246,7 +2236,7 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
  * fencing event is received or a CIB diff occurrs.
  */
 static void
-refresh_after_event(gboolean data_updated)
+refresh_after_event(gboolean data_updated, gboolean enforce)
 {
     static int updates = 0;
     time_t now = time(NULL);
@@ -2259,12 +2249,15 @@ refresh_after_event(gboolean data_updated)
         refresh_timer = mainloop_timer_add("refresh", 2000, FALSE, mon_trigger_refresh, NULL);
     }
 
-    if ((now - last_refresh) > (options.reconnect_msec / 1000)) {
-        mainloop_set_trigger(refresh_trigger);
+    if (reconnect_timer > 0) {
+        /* we will receive a refresh request after successful reconnect */
         mainloop_timer_stop(refresh_timer);
-        updates = 0;
+        return;
+    }
 
-    } else if(updates >= 10) {
+    if (enforce ||
+        now - last_refresh > options.reconnect_msec / 1000 ||
+        updates >= 10) {
         mainloop_set_trigger(refresh_trigger);
         mainloop_timer_stop(refresh_timer);
         updates = 0;
@@ -2285,7 +2278,7 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
         mon_cib_connection_destroy(NULL);
     } else {
         print_dot(output_format);
-        refresh_after_event(TRUE);
+        refresh_after_event(TRUE, FALSE);
     }
 }
 
