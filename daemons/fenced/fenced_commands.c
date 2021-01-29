@@ -1173,6 +1173,8 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
                   device->id, ndevices, pcmk__plural_s(ndevices));
         free_device(device);
         device = dup;
+        dup = g_hash_table_lookup(device_list, device->id);
+        dup->dirty = FALSE;
 
     } else {
         stonith_device_t *old = g_hash_table_lookup(device_list, device->id);
