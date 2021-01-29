@@ -4,49 +4,49 @@ Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 GuestOnline: [ bundle10-0:bundle10-docker-0 bundle10-1:bundle10-docker-1 bundle11-0:bundle11-docker-0 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-1
- rsc1a	(ocf::pacemaker:Dummy):	 Started rhel7-2
- rsc1b	(ocf::pacemaker:Dummy):	 Started rhel7-2
- rsc2a	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc2b	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc3a	(ocf::pacemaker:Dummy):	 Stopped
- rsc3b	(ocf::pacemaker:Dummy):	 Stopped
- rsc4a	(ocf::pacemaker:Dummy):	 Started rhel7-3
- rsc4b	(ocf::pacemaker:Dummy):	 Started rhel7-3
- rsc5a	(ocf::pacemaker:Dummy):	 Started rhel7-1
+ rsc1a	(ocf:pacemaker:Dummy):	 Started rhel7-2
+ rsc1b	(ocf:pacemaker:Dummy):	 Started rhel7-2
+ rsc2a	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc2b	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc3a	(ocf:pacemaker:Dummy):	 Stopped
+ rsc3b	(ocf:pacemaker:Dummy):	 Stopped
+ rsc4a	(ocf:pacemaker:Dummy):	 Started rhel7-3
+ rsc4b	(ocf:pacemaker:Dummy):	 Started rhel7-3
+ rsc5a	(ocf:pacemaker:Dummy):	 Started rhel7-1
  Resource Group: group5a
-     rsc5a1	(ocf::pacemaker:Dummy):	 Started rhel7-1
-     rsc5a2	(ocf::pacemaker:Dummy):	 Started rhel7-1
+     rsc5a1	(ocf:pacemaker:Dummy):	 Started rhel7-1
+     rsc5a2	(ocf:pacemaker:Dummy):	 Started rhel7-1
  Resource Group: group6a
-     rsc6a1	(ocf::pacemaker:Dummy):	 Started rhel7-2
-     rsc6a2	(ocf::pacemaker:Dummy):	 Started rhel7-2
- rsc6a	(ocf::pacemaker:Dummy):	 Started rhel7-2
+     rsc6a1	(ocf:pacemaker:Dummy):	 Started rhel7-2
+     rsc6a2	(ocf:pacemaker:Dummy):	 Started rhel7-2
+ rsc6a	(ocf:pacemaker:Dummy):	 Started rhel7-2
  Resource Group: group7a
-     rsc7a1	(ocf::pacemaker:Dummy):	 Started rhel7-3
-     rsc7a2	(ocf::pacemaker:Dummy):	 Started rhel7-3
+     rsc7a1	(ocf:pacemaker:Dummy):	 Started rhel7-3
+     rsc7a2	(ocf:pacemaker:Dummy):	 Started rhel7-3
  Clone Set: rsc8a-clone [rsc8a]
      Started: [ rhel7-1 rhel7-3 rhel7-4 ]
  Clone Set: rsc8b-clone [rsc8b]
      Started: [ rhel7-1 rhel7-3 rhel7-4 ]
- rsc9a	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc9b	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc9c	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc10a	(ocf::pacemaker:Dummy):	 Started rhel7-2
- rsc11a	(ocf::pacemaker:Dummy):	 Started rhel7-1
- rsc12a	(ocf::pacemaker:Dummy):	 Started rhel7-1
- rsc12b	(ocf::pacemaker:Dummy):	 Started rhel7-1
- rsc12c	(ocf::pacemaker:Dummy):	 Started rhel7-1
+ rsc9a	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc9b	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc9c	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc10a	(ocf:pacemaker:Dummy):	 Started rhel7-2
+ rsc11a	(ocf:pacemaker:Dummy):	 Started rhel7-1
+ rsc12a	(ocf:pacemaker:Dummy):	 Started rhel7-1
+ rsc12b	(ocf:pacemaker:Dummy):	 Started rhel7-1
+ rsc12c	(ocf:pacemaker:Dummy):	 Started rhel7-1
  Container bundle set: bundle10 [pcmktest:http]
-   bundle10-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started rhel7-2
-   bundle10-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Started rhel7-3
+   bundle10-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started rhel7-2
+   bundle10-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started rhel7-3
  Container bundle set: bundle11 [pcmktest:http]
-   bundle11-0 (192.168.122.134)	(ocf::pacemaker:Dummy):	 Started rhel7-1
-   bundle11-1 (192.168.122.135)	(ocf::pacemaker:Dummy):	 Stopped
- rsc13a	(ocf::pacemaker:Dummy):	 Started rhel7-3
+   bundle11-0 (192.168.122.134)	(ocf:pacemaker:Dummy):	 Started rhel7-1
+   bundle11-1 (192.168.122.135)	(ocf:pacemaker:Dummy):	 Stopped
+ rsc13a	(ocf:pacemaker:Dummy):	 Started rhel7-3
  Clone Set: rsc13b-clone [rsc13b] (promotable)
      Masters: [ rhel7-3 ]
      Slaves: [ rhel7-1 rhel7-2 rhel7-4 ]
      Stopped: [ rhel7-5 ]
- rsc14b	(ocf::pacemaker:Dummy):	 Started rhel7-4
+ rsc14b	(ocf:pacemaker:Dummy):	 Started rhel7-4
  Clone Set: rsc14a-clone [rsc14a] (promotable)
      Masters: [ rhel7-4 ]
      Slaves: [ rhel7-1 rhel7-2 rhel7-3 ]
@@ -118,50 +118,50 @@ Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 GuestOnline: [ bundle10-0:bundle10-docker-0 bundle10-1:bundle10-docker-1 bundle11-0:bundle11-docker-0 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-1
- rsc1a	(ocf::pacemaker:Dummy):	 Started rhel7-3
- rsc1b	(ocf::pacemaker:Dummy):	 Started rhel7-3
- rsc2a	(ocf::pacemaker:Dummy):	 Stopped
- rsc2b	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc3a	(ocf::pacemaker:Dummy):	 Started rhel7-2
- rsc3b	(ocf::pacemaker:Dummy):	 Started rhel7-2
- rsc4a	(ocf::pacemaker:Dummy):	 Stopped
- rsc4b	(ocf::pacemaker:Dummy):	 Started rhel7-3
- rsc5a	(ocf::pacemaker:Dummy):	 Stopped
+ rsc1a	(ocf:pacemaker:Dummy):	 Started rhel7-3
+ rsc1b	(ocf:pacemaker:Dummy):	 Started rhel7-3
+ rsc2a	(ocf:pacemaker:Dummy):	 Stopped
+ rsc2b	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc3a	(ocf:pacemaker:Dummy):	 Started rhel7-2
+ rsc3b	(ocf:pacemaker:Dummy):	 Started rhel7-2
+ rsc4a	(ocf:pacemaker:Dummy):	 Stopped
+ rsc4b	(ocf:pacemaker:Dummy):	 Started rhel7-3
+ rsc5a	(ocf:pacemaker:Dummy):	 Stopped
  Resource Group: group5a
-     rsc5a1	(ocf::pacemaker:Dummy):	 Started rhel7-1
-     rsc5a2	(ocf::pacemaker:Dummy):	 Started rhel7-1
+     rsc5a1	(ocf:pacemaker:Dummy):	 Started rhel7-1
+     rsc5a2	(ocf:pacemaker:Dummy):	 Started rhel7-1
  Resource Group: group6a
-     rsc6a1	(ocf::pacemaker:Dummy):	 Stopped
-     rsc6a2	(ocf::pacemaker:Dummy):	 Stopped
- rsc6a	(ocf::pacemaker:Dummy):	 Started rhel7-2
+     rsc6a1	(ocf:pacemaker:Dummy):	 Stopped
+     rsc6a2	(ocf:pacemaker:Dummy):	 Stopped
+ rsc6a	(ocf:pacemaker:Dummy):	 Started rhel7-2
  Resource Group: group7a
-     rsc7a1	(ocf::pacemaker:Dummy):	 Started rhel7-3
-     rsc7a2	(ocf::pacemaker:Dummy):	 Stopped
+     rsc7a1	(ocf:pacemaker:Dummy):	 Started rhel7-3
+     rsc7a2	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: rsc8a-clone [rsc8a]
      Started: [ rhel7-1 rhel7-3 ]
      Stopped: [ rhel7-2 rhel7-4 rhel7-5 ]
  Clone Set: rsc8b-clone [rsc8b]
      Started: [ rhel7-1 rhel7-3 rhel7-4 ]
- rsc9a	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc9b	(ocf::pacemaker:Dummy):	 Started rhel7-4
- rsc9c	(ocf::pacemaker:Dummy):	 Stopped
- rsc10a	(ocf::pacemaker:Dummy):	 Started rhel7-3
- rsc11a	(ocf::pacemaker:Dummy):	 Started rhel7-1
- rsc12a	(ocf::pacemaker:Dummy):	 Started rhel7-1
- rsc12b	(ocf::pacemaker:Dummy):	 Stopped
- rsc12c	(ocf::pacemaker:Dummy):	 Started rhel7-1
+ rsc9a	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc9b	(ocf:pacemaker:Dummy):	 Started rhel7-4
+ rsc9c	(ocf:pacemaker:Dummy):	 Stopped
+ rsc10a	(ocf:pacemaker:Dummy):	 Started rhel7-3
+ rsc11a	(ocf:pacemaker:Dummy):	 Started rhel7-1
+ rsc12a	(ocf:pacemaker:Dummy):	 Started rhel7-1
+ rsc12b	(ocf:pacemaker:Dummy):	 Stopped
+ rsc12c	(ocf:pacemaker:Dummy):	 Started rhel7-1
  Container bundle set: bundle10 [pcmktest:http]
-   bundle10-0 (192.168.122.131)	(ocf::heartbeat:apache):	 Started rhel7-2
-   bundle10-1 (192.168.122.132)	(ocf::heartbeat:apache):	 Started rhel7-3
+   bundle10-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started rhel7-2
+   bundle10-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started rhel7-3
  Container bundle set: bundle11 [pcmktest:http]
-   bundle11-0 (192.168.122.134)	(ocf::pacemaker:Dummy):	 Started rhel7-1
-   bundle11-1 (192.168.122.135)	(ocf::pacemaker:Dummy):	 Stopped
- rsc13a	(ocf::pacemaker:Dummy):	 Stopped
+   bundle11-0 (192.168.122.134)	(ocf:pacemaker:Dummy):	 Started rhel7-1
+   bundle11-1 (192.168.122.135)	(ocf:pacemaker:Dummy):	 Stopped
+ rsc13a	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: rsc13b-clone [rsc13b] (promotable)
      Masters: [ rhel7-3 ]
      Slaves: [ rhel7-1 rhel7-2 rhel7-4 ]
      Stopped: [ rhel7-5 ]
- rsc14b	(ocf::pacemaker:Dummy):	 Started rhel7-4
+ rsc14b	(ocf:pacemaker:Dummy):	 Started rhel7-4
  Clone Set: rsc14a-clone [rsc14a] (promotable)
      Slaves: [ rhel7-1 rhel7-2 rhel7-3 ]
      Stopped: [ rhel7-4 rhel7-5 ]

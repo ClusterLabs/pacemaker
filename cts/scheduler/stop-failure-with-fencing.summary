@@ -10,7 +10,7 @@ Online: [ pcmk-1 ]
  Clone Set: clvm-clone [clvm]
      clvm	(lsb:clvmd):	 FAILED pcmk-2
      Stopped: [ pcmk-1 pcmk-3 pcmk-4 ]
- ClusterIP	(ocf::heartbeat:IPaddr2):	 Stopped
+ ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
  Fencing	(stonith:fence_xvm):	 Stopped
 
 Transition Summary:
@@ -38,6 +38,6 @@ OFFLINE: [ pcmk-2 ]
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  Clone Set: clvm-clone [clvm]
      Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
- ClusterIP	(ocf::heartbeat:IPaddr2):	 Stopped
+ ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
  Fencing	(stonith:fence_xvm):	 Stopped
 

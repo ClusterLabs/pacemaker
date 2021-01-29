@@ -3,16 +3,16 @@ Current cluster status:
 Online: [ c7auto1 c7auto2 c7auto3 ]
 
  shooter	(stonith:fence_phd_kvm):	 Started c7auto2
- fake1	(ocf::heartbeat:Dummy):	 Stopped
- fake2	(ocf::heartbeat:Dummy):	 Stopped
- fake3	(ocf::heartbeat:Dummy):	 Stopped
- fake4	(ocf::heartbeat:Dummy):	 Stopped
- fake5	(ocf::heartbeat:Dummy):	 Stopped
+ fake1	(ocf:heartbeat:Dummy):	 Stopped
+ fake2	(ocf:heartbeat:Dummy):	 Stopped
+ fake3	(ocf:heartbeat:Dummy):	 Stopped
+ fake4	(ocf:heartbeat:Dummy):	 Stopped
+ fake5	(ocf:heartbeat:Dummy):	 Stopped
  Clone Set: fake_clone [fake]
      Stopped: [ c7auto1 c7auto2 c7auto3 c7auto4 ]
  Resource Group: fake_group
-     fake_fs	(ocf::heartbeat:Dummy):	 Stopped
-     container	(ocf::heartbeat:Dummy):	 Stopped
+     fake_fs	(ocf:heartbeat:Dummy):	 Stopped
+     container	(ocf:heartbeat:Dummy):	 Stopped
 
 Transition Summary:
  * Start      fake1         ( c7auto3 )  
@@ -87,14 +87,14 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
 GuestOnline: [ c7auto4:container ]
 
  shooter	(stonith:fence_phd_kvm):	 Started c7auto2
- fake1	(ocf::heartbeat:Dummy):	 Started c7auto3
- fake2	(ocf::heartbeat:Dummy):	 Started c7auto4
- fake3	(ocf::heartbeat:Dummy):	 Started c7auto2
- fake4	(ocf::heartbeat:Dummy):	 Started c7auto3
- fake5	(ocf::heartbeat:Dummy):	 Started c7auto4
+ fake1	(ocf:heartbeat:Dummy):	 Started c7auto3
+ fake2	(ocf:heartbeat:Dummy):	 Started c7auto4
+ fake3	(ocf:heartbeat:Dummy):	 Started c7auto2
+ fake4	(ocf:heartbeat:Dummy):	 Started c7auto3
+ fake5	(ocf:heartbeat:Dummy):	 Started c7auto4
  Clone Set: fake_clone [fake]
      Started: [ c7auto1 c7auto2 c7auto3 c7auto4 ]
  Resource Group: fake_group
-     fake_fs	(ocf::heartbeat:Dummy):	 Started c7auto1
-     container	(ocf::heartbeat:Dummy):	 Started c7auto1
+     fake_fs	(ocf:heartbeat:Dummy):	 Started c7auto1
+     container	(ocf:heartbeat:Dummy):	 Started c7auto1
 

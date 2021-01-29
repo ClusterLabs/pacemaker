@@ -6,11 +6,11 @@ RemoteOFFLINE: [ rabbitmq-bundle-0 ]
  Clone Set: storage-clone [storage]
      Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
  Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Stopped
+   galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
  Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Stopped
+   haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Stopped
  Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Stopped
+   redis-bundle-0	(ocf:heartbeat:redis):	 Stopped
 
 Transition Summary:
  * Start      storage:0                  (         metal-1 )   due to unrunnable redis-bundle promoted (blocked)
@@ -69,9 +69,9 @@ GuestOnline: [ redis-bundle-0:redis-bundle-docker-0 ]
  Clone Set: storage-clone [storage]
      Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
  Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Stopped
+   galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
  Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Started metal-2
+   haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started metal-2
  Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Slave metal-2
+   redis-bundle-0	(ocf:heartbeat:redis):	 Slave metal-2
 

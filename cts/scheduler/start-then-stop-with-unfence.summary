@@ -4,8 +4,8 @@ Online: [ rhel7-node1.example.com rhel7-node2.example.com ]
 
  mpath-node2	(stonith:fence_mpath):	 Started rhel7-node2.example.com
  mpath-node1	(stonith:fence_mpath):	 Stopped
- ip1	(ocf::heartbeat:IPaddr2):	 Started rhel7-node2.example.com
- ip2	(ocf::heartbeat:IPaddr2):	 Started rhel7-node2.example.com
+ ip1	(ocf:heartbeat:IPaddr2):	 Started rhel7-node2.example.com
+ ip2	(ocf:heartbeat:IPaddr2):	 Started rhel7-node2.example.com
  Clone Set: jrummy-clone [jrummy]
      Started: [ rhel7-node2.example.com ]
      Stopped: [ rhel7-node1.example.com ]
@@ -35,8 +35,8 @@ Online: [ rhel7-node1.example.com rhel7-node2.example.com ]
 
  mpath-node2	(stonith:fence_mpath):	 Started rhel7-node2.example.com
  mpath-node1	(stonith:fence_mpath):	 Started rhel7-node1.example.com
- ip1	(ocf::heartbeat:IPaddr2):	 Started rhel7-node1.example.com
- ip2	(ocf::heartbeat:IPaddr2):	 Started rhel7-node2.example.com
+ ip1	(ocf:heartbeat:IPaddr2):	 Started rhel7-node1.example.com
+ ip2	(ocf:heartbeat:IPaddr2):	 Started rhel7-node2.example.com
  Clone Set: jrummy-clone [jrummy]
      Started: [ rhel7-node1.example.com rhel7-node2.example.com ]
 

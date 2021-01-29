@@ -4,14 +4,14 @@ Online: [ rhel7-node2 rhel7-node3 ]
 GuestOnline: [ rhel7-node1:remote-rsc ]
 
  shooter1	(stonith:fence_xvm):	 Started rhel7-node3
- FAKE1	(ocf::heartbeat:Dummy):	 Started rhel7-node1
- FAKE2	(ocf::heartbeat:Dummy):	 Started rhel7-node1
- FAKE3	(ocf::heartbeat:Dummy):	 Started rhel7-node3
- FAKE4	(ocf::heartbeat:Dummy):	 Started rhel7-node3
- FAKE5	(ocf::heartbeat:Dummy):	 Started rhel7-node2
- FAKE6	(ocf::heartbeat:Dummy):	 Started rhel7-node1
- FAKE7	(ocf::heartbeat:Dummy):	 Started rhel7-node3
- remote-rsc	(ocf::heartbeat:Dummy):	 Started rhel7-node2
+ FAKE1	(ocf:heartbeat:Dummy):	 Started rhel7-node1
+ FAKE2	(ocf:heartbeat:Dummy):	 Started rhel7-node1
+ FAKE3	(ocf:heartbeat:Dummy):	 Started rhel7-node3
+ FAKE4	(ocf:heartbeat:Dummy):	 Started rhel7-node3
+ FAKE5	(ocf:heartbeat:Dummy):	 Started rhel7-node2
+ FAKE6	(ocf:heartbeat:Dummy):	 Started rhel7-node1
+ FAKE7	(ocf:heartbeat:Dummy):	 Started rhel7-node3
+ remote-rsc	(ocf:heartbeat:Dummy):	 Started rhel7-node2
 
 Transition Summary:
  * Move       shooter1        ( rhel7-node3 -> rhel7-node2 )  
@@ -43,12 +43,12 @@ Online: [ rhel7-node2 rhel7-node3 ]
 GuestOnline: [ rhel7-node1:remote-rsc ]
 
  shooter1	(stonith:fence_xvm):	 Started rhel7-node2
- FAKE1	(ocf::heartbeat:Dummy):	 Started rhel7-node1
- FAKE2	(ocf::heartbeat:Dummy):	 Started rhel7-node1
- FAKE3	(ocf::heartbeat:Dummy):	 Started rhel7-node2
- FAKE4	(ocf::heartbeat:Dummy):	 Started rhel7-node3
- FAKE5	(ocf::heartbeat:Dummy):	 Started rhel7-node2
- FAKE6	(ocf::heartbeat:Dummy):	 Started rhel7-node1
- FAKE7	(ocf::heartbeat:Dummy):	 Started rhel7-node3
- remote-rsc	(ocf::heartbeat:Dummy):	 Started rhel7-node3
+ FAKE1	(ocf:heartbeat:Dummy):	 Started rhel7-node1
+ FAKE2	(ocf:heartbeat:Dummy):	 Started rhel7-node1
+ FAKE3	(ocf:heartbeat:Dummy):	 Started rhel7-node2
+ FAKE4	(ocf:heartbeat:Dummy):	 Started rhel7-node3
+ FAKE5	(ocf:heartbeat:Dummy):	 Started rhel7-node2
+ FAKE6	(ocf:heartbeat:Dummy):	 Started rhel7-node1
+ FAKE7	(ocf:heartbeat:Dummy):	 Started rhel7-node3
+ remote-rsc	(ocf:heartbeat:Dummy):	 Started rhel7-node3
 

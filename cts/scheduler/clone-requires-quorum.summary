@@ -6,9 +6,9 @@ Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-1
  FencingFail	(stonith:fence_dummy):	 Started rhel7-2
- dummy-solo	(ocf::pacemaker:Dummy):	 Started rhel7-3
+ dummy-solo	(ocf:pacemaker:Dummy):	 Started rhel7-3
  Clone Set: dummy-crowd-clone [dummy-crowd]
-     dummy-crowd	(ocf::pacemaker:Dummy):	 ORPHANED Started rhel7-5 (UNCLEAN)
+     dummy-crowd	(ocf:pacemaker:Dummy):	 ORPHANED Started rhel7-5 (UNCLEAN)
      Started: [ rhel7-1 rhel7-2 rhel7-4 ]
  Clone Set: dummy-boss-clone [dummy-boss] (promotable)
      Masters: [ rhel7-3 ]
@@ -31,7 +31,7 @@ OFFLINE: [ rhel7-5 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-1
  FencingFail	(stonith:fence_dummy):	 Started rhel7-2
- dummy-solo	(ocf::pacemaker:Dummy):	 Started rhel7-3
+ dummy-solo	(ocf:pacemaker:Dummy):	 Started rhel7-3
  Clone Set: dummy-crowd-clone [dummy-crowd]
      Started: [ rhel7-1 rhel7-2 rhel7-4 ]
  Clone Set: dummy-boss-clone [dummy-boss] (promotable)

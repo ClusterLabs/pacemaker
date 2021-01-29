@@ -4,15 +4,15 @@ Node pcmk-4: pending
 Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
  Resource Group: group-1
-     r192.168.101.181	(ocf::heartbeat:IPaddr):	 Started pcmk-1
-     r192.168.101.182	(ocf::heartbeat:IPaddr):	 Started pcmk-1
-     r192.168.101.183	(ocf::heartbeat:IPaddr):	 Started pcmk-1
- rsc_pcmk-1	(ocf::heartbeat:IPaddr):	 Started pcmk-1
- rsc_pcmk-2	(ocf::heartbeat:IPaddr):	 Started pcmk-2
- rsc_pcmk-3	(ocf::heartbeat:IPaddr):	 Started pcmk-3
- rsc_pcmk-4	(ocf::heartbeat:IPaddr):	 Started pcmk-2
+     r192.168.101.181	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+     r192.168.101.182	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+     r192.168.101.183	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+ rsc_pcmk-1	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+ rsc_pcmk-2	(ocf:heartbeat:IPaddr):	 Started pcmk-2
+ rsc_pcmk-3	(ocf:heartbeat:IPaddr):	 Started pcmk-3
+ rsc_pcmk-4	(ocf:heartbeat:IPaddr):	 Started pcmk-2
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started pcmk-1
- migrator	(ocf::pacemaker:Dummy):	 Stopped
+ migrator	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 ]
      Stopped: [ pcmk-4 ]
@@ -34,15 +34,15 @@ Node pcmk-4: pending
 Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
  Resource Group: group-1
-     r192.168.101.181	(ocf::heartbeat:IPaddr):	 Started pcmk-1
-     r192.168.101.182	(ocf::heartbeat:IPaddr):	 Started pcmk-1
-     r192.168.101.183	(ocf::heartbeat:IPaddr):	 Started pcmk-1
- rsc_pcmk-1	(ocf::heartbeat:IPaddr):	 Started pcmk-1
- rsc_pcmk-2	(ocf::heartbeat:IPaddr):	 Started pcmk-2
- rsc_pcmk-3	(ocf::heartbeat:IPaddr):	 Started pcmk-3
- rsc_pcmk-4	(ocf::heartbeat:IPaddr):	 Started pcmk-2
+     r192.168.101.181	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+     r192.168.101.182	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+     r192.168.101.183	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+ rsc_pcmk-1	(ocf:heartbeat:IPaddr):	 Started pcmk-1
+ rsc_pcmk-2	(ocf:heartbeat:IPaddr):	 Started pcmk-2
+ rsc_pcmk-3	(ocf:heartbeat:IPaddr):	 Started pcmk-3
+ rsc_pcmk-4	(ocf:heartbeat:IPaddr):	 Started pcmk-2
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started pcmk-1
- migrator	(ocf::pacemaker:Dummy):	 Stopped
+ migrator	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 ]
      Stopped: [ pcmk-4 ]

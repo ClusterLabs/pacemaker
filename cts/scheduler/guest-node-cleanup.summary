@@ -6,8 +6,8 @@ GuestOnline: [ lxc2:container2 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-2
  FencingPass	(stonith:fence_dummy):	 Started rhel7-3
- container1	(ocf::heartbeat:VirtualDomain):	 FAILED
- container2	(ocf::heartbeat:VirtualDomain):	 Started rhel7-1
+ container1	(ocf:heartbeat:VirtualDomain):	 FAILED
+ container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Slaves: [ lxc2 ]
      Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
@@ -45,8 +45,8 @@ GuestOnline: [ lxc1:container1 lxc2:container2 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-2
  FencingPass	(stonith:fence_dummy):	 Started rhel7-3
- container1	(ocf::heartbeat:VirtualDomain):	 Started rhel7-1
- container2	(ocf::heartbeat:VirtualDomain):	 Started rhel7-1
+ container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
+ container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Masters: [ lxc1 ]
      Slaves: [ lxc2 ]

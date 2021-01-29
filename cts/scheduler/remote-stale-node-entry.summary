@@ -5,18 +5,18 @@ RemoteOFFLINE: [ remote1 ]
 
  Fencing	(stonith:fence_xvm):	 Stopped
  FencingPass	(stonith:fence_dummy):	 Stopped
- rsc_rhel7-node1	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-node2	(ocf::heartbeat:IPaddr2):	 Stopped
- rsc_rhel7-node3	(ocf::heartbeat:IPaddr2):	 Stopped
- migrator	(ocf::pacemaker:Dummy):	 Stopped
+ rsc_rhel7-node1	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-node2	(ocf:heartbeat:IPaddr2):	 Stopped
+ rsc_rhel7-node3	(ocf:heartbeat:IPaddr2):	 Stopped
+ migrator	(ocf:pacemaker:Dummy):	 Stopped
  Clone Set: Connectivity [ping-1]
      Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
  Clone Set: master-1 [stateful-1] (promotable)
      Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
  Resource Group: group-1
-     r192.168.122.204	(ocf::heartbeat:IPaddr2):	 Stopped
-     r192.168.122.205	(ocf::heartbeat:IPaddr2):	 Stopped
-     r192.168.122.206	(ocf::heartbeat:IPaddr2):	 Stopped
+     r192.168.122.204	(ocf:heartbeat:IPaddr2):	 Stopped
+     r192.168.122.205	(ocf:heartbeat:IPaddr2):	 Stopped
+     r192.168.122.206	(ocf:heartbeat:IPaddr2):	 Stopped
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Stopped
 
 Transition Summary:
@@ -93,18 +93,18 @@ RemoteOFFLINE: [ remote1 ]
 
  Fencing	(stonith:fence_xvm):	 Started rhel7-node1
  FencingPass	(stonith:fence_dummy):	 Started rhel7-node2
- rsc_rhel7-node1	(ocf::heartbeat:IPaddr2):	 Started rhel7-node1
- rsc_rhel7-node2	(ocf::heartbeat:IPaddr2):	 Started rhel7-node2
- rsc_rhel7-node3	(ocf::heartbeat:IPaddr2):	 Started rhel7-node3
- migrator	(ocf::pacemaker:Dummy):	 Started rhel7-node3
+ rsc_rhel7-node1	(ocf:heartbeat:IPaddr2):	 Started rhel7-node1
+ rsc_rhel7-node2	(ocf:heartbeat:IPaddr2):	 Started rhel7-node2
+ rsc_rhel7-node3	(ocf:heartbeat:IPaddr2):	 Started rhel7-node3
+ migrator	(ocf:pacemaker:Dummy):	 Started rhel7-node3
  Clone Set: Connectivity [ping-1]
      Started: [ rhel7-node1 rhel7-node2 rhel7-node3 ]
      Stopped: [ remote1 ]
  Clone Set: master-1 [stateful-1] (promotable)
      Stopped: [ remote1 rhel7-node1 rhel7-node2 rhel7-node3 ]
  Resource Group: group-1
-     r192.168.122.204	(ocf::heartbeat:IPaddr2):	 Stopped
-     r192.168.122.205	(ocf::heartbeat:IPaddr2):	 Stopped
-     r192.168.122.206	(ocf::heartbeat:IPaddr2):	 Stopped
+     r192.168.122.204	(ocf:heartbeat:IPaddr2):	 Stopped
+     r192.168.122.205	(ocf:heartbeat:IPaddr2):	 Stopped
+     r192.168.122.206	(ocf:heartbeat:IPaddr2):	 Stopped
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Stopped
 

@@ -18,8 +18,8 @@ Online: [ cvmh01 cvmh02 ]
      Started: [ cvmh01 cvmh02 cvmh03 cvmh04 ]
  Clone Set: c-fs-gpfs [p-fs-gpfs]
      Started: [ cvmh01 cvmh02 cvmh03 cvmh04 ]
- vm-compute-test	(ocf::ccni:xcatVirtualDomain):	 Started cvmh03
- vm-swbuildsl6	(ocf::ccni:xcatVirtualDomain):	 Started cvmh04
+ vm-compute-test	(ocf:ccni:xcatVirtualDomain):	 Started cvmh03
+ vm-swbuildsl6	(ocf:ccni:xcatVirtualDomain):	 Started cvmh04
 
 Transition Summary:
  * Stop       fs-libvirt-VM-xcm:0           (           cvmh04 )   due to node availability
@@ -95,6 +95,6 @@ Online: [ cvmh01 cvmh02 ]
  Clone Set: c-fs-gpfs [p-fs-gpfs]
      Started: [ cvmh01 cvmh02 ]
      Stopped: [ cvmh03 cvmh04 ]
- vm-compute-test	(ocf::ccni:xcatVirtualDomain):	 Started cvmh01
- vm-swbuildsl6	(ocf::ccni:xcatVirtualDomain):	 Started cvmh02
+ vm-compute-test	(ocf:ccni:xcatVirtualDomain):	 Started cvmh01
+ vm-swbuildsl6	(ocf:ccni:xcatVirtualDomain):	 Started cvmh02
 

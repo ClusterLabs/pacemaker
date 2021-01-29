@@ -4,16 +4,16 @@ Node wc02 (f36760d8-d84a-46b2-b452-4c8cac8b3396): standby
 Online: [ wc01 ]
 
  Resource Group: group_www_data
-     fs_www_data	(ocf::heartbeat:Filesystem):	 Started wc01
+     fs_www_data	(ocf:heartbeat:Filesystem):	 Started wc01
      nfs-kernel-server	(lsb:nfs-kernel-server):	 Started wc01
-     intip_nfs	(ocf::heartbeat:IPaddr2):	 Started wc01
+     intip_nfs	(ocf:heartbeat:IPaddr2):	 Started wc01
  Clone Set: ms_drbd_mysql [drbd_mysql] (promotable)
      Masters: [ wc02 ]
      Slaves: [ wc01 ]
  Resource Group: group_mysql
-     fs_mysql	(ocf::heartbeat:Filesystem):	 Started wc02
-     intip_sql	(ocf::heartbeat:IPaddr2):	 Started wc02
-     mysql-server	(ocf::heartbeat:mysql):	 Started wc02
+     fs_mysql	(ocf:heartbeat:Filesystem):	 Started wc02
+     intip_sql	(ocf:heartbeat:IPaddr2):	 Started wc02
+     mysql-server	(ocf:heartbeat:mysql):	 Started wc02
  Clone Set: ms_drbd_www [drbd_www] (promotable)
      Masters: [ wc01 ]
      Slaves: [ wc02 ]
@@ -24,8 +24,8 @@ Online: [ wc01 ]
  Clone Set: clone_webservice [group_webservice]
      Started: [ wc01 wc02 ]
  Resource Group: group_ftpd
-     extip_ftp	(ocf::heartbeat:IPaddr2):	 Started wc01
-     pure-ftpd	(ocf::heartbeat:Pure-FTPd):	 Started wc01
+     extip_ftp	(ocf:heartbeat:IPaddr2):	 Started wc01
+     pure-ftpd	(ocf:heartbeat:Pure-FTPd):	 Started wc01
  Clone Set: DoFencing [stonith_rackpdu] (unique)
      stonith_rackpdu:0	(stonith:external/rackpdu):	 Started wc01
      stonith_rackpdu:1	(stonith:external/rackpdu):	 Started wc02
@@ -130,16 +130,16 @@ Node wc02 (f36760d8-d84a-46b2-b452-4c8cac8b3396): standby
 Online: [ wc01 ]
 
  Resource Group: group_www_data
-     fs_www_data	(ocf::heartbeat:Filesystem):	 Started wc01
+     fs_www_data	(ocf:heartbeat:Filesystem):	 Started wc01
      nfs-kernel-server	(lsb:nfs-kernel-server):	 Started wc01
-     intip_nfs	(ocf::heartbeat:IPaddr2):	 Started wc01
+     intip_nfs	(ocf:heartbeat:IPaddr2):	 Started wc01
  Clone Set: ms_drbd_mysql [drbd_mysql] (promotable)
      Masters: [ wc01 ]
      Stopped: [ wc02 ]
  Resource Group: group_mysql
-     fs_mysql	(ocf::heartbeat:Filesystem):	 Started wc01
-     intip_sql	(ocf::heartbeat:IPaddr2):	 Started wc01
-     mysql-server	(ocf::heartbeat:mysql):	 Started wc01
+     fs_mysql	(ocf:heartbeat:Filesystem):	 Started wc01
+     intip_sql	(ocf:heartbeat:IPaddr2):	 Started wc01
+     mysql-server	(ocf:heartbeat:mysql):	 Started wc01
  Clone Set: ms_drbd_www [drbd_www] (promotable)
      Masters: [ wc01 ]
      Stopped: [ wc02 ]
@@ -153,8 +153,8 @@ Online: [ wc01 ]
      Started: [ wc01 ]
      Stopped: [ wc02 ]
  Resource Group: group_ftpd
-     extip_ftp	(ocf::heartbeat:IPaddr2):	 Started wc01
-     pure-ftpd	(ocf::heartbeat:Pure-FTPd):	 Started wc01
+     extip_ftp	(ocf:heartbeat:IPaddr2):	 Started wc01
+     pure-ftpd	(ocf:heartbeat:Pure-FTPd):	 Started wc01
  Clone Set: DoFencing [stonith_rackpdu] (unique)
      stonith_rackpdu:0	(stonith:external/rackpdu):	 Started wc01
      stonith_rackpdu:1	(stonith:external/rackpdu):	 Stopped

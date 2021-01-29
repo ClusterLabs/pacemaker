@@ -8,8 +8,8 @@ Online: [ castor kimball ]
      Started: [ castor kimball ]
  Clone Set: c-vm-fs [vm1]
      Started: [ castor kimball ]
- xen-f	(ocf::heartbeat:VirtualDomain):	 Stopped (disabled)
- sle12-kvm	(ocf::heartbeat:VirtualDomain):	 FAILED castor
+ xen-f	(ocf:heartbeat:VirtualDomain):	 Stopped (disabled)
+ sle12-kvm	(ocf:heartbeat:VirtualDomain):	 FAILED castor
  Clone Set: cl_sgdisk [sgdisk]
      Started: [ castor kimball ]
 
@@ -29,8 +29,8 @@ Online: [ castor kimball ]
      Started: [ castor kimball ]
  Clone Set: c-vm-fs [vm1]
      Started: [ castor kimball ]
- xen-f	(ocf::heartbeat:VirtualDomain):	 Stopped (disabled)
- sle12-kvm	(ocf::heartbeat:VirtualDomain):	 Started kimball
+ xen-f	(ocf:heartbeat:VirtualDomain):	 Stopped (disabled)
+ sle12-kvm	(ocf:heartbeat:VirtualDomain):	 Started kimball
  Clone Set: cl_sgdisk [sgdisk]
      Started: [ castor kimball ]
 

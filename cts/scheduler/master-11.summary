@@ -2,10 +2,10 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- simple-rsc	(ocf::heartbeat:apache):	 Stopped
+ simple-rsc	(ocf:heartbeat:apache):	 Stopped
  Clone Set: rsc1 [child_rsc1] (promotable) (unique)
-     child_rsc1:0	(ocf::heartbeat:apache):	 Stopped
-     child_rsc1:1	(ocf::heartbeat:apache):	 Stopped
+     child_rsc1:0	(ocf:heartbeat:apache):	 Stopped
+     child_rsc1:1	(ocf:heartbeat:apache):	 Stopped
 
 Transition Summary:
  * Start      simple-rsc     (                   node2 )  
@@ -31,8 +31,8 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- simple-rsc	(ocf::heartbeat:apache):	 Started node2
+ simple-rsc	(ocf:heartbeat:apache):	 Started node2
  Clone Set: rsc1 [child_rsc1] (promotable) (unique)
-     child_rsc1:0	(ocf::heartbeat:apache):	 Slave node1
-     child_rsc1:1	(ocf::heartbeat:apache):	 Master node2
+     child_rsc1:0	(ocf:heartbeat:apache):	 Slave node1
+     child_rsc1:1	(ocf:heartbeat:apache):	 Master node2
 

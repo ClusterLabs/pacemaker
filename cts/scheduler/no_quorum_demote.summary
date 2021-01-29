@@ -9,7 +9,7 @@ OFFLINE: [ rhel7-3 rhel7-4 rhel7-5 ]
      Masters: [ rhel7-1 ]
      Slaves: [ rhel7-2 ]
      Stopped: [ rhel7-3 rhel7-4 rhel7-5 ]
- rsc2	(ocf::pacemaker:Dummy):	 Started rhel7-2
+ rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-2
 
 Transition Summary:
  * Stop       Fencing     (                 rhel7-1 )   due to no quorum
@@ -34,5 +34,5 @@ OFFLINE: [ rhel7-3 rhel7-4 rhel7-5 ]
  Clone Set: rsc1-clone [rsc1] (promotable)
      Slaves: [ rhel7-1 rhel7-2 ]
      Stopped: [ rhel7-3 rhel7-4 rhel7-5 ]
- rsc2	(ocf::pacemaker:Dummy):	 Stopped
+ rsc2	(ocf:pacemaker:Dummy):	 Stopped
 

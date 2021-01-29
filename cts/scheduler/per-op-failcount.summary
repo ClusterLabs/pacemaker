@@ -4,7 +4,7 @@ Current cluster status:
 Node rh73-01-snmp (3232238265): UNCLEAN (online)
 Online: [ rh73-02-snmp ]
 
- prmDummy	(ocf::pacemaker:Dummy):	 FAILED rh73-01-snmp
+ prmDummy	(ocf:pacemaker:Dummy):	 FAILED rh73-01-snmp
  prmStonith1-1	(stonith:external/ssh):	 Started rh73-02-snmp
  prmStonith2-1	(stonith:external/ssh):	 Started rh73-01-snmp
 
@@ -26,7 +26,7 @@ Revised cluster status:
 Online: [ rh73-02-snmp ]
 OFFLINE: [ rh73-01-snmp ]
 
- prmDummy	(ocf::pacemaker:Dummy):	 Started rh73-02-snmp
+ prmDummy	(ocf:pacemaker:Dummy):	 Started rh73-02-snmp
  prmStonith1-1	(stonith:external/ssh):	 Started rh73-02-snmp
  prmStonith2-1	(stonith:external/ssh):	 Started rh73-02-snmp
 

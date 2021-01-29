@@ -4,17 +4,17 @@ Current cluster status:
 Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 overcloud-galera-0 overcloud-galera-1 overcloud-galera-2 ]
 RemoteOnline: [ overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 ]
 
- overcloud-rabbit-0	(ocf::pacemaker:remote):	 Started overcloud-controller-0
- overcloud-rabbit-1	(ocf::pacemaker:remote):	 Started overcloud-controller-1
- overcloud-rabbit-2	(ocf::pacemaker:remote):	 Started overcloud-controller-2
+ overcloud-rabbit-0	(ocf:pacemaker:remote):	 Started overcloud-controller-0
+ overcloud-rabbit-1	(ocf:pacemaker:remote):	 Started overcloud-controller-1
+ overcloud-rabbit-2	(ocf:pacemaker:remote):	 Started overcloud-controller-2
  Container bundle set: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Stopped overcloud-rabbit-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Stopped overcloud-rabbit-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Stopped overcloud-rabbit-2
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Stopped overcloud-rabbit-0
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Stopped overcloud-rabbit-1
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Stopped overcloud-rabbit-2
  Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-docker-0	(ocf::heartbeat:docker):	 Started overcloud-galera-0
-   galera-bundle-docker-1	(ocf::heartbeat:docker):	 Started overcloud-galera-1
-   galera-bundle-docker-2	(ocf::heartbeat:docker):	 Started overcloud-galera-2
+   galera-bundle-docker-0	(ocf:heartbeat:docker):	 Started overcloud-galera-0
+   galera-bundle-docker-1	(ocf:heartbeat:docker):	 Started overcloud-galera-1
+   galera-bundle-docker-2	(ocf:heartbeat:docker):	 Started overcloud-galera-2
 
 Transition Summary:
  * Restart    rabbitmq-bundle-docker-0     (     overcloud-rabbit-0 )   due to resource definition change
@@ -90,15 +90,15 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 o
 RemoteOnline: [ overcloud-rabbit-0 overcloud-rabbit-1 overcloud-rabbit-2 ]
 GuestOnline: [ rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 ]
 
- overcloud-rabbit-0	(ocf::pacemaker:remote):	 Started overcloud-controller-0
- overcloud-rabbit-1	(ocf::pacemaker:remote):	 Started overcloud-controller-1
- overcloud-rabbit-2	(ocf::pacemaker:remote):	 Started overcloud-controller-2
+ overcloud-rabbit-0	(ocf:pacemaker:remote):	 Started overcloud-controller-0
+ overcloud-rabbit-1	(ocf:pacemaker:remote):	 Started overcloud-controller-1
+ overcloud-rabbit-2	(ocf:pacemaker:remote):	 Started overcloud-controller-2
  Container bundle set: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]
-   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	 Started overcloud-rabbit-0
-   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	 Started overcloud-rabbit-1
-   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	 Started overcloud-rabbit-2
+   rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-rabbit-0
+   rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-rabbit-1
+   rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-rabbit-2
  Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-docker-0	(ocf::heartbeat:docker):	 Started overcloud-galera-0
-   galera-bundle-docker-1	(ocf::heartbeat:docker):	 Started overcloud-galera-1
-   galera-bundle-docker-2	(ocf::heartbeat:docker):	 Started overcloud-galera-2
+   galera-bundle-docker-0	(ocf:heartbeat:docker):	 Started overcloud-galera-0
+   galera-bundle-docker-1	(ocf:heartbeat:docker):	 Started overcloud-galera-1
+   galera-bundle-docker-2	(ocf:heartbeat:docker):	 Started overcloud-galera-2
 

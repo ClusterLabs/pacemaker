@@ -6,17 +6,17 @@ RemoteOFFLINE: [ rabbitmq-bundle-0 ]
  Clone Set: storage-clone [storage]
      Stopped: [ metal-1 metal-2 metal-3 rabbitmq-bundle-0 ]
  Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Stopped
-   galera-bundle-1	(ocf::heartbeat:galera):	 Stopped
-   galera-bundle-2	(ocf::heartbeat:galera):	 Stopped
+   galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
+   galera-bundle-1	(ocf:heartbeat:galera):	 Stopped
+   galera-bundle-2	(ocf:heartbeat:galera):	 Stopped
  Container bundle set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Stopped
-   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	 Stopped
-   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	 Stopped
+   haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Stopped
+   haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Stopped
+   haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Stopped
  Container bundle set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Stopped
-   redis-bundle-1	(ocf::heartbeat:redis):	 Stopped
-   redis-bundle-2	(ocf::heartbeat:redis):	 Stopped
+   redis-bundle-0	(ocf:heartbeat:redis):	 Stopped
+   redis-bundle-1	(ocf:heartbeat:redis):	 Stopped
+   redis-bundle-2	(ocf:heartbeat:redis):	 Stopped
 
 Transition Summary:
  * Start      storage:0                  (                          metal-1 )  
@@ -197,15 +197,15 @@ GuestOnline: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bun
      Started: [ metal-1 metal-2 metal-3 ]
      Stopped: [ rabbitmq-bundle-0 ]
  Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]
-   galera-bundle-0	(ocf::heartbeat:galera):	 Slave metal-1
-   galera-bundle-1	(ocf::heartbeat:galera):	 Slave metal-2
-   galera-bundle-2	(ocf::heartbeat:galera):	 Slave metal-3
+   galera-bundle-0	(ocf:heartbeat:galera):	 Slave metal-1
+   galera-bundle-1	(ocf:heartbeat:galera):	 Slave metal-2
+   galera-bundle-2	(ocf:heartbeat:galera):	 Slave metal-3
  Container bundle set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]
-   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	 Started metal-1
-   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	 Started metal-2
-   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	 Started metal-3
+   haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started metal-1
+   haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started metal-2
+   haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started metal-3
  Container bundle set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]
-   redis-bundle-0	(ocf::heartbeat:redis):	 Master metal-1
-   redis-bundle-1	(ocf::heartbeat:redis):	 Master metal-2
-   redis-bundle-2	(ocf::heartbeat:redis):	 Master metal-3
+   redis-bundle-0	(ocf:heartbeat:redis):	 Master metal-1
+   redis-bundle-1	(ocf:heartbeat:redis):	 Master metal-2
+   redis-bundle-2	(ocf:heartbeat:redis):	 Master metal-3
 

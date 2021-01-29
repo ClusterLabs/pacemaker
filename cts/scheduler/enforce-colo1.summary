@@ -4,10 +4,10 @@ Current cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
  shooter	(stonith:fence_xvm):	 Started rhel7-auto2
- engine	(ocf::heartbeat:Dummy):	 Started rhel7-auto3
+ engine	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
  Clone Set: keystone-clone [keystone]
      Started: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
- central	(ocf::heartbeat:Dummy):	 Started rhel7-auto3
+ central	(ocf:heartbeat:Dummy):	 Started rhel7-auto3
 
 Transition Summary:
  * Stop       engine         ( rhel7-auto3 )   due to colocation with central
@@ -29,8 +29,8 @@ Revised cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
 
  shooter	(stonith:fence_xvm):	 Started rhel7-auto2
- engine	(ocf::heartbeat:Dummy):	 Stopped
+ engine	(ocf:heartbeat:Dummy):	 Stopped
  Clone Set: keystone-clone [keystone]
      Stopped (disabled): [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
- central	(ocf::heartbeat:Dummy):	 Stopped
+ central	(ocf:heartbeat:Dummy):	 Stopped
 

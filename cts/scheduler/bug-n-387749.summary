@@ -4,11 +4,11 @@ Online: [ power720-1 power720-2 ]
 OFFLINE: [ power720-4 ]
 
  Clone Set: export_home_ocfs2_clone_set [export_home_ocfs2] (unique)
-     export_home_ocfs2:0	(ocf::heartbeat:Filesystem):	 Stopped
-     export_home_ocfs2:1	(ocf::heartbeat:Filesystem):	 Started power720-2
-     export_home_ocfs2:2	(ocf::heartbeat:Filesystem):	 Stopped
+     export_home_ocfs2:0	(ocf:heartbeat:Filesystem):	 Stopped
+     export_home_ocfs2:1	(ocf:heartbeat:Filesystem):	 Started power720-2
+     export_home_ocfs2:2	(ocf:heartbeat:Filesystem):	 Stopped
  Resource Group: group_nfs
-     resource_ipaddr1_single	(ocf::heartbeat:IPaddr):	 Started power720-2
+     resource_ipaddr1_single	(ocf:heartbeat:IPaddr):	 Started power720-2
      resource_nfsserver_single	(lsb:nfsserver):	 Started power720-2
 
 Transition Summary:
@@ -48,10 +48,10 @@ Online: [ power720-1 power720-2 ]
 OFFLINE: [ power720-4 ]
 
  Clone Set: export_home_ocfs2_clone_set [export_home_ocfs2] (unique)
-     export_home_ocfs2:0	(ocf::heartbeat:Filesystem):	 Started power720-1
-     export_home_ocfs2:1	(ocf::heartbeat:Filesystem):	 Started power720-2
-     export_home_ocfs2:2	(ocf::heartbeat:Filesystem):	 Stopped
+     export_home_ocfs2:0	(ocf:heartbeat:Filesystem):	 Started power720-1
+     export_home_ocfs2:1	(ocf:heartbeat:Filesystem):	 Started power720-2
+     export_home_ocfs2:2	(ocf:heartbeat:Filesystem):	 Stopped
  Resource Group: group_nfs
-     resource_ipaddr1_single	(ocf::heartbeat:IPaddr):	 Started power720-1
+     resource_ipaddr1_single	(ocf:heartbeat:IPaddr):	 Started power720-1
      resource_nfsserver_single	(lsb:nfsserver):	 Started power720-1
 

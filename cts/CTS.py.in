@@ -843,67 +843,6 @@ class ClusterManager(UserDict):
             self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=0)
 
 
-class Resource(object):
-    '''
-    This is an HA resource (not a resource group).
-    A resource group is just an ordered list of Resource objects.
-    '''
-
-    def __init__(self, cm, rsctype=None, instance=None):
-        self.CM = cm
-        self.ResourceType = rsctype
-        self.Instance = instance
-        self.needs_quorum = 1
-
-    def Type(self):
-        return self.ResourceType
-
-    def Instance(self, nodename):
-        return self.Instance
-
-    def IsRunningOn(self, nodename):
-        '''
-        This member function returns true if our resource is running
-        on the given node in the cluster.
-        It is analagous to the "status" operation on SystemV init scripts and
-        heartbeat scripts.  FailSafe calls it the "exclusive" operation.
-        '''
-        raise ValueError("Abstract Class member (IsRunningOn)")
-        return None
-
-    def IsWorkingCorrectly(self, nodename):
-        '''
-        This member function returns true if our resource is operating
-        correctly on the given node in the cluster.
-        OCF does not require this operation, but it might be called
-        the Monitor operation, which is what FailSafe calls it.
-        For remotely monitorable resources (like IP addresses), they *should*
-        be monitored remotely for testing.
-        '''
-        raise ValueError("Abstract Class member (IsWorkingCorrectly)")
-        return None
-
-    def Start(self, nodename):
-        '''
-        This member function starts or activates the resource.
-        '''
-        raise ValueError("Abstract Class member (Start)")
-        return None
-
-    def Stop(self, nodename):
-        '''
-        This member function stops or deactivates the resource.
-        '''
-        raise ValueError("Abstract Class member (Stop)")
-        return None
-
-    def __repr__(self):
-        if (self.Instance and len(self.Instance) > 1):
-                return "{" + self.ResourceType + "::" + self.Instance + "}"
-        else:
-                return "{" + self.ResourceType + "}"
-
-
 class Component(object):
     def kill(self, node):
         None

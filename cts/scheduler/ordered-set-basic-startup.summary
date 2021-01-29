@@ -4,12 +4,12 @@ Current cluster status:
 Online: [ fc16-builder ]
 OFFLINE: [ fc16-builder2 ]
 
- A	(ocf::pacemaker:Dummy):	 Stopped
- B	(ocf::pacemaker:Dummy):	 Stopped
- C	(ocf::pacemaker:Dummy):	 Stopped (disabled)
- D	(ocf::pacemaker:Dummy):	 Stopped (disabled)
- E	(ocf::pacemaker:Dummy):	 Stopped
- F	(ocf::pacemaker:Dummy):	 Stopped
+ A	(ocf:pacemaker:Dummy):	 Stopped
+ B	(ocf:pacemaker:Dummy):	 Stopped
+ C	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+ D	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+ E	(ocf:pacemaker:Dummy):	 Stopped
+ F	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
  * Start      A       ( fc16-builder )   due to unrunnable C start (blocked)
@@ -30,10 +30,10 @@ Revised cluster status:
 Online: [ fc16-builder ]
 OFFLINE: [ fc16-builder2 ]
 
- A	(ocf::pacemaker:Dummy):	 Stopped
- B	(ocf::pacemaker:Dummy):	 Started fc16-builder
- C	(ocf::pacemaker:Dummy):	 Stopped (disabled)
- D	(ocf::pacemaker:Dummy):	 Stopped (disabled)
- E	(ocf::pacemaker:Dummy):	 Stopped
- F	(ocf::pacemaker:Dummy):	 Stopped
+ A	(ocf:pacemaker:Dummy):	 Stopped
+ B	(ocf:pacemaker:Dummy):	 Started fc16-builder
+ C	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+ D	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+ E	(ocf:pacemaker:Dummy):	 Stopped
+ F	(ocf:pacemaker:Dummy):	 Stopped
 

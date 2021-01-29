@@ -9,13 +9,13 @@ Online: [ alice ]
  Clone Set: cl_tgtd [res_tgtd]
      Started: [ alice bob ]
  Resource Group: rg_iscsivg01
-     res_portblock_iscsivg01_block	(ocf::heartbeat:portblock):	 Started alice
-     res_lvm_iscsivg01	(ocf::heartbeat:LVM):	 Started alice
-     res_target_iscsivg01	(ocf::heartbeat:iSCSITarget):	 Started alice
-     res_lu_iscsivg01_lun1	(ocf::heartbeat:iSCSILogicalUnit):	 Started alice
-     res_lu_iscsivg01_lun2	(ocf::heartbeat:iSCSILogicalUnit):	 Started alice
-     res_ip_alicebob01	(ocf::heartbeat:IPaddr2):	 Started alice
-     res_portblock_iscsivg01_unblock	(ocf::heartbeat:portblock):	 Started alice
+     res_portblock_iscsivg01_block	(ocf:heartbeat:portblock):	 Started alice
+     res_lvm_iscsivg01	(ocf:heartbeat:LVM):	 Started alice
+     res_target_iscsivg01	(ocf:heartbeat:iSCSITarget):	 Started alice
+     res_lu_iscsivg01_lun1	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+     res_lu_iscsivg01_lun2	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+     res_ip_alicebob01	(ocf:heartbeat:IPaddr2):	 Started alice
+     res_portblock_iscsivg01_unblock	(ocf:heartbeat:portblock):	 Started alice
 
 Transition Summary:
  * Stop       res_drbd_iscsivg01:0     ( Slave bob )   due to node availability
@@ -47,11 +47,11 @@ Online: [ alice ]
      Started: [ alice ]
      Stopped: [ bob ]
  Resource Group: rg_iscsivg01
-     res_portblock_iscsivg01_block	(ocf::heartbeat:portblock):	 Started alice
-     res_lvm_iscsivg01	(ocf::heartbeat:LVM):	 Started alice
-     res_target_iscsivg01	(ocf::heartbeat:iSCSITarget):	 Started alice
-     res_lu_iscsivg01_lun1	(ocf::heartbeat:iSCSILogicalUnit):	 Started alice
-     res_lu_iscsivg01_lun2	(ocf::heartbeat:iSCSILogicalUnit):	 Started alice
-     res_ip_alicebob01	(ocf::heartbeat:IPaddr2):	 Started alice
-     res_portblock_iscsivg01_unblock	(ocf::heartbeat:portblock):	 Started alice
+     res_portblock_iscsivg01_block	(ocf:heartbeat:portblock):	 Started alice
+     res_lvm_iscsivg01	(ocf:heartbeat:LVM):	 Started alice
+     res_target_iscsivg01	(ocf:heartbeat:iSCSITarget):	 Started alice
+     res_lu_iscsivg01_lun1	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+     res_lu_iscsivg01_lun2	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+     res_ip_alicebob01	(ocf:heartbeat:IPaddr2):	 Started alice
+     res_portblock_iscsivg01_unblock	(ocf:heartbeat:portblock):	 Started alice
 

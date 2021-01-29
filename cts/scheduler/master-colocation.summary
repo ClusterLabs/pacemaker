@@ -5,9 +5,9 @@ Online: [ box1 box2 ]
  Clone Set: ms-conntrackd [conntrackd-stateful] (promotable)
      Slaves: [ box1 box2 ]
  Resource Group: virtualips
-     externalip	(ocf::heartbeat:IPaddr2):	 Started box2
-     internalip	(ocf::heartbeat:IPaddr2):	 Started box2
-     sship	(ocf::heartbeat:IPaddr2):	 Started box2
+     externalip	(ocf:heartbeat:IPaddr2):	 Started box2
+     internalip	(ocf:heartbeat:IPaddr2):	 Started box2
+     sship	(ocf:heartbeat:IPaddr2):	 Started box2
 
 Transition Summary:
  * Promote    conntrackd-stateful:1     ( Slave -> Master box2 )  
@@ -26,7 +26,7 @@ Online: [ box1 box2 ]
      Masters: [ box2 ]
      Slaves: [ box1 ]
  Resource Group: virtualips
-     externalip	(ocf::heartbeat:IPaddr2):	 Started box2
-     internalip	(ocf::heartbeat:IPaddr2):	 Started box2
-     sship	(ocf::heartbeat:IPaddr2):	 Started box2
+     externalip	(ocf:heartbeat:IPaddr2):	 Started box2
+     internalip	(ocf:heartbeat:IPaddr2):	 Started box2
+     sship	(ocf:heartbeat:IPaddr2):	 Started box2
 

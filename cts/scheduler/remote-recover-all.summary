@@ -5,12 +5,12 @@ Node controller-1 (2): UNCLEAN (offline)
 Online: [ controller-0 controller-2 ]
 RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
 
- messaging-0	(ocf::pacemaker:remote):	 Started controller-0
- messaging-1	(ocf::pacemaker:remote):	 Started controller-1 (UNCLEAN)
- messaging-2	(ocf::pacemaker:remote):	 Started controller-0
- galera-0	(ocf::pacemaker:remote):	 Started controller-1 (UNCLEAN)
- galera-1	(ocf::pacemaker:remote):	 Started controller-0
- galera-2	(ocf::pacemaker:remote):	 Started controller-1 (UNCLEAN)
+ messaging-0	(ocf:pacemaker:remote):	 Started controller-0
+ messaging-1	(ocf:pacemaker:remote):	 Started controller-1 (UNCLEAN)
+ messaging-2	(ocf:pacemaker:remote):	 Started controller-0
+ galera-0	(ocf:pacemaker:remote):	 Started controller-1 (UNCLEAN)
+ galera-1	(ocf:pacemaker:remote):	 Started controller-0
+ galera-2	(ocf:pacemaker:remote):	 Started controller-1 (UNCLEAN)
  Clone Set: rabbitmq-clone [rabbitmq]
      Started: [ messaging-0 messaging-1 messaging-2 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
@@ -18,16 +18,16 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
      Masters: [ galera-0 galera-1 galera-2 ]
      Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
  Clone Set: redis-master [redis] (promotable)
-     redis	(ocf::heartbeat:redis):	 Slave controller-1 (UNCLEAN)
+     redis	(ocf:heartbeat:redis):	 Slave controller-1 (UNCLEAN)
      Masters: [ controller-0 ]
      Slaves: [ controller-2 ]
      Stopped: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
- ip-192.168.24.6	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-10.0.0.102	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.1.14	(ocf::heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
- ip-172.17.1.17	(ocf::heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
- ip-172.17.3.15	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.4.11	(ocf::heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
+ ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-10.0.0.102	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
+ ip-172.17.1.17	(ocf:heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
+ ip-172.17.3.15	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-172.17.4.11	(ocf:heartbeat:IPaddr2):	 Started controller-1 (UNCLEAN)
  Clone Set: haproxy-clone [haproxy]
      haproxy	(systemd:haproxy):	 Started controller-1 (UNCLEAN)
      Started: [ controller-0 controller-2 ]
@@ -116,12 +116,12 @@ OFFLINE: [ controller-1 ]
 RemoteOnline: [ galera-0 galera-1 messaging-0 messaging-2 ]
 RemoteOFFLINE: [ galera-2 messaging-1 ]
 
- messaging-0	(ocf::pacemaker:remote):	 Started controller-0
- messaging-1	(ocf::pacemaker:remote):	 Stopped
- messaging-2	(ocf::pacemaker:remote):	 Started controller-0
- galera-0	(ocf::pacemaker:remote):	 Started controller-2
- galera-1	(ocf::pacemaker:remote):	 Started controller-0
- galera-2	(ocf::pacemaker:remote):	 Stopped
+ messaging-0	(ocf:pacemaker:remote):	 Started controller-0
+ messaging-1	(ocf:pacemaker:remote):	 Stopped
+ messaging-2	(ocf:pacemaker:remote):	 Started controller-0
+ galera-0	(ocf:pacemaker:remote):	 Started controller-2
+ galera-1	(ocf:pacemaker:remote):	 Started controller-0
+ galera-2	(ocf:pacemaker:remote):	 Stopped
  Clone Set: rabbitmq-clone [rabbitmq]
      Started: [ messaging-0 messaging-2 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-1 ]
@@ -132,12 +132,12 @@ RemoteOFFLINE: [ galera-2 messaging-1 ]
      Masters: [ controller-0 ]
      Slaves: [ controller-2 ]
      Stopped: [ controller-1 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
- ip-192.168.24.6	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-10.0.0.102	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.1.14	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-172.17.1.17	(ocf::heartbeat:IPaddr2):	 Started controller-2
- ip-172.17.3.15	(ocf::heartbeat:IPaddr2):	 Started controller-0
- ip-172.17.4.11	(ocf::heartbeat:IPaddr2):	 Started controller-2
+ ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-10.0.0.102	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-2
+ ip-172.17.1.17	(ocf:heartbeat:IPaddr2):	 Started controller-2
+ ip-172.17.3.15	(ocf:heartbeat:IPaddr2):	 Started controller-0
+ ip-172.17.4.11	(ocf:heartbeat:IPaddr2):	 Started controller-2
  Clone Set: haproxy-clone [haproxy]
      Started: [ controller-0 controller-2 ]
      Stopped: [ controller-1 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]

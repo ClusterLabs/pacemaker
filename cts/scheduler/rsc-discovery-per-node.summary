@@ -4,12 +4,12 @@ Online: [ 18builder 18node1 18node2 18node3 18node4 ]
 RemoteOFFLINE: [ remote1 ]
 
  shooter	(stonith:fence_xvm):	 Started 18node1
- remote1	(ocf::pacemaker:remote):	 Stopped
- FAKE1	(ocf::heartbeat:Dummy):	 Stopped
- FAKE2	(ocf::heartbeat:Dummy):	 Started 18node2
- FAKE3	(ocf::heartbeat:Dummy):	 Started 18builder
- FAKE4	(ocf::heartbeat:Dummy):	 Started 18node1
- FAKE5	(ocf::heartbeat:Dummy):	 Stopped
+ remote1	(ocf:pacemaker:remote):	 Stopped
+ FAKE1	(ocf:heartbeat:Dummy):	 Stopped
+ FAKE2	(ocf:heartbeat:Dummy):	 Started 18node2
+ FAKE3	(ocf:heartbeat:Dummy):	 Started 18builder
+ FAKE4	(ocf:heartbeat:Dummy):	 Started 18node1
+ FAKE5	(ocf:heartbeat:Dummy):	 Stopped
  Clone Set: FAKECLONE1-clone [FAKECLONE1]
      Stopped: [ 18builder 18node1 18node2 18node3 18node4 remote1 ]
  Clone Set: FAKECLONE2-clone [FAKECLONE2]
@@ -115,12 +115,12 @@ Online: [ 18builder 18node1 18node2 18node3 18node4 ]
 RemoteOnline: [ remote1 ]
 
  shooter	(stonith:fence_xvm):	 Started 18node1
- remote1	(ocf::pacemaker:remote):	 Started 18builder
- FAKE1	(ocf::heartbeat:Dummy):	 Started 18node2
- FAKE2	(ocf::heartbeat:Dummy):	 Started 18node3
- FAKE3	(ocf::heartbeat:Dummy):	 Started 18node4
- FAKE4	(ocf::heartbeat:Dummy):	 Started remote1
- FAKE5	(ocf::heartbeat:Dummy):	 Started 18builder
+ remote1	(ocf:pacemaker:remote):	 Started 18builder
+ FAKE1	(ocf:heartbeat:Dummy):	 Started 18node2
+ FAKE2	(ocf:heartbeat:Dummy):	 Started 18node3
+ FAKE3	(ocf:heartbeat:Dummy):	 Started 18node4
+ FAKE4	(ocf:heartbeat:Dummy):	 Started remote1
+ FAKE5	(ocf:heartbeat:Dummy):	 Started 18builder
  Clone Set: FAKECLONE1-clone [FAKECLONE1]
      Started: [ 18builder 18node1 18node2 18node3 18node4 remote1 ]
  Clone Set: FAKECLONE2-clone [FAKECLONE2]

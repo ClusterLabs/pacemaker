@@ -4,11 +4,11 @@ Online: [ node-a node-b ]
 
  Clone Set: ms-sf [group] (promotable) (unique)
      Resource Group: group:0
-         stateful-1:0	(ocf::heartbeat:Stateful):	 Slave node-b
-         stateful-2:0	(ocf::heartbeat:Stateful):	 Stopped
+         stateful-1:0	(ocf:heartbeat:Stateful):	 Slave node-b
+         stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
      Resource Group: group:1
-         stateful-1:1	(ocf::heartbeat:Stateful):	 Master node-a
-         stateful-2:1	(ocf::heartbeat:Stateful):	 Stopped
+         stateful-1:1	(ocf:heartbeat:Stateful):	 Master node-a
+         stateful-2:1	(ocf:heartbeat:Stateful):	 Stopped
 
 Transition Summary:
  * Start      stateful-2:0     (                   node-b )  
@@ -38,9 +38,9 @@ Online: [ node-a node-b ]
 
  Clone Set: ms-sf [group] (promotable) (unique)
      Resource Group: group:0
-         stateful-1:0	(ocf::heartbeat:Stateful):	 Slave node-b
-         stateful-2:0	(ocf::heartbeat:Stateful):	 Slave node-b
+         stateful-1:0	(ocf:heartbeat:Stateful):	 Slave node-b
+         stateful-2:0	(ocf:heartbeat:Stateful):	 Slave node-b
      Resource Group: group:1
-         stateful-1:1	(ocf::heartbeat:Stateful):	 Master node-a
-         stateful-2:1	(ocf::heartbeat:Stateful):	 Master node-a
+         stateful-1:1	(ocf:heartbeat:Stateful):	 Master node-a
+         stateful-2:1	(ocf:heartbeat:Stateful):	 Master node-a
 

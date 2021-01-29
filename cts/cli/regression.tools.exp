@@ -925,7 +925,7 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 * Passed: crm_resource   - Create a resource attribute
 =#=#=#= Begin test: List the configured resources =#=#=#=
 Full List of Resources:
-  * dummy	(ocf::pacemaker:Dummy):	 Stopped
+  * dummy	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= Current cib after: List the configured resources =#=#=#=
 <cib epoch="19" num_updates="0" admin_epoch="1">
   <configuration>
@@ -969,7 +969,7 @@ dummy
 =#=#=#= End test: List IDs of instantiated resources - OK (0) =#=#=#=
 * Passed: crm_resource   - List IDs of instantiated resources
 =#=#=#= Begin test: Show XML configuration of resource =#=#=#=
-dummy	(ocf::pacemaker:Dummy):	 Stopped
+dummy	(ocf:pacemaker:Dummy):	 Stopped
 Resource XML:
 <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
   <meta_attributes id="dummy-meta_attributes"/>
@@ -1106,7 +1106,7 @@ crm_resource: Error performing operation: Node not found
 Current cluster status:
 Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Stopped
+ dummy	(ocf:pacemaker:Dummy):	 Stopped
  Fence	(stonith:fence_true):	 Stopped
 
 Transition Summary:
@@ -1122,7 +1122,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
+ dummy	(ocf:pacemaker:Dummy):	 Started node1
  Fence	(stonith:fence_true):	 Started node1
 
 =#=#=#= Current cib after: Bring resources online =#=#=#=
@@ -1814,7 +1814,7 @@ crm_resource: Error performing operation: Node not found
 Current cluster status:
 Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
+ dummy	(ocf:pacemaker:Dummy):	 Started node1
  Fence	(stonith:fence_true):	 Started node1
 
 Performing requested modifications
@@ -1835,7 +1835,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
+ dummy	(ocf:pacemaker:Dummy):	 Started node1
  Fence	(stonith:fence_true):	 Started node2
 
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
@@ -2099,7 +2099,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
 Current cluster status:
 Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
+ dummy	(ocf:pacemaker:Dummy):	 Started node1
  Fence	(stonith:fence_true):	 Started node2
 
 Transition Summary:
@@ -2112,7 +2112,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node3
+ dummy	(ocf:pacemaker:Dummy):	 Started node3
  Fence	(stonith:fence_true):	 Started node2
 
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=

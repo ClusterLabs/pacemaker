@@ -3,9 +3,9 @@ Current cluster status:
 Online: [ paul ]
 
  Resource Group: group_1
-     datadisk_1	(ocf::heartbeat:datadisk):	 Started paul
-     Filesystem_2	(ocf::heartbeat:Filesystem):	 Started paul
-     IPaddr_5	(ocf::heartbeat:IPaddr):	 Started paul
+     datadisk_1	(ocf:heartbeat:datadisk):	 Started paul
+     Filesystem_2	(ocf:heartbeat:Filesystem):	 Started paul
+     IPaddr_5	(ocf:heartbeat:IPaddr):	 Started paul
      postfix_9	(lsb:postfix):	 FAILED paul
  depends	(lsb:postfix):	 Started paul
 
@@ -28,9 +28,9 @@ Revised cluster status:
 Online: [ paul ]
 
  Resource Group: group_1
-     datadisk_1	(ocf::heartbeat:datadisk):	 Started paul
-     Filesystem_2	(ocf::heartbeat:Filesystem):	 Started paul
-     IPaddr_5	(ocf::heartbeat:IPaddr):	 Started paul
+     datadisk_1	(ocf:heartbeat:datadisk):	 Started paul
+     Filesystem_2	(ocf:heartbeat:Filesystem):	 Started paul
+     IPaddr_5	(ocf:heartbeat:IPaddr):	 Started paul
      postfix_9	(lsb:postfix):	 Started paul
  depends	(lsb:postfix):	 Started paul
 

@@ -4,10 +4,10 @@ Current cluster status:
 Online: [ DEM-1 DEM-2 ]
 
  Resource Group: svc
-     ipv6_dem_tas_dns	(ocf::heartbeat:IPv6addr):	 Started DEM-1
+     ipv6_dem_tas_dns	(ocf:heartbeat:IPv6addr):	 Started DEM-1
      d_bird_subnet_state	(lsb:bird_subnet_state):	 Started DEM-1
-     ip_mgmt	(ocf::heartbeat:IPaddr2):	 Started DEM-1
-     ip_trf_tas	(ocf::heartbeat:IPaddr2):	 Started DEM-1
+     ip_mgmt	(ocf:heartbeat:IPaddr2):	 Started DEM-1
+     ip_trf_tas	(ocf:heartbeat:IPaddr2):	 Started DEM-1
  Clone Set: cl_bird [d_bird]
      Started: [ DEM-1 DEM-2 ]
  Clone Set: cl_bird6 [d_bird6]
@@ -44,10 +44,10 @@ Revised cluster status:
 Online: [ DEM-1 DEM-2 ]
 
  Resource Group: svc
-     ipv6_dem_tas_dns	(ocf::heartbeat:IPv6addr):	 Started DEM-2
+     ipv6_dem_tas_dns	(ocf:heartbeat:IPv6addr):	 Started DEM-2
      d_bird_subnet_state	(lsb:bird_subnet_state):	 Started DEM-2
-     ip_mgmt	(ocf::heartbeat:IPaddr2):	 Started DEM-2
-     ip_trf_tas	(ocf::heartbeat:IPaddr2):	 Started DEM-2
+     ip_mgmt	(ocf:heartbeat:IPaddr2):	 Started DEM-2
+     ip_trf_tas	(ocf:heartbeat:IPaddr2):	 Started DEM-2
  Clone Set: cl_bird [d_bird]
      Started: [ DEM-1 DEM-2 ]
  Clone Set: cl_bird6 [d_bird6]

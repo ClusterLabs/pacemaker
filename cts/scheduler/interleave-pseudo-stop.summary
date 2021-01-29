@@ -7,13 +7,13 @@ Online: [ node2 ]
      stonithclone	(stonith:external/ssh):	 Started node1 (UNCLEAN)
      Started: [ node2 ]
  Clone Set: evmscloneset [evmsclone]
-     evmsclone	(ocf::heartbeat:EvmsSCC):	 Started node1 (UNCLEAN)
+     evmsclone	(ocf:heartbeat:EvmsSCC):	 Started node1 (UNCLEAN)
      Started: [ node2 ]
  Clone Set: imagestorecloneset [imagestoreclone]
-     imagestoreclone	(ocf::heartbeat:Filesystem):	 Started node1 (UNCLEAN)
+     imagestoreclone	(ocf:heartbeat:Filesystem):	 Started node1 (UNCLEAN)
      Started: [ node2 ]
  Clone Set: configstorecloneset [configstoreclone]
-     configstoreclone	(ocf::heartbeat:Filesystem):	 Started node1 (UNCLEAN)
+     configstoreclone	(ocf:heartbeat:Filesystem):	 Started node1 (UNCLEAN)
      Started: [ node2 ]
 
 Transition Summary:

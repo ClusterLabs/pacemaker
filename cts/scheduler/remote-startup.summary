@@ -4,8 +4,8 @@ RemoteNode remote1: UNCLEAN (offline)
 Online: [ 18builder 18node1 18node2 ]
 
  shooter	(stonith:fence_xvm):	 Started 18builder
- fake	(ocf::pacemaker:Dummy):	 Stopped
- remote1	(ocf::pacemaker:remote):	 Stopped
+ fake	(ocf:pacemaker:Dummy):	 Stopped
+ remote1	(ocf:pacemaker:remote):	 Stopped
 
 Transition Summary:
  * Move       shooter     ( 18builder -> 18node1 )  
@@ -32,6 +32,6 @@ Online: [ 18builder 18node1 18node2 ]
 RemoteOnline: [ remote1 ]
 
  shooter	(stonith:fence_xvm):	 Started 18node1
- fake	(ocf::pacemaker:Dummy):	 Started 18node2
- remote1	(ocf::pacemaker:remote):	 Started 18builder
+ fake	(ocf:pacemaker:Dummy):	 Started 18node2
+ remote1	(ocf:pacemaker:remote):	 Started 18builder
 

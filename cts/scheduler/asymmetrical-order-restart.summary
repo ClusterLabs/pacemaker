@@ -5,8 +5,8 @@ Current cluster status:
 Online: [ cesr105-p16 cesr109-p16 ]
 
  cesr104ipmi	(stonith:fence_ipmilan):	 Started cesr105-p16
- sleep_a	(ocf::classe:anything):	 Stopped (disabled)
- sleep_b	(ocf::classe:anything):	 FAILED cesr109-p16
+ sleep_a	(ocf:classe:anything):	 Stopped (disabled)
+ sleep_b	(ocf:classe:anything):	 FAILED cesr109-p16
 
 Only 'private' parameters to cesr104ipmi_start_0 on cesr105-p16 changed: 0:0;1166:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c
 Only 'private' parameters to cesr104ipmi_monitor_60000 on cesr105-p16 changed: 0:0;1167:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c
@@ -21,6 +21,6 @@ Revised cluster status:
 Online: [ cesr105-p16 cesr109-p16 ]
 
  cesr104ipmi	(stonith:fence_ipmilan):	 Started cesr105-p16
- sleep_a	(ocf::classe:anything):	 Stopped (disabled)
- sleep_b	(ocf::classe:anything):	 Stopped
+ sleep_a	(ocf:classe:anything):	 Stopped (disabled)
+ sleep_b	(ocf:classe:anything):	 Stopped
 

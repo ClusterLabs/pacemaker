@@ -4,10 +4,10 @@ Current cluster status:
 Node deglxen002: standby
 Online: [ deglxen001 ]
 
- degllx62-vm	(ocf::heartbeat:Xen):	 Started deglxen002
- degllx63-vm	(ocf::heartbeat:Xen):	 Stopped (disabled)
- degllx61-vm	(ocf::heartbeat:Xen):	 Started deglxen001
- degllx64-vm	(ocf::heartbeat:Xen):	 Stopped (disabled)
+ degllx62-vm	(ocf:heartbeat:Xen):	 Started deglxen002
+ degllx63-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
+ degllx61-vm	(ocf:heartbeat:Xen):	 Started deglxen001
+ degllx64-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
  stonith_sbd	(stonith:external/sbd):	 Started deglxen001
  Clone Set: clone-nfs [grp-nfs]
      Started: [ deglxen001 deglxen002 ]
@@ -46,10 +46,10 @@ Revised cluster status:
 Node deglxen002: standby
 Online: [ deglxen001 ]
 
- degllx62-vm	(ocf::heartbeat:Xen):	 Started deglxen001
- degllx63-vm	(ocf::heartbeat:Xen):	 Stopped (disabled)
- degllx61-vm	(ocf::heartbeat:Xen):	 Stopped deglxen002
- degllx64-vm	(ocf::heartbeat:Xen):	 Stopped (disabled)
+ degllx62-vm	(ocf:heartbeat:Xen):	 Started deglxen001
+ degllx63-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
+ degllx61-vm	(ocf:heartbeat:Xen):	 Stopped deglxen002
+ degllx64-vm	(ocf:heartbeat:Xen):	 Stopped (disabled)
  stonith_sbd	(stonith:external/sbd):	 Started deglxen001
  Clone Set: clone-nfs [grp-nfs]
      Started: [ deglxen001 ]

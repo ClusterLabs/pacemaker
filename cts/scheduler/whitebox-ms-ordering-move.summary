@@ -6,12 +6,12 @@ GuestOnline: [ lxc1:container1 lxc2:container2 ]
  Fencing	(stonith:fence_xvm):	 Started rhel7-3
  FencingPass	(stonith:fence_dummy):	 Started rhel7-4
  FencingFail	(stonith:fence_dummy):	 Started rhel7-5
- rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	 Started rhel7-1
- rsc_rhel7-2	(ocf::heartbeat:IPaddr2):	 Started rhel7-2
- rsc_rhel7-3	(ocf::heartbeat:IPaddr2):	 Started rhel7-3
- rsc_rhel7-4	(ocf::heartbeat:IPaddr2):	 Started rhel7-4
- rsc_rhel7-5	(ocf::heartbeat:IPaddr2):	 Started rhel7-5
- migrator	(ocf::pacemaker:Dummy):	 Started rhel7-4
+ rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Started rhel7-1
+ rsc_rhel7-2	(ocf:heartbeat:IPaddr2):	 Started rhel7-2
+ rsc_rhel7-3	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
+ rsc_rhel7-4	(ocf:heartbeat:IPaddr2):	 Started rhel7-4
+ rsc_rhel7-5	(ocf:heartbeat:IPaddr2):	 Started rhel7-5
+ migrator	(ocf:pacemaker:Dummy):	 Started rhel7-4
  Clone Set: Connectivity [ping-1]
      Started: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
      Stopped: [ lxc1 lxc2 ]
@@ -19,12 +19,12 @@ GuestOnline: [ lxc1:container1 lxc2:container2 ]
      Masters: [ rhel7-3 ]
      Slaves: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
  Resource Group: group-1
-     r192.168.122.207	(ocf::heartbeat:IPaddr2):	 Started rhel7-3
+     r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
      petulant	(service:DummySD):	 Started rhel7-3
-     r192.168.122.208	(ocf::heartbeat:IPaddr2):	 Started rhel7-3
+     r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started rhel7-3
- container1	(ocf::heartbeat:VirtualDomain):	 Started rhel7-1
- container2	(ocf::heartbeat:VirtualDomain):	 Started rhel7-1
+ container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
+ container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Masters: [ lxc1 ]
      Slaves: [ lxc2 ]
@@ -80,12 +80,12 @@ GuestOnline: [ lxc1:container1 lxc2:container2 ]
  Fencing	(stonith:fence_xvm):	 Started rhel7-3
  FencingPass	(stonith:fence_dummy):	 Started rhel7-4
  FencingFail	(stonith:fence_dummy):	 Started rhel7-5
- rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	 Started rhel7-1
- rsc_rhel7-2	(ocf::heartbeat:IPaddr2):	 Started rhel7-2
- rsc_rhel7-3	(ocf::heartbeat:IPaddr2):	 Started rhel7-3
- rsc_rhel7-4	(ocf::heartbeat:IPaddr2):	 Started rhel7-4
- rsc_rhel7-5	(ocf::heartbeat:IPaddr2):	 Started rhel7-5
- migrator	(ocf::pacemaker:Dummy):	 Started rhel7-4
+ rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Started rhel7-1
+ rsc_rhel7-2	(ocf:heartbeat:IPaddr2):	 Started rhel7-2
+ rsc_rhel7-3	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
+ rsc_rhel7-4	(ocf:heartbeat:IPaddr2):	 Started rhel7-4
+ rsc_rhel7-5	(ocf:heartbeat:IPaddr2):	 Started rhel7-5
+ migrator	(ocf:pacemaker:Dummy):	 Started rhel7-4
  Clone Set: Connectivity [ping-1]
      Started: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
      Stopped: [ lxc1 lxc2 ]
@@ -93,12 +93,12 @@ GuestOnline: [ lxc1:container1 lxc2:container2 ]
      Masters: [ rhel7-3 ]
      Slaves: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
  Resource Group: group-1
-     r192.168.122.207	(ocf::heartbeat:IPaddr2):	 Started rhel7-3
+     r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
      petulant	(service:DummySD):	 Started rhel7-3
-     r192.168.122.208	(ocf::heartbeat:IPaddr2):	 Started rhel7-3
+     r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
  lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started rhel7-3
- container1	(ocf::heartbeat:VirtualDomain):	 Started rhel7-2
- container2	(ocf::heartbeat:VirtualDomain):	 Started rhel7-1
+ container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-2
+ container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
  Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Masters: [ lxc1 ]
      Slaves: [ lxc2 ]

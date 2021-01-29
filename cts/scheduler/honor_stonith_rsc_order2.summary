@@ -8,7 +8,7 @@ Online: [ fc16-builder ]
      S_B	(stonith:fence_xvm):	 Stopped
      S_C	(stonith:fence_xvm):	 Stopped
      S_D	(stonith:fence_xvm):	 Stopped
- A	(ocf::pacemaker:Dummy):	 Stopped
+ A	(ocf:pacemaker:Dummy):	 Stopped
 
 Transition Summary:
  * Start      S_A:0   ( fc16-builder )  
@@ -42,5 +42,5 @@ Online: [ fc16-builder ]
      S_B	(stonith:fence_xvm):	 Started fc16-builder
      S_C	(stonith:fence_xvm):	 Started fc16-builder
      S_D	(stonith:fence_xvm):	 Started fc16-builder
- A	(ocf::pacemaker:Dummy):	 Started fc16-builder
+ A	(ocf:pacemaker:Dummy):	 Started fc16-builder
 

@@ -3,15 +3,15 @@ Current cluster status:
 Node c001n02 (e9bdfde9-01b0-421f-acd8-8a65a53e775f): UNCLEAN (offline)
 Online: [ c001n03 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	 Stopped
+ DcIPaddr	(ocf:heartbeat:IPaddr):	 Stopped
  Resource Group: group-1
-     child_192.168.100.181	(ocf::heartbeat:IPaddr):	 Stopped
-     child_192.168.100.182	(ocf::heartbeat:IPaddr):	 Stopped
-     child_192.168.100.183	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n08	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n02	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n03	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n01	(ocf::heartbeat:IPaddr):	 Stopped
+     child_192.168.100.181	(ocf:heartbeat:IPaddr):	 Stopped
+     child_192.168.100.182	(ocf:heartbeat:IPaddr):	 Stopped
+     child_192.168.100.183	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n08	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n02	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n03	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n01	(ocf:heartbeat:IPaddr):	 Stopped
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	 Started c001n03
      child_DoFencing:1	(stonith:ssh):	 Started c001n02 (UNCLEAN)
@@ -48,15 +48,15 @@ Revised cluster status:
 Node c001n02 (e9bdfde9-01b0-421f-acd8-8a65a53e775f): UNCLEAN (offline)
 Online: [ c001n03 ]
 
- DcIPaddr	(ocf::heartbeat:IPaddr):	 Stopped
+ DcIPaddr	(ocf:heartbeat:IPaddr):	 Stopped
  Resource Group: group-1
-     child_192.168.100.181	(ocf::heartbeat:IPaddr):	 Stopped
-     child_192.168.100.182	(ocf::heartbeat:IPaddr):	 Stopped
-     child_192.168.100.183	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n08	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n02	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n03	(ocf::heartbeat:IPaddr):	 Stopped
- rsc_c001n01	(ocf::heartbeat:IPaddr):	 Stopped
+     child_192.168.100.181	(ocf:heartbeat:IPaddr):	 Stopped
+     child_192.168.100.182	(ocf:heartbeat:IPaddr):	 Stopped
+     child_192.168.100.183	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n08	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n02	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n03	(ocf:heartbeat:IPaddr):	 Stopped
+ rsc_c001n01	(ocf:heartbeat:IPaddr):	 Stopped
  Clone Set: DoFencing [child_DoFencing] (unique)
      child_DoFencing:0	(stonith:ssh):	 Started c001n03
      child_DoFencing:1	(stonith:ssh):	 Started c001n02 (UNCLEAN)

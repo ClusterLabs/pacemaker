@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -453,8 +453,8 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
     status_print("%s<resource ", pre_text);
     status_print("id=\"%s\" ", rsc_printable_id(rsc));
     status_print("resource_agent=\"%s%s%s:%s\" ",
-                 class,
-                 prov ? "::" : "", prov ? prov : "", crm_element_value(rsc->xml, XML_ATTR_TYPE));
+                 class, ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
+                 crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
     status_print("role=\"%s\" ", rsc_state);
     if (rsc->meta) {
@@ -572,11 +572,8 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 
     // Resource name and agent
     g_string_printf(outstr, "%s\t(%s%s%s:%s):\t", name, class,
-                    /* @COMPAT This should be a single ':' (see CLBZ#5395) but
-                     * to avoid breaking anything relying on it, we're keeping
-                     * it like this until the next minor version bump.
-                     */
-                    (provider? "::" : ""), (provider? provider : ""), kind);
+                    ((provider == NULL)? "" : ":"),
+                    ((provider == NULL)? "" : provider), kind);
 
     // State on node
     if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
@@ -932,8 +929,9 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     /* resource information. */
-    sprintf(ra_name, "%s%s%s:%s", class, prov ? "::" : "", prov ? prov : ""
-           , crm_element_value(rsc->xml, XML_ATTR_TYPE));
+    sprintf(ra_name, "%s%s%s:%s",
+            class, ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
+            crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
     nodes_running_on = crm_itoa(g_list_length(rsc->running_on));
     priority = crm_ftoa(rsc->priority);
@@ -1124,7 +1122,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
         if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-            offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
+            offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", prov);
         }
         offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
         CRM_LOG_ASSERT(offset > 0);

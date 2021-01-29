@@ -6,9 +6,9 @@ Online: [ node2 ]
  Clone Set: ms-rsc [rsc] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
- rsc1	(ocf::pacemaker:Dummy):	 Started node1
- rsc2	(ocf::pacemaker:Dummy):	 Started node1
- rsc3	(ocf::pacemaker:Dummy):	 Started node1
+ rsc1	(ocf:pacemaker:Dummy):	 Started node1
+ rsc2	(ocf:pacemaker:Dummy):	 Started node1
+ rsc3	(ocf:pacemaker:Dummy):	 Started node1
 
 Transition Summary:
  * Stop       rsc:0   (          Master node1 )   due to node availability
@@ -41,7 +41,7 @@ Online: [ node2 ]
  Clone Set: ms-rsc [rsc] (promotable)
      Masters: [ node2 ]
      Stopped: [ node1 ]
- rsc1	(ocf::pacemaker:Dummy):	 Started node2
- rsc2	(ocf::pacemaker:Dummy):	 Started node2
- rsc3	(ocf::pacemaker:Dummy):	 Started node2
+ rsc1	(ocf:pacemaker:Dummy):	 Started node2
+ rsc2	(ocf:pacemaker:Dummy):	 Started node2
+ rsc3	(ocf:pacemaker:Dummy):	 Started node2
 

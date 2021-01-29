@@ -6,8 +6,8 @@ Online: [ frigg odin ]
      Masters: [ frigg ]
      Slaves: [ odin ]
  Resource Group: group
-     IPaddr0	(ocf::heartbeat:IPaddr):	 Stopped
-     MailTo	(ocf::heartbeat:MailTo):	 Stopped
+     IPaddr0	(ocf:heartbeat:IPaddr):	 Stopped
+     MailTo	(ocf:heartbeat:MailTo):	 Stopped
 
 Transition Summary:
  * Promote    drbd0:0     (  Slave -> Master odin )  
@@ -55,6 +55,6 @@ Online: [ frigg odin ]
      Masters: [ odin ]
      Slaves: [ frigg ]
  Resource Group: group
-     IPaddr0	(ocf::heartbeat:IPaddr):	 Started odin
-     MailTo	(ocf::heartbeat:MailTo):	 Started odin
+     IPaddr0	(ocf:heartbeat:IPaddr):	 Started odin
+     MailTo	(ocf:heartbeat:MailTo):	 Started odin
 
