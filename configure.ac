@@ -1840,36 +1840,36 @@ AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)
 
 dnl Files we output that need to be executable
-AC_CONFIG_FILES([cts/CTSlab.py], [chmod +x cts/CTSlab.py])
-AC_CONFIG_FILES([cts/LSBDummy], [chmod +x cts/LSBDummy])
-AC_CONFIG_FILES([cts/OCFIPraTest.py], [chmod +x cts/OCFIPraTest.py])
-AC_CONFIG_FILES([cts/cluster_test], [chmod +x cts/cluster_test])
-AC_CONFIG_FILES([cts/cts], [chmod +x cts/cts])
-AC_CONFIG_FILES([cts/cts-cli], [chmod +x cts/cts-cli])
-AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
-AC_CONFIG_FILES([cts/cts-exec], [chmod +x cts/cts-exec])
-AC_CONFIG_FILES([cts/cts-fencing], [chmod +x cts/cts-fencing])
-AC_CONFIG_FILES([cts/cts-log-watcher], [chmod +x cts/cts-log-watcher])
-AC_CONFIG_FILES([cts/cts-regression], [chmod +x cts/cts-regression])
-AC_CONFIG_FILES([cts/cts-scheduler], [chmod +x cts/cts-scheduler])
-AC_CONFIG_FILES([cts/cts-support], [chmod +x cts/cts-support])
-AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
-AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
-AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
-AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
-AC_CONFIG_FILES([daemons/fenced/fence_legacy], [chmod +x daemons/fenced/fence_legacy])
-AC_CONFIG_FILES([doc/abi-check], [chmod +x doc/abi-check])
-AC_CONFIG_FILES([extra/resources/ClusterMon],  [chmod +x extra/resources/ClusterMon])
-AC_CONFIG_FILES([extra/resources/HealthSMART], [chmod +x extra/resources/HealthSMART])
-AC_CONFIG_FILES([extra/resources/SysInfo],     [chmod +x extra/resources/SysInfo])
-AC_CONFIG_FILES([extra/resources/ifspeed],     [chmod +x extra/resources/ifspeed])
-AC_CONFIG_FILES([extra/resources/o2cb],        [chmod +x extra/resources/o2cb])
-AC_CONFIG_FILES([tools/crm_failcount], [chmod +x tools/crm_failcount])
-AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
-AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
-AC_CONFIG_FILES([tools/crm_standby], [chmod +x tools/crm_standby])
-AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
-AC_CONFIG_FILES([tools/pcmk_simtimes], [chmod +x tools/pcmk_simtimes])
+CONFIG_FILES_EXEC([cts/CTSlab.py],
+                  [cts/LSBDummy],
+                  [cts/OCFIPraTest.py],
+                  [cts/cluster_test],
+                  [cts/cts],
+                  [cts/cts-cli],
+                  [cts/cts-coverage],
+                  [cts/cts-exec],
+                  [cts/cts-fencing],
+                  [cts/cts-log-watcher],
+                  [cts/cts-regression],
+                  [cts/cts-scheduler],
+                  [cts/cts-support],
+                  [cts/lxc_autogen.sh],
+                  [cts/benchmark/clubench],
+                  [cts/fence_dummy],
+                  [cts/pacemaker-cts-dummyd],
+                  [daemons/fenced/fence_legacy],
+                  [doc/abi-check],
+                  [extra/resources/ClusterMon],
+                  [extra/resources/HealthSMART],
+                  [extra/resources/SysInfo],
+                  [extra/resources/ifspeed],
+                  [extra/resources/o2cb],
+                  [tools/crm_failcount],
+                  [tools/crm_master],
+                  [tools/crm_report],
+                  [tools/crm_standby],
+                  [tools/cibsecret],
+                  [tools/pcmk_simtimes])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
