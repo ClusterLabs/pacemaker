@@ -109,7 +109,7 @@ static pcmk__supported_format_t formats[] = {
 #define RECONNECT_MSECS 5000
 
 struct {
-    int reconnect_msec;
+    guint reconnect_ms;
     gboolean daemonize;
     gboolean show_bans;
     char *pid_file;
@@ -122,7 +122,7 @@ struct {
     GSList *user_includes_excludes;
     GSList *includes_excludes;
 } options = {
-    .reconnect_msec = RECONNECT_MSECS,
+    .reconnect_ms = RECONNECT_MSECS,
     .mon_ops = mon_op_default
 };
 
@@ -472,7 +472,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
         g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
         return FALSE;
     } else {
-        options.reconnect_msec = crm_parse_interval_spec(optarg);
+        options.reconnect_ms = crm_parse_interval_spec(optarg);
     }
 
     return TRUE;
@@ -671,7 +671,7 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
-/* Reconnect to the CIB and fencing agent after reconnect_msec has passed.  This sounds
+/* Reconnect to the CIB and fencing agent after reconnect_ms has passed.  This sounds
  * like it would be more broadly useful, but only ever happens after a disconnect via
  * mon_cib_connection_destroy.
  */
@@ -696,7 +696,8 @@ reconnect_after_timeout(gpointer data)
         }
     }
 
-    reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
+    reconnect_timer = g_timeout_add(options.reconnect_ms,
+                                    reconnect_after_timeout, NULL);
     return G_SOURCE_REMOVE;
 }
 
@@ -726,7 +727,8 @@ mon_cib_connection_destroy(gpointer user_data)
     }
     if (cib) {
         cib->cmds->signoff(cib);
-        reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
+        reconnect_timer = g_timeout_add(options.reconnect_ms,
+                                        reconnect_after_timeout, NULL);
     }
     return;
 }
@@ -975,7 +977,7 @@ pacemakerd_status(void)
         case pcmk_rc_ok:
             rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
             if (rc == pcmk_rc_ok) {
-                rc = pcmk_poll_ipc(pacemakerd_api, options.reconnect_msec/2);
+                rc = pcmk_poll_ipc(pacemakerd_api, options.reconnect_ms/2);
                 if (rc == pcmk_rc_ok) {
                     pcmk_dispatch_ipc(pacemakerd_api);
                     rc = ENOTCONN;
@@ -1606,7 +1608,7 @@ main(int argc, char **argv)
     if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
         out->dest != stdout) {
         pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
-                              crm_itoa(options.reconnect_msec/1000), NULL);
+                              crm_itoa(options.reconnect_ms / 1000), NULL);
     }
 
     crm_info("Starting %s", crm_system_name);
@@ -1627,7 +1629,7 @@ main(int argc, char **argv)
         }
 
         if (rc != pcmk_rc_ok) {
-            sleep(options.reconnect_msec / 1000);
+            pcmk__sleep_ms(options.reconnect_ms);
 #if CURSES_ENABLED
             if (output_format == mon_output_console) {
                 clear();
@@ -2245,8 +2247,8 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
 
 /* Cause the screen to be redrawn (via mainloop_set_trigger) when various conditions are met:
  *
- * - If the last update occurred more than reconnect_msec ago (defaults to 5s, but can be
- *   changed via the -i command line option), or
+ * - If the last update occurred more than reconnect_ms ago (defaults to 5s, but
+ *   can be changed via the -i command line option), or
  * - After every 10 CIB updates, or
  * - If it's been 2s since the last update
  *
@@ -2280,7 +2282,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     fencing_connect();
 
     if (enforce ||
-        now - last_refresh > options.reconnect_msec / 1000 ||
+        ((now - last_refresh) > (options.reconnect_ms / 1000)) ||
         updates >= 10) {
         mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
         mainloop_timer_stop(refresh_timer);
