@@ -1899,7 +1899,6 @@ AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl Files we output that need to be executable
 CONFIG_FILES_EXEC([cts/CTSlab.py],
-                  [cts/LSBDummy],
                   [cts/OCFIPraTest.py],
                   [cts/cluster_test],
                   [cts/cts],
@@ -1910,11 +1909,12 @@ CONFIG_FILES_EXEC([cts/CTSlab.py],
                   [cts/cts-log-watcher],
                   [cts/cts-regression],
                   [cts/cts-scheduler],
-                  [cts/cts-support],
                   [cts/lxc_autogen.sh],
                   [cts/benchmark/clubench],
-                  [cts/fence_dummy],
-                  [cts/pacemaker-cts-dummyd],
+                  [cts/support/LSBDummy],
+                  [cts/support/cts-support],
+                  [cts/support/fence_dummy],
+                  [cts/support/pacemaker-cts-dummyd],
                   [daemons/fenced/fence_legacy],
                   [doc/abi-check],
                   [extra/resources/ClusterMon],
@@ -1935,7 +1935,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/CTS.py                                          \
                 cts/CTSvars.py                                      \
                 cts/benchmark/Makefile                              \
-                cts/pacemaker-cts-dummyd@.service                   \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
                 cts/scheduler/exp/Makefile                          \
@@ -1943,6 +1942,8 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/scheduler/stderr/Makefile                       \
                 cts/scheduler/summary/Makefile                      \
                 cts/scheduler/xml/Makefile                          \
+                cts/support/Makefile                                \
+                cts/support/pacemaker-cts-dummyd@.service           \
                 daemons/Makefile                                    \
                 daemons/attrd/Makefile                              \
                 daemons/based/Makefile                              \

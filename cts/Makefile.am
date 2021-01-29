@@ -14,8 +14,7 @@ noinst_SCRIPTS		= cluster_test		\
 
 # Commands intended to be run only via other commands
 halibdir		= $(CRM_DAEMON_DIR)
-dist_halib_SCRIPTS	= cts-log-watcher \
-			  cts-support
+dist_halib_SCRIPTS	= cts-log-watcher
 
 # Test commands and globally applicable test files should be in $(testdir),
 # and command-specific test data should be in a command-specific subdirectory.
@@ -47,17 +46,9 @@ nodist_ctslib_PYTHON	= CTS.py		\
 			  CTSvars.py
 
 ctsdir		= 	$(testdir)/cts
-cts_DATA	=	pacemaker-cts-dummyd@.service
-dist_cts_DATA	=	cts.conf
-if BUILD_UPSTART
-dist_cts_DATA	+=	pacemaker-cts-dummyd.conf
-endif
 cts_SCRIPTS		= CTSlab.py		\
 			  cts			\
-			  fence_dummy		\
-			  LSBDummy		\
-			  lxc_autogen.sh	\
-			  pacemaker-cts-dummyd
+			  lxc_autogen.sh
 
 clidir		= $(testdir)/cli
 dist_cli_DATA	= cli/constraints.xml \
@@ -85,10 +76,12 @@ CLEANFILES	= $(builddir)/.regression.failed.diff
 clean-local:
 	rm -f scheduler/*/*.pe
 
-SUBDIRS	= benchmark scheduler
+SUBDIRS	= benchmark scheduler support
 
-cts-support-install: cts-support
-	./cts-support install
+cts-support-install:
+	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
+	$(builddir)/support/cts-support install
 
-cts-support-uninstall: cts-support
-	./cts-support uninstall
+cts-support-uninstall:
+	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
+	$(builddir)/support/cts-support uninstall

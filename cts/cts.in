@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2012-2018 the Pacemaker project contributors
+# Copyright 2012-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -99,7 +99,15 @@ local_init() {
     chmod +x "$cts_root/crm_report"
 
     # Install the necessary helpers to system locations (must be done as root)
-    "$cts_root/cts-support" install
+    cts_support="$cts_root/cts-support" # if running from install
+    if [ ! -x "$cts_support" ]; then
+        cts_support="$cts_root/support/cts-support" # if running from source
+    fi
+    if [ -x "$cts_support" ]; then
+        "$cts_support" install
+    else
+        echo "warning: couldn't find cts-support (helpers may be unavailable)"
+    fi
 
     echo "Make sure you add $cts_root to your PATH and set a value for \$cluster_name in .bashrc"
     exit 0
