@@ -1898,19 +1898,19 @@ AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl Files we output that need to be executable
-CONFIG_FILES_EXEC([cts/CTSlab.py],
-                  [cts/OCFIPraTest.py],
-                  [cts/cluster_test],
-                  [cts/cts],
-                  [cts/cts-cli],
+CONFIG_FILES_EXEC([cts/cts-cli],
                   [cts/cts-coverage],
                   [cts/cts-exec],
                   [cts/cts-fencing],
-                  [cts/cts-log-watcher],
                   [cts/cts-regression],
                   [cts/cts-scheduler],
                   [cts/lxc_autogen.sh],
                   [cts/benchmark/clubench],
+                  [cts/lab/CTSlab.py],
+                  [cts/lab/OCFIPraTest.py],
+                  [cts/lab/cluster_test],
+                  [cts/lab/cts],
+                  [cts/lab/cts-log-watcher],
                   [cts/support/LSBDummy],
                   [cts/support/cts-support],
                   [cts/support/fence_dummy],
@@ -1932,9 +1932,10 @@ CONFIG_FILES_EXEC([cts/CTSlab.py],
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 cts/Makefile                                        \
-                cts/CTS.py                                          \
-                cts/CTSvars.py                                      \
                 cts/benchmark/Makefile                              \
+                cts/lab/Makefile                                    \
+                cts/lab/CTS.py                                      \
+                cts/lab/CTSvars.py                                  \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
                 cts/scheduler/exp/Makefile                          \

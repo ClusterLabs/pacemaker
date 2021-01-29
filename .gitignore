@@ -48,20 +48,20 @@ libltdl
 ylwrap
 
 # Configure targets
-/cts/CTS.py
-/cts/CTSlab.py
-/cts/CTSvars.py
-/cts/OCFIPraTest.py
 /cts/benchmark/clubench
-/cts/cluster_test
-/cts/cts
 /cts/cts-cli
 /cts/cts-coverage
 /cts/cts-exec
 /cts/cts-fencing
-/cts/cts-log-watcher
 /cts/cts-regression
 /cts/cts-scheduler
+/cts/lab/CTS.py
+/cts/lab/CTSlab.py
+/cts/lab/CTSvars.py
+/cts/lab/OCFIPraTest.py
+/cts/lab/cluster_test
+/cts/lab/cts
+/cts/lab/cts-log-watcher
 /cts/lxc_autogen.sh
 /cts/support/LSBDummy
 /cts/support/cts-support
@@ -199,8 +199,15 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /config.sub
 /coverage.sh
 /crmd
+/cts/CTS.py
+/cts/CTSlab.py
+/cts/CTSvars.py
 /cts/HBDummy
 /cts/LSBDummy
+/cts/OCFIPraTest.py
+/cts/cluster_test
+/cts/cts
+/cts/cts-log-watcher
 /cts/cts-support
 /cts/fence_dummy
 /cts/pacemaker-cts-dummyd

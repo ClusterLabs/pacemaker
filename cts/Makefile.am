@@ -9,13 +9,6 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-noinst_SCRIPTS		= cluster_test		\
-			  OCFIPraTest.py
-
-# Commands intended to be run only via other commands
-halibdir		= $(CRM_DAEMON_DIR)
-dist_halib_SCRIPTS	= cts-log-watcher
-
 # Test commands and globally applicable test files should be in $(testdir),
 # and command-specific test data should be in a command-specific subdirectory.
 testdir			= $(datadir)/$(PACKAGE)/tests
@@ -28,27 +21,8 @@ test_SCRIPTS		= cts-cli		\
 dist_test_DATA		= README.md			\
 			  valgrind-pcmk.suppressions
 
-ctslibdir		= $(pythondir)/cts
-ctslib_PYTHON		= __init__.py		\
-			  CIB.py		\
-			  cib_xml.py		\
-			  CM_common.py		\
-			  CM_corosync.py	\
-			  CTSaudits.py		\
-			  CTSscenarios.py	\
-			  CTStests.py		\
-			  environment.py	\
-			  logging.py		\
-			  patterns.py		\
-			  remote.py		\
-			  watcher.py
-nodist_ctslib_PYTHON	= CTS.py		\
-			  CTSvars.py
-
 ctsdir		= 	$(testdir)/cts
-cts_SCRIPTS		= CTSlab.py		\
-			  cts			\
-			  lxc_autogen.sh
+cts_SCRIPTS		= lxc_autogen.sh
 
 clidir		= $(testdir)/cli
 dist_cli_DATA	= cli/constraints.xml \
@@ -76,7 +50,7 @@ CLEANFILES	= $(builddir)/.regression.failed.diff
 clean-local:
 	rm -f scheduler/*/*.pe
 
-SUBDIRS	= benchmark scheduler support
+SUBDIRS	= benchmark lab scheduler support
 
 cts-support-install:
 	$(MAKE) $(AM_MAKEFLAGS) -C support cts-support
