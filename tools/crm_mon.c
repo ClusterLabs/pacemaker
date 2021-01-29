@@ -132,9 +132,10 @@ static void handle_connection_failures(int rc);
 static int mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
 static int fencing_connect(void);
+static int pacemakerd_status(void);
 static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
 static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
-static void refresh_after_event(gboolean data_updated);
+static void refresh_after_event(gboolean data_updated, gboolean enforce);
 
 static unsigned int
 all_includes(mon_output_format_t fmt) {
@@ -683,21 +684,19 @@ reconnect_after_timeout(gpointer data)
     }
 #endif
 
-    if (reconnect_timer > 0) {
-        g_source_remove(reconnect_timer);
-        reconnect_timer = 0;
-    }
-
     print_as(output_format, "Reconnecting...\n");
-    fencing_connect();
-    if (cib_connect(TRUE) == pcmk_ok) {
-        /* Redraw the screen and reinstall ourselves to get called after another reconnect_msec. */
-        mon_refresh_display(NULL);
-        return FALSE;
+    if (pacemakerd_status() == pcmk_rc_ok) {
+        fencing_connect();
+        if (cib_connect(TRUE) == pcmk_rc_ok) {
+            /* trigger redrawing the screen (needs reconnect_timer == 0) */
+            reconnect_timer = 0;
+            refresh_after_event(FALSE, TRUE);
+            return G_SOURCE_REMOVE;
+        }
     }
 
     reconnect_timer = g_timeout_add(options.reconnect_msec, reconnect_after_timeout, NULL);
-    return TRUE;
+    return G_SOURCE_REMOVE;
 }
 
 /* Called from various places when we are disconnected from the CIB or from the
@@ -795,7 +794,7 @@ fencing_connect(void)
             st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
         }
     } else {
-        st = NULL;
+        clean_up_fencing_connection();
     }
 
     return rc;
@@ -804,16 +803,17 @@ fencing_connect(void)
 static int
 cib_connect(gboolean full)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     static gboolean need_pass = TRUE;
 
-    CRM_CHECK(cib != NULL, return -EINVAL);
+    CRM_CHECK(cib != NULL, return EINVAL);
 
     if (getenv("CIB_passwd") != NULL) {
         need_pass = FALSE;
     }
 
-    if (cib->state == cib_connected_query || cib->state == cib_connected_command) {
+    if (cib->state == cib_connected_query ||
+        cib->state == cib_connected_command) {
         return rc;
     }
 
@@ -825,37 +825,51 @@ cib_connect(gboolean full)
      * @TODO Add a password prompt (maybe including input) function to
      *       pcmk__output_t and use it in libcib.
      */
-    if ((output_format == mon_output_console) && need_pass && (cib->variant == cib_remote)) {
+    if ((output_format == mon_output_console) &&
+         need_pass &&
+         (cib->variant == cib_remote)) {
         need_pass = FALSE;
         print_as(output_format, "Password:");
     }
 
-    rc = cib->cmds->signon(cib, crm_system_name, cib_query);
-    if (rc != pcmk_ok) {
+    rc = pcmk_legacy2rc(cib->cmds->signon(cib, crm_system_name, cib_query));
+    if (rc != pcmk_rc_ok) {
         out->err(out, "Could not connect to the CIB: %s",
-                 pcmk_strerror(rc));
+                 pcmk_rc_str(rc));
         return rc;
     }
 
-    rc = cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
+#if CURSES_ENABLED
+    /* just show this if refresh is gonna remove all traces */
+    if (output_format == mon_output_console) {
+        print_as(output_format ,"Waiting for CIB ...\n");
+    }
+#endif
 
-    if (rc == pcmk_ok && full) {
-        rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
-        if (rc == -EPROTONOSUPPORT) {
-            print_as
-                (output_format, "Notification setup not supported, won't be able to reconnect after failure");
+    rc = pcmk_legacy2rc(cib->cmds->query(cib, NULL, &current_cib,
+                                         cib_scope_local | cib_sync_call));
+
+    if (rc == pcmk_rc_ok && full) {
+        rc = pcmk_legacy2rc(cib->cmds->set_connection_dnotify(cib,
+            mon_cib_connection_destroy));
+        if (rc == EPROTONOSUPPORT) {
+            print_as(output_format,
+                     "Notification setup not supported, won't be "
+                     "able to reconnect after failure");
             if (output_format == mon_output_console) {
                 sleep(2);
             }
-            rc = pcmk_ok;
+            rc = pcmk_rc_ok;
         }
 
-        if (rc == pcmk_ok) {
-            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
-            rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
+        if (rc == pcmk_rc_ok) {
+            cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY,
+                                           crm_diff_update);
+            rc = pcmk_legacy2rc(cib->cmds->add_notify_callback(cib,
+                                    T_CIB_DIFF_NOTIFY, crm_diff_update));
         }
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             out->err(out, "Notification setup failed, could not monitor CIB actions");
             clean_up_cib_connection();
             clean_up_fencing_connection();
@@ -896,6 +910,132 @@ set_fencing_options(int level)
     }
 }
 
+/* Before trying to connect to fencer or cib check for state of
+   pacemakerd - just no sense in trying till pacemakerd has
+   taken care of starting all the sub-processes
+
+   Only noteworthy thing to show here is when pacemakerd is
+   waiting for startup-trigger from SBD.
+ */
+static void
+pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
+                    enum pcmk_ipc_event event_type, crm_exit_t status,
+                    void *event_data, void *user_data)
+{
+    pcmk_pacemakerd_api_reply_t *reply = event_data;
+    enum pcmk_pacemakerd_state *state =
+        (enum pcmk_pacemakerd_state *) user_data;
+
+    /* we are just interested in the latest reply */
+    *state = pcmk_pacemakerd_state_invalid;
+
+    switch (event_type) {
+        case pcmk_ipc_event_reply:
+            break;
+
+        default:
+            return;
+    }
+
+    if (status != CRM_EX_OK) {
+        out->err(out, "Bad reply from pacemakerd: %s",
+                 crm_exit_str(status));
+        return;
+    }
+
+    if (reply->reply_type != pcmk_pacemakerd_reply_ping) {
+        out->err(out, "Unknown reply type %d from pacemakerd",
+                 reply->reply_type);
+    } else {
+        if ((reply->data.ping.last_good != (time_t) 0) &&
+            (reply->data.ping.status == pcmk_rc_ok)) {
+            *state = reply->data.ping.state;
+        }
+    }
+}
+
+static int
+pacemakerd_status(void)
+{
+    int rc = pcmk_rc_ok;
+    pcmk_ipc_api_t *pacemakerd_api = NULL;
+    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
+
+    if (!pcmk_is_set(options.mon_ops, mon_op_cib_native)) {
+        /* we don't need fully functional pacemakerd otherwise */
+        return rc;
+    }
+    if (cib != NULL &&
+        (cib->state == cib_connected_query ||
+         cib->state == cib_connected_command)) {
+        /* As long as we have a cib-connection let's go with
+         * that to fetch further cluster-status and avoid
+         * unnecessary pings to pacemakerd.
+         * If cluster is going down and fencer is down already
+         * this will lead to a silently failing fencer reconnect.
+         * On cluster startup we shouldn't see this situation
+         * as first we do is wait for pacemakerd to report all
+         * daemons running.
+         */
+        return rc;
+    }
+    rc = pcmk_new_ipc_api(&pacemakerd_api, pcmk_ipc_pacemakerd);
+    if (pacemakerd_api == NULL) {
+        out->err(out, "Could not connect to pacemakerd: %s",
+                 pcmk_rc_str(rc));
+        /* this is unrecoverable so return with rc we have */
+        return rc;
+    }
+    pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb, (void *) &state);
+    rc = pcmk_connect_ipc(pacemakerd_api, pcmk_ipc_dispatch_poll);
+    if (rc == pcmk_rc_ok) {
+        rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
+        if (rc == pcmk_rc_ok) {
+            rc = pcmk_poll_ipc(pacemakerd_api, options.reconnect_msec/2);
+            if (rc == pcmk_rc_ok) {
+                pcmk_dispatch_ipc(pacemakerd_api);
+                rc = ENOTCONN;
+                if ((output_format == mon_output_console) ||
+                    (output_format == mon_output_plain)) {
+                    switch (state) {
+                        case pcmk_pacemakerd_state_running:
+                            rc = pcmk_rc_ok;
+                            break;
+                        case pcmk_pacemakerd_state_starting_daemons:
+                            print_as(output_format ,"Pacemaker daemons starting ...\n");
+                            break;
+                        case pcmk_pacemakerd_state_wait_for_ping:
+                            print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
+                            break;
+                        case pcmk_pacemakerd_state_shutting_down:
+                            print_as(output_format ,"Pacemaker daemons shutting down ...\n");
+                            break;
+                        case pcmk_pacemakerd_state_shutdown_complete:
+                            /* assuming pacemakerd doesn't dispatch any pings after entering
+                            * that state unless it is waiting for SBD
+                            */
+                            print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    switch (state) {
+                        case pcmk_pacemakerd_state_running:
+                            rc = pcmk_rc_ok;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+    }
+    pcmk_free_ipc_api(pacemakerd_api);
+    /* returning with ENOTCONN triggers a retry */
+    return (rc == pcmk_rc_ok)?rc:ENOTCONN;
+}
+
 #if CURSES_ENABLED
 static const char *
 get_option_desc(char c)
@@ -924,7 +1064,6 @@ static gboolean
 detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_data)
 {
     int c;
-    int rc;
     gboolean config_mode = FALSE;
 
     while (1) {
@@ -1025,13 +1164,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
     }
 
 refresh:
-    fencing_connect();
-    rc = cib_connect(FALSE);
-    if (rc == pcmk_rc_ok) {
-        mon_refresh_display(NULL);
-    } else {
-        handle_connection_failures(rc);
-    }
+    refresh_after_event(FALSE, TRUE);
 
     return TRUE;
 }
@@ -1206,33 +1339,37 @@ reconcile_output_format(pcmk__common_args_t *args) {
 static void
 handle_connection_failures(int rc)
 {
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         return;
     }
 
     if (output_format == mon_output_monitor) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "CLUSTER CRIT: Connection to cluster failed: %s",
-                    pcmk_strerror(rc));
+                    pcmk_rc_str(rc));
         rc = MON_STATUS_CRIT;
-    } else if (rc == -ENOTCONN) {
+    } else if (rc == ENOTCONN) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
-        rc = crm_errno2exit(rc);
+        rc = pcmk_rc2exitc(rc);
     } else {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_strerror(rc));
-        rc = crm_errno2exit(rc);
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_rc_str(rc));
+        rc = pcmk_rc2exitc(rc);
     }
 
     clean_up(rc);
 }
 
 static void
-one_shot()
+one_shot(void)
 {
     int rc;
 
-    fencing_connect();
+    rc = pacemakerd_status();
 
-    rc = cib_connect(FALSE);
+    if (rc == pcmk_rc_ok) {
+        fencing_connect();
+        rc = cib_connect(FALSE);
+    }
+
     if (rc == pcmk_rc_ok) {
         mon_refresh_display(NULL);
     } else {
@@ -1308,6 +1445,7 @@ main(int argc, char **argv)
 
                 case cib_native:
                     /* cib & fencing - everything available */
+                    options.mon_ops |= mon_op_cib_native;
                     break;
 
                 case cib_file:
@@ -1475,10 +1613,13 @@ main(int argc, char **argv)
     do {
         print_as(output_format ,"Waiting until cluster is available on this node ...\n");
 
-        fencing_connect();
-        rc = cib_connect(TRUE);
+        rc = pacemakerd_status();
+        if (rc == pcmk_rc_ok) {
+            fencing_connect();
+            rc = cib_connect(TRUE);
+        }
 
-        if (rc != pcmk_ok) {
+        if (rc != pcmk_rc_ok) {
             sleep(options.reconnect_msec / 1000);
 #if CURSES_ENABLED
             if (output_format == mon_output_console) {
@@ -1490,7 +1631,7 @@ main(int argc, char **argv)
             printf("Writing html to %s ...\n", args->output_dest);
         }
 
-    } while (rc == -ENOTCONN);
+    } while (rc == ENOTCONN);
 
     handle_connection_failures(rc);
     set_fencing_options(interactive_fence_level);
@@ -1943,7 +2084,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     stale = FALSE;
-    refresh_after_event(cib_updated);
+    refresh_after_event(cib_updated, FALSE);
 }
 
 static int
@@ -2102,7 +2243,7 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
  * fencing event is received or a CIB diff occurrs.
  */
 static void
-refresh_after_event(gboolean data_updated)
+refresh_after_event(gboolean data_updated, gboolean enforce)
 {
     static int updates = 0;
     time_t now = time(NULL);
@@ -2115,12 +2256,21 @@ refresh_after_event(gboolean data_updated)
         refresh_timer = mainloop_timer_add("refresh", 2000, FALSE, mon_trigger_refresh, NULL);
     }
 
-    if ((now - last_refresh) > (options.reconnect_msec / 1000)) {
-        mainloop_set_trigger(refresh_trigger);
+    if (reconnect_timer > 0) {
+        /* we will receive a refresh request after successful reconnect */
         mainloop_timer_stop(refresh_timer);
-        updates = 0;
+        return;
+    }
 
-    } else if(updates >= 10) {
+    /* as we're not handling initial failure of fencer-connection as
+     * fatal give it a retry here
+     * not getting here if cib-reconnection is already on the way
+     */
+    fencing_connect();
+
+    if (enforce ||
+        now - last_refresh > options.reconnect_msec / 1000 ||
+        updates >= 10) {
         mainloop_set_trigger(refresh_trigger);
         mainloop_timer_stop(refresh_timer);
         updates = 0;
@@ -2141,7 +2291,7 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
         mon_cib_connection_destroy(NULL);
     } else {
         print_dot(output_format);
-        refresh_after_event(TRUE);
+        refresh_after_event(TRUE, FALSE);
     }
 }
 

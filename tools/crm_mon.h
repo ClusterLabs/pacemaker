@@ -91,6 +91,7 @@ typedef enum mon_output_format_e {
 #define mon_op_print_brief          (0x0200U)
 #define mon_op_print_pending        (0x0400U)
 #define mon_op_print_clone_detail   (0x0800U)
+#define mon_op_cib_native           (0x1000U)
 
 #define mon_op_default              (mon_op_print_pending | mon_op_fence_history | mon_op_fence_connect)
 

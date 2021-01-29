@@ -54,7 +54,8 @@ SPEC_COMMIT	?= $(shell						\
 		        echo '$(TAG)' ;;				\
 		    *$(rparen)						\
 		        git log --pretty=format:%h -n 1 '$(TAG)';;	\
-		esac)
+		esac)$(shell						\
+		if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
 SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
 
 LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
@@ -88,7 +89,8 @@ distdir		= $(PACKAGE)-$(shell						\
 		  		echo '$(TAG)' | cut -c11-;;			\
 		  	*$(rparen)						\
 		  		git log --pretty=format:%h -n 1 '$(TAG)';;	\
-		  esac)
+		  esac)$(shell							\
+		  if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
 TARFILE		= $(abs_builddir)/$(distdir).tar.gz
 
 .PHONY: init
@@ -102,10 +104,10 @@ build: init
 
 export:
 	if [ ! -f "$(TARFILE)" ]; then						\
-	    if [ $(TAG) = dirty ]; then 					\
+	    if [ x$(DIRTY) != x ]; then 					\
 		git commit -m "DO-NOT-PUSH" -a;					\
 		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
-		git reset --mixed HEAD^; 					\
+		git reset --mixed HEAD^;					\
 	    else								\
 		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
 	    fi;									\
@@ -273,7 +275,7 @@ mock:   mock-$(MOCK_CFG)
 
 .PHONY: dirty
 dirty:
-	$(MAKE) $(AM_MAKEFLAGS) TAG=dirty mock
+	$(MAKE) $(AM_MAKEFLAGS) DIRTY=yes mock
 
 .PHONY: mock-clean
 mock-clean:
