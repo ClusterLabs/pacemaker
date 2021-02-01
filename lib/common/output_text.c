@@ -70,14 +70,17 @@ text_init(pcmk__output_t *out) {
 
 static void
 text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
-    /* This function intentionally left blank */
+    fflush(out->dest);
 }
 
 static void
 text_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
-    out->dest = freopen(NULL, "w", out->dest);
+    if (out->dest != stdout) {
+        out->dest = freopen(NULL, "w", out->dest);
+    }
+
     CRM_ASSERT(out->dest != NULL);
 
     text_free_priv(out);

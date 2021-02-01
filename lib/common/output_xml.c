@@ -172,6 +172,7 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     if (print) {
         char *buf = dump_xml_formatted_with_text(priv->root);
         fprintf(out->dest, "%s", buf);
+        fflush(out->dest);
         free(buf);
     }
 }
