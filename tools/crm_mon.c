@@ -686,7 +686,7 @@ reconnect_after_timeout(gpointer data)
     }
 #endif
 
-    print_as(output_format, "Reconnecting...\n");
+    out->info(out, "Reconnecting...");
     if (pacemakerd_status() == pcmk_rc_ok) {
         fencing_connect();
         if (cib_connect(TRUE) == pcmk_rc_ok) {
@@ -826,7 +826,7 @@ cib_connect(gboolean full)
 #if CURSES_ENABLED
     /* just show this if refresh is gonna remove all traces */
     if (output_format == mon_output_console) {
-        print_as(output_format ,"Waiting for CIB ...\n");
+        out->info(out,"Waiting for CIB ...");
     }
 #endif
 
@@ -837,7 +837,7 @@ cib_connect(gboolean full)
         rc = pcmk_legacy2rc(cib->cmds->set_connection_dnotify(cib,
             mon_cib_connection_destroy));
         if (rc == EPROTONOSUPPORT) {
-            print_as(output_format,
+            out->err(out,
                      "Notification setup not supported, won't be "
                      "able to reconnect after failure");
             if (output_format == mon_output_console) {
@@ -987,19 +987,19 @@ pacemakerd_status(void)
                                 rc = pcmk_rc_ok;
                                 break;
                             case pcmk_pacemakerd_state_starting_daemons:
-                                print_as(output_format ,"Pacemaker daemons starting ...\n");
+                                out->info(out,"Pacemaker daemons starting ...");
                                 break;
                             case pcmk_pacemakerd_state_wait_for_ping:
-                                print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
+                                out->info(out,"Waiting for startup-trigger from SBD ...");
                                 break;
                             case pcmk_pacemakerd_state_shutting_down:
-                                print_as(output_format ,"Pacemaker daemons shutting down ...\n");
+                                out->info(out,"Pacemaker daemons shutting down ...");
                                 break;
                             case pcmk_pacemakerd_state_shutdown_complete:
                                 /* assuming pacemakerd doesn't dispatch any pings after entering
                                 * that state unless it is waiting for SBD
                                 */
-                                print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
+                                out->info(out,"Pacemaker daemons shut down - reporting to SBD ...");
                                 break;
                             default:
                                 break;
@@ -1022,8 +1022,8 @@ pacemakerd_status(void)
 #if CURSES_ENABLED
             /* just show this if refresh is gonna remove all traces */
             if (output_format == mon_output_console) {
-                print_as(output_format ,
-                    "Running on remote-node waiting to be connected by cluster ...\n");
+                out->info(out,
+                    "Running on remote-node waiting to be connected by cluster ...");
             }
 #endif
             break;
@@ -1616,7 +1616,7 @@ main(int argc, char **argv)
     }
 
     do {
-        print_as(output_format ,"Waiting until cluster is available on this node ...\n");
+        out->info(out,"Waiting until cluster is available on this node ...");
 
         rc = pacemakerd_status();
         if (rc == pcmk_rc_ok) {
@@ -2082,7 +2082,7 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (current_cib == NULL) {
         if(!stale) {
-            print_as(output_format, "--- Stale data ---");
+            out->info(out, "--- Stale data ---");
         }
         stale = TRUE;
         return;

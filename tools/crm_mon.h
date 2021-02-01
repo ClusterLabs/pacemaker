@@ -19,18 +19,6 @@
                      "shutdown", "terminate", "standby", "probe_complete", \
                      "#", NULL }
 
-#if CURSES_ENABLED
-#  define print_as(output_format, fmt, args...) if (output_format == mon_output_console) { \
-	printw(fmt, ##args);				\
-	clrtoeol();					\
-	refresh();					\
-    } else {						\
-	fprintf(stdout, fmt, ##args);			\
-    }
-#else
-#  define print_as(output_format, fmt, args...) fprintf(stdout, fmt, ##args);
-#endif
-
 typedef enum mon_output_format_e {
     mon_output_unset,
     mon_output_none,
