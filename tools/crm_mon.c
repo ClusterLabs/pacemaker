@@ -381,7 +381,6 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
     args->output_ty = strdup("xml");
     output_format = mon_output_legacy_xml;
-    options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
@@ -1311,7 +1310,6 @@ reconcile_output_format(pcmk__common_args_t *args) {
 
         args->output_ty = strdup("xml");
         output_format = mon_output_xml;
-        options.mon_ops |= mon_op_one_shot;
     } else if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
@@ -1482,7 +1480,7 @@ main(int argc, char **argv)
             }
 
         } else if (options.daemonize) {
-            if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
+            if ((output_format == mon_output_console) || (args->output_dest == NULL)) {
                 output_format = mon_output_none;
             }
             crm_enable_stderr(FALSE);
@@ -1599,6 +1597,10 @@ main(int argc, char **argv)
 
     if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
         options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
+
+        if (!options.daemonize) {
+            options.mon_ops |= mon_op_one_shot;
+        }
     }
 
     if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
@@ -2156,6 +2158,10 @@ mon_refresh_display(gpointer user_data)
         unpack_constraints(cib_constraints, mon_data_set);
     }
 
+    if (options.daemonize) {
+        out->reset(out);
+    }
+
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
@@ -2210,7 +2216,7 @@ mon_refresh_display(gpointer user_data)
     }
 
     if (options.daemonize) {
-        out->reset(out);
+        out->finish(out, CRM_EX_OK, true, NULL);
     }
 
     stonith_history_free(stonith_history);
@@ -2401,12 +2407,9 @@ clean_up(crm_exit_t exit_code)
      * crm_mon to be able to do so.
      */
     if (out != NULL) {
-        if (options.daemonize) {
-            out->dest = freopen(NULL, "w", out->dest);
-            CRM_ASSERT(out->dest != NULL);
+        if (!options.daemonize) {
+            out->finish(out, exit_code, true, NULL);
         }
-
-        out->finish(out, exit_code, true, NULL);
 
         pcmk__output_free(out);
         pcmk__unregister_formats();
