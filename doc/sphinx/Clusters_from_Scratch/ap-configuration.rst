@@ -4,6 +4,12 @@ Configuration Recap
 Final Cluster Configuration
 ###########################
 
+.. NOTE::
+
+    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`,
+    installing dlm is not trivial. This chapter will updated once the bug
+    is resolved.
+
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource
