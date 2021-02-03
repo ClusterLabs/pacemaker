@@ -922,6 +922,32 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
 }
 
 /*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the pacemakerd API
+ *
+ * \param[in] cb  IPC callbacks
+ *
+ * \note This function exits with CRM_EX_OSERR if unable to create the servers.
+ */
+void
+pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
+                       struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        crm_err("Couldn't start pacemakerd IPC server");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
+         * if we want to prevent pacemakerd from restarting them.
+         * With pacemakerd we leave the exit-code shown to e.g. systemd
+         * to what it was prior to moving the code here from pacemakerd.c
+         */
+        crm_exit(CRM_EX_OSERR);
+    }
+}
+
+/*!
  * \brief Check whether string represents a client name used by cluster daemons
  *
  * \param[in] name  String to check

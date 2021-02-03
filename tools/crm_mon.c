@@ -83,6 +83,8 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
 
+static gboolean on_remote_node = FALSE;
+
 int interactive_fence_level = 0;
 
 static pcmk__supported_format_t formats[] = {
@@ -988,48 +990,63 @@ pacemakerd_status(void)
     }
     pcmk_register_ipc_callback(pacemakerd_api, pacemakerd_event_cb, (void *) &state);
     rc = pcmk_connect_ipc(pacemakerd_api, pcmk_ipc_dispatch_poll);
-    if (rc == pcmk_rc_ok) {
-        rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
-        if (rc == pcmk_rc_ok) {
-            rc = pcmk_poll_ipc(pacemakerd_api, options.reconnect_msec/2);
+    switch (rc) {
+        case pcmk_rc_ok:
+            rc = pcmk_pacemakerd_api_ping(pacemakerd_api, crm_system_name);
             if (rc == pcmk_rc_ok) {
-                pcmk_dispatch_ipc(pacemakerd_api);
-                rc = ENOTCONN;
-                if ((output_format == mon_output_console) ||
-                    (output_format == mon_output_plain)) {
-                    switch (state) {
-                        case pcmk_pacemakerd_state_running:
-                            rc = pcmk_rc_ok;
-                            break;
-                        case pcmk_pacemakerd_state_starting_daemons:
-                            print_as(output_format ,"Pacemaker daemons starting ...\n");
-                            break;
-                        case pcmk_pacemakerd_state_wait_for_ping:
-                            print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
-                            break;
-                        case pcmk_pacemakerd_state_shutting_down:
-                            print_as(output_format ,"Pacemaker daemons shutting down ...\n");
-                            break;
-                        case pcmk_pacemakerd_state_shutdown_complete:
-                            /* assuming pacemakerd doesn't dispatch any pings after entering
-                            * that state unless it is waiting for SBD
-                            */
-                            print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
-                            break;
-                        default:
-                            break;
-                    }
-                } else {
-                    switch (state) {
-                        case pcmk_pacemakerd_state_running:
-                            rc = pcmk_rc_ok;
-                            break;
-                        default:
-                            break;
+                rc = pcmk_poll_ipc(pacemakerd_api, options.reconnect_msec/2);
+                if (rc == pcmk_rc_ok) {
+                    pcmk_dispatch_ipc(pacemakerd_api);
+                    rc = ENOTCONN;
+                    if ((output_format == mon_output_console) ||
+                        (output_format == mon_output_plain)) {
+                        switch (state) {
+                            case pcmk_pacemakerd_state_running:
+                                rc = pcmk_rc_ok;
+                                break;
+                            case pcmk_pacemakerd_state_starting_daemons:
+                                print_as(output_format ,"Pacemaker daemons starting ...\n");
+                                break;
+                            case pcmk_pacemakerd_state_wait_for_ping:
+                                print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
+                                break;
+                            case pcmk_pacemakerd_state_shutting_down:
+                                print_as(output_format ,"Pacemaker daemons shutting down ...\n");
+                                break;
+                            case pcmk_pacemakerd_state_shutdown_complete:
+                                /* assuming pacemakerd doesn't dispatch any pings after entering
+                                * that state unless it is waiting for SBD
+                                */
+                                print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
+                                break;
+                            default:
+                                break;
+                        }
+                    } else {
+                        switch (state) {
+                            case pcmk_pacemakerd_state_running:
+                                rc = pcmk_rc_ok;
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
             }
-        }
+            break;
+        case EREMOTEIO:
+            rc = pcmk_rc_ok;
+            on_remote_node = TRUE;
+#if CURSES_ENABLED
+            /* just show this if refresh is gonna remove all traces */
+            if (output_format == mon_output_console) {
+                print_as(output_format ,
+                    "Running on remote-node waiting to be connected by cluster ...\n");
+            }
+#endif
+            break;
+        default:
+            break;
     }
     pcmk_free_ipc_api(pacemakerd_api);
     /* returning with ENOTCONN triggers a retry */
@@ -1348,7 +1365,11 @@ handle_connection_failures(int rc)
                     pcmk_rc_str(rc));
         rc = MON_STATUS_CRIT;
     } else if (rc == ENOTCONN) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
+        if (on_remote_node) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: remote-node not connected to cluster");
+        } else {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error: cluster is not available on this node");
+        }
         rc = pcmk_rc2exitc(rc);
     } else {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Connection to cluster failed: %s", pcmk_rc_str(rc));

@@ -1287,11 +1287,7 @@ main(int argc, char **argv)
 
     // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
 
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
-    if (ipcs == NULL) {
-        crm_err("Couldn't start IPC server");
-        crm_exit(CRM_EX_OSERR);
-    }
+    pcmk__serve_pacemakerd_ipc(&ipcs, &mcp_ipc_callbacks);
 
 #ifdef SUPPORT_COROSYNC
     /* Allows us to block shutdown */
