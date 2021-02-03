@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #  define CIB_INTERNAL__H
 #  include <crm/cib.h>
 #  include <crm/common/ipc_internal.h>
+#  include <crm/common/output_internal.h>
 
 #  define CIB_OP_SLAVE	"cib_slave"
 #  define CIB_OP_SLAVEALL	"cib_slave_all"
@@ -211,5 +212,7 @@ int cib_file_read_and_verify(const char *filename, const char *sigfile,
                              xmlNode **root);
 int cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                                const char *cib_filename);
+
+void cib__set_output(cib_t *cib, pcmk__output_t *out);
 
 #endif

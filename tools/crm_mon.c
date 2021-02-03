@@ -806,13 +806,8 @@ static int
 cib_connect(gboolean full)
 {
     int rc = pcmk_rc_ok;
-    static gboolean need_pass = TRUE;
 
     CRM_CHECK(cib != NULL, return EINVAL);
-
-    if (getenv("CIB_passwd") != NULL) {
-        need_pass = FALSE;
-    }
 
     if (cib->state == cib_connected_query ||
         cib->state == cib_connected_command) {
@@ -820,19 +815,6 @@ cib_connect(gboolean full)
     }
 
     crm_trace("Connecting to the CIB");
-
-    /* Hack: the CIB signon will print the prompt for a password if needed,
-     * but to stderr. If we're in curses, show it on the screen instead.
-     *
-     * @TODO Add a password prompt (maybe including input) function to
-     *       pcmk__output_t and use it in libcib.
-     */
-    if ((output_format == mon_output_console) &&
-         need_pass &&
-         (cib->variant == cib_remote)) {
-        need_pass = FALSE;
-        print_as(output_format, "Password:");
-    }
 
     rc = pcmk_legacy2rc(cib->cmds->signon(cib, crm_system_name, cib_query));
     if (rc != pcmk_rc_ok) {
@@ -1626,6 +1608,8 @@ main(int argc, char **argv)
     }
 
     crm_info("Starting %s", crm_system_name);
+
+    cib__set_output(cib, out);
 
     if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         one_shot();
