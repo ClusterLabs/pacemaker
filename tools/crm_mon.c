@@ -886,7 +886,7 @@ set_fencing_options(int level)
             break;
 
         default:
-            level = 0;
+            interactive_fence_level = 0;
             options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
             show &= ~mon_show_fencing_all;
             break;
