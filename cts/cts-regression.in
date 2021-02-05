@@ -4,13 +4,17 @@
 #
 # Convenience wrapper for running any of the Pacemaker regression tests
 #
-# Copyright 2012-2018 the Pacemaker project contributors
+# Copyright 2012-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
+
+# Check whether Pacemaker Remote support was built
+[ -z "@PC_NAME_GNUTLS@" ]
+REMOTE_ENABLED=$?
 
 USAGE_TEXT="Usage: cts-regression [<options>] [<test> ...]
 Options:
@@ -21,8 +25,14 @@ Options:
 Tests (default tests are 'scheduler cli'):
  scheduler         Action scheduler
  cli               Command-line tools
- exec              Local resource agent executor
- pacemaker_remote  Resource agent executor in remote mode
+ exec              Local resource agent executor"
+
+if [ $REMOTE_ENABLED -eq 1 ]; then
+    USAGE_TEXT="$USAGE_TEXT
+ pacemaker_remote  Resource agent executor in remote mode"
+fi
+
+USAGE_TEXT="$USAGE_TEXT
  fencing           Fencer
  all               Synonym for 'scheduler cli exec fencing'"
 
@@ -188,9 +198,18 @@ while [ $# -gt 0 ] ; do
             valgrind="-v"
             shift
             ;;
-        scheduler|exec|pacemaker_remote|fencing|cli)
+        scheduler|exec|fencing|cli)
             add_test $1
             shift
+            ;;
+        pacemaker_remote)
+            if [ $REMOTE_ENABLED -eq 0 ]; then
+                error "Pacemaker Remote not supported by this build"
+                exit $CRM_EX_USAGE
+            else
+                add_test $1
+                shift
+            fi
             ;;
         all)
             add_test scheduler

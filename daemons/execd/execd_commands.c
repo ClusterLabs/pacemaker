@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1531,7 +1531,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     }
 
     if (crm_is_true(is_ipc_provider)) {
-#ifdef SUPPORT_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
         if ((client->remote != NULL) && client->remote->tls_handshake_complete) {
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
@@ -1866,7 +1866,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
-#ifdef SUPPORT_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
         if (allowed) {
             ipc_proxy_forward_client(client, request);
         } else {

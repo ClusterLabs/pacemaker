@@ -1502,6 +1502,7 @@ AS_IF([test "$ac_cv_lib_gnutls_gnutls_sec_param_to_pk_bits" != ""], [
                      ],
                      [PC_NAME_GNUTLS=""])
     AC_SUBST(PC_NAME_GNUTLS)
+    AM_CONDITIONAL(BUILD_REMOTE, test "$PC_NAME_GNUTLS" != "")
 ])
 
 dnl ========================================================================
