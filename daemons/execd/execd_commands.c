@@ -411,6 +411,12 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         dup = gIter->data;
         if (pcmk__str_eq(cmd->action, dup->action, pcmk__str_casei)
             && (cmd->interval_ms == dup->interval_ms)) {
+            if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+                if (dup->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
+                    /* Fencing monitors marked for cancellation will not be merged to respond to cancellation. */
+                    return FALSE;
+                }
+            }
             goto merge_dup;
         }
     }
