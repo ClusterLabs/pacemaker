@@ -225,6 +225,21 @@ AC_ARG_ENABLE([hardening],
 yes_no_try "$enable_hardening" "try"
 enable_hardening=$?
 
+AC_ARG_ENABLE([compat-2.0],
+    [AS_HELP_STRING([--enable-compat-2.0], m4_normalize([
+	preserve certain output as it was in 2.0; this option will be
+	available only for the lifetime of the 2.1 series @<:@no@:>@]))]
+)
+yes_no_try "$enable_compat_2_0" "no"
+enable_compat_2_0=$?
+AS_IF([test $enable_compat_2_0 -gt 0],
+      [
+          AC_DEFINE_UNQUOTED([PCMK__COMPAT_2_0], [1],
+                             [Keep certain output compatible with 2.0 release series])
+          PCMK_FEATURES="$PCMK_FEATURES compat-2.0"
+      ]
+)
+
 # Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
 # that users and tools can continue to invoke those names directly (e.g., for
 # meta-data). This option will be deprecated in a future release.

@@ -448,6 +448,10 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 
 ./autogen.sh
 
+%if 0%{?fedora} <= 34 || 0%{?rhel} <= 8
+%global compat20 --enable-compat-2.0
+%endif
+
 %{configure}                                                                    \
         PYTHON=%{python_path}                                                   \
         %{!?with_hardening:    --disable-hardening}                             \
@@ -456,6 +460,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
+        %{?compat20}                                                            \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \
         --localstatedir=%{_var}                                                 \

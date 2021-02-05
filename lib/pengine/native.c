@@ -19,6 +19,12 @@
 #define VARIANT_NATIVE 1
 #include "./variant.h"
 
+#ifdef PCMK__COMPAT_2_0
+#define PROVIDER_SEP "::"
+#else
+#define PROVIDER_SEP ":"
+#endif
+
 /*!
  * \internal
  * \brief Check whether a resource is active on multiple nodes
@@ -452,8 +458,9 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
     /* resource information. */
     status_print("%s<resource ", pre_text);
     status_print("id=\"%s\" ", rsc_printable_id(rsc));
-    status_print("resource_agent=\"%s%s%s:%s\" ",
-                 class, ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
+    status_print("resource_agent=\"%s%s%s:%s\" ", class,
+                 ((prov == NULL)? "" : PROVIDER_SEP),
+                 ((prov == NULL)? "" : prov),
                  crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
     status_print("role=\"%s\" ", rsc_state);
@@ -572,7 +579,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 
     // Resource name and agent
     g_string_printf(outstr, "%s\t(%s%s%s:%s):\t", name, class,
-                    ((provider == NULL)? "" : ":"),
+                    ((provider == NULL)? "" : PROVIDER_SEP),
                     ((provider == NULL)? "" : provider), kind);
 
     // State on node
@@ -929,8 +936,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     /* resource information. */
-    sprintf(ra_name, "%s%s%s:%s",
-            class, ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
+    snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
+            ((prov == NULL)? "" : PROVIDER_SEP), ((prov == NULL)? "" : prov),
             crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
     nodes_running_on = crm_itoa(g_list_length(rsc->running_on));
@@ -1122,7 +1129,11 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
         if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-            offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", prov);
+
+            if (prov != NULL) {
+                offset += snprintf(buffer + offset, LINE_MAX - offset,
+                                   PROVIDER_SEP "%s", prov);
+            }
         }
         offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
         CRM_LOG_ASSERT(offset > 0);
