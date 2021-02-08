@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -70,8 +71,15 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     const char *description = "Examples:\n\n"
@@ -81,7 +89,7 @@ build_arg_context(pcmk__common_args_t *args) {
                               "produce verbose output:\n\n"
                               "\tcrm_verify --xml-file file.xml --verbose\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "data", "Data sources:",
@@ -107,10 +115,14 @@ main(int argc, char **argv)
 
     GError *error = NULL;
 
+    pcmk__output_t *out = NULL;
+
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "xSX");
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
@@ -118,11 +130,17 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_verify", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_verify is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_USAGE);
+        out->version(out, false);
+        goto done;
     }
 
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
@@ -208,9 +226,9 @@ main(int argc, char **argv)
         pcmk__config_error = true;
         free_xml(cib_object);
         cib_object = NULL;
-        fprintf(stderr, "The cluster will NOT be able to use this configuration.\n");
-        fprintf(stderr, "Please manually update the configuration to conform to the %s syntax.\n",
-                xml_latest_schema());
+        out->err(out, "The cluster will NOT be able to use this configuration.\n"
+                 "Please manually update the configuration to conform to the %s syntax.",
+                 xml_latest_schema());
     }
 
     data_set = pe_new_working_set();
@@ -268,11 +286,16 @@ main(int argc, char **argv)
     free(options.xml_file);
     free(options.xml_string);
 
+    if (exit_code == CRM_EX_OK) {
+        exit_code = pcmk_rc2exitc(rc);
+    }
+
     pcmk__output_and_clear_error(error, NULL);
 
-    if (exit_code != CRM_EX_OK) {
-        crm_exit(exit_code);
-    } else {
-        crm_exit(pcmk_rc2exitc(rc));
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
     }
+
+    crm_exit(exit_code);
 }
