@@ -27,8 +27,14 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
-gboolean USE_LIVE_CIB = FALSE;
-char *cib_save = NULL;
+struct {
+    char *cib_save;
+    gboolean use_live_cib;
+    char *xml_file;
+    gboolean xml_stdin;
+    char *xml_string;
+} options;
+
 extern gboolean stage0(pe_working_set_t * data_set);
 
 static pcmk__cli_option_t long_options[] = {
@@ -116,10 +122,7 @@ main(int argc, char **argv)
     int rc = pcmk_rc_ok;
 
     bool verbose = FALSE;
-    gboolean xml_stdin = FALSE;
     const char *xml_tag = NULL;
-    const char *xml_file = NULL;
-    const char *xml_string = NULL;
 
     pcmk__cli_init_logging("crm_verify", 0);
     pcmk__set_cli_options(NULL, "[options]", long_options,
@@ -140,24 +143,24 @@ main(int argc, char **argv)
         switch (flag) {
             case 'X':
                 crm_trace("Option %c => %s", flag, optarg);
-                xml_string = optarg;
+                options.xml_string = optarg;
                 break;
             case 'x':
                 crm_trace("Option %c => %s", flag, optarg);
-                xml_file = optarg;
+                options.xml_file = optarg;
                 break;
             case 'p':
-                xml_stdin = TRUE;
+                options.xml_stdin = TRUE;
                 break;
             case 'S':
-                cib_save = optarg;
+                options.cib_save = optarg;
                 break;
             case 'V':
                 verbose = TRUE;
                 crm_bump_log_level(argc, argv);
                 break;
             case 'L':
-                USE_LIVE_CIB = TRUE;
+                options.use_live_cib = TRUE;
                 break;
             case '$':
             case '?':
@@ -189,13 +192,13 @@ main(int argc, char **argv)
 
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
-    if (USE_LIVE_CIB) {
+    if (options.use_live_cib) {
         cib_conn = cib_new();
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
         rc = pcmk_legacy2rc(rc);
     }
 
-    if (USE_LIVE_CIB) {
+    if (options.use_live_cib) {
         if (rc == pcmk_rc_ok) {
             int options = cib_scope_local | cib_sync_call;
 
@@ -214,22 +217,22 @@ main(int argc, char **argv)
             goto done;
         }
 
-    } else if (xml_file != NULL) {
-        cib_object = filename2xml(xml_file);
+    } else if (options.xml_file != NULL) {
+        cib_object = filename2xml(options.xml_file);
         if (cib_object == NULL) {
-            fprintf(stderr, "Couldn't parse input file: %s\n", xml_file);
+            fprintf(stderr, "Couldn't parse input file: %s\n", options.xml_file);
             rc = ENODATA;
             goto done;
         }
 
-    } else if (xml_string != NULL) {
-        cib_object = string2xml(xml_string);
+    } else if (options.xml_string != NULL) {
+        cib_object = string2xml(options.xml_string);
         if (cib_object == NULL) {
-            fprintf(stderr, "Couldn't parse input string: %s\n", xml_string);
+            fprintf(stderr, "Couldn't parse input string: %s\n", options.xml_string);
             rc = ENODATA;
             goto done;
         }
-    } else if (xml_stdin) {
+    } else if (options.xml_stdin) {
         cib_object = stdin2xml();
         if (cib_object == NULL) {
             fprintf(stderr, "Couldn't parse input from STDIN.\n");
@@ -252,8 +255,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (cib_save != NULL) {
-        write_xml_file(cib_object, cib_save, FALSE);
+    if (options.cib_save != NULL) {
+        write_xml_file(cib_object, options.cib_save, FALSE);
     }
 
     status = get_object_root(XML_CIB_TAG_STATUS, cib_object);
@@ -284,7 +287,7 @@ main(int argc, char **argv)
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     if (cib_object == NULL) {
-    } else if (status != NULL || USE_LIVE_CIB) {
+    } else if (status != NULL || options.use_live_cib) {
         /* live queries will always have a status section and can do a full simulation */
         pcmk__schedule_actions(data_set, cib_object, NULL);
 
@@ -310,11 +313,14 @@ main(int argc, char **argv)
         rc = pcmk_rc_schema_validation;
     }
 
-    if (USE_LIVE_CIB && cib_conn) {
+    if (options.use_live_cib && cib_conn) {
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
     }
 
   done:
+    free(options.cib_save);
+    free(options.xml_file);
+    free(options.xml_string);
     crm_exit(pcmk_rc2exitc(rc));
 }
