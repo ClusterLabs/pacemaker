@@ -413,6 +413,7 @@ pcmk__mk_html_output(char **argv) {
     retval->is_quiet = html_is_quiet;
     retval->spacer = html_spacer;
     retval->progress = html_progress;
+    retval->prompt = pcmk__text_prompt;
 
     return retval;
 }

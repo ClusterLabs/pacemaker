@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <termios.h>
 
 #include <crm/crm.h>
 #include <crm/common/output_internal.h>
@@ -293,6 +294,7 @@ pcmk__mk_text_output(char **argv) {
     retval->is_quiet = text_is_quiet;
     retval->spacer = text_spacer;
     retval->progress = text_progress;
+    retval->prompt = pcmk__text_prompt;
 
     return retval;
 }
@@ -331,4 +333,51 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
     va_start(ap, format);
     pcmk__indented_vprintf(out, format, ap);
     va_end(ap);
+}
+
+void
+pcmk__text_prompt(const char *prompt, bool echo, char **dest)
+{
+    int rc = 0;
+    struct termios settings;
+    tcflag_t orig_c_lflag = 0;
+
+    CRM_ASSERT(prompt != NULL);
+    CRM_ASSERT(dest != NULL);
+
+    if (!echo) {
+        rc = tcgetattr(0, &settings);
+        if (rc == 0) {
+            orig_c_lflag = settings.c_lflag;
+            settings.c_lflag &= ~ECHO;
+            rc = tcsetattr(0, TCSANOW, &settings);
+        }
+    }
+
+    if (rc == 0) {
+        fprintf(stderr, "%s: ", prompt);
+
+        if (*dest != NULL) {
+            free(*dest);
+            *dest = NULL;
+        }
+
+#if SSCANF_HAS_M
+        rc = scanf("%ms", dest);
+#else
+        *dest = calloc(1, 1024);
+        rc = scanf("%1023s", *dest);
+#endif
+        fprintf(stderr, "\n");
+    }
+
+    if (rc < 1) {
+        free(*dest);
+        *dest = NULL;
+    }
+
+    if (orig_c_lflag != 0) {
+        settings.c_lflag = orig_c_lflag;
+        rc = tcsetattr(0, TCSANOW, &settings);
+    }
 }

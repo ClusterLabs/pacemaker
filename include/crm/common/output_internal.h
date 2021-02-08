@@ -480,6 +480,24 @@ struct pcmk__output_s {
      *
      */
     void (*progress) (pcmk__output_t *out, bool end);
+
+    /*!
+     * \internal
+     * \brief Prompt the user for input.  Not all formatters will do this.
+     *
+     * \note This function is part of pcmk__output_t, but unlike all other
+     *       function it does not take that as an argument.  In general, a
+     *       prompt will go directly to the screen and therefore bypass any
+     *       need to use the formatted output code to decide where and how
+     *       to display.
+     *
+     * \param[in]  prompt The prompt to display.  This is required.
+     * \param[in]  echo   If true, echo the user's input to the screen.  Set
+     *                    to false for password entry.
+     * \param[out] dest   Where to store the user's response.  This is
+     *                    required.
+     */
+    void (*prompt) (const char *prompt, bool echo, char **dest);
 };
 
 /*!
@@ -628,6 +646,18 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
  */
 void
 pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
+
+/*!
+ * \internal
+ * \brief Prompt the user for input.
+ *
+ * \param[in]  prompt The prompt to display
+ * \param[in]  echo   If true, echo the user's input to the screen.  Set
+ *                    to false for password entry.
+ * \param[out] dest   Where to store the user's response.
+ */
+void
+pcmk__text_prompt(const char *prompt, bool echo, char **dest);
 
 /*!
  * \internal

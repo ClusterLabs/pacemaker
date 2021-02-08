@@ -421,6 +421,7 @@ pcmk__mk_xml_output(char **argv) {
     retval->is_quiet = xml_is_quiet;
     retval->spacer = xml_spacer;
     retval->progress = xml_progress;
+    retval->prompt = pcmk__text_prompt;
 
     return retval;
 }

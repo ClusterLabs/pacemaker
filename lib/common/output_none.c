@@ -105,6 +105,11 @@ none_progress(pcmk__output_t *out, bool end) {
     /* This function intentionally left blank */
 }
 
+static void
+none_prompt(const char *prompt, bool echo, char **dest) {
+    /* This function intentionally left blank */
+}
+
 pcmk__output_t *
 pcmk__mk_none_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -138,6 +143,7 @@ pcmk__mk_none_output(char **argv) {
     retval->is_quiet = none_is_quiet;
     retval->spacer = none_spacer;
     retval->progress = none_progress;
+    retval->prompt = none_prompt;
 
     return retval;
 }
