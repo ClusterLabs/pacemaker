@@ -317,6 +317,20 @@ AC_ARG_WITH([gnutls-priorities],
     [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ]
 )
 
+AC_ARG_WITH([concurrent-fencing-default],
+    [AS_HELP_STRING([--with-concurrent-fencing-default],
+        [default value for concurrent-fencing cluster option @<:@false@:>@])],
+)
+AS_CASE([$with_concurrent_fencing_default],
+	[""], [with_concurrent_fencing_default="false"],
+        [false], [],
+        [true], [PCMK_FEATURES="$PCMK_FEATURES default-concurrent-fencing"],
+        [AC_MSG_ERROR([Invalid value "$with_concurrent_fencing_default" for --with-concurrent-fencing-default])]
+)
+AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
+                   ["$with_concurrent_fencing_default"],
+                   [Default value for concurrent-fencing cluster option])
+
 AC_ARG_WITH([corosync],
     [AS_HELP_STRING([--with-corosync],
         [support the Corosync messaging and membership layer @<:@try@:>@])]
