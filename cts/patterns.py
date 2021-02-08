@@ -1,7 +1,7 @@
 """ Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2008-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, os
@@ -225,6 +225,7 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
             r"pacemaker-controld.*error:.*Could not recover from internal error",
             r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
+            r"error:.*cib_(shm|rw) IPC provider disconnected while waiting",
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit: Fencing daemon connection failed",
             # This is overbroad, but we don't have a way to say that only
@@ -275,7 +276,7 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["pacemaker-execd"] = [
-            r"pacemaker-controld.*Connection to (pacemaker-execd|lrmd|executor) (failed|closed)",
+            r"pacemaker-controld.*Connection to executor failed",
             r"pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
             r"pacemaker-controld.*State transition .* S_RECOVERY",
             r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
@@ -285,7 +286,7 @@ class crm_corosync(BasePatterns):
             r"pacemakerd.*Respawning failed child process: pacemaker-controld",
         ]
         self.components["pacemaker-execd-ignore"] = [
-            r"pacemaker-attrd.*Connection to lrmd (failed|closed)",
+            r"pacemaker-(attrd|controld).*Connection to lrmd.* (failed|closed)",
             r"pacemaker-(attrd|controld).*Could not execute alert",
         ]
 
@@ -304,14 +305,14 @@ class crm_corosync(BasePatterns):
                     "State transition .* S_RECOVERY",
                     r"Respawning failed child process: pacemaker-controld",
                     r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
-                    "Connection to pengine failed",
-                    "Connection to pengine.* closed",
                     r"Connection to the scheduler failed",
                     "pacemaker-controld.*I_ERROR.*save_cib_contents",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
                     "pacemaker-controld.*Could not recover from internal error",
                     ]
-        self.components["pacemaker-schedulerd-ignore"] = []
+        self.components["pacemaker-schedulerd-ignore"] = [
+            r"Connection to pengine.* (failed|closed)",
+        ]
 
         self.components["pacemaker-fenced"] = [
             r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
