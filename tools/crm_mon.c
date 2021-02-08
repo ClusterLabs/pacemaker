@@ -81,7 +81,7 @@ static GOptionContext *context = NULL;
 static gchar **processed_args = NULL;
 
 static time_t last_refresh = 0;
-crm_trigger_t *refresh_trigger = NULL;
+volatile crm_trigger_t *refresh_trigger = NULL;
 
 static gboolean on_remote_node = FALSE;
 
@@ -739,7 +739,7 @@ mon_shutdown(int nsig)
 }
 
 #if CURSES_ENABLED
-static sighandler_t ncurses_winch_handler;
+static volatile sighandler_t ncurses_winch_handler;
 
 /* Signal handler installed the regular way (not into the main loop) for when
  * the screen is resized.  Commonly, this happens when running in an xterm and
@@ -762,7 +762,7 @@ mon_winresize(int nsig)
         /* Alert the mainloop code we'd like the refresh_trigger to run next
          * time the mainloop gets around to checking.
          */
-        mainloop_set_trigger(refresh_trigger);
+        mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
     }
     not_done--;
 }
@@ -1906,7 +1906,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 static gboolean
 mon_trigger_refresh(gpointer user_data)
 {
-    mainloop_set_trigger(refresh_trigger);
+    mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
     return FALSE;
 }
 
@@ -2282,7 +2282,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     if (enforce ||
         now - last_refresh > options.reconnect_msec / 1000 ||
         updates >= 10) {
-        mainloop_set_trigger(refresh_trigger);
+        mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
         mainloop_timer_stop(refresh_timer);
         updates = 0;
 
