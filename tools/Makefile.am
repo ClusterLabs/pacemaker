@@ -31,6 +31,7 @@ EXTRA_DIST		= crm_diff.8.inc \
 			  crm_resource.8.inc \
 			  crm_rule.8.inc \
 			  crm_simulate.8.inc \
+			  crm_verify.8.inc \
 			  crmadmin.8.inc \
 			  fix-manpages \
 			  stonith_admin.8.inc
