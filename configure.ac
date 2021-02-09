@@ -287,6 +287,15 @@ AC_ARG_WITH([cibsecrets],
 yes_no_try "$with_cibsecrets" "no"
 with_cibsecrets=$?
 
+AC_ARG_WITH([gnutls],
+    [AS_HELP_STRING([--with-gnutls],
+        [support Pacemaker Remote and remote-tls-port using GnuTLS @<:@try@:>@])]
+)
+with_gnutls=$(yes_no_try "$with_gnutls" "try")
+AS_IF([test $with_gnutls -eq 3],
+      [AC_MSG_ERROR([Invalid value for --with-gnutls])]
+)
+
 PCMK_GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH([gnutls-priorities],
     [AS_HELP_STRING([--with-gnutls-priorities],
@@ -1476,18 +1485,27 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-dnl Require GnuTLS >=2.12.0 (2011-03) to support Pacemaker Remote
-AC_CHECK_LIB(gnutls, gnutls_sec_param_to_pk_bits)
-AS_IF([test "$ac_cv_lib_gnutls_gnutls_sec_param_to_pk_bits" != ""], [
-    AC_CHECK_HEADERS([gnutls/gnutls.h],
-                     [
-                         PC_NAME_GNUTLS="gnutls"
-                         PCMK_FEATURES="$PCMK_FEATURES remote"
-                     ],
-                     [PC_NAME_GNUTLS=""])
-    AC_SUBST(PC_NAME_GNUTLS)
-    AM_CONDITIONAL(BUILD_REMOTE, test "$PC_NAME_GNUTLS" != "")
-])
+dnl Require GnuTLS >=2.12.0 (2011-03) for Pacemaker Remote support
+PC_NAME_GNUTLS=""
+AS_CASE([$with_gnutls],
+        [1], [
+                 REQUIRE_LIB([gnutls], [gnutls_sec_param_to_pk_bits])
+                 REQUIRE_HEADER([gnutls/gnutls.h])
+             ],
+        [2], [
+                 AC_CHECK_LIB([gnutls], [gnutls_sec_param_to_pk_bits],
+                              [], [with_gnutls=0])
+                 AC_CHECK_HEADERS([gnutls/gnutls.h], [], [with_gnutls=0])
+             ]
+)
+AS_IF([test $with_gnutls -gt 0],
+      [
+          PC_NAME_GNUTLS="gnutls"
+          PCMK_FEATURES="$PCMK_FEATURES remote"
+      ]
+)
+AC_SUBST([PC_NAME_GNUTLS])
+AM_CONDITIONAL([BUILD_REMOTE], [test $with_gnutls -gt 0])
 
 dnl ========================================================================
 dnl    System Health
