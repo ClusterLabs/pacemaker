@@ -869,8 +869,7 @@ PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
                    LIBS="${LIBS} ${LIBXML2_LIBS}"])
 
-AC_CHECK_LIB([xslt], [xsltApplyStylesheet], [],
-             [AC_MSG_FAILURE([Could not find required C library libxslt])])
+REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
 dnl ========================================================================
 dnl Headers
@@ -983,8 +982,7 @@ dnl ========================================================================
 dnl   bzip2
 dnl ========================================================================
 REQUIRE_HEADER([bzlib.h])
-AC_CHECK_LIB([bz2], [BZ2_bzBuffToBuffCompress],,
-             [AC_MSG_FAILURE(Could not find required C library libbz2)])
+REQUIRE_LIB([bz2], [BZ2_bzBuffToBuffCompress])
 
 dnl ========================================================================
 dnl sighandler_t is missing from Illumos, Solaris11 systems
@@ -1539,17 +1537,17 @@ AS_IF([test -n "${SANITIZERS}"], [
             [asan|ASAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=address"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=address -lasan"
-                AC_CHECK_LIB([asan],[main],,AC_MSG_ERROR([Unable to find libasan]))
+                REQUIRE_LIB([asan],[main])
             ],
             [ubsan|UBSAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=undefined"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=undefined -lubsan"
-                AC_CHECK_LIB([ubsan],[main],,AC_MSG_ERROR([Unable to find libubsan]))
+                REQUIRE_LIB([ubsan],[main])
             ],
             [tsan|TSAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=thread"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=thread -ltsan"
-                AC_CHECK_LIB([tsan],[main],,AC_MSG_ERROR([Unable to find libtsan]))
+                REQUIRE_LIB([tsan],[main])
             ])
   done
 ])
