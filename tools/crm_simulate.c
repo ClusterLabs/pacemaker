@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
@@ -864,13 +865,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     };
 
     const char *description = "Operation Specification:\n\n"
-                              "The OPSPEC in any command line option is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc} "
-                              "memcached_monitor_20000@bart.example.com=7, for example).  ${rc} is an OCF return code.  For more "
-                              "information on these return codes, refer to "
-                              "https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/s-ocf-return-codes.html\n\n"
+                              "The OPSPEC in any command line option is of the form\n"
+                              "${resource}_${task}_${interval_in_ms}@${node}=${rc}\n"
+                              "(memcached_monitor_20000@bart.example.com=7, for example).\n"
+                              "${rc} is an OCF return code.  For more information on these\n"
+                              "return codes, refer to https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/s-ocf-return-codes.html\n\n"
                               "Examples:\n\n"
-                              "Pretend a recurring monitor action found memcached stopped on node "
-                              "fred.example.com and, during recovery, that the memcached stop "
+                              "Pretend a recurring monitor action found memcached stopped on node\n"
+                              "fred.example.com and, during recovery, that the memcached stop\n"
                               "action failed:\n\n"
                               "\tcrm_simulate -LS --op-inject memcached:0_monitor_20000@bart.example.com=7 "
                               "--op-fail memcached:0_stop_0@fred.example.com=1 --save-output /tmp/memcached-test.xml\n\n"
@@ -896,44 +898,31 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
-    GError *error = NULL;
-    GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = build_arg_context(args, &output_group);
-
     int rc = pcmk_rc_ok;
     pe_working_set_t *data_set = NULL;
-
     xmlNode *input = NULL;
 
+    GError *error = NULL;
+
+    GOptionGroup *output_group = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "bdefgiqrtuwxDFGINO");
+    GOptionContext *context = build_arg_context(args, &output_group);
+
+    /* This must come before g_option_context_parse_strv. */
     options.xml_file = strdup("-");
 
-    crm_log_cli_init("crm_simulate");
-
-    processed_args = pcmk__cmdline_preproc(argv, "bdefgiqrtuwxDFGINO");
-
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         goto done;
     }
 
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_simulate", args->verbosity);
 
     if (args->version) {
         g_strfreev(processed_args);
         pcmk__free_arg_context(context);
         /* FIXME:  When crm_simulate is converted to use formatted output, this can go. */
         pcmk__cli_help('v', CRM_EX_USAGE);
-    }
-
-    if (optind > argc) {
-        gchar *help = g_option_context_get_help(context, TRUE, NULL);
-        fprintf(stderr, "%s", help);
-        g_free(help);
-        goto done;
     }
 
     if (args->verbosity > 0) {
@@ -1104,10 +1093,7 @@ main(int argc, char **argv)
     }
 
   done:
-    if (error != NULL) {
-        fprintf(stderr, "%s\n", error->message);
-        g_clear_error(&error);
-    }
+    pcmk__output_and_clear_error(error, NULL);
 
     /* There sure is a lot to free in options. */
     free(options.dot_file);

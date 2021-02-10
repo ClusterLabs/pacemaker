@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2020 the Pacemaker project contributors
+ * Copyright 2006-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef OPTIONS_INTERNAL__H
-#  define OPTIONS_INTERNAL__H
+#ifndef PCMK__OPTIONS_INTERNAL__H
+#  define PCMK__OPTIONS_INTERNAL__H
 
 #  ifndef PCMK__CONFIG_H
 #    define PCMK__CONFIG_H
@@ -119,4 +119,4 @@ bool pcmk__get_sbd_sync_resource_startup(void);
 long pcmk__auto_watchdog_timeout(void);
 bool pcmk__valid_sbd_timeout(const char *value);
 
-#endif // OPTIONS_INTERNAL__H
+#endif // PCMK__OPTIONS_INTERNAL__H

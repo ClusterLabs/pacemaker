@@ -180,7 +180,7 @@ main(int argc, char **argv)
 
     gboolean query_all = FALSE;
 
-    crm_log_cli_init("attrd_updater");
+    pcmk__cli_init_logging("attrd_updater", 0);
     pcmk__set_cli_options(NULL, "-n <attribute> <command> [options]",
                           long_options,
                           "query and update Pacemaker node attributes");

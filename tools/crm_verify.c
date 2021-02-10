@@ -121,7 +121,7 @@ main(int argc, char **argv)
     const char *xml_file = NULL;
     const char *xml_string = NULL;
 
-    crm_log_cli_init("crm_verify");
+    pcmk__cli_init_logging("crm_verify", 0);
     pcmk__set_cli_options(NULL, "[options]", long_options,
                           "check a Pacemaker configuration for errors\n\n"
                           "Check the well-formedness of a complete Pacemaker "

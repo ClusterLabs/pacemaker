@@ -527,7 +527,7 @@ main(int argc, char **argv)
     gboolean use_tls = FALSE;
     crm_trigger_t *trig;
 
-    crm_log_cli_init("cts-exec-helper");
+    pcmk__cli_init_logging("cts-exec-helper", 0);
     pcmk__set_cli_options(NULL, "<mode> [options]", long_options,
                           "inject commands into the Pacemaker executor, "
                           "and watch for events");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -183,46 +183,38 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
-    pcmk__output_t *out = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     int rc;
     int argerr = 0;
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-
     GError *error = NULL;
-    GOptionContext *context = NULL;
+
+    pcmk__output_t *out = NULL;
+
     GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "itBDEHKNPS");
+    GOptionContext *context = build_arg_context(args, &output_group);
 
-    context = build_arg_context(args, &output_group);
     pcmk__register_formats(output_group, formats);
-
-    crm_log_cli_init("crmadmin");
-
-    processed_args = pcmk__cmdline_preproc(argv, "itBDEHKNPS");
-
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crmadmin", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Error creating output format %s: %s\n",
-                args->output_ty, pcmk_rc_str(rc));
         exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
 
-    out->quiet = args->quiet;
-
     pcmk__register_lib_messages(out);
+
+    out->quiet = args->quiet;
 
     if (!pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname())) {
         goto done;
@@ -235,10 +227,6 @@ main(int argc, char **argv)
 
     if (options.health) {
         out->err(out, "Cluster-wide health option not supported");
-        ++argerr;
-    }
-
-    if (optind > argc) {
         ++argerr;
     }
 
@@ -288,8 +276,10 @@ main(int argc, char **argv)
 done:
 
     g_strfreev(processed_args);
-    g_clear_error(&error);
     pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, out);
+
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);

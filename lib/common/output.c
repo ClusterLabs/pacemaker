@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -150,4 +150,20 @@ pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table) {
             pcmk__register_message(out, entry->message_id, entry->fn);
         }
     }
+}
+
+void
+pcmk__output_and_clear_error(GError *error, pcmk__output_t *out)
+{
+    if (error == NULL) {
+        return;
+    }
+
+    if (out != NULL) {
+        out->err(out, "%s: %s", g_get_prgname(), error->message);
+    } else {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+    }
+
+    g_clear_error(&error);
 }

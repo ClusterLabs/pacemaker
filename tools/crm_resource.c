@@ -10,6 +10,7 @@
 #include <crm_resource.h>
 #include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/lists_internal.h>
 #include <pacemaker-internal.h>
 
@@ -189,15 +190,7 @@ static pcmk__supported_format_t formats[] = {
 static crm_exit_t
 bye(crm_exit_t ec)
 {
-    if (error != NULL) {
-        if (out != NULL) {
-            out->err(out, "%s: %s", g_get_prgname(), error->message);
-        } else {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        }
-
-        g_clear_error(&error);
-    }
+    pcmk__output_and_clear_error(error, out);
 
     if (out != NULL) {
         out->finish(out, ec, true, NULL);
@@ -1519,37 +1512,31 @@ main(int argc, char **argv)
      * Parse command line arguments
      */
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = NULL;
     GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
+    GOptionContext *context = build_arg_context(args, &output_group);
 
-    context = build_arg_context(args, &output_group);
     pcmk__register_formats(output_group, formats);
-    crm_log_cli_init("crm_resource");
-
-    processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
-
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
-    /*
-     * Set verbosity
-     */
-
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_resource", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Error creating output format %s: %s\n",
-                args->output_ty, pcmk_rc_str(rc));
         exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
+
+    pe__register_messages(out);
+    crm_resource_register_messages(out);
+    lrmd__register_messages(out);
+    pcmk__register_lib_messages(out);
 
     out->quiet = args->quiet;
 
@@ -1649,20 +1636,8 @@ main(int argc, char **argv)
         }
     }
 
-    pe__register_messages(out);
-    crm_resource_register_messages(out);
-    lrmd__register_messages(out);
-    pcmk__register_lib_messages(out);
-
     if (args->version) {
         out->version(out, false);
-        goto done;
-    }
-
-    if (optind > argc) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Invalid option(s) supplied, use --help for valid usage");
-        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
@@ -2063,7 +2038,7 @@ main(int argc, char **argv)
      */
 
 done:
-    if (rc != pcmk_rc_ok) {
+    if (rc != pcmk_rc_ok || exit_code != CRM_EX_OK) {
         if (rc == pcmk_rc_no_quorum) {
             g_prefix_error(&error, "To ignore quorum, use the force option.\n");
         }

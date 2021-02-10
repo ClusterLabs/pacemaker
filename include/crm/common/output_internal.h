@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_OUTPUT__H
-#  define CRM_OUTPUT__H
+#ifndef PCMK__OUTPUT_INTERNAL__H
+#  define PCMK__OUTPUT_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -796,6 +796,17 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 void
 pcmk__html_add_header(const char *name, ...)
 G_GNUC_NULL_TERMINATED;
+
+/*!
+ * \internal
+ * \brief Handle end-of-program error reporting
+ *
+ * \param[in,out] error A GError object potentially containing some error.
+ *                      If NULL, do nothing.
+ * \param[in]     out   The output functions structure.  If NULL, any errors
+ *                      will simply be printed to stderr.
+ */
+void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \

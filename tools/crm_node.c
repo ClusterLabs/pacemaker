@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
@@ -530,28 +531,19 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup *group) {
 int
 main(int argc, char **argv)
 {
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-
     GError *error = NULL;
-    GOptionContext *context = NULL;
+
     GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
-
-    context = build_arg_context(args, output_group);
-
-    crm_log_cli_init("crm_node");
-
-    processed_args = pcmk__cmdline_preproc(argv, "NR");
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "NR");
+    GOptionContext *context = build_arg_context(args, output_group);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_node", args->verbosity);
 
     if (args->version) {
         g_strfreev(processed_args);
@@ -560,7 +552,7 @@ main(int argc, char **argv)
         pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
-    if (optind > argc || options.command == 0) {
+    if (options.command == 0) {
         char *help = g_option_context_get_help(context, TRUE, NULL);
 
         fprintf(stderr, "%s", help);
@@ -599,7 +591,8 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    g_clear_error(&error);
     pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, NULL);
     return crm_exit(exit_code);
 }

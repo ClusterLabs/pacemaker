@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -97,8 +97,6 @@ void crm_write_blackbox(int nsig, struct qb_log_callsite *callsite);
 void crm_update_callsites(void);
 
 void crm_log_deinit(void);
-
-gboolean crm_log_cli_init(const char *entity);
 
 void crm_log_preinit(const char *entity, int argc, char **argv);
 gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
@@ -398,6 +396,9 @@ unsigned int get_crm_log_level(void);
                 break;                                                      \
         }                                                                   \
     } while (0)
+
+//! \deprecated Do not use Pacemaker for logging
+gboolean crm_log_cli_init(const char *entity);
 
 #endif // PCMK__NO_COMPAT
 
