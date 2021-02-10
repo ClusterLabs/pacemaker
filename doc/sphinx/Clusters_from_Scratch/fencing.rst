@@ -124,56 +124,77 @@ For this example, assume we have a chassis containing four nodes
 and a separately powered IPMI device active on 10.0.0.1. Following the steps
 above would go something like this:
 
-Step 1: Install the **fence-virt** package on both nodes.
+Step 1: Install the **fence-agents-ipmilan** package on both nodes.
 
 Step 2: Configure the IP address, authentication credentials, etc. in the IPMI device itself.
 
-Step 3: Choose the **fence_virt** STONITH agent.
+Step 3: Choose the **fence_ipmilan** STONITH agent.
 
 Step 4: Obtain the agent's possible parameters:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs stonith describe fence_virt
-    fence_virt - Fence agent for virtual machines
+    [root@pcmk-1 ~]# pcs stonith describe fence_ipmilan
+    fence_ipmilan - Fence agent for IPMI
     
-    fence_virt is an I/O Fencing agent which can be used withvirtual machines.
-    
-    Stonith options:
-      debug: Specify (stdin) or increment (command line) debug level
-      serial_device: Serial device (default=/dev/ttyS1)
-      serial_params: Serial Parameters (default=115200,8N1)
-      channel_address: VM Channel IP address (default=10.0.2.179)
-      ipport: TCP, Multicast, VMChannel, or VM socket port (default=1229)
-      port: Virtual Machine (domain name) to fence
-      timeout: Fencing timeout (in seconds; default=30)
-      ipaddr: IP address to connect to in TCP mode (default=127.0.0.1 / ::1)
-      vsock: vm socket CID to connect to in vsock mode
-      auth: Authentication (none, sha1, [sha256], sha512)
-      hash: Packet hash strength (none, sha1, [sha256], sha512)
-      key_file: Shared key file (default=/etc/cluster/fence_xvm.key)
-      delay: Fencing delay (in seconds; default=0)
-      domain: Virtual Machine (domain name) to fence (deprecated; use port)
-      pcmk_host_map: A mapping of host names to ports numbers for devices that do not support host names. Eg.
-                     node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2
-      pcmk_host_list: A list of machines controlled by this device (Optional unless pcmk_host_check=static-list).
-      pcmk_host_check: How to determine which machines are controlled by the device. Allowed values: dynamic-list (query
-                       the device via the 'list' command), static-list (check the pcmk_host_list attribute), status
-                       (query the device via the 'status' command), none (assume every device can fence every machine)
-      pcmk_delay_max: Enable a random delay for stonith actions and specify the maximum of random delay. This prevents
-                      double fencing when using slow devices such as sbd. Use this to enable a random delay for stonith
-                      actions. The overall delay is derived from this random delay value adding a static delay so that
-                      the sum is kept below the maximum delay.
-      pcmk_delay_base: Enable a base delay for stonith actions and specify base delay value. This prevents double
-                       fencing when different delays are configured on the nodes. Use this to enable a static delay for
-                       stonith actions. The overall delay is derived from a random delay value adding this static delay
-                       so that the sum is kept below the maximum delay.
-      pcmk_action_limit: The maximum number of actions can be performed in parallel on this device Cluster property
-                         concurrent-fencing=true needs to be configured first. Then use this to specify the maximum
-                         number of actions can be performed in parallel on this device. -1 is unlimited.
+    fence_ipmilan is an I/O Fencing agentwhich can be used with machines controlled by IPMI.This agent calls support software ipmitool (http://ipmitool.sf.net/). WARNING! This fence agent might report success before the node is powered off. You should use -m/method onoff if your fence device works correctly with that option.
 
-     Default operations:
-       monitor: interval=60s
+    Stonith options:
+      auth: IPMI Lan Auth type.
+      cipher: Ciphersuite to use (same as ipmitool -C parameter)
+      hexadecimal_kg: Hexadecimal-encoded Kg key for IPMIv2 authentication
+      ip: IP address or hostname of fencing device
+      ipport: TCP/UDP port to use for connection with device
+      lanplus: Use Lanplus to improve security of connection
+      method: Method to fence
+      password: Login password or passphrase
+      password_script: Script to run to retrieve password
+      plug: IP address or hostname of fencing device (together with --port-as-ip)
+      privlvl: Privilege level on IPMI device
+      target: Bridge IPMI requests to the remote target address
+      username: Login name
+      quiet: Disable logging to stderr. Does not affect --verbose or --debug-file or logging to syslog.
+      verbose: Verbose mode. Multiple -v flags can be stacked on the command line (e.g., -vvv) to increase
+               verbosity.
+      verbose_level: Level of debugging detail in output. Defaults to the number of --verbose flags specified
+                     on the command line, or to 1 if verbose=1 in a stonith device configuration (i.e., on
+                     stdin).
+      debug_file: Write debug information to given file
+      delay: Wait X seconds before fencing is started
+      disable_timeout: Disable timeout (true/false) (default: true when run from Pacemaker 2.0+)
+      ipmitool_path: Path to ipmitool binary
+      login_timeout: Wait X seconds for cmd prompt after login
+      port_as_ip: Make "port/plug" to be an alias to IP address
+      power_timeout: Test X seconds for status change after ON/OFF
+      power_wait: Wait X seconds after issuing ON/OFF
+      shell_timeout: Wait X seconds for cmd prompt after issuing command
+      retry_on: Count of attempts to retry power on
+      use_sudo: Use sudo (without password) when calling 3rd party software
+      sudo_path: Path to sudo binary
+      pcmk_host_map: A mapping of host names to ports numbers for devices that do not support host names. Eg.
+                     node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for
+                     node2
+      pcmk_host_list: A list of machines controlled by this device (Optional unless pcmk_host_check=static-
+                      list).
+      pcmk_host_check: How to determine which machines are controlled by the device. Allowed values: dynamic-
+                       list (query the device via the 'list' command), static-list (check the pcmk_host_list
+                       attribute), status (query the device via the 'status' command), none (assume every
+                       device can fence every machine)
+      pcmk_delay_max: Enable a random delay for stonith actions and specify the maximum of random delay. This
+                      prevents double fencing when using slow devices such as sbd. Use this to enable a
+                      random delay for stonith actions. The overall delay is derived from this random delay
+                      value adding a static delay so that the sum is kept below the maximum delay.
+      pcmk_delay_base: Enable a base delay for stonith actions and specify base delay value. This prevents
+                       double fencing when different delays are configured on the nodes. Use this to enable a
+                       static delay for stonith actions. The overall delay is derived from a random delay
+                       value adding this static delay so that the sum is kept below the maximum delay.
+      pcmk_action_limit: The maximum number of actions can be performed in parallel on this device Cluster
+                         property concurrent-fencing=true needs to be configured first. Then use this to
+                         specify the maximum number of actions can be performed in parallel on this device.
+                         -1 is unlimited.
+    
+    Default operations:
+      monitor: interval=60s
 
 Step 5: ``pcs cluster cib stonith_cfg``
 
@@ -181,10 +202,11 @@ Step 6: Here are example parameters for creating our fence device resource:
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs -f stonith_cfg stonith create my_stonith fence_virt \
-          pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 op monitor interval=60s
+    [root@pcmk-1 ~]# pcs -f stonith_cfg stonith create ipmi-fencing fence_ipmilan \
+          pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
+          passwd=acd123 op monitor interval=60s
     [root@pcmk-1 ~]# pcs -f stonith_cfg stonith
-     ipmi-fencing	(stonith:fence_ipmilan):	Stopped 
+      * ipmi-fencing	(stonith:fence_ipmilan):	Stopped
 
 Steps 7-10: Enable fencing in the cluster:
 

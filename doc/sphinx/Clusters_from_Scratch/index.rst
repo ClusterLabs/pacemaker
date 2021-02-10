@@ -13,7 +13,7 @@ The example cluster will use:
 
 * |CFS_DISTRO| |CFS_DISTRO_VER| as the host operating system
 * Corosync to provide messaging and membership services,
-* Pacemaker 1.1.18 [#]_
+* Pacemaker 2 [#]_
 * DRBD as a cost-effective alternative to shared storage,
 * GFS2 as the cluster filesystem (in active/active mode)
 

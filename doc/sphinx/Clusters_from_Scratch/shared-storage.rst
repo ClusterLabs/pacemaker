@@ -7,7 +7,7 @@ Replicate Storage Using DRBD
 Even if you're serving up static websites, having to manually synchronize
 the contents of that website to all the machines in the cluster is not
 ideal. For dynamic websites, such as a wiki, it's not even an option. Not
-everyone care afford network-attached storage, but somehow the data needs
+everyone can afford network-attached storage, but somehow the data needs
 to be kept in sync.
 
 Enter DRBD, which can be thought of as network-based RAID-1 [#]_.
@@ -89,7 +89,7 @@ which is more than sufficient for a single HTML file and (later) GFS2 metadata.
 .. code-block:: none
 
     [root@pcmk-1 ~]# vgdisplay | grep -e Name -e Free
-      VG Name               centos_pcmk-1
+      VG Name               cs_pcmk-1
       Free  PE / Size       3583 / <14.00 GiB
     [root@pcmk-1 ~]# lvcreate --name drbd-demo --size 512M cs_pcmk-1
      Logical volume "drbd-demo" created.
@@ -114,29 +114,27 @@ run this on both nodes to use this sample configuration:
 
 .. code-block:: none
 
-ORIGINAL CFS
-
-# cat <<END >/etc/drbd.d/wwwdata.res
-resource wwwdata {
- protocol C;
- meta-disk internal;
- device /dev/drbd1;
- syncer {
-  verify-alg sha1;
- }
- net {
-  allow-two-primaries;
- }
- on pcmk-1 {
-  disk   /dev/cs_pcmk-1/drbd-demo;
-  address  192.168.122.101:7789;
- }
- on pcmk-2 {
-  disk   /dev/cs_pcmk-2/drbd-demo;
-  address  192.168.122.102:7789;
- }
-}
-END
+    # cat <<END >/etc/drbd.d/wwwdata.res
+    resource wwwdata {
+     protocol C;
+     meta-disk internal;
+     device /dev/drbd1;
+     syncer {
+      verify-alg sha1;
+     }
+     net {
+      allow-two-primaries;
+     }
+     on pcmk-1 {
+      disk   /dev/cs_pcmk-1/drbd-demo;
+      address  192.168.122.101:7789;
+     }
+     on pcmk-2 {
+      disk   /dev/cs_pcmk-2/drbd-demo;
+      address  192.168.122.102:7789;
+     }
+    }
+    END
 
 .. IMPORTANT::
 
@@ -459,9 +457,11 @@ Review the updated configuration.
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
       promote WebData-clone then start WebFS (kind:Mandatory)
+      start WebFS then start WebSite (kind:Mandatory)
     Colocation Constraints:
       WebSite with ClusterIP (score:INFINITY)
       WebFS with WebData-clone (score:INFINITY) (with-rsc-role:Master)
+      WebSite with WebFS (score:INFINITY)
     Ticket Constraints:
     [root@pcmk-1 ~]# pcs resource status
       * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1

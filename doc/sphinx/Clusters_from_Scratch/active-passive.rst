@@ -188,7 +188,7 @@ automatically, and no errors are reported.
 .. topic:: Quorum
 
     If a cluster splits into two (or more) groups of nodes that can no longer
-    communicate with each other (aka. _partitions_), _quorum_ is used to prevent
+    communicate with each other (aka. *partitions*), *quorum* is used to prevent
     resources from starting on more nodes than desired, which would risk
     data corruption.
 

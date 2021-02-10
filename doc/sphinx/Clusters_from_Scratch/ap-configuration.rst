@@ -6,7 +6,7 @@ Final Cluster Configuration
 
 .. NOTE::
 
-    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`,
+    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`_,
     installing dlm is not trivial. This chapter will updated once the bug
     is resolved.
 
@@ -30,7 +30,7 @@ Final Cluster Configuration
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs stonith
-     impi-fencing	(stonith:fence_ipmilan): Started pcmk-1
+      * my_stonith	(stonith:fence_virt): 	Started pcmk-1
 
 .. code-block:: none
 
@@ -64,7 +64,7 @@ Final Cluster Configuration
 
     Full list of resources:
 
-     ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1
+     my_stonith   (stonith:fence_virt):        Started pcmk-1
      Master/Slave Set: WebDataClone [WebData]
          Masters: [ pcmk-1 pcmk-2 ]
      Clone Set: dlm-clone [dlm]
@@ -277,9 +277,9 @@ _______
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs stonith show
-     ipmi-fencing	(stonith:fence_ipmilan):	Started pcmk-1
-    [root@pcmk-1 ~]# pcs stonith show ipmi-fencing
-     Resource: ipmi-fencing (class=stonith type=fence_ipmilan)
+      * my_stonith	(stonith:fence_virt): 	Started pcmk-1
+    [root@pcmk-1 ~]# pcs stonith show my_stonith
+     Resource: my_stonith (class=stonith type=fence_virt)
       Attributes: ipaddr="10.0.0.1" login="testuser" passwd="acd123" pcmk_host_list="pcmk-1 pcmk-2" 
       Operations: monitor interval=60s (fence-monitor-interval-60s)
 

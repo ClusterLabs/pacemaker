@@ -7,7 +7,10 @@ Install |CFS_DISTRO| |CFS_DISTRO_VER|
 Boot the Install Image
 ______________________
 
-Download the 8.9GB |CFS_DISTRO| |CFS_DISTRO_VER| `DVD ISO <http://mirror.metrocast.net/centos/8-stream/isos/x86_64/CentOS-Stream-8-x86_64-20201211-dvd1.iso>`_.
+Download the latest |CFS_DISTRO| |CFS_DISTRO_VER| DVD ISO by navigating to 
+the `CentOS Mirrors List <http://isoredirect.centos.org/centos/8-stream/isos/x86_64/>`_,
+selecting a download mirror which is close to you, and finally selecting the
+.iso file that has "dvd" in its name.
 Use the image to boot a virtual machine, or burn it to a DVD or USB drive and
 boot a physical server from that.
 
@@ -69,7 +72,7 @@ In the **NETWORK & HOSTNAME** section:
     :width: 1024
     :height: 800
     :align: center
-    :alt: Editing enp0s3
+    :alt: Editing network settings
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Network Interface Screen
 

@@ -270,7 +270,7 @@ so it may well be that one machine is more powerful than the other.
 
 In such cases, you may want to host the resources on the more powerful node
 when it is available, to have the best performance -- or you may want to host
-the resources on the _less_ powerful node when it's available, so you don't
+the resources on the **less** powerful node when it's available, so you don't
 have to worry about whether you can handle the load after a failover.
 
 To do this, we create a location constraint.
@@ -403,6 +403,7 @@ constraints previously created by **pcs resource move** or **pcs resource ban**.
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource clear WebSite
+    Removing constraint: cli-prefer-WebSite
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
       Resource: WebSite

@@ -142,7 +142,7 @@ on both nodes:
 Configure Corosync
 __________________
 
-On either node, use ``pcs cluster auth`` to authenticate as the **hacluster** user:
+On either node, use ``pcs host auth`` to authenticate as the **hacluster** user:
 
 .. code-block:: none
 
@@ -180,15 +180,6 @@ If you received an authorization error for either of those commands, make
 sure you configured the **hacluster** user account on each node
 with the same password.
 
-.. NOTE::
-
-    If you are not using ``pcs`` for cluster administration,
-    follow whatever procedures are appropriate for your tools
-    to create a corosync.conf and copy it to all nodes.
-
-    The ``pcs`` command will configure corosync to use UDP unicast transport; if you
-    choose to use multicast instead, choose a multicast address carefully [#]_.
-
 The final corosync.conf configuration on each node should look
 something like the sample in :ref:`sample-corosync-configuration`.
 
@@ -200,13 +191,19 @@ Start by taking some time to familiarize yourself with what ``pcs`` can do.
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs
-
+    
     Usage: pcs [-f file] [-h] [commands]...
     Control and configure pacemaker and corosync.
-
+    
     Options:
         -h, --help         Display usage and exit.
         -f file            Perform actions on file instead of active CIB.
+                           Commands supporting the option use the initial state of
+                           the specified file as their input and then overwrite the
+                           file with the state reflecting the requested
+                           operation(s).
+                           A few commands only use the specified file in read-only
+                           mode since their effect is not a CIB modification.
         --debug            Print all network traffic and external commands run.
         --version          Print pcs version information. List pcs capabilities if
                            --full is specified.
@@ -229,8 +226,13 @@ Start by taking some time to familiarize yourself with what ``pcs`` can do.
         status      View cluster status.
         config      View and manage cluster configuration.
         pcsd        Manage pcs daemon.
+        host        Manage hosts known to pcs/pcsd.
         node        Manage cluster nodes.
         alert       Manage pacemaker alerts.
+        client      Manage pcsd client configuration.
+        dr          Manage disaster recovery configuration.
+        tag         Manage pacemaker tags.
+
 
 As you can see, the different aspects of cluster management are separated
 into categories. To discover the functionality available in each of these
@@ -240,30 +242,24 @@ example of all the options available under the status category.
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs status help
-
+    
     Usage: pcs status [commands]...
     View current cluster and resource status
     Commands:
-        [status] [--full | --hide-inactive]
+        [status] [--full] [--hide-inactive]
             View all information about the cluster and resources (--full provides
             more details, --hide-inactive hides inactive resources).
-
-        resources [<resource id> | --full | --groups | --hide-inactive]
-            Show all currently configured resources or if a resource is specified
-            show the options for the configured resource.  If --full is specified,
-            all configured resource options will be displayed.  If --groups is
-            specified, only show groups (and their resources).  If --hide-inactive
+    
+        resources [--hide-inactive]
+            Show status of all currently configured resources. If --hide-inactive
             is specified, only show active resources.
-
-        groups
-            View currently configured groups and their resources.
-
+    
         cluster
             View current cluster status.
-
+    
         corosync
             View current membership information as seen by corosync.
-
+    
         quorum
             View current quorum status.
 
@@ -271,18 +267,21 @@ example of all the options available under the status category.
             Show runtime status of specified model of quorum device provider.  Using
             --full will give more detailed output.  If <cluster name> is specified,
             only information about the specified cluster will be displayed.
-
+    
+        booth
+            Print current status of booth on the local node.
+    
         nodes [corosync | both | config]
             View current status of nodes from pacemaker. If 'corosync' is
             specified, view current status of nodes from corosync instead. If
             'both' is specified, view current status of nodes from both corosync &
             pacemaker. If 'config' is specified, print nodes from corosync &
             pacemaker configuration.
-
+    
         pcsd [<node>]...
             Show current status of pcsd on nodes specified, or on all nodes
             configured in the local cluster if no nodes are specified.
-
+    
         xml
             View xml version of status (output from crm_mon -r -1 -X).
 

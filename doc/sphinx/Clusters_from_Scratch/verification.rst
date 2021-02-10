@@ -7,7 +7,7 @@ Start the Cluster
 Now that corosync is configured, it is time to start the cluster.
 The command below will start corosync and pacemaker on both nodes
 in the cluster.  If you are issuing the start command from a different
-node than the one you ran the ``pcs cluster auth`` command on earlier, you
+node than the one you ran the ``pcs host auth`` command on earlier, you
 must authenticate on the current node you are logged into before you will
 be allowed to start the cluster.
 
@@ -71,19 +71,18 @@ Next, check the membership and quorum APIs:
 .. code-block:: none
 
     [root@pcmk-1 ~]# corosync-cmapctl | grep members 
-    runtime.totem.pg.mrp.srp.members.1.config_version (u64) = 0
-    runtime.totem.pg.mrp.srp.members.1.ip (str) = r(0) ip(192.168.122.101) 
-    runtime.totem.pg.mrp.srp.members.1.join_count (u32) = 1
-    runtime.totem.pg.mrp.srp.members.1.status (str) = joined
-    runtime.totem.pg.mrp.srp.members.2.config_version (u64) = 0
-    runtime.totem.pg.mrp.srp.members.2.ip (str) = r(0) ip(192.168.122.102) 
-    runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 1
-    runtime.totem.pg.mrp.srp.members.2.status (str) = joined
-
+    runtime.members.1.config_version (u64) = 0
+    runtime.members.1.ip (str) = r(0) ip(192.168.122.101) 
+    runtime.members.1.join_count (u32) = 1
+    runtime.members.1.status (str) = joined
+    runtime.members.2.config_version (u64) = 0
+    runtime.members.2.ip (str) = r(0) ip(192.168.122.102) 
+    runtime.members.2.join_count (u32) = 1
+    runtime.members.2.status (str) = joined
     [root@pcmk-1 ~]# pcs status corosync 
 
     Membership information
-    \----------------------
+    ----------------------
         Nodeid      Votes Name
              1          1 pcmk-1 (local)
              2          1 pcmk-2
@@ -103,14 +102,14 @@ the necessary processes are running:
       PID TTY      STAT   TIME COMMAND
         2 ?        S      0:00 [kthreadd]
     ...lots of processes...
-    11635 ?        SLsl   0:03 corosync
-    11642 ?        Ss     0:00 /usr/sbin/pacemakerd -f
-    11643 ?        Ss     0:00  \_ /usr/libexec/pacemaker/cib
-    11644 ?        Ss     0:00  \_ /usr/libexec/pacemaker/stonithd
-    11645 ?        Ss     0:00  \_ /usr/libexec/pacemaker/lrmd
-    11646 ?        Ss     0:00  \_ /usr/libexec/pacemaker/attrd
-    11647 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pengine
-    11648 ?        Ss     0:00  \_ /usr/libexec/pacemaker/crmd
+    17121 ?        SLsl   0:01 /usr/sbin/corosync -f
+    17133 ?        Ss     0:00 /usr/sbin/pacemakerd -f
+    17134 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-based
+    17135 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-fenced
+    17136 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-execd
+    17137 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-attrd
+    17138 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-schedulerd
+    17139 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-controld
 
 If that looks OK, check the ``pcs status`` output:
 
@@ -170,12 +169,12 @@ configuration and status by using the ``pcs cluster cib`` command.
 
     .. code-block:: xml
 
-        <cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Mon Sep 10 16:30:53 2018" update-origin="pcmk-2" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+        <cib crm_feature_set="3.7.1" validate-with="pacemaker-3.6" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Tue Feb 16 16:20:57 2021" update-origin="pcmk-1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1">
           <configuration>
             <crm_config>
               <cluster_property_set id="cib-bootstrap-options">
                 <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
-                <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.18-11.el7_5.3-2b07d5c5a9"/>
+                <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.5-7.el8-ba59be7122"/>
                 <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
                 <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
               </cluster_property_set>
@@ -188,13 +187,13 @@ configuration and status by using the ``pcs cluster cib`` command.
             <constraints/>
           </configuration>
           <status>
-            <node_state id="1" uname="pcmk-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
-              <lrm id="1">
+            <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+              <lrm id="2">
                 <lrm_resources/>
               </lrm>
             </node_state>
-            <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
-              <lrm id="2">
+            <node_state id="1" uname="pcmk-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+              <lrm id="1">
                 <lrm_resources/>
               </lrm>
             </node_state>

@@ -31,7 +31,7 @@ Distributed Lock Manager (DLM) required by cluster filesystems:
 
 .. NOTE::
 
-    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`,
+    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`_,
     installing dlm is not trivial. This chapter will updated once the bug
     is resolved.
 
@@ -40,10 +40,7 @@ Configure the Cluster for the DLM
 
 The DLM control daemon needs to run on both nodes, so we'll start by creating a
 resource for it (using the **ocf:pacemaker:controld** resource script), and clone
-it.
-
-
-pcs -f dlm_cfg resource clone dlm3 clone-max=2 clone-node-max=1
+it:
 
 .. code-block:: none
 
@@ -115,14 +112,14 @@ Activate our new configuration, and see how the cluster responds:
       * Clone Set: dlm-clone [dlm]:
         * Stopped: [ pcmk-1 pcmk-2 ]
     
-Failed Resource Actions:
-  * dlm_monitor_0 on pcmk-2 'not installed' (5): call=40, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=26ms
-  * dlm_monitor_0 on pcmk-1 'not installed' (5): call=43, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=30ms
+    Failed Resource Actions:
+      * dlm_monitor_0 on pcmk-2 'not installed' (5): call=40, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=26ms
+      * dlm_monitor_0 on pcmk-1 'not installed' (5): call=43, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=30ms
 
-Daemon Status:
-  corosync: active/disabled
-  pacemaker: active/disabled
-  pcsd: active/enabled
+    Daemon Status:
+      corosync: active/disabled
+      pacemaker: active/disabled
+      pcsd: active/enabled
 
 .. NOTE::
 
