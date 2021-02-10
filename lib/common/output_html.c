@@ -115,10 +115,17 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
+html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
     private_data_t *priv = out->priv;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
+
+    /* If root is NULL, html_init failed and we are being called from pcmk__output_free
+     * in the pcmk__output_new path.
+     */
+    if (priv == NULL || priv->root == NULL) {
+        return;
+    }
 
     if (cgi_output && print) {
         fprintf(out->dest, "Content-Type: text/html\n\n");
@@ -170,20 +177,6 @@ finish_reset_common(pcmk__output_t *out, crm_exit_t exit_status, bool print) {
     if (print) {
         htmlDocDump(out->dest, priv->root->doc);
     }
-}
-
-static void
-html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
-    private_data_t *priv = out->priv;
-
-    /* If root is NULL, html_init failed and we are being called from pcmk__output_free
-     * in the pcmk__output_new path.
-     */
-    if (priv == NULL || priv->root == NULL) {
-        return;
-    }
-
-    finish_reset_common(out, exit_status, print);
 
     if (copy_dest != NULL) {
         *copy_dest = copy_xml(priv->root);
@@ -198,10 +191,6 @@ html_reset(pcmk__output_t *out) {
 
     out->dest = freopen(NULL, "w", out->dest);
     CRM_ASSERT(out->dest != NULL);
-
-    if (out->priv != NULL) {
-        finish_reset_common(out, CRM_EX_OK, true);
-    }
 
     html_free_priv(out);
     html_init(out);
