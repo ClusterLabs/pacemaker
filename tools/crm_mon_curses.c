@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -252,6 +252,57 @@ curses_spacer(pcmk__output_t *out) {
     addch('\n');
 }
 
+static void
+curses_progress(pcmk__output_t *out, bool end) {
+    if (end) {
+        printw(".\n");
+    } else {
+        addch('.');
+    }
+}
+
+static void
+curses_prompt(const char *prompt, bool do_echo, char **dest)
+{
+    int rc = OK;
+
+    CRM_ASSERT(prompt != NULL);
+    CRM_ASSERT(dest != NULL);
+
+    /* This is backwards from the text version of this function on purpose.  We
+     * disable echo by default in curses_init, so we need to enable it here if
+     * asked for.
+     */
+    if (do_echo) {
+        rc = echo();
+    }
+
+    if (rc == OK) {
+        printw("%s: ", prompt);
+
+        if (*dest != NULL) {
+            free(*dest);
+        }
+
+        *dest = calloc(1, 1024);
+        /* On older systems, scanw is defined as taking a char * for its first argument,
+         * while newer systems rightly want a const char *.  Accomodate both here due
+         * to building with -Werror.
+         */
+        rc = scanw((NCURSES_CONST char *) "%1023s", *dest);
+        addch('\n');
+    }
+
+    if (rc < 1) {
+        free(*dest);
+        *dest = NULL;
+    }
+
+    if (do_echo) {
+        noecho();
+    }
+}
+
 pcmk__output_t *
 crm_mon_mk_curses_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -284,6 +335,8 @@ crm_mon_mk_curses_output(char **argv) {
 
     retval->is_quiet = curses_is_quiet;
     retval->spacer = curses_spacer;
+    retval->progress = curses_progress;
+    retval->prompt = curses_prompt;
 
     return retval;
 }

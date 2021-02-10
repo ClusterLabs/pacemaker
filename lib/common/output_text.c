@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <termios.h>
 
 #include <crm/crm.h>
 #include <crm/common/output_internal.h>
@@ -69,14 +70,17 @@ text_init(pcmk__output_t *out) {
 
 static void
 text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
-    /* This function intentionally left blank */
+    fflush(out->dest);
 }
 
 static void
 text_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
-    out->dest = freopen(NULL, "w", out->dest);
+    if (out->dest != stdout) {
+        out->dest = freopen(NULL, "w", out->dest);
+    }
+
     CRM_ASSERT(out->dest != NULL);
 
     text_free_priv(out);
@@ -249,6 +253,17 @@ text_spacer(pcmk__output_t *out) {
     fprintf(out->dest, "\n");
 }
 
+static void
+text_progress(pcmk__output_t *out, bool end) {
+    if (out->dest == stdout) {
+        fprintf(out->dest, ".");
+
+        if (end) {
+            fprintf(out->dest, "\n");
+        }
+    }
+}
+
 pcmk__output_t *
 pcmk__mk_text_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -281,6 +296,8 @@ pcmk__mk_text_output(char **argv) {
 
     retval->is_quiet = text_is_quiet;
     retval->spacer = text_spacer;
+    retval->progress = text_progress;
+    retval->prompt = pcmk__text_prompt;
 
     return retval;
 }
@@ -319,4 +336,51 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
     va_start(ap, format);
     pcmk__indented_vprintf(out, format, ap);
     va_end(ap);
+}
+
+void
+pcmk__text_prompt(const char *prompt, bool echo, char **dest)
+{
+    int rc = 0;
+    struct termios settings;
+    tcflag_t orig_c_lflag = 0;
+
+    CRM_ASSERT(prompt != NULL);
+    CRM_ASSERT(dest != NULL);
+
+    if (!echo) {
+        rc = tcgetattr(0, &settings);
+        if (rc == 0) {
+            orig_c_lflag = settings.c_lflag;
+            settings.c_lflag &= ~ECHO;
+            rc = tcsetattr(0, TCSANOW, &settings);
+        }
+    }
+
+    if (rc == 0) {
+        fprintf(stderr, "%s: ", prompt);
+
+        if (*dest != NULL) {
+            free(*dest);
+            *dest = NULL;
+        }
+
+#if SSCANF_HAS_M
+        rc = scanf("%ms", dest);
+#else
+        *dest = calloc(1, 1024);
+        rc = scanf("%1023s", *dest);
+#endif
+        fprintf(stderr, "\n");
+    }
+
+    if (rc < 1) {
+        free(*dest);
+        *dest = NULL;
+    }
+
+    if (orig_c_lflag != 0) {
+        settings.c_lflag = orig_c_lflag;
+        rc = tcsetattr(0, TCSANOW, &settings);
+    }
 }

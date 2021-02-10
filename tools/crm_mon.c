@@ -81,7 +81,7 @@ static GOptionContext *context = NULL;
 static gchar **processed_args = NULL;
 
 static time_t last_refresh = 0;
-crm_trigger_t *refresh_trigger = NULL;
+volatile crm_trigger_t *refresh_trigger = NULL;
 
 static gboolean on_remote_node = FALSE;
 
@@ -381,7 +381,6 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
     args->output_ty = strdup("xml");
     output_format = mon_output_legacy_xml;
-    options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
@@ -686,7 +685,7 @@ reconnect_after_timeout(gpointer data)
     }
 #endif
 
-    print_as(output_format, "Reconnecting...\n");
+    out->info(out, "Reconnecting...");
     if (pacemakerd_status() == pcmk_rc_ok) {
         fencing_connect();
         if (cib_connect(TRUE) == pcmk_rc_ok) {
@@ -740,7 +739,7 @@ mon_shutdown(int nsig)
 }
 
 #if CURSES_ENABLED
-static sighandler_t ncurses_winch_handler;
+static volatile sighandler_t ncurses_winch_handler;
 
 /* Signal handler installed the regular way (not into the main loop) for when
  * the screen is resized.  Commonly, this happens when running in an xterm and
@@ -763,7 +762,7 @@ mon_winresize(int nsig)
         /* Alert the mainloop code we'd like the refresh_trigger to run next
          * time the mainloop gets around to checking.
          */
-        mainloop_set_trigger(refresh_trigger);
+        mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
     }
     not_done--;
 }
@@ -806,13 +805,8 @@ static int
 cib_connect(gboolean full)
 {
     int rc = pcmk_rc_ok;
-    static gboolean need_pass = TRUE;
 
     CRM_CHECK(cib != NULL, return EINVAL);
-
-    if (getenv("CIB_passwd") != NULL) {
-        need_pass = FALSE;
-    }
 
     if (cib->state == cib_connected_query ||
         cib->state == cib_connected_command) {
@@ -820,19 +814,6 @@ cib_connect(gboolean full)
     }
 
     crm_trace("Connecting to the CIB");
-
-    /* Hack: the CIB signon will print the prompt for a password if needed,
-     * but to stderr. If we're in curses, show it on the screen instead.
-     *
-     * @TODO Add a password prompt (maybe including input) function to
-     *       pcmk__output_t and use it in libcib.
-     */
-    if ((output_format == mon_output_console) &&
-         need_pass &&
-         (cib->variant == cib_remote)) {
-        need_pass = FALSE;
-        print_as(output_format, "Password:");
-    }
 
     rc = pcmk_legacy2rc(cib->cmds->signon(cib, crm_system_name, cib_query));
     if (rc != pcmk_rc_ok) {
@@ -844,7 +825,7 @@ cib_connect(gboolean full)
 #if CURSES_ENABLED
     /* just show this if refresh is gonna remove all traces */
     if (output_format == mon_output_console) {
-        print_as(output_format ,"Waiting for CIB ...\n");
+        out->info(out,"Waiting for CIB ...");
     }
 #endif
 
@@ -855,7 +836,7 @@ cib_connect(gboolean full)
         rc = pcmk_legacy2rc(cib->cmds->set_connection_dnotify(cib,
             mon_cib_connection_destroy));
         if (rc == EPROTONOSUPPORT) {
-            print_as(output_format,
+            out->err(out,
                      "Notification setup not supported, won't be "
                      "able to reconnect after failure");
             if (output_format == mon_output_console) {
@@ -905,7 +886,7 @@ set_fencing_options(int level)
             break;
 
         default:
-            level = 0;
+            interactive_fence_level = 0;
             options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
             show &= ~mon_show_fencing_all;
             break;
@@ -1005,19 +986,19 @@ pacemakerd_status(void)
                                 rc = pcmk_rc_ok;
                                 break;
                             case pcmk_pacemakerd_state_starting_daemons:
-                                print_as(output_format ,"Pacemaker daemons starting ...\n");
+                                out->info(out,"Pacemaker daemons starting ...");
                                 break;
                             case pcmk_pacemakerd_state_wait_for_ping:
-                                print_as(output_format ,"Waiting for startup-trigger from SBD ...\n");
+                                out->info(out,"Waiting for startup-trigger from SBD ...");
                                 break;
                             case pcmk_pacemakerd_state_shutting_down:
-                                print_as(output_format ,"Pacemaker daemons shutting down ...\n");
+                                out->info(out,"Pacemaker daemons shutting down ...");
                                 break;
                             case pcmk_pacemakerd_state_shutdown_complete:
                                 /* assuming pacemakerd doesn't dispatch any pings after entering
                                 * that state unless it is waiting for SBD
                                 */
-                                print_as(output_format ,"Pacemaker daemons shut down - reporting to SBD ...\n");
+                                out->info(out,"Pacemaker daemons shut down - reporting to SBD ...");
                                 break;
                             default:
                                 break;
@@ -1040,8 +1021,8 @@ pacemakerd_status(void)
 #if CURSES_ENABLED
             /* just show this if refresh is gonna remove all traces */
             if (output_format == mon_output_console) {
-                print_as(output_format ,
-                    "Running on remote-node waiting to be connected by cluster ...\n");
+                out->info(out,
+                    "Running on remote-node waiting to be connected by cluster ...");
             }
 #endif
             break;
@@ -1329,7 +1310,6 @@ reconcile_output_format(pcmk__common_args_t *args) {
 
         args->output_ty = strdup("xml");
         output_format = mon_output_xml;
-        options.mon_ops |= mon_op_one_shot;
     } else if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
@@ -1500,7 +1480,7 @@ main(int argc, char **argv)
             }
 
         } else if (options.daemonize) {
-            if ((output_format == mon_output_console) || (output_format == mon_output_plain)) {
+            if ((output_format == mon_output_console) || (args->output_dest == NULL)) {
                 output_format = mon_output_none;
             }
             crm_enable_stderr(FALSE);
@@ -1617,6 +1597,10 @@ main(int argc, char **argv)
 
     if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
         options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
+
+        if (!options.daemonize) {
+            options.mon_ops |= mon_op_one_shot;
+        }
     }
 
     if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
@@ -1627,12 +1611,14 @@ main(int argc, char **argv)
 
     crm_info("Starting %s", crm_system_name);
 
+    cib__set_output(cib, out);
+
     if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
         one_shot();
     }
 
     do {
-        print_as(output_format ,"Waiting until cluster is available on this node ...\n");
+        out->info(out,"Waiting until cluster is available on this node ...");
 
         rc = pacemakerd_status();
         if (rc == pcmk_rc_ok) {
@@ -1920,7 +1906,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 static gboolean
 mon_trigger_refresh(gpointer user_data)
 {
-    mainloop_set_trigger(refresh_trigger);
+    mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
     return FALSE;
 }
 
@@ -2056,7 +2042,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     gboolean cib_updated = FALSE;
     xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-    print_dot(output_format);
+    out->progress(out, false);
 
     if (current_cib != NULL) {
         rc = xml_apply_patchset(current_cib, diff, TRUE);
@@ -2098,7 +2084,7 @@ crm_diff_update(const char *event, xmlNode * msg)
 
     if (current_cib == NULL) {
         if(!stale) {
-            print_as(output_format, "--- Stale data ---");
+            out->info(out, "--- Stale data ---");
         }
         stale = TRUE;
         return;
@@ -2172,6 +2158,10 @@ mon_refresh_display(gpointer user_data)
         unpack_constraints(cib_constraints, mon_data_set);
     }
 
+    if (options.daemonize) {
+        out->reset(out);
+    }
+
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
@@ -2226,7 +2216,7 @@ mon_refresh_display(gpointer user_data)
     }
 
     if (options.daemonize) {
-        out->reset(out);
+        out->finish(out, CRM_EX_OK, true, NULL);
     }
 
     stonith_history_free(stonith_history);
@@ -2292,7 +2282,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     if (enforce ||
         now - last_refresh > options.reconnect_msec / 1000 ||
         updates >= 10) {
-        mainloop_set_trigger(refresh_trigger);
+        mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
         mainloop_timer_stop(refresh_timer);
         updates = 0;
 
@@ -2311,7 +2301,7 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
         /* disconnect cib as well and have everything reconnect */
         mon_cib_connection_destroy(NULL);
     } else {
-        print_dot(output_format);
+        out->progress(out, false);
         refresh_after_event(TRUE, FALSE);
     }
 }
@@ -2417,12 +2407,9 @@ clean_up(crm_exit_t exit_code)
      * crm_mon to be able to do so.
      */
     if (out != NULL) {
-        if (options.daemonize) {
-            out->dest = freopen(NULL, "w", out->dest);
-            CRM_ASSERT(out->dest != NULL);
+        if (!options.daemonize) {
+            out->finish(out, exit_code, true, NULL);
         }
-
-        out->finish(out, exit_code, true, NULL);
 
         pcmk__output_free(out);
         pcmk__unregister_formats();

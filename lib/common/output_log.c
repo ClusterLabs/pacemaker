@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -231,6 +231,16 @@ log_spacer(pcmk__output_t *out) {
     /* This function intentionally left blank */
 }
 
+static void
+log_progress(pcmk__output_t *out, bool end) {
+    /* This function intentionally left blank */
+}
+
+static void
+log_prompt(const char *prompt, bool echo, char **dest) {
+    /* This function intentionally left blank */
+}
+
 pcmk__output_t *
 pcmk__mk_log_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -262,6 +272,8 @@ pcmk__mk_log_output(char **argv) {
 
     retval->is_quiet = log_is_quiet;
     retval->spacer = log_spacer;
+    retval->progress = log_progress;
+    retval->prompt = log_prompt;
 
     return retval;
 }
