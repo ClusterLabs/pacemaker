@@ -188,14 +188,7 @@ dnl ===============================================
 dnl Actual library checks come later, but pkg-config can be used here to grab
 dnl external values to use as defaults for configure options
 
-dnl --enable-* options
-
-AC_ARG_ENABLE([fatal-warnings],
-    [AS_HELP_STRING([--enable-fatal-warnings],
-        [enable pedantic and fatal warnings for gcc @<:@try@:>@])],
-)
-yes_no_try "$enable_fatal_warnings" "try"
-enable_fatal_warnings=$?
+dnl --enable-* options: build process
 
 AC_ARG_ENABLE([quiet],
     [AS_HELP_STRING([--enable-quiet],
@@ -204,12 +197,21 @@ AC_ARG_ENABLE([quiet],
 yes_no_try "$enable_quiet" "no"
 enable_quiet=$?
 
-AC_ARG_ENABLE([upstart],
-    [AS_HELP_STRING([--enable-upstart],
-        [enable support for managing resources via Upstart @<:@try@:>@])]
+AC_ARG_ENABLE([fatal-warnings],
+    [AS_HELP_STRING([--enable-fatal-warnings],
+        [enable pedantic and fatal warnings for gcc @<:@try@:>@])],
 )
-yes_no_try "$enable_upstart" "try"
-enable_upstart=$?
+yes_no_try "$enable_fatal_warnings" "try"
+enable_fatal_warnings=$?
+
+AC_ARG_ENABLE([hardening],
+    [AS_HELP_STRING([--enable-hardening],
+        [harden the resulting executables/libraries @<:@try@:>@])]
+)
+yes_no_try "$enable_hardening" "try"
+enable_hardening=$?
+
+dnl --enable-* options: features
 
 AC_ARG_ENABLE([systemd],
     [AS_HELP_STRING([--enable-systemd],
@@ -218,12 +220,14 @@ AC_ARG_ENABLE([systemd],
 yes_no_try "$enable_systemd" "try"
 enable_systemd=$?
 
-AC_ARG_ENABLE([hardening],
-    [AS_HELP_STRING([--enable-hardening],
-        [harden the resulting executables/libraries @<:@try@:>@])]
+AC_ARG_ENABLE([upstart],
+    [AS_HELP_STRING([--enable-upstart],
+        [enable support for managing resources via Upstart @<:@try@:>@])]
 )
-yes_no_try "$enable_hardening" "try"
-enable_hardening=$?
+yes_no_try "$enable_upstart" "try"
+enable_upstart=$?
+
+dnl --enable-* options: compatibility
 
 AC_ARG_ENABLE([compat-2.0],
     [AS_HELP_STRING([--enable-compat-2.0], m4_normalize([
@@ -251,8 +255,7 @@ yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
 AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -gt 0])
 
-
-dnl --with-* options
+dnl --with-* options: basic parameters
 
 AC_DEFUN([VERSION_ARG],
     [AC_ARG_WITH([version],
@@ -262,31 +265,29 @@ AC_DEFUN([VERSION_ARG],
 )
 VERSION_ARG(VERSION_NUMBER)
 
-AC_ARG_WITH([corosync],
-    [AS_HELP_STRING([--with-corosync],
-        [support the Corosync messaging and membership layer @<:@try@:>@])]
-)
-yes_no_try "$with_corosync" "try"
-with_corosync=$?
-
-AC_ARG_WITH([nagios],
-    [AS_HELP_STRING([--with-nagios],
-        [support nagios remote monitoring])]
-)
-yes_no_try "$with_nagios" "try"
-with_nagios=$?
-
-AC_ARG_WITH([nagios-plugin-dir],
-    [AS_HELP_STRING([--with-nagios-plugin-dir=DIR],
-        [directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@])],
-    [ NAGIOS_PLUGIN_DIR="$withval" ]
+CRM_DAEMON_USER=""
+AC_ARG_WITH([daemon-user],
+    [AS_HELP_STRING([--with-daemon-user=USER],
+        [user to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@])],
+    [ CRM_DAEMON_USER="$withval" ]
 )
 
-AC_ARG_WITH([nagios-metadata-dir],
-    [AS_HELP_STRING([--with-nagios-metadata-dir=DIR],
-        [directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@])],
-    [ NAGIOS_METADATA_DIR="$withval" ]
+CRM_DAEMON_GROUP=""
+AC_ARG_WITH([daemon-group],
+    [AS_HELP_STRING([--with-daemon-group=GROUP],
+        [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
+    [ CRM_DAEMON_GROUP="$withval" ]
 )
+
+BUG_URL=""
+AC_ARG_WITH([bug-url],
+    [AS_HELP_STRING([--with-bug-url=DIR], m4_normalize([
+	address where users should submit bug reports
+	@<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@]))],
+    [ BUG_URL="$withval" ]
+)
+
+dnl --with-* options: features
 
 AC_ARG_WITH([acl],
     [AS_HELP_STRING([--with-acl],
@@ -306,16 +307,41 @@ AC_ARG_WITH([gnutls],
     [AS_HELP_STRING([--with-gnutls],
         [support Pacemaker Remote and remote-tls-port using GnuTLS @<:@try@:>@])]
 )
-with_gnutls=$(yes_no_try "$with_gnutls" "try")
-AS_IF([test $with_gnutls -eq 3],
-      [AC_MSG_ERROR([Invalid value for --with-gnutls])]
-)
+yes_no_try "$with_gnutls" "try"
+with_gnutls=$?
 
 PCMK_GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH([gnutls-priorities],
     [AS_HELP_STRING([--with-gnutls-priorities],
         [default GnuTLS cipher priorities @<:@NORMAL@:>@])],
     [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ]
+)
+
+AC_ARG_WITH([corosync],
+    [AS_HELP_STRING([--with-corosync],
+        [support the Corosync messaging and membership layer @<:@try@:>@])]
+)
+yes_no_try "$with_corosync" "try"
+with_corosync=$?
+
+AC_ARG_WITH([nagios],
+    [AS_HELP_STRING([--with-nagios], [support nagios resources])]
+)
+yes_no_try "$with_nagios" "try"
+with_nagios=$?
+
+dnl --with-* options: directory locations
+
+AC_ARG_WITH([nagios-plugin-dir],
+    [AS_HELP_STRING([--with-nagios-plugin-dir=DIR],
+        [directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@])],
+    [ NAGIOS_PLUGIN_DIR="$withval" ]
+)
+
+AC_ARG_WITH([nagios-metadata-dir],
+    [AS_HELP_STRING([--with-nagios-metadata-dir=DIR],
+        [directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@])],
+    [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
 INITDIR=""
@@ -332,32 +358,20 @@ AC_ARG_WITH([systemdsystemunitdir],
     [ systemdsystemunitdir="$withval" ]
 )
 
-AC_ARG_WITH([profiling],
-    [AS_HELP_STRING([--with-profiling],
-        [disable optimizations, for effective profiling @<:@no@:>@])]
-)
-yes_no_try "$with_profiling" "no"
-with_profiling=$?
-
-AC_ARG_WITH([coverage],
-    [AS_HELP_STRING([--with-coverage],
-        [disable optimizations, for effective profiling and coverage testing @<:@no@:>@])]
-)
-yes_no_try "$with_coverage" "no"
-with_coverage=$?
-
-BUG_URL=""
-AC_ARG_WITH([bug-url],
-    [AS_HELP_STRING([--with-bug-url=DIR],
-        [address where users should submit bug reports @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@])],
-    [ BUG_URL="$withval" ]
-)
-
 CONFIGDIR=""
 AC_ARG_WITH([configdir],
     [AS_HELP_STRING([--with-configdir=DIR],
         [directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@])],
     [ CONFIGDIR="$withval" ]
+)
+
+dnl --runstatedir is available as of autoconf 2.70 (2020-12-08). When users
+dnl have an older version, they can use our --with-runstatedir.
+pcmk_runstatedir=""
+AC_ARG_WITH([runstatedir],
+    [AS_HELP_STRING([--with-runstatedir=DIR],
+        [modifiable per-process data @<:@LOCALSTATEDIR/run@:>@ (ignored if --runstatedir is available)])],
+    [ pcmk_runstatedir="$withval" ]
 )
 
 CRM_LOG_DIR=""
@@ -372,22 +386,6 @@ AC_ARG_WITH([bundledir],
     [AS_HELP_STRING([--with-bundledir=DIR],
         [directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@])],
     [ CRM_BUNDLE_DIR="$withval" ]
-)
-
-AC_ARG_WITH([sanitizers],
-  [AS_HELP_STRING([--with-sanitizers=...,...],
-    [enable SANitizer build, do *NOT* use for production. Only ASAN/UBSAN/TSAN are currently supported])],
-  [ SANITIZERS="$withval" ],
-  [ SANITIZERS="" ])
-
-
-dnl --runstatedir is available as of autoconf 2.70 (2020-12-08). When users
-dnl have an older version, they can use our --with-runstatedir.
-pcmk_runstatedir=""
-AC_ARG_WITH([runstatedir],
-    [AS_HELP_STRING([--with-runstatedir=DIR],
-        [modifiable per-process data @<:@LOCALSTATEDIR/run@:>@ (ignored if --runstatedir is available)])],
-    [ pcmk_runstatedir="$withval" ]
 )
 
 dnl Get default from resource-agents if possible. Otherwise, the default uses
@@ -421,19 +419,27 @@ AC_ARG_WITH([fence-bindir],
 )
 AC_SUBST(PCMK__FENCE_BINDIR)
 
-CRM_DAEMON_USER=""
-AC_ARG_WITH([daemon-user],
-    [AS_HELP_STRING([--with-daemon-user=USER],
-        [user to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@hacluster@:>@])],
-    [ CRM_DAEMON_USER="$withval" ]
-)
+dnl --with-* options: non-production testing
 
-CRM_DAEMON_GROUP=""
-AC_ARG_WITH([daemon-group],
-    [AS_HELP_STRING([--with-daemon-group=GROUP],
-        [group to run unprivileged Pacemaker daemons as (advanced option: changing this may break other cluster components unless similarly configured) @<:@haclient@:>@])],
-    [ CRM_DAEMON_GROUP="$withval" ]
+AC_ARG_WITH([profiling],
+    [AS_HELP_STRING([--with-profiling],
+        [disable optimizations, for effective profiling @<:@no@:>@])]
 )
+yes_no_try "$with_profiling" "no"
+with_profiling=$?
+
+AC_ARG_WITH([coverage],
+    [AS_HELP_STRING([--with-coverage],
+        [disable optimizations, for effective profiling and coverage testing @<:@no@:>@])]
+)
+yes_no_try "$with_coverage" "no"
+with_coverage=$?
+
+AC_ARG_WITH([sanitizers],
+  [AS_HELP_STRING([--with-sanitizers=...,...],
+    [enable SANitizer build, do *NOT* use for production. Only ASAN/UBSAN/TSAN are currently supported])],
+  [ SANITIZERS="$withval" ],
+  [ SANITIZERS="" ])
 
 
 dnl ===============================================
