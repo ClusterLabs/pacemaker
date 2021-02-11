@@ -1780,8 +1780,8 @@ cli_resource_execute(pcmk__output_t *out, pe_resource_t *rsc,
         action = rsc_action+6;
 
         if(pe_rsc_is_clone(rsc)) {
-            GListPtr rscs = cli_resource_search(out, rsc, requested_name, data_set);
-            if(rscs != NULL && force == FALSE) {
+            GListPtr nodes = cli_resource_search(out, rsc, requested_name, data_set);
+            if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          action, rsc->id);
                 out->err(out, "Try setting target-role=Stopped first or specifying "
