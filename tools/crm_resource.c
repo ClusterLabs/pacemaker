@@ -1874,7 +1874,8 @@ main(int argc, char **argv)
 
         case cmd_locate: {
             GListPtr nodes = cli_resource_search(out, rsc, options.rsc_id, data_set);
-            rc = out->message(out, "resource-search-list", nodes, rsc, options.rsc_id);
+            rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
+            g_list_free_full(nodes, free);
             break;
         }
 

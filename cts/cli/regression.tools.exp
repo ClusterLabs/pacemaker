@@ -4078,13 +4078,13 @@ Resources colocated with clone:
 =#=#=#= End test: List guest,remote nodes - OK (0) =#=#=#=
 * Passed: crmadmin       - List guest,remote nodes
 =#=#=#= Begin test: List a promotable clone resource =#=#=#=
-resource promotable-clone is running on: cluster02
 resource promotable-clone is running on: cluster01
+resource promotable-clone is running on: cluster02 Master
 =#=#=#= End test: List a promotable clone resource - OK (0) =#=#=#=
 * Passed: crm_resource   - List a promotable clone resource
 =#=#=#= Begin test: List the primitive of a promotable clone resource =#=#=#=
+resource promotable-rsc is running on: cluster01
 resource promotable-rsc is running on: cluster02 Master
-resource promotable-rsc is running on: cluster01 Master
 =#=#=#= End test: List the primitive of a promotable clone resource - OK (0) =#=#=#=
 * Passed: crm_resource   - List the primitive of a promotable clone resource
 =#=#=#= Begin test: List a single instance of a promotable clone resource =#=#=#=
