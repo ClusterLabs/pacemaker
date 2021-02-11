@@ -5,7 +5,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -20,6 +20,9 @@ Active Resources:
     * Email	(lsb:exim):	 Started cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
+    * Slaves: [ cluster01 ]
 =#=#=#= End test: Basic text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output
 =#=#=#= Begin test: XML output =#=#=#=
@@ -30,12 +33,12 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -112,6 +115,17 @@ Active Resources:
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
+    <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
   </resources>
   <node_attributes>
     <node name="cluster01">
@@ -142,6 +156,12 @@ Active Resources:
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
@@ -150,7 +170,7 @@ Active Resources:
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
         <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="24ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
         <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
@@ -158,6 +178,10 @@ Active Resources:
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -175,7 +199,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -187,6 +211,9 @@ Active Resources:
     * Email	(lsb:exim):	 Started cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
+    * Slaves: [ cluster01 ]
 =#=#=#= End test: Basic text output without node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output without node section
 =#=#=#= Begin test: XML output without the node section =#=#=#=
@@ -197,7 +224,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <resources>
@@ -272,6 +299,17 @@ Active Resources:
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
+    <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
   </resources>
   <node_attributes>
     <node name="cluster01">
@@ -302,6 +340,12 @@ Active Resources:
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
@@ -310,7 +354,7 @@ Active Resources:
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
         <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="24ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
         <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
@@ -318,6 +362,10 @@ Active Resources:
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -340,7 +388,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -355,6 +403,9 @@ Active Resources:
     * Email	(lsb:exim):	 Started cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
+    * Slaves: [ cluster01 ]
 
 Node Attributes:
   * Node: cluster01:
@@ -378,18 +429,26 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (4) monitor: interval="10000ms"
+      * (5) cancel: interval="10000ms"
+      * (6) promote
+      * (7) monitor: interval="5000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (2) start
+      * (4) monitor: interval="10000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -402,7 +461,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -427,6 +486,12 @@ Active Resources:
       * mysql-proxy	(lsb:mysql-proxy):	 Stopped
     * Resource Group: mysql-group:4:
       * mysql-proxy	(lsb:mysql-proxy):	 Stopped
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Master cluster02
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave cluster01
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
 
 Node Attributes:
   * Node: cluster01 (1):
@@ -450,18 +515,26 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (4) monitor: interval="10000ms"
+      * (5) cancel: interval="10000ms"
+      * (6) promote
+      * (7) monitor: interval="5000ms"
   * Node: cluster01 (1):
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (2) start
+      * (4) monitor: interval="10000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01 (1)
@@ -474,7 +547,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -489,6 +562,9 @@ Active Resources:
     * 1/1	(ocf:heartbeat:IPaddr):	Active cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
+    * Slaves: [ cluster01 ]
 
 Node Attributes:
   * Node: cluster01:
@@ -512,18 +588,26 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (4) monitor: interval="10000ms"
+      * (5) cancel: interval="10000ms"
+      * (6) promote
+      * (7) monitor: interval="5000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (2) start
+      * (4) monitor: interval="10000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -536,7 +620,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Node cluster01: online:
@@ -544,6 +628,7 @@ Node List:
       * ping	(ocf:pacemaker:ping):	 Started
       * Fencing	(stonith:fence_xvm):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
+      * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave
   * Node cluster02: online:
     * Resources:
       * ping	(ocf:pacemaker:ping):	 Started
@@ -551,6 +636,7 @@ Node List:
       * Public-IP	(ocf:heartbeat:IPaddr):	 Started
       * Email	(lsb:exim):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
+      * promotable-rsc	(ocf:pacemaker:Stateful):	 Master
   * GuestNode httpd-bundle-0@: OFFLINE:
     * Resources:
   * GuestNode httpd-bundle-1@: OFFLINE:
@@ -580,18 +666,26 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (4) monitor: interval="10000ms"
+      * (5) cancel: interval="10000ms"
+      * (6) promote
+      * (7) monitor: interval="5000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (2) start
+      * (4) monitor: interval="10000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -604,12 +698,13 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Node cluster01: online:
     * Resources:
       * 1	(lsb:mysql-proxy):	Active 
+      * 1	(ocf:pacemaker:Stateful):	Active 
       * 1	(ocf:pacemaker:ping):	Active 
       * 1	(stonith:fence_xvm):	Active 
   * Node cluster02: online:
@@ -618,6 +713,7 @@ Node List:
       * 1	(lsb:mysql-proxy):	Active 
       * 1	(ocf:heartbeat:IPaddr):	Active 
       * 1	(ocf:pacemaker:Dummy):	Active 
+      * 1	(ocf:pacemaker:Stateful):	Active 
       * 1	(ocf:pacemaker:ping):	Active 
 
 Node Attributes:
@@ -642,18 +738,26 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (4) monitor: interval="10000ms"
+      * (5) cancel: interval="10000ms"
+      * (6) promote
+      * (7) monitor: interval="5000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
       * (18) monitor: interval="10000ms"
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (2) start
+      * (4) monitor: interval="10000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -667,11 +771,11 @@ Negative Location Constraints:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member">
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member">
       <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
@@ -681,8 +785,11 @@ Negative Location Constraints:
       <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
     </node>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member">
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member">
       <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
@@ -696,6 +803,9 @@ Negative Location Constraints:
         <node name="cluster02" id="2" cached="true"/>
       </resource>
       <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
     </node>
@@ -753,6 +863,17 @@ Negative Location Constraints:
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
+    <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
   </resources>
   <node_attributes>
     <node name="cluster01">
@@ -783,6 +904,12 @@ Negative Location Constraints:
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
@@ -791,7 +918,7 @@ Negative Location Constraints:
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
         <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="24ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
         <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
@@ -799,6 +926,10 @@ Negative Location Constraints:
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -816,7 +947,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 ]
@@ -827,6 +958,8 @@ Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Slaves: [ cluster01 ]
 
 Node Attributes:
   * Node: cluster01:
@@ -840,12 +973,15 @@ Operations:
       * (18) monitor: interval="10000ms"
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
     * dummy: migration-threshold=1000000:
       * (16) stop
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (2) start
+      * (4) monitor: interval="10000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -859,11 +995,11 @@ Negative Location Constraints:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -918,6 +1054,14 @@ Negative Location Constraints:
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
+    <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
   </resources>
   <node_attributes>
     <node name="cluster01">
@@ -933,7 +1077,7 @@ Negative Location Constraints:
       </resource_history>
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
         <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="24ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="dummy" orphan="false" migration-threshold="1000000">
         <operation_history call="16" task="stop" rc="0" rc_text="ok" exec-time="6048ms" queue-time="0ms"/>
@@ -941,6 +1085,10 @@ Negative Location Constraints:
       <resource_history id="mysql-proxy" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -958,7 +1106,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster02 ]
@@ -972,6 +1120,8 @@ Active Resources:
     * Email	(lsb:exim):	 Started cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
 
 Node Attributes:
   * Node: cluster02:
@@ -992,6 +1142,11 @@ Operations:
     * mysql-proxy: migration-threshold=1000000:
       * (2) start
       * (3) monitor: interval="10000ms"
+    * promotable-rsc: migration-threshold=1000000:
+      * (4) monitor: interval="10000ms"
+      * (5) cancel: interval="10000ms"
+      * (6) promote
+      * (7) monitor: interval="5000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -1005,11 +1160,11 @@ Negative Location Constraints:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -1072,6 +1227,14 @@ Negative Location Constraints:
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
+    <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    </clone>
   </resources>
   <node_attributes>
     <node name="cluster02">
@@ -1098,6 +1261,12 @@ Negative Location Constraints:
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
+        <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
   </node_history>
   <bans>
@@ -1114,7 +1283,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1133,7 +1302,7 @@ Operations:
   * Node: cluster01:
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
 =#=#=#= End test: Complete text output filtered by resource tag - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by resource tag
 =#=#=#= Begin test: XML output filtered by resource tag =#=#=#=
@@ -1144,12 +1313,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1172,7 +1341,7 @@ Operations:
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
         <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="24ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -1187,7 +1356,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Active Resources:
   * No active resources
@@ -1201,7 +1370,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes/>
@@ -1249,7 +1418,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1273,6 +1442,9 @@ Full List of Resources:
     * Email	(lsb:exim):	 Started cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
+    * Slaves: [ cluster01 ]
 =#=#=#= End test: Basic text output with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by node =#=#=#=
@@ -1282,7 +1454,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster02 ]
@@ -1305,6 +1477,8 @@ Full List of Resources:
     * Email	(lsb:exim):	 Started cluster02
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
 =#=#=#= End test: Basic text output with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by node
 =#=#=#= Begin test: Complete text output filtered by primitive resource =#=#=#=
@@ -1314,7 +1488,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1333,7 +1507,7 @@ Operations:
   * Node: cluster01:
     * Fencing: migration-threshold=1000000:
       * (15) start
-      * (19) monitor: interval="60000ms"
+      * (20) monitor: interval="60000ms"
 =#=#=#= End test: Complete text output filtered by primitive resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete text output filtered by primitive resource
 =#=#=#= Begin test: XML output filtered by primitive resource =#=#=#=
@@ -1344,12 +1518,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1372,7 +1546,7 @@ Operations:
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
         <operation_history call="15" task="start" rc="0" rc_text="ok" exec-time="36ms" queue-time="0ms"/>
-        <operation_history call="19" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="24ms" queue-time="0ms"/>
+        <operation_history call="20" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -1387,7 +1561,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1420,12 +1594,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1470,7 +1644,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1500,12 +1674,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1544,7 +1718,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1579,12 +1753,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1633,7 +1807,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1668,12 +1842,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1722,7 +1896,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -1757,12 +1931,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1808,7 +1982,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1825,12 +1999,12 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1857,7 +2031,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1877,7 +2051,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1897,12 +2071,12 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -1950,7 +2124,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1969,12 +2143,12 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2007,7 +2181,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2026,12 +2200,12 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2064,7 +2238,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2083,12 +2257,12 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2121,7 +2295,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2144,12 +2318,12 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2188,7 +2362,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2232,12 +2406,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2279,7 +2453,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2323,12 +2497,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2390,7 +2564,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2426,12 +2600,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2479,7 +2653,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2523,12 +2697,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -2590,7 +2764,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2626,12 +2800,12 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="27" disabled="4" blocked="0"/>
+    <resources_configured number="32" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="5" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
     <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
     <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
@@ -3083,7 +3257,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 27 resource instances configured (4 DISABLED)
+  * 32 resource instances configured (4 DISABLED)
 
               *** Resource management is DISABLED ***
   The cluster will not attempt to start, stop or recover services
@@ -3114,5 +3288,8 @@ Full List of Resources:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster02 (unmanaged)
     * Resource Group: mysql-group:1 (unmanaged):
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01 (unmanaged)
+  * Clone Set: promotable-clone [promotable-rsc] (promotable) (unmanaged):
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Master cluster02 (unmanaged)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave cluster01 (unmanaged)
 =#=#=#= End test: Text output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of all resources with maintenance-mode enabled
