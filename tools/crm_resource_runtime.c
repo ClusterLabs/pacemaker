@@ -41,20 +41,37 @@ cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
     return rc;
 }
 
+static GListPtr
+build_node_info_list(pe_resource_t *rsc)
+{
+    GListPtr retval = NULL;
+
+    for (GListPtr iter = rsc->children; iter != NULL; iter = iter->next) {
+        pe_resource_t *child = (pe_resource_t *) iter->data;
+
+        for (GListPtr iter2 = child->running_on; iter2 != NULL; iter2 = iter2->next) {
+            pe_node_t *node = (pe_node_t *) iter2->data;
+            node_info_t *ni = calloc(1, sizeof(node_info_t));
+            ni->node_name = node->details->uname;
+            ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
+                           child->fns->state(child, TRUE) == RSC_ROLE_MASTER;
+
+            retval = g_list_prepend(retval, ni);
+        }
+    }
+
+    return retval;
+}
+
 GListPtr
 cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
 {
-    GListPtr found = NULL;
+    GListPtr retval = NULL;
     pe_resource_t *parent = uber_parent(rsc);
 
     if (pe_rsc_is_clone(rsc)) {
-        for (GListPtr iter = rsc->children; iter != NULL; iter = iter->next) {
-            GListPtr extra = ((pe_resource_t *) iter->data)->running_on;
-            if (extra != NULL) {
-                found = g_list_concat(found, extra);
-            }
-        }
+        retval = build_node_info_list(rsc);
 
     /* The anonymous clone children's common ID is supplied */
     } else if (pe_rsc_is_clone(parent)
@@ -63,18 +80,20 @@ cli_resource_search(pcmk__output_t *out, pe_resource_t *rsc, const char *request
                && pcmk__str_eq(requested_name, rsc->clone_name, pcmk__str_casei)
                && !pcmk__str_eq(requested_name, rsc->id, pcmk__str_casei)) {
 
-        for (GListPtr iter = parent->children; iter; iter = iter->next) {
-            GListPtr extra = ((pe_resource_t *) iter->data)->running_on;
-            if (extra != NULL) {
-                found = g_list_concat(found, extra);
-            }
-        }
+        retval = build_node_info_list(parent);
 
     } else if (rsc->running_on != NULL) {
-        found = g_list_concat(found, rsc->running_on);
+        for (GListPtr iter = rsc->running_on; iter != NULL; iter = iter->next) {
+            pe_node_t *node = (pe_node_t *) iter->data;
+            node_info_t *ni = calloc(1, sizeof(node_info_t));
+            ni->node_name = node->details->uname;
+            ni->promoted = rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER;
+
+            retval = g_list_prepend(retval, ni);
+        }
     }
 
-    return found;
+    return retval;
 }
 
 #define XPATH_MAX 1024
@@ -1780,14 +1799,16 @@ cli_resource_execute(pcmk__output_t *out, pe_resource_t *rsc,
         action = rsc_action+6;
 
         if(pe_rsc_is_clone(rsc)) {
-            GListPtr rscs = cli_resource_search(out, rsc, requested_name, data_set);
-            if(rscs != NULL && force == FALSE) {
+            GListPtr nodes = cli_resource_search(out, rsc, requested_name, data_set);
+            if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          action, rsc->id);
                 out->err(out, "Try setting target-role=Stopped first or specifying "
                          "the force option");
                 return CRM_EX_UNSAFE;
             }
+
+            g_list_free_full(nodes, free);
         }
 
     } else {

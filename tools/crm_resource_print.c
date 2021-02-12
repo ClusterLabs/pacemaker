@@ -276,12 +276,11 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "gchar *")
 static int
 resource_search_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gchar *requested_name = va_arg(args, gchar *);
 
     bool printed = false;
@@ -293,7 +292,7 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
     }
 
     for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
-        pe_node_t *node = (pe_node_t *) lpc->data;
+        node_info_t *ni = (node_info_t *) lpc->data;
 
         if (!printed) {
             out->begin_list(out, NULL, NULL, "Nodes");
@@ -302,15 +301,10 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
         }
 
         if (out->is_quiet(out)) {
-            out->list_item(out, "node", "%s", node->details->uname);
+            out->list_item(out, "node", "%s", ni->node_name);
         } else {
-            const char *state = "";
-
-            if (!pe_rsc_is_clone(rsc) && rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
-                state = " Master";
-            }
             out->list_item(out, "node", "resource %s is running on: %s%s",
-                           requested_name, node->details->uname, state);
+                           requested_name, ni->node_name, ni->promoted ? " Master" : "");
         }
     }
 
@@ -321,12 +315,11 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "gchar *")
 static int
 resource_search_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gchar *requested_name = va_arg(args, gchar *);
 
     pcmk__output_xml_create_parent(out, "nodes",
@@ -334,10 +327,10 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
                                    NULL);
 
     for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
-        pe_node_t *node = (pe_node_t *) lpc->data;
-        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out, "node", node->details->uname);
+        node_info_t *ni = (node_info_t *) lpc->data;
+        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out, "node", ni->node_name);
 
-        if (!pe_rsc_is_clone(rsc) && rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
+        if (ni->promoted) {
             crm_xml_add(sub_node, "state", "promoted");
         }
     }

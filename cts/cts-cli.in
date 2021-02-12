@@ -831,6 +831,26 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     unset CIB_file
+
+    export CIB_file="$test_home/cli/crm_mon.xml"
+
+    desc="List a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-clone"
+    test_assert $CRM_EX_OK 0
+
+    desc="List the primitive of a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-rsc"
+    test_assert $CRM_EX_OK 0
+
+    desc="List a single instance of a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-rsc:0"
+    test_assert $CRM_EX_OK 0
+
+    desc="List another instance of a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-rsc:1"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
 }
 
 INVALID_PERIODS=(

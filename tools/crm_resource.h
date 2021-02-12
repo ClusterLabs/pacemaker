@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,11 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <pacemaker-internal.h>
+
+typedef struct node_info_s {
+    const char *node_name;
+    bool promoted;
+} node_info_t;
 
 enum resource_check_flags {
     rsc_remain_stopped  = (1 << 0),
