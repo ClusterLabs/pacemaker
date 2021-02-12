@@ -359,7 +359,18 @@ stonith_merge_in_history_list(GHashTable *history)
             g_hash_table_lookup(stonith_remote_op_list, op->id);
 
         if (stored_op) {
-            continue; /* skip over existant - state-merging migh be desirable */
+            if (stored_op->state != st_failed
+                && stored_op->state != st_done
+                && (op->state == st_failed || op->state == st_done)) {
+                    crm_debug("Updating outdated pending operation %.8s "
+                              "(state=%d) according to the one (state=%d) from "
+                              "remote peer history",
+                              op->id, stored_op->state,
+                              op->state);
+
+            } else {
+                continue; // Skip existent
+            }
         }
 
         updated = TRUE;
