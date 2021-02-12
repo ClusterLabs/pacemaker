@@ -2039,7 +2039,12 @@ main(int argc, char **argv)
      */
 
 done:
-    if (rc != pcmk_rc_ok || exit_code != CRM_EX_OK) {
+    /* Don't do any of this for pcmk_rc_no_output (doesn't make sense to show an
+     * error message for no output) or for CRM_EX_USAGE (we don't want to show
+     * an "error: OK" message from pcmk_rc_str).
+     */
+    if ((rc != pcmk_rc_ok && rc != pcmk_rc_no_output) ||
+        (exit_code != CRM_EX_OK && exit_code != CRM_EX_USAGE)) {
         if (rc == pcmk_rc_no_quorum) {
             g_prefix_error(&error, "To ignore quorum, use the force option.\n");
         }
@@ -2054,10 +2059,10 @@ done:
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Error performing operation: %s", pcmk_rc_str(rc));
         }
+    }
 
-        if (exit_code == CRM_EX_OK) {
-            exit_code = pcmk_rc2exitc(rc);
-        }
+    if (exit_code == CRM_EX_OK) {
+        exit_code = pcmk_rc2exitc(rc);
     }
 
     g_free(options.host_uname);
