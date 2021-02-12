@@ -102,6 +102,7 @@
       <clone id="promotable-clone">
         <meta_attributes id="promotable-clone-meta_attributes">
           <nvpair id="promotable-clone-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="promotable-clone-meta_attributes-clone-max" name="clone-max" value="2"/>
         </meta_attributes>
         <primitive id="promotable-rsc" class="ocf" provider="pacemaker" type="Stateful">
           <operations id="promotable-rsc-operations">

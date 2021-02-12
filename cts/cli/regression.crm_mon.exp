@@ -5,7 +5,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -33,7 +33,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -122,9 +122,6 @@ Active Resources:
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
   </resources>
   <node_attributes>
@@ -199,7 +196,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -224,7 +221,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <resources>
@@ -306,9 +303,6 @@ Active Resources:
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
   </resources>
   <node_attributes>
@@ -388,7 +382,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -461,7 +455,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -489,9 +483,6 @@ Active Resources:
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Master cluster02
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave cluster01
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
 
 Node Attributes:
   * Node: cluster01 (1):
@@ -547,7 +538,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -620,7 +611,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Node cluster01: online:
@@ -698,7 +689,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Node cluster01: online:
@@ -771,7 +762,7 @@ Negative Location Constraints:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -863,17 +854,6 @@ Negative Location Constraints:
         <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       </group>
     </clone>
-    <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
-        <node name="cluster02" id="2" cached="true"/>
-      </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
-        <node name="cluster01" id="1" cached="true"/>
-      </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-    </clone>
   </resources>
   <node_attributes>
     <node name="cluster01">
@@ -947,7 +927,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 ]
@@ -995,7 +975,7 @@ Negative Location Constraints:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1058,9 +1038,6 @@ Negative Location Constraints:
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
   </resources>
   <node_attributes>
@@ -1106,7 +1083,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster02 ]
@@ -1160,7 +1137,7 @@ Negative Location Constraints:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1231,9 +1208,6 @@ Negative Location Constraints:
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </clone>
   </resources>
   <node_attributes>
@@ -1283,7 +1257,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1313,7 +1287,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1356,7 +1330,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Active Resources:
   * No active resources
@@ -1370,7 +1344,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes/>
@@ -1418,7 +1392,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1454,7 +1428,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster02 ]
@@ -1488,7 +1462,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1518,7 +1492,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1561,7 +1535,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1594,7 +1568,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1644,7 +1618,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1674,7 +1648,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1718,7 +1692,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1753,7 +1727,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1807,7 +1781,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1842,7 +1816,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1896,7 +1870,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -1931,7 +1905,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -1982,7 +1956,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -1999,7 +1973,7 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2031,7 +2005,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2051,7 +2025,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2071,7 +2045,7 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2124,7 +2098,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2143,7 +2117,7 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2181,7 +2155,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2200,7 +2174,7 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2238,7 +2212,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2257,7 +2231,7 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2295,7 +2269,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 cluster02 ]
@@ -2318,7 +2292,7 @@ Full List of Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2362,7 +2336,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2406,7 +2380,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2453,7 +2427,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2497,7 +2471,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2564,7 +2538,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2600,7 +2574,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2653,7 +2627,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2697,7 +2671,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -2764,7 +2738,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
@@ -2800,7 +2774,7 @@ Operations:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="5"/>
-    <resources_configured number="32" disabled="4" blocked="0"/>
+    <resources_configured number="29" disabled="4" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
@@ -3257,7 +3231,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 5 nodes configured
-  * 32 resource instances configured (4 DISABLED)
+  * 29 resource instances configured (4 DISABLED)
 
               *** Resource management is DISABLED ***
   The cluster will not attempt to start, stop or recover services
