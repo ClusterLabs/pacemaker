@@ -284,9 +284,26 @@ stonith_local_history_diff(GHashTable *remote_history,
             while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
                 xmlNode *entry = NULL;
 
-                if (remote_history &&
-                    g_hash_table_lookup(remote_history, op->id)) {
-                    continue; /* skip entries broadcasted already */
+                if (remote_history) {
+                    remote_fencing_op_t *remote_op =
+                        g_hash_table_lookup(remote_history, op->id);
+
+                    if (remote_op) {
+                        if (remote_op->state != st_failed
+                            && remote_op->state != st_done
+                            && (op->state == st_failed
+                                || op->state == st_done)) {
+
+                            crm_debug("Broadcasting operation %.8s (state=%d) to "
+                                      "update the outdated pending one "
+                                      "(state=%d) in remote peer history",
+                                      op->id, op->state,
+                                      remote_op->state);
+
+                        } else {
+                            continue; /* skip entries broadcasted already */
+                        }
+                    }
                 }
 
                 if (target && strcmp(op->target, target) != 0) {
