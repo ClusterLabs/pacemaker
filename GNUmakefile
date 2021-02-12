@@ -382,12 +382,11 @@ rc-changes:
 
 changes: summary
 	@printf "\n- Features added since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
+	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
+		| sed -n -e 's/^ *Feature: */  + /p' | sort -uf
 	@printf "\n- Fixes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| grep -e High: -e Fix: -e Bug | sed \
-			-e 's@\(Fix\|High\|Bug\):@@' \
+	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
+		| sed -n -e 's/^ *\(Fix\|High\|Bug\): */  + /p' | sed			\
 			-e 's@\(cib\|pacemaker-based\|based\):@CIB:@' \
 			-e 's@\(crmd\|pacemaker-controld\|controld\):@controller:@' \
 			-e 's@\(lrmd\|pacemaker-execd\|execd\):@executor:@' \
