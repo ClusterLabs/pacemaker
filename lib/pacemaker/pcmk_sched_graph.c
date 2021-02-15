@@ -851,8 +851,8 @@ get_router_node(pe_action_t *action)
      * the connection's pseudo-start on the migration target, so the target is
      * the router node.
      */
-    if (pcmk__strcase_any_of(task, "stop", "demote", "migrate_from", "migrate_to",
-                             NULL) && !partial_migration) {
+    if (pcmk__strcase_any_of(task, "cancel", "stop", "demote", "migrate_from",
+                             "migrate_to", NULL) && !partial_migration) {
         crm_trace("Routing %s for %s through remote connection's "
                   "current node %s (moving)%s",
                   action->task, (action->rsc? action->rsc->id : "no resource"),
