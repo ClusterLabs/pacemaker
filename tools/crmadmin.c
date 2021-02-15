@@ -25,9 +25,7 @@
 
 static enum {
     cmd_none,
-    cmd_shutdown,
     cmd_health,
-    cmd_elect_dc,
     cmd_whois_dc,
     cmd_list_nodes,
     cmd_pacemakerd_health,
@@ -50,35 +48,27 @@ gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data
 static GOptionEntry command_options[] = {
     { "status", 'S', 0, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the status of the specified node."
-      "\n                          Result is state of node's internal finite state"
-      "\n                          machine, which can be useful for debugging",
-      NULL
+      "\n                             Result is state of node's internal finite state"
+      "\n                             machine, which can be useful for debugging",
+      "NODE"
     },
     { "pacemakerd", 'P', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the status of local pacemakerd."
-      "\n                          Result is the state of the sub-daemons watched"
-      "\n                          by pacemakerd.",
+      "\n                             Result is the state of the sub-daemons watched"
+      "\n                             by pacemakerd.",
       NULL
     },
     { "dc_lookup", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the uname of the node co-ordinating the cluster."
-      "\n                          This is an internal detail rarely useful to"
-      "\n                          administrators except when deciding on which"
-      "\n                          node to examine the logs.",
+      "\n                             This is an internal detail rarely useful to"
+      "\n                             administrators except when deciding on which"
+      "\n                             node to examine the logs.",
       NULL
     },
     { "nodes", 'N', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Display the uname of all member nodes [optionally filtered by type (comma-separated)]"
-      "\n                          Types: all (default), cluster, guest, remote",
+      "\n                             Types: all (default), cluster, guest, remote",
       "TYPE"
-    },
-    { "election", 'E', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "(Advanced) Start an election for the cluster co-ordinator",
-      NULL
-    },
-    { "kill", 'K', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, command_cb,
-      "(Advanced) Stop controller (not rest of cluster stack) on specified node",
-      NULL
     },
     { "health", 'H', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.health,
       NULL,
@@ -89,18 +79,18 @@ static GOptionEntry command_options[] = {
 };
 
 static GOptionEntry additional_options[] = {
-    { "timeout", 't', 0, G_OPTION_ARG_INT, &options.timeout,
-      "Time (in milliseconds) to wait before declaring the"
-      "\n                          operation failed",
-      NULL
+    { "timeout", 't', 0, G_OPTION_ARG_CALLBACK, command_cb,
+      "Time  to wait before declaring the operation"
+      "\n                             failed",
+      "TIMESPEC"
     },
     { "bash-export", 'B', 0, G_OPTION_ARG_NONE, &options.BASH_EXPORT,
       "Display nodes as shell commands of the form 'export uname=uuid'"
-      "\n                          (valid with -N/--nodes)",
+      "\n                             (valid with -N/--nodes)",
     },
     { "ipc-name", 'i', 0, G_OPTION_ARG_STRING, &options.ipc_name,
       "Name to use for ipc instead of 'crmadmin' (with -P/--pacemakerd).",
-      NULL
+      "NAME"
     },
 
     { NULL }
@@ -126,13 +116,12 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
         command = cmd_list_nodes;
     }
 
-    if (!strcmp(option_name, "--election") || !strcmp(option_name, "-E")) {
-        command = cmd_elect_dc;
-    }
-
-    if (!strcmp(option_name, "--kill") || !strcmp(option_name, "-K")) {
-        command = cmd_shutdown;
-        crm_trace("Option %c => %s", 'K', optarg);
+    if (!strcmp(option_name, "--timeout") || !strcmp(option_name, "-t")) {
+        options.timeout = crm_parse_interval_spec(optarg);
+        if (errno == EINVAL) {
+            return FALSE;
+        }
+        return TRUE;
     }
 
     if (optarg) {
@@ -155,7 +144,12 @@ static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    const char *description = "Report bugs to users@clusterlabs.org";
+    const char *description = "Notes:\n\n"
+                              "Time Specification:\n\n"
+                              "The TIMESPEC in any command line option can be specified in many different\n"
+                              "formats.  It can be just an integer number of seconds, a number plus units\n"
+                              "(ms/msec/us/usec/s/sec/m/min/h/hr), or an ISO 8601 period specification.\n\n"
+                              "Report bugs to users@clusterlabs.org";
 
     GOptionEntry extra_prog_entries[] = {
         { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
@@ -256,12 +250,6 @@ main(int argc, char **argv)
             break;
         case cmd_whois_dc:
             rc = pcmk__designated_controller(out, options.timeout);
-            break;
-        case cmd_shutdown:
-            rc = pcmk__shutdown_controller(out, options.optarg);
-            break;
-        case cmd_elect_dc:
-            rc = pcmk__start_election(out);
             break;
         case cmd_none:
             rc = pcmk_rc_error;

@@ -26,7 +26,7 @@ class BasePatterns(object):
         self.BadNews = []
         self.components = {}
         self.commands = {
-            "StatusCmd"      : "crmadmin -t 60000 -S %s 2>/dev/null",
+            "StatusCmd"      : "crmadmin -t 60 -S %s 2>/dev/null",
             "CibQuery"       : "cibadmin -Ql",
             "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
             "CibDelXpath"    : "cibadmin --delete --xpath %s",
