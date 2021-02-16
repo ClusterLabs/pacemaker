@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.3" epoch="1" num_updates="135" admin_epoch="1" cib-last-written="Tue May  5 12:04:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.3" epoch="1" num_updates="173" admin_epoch="1" cib-last-written="Tue May  5 12:04:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -176,6 +176,42 @@
             <lrm_rsc_op id="promotable-rsc_cancel_10000" operation_key="promotable-rsc_cancel_10000" operation="cancel" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="5" rc-code="0" op-status="0" interval="10000" last-rc-change="1613059546" exec-time="0" queue-time="0" op-digest="79643b49fcd2a15282788271c56eddb4"/>
             <lrm_rsc_op id="promotable-rsc_monitor_5000" operation_key="promotable-rsc_monitor_5000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="7:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:8;7:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="7" rc-code="8" op-status="0" interval="5000" last-rc-change="1613059546" exec-time="0" queue-time="0" op-digest="79643b49fcd2a15282788271c56eddb4"/>
           </lrm_resource>
+          <lrm_resource id="inactive-dhcpd" class="lsb" type="dhcpd">
+            <lrm_rsc_op id="inactive-dhcpd_last_0" operation_key="inactive-dhcpd_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="inactive-dummy-1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="inactive-dummy-1_last_0" operation_key="inactive-dummy-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="inactive-dummy-2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="inactive-dummy-2_last_0" operation_key="inactive-dummy-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.131" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.131_last_0" operation_key="httpd-bundle-ip-192.168.122.131_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="8656419d4ed26465c724189832393477"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-0_last_0" operation_key="httpd-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="02a1a0b2dfa1cade1893713b56939c55"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.132" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.132_last_0" operation_key="httpd-bundle-ip-192.168.122.132_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="c3d96a2922c2946905f760df9a177cd1"/>
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.132_monitor_60000" operation_key="httpd-bundle-ip-192.168.122.132_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1613491700" exec-time="0" queue-time="0" op-digest="547dff7d7a9d7448dd07cde35966f08a"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-1_last_0" operation_key="httpd-bundle-docker-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="2edb33b196e2261c6b3e30ce579e0590"/>
+            <lrm_rsc_op id="httpd-bundle-docker-1_monitor_60000" operation_key="httpd-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1613491700" exec-time="0" queue-time="0" op-digest="1ed1cced876b80101858caac9836e113"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.133" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.133_last_0" operation_key="httpd-bundle-ip-192.168.122.133_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f318115a675fd430c293a0dc2705f398"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-2_last_0" operation_key="httpd-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="6680384ac1363763d9d5cca296be0b2d"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-0_last_0" operation_key="httpd-bundle-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="c535429017a9ee0785106fbef2858a41"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-1_last_0" operation_key="httpd-bundle-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="791bcda8f6693465cc318cba5302a8df"/>
+            <lrm_rsc_op id="httpd-bundle-1_monitor_30000" operation_key="httpd-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1613491700" exec-time="0" queue-time="0" op-digest="7592cb10fa1499772a031adfd385f558"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="2">
@@ -213,6 +249,42 @@
             <lrm_rsc_op id="promotable-rsc_post_notify_start_0" operation_key="promotable-rsc_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" last-rc-change="1613058809" last-run="1613058809" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
             <lrm_rsc_op id="promotable-rsc_monitor_10000" operation_key="promotable-rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="4" rc-code="0" op-status="0" interval="10000" last-rc-change="1613058809" exec-time="0" queue-time="0" op-digest="79643b49fcd2a15282788271c56eddb4"/>
           </lrm_resource>
+          <lrm_resource id="inactive-dhcpd" class="lsb" type="dhcpd">
+            <lrm_rsc_op id="inactive-dhcpd_last_0" operation_key="inactive-dhcpd_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="inactive-dummy-1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="inactive-dummy-1_last_0" operation_key="inactive-dummy-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="inactive-dummy-2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="inactive-dummy-2_last_0" operation_key="inactive-dummy-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.131" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.131_last_0" operation_key="httpd-bundle-ip-192.168.122.131_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="8656419d4ed26465c724189832393477"/>
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.131_monitor_60000" operation_key="httpd-bundle-ip-192.168.122.131_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1613491700" exec-time="0" queue-time="0" op-digest="dfb531456299aa7b527d4e57805703da"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-0_last_0" operation_key="httpd-bundle-docker-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="02a1a0b2dfa1cade1893713b56939c55"/>
+            <lrm_rsc_op id="httpd-bundle-docker-0_monitor_60000" operation_key="httpd-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1613491700" exec-time="0" queue-time="0" op-digest="377a66c466df6e6edf98a6e83cff9c22"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.132" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.132_last_0" operation_key="httpd-bundle-ip-192.168.122.132_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="c3d96a2922c2946905f760df9a177cd1"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-1_last_0" operation_key="httpd-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="2edb33b196e2261c6b3e30ce579e0590"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-ip-192.168.122.133" class="ocf" provider="heartbeat" type="IPaddr2">
+            <lrm_rsc_op id="httpd-bundle-ip-192.168.122.133_last_0" operation_key="httpd-bundle-ip-192.168.122.133_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f318115a675fd430c293a0dc2705f398"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="httpd-bundle-docker-2_last_0" operation_key="httpd-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="6680384ac1363763d9d5cca296be0b2d"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-0_last_0" operation_key="httpd-bundle-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="c535429017a9ee0785106fbef2858a41"/>
+            <lrm_rsc_op id="httpd-bundle-0_monitor_30000" operation_key="httpd-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="30000" last-rc-change="1613491700" exec-time="0" queue-time="0" op-digest="6d63e20548871f169e287d33f3711637"/>
+          </lrm_resource>
+          <lrm_resource id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="httpd-bundle-1_last_0" operation_key="httpd-bundle-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="791bcda8f6693465cc318cba5302a8df"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
       <transient_attributes id="1">
@@ -220,6 +292,24 @@
           <nvpair id="status-1-pingd" name="pingd" value="1000"/>
         </instance_attributes>
       </transient_attributes>
+    </node_state>
+    <node_state id="httpd-bundle-0" uname="httpd-bundle-0">
+      <lrm id="httpd-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="httpd" class="ocf" provider="heartbeat" type="apache">
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="httpd-bundle-1" uname="httpd-bundle-1">
+      <lrm id="httpd-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="httpd" class="ocf" provider="heartbeat" type="apache">
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
     </node_state>
   </status>
 </cib>

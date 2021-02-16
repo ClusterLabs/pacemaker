@@ -9,12 +9,17 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 cluster02 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Resource Group: exim-group:
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
     * Email	(lsb:exim):	 Started cluster02
@@ -37,10 +42,10 @@ Active Resources:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -68,16 +73,32 @@ Active Resources:
     </group>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
       </replica>
       <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
       </replica>
       <replica id="2">
         <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -162,6 +183,18 @@ Active Resources:
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
@@ -182,6 +215,28 @@ Active Resources:
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -206,6 +261,10 @@ Active Resources:
     * Started: [ cluster01 cluster02 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Resource Group: exim-group:
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
     * Email	(lsb:exim):	 Started cluster02
@@ -252,16 +311,32 @@ Active Resources:
     </group>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
       </replica>
       <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
       </replica>
       <replica id="2">
         <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -346,6 +421,18 @@ Active Resources:
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
@@ -367,6 +454,28 @@ Active Resources:
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
   </node_history>
   <bans>
@@ -379,6 +488,7 @@ Active Resources:
 =#=#=#= Begin test: Text output with only the node section =#=#=#=
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 =#=#=#= End test: Text output with only the node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output with only the node section
 =#=#=#= Begin test: Complete text output =#=#=#=
@@ -392,12 +502,17 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 cluster02 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Resource Group: exim-group:
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
     * Email	(lsb:exim):	 Started cluster02
@@ -434,6 +549,15 @@ Operations:
       * (5) cancel: interval="10000ms"
       * (6) promote
       * (7) monitor: interval="5000ms"
+    * httpd-bundle-ip-192.168.122.132: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
@@ -449,6 +573,21 @@ Operations:
     * promotable-rsc: migration-threshold=1000000:
       * (2) start
       * (4) monitor: interval="10000ms"
+    * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
+  * Node: httpd-bundle-0@cluster01:
+    * httpd: migration-threshold=1000000:
+      * (1) start
+  * Node: httpd-bundle-1@cluster02:
+    * httpd: migration-threshold=1000000:
+      * (1) start
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -465,6 +604,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -472,6 +612,22 @@ Active Resources:
     * ping	(ocf:pacemaker:ping):	 Started cluster01
   * Fencing	(stonith:fence_xvm):	 Started cluster01
   * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * Replica[0]
+      * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster01
+      * httpd	(ocf:heartbeat:apache):	 Started httpd-bundle-0
+      * httpd-bundle-docker-0	(ocf:heartbeat:docker):	 Started cluster01
+      * httpd-bundle-0	(ocf:pacemaker:remote):	 Started cluster01
+    * Replica[1]
+      * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started cluster02
+      * httpd	(ocf:heartbeat:apache):	 Started httpd-bundle-1
+      * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started cluster02
+      * httpd-bundle-1	(ocf:pacemaker:remote):	 Started cluster02
+    * Replica[2]
+      * httpd-bundle-ip-192.168.122.133	(ocf:heartbeat:IPaddr2):	 Stopped
+      * httpd	(ocf:heartbeat:apache):	 Stopped
+      * httpd-bundle-docker-2	(ocf:heartbeat:docker):	 Stopped
+      * httpd-bundle-2	(ocf:pacemaker:remote):	 Stopped
   * Resource Group: exim-group:
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
     * Email	(lsb:exim):	 Started cluster02
@@ -520,6 +676,15 @@ Operations:
       * (5) cancel: interval="10000ms"
       * (6) promote
       * (7) monitor: interval="5000ms"
+    * httpd-bundle-ip-192.168.122.132: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
   * Node: cluster01 (1):
     * ping: migration-threshold=1000000:
       * (17) start
@@ -535,6 +700,21 @@ Operations:
     * promotable-rsc: migration-threshold=1000000:
       * (2) start
       * (4) monitor: interval="10000ms"
+    * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
+  * Node: httpd-bundle-0@cluster01:
+    * httpd: migration-threshold=1000000:
+      * (1) start
+  * Node: httpd-bundle-1@cluster02:
+    * httpd: migration-threshold=1000000:
+      * (1) start
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01 (1)
@@ -551,12 +731,17 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * 1	(ocf:pacemaker:Dummy):	Active cluster02
   * 1	(stonith:fence_xvm):	Active cluster01
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 cluster02 ]
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Resource Group: exim-group:
     * 1/1	(lsb:exim):	Active cluster02
     * 1/1	(ocf:heartbeat:IPaddr):	Active cluster02
@@ -593,6 +778,15 @@ Operations:
       * (5) cancel: interval="10000ms"
       * (6) promote
       * (7) monitor: interval="5000ms"
+    * httpd-bundle-ip-192.168.122.132: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
@@ -608,6 +802,21 @@ Operations:
     * promotable-rsc: migration-threshold=1000000:
       * (2) start
       * (4) monitor: interval="10000ms"
+    * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
+  * Node: httpd-bundle-0@cluster01:
+    * httpd: migration-threshold=1000000:
+      * (1) start
+  * Node: httpd-bundle-1@cluster02:
+    * httpd: migration-threshold=1000000:
+      * (1) start
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -629,6 +838,8 @@ Node List:
       * Fencing	(stonith:fence_xvm):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
       * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave
+      * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started
+      * httpd-bundle-docker-0	(ocf:heartbeat:docker):	 Started
   * Node cluster02: online:
     * Resources:
       * ping	(ocf:pacemaker:ping):	 Started
@@ -637,10 +848,14 @@ Node List:
       * Email	(lsb:exim):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
       * promotable-rsc	(ocf:pacemaker:Stateful):	 Master
-  * GuestNode httpd-bundle-0@: OFFLINE:
+      * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started
+      * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started
+  * GuestNode httpd-bundle-0@cluster01: online:
     * Resources:
-  * GuestNode httpd-bundle-1@: OFFLINE:
+      * httpd	(ocf:heartbeat:apache):	 Started
+  * GuestNode httpd-bundle-1@cluster02: online:
     * Resources:
+      * httpd	(ocf:heartbeat:apache):	 Started
   * GuestNode httpd-bundle-2@: OFFLINE:
     * Resources:
 
@@ -671,6 +886,15 @@ Operations:
       * (5) cancel: interval="10000ms"
       * (6) promote
       * (7) monitor: interval="5000ms"
+    * httpd-bundle-ip-192.168.122.132: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
@@ -686,6 +910,21 @@ Operations:
     * promotable-rsc: migration-threshold=1000000:
       * (2) start
       * (4) monitor: interval="10000ms"
+    * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
+  * Node: httpd-bundle-0@cluster01:
+    * httpd: migration-threshold=1000000:
+      * (1) start
+  * Node: httpd-bundle-1@cluster02:
+    * httpd: migration-threshold=1000000:
+      * (1) start
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -704,17 +943,29 @@ Node List:
   * Node cluster01: online:
     * Resources:
       * 1	(lsb:mysql-proxy):	Active 
+      * 1	(ocf:heartbeat:IPaddr2):	Active 
+      * 1	(ocf:heartbeat:docker):	Active 
       * 1	(ocf:pacemaker:Stateful):	Active 
       * 1	(ocf:pacemaker:ping):	Active 
+      * 1	(ocf:pacemaker:remote):	Active 
       * 1	(stonith:fence_xvm):	Active 
   * Node cluster02: online:
     * Resources:
       * 1	(lsb:exim):	Active 
       * 1	(lsb:mysql-proxy):	Active 
       * 1	(ocf:heartbeat:IPaddr):	Active 
+      * 1	(ocf:heartbeat:IPaddr2):	Active 
+      * 1	(ocf:heartbeat:docker):	Active 
       * 1	(ocf:pacemaker:Dummy):	Active 
       * 1	(ocf:pacemaker:Stateful):	Active 
       * 1	(ocf:pacemaker:ping):	Active 
+      * 1	(ocf:pacemaker:remote):	Active 
+  * GuestNode httpd-bundle-0@cluster01: online:
+    * Resources:
+      * 1	(ocf:heartbeat:apache):	Active 
+  * GuestNode httpd-bundle-1@cluster02: online:
+    * Resources:
+      * 1	(ocf:heartbeat:apache):	Active 
 
 Node Attributes:
   * Node: cluster01:
@@ -743,6 +994,15 @@ Operations:
       * (5) cancel: interval="10000ms"
       * (6) promote
       * (7) monitor: interval="5000ms"
+    * httpd-bundle-ip-192.168.122.132: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
   * Node: cluster01:
     * ping: migration-threshold=1000000:
       * (17) start
@@ -758,6 +1018,21 @@ Operations:
     * promotable-rsc: migration-threshold=1000000:
       * (2) start
       * (4) monitor: interval="10000ms"
+    * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
+  * Node: httpd-bundle-0@cluster01:
+    * httpd: migration-threshold=1000000:
+      * (1) start
+  * Node: httpd-bundle-1@cluster02:
+    * httpd: migration-threshold=1000000:
+      * (1) start
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -775,7 +1050,7 @@ Negative Location Constraints:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member">
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member">
       <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
@@ -788,8 +1063,17 @@ Negative Location Constraints:
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
+      <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
     </node>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member">
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member">
       <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
@@ -808,9 +1092,26 @@ Negative Location Constraints:
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
+      <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
+      <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="true"/>
+      </resource>
     </node>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0">
+      <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+      </resource>
+    </node>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1">
+      <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+      </resource>
+    </node>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -824,16 +1125,32 @@ Negative Location Constraints:
     </group>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
       </replica>
       <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
       </replica>
       <replica id="2">
         <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -910,6 +1227,18 @@ Negative Location Constraints:
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
     <node name="cluster01">
       <resource_history id="ping" orphan="false" migration-threshold="1000000">
@@ -930,6 +1259,28 @@ Negative Location Constraints:
       <resource_history id="promotable-rsc" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
   </node_history>
@@ -956,6 +1307,9 @@ Active Resources:
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster01 ]
   * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
@@ -982,6 +1336,15 @@ Operations:
     * promotable-rsc: migration-threshold=1000000:
       * (2) start
       * (4) monitor: interval="10000ms"
+    * httpd-bundle-ip-192.168.122.131: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-0: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -999,7 +1362,7 @@ Negative Location Constraints:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -1020,16 +1383,18 @@ Negative Location Constraints:
     </group>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      </replica>
-      <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
       </replica>
       <replica id="2">
         <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -1090,6 +1455,18 @@ Negative Location Constraints:
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
   </node_history>
   <bans>
@@ -1115,6 +1492,9 @@ Active Resources:
   * Clone Set: ping-clone [ping]:
     * Started: [ cluster02 ]
   * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Resource Group: exim-group:
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
     * Email	(lsb:exim):	 Started cluster02
@@ -1147,6 +1527,15 @@ Operations:
       * (5) cancel: interval="10000ms"
       * (6) promote
       * (7) monitor: interval="5000ms"
+    * httpd-bundle-ip-192.168.122.132: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-docker-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="60000ms"
+    * httpd-bundle-1: migration-threshold=1000000:
+      * (2) start
+      * (3) monitor: interval="30000ms"
 
 Negative Location Constraints:
   * not-on-cluster1	prevents dummy from running on cluster01
@@ -1164,7 +1553,7 @@ Negative Location Constraints:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
   </nodes>
   <resources>
     <clone id="ping-clone" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
@@ -1184,17 +1573,19 @@ Negative Location Constraints:
       <resource id="inactive-dummy-2" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
-      <replica id="0">
-        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      </replica>
       <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
       </replica>
       <replica id="2">
         <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -1267,6 +1658,18 @@ Negative Location Constraints:
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
     </node>
   </node_history>
   <bans>
@@ -1287,6 +1690,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1317,10 +1721,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -1383,26 +1787,6 @@ Active Resources:
       <resource id="inactive-dummy-1" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
       <resource id="inactive-dummy-2" resource_agent="ocf:pacemaker:Dummy" role="Stopped" target_role="stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     </group>
-    <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
-      <replica id="0">
-        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      </replica>
-      <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      </replica>
-      <replica id="2">
-        <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-2" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-2" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-      </replica>
-    </bundle>
   </resources>
   <bans>
     <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
@@ -1422,6 +1806,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Full List of Resources:
   * Clone Set: ping-clone [ping]:
@@ -1434,8 +1819,8 @@ Full List of Resources:
     * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
     * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Stopped
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Resource Group: exim-group:
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
@@ -1469,8 +1854,7 @@ Full List of Resources:
     * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
     * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Stopped
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
   * Resource Group: exim-group:
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
@@ -1492,6 +1876,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01
@@ -1522,10 +1907,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -1565,6 +1950,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -1598,10 +1984,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -1648,6 +2034,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Resource Group: exim-group:
@@ -1678,10 +2065,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -1722,6 +2109,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -1757,10 +2145,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -1811,6 +2199,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -1846,10 +2235,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -1900,6 +2289,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: ping-clone [ping]:
@@ -1935,10 +2325,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -1986,6 +2376,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * No active resources
@@ -2003,10 +2394,10 @@ Active Resources:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources/>
@@ -2035,6 +2426,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Full List of Resources:
   * Clone Set: inactive-clone [inactive-dhcpd] (disabled):
@@ -2055,11 +2447,12 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Stopped
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundle resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle resource
@@ -2075,25 +2468,41 @@ Full List of Resources:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-0" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
       </replica>
       <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
-        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-docker-1" resource_agent="ocf:heartbeat:docker" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+        <resource id="httpd-bundle-1" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
       </replica>
       <replica id="2">
         <resource id="httpd-bundle-ip-192.168.122.133" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -2112,7 +2521,46 @@ Full List of Resources:
       <attribute name="pingd" value="1000" expected="1000"/>
     </node>
   </node_attributes>
-  <node_history/>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+  </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by inactive bundle resource - OK (0) =#=#=#=
@@ -2128,11 +2576,12 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
-      * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Stopped
+      * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started cluster01
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled IP address resource - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled IP address resource
 =#=#=#= Begin test: XML output filtered by bundled IP address resource =#=#=#=
@@ -2147,16 +2596,18 @@ Full List of Resources:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="1">
-        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
       </replica>
     </bundle>
   </resources>
@@ -2169,7 +2620,46 @@ Full List of Resources:
       <attribute name="pingd" value="1000" expected="1000"/>
     </node>
   </node_attributes>
-  <node_history/>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+  </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled IP address resource - OK (0) =#=#=#=
@@ -2185,11 +2675,12 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[1]
-      * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Stopped
+      * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started cluster02
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled container - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundled container
 =#=#=#= Begin test: XML output filtered by bundled container =#=#=#=
@@ -2204,10 +2695,10 @@ Full List of Resources:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -2226,7 +2717,46 @@ Full List of Resources:
       <attribute name="pingd" value="1000" expected="1000"/>
     </node>
   </node_attributes>
-  <node_history/>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+  </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled container - OK (0) =#=#=#=
@@ -2242,11 +2772,12 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
-      * httpd-bundle-0	(ocf:pacemaker:remote):	 Stopped
+      * httpd-bundle-0	(ocf:pacemaker:remote):	 Started cluster01
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundle connection - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by bundle connection
 =#=#=#= Begin test: XML output filtered by bundle connection =#=#=#=
@@ -2261,16 +2792,18 @@ Full List of Resources:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd-bundle-0" resource_agent="ocf:pacemaker:remote" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
       </replica>
     </bundle>
   </resources>
@@ -2283,7 +2816,46 @@ Full List of Resources:
       <attribute name="pingd" value="1000" expected="1000"/>
     </node>
   </node_attributes>
-  <node_history/>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+  </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundle connection - OK (0) =#=#=#=
@@ -2299,13 +2871,14 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * Replica[0]
-      * httpd	(ocf:heartbeat:apache):	 Stopped
+      * httpd	(ocf:heartbeat:apache):	 Started httpd-bundle-0
     * Replica[1]
-      * httpd	(ocf:heartbeat:apache):	 Stopped
+      * httpd	(ocf:heartbeat:apache):	 Started httpd-bundle-1
     * Replica[2]
       * httpd	(ocf:heartbeat:apache):	 Stopped
 =#=#=#= End test: Basic text output with inactive resources, filtered by bundled primitive resource - OK (0) =#=#=#=
@@ -2322,19 +2895,23 @@ Full List of Resources:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
     <bundle id="httpd-bundle" type="docker" image="pcmk:http" unique="false" managed="true" failed="false">
       <replica id="0">
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-0" id="httpd-bundle-0" cached="true"/>
+        </resource>
       </replica>
       <replica id="1">
-        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+        <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="httpd-bundle-1" id="httpd-bundle-1" cached="true"/>
+        </resource>
       </replica>
       <replica id="2">
         <resource id="httpd" resource_agent="ocf:heartbeat:apache" role="Stopped" target_role="Started" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -2350,7 +2927,46 @@ Full List of Resources:
       <attribute name="pingd" value="1000" expected="1000"/>
     </node>
   </node_attributes>
-  <node_history/>
+  <node_history>
+    <node name="cluster02">
+      <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-1" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="cluster01">
+      <resource_history id="httpd-bundle-ip-192.168.122.131" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-docker-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="httpd-bundle-0" orphan="false" migration-threshold="1000000">
+        <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="30000ms" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-0">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+    <node name="httpd-bundle-1">
+      <resource_history id="httpd" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+    </node>
+  </node_history>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: XML output filtered by bundled primitive resource - OK (0) =#=#=#=
@@ -2366,6 +2982,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -2410,10 +3027,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -2457,6 +3074,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -2501,10 +3119,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -2568,6 +3186,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -2604,10 +3223,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -2657,6 +3276,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -2701,10 +3321,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -2768,6 +3388,7 @@ Cluster Summary:
 
 Node List:
   * Online: [ cluster01 (1) cluster02 (2) ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
 
 Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
@@ -2804,10 +3425,10 @@ Operations:
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="false" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
-    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="6" type="member"/>
-    <node name="httpd-bundle-0" id="httpd-bundle-0" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-0"/>
-    <node name="httpd-bundle-1" id="httpd-bundle-1" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-1"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
+    <node name="cluster02" id="2" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="true" resources_running="9" type="member"/>
+    <node name="httpd-bundle-0" id="httpd-bundle-0" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-0"/>
+    <node name="httpd-bundle-1" id="httpd-bundle-1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="1" type="remote" id_as_resource="httpd-bundle-docker-1"/>
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
@@ -3263,6 +3884,8 @@ Cluster Summary:
   The cluster will not attempt to start, stop or recover services
 
 Node List:
+  * GuestNode httpd-bundle-0@cluster01: maintenance
+  * GuestNode httpd-bundle-1@cluster02: maintenance
   * Online: [ cluster01 cluster02 ]
 
 Full List of Resources:
@@ -3277,8 +3900,8 @@ Full List of Resources:
     * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled, unmanaged)
     * inactive-dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled, unmanaged)
   * Container bundle set: httpd-bundle [pcmk:http] (unmanaged):
-    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Stopped (unmanaged)
-    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped (unmanaged)
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01 (unmanaged)
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02 (unmanaged)
     * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped (unmanaged)
   * Resource Group: exim-group (unmanaged):
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02 (unmanaged)
