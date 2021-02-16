@@ -378,7 +378,7 @@ get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
             char *when = crm_time_as_string(data_set->now,
                             crm_time_log_date|crm_time_log_timeofday);
 
-            printf("Using the original execution date of: %s\n", when);
+            out->info(out, "Using the original execution date of: %s", when);
             free(when);
         }
     }
@@ -668,11 +668,10 @@ setup_input(const char *input, const char *output, GError **error)
 static void
 profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set, char *use_date)
 {
+    pcmk__output_t *out = data_set->priv;
     xmlNode *cib_object = NULL;
     clock_t start = 0;
-
-    printf("* Testing %s ...", xml_file);
-    fflush(stdout);
+    clock_t end;
 
     cib_object = filename2xml(xml_file);
     start = clock();
@@ -700,7 +699,9 @@ profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set, 
         pcmk__schedule_actions(data_set, input, NULL);
         pe_reset_working_set(data_set);
     }
-    printf(" %.2f secs\n", (clock() - start) / (float) CLOCKS_PER_SEC);
+
+    end = clock();
+    out->message(out, "profile", xml_file, start, end);
 }
 
 #ifndef FILENAME_MAX
@@ -710,6 +711,7 @@ profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set, 
 static void
 profile_all(const char *dir, long long repeat, pe_working_set_t *data_set, char *use_date)
 {
+    pcmk__output_t *out = data_set->priv;
     struct dirent **namelist;
 
     int file_num = scandir(dir, &namelist, 0, alphasort);
@@ -717,6 +719,8 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set, char 
     if (file_num > 0) {
         struct stat prop;
         char buffer[FILENAME_MAX];
+
+        out->begin_list(out, NULL, NULL, "Timings");
 
         while (file_num--) {
             if ('.' == namelist[file_num]->d_name[0]) {
@@ -735,7 +739,52 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set, char 
             free(namelist[file_num]);
         }
         free(namelist);
+
+        out->end_list(out);
     }
+}
+
+PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
+static int
+profile_default(pcmk__output_t *out, va_list args) {
+    const char *xml_file = va_arg(args, const char *);
+    clock_t start = va_arg(args, clock_t);
+    clock_t end = va_arg(args, clock_t);
+
+    out->list_item(out, NULL, "Testing %s ... %.2f secs", xml_file,
+                   (end - start) / (float) CLOCKS_PER_SEC);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
+static int
+profile_xml(pcmk__output_t *out, va_list args) {
+    const char *xml_file = va_arg(args, const char *);
+    clock_t start = va_arg(args, clock_t);
+    clock_t end = va_arg(args, clock_t);
+
+    char *duration = crm_ftoa((end - start) / (float) CLOCKS_PER_SEC);
+
+    pcmk__output_create_xml_node(out, "timing",
+                                 "file", xml_file,
+                                 "duration", duration,
+                                 NULL);
+
+    free(duration);
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "profile", "default", profile_default, },
+    { "profile", "xml", profile_xml },
+
+    { NULL }
+};
+
+static void
+crm_simulate_register_messages(pcmk__output_t *out) {
+    pcmk__register_messages(out, fmt_functions);
 }
 
 static GOptionContext *
@@ -818,8 +867,11 @@ main(int argc, char **argv)
 
     if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
         pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
+    } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
+        pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
     }
 
+    crm_simulate_register_messages(out);
     pe__register_messages(out);
 
     out->quiet = args->quiet;
