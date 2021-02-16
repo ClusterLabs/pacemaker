@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -783,7 +783,6 @@ get_router_node(pe_action_t *action)
 {
     pe_node_t *began_on = NULL;
     pe_node_t *ended_on = NULL;
-    pe_node_t *router_node = NULL;
     bool partial_migration = FALSE;
     const char *task = action->task;
 
@@ -802,52 +801,76 @@ get_router_node(pe_action_t *action)
         partial_migration = TRUE;
     }
 
-    /* if there is only one location to choose from,
-     * this is easy. Check for those conditions first */
-    if (!began_on || !ended_on) {
-        /* remote rsc is either shutting down or starting up */
-        return began_on ? began_on : ended_on;
-    } else if (began_on->details == ended_on->details) {
-        /* remote rsc didn't move nodes. */
+    if (began_on == NULL) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "next node %s (starting)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (ended_on? ended_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
+        return ended_on;
+    }
+
+    if (ended_on == NULL) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "current node %s (stopping)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (began_on? began_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
         return began_on;
     }
 
-    /* If we have get here, we know the remote resource
-     * began on one node and is moving to another node.
-     *
-     * This means some actions will get routed through the cluster
-     * node the connection rsc began on, and others are routed through
-     * the cluster node the connection rsc ends up on.
-     *
-     * 1. stop, demote, migrate actions of resources living in the remote
-     *    node _MUST_ occur _BEFORE_ the connection can move (these actions
-     *    are all required before the remote rsc stop action can occur.) In
-     *    this case, we know these actions have to be routed through the initial
-     *    cluster node the connection resource lived on before the move takes place.
-     *    The exception is a partial migration of a (non-guest) remote
-     *    connection resource; in that case, all actions (even these) will be
-     *    ordered after the connection's pseudo-start on the migration target,
-     *    so the target is the router node.
-     *
-     * 2. Everything else (start, promote, monitor, probe, refresh, clear failcount
-     *    delete ....) must occur after the resource starts on the node it is
-     *    moving to.
+    if (began_on->details == ended_on->details) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "current node %s (not moving)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (began_on? began_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
+        return began_on;
+    }
+
+    /* If we get here, the remote connection is moving during this transition.
+     * This means some actions for resources behind the connection will get
+     * routed through the cluster node the connection reource is currently on,
+     * and others are routed through the cluster node the connection will end up
+     * on.
      */
 
     if (pcmk__str_eq(task, "notify", pcmk__str_casei)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 
-    /* 1. before connection rsc moves. */
-    if (pcmk__strcase_any_of(task, "stop", "demote", "migrate_from", "migrate_to",
-                             NULL) && !partial_migration) {
-        router_node = began_on;
-
-    /* 2. after connection rsc moves. */
-    } else {
-        router_node = ended_on;
+    /*
+     * Stop, demote, and migration actions must occur before the connection can
+     * move (these actions are required before the remote resource can stop). In
+     * this case, we know these actions have to be routed through the initial
+     * cluster node the connection resource lived on before the move takes
+     * place.
+     *
+     * The exception is a partial migration of a (non-guest) remote connection
+     * resource; in that case, all actions (even these) will be ordered after
+     * the connection's pseudo-start on the migration target, so the target is
+     * the router node.
+     */
+    if (pcmk__strcase_any_of(task, "cancel", "stop", "demote", "migrate_from",
+                             "migrate_to", NULL) && !partial_migration) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "current node %s (moving)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (began_on? began_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
+        return began_on;
     }
-    return router_node;
+
+    /* Everything else (start, promote, monitor, probe, refresh,
+     * clear failcount, delete, ...) must occur after the connection starts on
+     * the node it is moving to.
+     */
+    crm_trace("Routing %s for %s through remote connection's "
+              "next node %s (moving)%s",
+              action->task, (action->rsc? action->rsc->id : "no resource"),
+              (ended_on? ended_on->details->uname : "none"),
+              partial_migration? " (partial migration)" : "");
+    return ended_on;
 }
 
 /*!
