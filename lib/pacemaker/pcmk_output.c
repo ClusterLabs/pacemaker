@@ -376,14 +376,14 @@ PCMK__OUTPUT_ARGS("health", "const char *", "const char *", "const char *", "con
 static int
 health_text(pcmk__output_t *out, va_list args)
 {
-    const char *sys_from = va_arg(args, const char *);
+    const char *sys_from G_GNUC_UNUSED = va_arg(args, const char *);
     const char *host_from = va_arg(args, const char *);
     const char *fsa_state = va_arg(args, const char *);
     const char *result = va_arg(args, const char *);
 
     if (!out->is_quiet(out)) {
-        out->info(out, "Status of %s@%s: %s (%s)", crm_str(sys_from),
-                       crm_str(host_from), crm_str(fsa_state), crm_str(result));
+        out->info(out, "Controller on %s in state %s: %s", crm_str(host_from),
+                        crm_str(fsa_state), crm_str(result));
     } else if (fsa_state != NULL) {
         out->info(out, "%s", fsa_state);
     }
