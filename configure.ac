@@ -257,13 +257,22 @@ AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -gt 0])
 
 dnl --with-* options: basic parameters
 
+dnl This argument is defined via an M4 macro so default can be a variable
 AC_DEFUN([VERSION_ARG],
     [AC_ARG_WITH([version],
         [AS_HELP_STRING([--with-version=VERSION],
             [override package version @<:@$1@:>@])],
-        [ PACKAGE_VERSION="$withval" ])]
+        [ PACEMAKER_VERSION="$withval" ],
+        [ PACEMAKER_VERSION="$PACKAGE_VERSION" ])]
 )
 VERSION_ARG(VERSION_NUMBER)
+
+# Redefine PACKAGE_VERSION and VERSION according to PACEMAKER_VERSION in case
+# the user used --with-version. Unfortunately, this can only affect the
+# substitution variables and later uses in this file, not the config.h
+# constants, so we have to be careful to use only PACEMAKER_VERSION in C code.
+PACKAGE_VERSION=$PACEMAKER_VERSION
+VERSION=$PACEMAKER_VERSION
 
 CRM_DAEMON_USER=""
 AC_ARG_WITH([daemon-user],
@@ -460,12 +469,11 @@ dnl ===============================================
 dnl General Processing
 dnl ===============================================
 
-AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION",
-                   [Current pacemaker version])
+AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$VERSION",
+                   [Version number of this Pacemaker build])
 
-PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
+PACKAGE_SERIES=`echo $VERSION | awk -F. '{ print $1"."$2 }'`
 AC_SUBST(PACKAGE_SERIES)
-AC_SUBST(PACKAGE_VERSION)
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P

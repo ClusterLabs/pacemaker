@@ -107,7 +107,7 @@ xml_init(pcmk__output_t *out) {
 
     if (legacy_xml) {
         priv->root = create_xml_node(NULL, "crm_mon");
-        crm_xml_add(priv->root, "version", VERSION);
+        crm_xml_add(priv->root, "version", PACEMAKER_VERSION);
     } else {
         priv->root = create_xml_node(NULL, "pacemaker-result");
         crm_xml_add(priv->root, "api-version", PCMK__API_VERSION);
