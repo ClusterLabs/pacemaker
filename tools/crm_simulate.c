@@ -68,6 +68,7 @@ bool action_numbers = FALSE;
 gboolean quiet = FALSE;
 char *temp_shadow = NULL;
 extern gboolean bringing_nodes_online;
+crm_exit_t exit_code = CRM_EX_OK;
 
 #define quiet_log(fmt, args...) do {		\
 	if(quiet == FALSE) {			\
@@ -76,6 +77,13 @@ extern gboolean bringing_nodes_online;
     } while(0)
 
 #define INDENT "                                   "
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 static gboolean
 in_place_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
@@ -319,7 +327,7 @@ static GOptionEntry synthetic_entries[] = {
     { NULL }
 };
 
-static GOptionEntry output_entries[] = {
+static GOptionEntry artifact_entries[] = {
     { "save-input", 'I', 0, G_OPTION_ARG_FILENAME, &options.input_file,
       "Save the input configuration to the named file",
       "FILE" },
@@ -877,7 +885,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "Now see what the reaction to the stop failed would be:\n\n"
                               "\tcrm_simulate -S --xml-file /tmp/memcached-test.xml\n\n";
 
-    context = pcmk__build_arg_context(args, NULL, group, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
     g_option_context_set_description(context, description);
 
@@ -885,8 +893,8 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                         "Show operations options", operation_entries);
     pcmk__add_arg_group(context, "synthetic", "Synthetic Cluster Events:",
                         "Show synthetic cluster event options", synthetic_entries);
-    pcmk__add_arg_group(context, "output", "Output Options:",
-                        "Show output options", output_entries);
+    pcmk__add_arg_group(context, "artifact", "Artifact Options:",
+                        "Show artifact options", artifact_entries);
     pcmk__add_arg_group(context, "source", "Data Source:",
                         "Show data source options", source_entries);
 
@@ -898,6 +906,7 @@ main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
     pe_working_set_t *data_set = NULL;
+    pcmk__output_t *out = NULL;
     xmlNode *input = NULL;
 
     GError *error = NULL;
@@ -910,17 +919,25 @@ main(int argc, char **argv)
     /* This must come before g_option_context_parse_strv. */
     options.xml_file = strdup("-");
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
     pcmk__cli_init_logging("crm_simulate", args->verbosity);
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "Error creating output format %s: %s\n",
+                args->output_ty, pcmk_rc_str(rc));
+        exit_code = CRM_EX_ERROR;
+        goto done;
+    }
+
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When crm_simulate is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_USAGE);
+        out->version(out, false);
+        goto done;
     }
 
     if (args->verbosity > 0) {
@@ -978,6 +995,7 @@ main(int argc, char **argv)
     }
 
     data_set->input = input;
+    data_set->priv = out;
     get_date(data_set, true, options.use_date);
     if(options.xml_file) {
         pe__set_working_set_flags(data_set, pe_flag_sanitized);
@@ -1028,6 +1046,7 @@ main(int argc, char **argv)
 
         cleanup_calculations(data_set);
         data_set->input = input;
+        data_set->priv = out;
         get_date(data_set, true, options.use_date);
 
         if(options.xml_file) {
@@ -1158,5 +1177,15 @@ main(int argc, char **argv)
         unlink(temp_shadow);
         free(temp_shadow);
     }
-    crm_exit(pcmk_rc2exitc(rc));
+
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+    }
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+
+    crm_exit(exit_code);
 }
