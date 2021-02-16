@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -527,11 +527,9 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
 
         CRM_CHECK(request != NULL, return);
-#if ENABLE_ACL
         CRM_CHECK(lrm_state->node_name, return);
         crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
         pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
-#endif
 
         /* Pacemaker Remote nodes don't know their own names (as known to the
          * cluster). When getting a node info request with no name or ID, add

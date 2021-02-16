@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2020 the Pacemaker project contributors
+ * Later changes copyright 2008-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -187,7 +187,6 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 {
     bool rc = FALSE;
 
-#if ENABLE_ACL
     if(pcmk_acl_required(user)) {
         const char *value = NULL;
         GHashTable *options = crm_str_table_new();
@@ -199,7 +198,6 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     }
 
     crm_trace("CIB ACL is %s", rc ? "enabled" : "disabled");
-#endif
     return rc;
 }
 
@@ -457,9 +455,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_ORIG, origin);
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT,
                                 crm_element_value(req, F_CIB_CLIENTNAME));
-#if ENABLE_ACL
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_USER, crm_element_value(req, F_CIB_USER));
-#endif
             }
         }
     }
@@ -477,7 +473,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
   done:
 
     *result_cib = scratch;
-#if ENABLE_ACL
     if(rc != pcmk_ok && cib_acl_enabled(current_cib, user)) {
         if(xml_acl_filtered_copy(user, current_cib, scratch, result_cib)) {
             if (*result_cib == NULL) {
@@ -486,7 +481,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             free_xml(scratch);
         }
     }
-#endif
 
     if(diff) {
         *diff = local_diff;
@@ -516,11 +510,9 @@ cib_create_op(int call_id, const char *token, const char *op, const char *host, 
     crm_xml_add(op_msg, F_CIB_HOST, host);
     crm_xml_add(op_msg, F_CIB_SECTION, section);
     crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
-#if ENABLE_ACL
     if (user_name) {
         crm_xml_add(op_msg, F_CIB_USER, user_name);
     }
-#endif
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 
@@ -715,11 +707,9 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                      xmlNode ** output_data, int call_options, const char *user_name) =
         cib->delegate_fn;
 
-#if ENABLE_ACL
     if(user_name == NULL) {
         user_name = getenv("CIB_user");
     }
-#endif
 
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }

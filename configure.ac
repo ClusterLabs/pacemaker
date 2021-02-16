@@ -298,13 +298,6 @@ AC_ARG_WITH([bug-url],
 
 dnl --with-* options: features
 
-AC_ARG_WITH([acl],
-    [AS_HELP_STRING([--with-acl],
-        [support CIB Access Control Lists @<:@yes@:>@])]
-)
-yes_no_try "$with_acl" "yes"
-with_acl=$?
-
 AC_ARG_WITH([cibsecrets],
     [AS_HELP_STRING([--with-cibsecrets],
         [support separate file for CIB secrets @<:@no@:>@])]
@@ -1493,19 +1486,6 @@ PCMK_FEATURES="${PCMK_FEATURES}${STACKS}"
 
 AC_SUBST(CLUSTERLIBS)
 AC_SUBST(PC_NAME_CLUSTER)
-
-dnl ========================================================================
-dnl    ACL
-dnl ========================================================================
-
-AS_IF([test $with_acl -gt 0],
-      [
-          with_acl=1
-          PCMK_FEATURES="$PCMK_FEATURES acls"
-      ]
-)
-AM_CONDITIONAL([ENABLE_ACL], [test $with_acl -eq 1])
-AC_DEFINE_UNQUOTED([ENABLE_ACL], [$with_acl], [Support CIB ACLs])
 
 dnl ========================================================================
 dnl    CIB secrets

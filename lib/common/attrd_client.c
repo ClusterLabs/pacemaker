@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the Pacemaker project contributors
+ * Copyright 2011-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,9 +34,7 @@ create_attrd_op(const char *user_name)
 
     crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
     crm_xml_add(attrd_op, F_ORIG, (crm_system_name? crm_system_name: "unknown"));
-#if ENABLE_ACL
     crm_xml_add(attrd_op, PCMK__XA_ATTR_USER, user_name);
-#endif
 
     return attrd_op;
 }

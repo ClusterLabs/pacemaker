@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -155,10 +155,8 @@ create_attribute(xmlNode *xml)
 
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &a->is_private);
 
-#if ENABLE_ACL
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
     crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
-#endif
 
     if(value) {
         dampen = crm_get_msec(value);

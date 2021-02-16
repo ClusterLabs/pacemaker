@@ -1852,15 +1852,11 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     int do_notify = 0;
     xmlNode *reply = NULL;
 
-#if ENABLE_ACL
     /* Certain IPC commands may be done only by privileged users (i.e. root or
-     * hacluster) when ACLs are enabled, because they would otherwise provide a
-     * means of bypassing ACLs.
+     * hacluster), because they would otherwise provide a means of bypassing
+     * ACLs.
      */
     bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
-#else
-    bool allowed = true;
-#endif
 
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);

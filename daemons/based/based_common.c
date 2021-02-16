@@ -1,5 +1,7 @@
 /*
- * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2008-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -224,9 +226,7 @@ cib_msg_copy(xmlNode * msg, gboolean with_data)
         F_CIB_CALLBACK_TOKEN,
         F_CIB_GLOBAL_UPDATE,
         F_CIB_CLIENTNAME,
-#if ENABLE_ACL
         F_CIB_USER,
-#endif
         F_CIB_NOTIFY_TYPE,
         F_CIB_NOTIFY_ACTIVATE
     };

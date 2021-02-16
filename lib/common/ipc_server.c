@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -171,7 +171,6 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
     }
 
     if (c) {
-#if ENABLE_ACL
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = strdup("#unprivileged");
@@ -179,7 +178,6 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
             crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
                     uid_client);
         }
-#endif
         client->ipcs = c;
         pcmk__set_client_flags(client, pcmk__client_ipc);
         client->pid = pcmk__client_pid(c);
