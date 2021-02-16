@@ -321,7 +321,7 @@ crm_time_get_seconds(crm_time_t * dt)
     }
 
     for (lpc = 1; lpc < utc->years; lpc++) {
-        int dmax = year_days(lpc);
+        long long dmax = year_days(lpc);
 
         in_seconds += DAY_SECONDS * dmax;
     }
@@ -334,11 +334,11 @@ crm_time_get_seconds(crm_time_t * dt)
      * for anyone that tries to use a month in this way.
      */
     if (utc->months > 0) {
-        in_seconds += DAY_SECONDS * 30 * utc->months;
+        in_seconds += DAY_SECONDS * 30 * (long long) (utc->months);
     }
 
     if (utc->days > 0) {
-        in_seconds += DAY_SECONDS * (utc->days - 1);
+        in_seconds += DAY_SECONDS * (long long) (utc->days - 1);
     }
     in_seconds += utc->seconds;
 
