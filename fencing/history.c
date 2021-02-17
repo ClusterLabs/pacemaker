@@ -257,7 +257,7 @@ stonith_xml_history_to_list(xmlNode *history)
 /*!
  * \internal
  * \brief Craft xml difference between local fence-history and a history
- *        coming from remote
+ *        coming from remote, and merge the remote history into the local
  *
  * \param[in] remote_history    Fence-history as hash-table (may be NULL)
  * \param[in] add_id            If crafting the answer for an API
@@ -267,21 +267,23 @@ stonith_xml_history_to_list(xmlNode *history)
  * \return The fence-history as xml
  */
 static xmlNode *
-stonith_local_history_diff(GHashTable *remote_history,
+stonith_local_history_diff_and_merge(GHashTable *remote_history,
                            gboolean add_id,
                            const char *target)
 {
     xmlNode *history = NULL;
+    GHashTableIter iter;
+    remote_fencing_op_t *op = NULL;
+    gboolean updated = FALSE;
     int cnt = 0;
 
     if (stonith_remote_op_list) {
-            GHashTableIter iter;
-            remote_fencing_op_t *op = NULL;
+            char *id = NULL;
 
             history = create_xml_node(NULL, F_STONITH_HISTORY_LIST);
 
             g_hash_table_iter_init(&iter, stonith_remote_op_list);
-            while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
+            while (g_hash_table_iter_next(&iter, (void **)&id, (void **)&op)) {
                 xmlNode *entry = NULL;
 
                 if (remote_history) {
@@ -289,10 +291,25 @@ stonith_local_history_diff(GHashTable *remote_history,
                         g_hash_table_lookup(remote_history, op->id);
 
                     if (remote_op) {
-                        if (remote_op->state != st_failed
-                            && remote_op->state != st_done
-                            && (op->state == st_failed
-                                || op->state == st_done)) {
+                        if (stonith__op_state_pending(op->state)
+                            && !stonith__op_state_pending(remote_op->state)) {
+
+                            crm_debug("Updating outdated pending operation %.8s "
+                                      "(state=%d) according to the one (state=%d) from "
+                                      "remote peer history",
+                                      op->id, op->state,
+                                      remote_op->state);
+
+                            g_hash_table_steal(remote_history, op->id);
+                            op->id = remote_op->id;
+                            remote_op->id = id;
+                            g_hash_table_iter_replace(&iter, remote_op);
+
+                            updated = TRUE;
+                            continue; /* skip outdated entries */
+
+                        } else if (!stonith__op_state_pending(op->state)
+                                   && stonith__op_state_pending(remote_op->state)) {
 
                             crm_debug("Broadcasting operation %.8s (state=%d) to "
                                       "update the outdated pending one "
@@ -300,7 +317,10 @@ stonith_local_history_diff(GHashTable *remote_history,
                                       op->id, op->state,
                                       remote_op->state);
 
+                            g_hash_table_remove(remote_history, op->id);
+
                         } else {
+                            g_hash_table_remove(remote_history, op->id);
                             continue; /* skip entries broadcasted already */
                         }
                     }
@@ -326,6 +346,47 @@ stonith_local_history_diff(GHashTable *remote_history,
             }
     }
 
+    if (remote_history) {
+        init_stonith_remote_op_hash_table(&stonith_remote_op_list);
+
+        updated |= g_hash_table_size(remote_history);
+
+        g_hash_table_iter_init(&iter, remote_history);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
+
+            if (stonith__op_state_pending(op->state) &&
+                safe_str_eq(op->originator, stonith_our_uname)) {
+                crm_warn("Failing pending operation %.8s originated by us but "
+                         "known only from peer history", op->id);
+                op->state = st_failed;
+                op->completed = time(NULL);
+                /* use -EHOSTUNREACH to not introduce a new return-code that might
+                   trigger unexpected results at other places and to prevent
+                   remote_op_done from setting the delegate if not present
+                */
+                stonith_bcast_result_to_peers(op, -EHOSTUNREACH);
+            }
+
+            g_hash_table_iter_steal(&iter);
+            g_hash_table_replace(stonith_remote_op_list, op->id, op);
+            /* we could trim the history here but if we bail
+             * out after trim we might miss more recent entries
+             * of those that might still be in the list
+             * if we don't bail out trimming once is more
+             * efficient and memory overhead is minimal as
+             * we are just moving pointers from one hash to
+             * another
+             */
+        }
+
+        g_hash_table_destroy(remote_history); /* remove what is left */
+    }
+
+    if (updated) {
+        stonith_fence_history_trim();
+        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
+    }
+
     if (cnt == 0) {
         free_xml(history);
         return NULL;
@@ -336,75 +397,18 @@ stonith_local_history_diff(GHashTable *remote_history,
 
 /*!
  * \internal
- * \brief Merge fence-history coming from remote into local history
+ * \brief Craft xml from the local fence-history
  *
- * \param[in] history   Hash-table holding remote history to be merged in
+ * \param[in] add_id            If crafting the answer for an API
+ *                              history-request there is no need for the id
+ * \param[in] target            Optionally limit to certain fence-target
+ *
+ * \return The fence-history as xml
  */
-static void
-stonith_merge_in_history_list(GHashTable *history)
+static xmlNode *
+stonith_local_history(gboolean add_id, const char *target)
 {
-    GHashTableIter iter;
-    remote_fencing_op_t *op = NULL;
-    gboolean updated = FALSE;
-
-    if (!history) {
-        return;
-    }
-
-    init_stonith_remote_op_hash_table(&stonith_remote_op_list);
-
-    g_hash_table_iter_init(&iter, history);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
-        remote_fencing_op_t *stored_op =
-            g_hash_table_lookup(stonith_remote_op_list, op->id);
-
-        if (stored_op) {
-            if (stored_op->state != st_failed
-                && stored_op->state != st_done
-                && (op->state == st_failed || op->state == st_done)) {
-                    crm_debug("Updating outdated pending operation %.8s "
-                              "(state=%d) according to the one (state=%d) from "
-                              "remote peer history",
-                              op->id, stored_op->state,
-                              op->state);
-
-            } else {
-                continue; // Skip existent
-            }
-        }
-
-        updated = TRUE;
-        g_hash_table_iter_steal(&iter);
-
-        if ((op->state != st_failed) &&
-            (op->state != st_done) &&
-            safe_str_eq(op->originator, stonith_our_uname)) {
-            crm_warn("received pending action we are supposed to be the "
-                     "owner but it's not in our records -> fail it");
-            op->state = st_failed;
-            op->completed = time(NULL);
-            /* use -EHOSTUNREACH to not introduce a new return-code that might
-               trigger unexpected results at other places and to prevent
-               remote_op_done from setting the delegate if not present
-             */
-            stonith_bcast_result_to_peers(op, -EHOSTUNREACH);
-        }
-
-        g_hash_table_insert(stonith_remote_op_list, op->id, op);
-        /* we could trim the history here but if we bail
-         * out after trim we might miss more recent entries
-         * of those that might still be in the list
-         * if we don't bail out trimming once is more
-         * efficient and memory overhead is minimal as
-         * we are just moving pointers from one hash to
-         * another
-         */
-    }
-    stonith_fence_history_trim();
-    if (updated) {
-        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
-    }
-    g_hash_table_destroy(history); /* remove what is left */
+    return stonith_local_history_diff_and_merge(NULL, add_id, target);
 }
 
 /*!
@@ -460,7 +464,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             * so that every node can merge and broadcast
             * what it has on top
             */
-            out_history = stonith_local_history_diff(NULL, TRUE, NULL);
+            out_history = stonith_local_history(TRUE, NULL);
             crm_trace("Broadcasting history to peers");
             stonith_send_broadcast_history(out_history,
                                         st_opt_broadcast | st_opt_discard_reply,
@@ -485,7 +489,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                 !crm_is_true(crm_element_value(history,
                                                F_STONITH_DIFFERENTIAL))) {
                 out_history =
-                    stonith_local_history_diff(received_history, TRUE, NULL);
+                    stonith_local_history_diff_and_merge(received_history, TRUE, NULL);
                 if (out_history) {
                     crm_trace("Broadcasting history-diff to peers");
                     crm_xml_add(out_history, F_STONITH_DIFFERENTIAL,
@@ -497,7 +501,6 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                     crm_trace("History-diff is empty - skip broadcast");
                 }
             }
-            stonith_merge_in_history_list(received_history);
         } else {
             crm_trace("Skipping history-query-broadcast (%s%s)"
                       " we sent ourselves",
@@ -508,7 +511,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         /* plain history request */
         crm_trace("Looking for operations on %s in %p", target,
                   stonith_remote_op_list);
-        *output = stonith_local_history_diff(NULL, FALSE, target);
+        *output = stonith_local_history(FALSE, target);
     }
     free_xml(out_history);
     return rc;
