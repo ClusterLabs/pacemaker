@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,6 +55,15 @@ static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
 
 static cib_t *cib_api = NULL;
+
+static pcmk__output_t *out = NULL;
+
+pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_LOG,
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    { NULL, NULL, NULL }
+};
 
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
@@ -1287,6 +1296,7 @@ main(int argc, char **argv)
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
     crm_ipc_t *old_instance = NULL;
+    int rc = pcmk_rc_ok;
 
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
@@ -1546,6 +1556,20 @@ main(int argc, char **argv)
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(&out, "log", NULL, argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        crm_err("Can't log resource details due to internal error: %s\n",
+                pcmk_rc_str(rc));
+        crm_exit(CRM_EX_FATAL);
+    }
+
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
+
+    pcmk__output_set_log_level(out, LOG_TRACE);
+    fenced_data_set->priv = out;
+
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker fencer successfully started and accepting connections");
@@ -1553,5 +1577,10 @@ main(int argc, char **argv)
 
     stonith_cleanup();
     pe_free_working_set(fenced_data_set);
+
+    pcmk__unregister_formats();
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
+
     crm_exit(CRM_EX_OK);
 }
