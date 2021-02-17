@@ -354,15 +354,15 @@ static GOptionEntry query_entries[] = {
       list_providers_cb,
       "List all available OCF providers",
       NULL },
-    { "list-agents", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+    { "list-agents", 0, 0, G_OPTION_ARG_CALLBACK,
       list_agents_cb,
       "List all agents available for the named standard and/or provider",
       "STD/PROV" },
-    { "list-ocf-alternatives", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+    { "list-ocf-alternatives", 0, 0, G_OPTION_ARG_CALLBACK,
       list_alternatives_cb,
       "List all available providers for the named OCF agent",
       "AGENT" },
-    { "show-metadata", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
+    { "show-metadata", 0, 0, G_OPTION_ARG_CALLBACK,
       metadata_cb,
       "Show the metadata for the named class:provider:agent",
       "SPEC" },
@@ -372,7 +372,7 @@ static GOptionEntry query_entries[] = {
     { "query-xml-raw", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Show XML configuration of resource (before any template expansion)",
       NULL },
-    { "get-parameter", 'g', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
+    { "get-parameter", 'g', 0, G_OPTION_ARG_CALLBACK, get_param_prop_cb,
       "Display named parameter for resource (use instance attribute\n"
       INDENT "unless --meta or --utilization is specified)",
       "PARAM" },
@@ -424,11 +424,11 @@ static GOptionEntry command_entries[] = {
       INDENT "numbered instance of a clone or bundled resource, the refresh\n"
       INDENT "applies to the whole collective resource unless --force is given.",
       NULL },
-    { "set-parameter", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
+    { "set-parameter", 'p', 0, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
       "Set named parameter for resource (requires -v). Use instance\n"
       INDENT "attribute unless --meta or --utilization is specified.",
       "PARAM" },
-    { "delete-parameter", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
+    { "delete-parameter", 'd', 0, G_OPTION_ARG_CALLBACK, set_delete_param_cb,
       "Delete named parameter for resource. Use instance attribute\n"
       INDENT "unless --meta or --utilization is specified.",
       "PARAM" },
@@ -477,11 +477,11 @@ static GOptionEntry location_entries[] = {
       "Modifies the --clear argument to remove constraints with\n"
       INDENT "expired lifetimes.",
       NULL },
-    { "lifetime", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.move_lifetime,
+    { "lifetime", 'u', 0, G_OPTION_ARG_STRING, &options.move_lifetime,
       "Lifespan (as ISO 8601 duration) of created constraints (with\n"
       INDENT "-B, -M) see https://en.wikipedia.org/wiki/ISO_8601#Durations)",
       "TIMESPEC" },
-    { "master", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.promoted_role_only,
+    { "master", 0, 0, G_OPTION_ARG_NONE, &options.promoted_role_only,
       "Limit scope of command to Master role (with -B, -M, -U). For\n"
       INDENT "-B and -M the previous master may remain active in the Slave role.",
       NULL },
@@ -546,16 +546,16 @@ static GOptionEntry advanced_entries[] = {
 };
 
 static GOptionEntry addl_entries[] = {
-    { "node", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.host_uname,
+    { "node", 'N', 0, G_OPTION_ARG_STRING, &options.host_uname,
       "Node name",
       "NAME" },
-    { "recursive", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.recursive,
+    { "recursive", 0, 0, G_OPTION_ARG_NONE, &options.recursive,
       "Follow colocation chains when using --set-parameter",
       NULL },
-    { "resource-type", 't', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.rsc_type,
+    { "resource-type", 't', 0, G_OPTION_ARG_STRING, &options.rsc_type,
       "Resource XML element (primitive, group, etc.) (with -D)",
       "ELEMENT" },
-    { "parameter-value", 'v', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.prop_value,
+    { "parameter-value", 'v', 0, G_OPTION_ARG_STRING, &options.prop_value,
       "Value to use with -p",
       "PARAM" },
     { "meta", 'm', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attr_set_type_cb,
@@ -566,40 +566,40 @@ static GOptionEntry addl_entries[] = {
       "Use resource utilization attribute instead of instance attribute\n"
       INDENT "(with -p, -g, -d)",
       NULL },
-    { "operation", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.operation,
+    { "operation", 'n', 0, G_OPTION_ARG_STRING, &options.operation,
       "Operation to clear instead of all (with -C -r)",
       "OPERATION" },
-    { "interval", 'I', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.interval_spec,
+    { "interval", 'I', 0, G_OPTION_ARG_STRING, &options.interval_spec,
       "Interval of operation to clear (default 0) (with -C -r -n)",
       "N" },
-    { "class", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, class_cb,
+    { "class", 0, 0, G_OPTION_ARG_CALLBACK, class_cb,
       "The standard the resource agent conforms to (for example, ocf).\n"
       INDENT "Use with --agent, --provider, --option, and --validate.",
       "CLASS" },
-    { "agent", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
+    { "agent", 0, 0, G_OPTION_ARG_CALLBACK, agent_provider_cb,
       "The agent to use (for example, IPaddr). Use with --class,\n"
       INDENT "--provider, --option, and --validate.",
       "AGENT" },
-    { "provider", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, agent_provider_cb,
+    { "provider", 0, 0, G_OPTION_ARG_CALLBACK, agent_provider_cb,
       "The vendor that supplies the resource agent (for example,\n"
       INDENT "heartbeat). Use with --class, --agent, --option, and --validate.",
       "PROVIDER" },
-    { "option", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, option_cb,
+    { "option", 0, 0, G_OPTION_ARG_CALLBACK, option_cb,
       "Specify a device configuration parameter as NAME=VALUE (may be\n"
       INDENT "specified multiple times). Use with --validate and without the\n"
       INDENT "-r option.",
       "PARAM" },
-    { "set-name", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.prop_set,
+    { "set-name", 's', 0, G_OPTION_ARG_STRING, &options.prop_set,
       "(Advanced) XML ID of attributes element to use (with -p, -d)",
       "ID" },
-    { "nvpair", 'i', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.prop_id,
+    { "nvpair", 'i', 0, G_OPTION_ARG_STRING, &options.prop_id,
       "(Advanced) XML ID of nvpair element to use (with -p, -d)",
       "ID" },
-    { "timeout", 'T', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, timeout_cb,
+    { "timeout", 'T', 0, G_OPTION_ARG_CALLBACK, timeout_cb,
       "(Advanced) Abort if command does not finish in this time (with\n"
       INDENT "--restart, --wait, --force-*)",
       "N" },
-    { "force", 'f', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.force,
+    { "force", 'f', 0, G_OPTION_ARG_NONE, &options.force,
       "If making CIB changes, do so regardless of quorum. See help for\n"
       INDENT "individual commands for additional behavior.",
       NULL },
@@ -1440,13 +1440,13 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
-        { "quiet", 'Q', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &(args->quiet),
+        { "quiet", 'Q', 0, G_OPTION_ARG_NONE, &(args->quiet),
           "Be less descriptive in output.",
           NULL },
-        { "resource", 'r', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.rsc_id,
+        { "resource", 'r', 0, G_OPTION_ARG_STRING, &options.rsc_id,
           "Resource ID",
           "ID" },
-        { G_OPTION_REMAINING, 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY, &options.remainder,
+        { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &options.remainder,
           NULL,
           NULL },
 
