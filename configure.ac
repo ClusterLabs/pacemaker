@@ -162,13 +162,16 @@ cc_restore_flags() {
 }
 
 # yes_no_try $user_response $default
+DISABLED=0
+REQUIRED=1
+OPTIONAL=2
 yes_no_try() {
     local value
     AS_IF([test x"$1" = x""], [value="$2"], [value="$1"])
     AS_CASE(["`echo "$value" | tr '[A-Z]' '[a-z]'`"],
-            [0|no|false|disable], [return 0],
-            [1|yes|true|enable], [return 1],
-            [try|check], [return 2]
+            [0|no|false|disable], [return $DISABLED],
+            [1|yes|true|enable], [return $REQUIRED],
+            [try|check], [return $OPTIONAL]
     )
     AC_MSG_ERROR([Invalid option value "$value"])
 }
@@ -236,7 +239,7 @@ AC_ARG_ENABLE([compat-2.0],
 )
 yes_no_try "$enable_compat_2_0" "no"
 enable_compat_2_0=$?
-AS_IF([test $enable_compat_2_0 -gt 0],
+AS_IF([test $enable_compat_2_0 -ne $DISABLED],
       [
           AC_DEFINE_UNQUOTED([PCMK__COMPAT_2_0], [1],
                              [Keep certain output compatible with 2.0 release series])
@@ -253,7 +256,7 @@ AC_ARG_ENABLE([legacy-links],
 )
 yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
-AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -gt 0])
+AM_CONDITIONAL([BUILD_LEGACY_LINKS], [test $enable_legacy_links -ne $DISABLED])
 
 dnl --with-* options: basic parameters
 
@@ -472,16 +475,16 @@ AC_PROG_LN_S
 AC_PROG_MKDIR_P
 
 # Check for fatal warning support
-AS_IF([test $enable_fatal_warnings -gt 0 && test "$GCC" = "yes" && cc_supports_flag -Werror],
+AS_IF([test $enable_fatal_warnings -ne $DISABLED && test "$GCC" = "yes" && cc_supports_flag -Werror],
       [WERROR="-Werror"],
       [
           WERROR=""
           AS_CASE([$enable_fatal_warnings],
-                  [1], [AC_MSG_ERROR([Compiler does not support fatal warnings])],
-                  [2], [
-                           AC_MSG_NOTICE([Compiler does not support fatal warnings])
-                           enable_fatal_warnings=0
-                       ])
+                  [$REQUIRED], [AC_MSG_ERROR([Compiler does not support fatal warnings])],
+                  [$OPTIONAL], [
+                      AC_MSG_NOTICE([Compiler does not support fatal warnings])
+                      enable_fatal_warnings=$DISABLED
+                  ])
       ])
 
 AC_MSG_NOTICE([Sanitizing prefix: ${prefix}])
@@ -1143,18 +1146,18 @@ dnl    Profiling and GProf
 dnl ========================================================================
 
 CFLAGS_ORIG="$CFLAGS"
-AS_IF([test $with_coverage -gt 0],
+AS_IF([test $with_coverage -ne $DISABLED],
       [
-        with_profiling=1
+        with_profiling=$REQUIRED
         PCMK_FEATURES="$PCMK_FEATURES coverage"
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
         dnl During linking, make sure to specify -lgcov or -coverage
       ]
 )
 
-AS_IF([test $with_profiling -gt 0],
+AS_IF([test $with_profiling -ne $DISABLED],
       [
-          with_profiling=1
+          with_profiling=$REQUIRED
           PCMK_FEATURES="$PCMK_FEATURES profile"
 
           dnl Disable various compiler optimizations
@@ -1307,45 +1310,45 @@ fi
 AC_SUBST(PC_NAME_DBUS)
 
 AS_CASE([$enable_systemd],
-        [1], [
-                 AS_IF([test $HAVE_dbus = 0],
-                       [AC_MSG_FAILURE([Cannot support systemd resources without DBus])])
-                 AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
-                       [AC_MSG_FAILURE([Cannot support systemd resources without monotonic clock])])
-                 AS_IF([check_systemdsystemunitdir], [],
-                       [AC_MSG_FAILURE([Cannot support systemd resources without systemdsystemunitdir])])
-             ],
-        [2], [
-                 AS_IF([test $HAVE_dbus = 0 \
-                        || test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
-                       [enable_systemd=0],
-                       [
-                           AC_MSG_CHECKING([for systemd version (using dbus-send)])
-                           ret=$({ dbus-send --system --print-reply \
-                                       --dest=org.freedesktop.systemd1 \
-                                       /org/freedesktop/systemd1 \
-                                       org.freedesktop.DBus.Properties.Get \
-                                       string:org.freedesktop.systemd1.Manager \
-                                       string:Version 2>/dev/null \
-                                   || echo "version unavailable"; } | tail -n1)
-                           # sanitize output a bit (interested just in value, not type),
-                           # ret is intentionally unenquoted so as to normalize whitespace
-                           ret=$(echo ${ret} | cut -d' ' -f2-)
-                           AC_MSG_RESULT([${ret}])
-                           AS_IF([test "$ret" != "unavailable" \
-                                  || systemctl --version 2>/dev/null | grep -q systemd],
-                                 [
-                                     AS_IF([check_systemdsystemunitdir],
-                                           [enable_systemd=1],
-                                           [enable_systemd=0])
-                                 ],
-                                 [enable_systemd=0]
-                           )
-                       ])
-             ],
+        [$REQUIRED], [
+            AS_IF([test $HAVE_dbus = 0],
+                  [AC_MSG_FAILURE([Cannot support systemd resources without DBus])])
+            AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
+                  [AC_MSG_FAILURE([Cannot support systemd resources without monotonic clock])])
+            AS_IF([check_systemdsystemunitdir], [],
+                  [AC_MSG_FAILURE([Cannot support systemd resources without systemdsystemunitdir])])
+        ],
+        [$OPTIONAL], [
+            AS_IF([test $HAVE_dbus = 0 \
+                   || test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
+                  [enable_systemd=$DISABLED],
+                  [
+                      AC_MSG_CHECKING([for systemd version (using dbus-send)])
+                      ret=$({ dbus-send --system --print-reply \
+                                  --dest=org.freedesktop.systemd1 \
+                                  /org/freedesktop/systemd1 \
+                                  org.freedesktop.DBus.Properties.Get \
+                                  string:org.freedesktop.systemd1.Manager \
+                                  string:Version 2>/dev/null \
+                              || echo "version unavailable"; } | tail -n1)
+                      # sanitize output a bit (interested just in value, not type),
+                      # ret is intentionally unenquoted so as to normalize whitespace
+                      ret=$(echo ${ret} | cut -d' ' -f2-)
+                      AC_MSG_RESULT([${ret}])
+                      AS_IF([test "$ret" != "unavailable" \
+                             || systemctl --version 2>/dev/null | grep -q systemd],
+                            [
+                                AS_IF([check_systemdsystemunitdir],
+                                      [enable_systemd=$REQUIRED],
+                                      [enable_systemd=$DISABLED])
+                            ],
+                            [enable_systemd=$DISABLED]
+                      )
+                  ])
+        ],
 )
 AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
-AS_IF([test $enable_systemd -eq 0], [AC_MSG_RESULT([no])],
+AS_IF([test $enable_systemd -eq $DISABLED], [AC_MSG_RESULT([no])],
       [
           AC_MSG_RESULT([yes])
           PCMK_FEATURES="$PCMK_FEATURES systemd"
@@ -1354,37 +1357,37 @@ AS_IF([test $enable_systemd -eq 0], [AC_MSG_RESULT([no])],
 AC_SUBST([systemdsystemunitdir])
 AC_DEFINE_UNQUOTED([SUPPORT_SYSTEMD], [$enable_systemd],
                    [Support systemd resources])
-AM_CONDITIONAL([BUILD_SYSTEMD], [test $enable_systemd = 1])
+AM_CONDITIONAL([BUILD_SYSTEMD], [test $enable_systemd = $REQUIRED])
 AC_SUBST(SUPPORT_SYSTEMD)
 
 AS_CASE([$enable_upstart],
-        [1], [
-                 AS_IF([test $HAVE_dbus = 0],
-                       [AC_MSG_FAILURE([Cannot support Upstart resources without DBus])])
-             ],
-        [2], [
-                 AS_IF([test $HAVE_dbus = 0], [enable_upstart=0],
-                       [
-                           AC_MSG_CHECKING([for Upstart version (using dbus-send)])
-                           ret=$({ dbus-send --system --print-reply \
-                                       --dest=com.ubuntu.Upstart \
-                                       /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
-                                       string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
-                                   || echo "version unavailable"; } | tail -n1)
-                           # sanitize output a bit (interested just in value, not type),
-                           # ret is intentionally unenquoted so as to normalize whitespace
-                           ret=$(echo ${ret} | cut -d' ' -f2-)
-                           AC_MSG_RESULT([${ret}])
-                           AS_IF([test "$ret" != "unavailable" \
-                                  || initctl --version 2>/dev/null | grep -q upstart],
-                                 [enable_upstart=1],
-                                 [enable_upstart=0]
-                           )
-                       ])
-             ],
+        [$REQUIRED], [
+            AS_IF([test $HAVE_dbus = 0],
+                  [AC_MSG_FAILURE([Cannot support Upstart resources without DBus])])
+        ],
+        [$OPTIONAL], [
+            AS_IF([test $HAVE_dbus = 0], [enable_upstart=$DISABLED],
+                  [
+                      AC_MSG_CHECKING([for Upstart version (using dbus-send)])
+                      ret=$({ dbus-send --system --print-reply \
+                                  --dest=com.ubuntu.Upstart \
+                                  /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
+                                  string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
+                              || echo "version unavailable"; } | tail -n1)
+                      # sanitize output a bit (interested just in value, not type),
+                      # ret is intentionally unenquoted so as to normalize whitespace
+                      ret=$(echo ${ret} | cut -d' ' -f2-)
+                      AC_MSG_RESULT([${ret}])
+                      AS_IF([test "$ret" != "unavailable" \
+                             || initctl --version 2>/dev/null | grep -q upstart],
+                            [enable_upstart=$REQUIRED],
+                            [enable_upstart=$DISABLED]
+                      )
+                  ])
+        ],
 )
 AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
-AS_IF([test $enable_upstart -eq 0], [AC_MSG_RESULT([no])],
+AS_IF([test $enable_upstart -eq $DISABLED], [AC_MSG_RESULT([no])],
       [
           AC_MSG_RESULT([yes])
           PCMK_FEATURES="$PCMK_FEATURES upstart"
@@ -1392,22 +1395,22 @@ AS_IF([test $enable_upstart -eq 0], [AC_MSG_RESULT([no])],
 )
 AC_DEFINE_UNQUOTED([SUPPORT_UPSTART], [$enable_upstart],
                    [Support Upstart resources])
-AM_CONDITIONAL([BUILD_UPSTART], [test $enable_upstart = 1])
+AM_CONDITIONAL([BUILD_UPSTART], [test $enable_upstart -eq $REQUIRED])
 AC_SUBST(SUPPORT_UPSTART)
 
 AS_CASE([$with_nagios],
-        [1], [
-                 AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
-                       [AC_MSG_FAILURE([Cannot support nagios resources without monotonic clock])])
-             ],
-        [2], [
-                 AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
-                       [with_nagios=0], [with_nagios=1])
-             ]
+        [$REQUIRED], [
+            AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
+                  [AC_MSG_FAILURE([Cannot support nagios resources without monotonic clock])])
+        ],
+        [$OPTIONAL], [
+            AS_IF([test "$ac_cv_have_decl_CLOCK_MONOTONIC" = "no"],
+                  [with_nagios=$DISABLED], [with_nagios=$REQUIRED])
+        ]
 )
-AS_IF([test $with_nagios = 1], [PCMK_FEATURES="$PCMK_FEATURES nagios"])
+AS_IF([test $with_nagios -eq $REQUIRED], [PCMK_FEATURES="$PCMK_FEATURES nagios"])
 AC_DEFINE_UNQUOTED([SUPPORT_NAGIOS], [$with_nagios], [Support nagios plugins])
-AM_CONDITIONAL([BUILD_NAGIOS], [test $with_nagios = 1])
+AM_CONDITIONAL([BUILD_NAGIOS], [test $with_nagios -eq $REQUIRED])
 
 if test x"$NAGIOS_PLUGIN_DIR" = x""; then
     NAGIOS_PLUGIN_DIR="${libexecdir}/nagios/plugins"
@@ -1434,24 +1437,24 @@ dnl ========================================================================
 COROSYNC_LIBS=""
 
 AS_CASE([$with_corosync],
-        [1], [
-                 # These will be fatal if unavailable
-                 PKG_CHECK_MODULES([cpg], [libcpg])
-                 PKG_CHECK_MODULES([cfg], [libcfg])
-                 PKG_CHECK_MODULES([cmap], [libcmap])
-                 PKG_CHECK_MODULES([quorum], [libquorum])
-                 PKG_CHECK_MODULES([libcorosync_common], [libcorosync_common])
-             ]
-        [2], [
-                 PKG_CHECK_MODULES([cpg], [libcpg], [], [with_corosync=0])
-                 PKG_CHECK_MODULES([cfg], [libcfg], [], [with_corosync=0])
-                 PKG_CHECK_MODULES([cmap], [libcmap], [], [with_corosync=0])
-                 PKG_CHECK_MODULES([quorum], [libquorum], [], [with_corosync=0])
-                 PKG_CHECK_MODULES([libcorosync_common], [libcorosync_common], [], [with_corosync=0])
-                 AS_IF([test $with_corosync -gt 0], [with_corosync=1])
-             ]
+        [$REQUIRED], [
+            # These will be fatal if unavailable
+            PKG_CHECK_MODULES([cpg], [libcpg])
+            PKG_CHECK_MODULES([cfg], [libcfg])
+            PKG_CHECK_MODULES([cmap], [libcmap])
+            PKG_CHECK_MODULES([quorum], [libquorum])
+            PKG_CHECK_MODULES([libcorosync_common], [libcorosync_common])
+        ]
+        [$OPTIONAL], [
+            PKG_CHECK_MODULES([cpg], [libcpg], [], [with_corosync=$DISABLED])
+            PKG_CHECK_MODULES([cfg], [libcfg], [], [with_corosync=$DISABLED])
+            PKG_CHECK_MODULES([cmap], [libcmap], [], [with_corosync=$DISABLED])
+            PKG_CHECK_MODULES([quorum], [libquorum], [], [with_corosync=$DISABLED])
+            PKG_CHECK_MODULES([libcorosync_common], [libcorosync_common], [], [with_corosync=$DISABLED])
+            AS_IF([test $with_corosync -ne $DISABLED], [with_corosync=$REQUIRED])
+        ]
 )
-AS_IF([test $with_corosync -gt 0],
+AS_IF([test $with_corosync -ne $DISABLED],
       [
           AC_MSG_CHECKING([for Corosync 2 or later])
           AC_MSG_RESULT([yes])
@@ -1472,7 +1475,7 @@ AS_IF([test $with_corosync -gt 0],
 )
 AC_DEFINE_UNQUOTED([SUPPORT_COROSYNC], [$with_corosync],
                    [Support the Corosync messaging and membership layer])
-AM_CONDITIONAL([BUILD_CS_SUPPORT], [test $with_corosync -eq 1])
+AM_CONDITIONAL([BUILD_CS_SUPPORT], [test $with_corosync -eq $REQUIRED])
 AC_SUBST([SUPPORT_COROSYNC])
 
 dnl
@@ -1491,9 +1494,9 @@ dnl ========================================================================
 dnl    CIB secrets
 dnl ========================================================================
 
-AS_IF([test $with_cibsecrets -gt 0],
+AS_IF([test $with_cibsecrets -ne $DISABLED],
       [
-          with_cibsecrets=1
+          with_cibsecrets=$REQUIRED
           PCMK_FEATURES="$PCMK_FEATURES cibsecrets"
           LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
           AC_DEFINE_UNQUOTED([LRM_CIBSECRETS_DIR], ["$LRM_CIBSECRETS_DIR"],
@@ -1502,7 +1505,7 @@ AS_IF([test $with_cibsecrets -gt 0],
       ]
 )
 AC_DEFINE_UNQUOTED([SUPPORT_CIBSECRETS], [$with_cibsecrets], [Support CIB secrets])
-AM_CONDITIONAL([BUILD_CIBSECRETS], [test $with_cibsecrets -eq 1])
+AM_CONDITIONAL([BUILD_CIBSECRETS], [test $with_cibsecrets -eq $REQUIRED])
 
 dnl ========================================================================
 dnl    GnuTLS
@@ -1511,24 +1514,24 @@ dnl ========================================================================
 dnl Require GnuTLS >=2.12.0 (2011-03) for Pacemaker Remote support
 PC_NAME_GNUTLS=""
 AS_CASE([$with_gnutls],
-        [1], [
-                 REQUIRE_LIB([gnutls], [gnutls_sec_param_to_pk_bits])
-                 REQUIRE_HEADER([gnutls/gnutls.h])
-             ],
-        [2], [
-                 AC_CHECK_LIB([gnutls], [gnutls_sec_param_to_pk_bits],
-                              [], [with_gnutls=0])
-                 AC_CHECK_HEADERS([gnutls/gnutls.h], [], [with_gnutls=0])
-             ]
+        [$REQUIRED], [
+            REQUIRE_LIB([gnutls], [gnutls_sec_param_to_pk_bits])
+            REQUIRE_HEADER([gnutls/gnutls.h])
+        ],
+        [$OPTIONAL], [
+            AC_CHECK_LIB([gnutls], [gnutls_sec_param_to_pk_bits],
+                         [], [with_gnutls=$DISABLED])
+            AC_CHECK_HEADERS([gnutls/gnutls.h], [], [with_gnutls=$DISABLED])
+        ]
 )
-AS_IF([test $with_gnutls -gt 0],
+AS_IF([test $with_gnutls -ne $DISABLED],
       [
           PC_NAME_GNUTLS="gnutls"
           PCMK_FEATURES="$PCMK_FEATURES remote"
       ]
 )
 AC_SUBST([PC_NAME_GNUTLS])
-AM_CONDITIONAL([BUILD_REMOTE], [test $with_gnutls -gt 0])
+AM_CONDITIONAL([BUILD_REMOTE], [test $with_gnutls -ne $DISABLED])
 
 dnl ========================================================================
 dnl    System Health
@@ -1736,94 +1739,94 @@ dnl https://fedoraproject.org/wiki/Changes/Harden_All_Packages#Detailed_Harden_F
 dnl https://owasp.org/index.php/C-Based_Toolchain_Hardening#GCC.2FBinutils
 dnl
 
-AS_IF([test $enable_hardening -lt 2],
+AS_IF([test $enable_hardening -eq $OPTIONAL],
+      [
+          AS_IF([test "$(env | grep -Ec '^(C|LD)FLAGS_HARDENED_(EXE|LIB)=.')" = 0],
+                [enable_hardening=$REQUIRED],
+                [AC_MSG_NOTICE([Hardening: using custom flags from environment])]
+          )
+      ],
       [
           unset CFLAGS_HARDENED_EXE
           unset CFLAGS_HARDENED_LIB
           unset LDFLAGS_HARDENED_EXE
           unset LDFLAGS_HARDENED_LIB
-      ],
-      [
-          AS_IF([test "$(env | grep -Ec '^(C|LD)FLAGS_HARDENED_(EXE|LIB)=.')" = 0],
-                [enable_hardening=1],
-                [AC_MSG_NOTICE([Hardening: using custom flags from environment])]
-          )
       ]
 )
 AS_CASE([$enable_hardening],
-        [0], [AC_MSG_NOTICE([Hardening: explicitly disabled])],
-        [1], [
-                 CFLAGS_HARDENED_EXE=
-                 CFLAGS_HARDENED_LIB=
-                 LDFLAGS_HARDENED_EXE=
-                 LDFLAGS_HARDENED_LIB=
-                 relro=0
-                 pie=0
-                 bindnow=0
-                 # daemons incl. libs: partial RELRO
-                 flag="-Wl,-z,relro"
-                 CC_CHECK_LDFLAGS(["${flag}"],
-                                  [
-                                      LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
-                                      LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"
-                                      relro=1
-                                  ])
-                 # daemons: PIE for both CFLAGS and LDFLAGS
-                 AS_IF([cc_supports_flag -fPIE],
-                       [
-                           flag="-pie"
-                           CC_CHECK_LDFLAGS(["${flag}"],
-                                            [
-                                                CFLAGS_HARDENED_EXE="${CFLAGS_HARDENED_EXE} -fPIE"
-                                                LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
-                                                pie=1
-                                            ])
-                       ]
-                 )
-                 # daemons incl. libs: full RELRO if sensible + as-needed linking
-                 #                     so as to possibly mitigate startup performance
-                 #                     hit caused by excessive linking with unneeded
-                 #                     libraries
-                 AS_IF([test "${relro}" = 1 && test "${pie}" = 1],
-                       [
-                           flag="-Wl,-z,now"
-                           CC_CHECK_LDFLAGS(["${flag}"],
-                                            [
-                                                LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
-                                                LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"
-                                                bindnow=1
-                                            ])
-                       ]
-                 )
-                 AS_IF([test "${bindnow}" = 1],
-                       [
-                           flag="-Wl,--as-needed"
-                           CC_CHECK_LDFLAGS(["${flag}"],
-                                            [
-                                                LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
-                                                LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"
-                                            ])
-                       ])
-                 # universal: prefer strong > all > default stack protector if possible
-                 flag=
-                 AS_IF([cc_supports_flag -fstack-protector-strong],
-                       [flag="-fstack-protector-strong"],
-                       [cc_supports_flag -fstack-protector-all],
-                       [flag="-fstack-protector-all"],
-                       [cc_supports_flag -fstack-protector],
-                       [flag="-fstack-protector"]
-                 )
-                 AS_IF([test -n "${flag}"],
-                       [
-                           CC_EXTRAS="${CC_EXTRAS} ${flag}"
-                           stackprot=1
-                       ]
-                 )
-                 AS_IF([test "${relro}" = 1 || test "${pie}" = 1 || test "${stackprot}" = 1],
-                       [AC_MSG_NOTICE([Hardening: relro=${relro} pie=${pie} bindnow=${bindnow} stackprot=${flag}])],
-                       [AC_MSG_WARN([Hardening: no suitable features in the toolchain detected])]
-                 )
-             ],
+        [$DISABLED], [AC_MSG_NOTICE([Hardening: explicitly disabled])],
+        [$REQUIRED], [
+            CFLAGS_HARDENED_EXE=
+            CFLAGS_HARDENED_LIB=
+            LDFLAGS_HARDENED_EXE=
+            LDFLAGS_HARDENED_LIB=
+            relro=0
+            pie=0
+            bindnow=0
+            # daemons incl. libs: partial RELRO
+            flag="-Wl,-z,relro"
+            CC_CHECK_LDFLAGS(["${flag}"],
+                             [
+                                 LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
+                                 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"
+                                 relro=1
+                             ])
+            # daemons: PIE for both CFLAGS and LDFLAGS
+            AS_IF([cc_supports_flag -fPIE],
+                  [
+                      flag="-pie"
+                      CC_CHECK_LDFLAGS(["${flag}"],
+                                       [
+                                           CFLAGS_HARDENED_EXE="${CFLAGS_HARDENED_EXE} -fPIE"
+                                           LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
+                                           pie=1
+                                       ])
+                  ]
+            )
+            # daemons incl. libs: full RELRO if sensible + as-needed linking
+            #                     so as to possibly mitigate startup performance
+            #                     hit caused by excessive linking with unneeded
+            #                     libraries
+            AS_IF([test "${relro}" = 1 && test "${pie}" = 1],
+                  [
+                      flag="-Wl,-z,now"
+                      CC_CHECK_LDFLAGS(["${flag}"],
+                                       [
+                                           LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
+                                           LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"
+                                           bindnow=1
+                                       ])
+                  ]
+            )
+            AS_IF([test "${bindnow}" = 1],
+                  [
+                      flag="-Wl,--as-needed"
+                      CC_CHECK_LDFLAGS(["${flag}"],
+                                       [
+                                           LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}"
+                                           LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"
+                                       ])
+                  ])
+            # universal: prefer strong > all > default stack protector if possible
+            flag=
+            AS_IF([cc_supports_flag -fstack-protector-strong],
+                  [flag="-fstack-protector-strong"],
+                  [cc_supports_flag -fstack-protector-all],
+                  [flag="-fstack-protector-all"],
+                  [cc_supports_flag -fstack-protector],
+                  [flag="-fstack-protector"]
+            )
+            AS_IF([test -n "${flag}"],
+                  [
+                      CC_EXTRAS="${CC_EXTRAS} ${flag}"
+                      stackprot=1
+                  ]
+            )
+            AS_IF([test "${relro}" = 1 || test "${pie}" = 1 || test "${stackprot}" = 1],
+                  [AC_MSG_NOTICE([Hardening: relro=${relro} pie=${pie} bindnow=${bindnow} stackprot=${flag}])],
+                  [AC_MSG_WARN([Hardening: no suitable features in the toolchain detected])]
+            )
+        ],
 )
 
 CFLAGS="$SANITIZERS_CFLAGS $CFLAGS $CC_EXTRAS"
@@ -1841,7 +1844,7 @@ dnl AC_*FUNCS() calls above from working.  In particular, -Werror will
 dnl *always* cause us troubles if we set it before here.
 dnl
 dnl
-AS_IF([test $enable_fatal_warnings -gt 0], [
+AS_IF([test $enable_fatal_warnings -ne $DISABLED], [
     AC_MSG_NOTICE([Enabling fatal compiler warnings])
     CFLAGS="$CFLAGS $WERROR"
 ])
@@ -1856,7 +1859,7 @@ AC_SUBST(LIBADD_DL)        dnl extra flags for dynamic linking libraries
 AC_SUBST(LOCALE)
 
 dnl Options for cleaning up the compiler output
-AS_IF([test $enable_quiet -gt 0],
+AS_IF([test $enable_quiet -ne $DISABLED],
       [
           AC_MSG_NOTICE([Suppressing make details])
           QUIET_LIBTOOL_OPTS="--silent"
