@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -259,10 +259,8 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     crm_xml_add(op_request, F_CIB_CLIENTID, cib_client->id);
     crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
-#if ENABLE_ACL
     CRM_LOG_ASSERT(cib_client->user != NULL);
     pcmk__update_acl_user(op_request, F_CIB_USER, cib_client->user);
-#endif
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
     free_xml(op_request);

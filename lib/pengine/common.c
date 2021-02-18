@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,12 +139,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "concurrent-fencing", NULL, "boolean", NULL,
-#ifdef DEFAULT_CONCURRENT_FENCING_TRUE
-        "true",
-#else
-        "false",
-#endif
-        pcmk__valid_boolean,
+        PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
         "Allow performing fencing operations in parallel",
         NULL
     },

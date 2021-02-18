@@ -1494,14 +1494,12 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
     op->user_data = NULL;
     op->interval_ms = 0;
 
-#if ENABLE_ACL
     if (user_name && !pcmk__is_privileged(user_name)) {
         crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
         controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
         lrmd_free_event(op);
         return;
     }
-#endif
 
     if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_ok) {
         crm_info("Failing resource %s...", rsc->id);
@@ -1670,8 +1668,6 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
               bool crm_rsc_delete, const char *user_name)
 {
     gboolean unregister = TRUE;
-
-#if ENABLE_ACL
     int cib_rc = controld_delete_resource_history(rsc->id, lrm_state->node_name,
                                                   user_name,
                                                   cib_dryrun|cib_sync_call);
@@ -1691,7 +1687,6 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
         lrmd_free_event(op);
         return;
     }
-#endif
 
     if (crm_rsc_delete && is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
         unregister = FALSE;
@@ -1733,22 +1728,14 @@ do_lrm_invoke(long long action,
     }
     CRM_ASSERT(lrm_state != NULL);
 
-#if ENABLE_ACL
     user_name = pcmk__update_acl_user(input->msg, F_CRM_USER, NULL);
-#endif
-
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
     from_sys = crm_element_value(input->msg, F_CRM_SYS_FROM);
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
-#if ENABLE_ACL
     crm_trace("Executor %s command from %s as user %s",
               crm_op, from_sys, user_name);
-#else
-    crm_trace("Executor %s command from %s",
-              crm_op, from_sys);
-#endif
 
     if (pcmk__str_eq(crm_op, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
         if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {

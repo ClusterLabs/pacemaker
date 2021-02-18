@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -365,18 +365,13 @@ set_working_set_defaults(pe_working_set_t * data_set)
 
     data_set->flags = 0x0ULL;
 
-#ifdef DEFAULT_CONCURRENT_FENCING_TRUE
-    pe__set_working_set_flags(data_set,
-                              pe_flag_stop_rsc_orphans
-                              |pe_flag_symmetric_cluster
-                              |pe_flag_stop_action_orphans
-                              |pe_flag_concurrent_fencing);
-#else
     pe__set_working_set_flags(data_set,
                               pe_flag_stop_rsc_orphans
                               |pe_flag_symmetric_cluster
                               |pe_flag_stop_action_orphans);
-#endif
+    if (!strcmp(PCMK__CONCURRENT_FENCING_DEFAULT, "true")) {
+        pe__set_working_set_flags(data_set, pe_flag_concurrent_fencing);
+    }
 }
 
 pe_resource_t *

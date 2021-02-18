@@ -1326,7 +1326,15 @@ class CtsScheduler(object):
             # @TODO Why isn't test_args added here?
             test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ]
         with io.open(summary_output_filename, "wt") as f:
-            subprocess.call(test_cmd_full, stdout=f, stderr=subprocess.STDOUT, env=os.environ)
+            simulation = subprocess.Popen(test_cmd_full, stdout=subprocess.PIPE,
+                                          stderr=subprocess.STDOUT,
+                                          env=os.environ)
+            # This makes diff happy regardless of PCMK__COMPAT_2_0
+            sed = subprocess.Popen(["sed", "-e", "s/ocf::/ocf:/g"],
+                                   stdin=simulation.stdout, stdout=f,
+                                   stderr=subprocess.STDOUT)
+            simulation.stdout.close()
+            sed.communicate()
         if self.args.run:
             cat(summary_output_filename)
 

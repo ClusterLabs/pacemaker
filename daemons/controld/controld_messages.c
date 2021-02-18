@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -672,16 +672,12 @@ handle_lrm_delete(xmlNode *stored_msg)
         rsc_id = ID(rsc_xml);
         from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
         node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
-#if ENABLE_ACL
         user_name = pcmk__update_acl_user(stored_msg, F_CRM_USER, NULL);
-#endif
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
                   "(clearing CIB resource history only)", rsc_id, node,
                   (user_name? " for user " : ""), (user_name? user_name : ""));
-#if ENABLE_ACL
         rc = controld_delete_resource_history(rsc_id, node, user_name,
                                               cib_dryrun|cib_sync_call);
-#endif
         if (rc == pcmk_rc_ok) {
             rc = controld_delete_resource_history(rsc_id, node, user_name,
                                                   crmd_cib_smart_opt());

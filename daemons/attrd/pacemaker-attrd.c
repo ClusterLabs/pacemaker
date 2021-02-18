@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -240,10 +240,8 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
-#if ENABLE_ACL
     CRM_ASSERT(client->user != NULL);
     pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
-#endif
 
     op = crm_element_value(xml, PCMK__XA_TASK);
 

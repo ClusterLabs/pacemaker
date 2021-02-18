@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -571,17 +571,12 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
-#if ENABLE_ACL
-        /* Only allow privileged users (i.e. root or hacluster)
-         * to shut down Pacemaker from the command line (or direct IPC).
-         *
-         * We only check when ACLs are enabled, because without them, any client
-         * with IPC access could shut down Pacemaker via the CIB anyway.
+        /* Only allow privileged users (i.e. root or hacluster) to shut down
+         * Pacemaker from the command line (or direct IPC), so that other users
+         * are forced to go through the CIB and have ACLs applied.
          */
         bool allowed = pcmk_is_set(c->flags, pcmk__client_privileged);
-#else
-        bool allowed = true;
-#endif
+
         if (allowed) {
             crm_notice("Shutting down in response to IPC request %s from %s",
                        crm_element_value(msg, F_CRM_REFERENCE),

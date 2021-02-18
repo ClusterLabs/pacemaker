@@ -61,8 +61,8 @@
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
-## Add option to disable links for legacy daemon names
-%bcond_without legacy_links
+## Add option to enable links for legacy daemon names
+%bcond_with legacy_links
 
 # Define globals for convenient use later
 
@@ -448,14 +448,24 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 
 ./autogen.sh
 
+%if 0%{?rhel} >= 7
+%global concurrent_fencing --with-concurrent-fencing-default=true
+%endif
+
+%if 0%{?fedora} <= 34 || 0%{?rhel} <= 8
+%global compat20 --enable-compat-2.0
+%endif
+
 %{configure}                                                                    \
         PYTHON=%{python_path}                                                   \
         %{!?with_hardening:    --disable-hardening}                             \
-        %{!?with_legacy_links: --disable-legacy-links}                          \
+        %{?with_legacy_links:  --enable-legacy-links}                           \
         %{?with_profiling:     --with-profiling}                                \
         %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
+        %{?concurrent_fencing}                                                  \
+        %{?compat20}                                                            \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \
         --localstatedir=%{_var}                                                 \
@@ -664,9 +674,7 @@ exit 0
 %exclude %{_libexecdir}/pacemaker/cts-log-watcher
 %exclude %{_libexecdir}/pacemaker/cts-support
 %exclude %{_sbindir}/pacemaker-remoted
-%if %{with legacy_links}
 %exclude %{_sbindir}/pacemaker_remoted
-%endif
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_attribute
@@ -805,9 +813,7 @@ exit 0
 %endif
 
 %{_sbindir}/pacemaker-remoted
-%if %{with legacy_links}
 %{_sbindir}/pacemaker_remoted
-%endif
 %{_mandir}/man8/pacemaker-remoted.*
 %license licenses/GPLv2
 %doc COPYING

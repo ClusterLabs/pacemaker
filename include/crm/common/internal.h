@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,15 +31,11 @@ char *pcmk__uid2username(uid_t uid);
 const char *pcmk__update_acl_user(xmlNode *request, const char *field,
                                   const char *peer_user);
 
-#if ENABLE_ACL
-#  include <string.h>
 static inline bool
 pcmk__is_privileged(const char *user)
 {
     return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
-#endif
-
 
 #if SUPPORT_CIBSECRETS
 // Internal CIB utilities (from cib_secrets.c) */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -136,7 +136,8 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
     char timestamp_usec[7];
 
     params = alert_key2param(params, PCMK__alert_key_kind, kind_s);
-    params = alert_key2param(params, PCMK__alert_key_version, VERSION);
+    params = alert_key2param(params, PCMK__alert_key_version,
+                             PACEMAKER_VERSION);
 
     for (GList *iter = g_list_first(alert_list); iter; iter = g_list_next(iter)) {
         pcmk__alert_t *entry = (pcmk__alert_t *)(iter->data);
