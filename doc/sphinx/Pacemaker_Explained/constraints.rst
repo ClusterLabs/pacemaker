@@ -116,7 +116,7 @@ ___________________
    |                    |         | the pattern are selected. If the regular expression                                          |
    |                    |         | contains submatches, and the constraint is governed by                                       |
    |                    |         | a :ref:`rule <rules>`, the submatches can be                                                 |
-   |                    |         | referenced as **%0** through **%9** in the rule's                                            |
+   |                    |         | referenced as **%1** through **%9** in the rule's                                            |
    |                    |         | ``score-attribute`` or a rule expression's ``attribute``.                                    |
    |                    |         | A location constraint must either have a ``rsc``, have a                                     |
    |                    |         | ``rsc-pattern``, or contain at least one resource set.                                       |
