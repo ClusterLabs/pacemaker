@@ -29,6 +29,7 @@
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
 static corosync_cfg_handle_t cfg_handle = 0;
+static mainloop_timer_t *reconnect_timer = NULL;
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -59,13 +60,32 @@ pcmk_cfg_dispatch(gpointer user_data)
     return 0;
 }
 
+static gboolean
+cluster_reconnect_cb(gpointer data)
+{
+    if (cluster_connect_cfg()) {
+        mainloop_timer_stop(reconnect_timer);
+        mainloop_timer_del(reconnect_timer);
+        crm_warn("Cluster reconnect succeeded");
+    } else {
+        crm_warn("Cluster reconnect callback failed - retrying");
+    }
+    /*
+     * In theory this will continue forever. In practice the CIB connection from
+     * attrd will timeout and shut down Pacemaker when it gets bored.
+     */
+    return TRUE;
+}
+
+
 static void
 cfg_connection_destroy(gpointer user_data)
 {
     crm_err("Lost connection to cluster layer");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
-    pcmk_shutdown(SIGTERM);
+    reconnect_timer = mainloop_timer_add("corosync reconnect", 1000, TRUE, cluster_reconnect_cb, NULL);
+    mainloop_timer_start(reconnect_timer);
 }
 
 gboolean
