@@ -198,4 +198,18 @@ bool stonith__event_state_pending(stonith_history_t *history, void *user_data);
 bool stonith__event_state_eq(stonith_history_t *history, void *user_data);
 bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
 
+/*!
+ * \internal
+ * \brief Is a fencing operation in pending state?
+ *
+ * \param[in] state     State as enum op_state value
+ *
+ * \return A boolean
+ */
+static inline bool
+stonith__op_state_pending(enum op_state state)
+{
+    return state != st_failed && state != st_done;
+}
+
 #endif
