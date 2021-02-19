@@ -69,6 +69,9 @@ static void stonith_send_reply(xmlNode * reply, int call_options, const char *re
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
 
+static xmlNode * get_agent_metadata(const char *agent);
+static void read_action_metadata(stonith_device_t *device);
+
 typedef struct async_command_s {
 
     int id;
@@ -323,6 +326,25 @@ fork_cb(GPid pid, gpointer user_data)
     cmd->activating_on = NULL;
 }
 
+static int
+get_agent_metadata_cb(gpointer data) {
+    stonith_device_t *device = data;
+
+    device->agent_metadata = get_agent_metadata(device->agent);
+    if (device->agent_metadata) {
+        read_action_metadata(device);
+        stonith__device_parameter_flags(&(device->flags), device->id,
+                                        device->agent_metadata);
+        return G_SOURCE_REMOVE;
+    } else {
+        guint period_ms = pcmk__mainloop_timer_get_period(device->timer);
+        if (period_ms < 160 * 1000) {
+            mainloop_timer_set_period(device->timer, 2 * period_ms);
+        }
+        return G_SOURCE_CONTINUE;
+    }
+}
+
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
@@ -568,6 +590,11 @@ free_device(gpointer data)
     g_list_free(device->pending_ops);
 
     g_list_free_full(device->targets, free);
+
+    if (device->timer) {
+        mainloop_timer_stop(device->timer);
+        mainloop_timer_del(device->timer);
+    }
 
     mainloop_destroy_trigger(device->work);
 
@@ -916,6 +943,14 @@ build_device_from_xml(xmlNode * msg)
         read_action_metadata(device);
         stonith__device_parameter_flags(&(device->flags), device->id,
                                         device->agent_metadata);
+    } else {
+        if (device->timer == NULL) {
+            device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
+                                           TRUE, get_agent_metadata_cb, device);
+        }
+        if (!mainloop_timer_running(device->timer)) {
+            mainloop_timer_start(device->timer);
+        }
     }
 
     value = g_hash_table_lookup(device->params, "nodeid");
