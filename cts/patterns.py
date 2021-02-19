@@ -219,6 +219,7 @@ class crm_corosync(BasePatterns):
         self.components["corosync-ignore"] = [
             r"error:.*Connection to the CPG API failed: Library error",
             r"\[[0-9]+\] exited with status [0-9]+ \(",
+            r"\[[0-9]+\] terminated with signal 15",
             r"pacemaker-based.*error:.*Corosync connection lost",
             r"pacemaker-fenced.*error:.*Corosync connection terminated",
             r"pacemaker-controld.*State transition .* S_RECOVERY",
