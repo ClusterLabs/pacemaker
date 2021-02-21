@@ -1,0 +1,44 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+    * RemoteOnline: [ node3-rem ]
+
+  * Full List of Resources:
+    * xvm	(stonith:fence_xvm):	 Started node2
+    * xvm_rem	(stonith:fence_xvm):	 Started node1
+    * Clone Set: stateful-clone [stateful] (promotable):
+      * Unpromoted: [ node1 node3-rem ]
+      * Stopped: [ node2 ]
+    * node3-rem	(ocf:pacemaker:remote):	 Started node1
+
+Transition Summary:
+  * Move       stateful:0     ( Unpromoted node1 -> Promoted node2 )
+  * Start      stateful:2     (                              node1 )
+
+Executing Cluster Transition:
+  * Resource action: stateful        monitor=11000 on node3-rem
+  * Pseudo action:   stateful-clone_stop_0
+  * Resource action: stateful        stop on node1
+  * Pseudo action:   stateful-clone_stopped_0
+  * Pseudo action:   stateful-clone_start_0
+  * Resource action: stateful        start on node2
+  * Resource action: stateful        start on node1
+  * Pseudo action:   stateful-clone_running_0
+  * Resource action: stateful        monitor=11000 on node1
+  * Pseudo action:   stateful-clone_promote_0
+  * Resource action: stateful        promote on node2
+  * Pseudo action:   stateful-clone_promoted_0
+  * Resource action: stateful        monitor=10000 on node2
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+    * RemoteOnline: [ node3-rem ]
+
+  * Full List of Resources:
+    * xvm	(stonith:fence_xvm):	 Started node2
+    * xvm_rem	(stonith:fence_xvm):	 Started node1
+    * Clone Set: stateful-clone [stateful] (promotable):
+      * Promoted: [ node2 ]
+      * Unpromoted: [ node1 node3-rem ]
+    * node3-rem	(ocf:pacemaker:remote):	 Started node1
