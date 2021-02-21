@@ -268,7 +268,7 @@ native_deallocate(pe_resource_t * rsc)
 }
 
 gboolean
-native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboolean force)
+native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
 {
     CRM_ASSERT(rsc->variant == pe_native);
 
