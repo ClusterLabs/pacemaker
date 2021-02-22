@@ -832,7 +832,7 @@ function test_tools() {
 
     unset CIB_file
 
-    export CIB_file="$test_home/cli/crm_mon.xml"
+    export CIB_file="$test_home/cli/promotable.xml"
 
     desc="List a promotable clone resource"
     cmd="crm_resource --locate -r promotable-clone"

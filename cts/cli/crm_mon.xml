@@ -99,25 +99,9 @@
           </primitive>
         </group>
       </clone>
-      <clone id="promotable-clone">
-        <meta_attributes id="promotable-clone-meta_attributes">
-          <nvpair id="promotable-clone-meta_attributes-promotable" name="promotable" value="true"/>
-        </meta_attributes>
-        <primitive id="promotable-rsc" class="ocf" provider="pacemaker" type="Stateful">
-          <operations id="promotable-rsc-operations">
-            <op id="promotable-rsc-monitor-master-5" name="monitor" interval="5" role="Master"/>
-            <op id="promotable-rsc-monitor-slave-10" name="monitor" interval="10" role="Slave"/>
-          </operations>
-        </primitive>
-      </clone>
     </resources>
     <constraints>
       <rsc_location id="not-on-cluster1" rsc="dummy" node="cluster01" score="-INFINITY"/>
-      <rsc_location id="loc-promotable-clone" rsc="promotable-clone">
-        <rule id="loc-promotable-clone-rule" role="Master" score="10">
-          <expression attribute="#uname" id="loc-promotable-clone-expression" operation="eq" value="cluster02"/>
-        </rule>
-      </rsc_location>
     </constraints>
     <tags>
       <tag id="all-nodes">
@@ -168,13 +152,6 @@
           <lrm_resource id="mysql-proxy" class="lsb" type="mysql-proxy">
             <lrm_rsc_op id="mysql-proxy_last_0" operation_key="mysql-proxy_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1596126852" last-run="1596126852" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
             <lrm_rsc_op id="mysql-proxy_monitor_10000" operation_key="mysql-proxy_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1596126852" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
-          </lrm_resource>
-          <lrm_resource id="promotable-rsc" class="ocf" provider="pacemaker" type="Stateful">
-            <lrm_rsc_op id="promotable-rsc_last_0" operation_key="promotable-rsc_promote_0" operation="promote" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;6:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="6" rc-code="0" op-status="0" interval="0" last-rc-change="1613059546" last-run="1613059546" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="promotable-rsc_post_notify_start_0" operation_key="promotable-rsc_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" last-rc-change="1613058809" last-run="1613058809" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="promotable-rsc_monitor_10000" operation_key="promotable-rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="4" rc-code="0" op-status="0" interval="10000" last-rc-change="1613058809" exec-time="0" queue-time="0" op-digest="79643b49fcd2a15282788271c56eddb4"/>
-            <lrm_rsc_op id="promotable-rsc_cancel_10000" operation_key="promotable-rsc_cancel_10000" operation="cancel" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;5:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="5" rc-code="0" op-status="0" interval="10000" last-rc-change="1613059546" exec-time="0" queue-time="0" op-digest="79643b49fcd2a15282788271c56eddb4"/>
-            <lrm_rsc_op id="promotable-rsc_monitor_5000" operation_key="promotable-rsc_monitor_5000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="7:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:8;7:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="7" rc-code="8" op-status="0" interval="5000" last-rc-change="1613059546" exec-time="0" queue-time="0" op-digest="79643b49fcd2a15282788271c56eddb4"/>
           </lrm_resource>
           <lrm_resource id="inactive-dhcpd" class="lsb" type="dhcpd">
             <lrm_rsc_op id="inactive-dhcpd_last_0" operation_key="inactive-dhcpd_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -243,11 +220,6 @@
           <lrm_resource id="mysql-proxy" class="lsb" type="mysql-proxy">
             <lrm_rsc_op id="mysql-proxy_last_0" operation_key="mysql-proxy_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1596126852" last-run="1596126852" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
             <lrm_rsc_op id="mysql-proxy_monitor_10000" operation_key="mysql-proxy_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.4.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1596126852" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
-          </lrm_resource>
-          <lrm_resource id="promotable-rsc" class="ocf" provider="pacemaker" type="Stateful">
-            <lrm_rsc_op id="promotable-rsc_last_0" operation_key="promotable-rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1613058809" last-run="1613058809" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="promotable-rsc_post_notify_start_0" operation_key="promotable-rsc_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" last-rc-change="1613058809" last-run="1613058809" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
-            <lrm_rsc_op id="promotable-rsc_monitor_10000" operation_key="promotable-rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="4" rc-code="0" op-status="0" interval="10000" last-rc-change="1613058809" exec-time="0" queue-time="0" op-digest="79643b49fcd2a15282788271c56eddb4"/>
           </lrm_resource>
           <lrm_resource id="inactive-dhcpd" class="lsb" type="dhcpd">
             <lrm_rsc_op id="inactive-dhcpd_last_0" operation_key="inactive-dhcpd_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.7.1" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1613491700" last-run="1613491700" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
