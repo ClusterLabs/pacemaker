@@ -10,9 +10,6 @@
 #
 # Some variables to help with silent rules
 # https://www.gnu.org/software/automake/manual/html_node/Automake-silent_002drules-Option.html
-#
-# We require a minimum automake version of 1.11, which includes AM_V_GEN and
-# AM_V_at, but AM_V_P is not available until 1.13.
 
 V ?= $(AM_DEFAULT_VERBOSITY)
 

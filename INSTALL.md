@@ -4,7 +4,7 @@
 
 | Version         | Fedora-based       | Suse-based         | Debian-based   |
 |:---------------:|:------------------:|:------------------:|:--------------:|
-| 1.11 or later   | automake           | automake           | automake       |
+| 1.13 or later   | automake           | automake           | automake       |
 | 2.64 or later   | autoconf           | autoconf           | autoconf       |
 |                 | libtool            | libtool            | libtool        |
 |                 | libtool-ltdl-devel |                    | libltdl-dev    |
