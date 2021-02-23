@@ -562,10 +562,12 @@ values, by running the ``man pacemaker-schedulerd`` and
    | remove-after-stop         | false   | .. index::                                         |
    |                           |         |    pair: cluster option; remove-after-stop         |
    |                           |         |                                                    |
-   |                           |         | *Advanced Use Only:* Should the cluster remove     |
+   |                           |         | *Deprecated* Should the cluster remove             |
    |                           |         | resources from Pacemaker's executor after they are |
    |                           |         | stopped? Values other than the default are, at     |
    |                           |         | best, poorly tested and potentially dangerous.     |
+   |                           |         | This option is deprecated and will be removed in a |
+   |                           |         | future release.                                    |
    +---------------------------+---------+----------------------------------------------------+
    | startup-fencing           | true    | .. index::                                         |
    |                           |         |    pair: cluster option; startup-fencing           |

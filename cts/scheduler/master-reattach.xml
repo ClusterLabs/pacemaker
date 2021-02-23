@@ -7,7 +7,6 @@
         <nvpair name="stonith-enabled" value="false" id="nvpair.id2244260"/>
         <nvpair name="stop-orphan-resources" value="true" id="nvpair.id2245052"/>
         <nvpair name="stop-orphan-actions" value="true" id="nvpair.id2245024"/>
-        <nvpair name="remove-after-stop" value="false" id="nvpair.id2244807"/>
         <nvpair name="startup-fencing" value="true" id="nvpair.id2244608"/>
         <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1225707410"/>
       </cluster_property_set>

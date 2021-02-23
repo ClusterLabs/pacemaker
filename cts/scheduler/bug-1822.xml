@@ -7,10 +7,8 @@
         <nvpair id="nvpair.id21884" name="cluster-delay" value="180s"/>
         <nvpair id="nvpair.id21901" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21910" name="symmetric-cluster" value="true"/>
-        <nvpair id="nvpair.id21920" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21938" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21947" name="stop-orphan-actions" value="true"/>
-        <nvpair id="nvpair.id21956" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21965" name="dc-deadtime" value="10s"/>
         <nvpair id="nvpair.id21973" name="cluster-recheck-interval" value="0"/>
         <nvpair id="nvpair.id21982" name="election-timeout" value="2min"/>

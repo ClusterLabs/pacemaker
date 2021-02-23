@@ -28,7 +28,7 @@ BOOKS		?= Clusters_from_Scratch	\
 #  linkcheck  (not actually a format; check validity of external links)
 #
 # The results will end up in <book>/_build/<format>
-BOOK_FORMATS	?= html
+BOOK_FORMATS	?= singlehtml
 
 # Set to "a4" or "letter" if building latex format
 PAPER		?= letter

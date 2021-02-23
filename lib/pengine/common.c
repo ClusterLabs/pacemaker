@@ -217,9 +217,10 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "remove-after-stop", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "*** Advanced Use Only *** Whether to remove stopped resources from "
+        "*** Deprecated *** Whether to remove stopped resources from "
             "the executor",
         "Values other than default are poorly tested and potentially dangerous."
+            " This option will be removed in a future release."
     },
 
     /* Storing inputs */

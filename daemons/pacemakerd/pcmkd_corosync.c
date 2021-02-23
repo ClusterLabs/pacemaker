@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,11 +64,12 @@ static gboolean
 cluster_reconnect_cb(gpointer data)
 {
     if (cluster_connect_cfg()) {
-        mainloop_timer_stop(reconnect_timer);
         mainloop_timer_del(reconnect_timer);
-        crm_warn("Cluster reconnect succeeded");
+        reconnect_timer = NULL;
+        crm_notice("Cluster reconnect succeeded");
     } else {
-        crm_warn("Cluster reconnect callback failed - retrying");
+        crm_info("Cluster reconnect failed"
+                 "(connection will be reattempted once per second)");
     }
     /*
      * In theory this will continue forever. In practice the CIB connection from
@@ -81,7 +82,8 @@ cluster_reconnect_cb(gpointer data)
 static void
 cfg_connection_destroy(gpointer user_data)
 {
-    crm_err("Lost connection to cluster layer");
+    crm_warn("Lost connection to cluster layer "
+             "(connection will be reattempted once per second)");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
     reconnect_timer = mainloop_timer_add("corosync reconnect", 1000, TRUE, cluster_reconnect_cb, NULL);
@@ -98,7 +100,13 @@ cluster_disconnect_cfg(void)
         corosync_cfg_finalize(cfg_handle);
         cfg_handle = 0;
     }
-
+    if (reconnect_timer != NULL) {
+        /* The mainloop should be gone by this point, so this isn't necessary,
+         * but cleaning up memory should make valgrind happier.
+         */
+        mainloop_timer_del(reconnect_timer);
+        reconnect_timer = NULL;
+    }
     pcmk_shutdown(SIGTERM);
     return TRUE;
 }

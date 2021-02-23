@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -724,7 +724,7 @@ struct crm_ipc_s {
     int msg_size;
     int need_reply;
     char *buffer;
-    char *name;
+    char *server_name;          // server IPC name being connected to
     qb_ipcc_connection_t *ipc;
 };
 
@@ -752,17 +752,19 @@ crm_ipc_new(const char *name, size_t max_size)
         return NULL;
     }
 
-    client->name = strdup(name);
-    if (client->name == NULL) {
-        crm_err("Could not create IPC connection: %s", strerror(errno));
+    client->server_name = strdup(name);
+    if (client->server_name == NULL) {
+        crm_err("Could not create %s IPC connection: %s",
+                name, strerror(errno));
         free(client);
         return NULL;
     }
     client->buf_size = pcmk__ipc_buffer_size(max_size);
     client->buffer = malloc(client->buf_size);
     if (client->buffer == NULL) {
-        crm_err("Could not create IPC connection: %s", strerror(errno));
-        free(client->name);
+        crm_err("Could not create %s IPC connection: %s",
+                name, strerror(errno));
+        free(client->server_name);
         free(client);
         return NULL;
     }
@@ -795,10 +797,11 @@ crm_ipc_connect(crm_ipc_t * client)
     int rv;
 
     client->need_reply = FALSE;
-    client->ipc = qb_ipcc_connect(client->name, client->buf_size);
+    client->ipc = qb_ipcc_connect(client->server_name, client->buf_size);
 
     if (client->ipc == NULL) {
-        crm_debug("Could not establish %s connection: %s (%d)", client->name, pcmk_strerror(errno), errno);
+        crm_debug("Could not establish %s IPC connection: %s (%d)",
+                  client->server_name, pcmk_strerror(errno), errno);
         return FALSE;
     }
 
@@ -822,17 +825,19 @@ crm_ipc_connect(crm_ipc_t * client)
     if ((rv = pcmk__crm_ipc_is_authentic_process(client->ipc, client->pfd.fd, cl_uid, cl_gid,
                                                   &found_pid, &found_uid,
                                                   &found_gid)) == pcmk_rc_ipc_unauthorized) {
-        crm_err("Daemon (IPC %s) is not authentic:"
-                " process %lld (uid: %lld, gid: %lld)",
-                client->name,  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) found_gid);
+        crm_err("%s IPC provider authentication failed: process %lld has "
+                "uid %lld (expected %lld) and gid %lld (expected %lld)",
+                client->server_name,
+                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                (long long) found_uid, (long long) cl_uid,
+                (long long) found_gid, (long long) cl_gid);
         crm_ipc_close(client);
         errno = ECONNABORTED;
         return FALSE;
 
     } else if (rv != pcmk_rc_ok) {
-        crm_perror(LOG_ERR, "Could not verify authenticity of daemon (IPC %s)",
-                   client->name);
+        crm_perror(LOG_ERR, "Could not verify authenticity of %s IPC provider",
+                   client->server_name);
         crm_ipc_close(client);
         if (rv > 0) {
             errno = rv;
@@ -871,7 +876,8 @@ crm_ipc_destroy(crm_ipc_t * client)
 {
     if (client) {
         if (client->ipc && qb_ipcc_is_connected(client->ipc)) {
-            crm_notice("Destroying an active IPC connection to %s", client->name);
+            crm_notice("Destroying active %s IPC connection",
+                       client->server_name);
             /* The next line is basically unsafe
              *
              * If this connection was attached to mainloop and mainloop is active,
@@ -881,10 +887,12 @@ crm_ipc_destroy(crm_ipc_t * client)
              *   we call exit
              */
             /* crm_ipc_close(client); */
+        } else {
+            crm_trace("Destroying inactive %s IPC connection",
+                      client->server_name);
         }
-        crm_trace("Destroying IPC connection to %s: %p", client->name, client);
         free(client->buffer);
-        free(client->name);
+        free(client->server_name);
         free(client);
     }
 }
@@ -898,8 +906,8 @@ crm_ipc_get_fd(crm_ipc_t * client)
         return fd;
     }
     errno = EINVAL;
-    crm_perror(LOG_ERR, "Could not obtain file IPC descriptor for %s",
-               (client? client->name : "unspecified client"));
+    crm_perror(LOG_ERR, "Could not obtain file descriptor for %s IPC",
+               (client? client->server_name : "unspecified"));
     return -errno;
 }
 
@@ -1023,16 +1031,18 @@ crm_ipc_read(crm_ipc_t * client)
             return -EBADMSG;
         }
 
-        crm_trace("Received %s event %d, size=%u, rc=%d, text: %.100s",
-                  client->name, header->qb.id, header->qb.size, client->msg_size,
+        crm_trace("Received %s IPC event %d size=%u rc=%d text='%.100s'",
+                  client->server_name, header->qb.id, header->qb.size,
+                  client->msg_size,
                   client->buffer + sizeof(pcmk__ipc_header_t));
 
     } else {
-        crm_trace("No message from %s received: %s", client->name, pcmk_strerror(client->msg_size));
+        crm_trace("No message received from %s IPC: %s",
+                  client->server_name, pcmk_strerror(client->msg_size));
     }
 
     if (crm_ipc_connected(client) == FALSE || client->msg_size == -ENOTCONN) {
-        crm_err("Connection to %s failed", client->name);
+        crm_err("Connection to %s IPC failed", client->server_name);
     }
 
     if (header) {
@@ -1067,7 +1077,7 @@ const char *
 crm_ipc_name(crm_ipc_t * client)
 {
     CRM_ASSERT(client != NULL);
-    return client->name;
+    return client->server_name;
 }
 
 // \return Standard Pacemaker return code
@@ -1079,7 +1089,8 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     int rc = pcmk_rc_ok;
 
     /* get the reply */
-    crm_trace("client %s waiting on reply to msg id %d", client->name, request_id);
+    crm_trace("Waiting on reply to %s IPC message %d",
+              client->server_name, request_id);
     do {
 
         *bytes = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 1000);
@@ -1109,8 +1120,8 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                 CRM_ASSERT(hdr->qb.id <= request_id);
             }
         } else if (crm_ipc_connected(client) == FALSE) {
-            crm_err("Server disconnected client %s while waiting for msg id %d", client->name,
-                    request_id);
+            crm_err("%s IPC provider disconnected while waiting for message %d",
+                    client->server_name, request_id);
             break;
         }
 
@@ -1154,8 +1165,8 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
     } else if (crm_ipc_connected(client) == FALSE) {
         /* Don't even bother */
-        crm_notice("Can't send IPC request to %s: Connection closed",
-                   client->name);
+        crm_notice("Can't send %s IPC requests: Connection closed",
+                   client->server_name);
         return -ENOTCONN;
     }
 
@@ -1166,13 +1177,13 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     if (client->need_reply) {
         qb_rc = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, ms_timeout);
         if (qb_rc < 0) {
-            crm_warn("Sending IPC to %s disabled until pending reply received",
-                     client->name);
+            crm_warn("Sending %s IPC disabled until pending reply received",
+                     client->server_name);
             return -EALREADY;
 
         } else {
-            crm_notice("Sending IPC to %s re-enabled after pending reply received",
-                       client->name);
+            crm_notice("Sending %s IPC re-enabled after pending reply received",
+                       client->server_name);
             client->need_reply = FALSE;
         }
     }
@@ -1181,13 +1192,13 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
     rc = pcmk__ipc_prepare_iov(id, message, client->max_buf_size, &iov, &bytes);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't prepare IPC request to %s: %s " CRM_XS " rc=%d",
-                 client->name, pcmk_rc_str(rc), rc);
+        crm_warn("Couldn't prepare %s IPC request: %s " CRM_XS " rc=%d",
+                 client->server_name, pcmk_rc_str(rc), rc);
         return pcmk_rc2legacy(rc);
     }
 
     header = iov[0].iov_base;
-    pcmk__set_ipc_flags(header->flags, client->name, flags);
+    pcmk__set_ipc_flags(header->flags, client->server_name, flags);
 
     if (pcmk_is_set(flags, crm_ipc_proxied)) {
         /* Don't look for a synchronous response */
@@ -1205,7 +1216,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
     }
 
     crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
-              client->name, header->qb.id, header->qb.size, ms_timeout);
+              client->server_name, header->qb.id, header->qb.size, ms_timeout);
 
     if ((ms_timeout > 0) || !pcmk_is_set(flags, crm_ipc_client_response)) {
 
@@ -1228,7 +1239,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
         } else if (!pcmk_is_set(flags, crm_ipc_client_response)) {
             crm_trace("Not waiting for reply to %s IPC request %d",
-                      client->name, header->qb.id);
+                      client->server_name, header->qb.id);
             goto send_cleanup;
         }
 
@@ -1257,7 +1268,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
         pcmk__ipc_header_t *hdr = (pcmk__ipc_header_t *)(void*)client->buffer;
 
         crm_trace("Received %d-byte reply %d to %s IPC %d: %.100s",
-                  rc, hdr->qb.id, client->name, header->qb.id,
+                  rc, hdr->qb.id, client->server_name, header->qb.id,
                   crm_ipc_buffer(client));
 
         if (reply) {
@@ -1266,23 +1277,23 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
 
     } else {
         crm_trace("No reply to %s IPC %d: rc=%d",
-                  client->name, header->qb.id, rc);
+                  client->server_name, header->qb.id, rc);
     }
 
   send_cleanup:
     if (crm_ipc_connected(client) == FALSE) {
         crm_notice("Couldn't send %s IPC request %d: Connection closed "
-                   CRM_XS " rc=%d", client->name, header->qb.id, rc);
+                   CRM_XS " rc=%d", client->server_name, header->qb.id, rc);
 
     } else if (rc == -ETIMEDOUT) {
         crm_warn("%s IPC request %d failed: %s after %dms " CRM_XS " rc=%d",
-                 client->name, header->qb.id, pcmk_strerror(rc), ms_timeout,
-                 rc);
+                 client->server_name, header->qb.id, pcmk_strerror(rc),
+                 ms_timeout, rc);
         crm_write_blackbox(0, NULL);
 
     } else if (rc <= 0) {
         crm_warn("%s IPC request %d failed: %s " CRM_XS " rc=%d",
-                 client->name, header->qb.id,
+                 client->server_name, header->qb.id,
                  ((rc == 0)? "No bytes sent" : pcmk_strerror(rc)), rc);
     }
 

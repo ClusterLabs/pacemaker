@@ -104,7 +104,10 @@ enum pe_find {
 #  define pe_flag_stop_everything       0x00000400ULL
 
 #  define pe_flag_start_failure_fatal   0x00001000ULL
+
+//! \deprecated
 #  define pe_flag_remove_after_stop     0x00002000ULL
+
 #  define pe_flag_startup_fencing       0x00004000ULL
 #  define pe_flag_shutdown_lock         0x00008000ULL
 

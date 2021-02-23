@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,13 +139,14 @@
 // Some warnings we don't want to print every transition
 
 enum pe_warn_once_e {
-    pe_wo_blind         = 0x0001,
-    pe_wo_restart_type  = 0x0002,
-    pe_wo_role_after    = 0x0004,
-    pe_wo_poweroff      = 0x0008,
-    pe_wo_require_all   = 0x0010,
-    pe_wo_order_score   = 0x0020,
-    pe_wo_neg_threshold = 0x0040,
+    pe_wo_blind         = (1 << 0),
+    pe_wo_restart_type  = (1 << 1),
+    pe_wo_role_after    = (1 << 2),
+    pe_wo_poweroff      = (1 << 3),
+    pe_wo_require_all   = (1 << 4),
+    pe_wo_order_score   = (1 << 5),
+    pe_wo_neg_threshold = (1 << 6),
+    pe_wo_remove_after  = (1 << 7),
 };
 
 extern uint32_t pe_wo;
@@ -313,9 +314,9 @@ extern time_t get_effective_time(pe_working_set_t * data_set);
 
 // bit flags for fail count handling options
 enum pe_fc_flags_e {
-    pe_fc_default   = 0x00,
-    pe_fc_effective = 0x01, // don't count expired failures
-    pe_fc_fillers   = 0x02, // if container, include filler failures in count
+    pe_fc_default   = (1 << 0),
+    pe_fc_effective = (1 << 1), // don't count expired failures
+    pe_fc_fillers   = (1 << 2), // if container, include filler failures in count
 };
 
 int pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,

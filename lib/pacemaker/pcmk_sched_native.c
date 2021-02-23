@@ -1242,8 +1242,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         pe_action_t *stop = NULL;
 
-        pe_rsc_trace(rsc, "Creating stop action %s cleanup for %s on %s due to dangling migration",
-                     (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)? "and" : "without"),
+        pe_rsc_trace(rsc, "Creating stop action %sfor %s on %s due to dangling migration",
+                     pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)? "and cleanup " : "",
                      rsc->id, dangling_source->details->uname);
         stop = stop_action(rsc, dangling_source, FALSE);
         pe__set_action_flags(stop, pe_action_dangle);

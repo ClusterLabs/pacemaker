@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,6 +74,12 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
     if (value != NULL) {
         crm_str_to_boolean(value, &(action->can_fail));
+#ifndef PCMK__COMPAT_2_0
+        if (action->can_fail) {
+            crm_warn("Support for the can_fail meta-attribute is deprecated"
+                     " and will be removed in a future release");
+        }
+#endif
     }
 
     crm_trace("Action %d has timer set to %dms", action->id, action->timeout);

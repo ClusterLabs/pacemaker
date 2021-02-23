@@ -12,7 +12,6 @@
 
 #include <pwd.h>
 #include <grp.h>
-#include <poll.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -456,7 +455,7 @@ pcmk_shutdown_worker(gpointer user_data)
         const char *delay = pcmk__env_option("shutdown_delay");
         if(delay) {
             sync();
-            sleep(crm_get_msec(delay) / 1000);
+            pcmk__sleep_ms(crm_get_msec(delay));
         }
     }
 
@@ -1002,7 +1001,7 @@ find_and_track_existing_processes(void)
         if (!wait_in_progress) {
             break;
         }
-        (void) poll(NULL, 0, 250);  /* a bit for changes to possibly happen */
+        pcmk__sleep_ms(250); // Wait a bit for changes to possibly happen
     }
     for (i = 0; i < SIZEOF(pcmk_children); i++) {
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
