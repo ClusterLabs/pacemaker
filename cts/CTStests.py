@@ -2954,10 +2954,8 @@ class RemoteDriver(CTSTest):
         # create key locally
         (handle, keyfile) = tempfile.mkstemp(".cts")
         os.close(handle)
-        devnull = open(os.devnull, 'wb')
         subprocess.check_call(["dd", "if=/dev/urandom", "of=%s" % keyfile, "bs=4096", "count=1"],
-            stdout=devnull, stderr=devnull)
-        devnull.close()
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # sync key throughout the cluster
         for node in self.Env["nodes"]:

@@ -764,8 +764,8 @@ dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
 dnl Ensure PYTHON is an absolute path
 AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 
-dnl Pacemaker requires a minimum Python version of 3.2
-AM_PATH_PYTHON([3.2])
+dnl Require a minimum Python version
+AM_PATH_PYTHON([3.4])
 
 AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])

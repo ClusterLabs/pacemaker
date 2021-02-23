@@ -1269,11 +1269,10 @@ class CtsScheduler(object):
     def _compare_files(self, filename1, filename2):
         """ Add any file differences to failed results """
 
-        with io.open("/dev/null", "wt") as dev_null:
-            if diff(filename1, filename2, stdout=dev_null) != 0:
-                diff(filename1, filename2, stdout=self.failed_file, stderr=dev_null)
-                self.failed_file.write("\n");
-                return True
+        if diff(filename1, filename2, stdout=subprocess.DEVNULL) != 0:
+            diff(filename1, filename2, stdout=self.failed_file, stderr=subprocess.DEVNULL)
+            self.failed_file.write("\n");
+            return True
         return False
 
     def run_one(self, test_name, test_desc, test_args=[]):
