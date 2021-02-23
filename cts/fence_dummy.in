@@ -193,7 +193,10 @@ def show_docs(options):
         sys.exit(0)
 
     if "-o" in options and options["-o"].lower() == "metadata":
-        metadata(device_opt, options)
+        if not os.path.exists(__file__ + ".fail"):
+            metadata(device_opt, options)
+        else:
+            os.remove(__file__ + ".fail")
         sys.exit(0)
 
     if "-V" in options:
