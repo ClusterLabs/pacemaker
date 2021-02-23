@@ -65,18 +65,11 @@ dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
 dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
 AM_INIT_AUTOMAKE([1.13 foreign tar-ustar subdir-objects])
 
-dnl Require pkg-config (with a minimum version)
-PKG_PROG_PKG_CONFIG(0.18)
+dnl Require minimum version of pkg-config
+PKG_PROG_PKG_CONFIG(0.27)
 AS_IF([test "x${PKG_CONFIG}" != x], [],
-      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.18 or later)])])
-dnl PKG_NOARCH_INSTALLDIR is not available prior to pkg-config 0.27 and
-dnl pkgconf 0.8.10 (uncomment next line to mimic that scenario)
-dnl m4_ifdef([PKG_NOARCH_INSTALLDIR], [m4_undefine([PKG_NOARCH_INSTALLDIR])])
-m4_ifndef([PKG_NOARCH_INSTALLDIR], [
-    AC_DEFUN([PKG_NOARCH_INSTALLDIR], [
-        AC_SUBST([noarch_pkgconfigdir], ['${datadir}/pkgconfig'])
-    ])
-])
+      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.27 or later)])])
+PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
