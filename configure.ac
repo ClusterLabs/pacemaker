@@ -896,8 +896,8 @@ else
 fi
 AC_SUBST(PC_LIBS_RT)
 
-# Require glib 2.32.0 (2012-03) or later
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.32.0],
+# Require minimum glib version
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
                   [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
                    LIBS="${LIBS} ${GLIB_LIBS}"])
 
