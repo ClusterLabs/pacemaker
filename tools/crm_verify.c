@@ -64,7 +64,7 @@ static GOptionEntry data_entries[] = {
 };
 
 static GOptionEntry addl_entries[] = {
-    { "save-xml", 'S', 0, G_OPTION_ARG_FILENAME,
+    { "save-xml", 'S', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
       &options.cib_save, "Save verified XML to named file (most useful with -L)",
       "FILE" },
 
