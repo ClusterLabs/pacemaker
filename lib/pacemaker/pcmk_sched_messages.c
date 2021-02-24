@@ -22,7 +22,6 @@
 #include <pacemaker-internal.h>
 #include <crm/common/ipc_internal.h>
 
-gboolean show_scores = FALSE;
 gboolean show_utilization = FALSE;
 
 static void

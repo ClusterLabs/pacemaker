@@ -54,7 +54,8 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         g_list_concat(group_data->last_child->rsc_cons_lhs, rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 
-    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
+    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {

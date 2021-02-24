@@ -753,7 +753,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         score2char_stack(child_rsc->sort_index, score, len);
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-        if (show_scores) {
+        if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
             if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
                 printf("%s promotion score on %s: %s\n",
                        child_rsc->id,

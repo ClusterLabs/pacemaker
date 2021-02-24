@@ -584,7 +584,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
-    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
+    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes);
     if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
         && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
