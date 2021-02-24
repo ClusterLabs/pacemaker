@@ -293,7 +293,3 @@ available with your Pacemaker installation, run:
     [root@pcmk-1 ~]# pacemakerd --features
     Pacemaker 2.0.5-4.el8 (Build: ba59be7122)
     Supporting v3.6.1:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls cibsecrets
-
-
-.. [#] For some subtle issues, see `Topics in High-Performance Messaging: Multicast Address Assignment <http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html>`_
-       or the more detailed treatment in `Cisco's Guidelines for Enterprise IP Multicast Address Allocation <https://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf>`_.
