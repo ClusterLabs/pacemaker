@@ -170,6 +170,7 @@ _________________
 Ensure that the machine has the static IP address you configured earlier.
 
 .. code-block:: none
+
     [root@pcmk-1 ~]# ip addr
     1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
 	link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
