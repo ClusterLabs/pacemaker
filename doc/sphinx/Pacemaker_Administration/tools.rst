@@ -474,8 +474,6 @@ This capability is useful when using a shadow CIB to edit the configuration.
 Before committing the changes to the live cluster with ``crm_shadow --commit``,
 you can use ``crm_simulate`` to see how the cluster will react to the changes.
 
-.. _attrd_updater:
-
 .. _crm_attribute:
 
 .. index::
