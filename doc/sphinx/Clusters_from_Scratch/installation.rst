@@ -388,30 +388,30 @@ Create a new key and allow anyone with that key to log in:
 .. index::
     single: SSH; key
 
-.Creating and Activating a new SSH Key
+.. topic:: Creating and Activating a new SSH Key
 
-.. code-block:: none
+   .. code-block:: none
 
-    [root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
-    Generating public/private dsa key pair.
-    Created directory '/root/.ssh'.
-    Your identification has been saved in /root/.ssh/id_dsa.
-    Your public key has been saved in /root/.ssh/id_dsa.pub.
-    The key fingerprint is:
-    SHA256:ehR595AVLAVpvFgqYXiayds2qx8emkvnHmfQZMTZ4jM root@pcmk-1
-    The key's randomart image is:
-    +---[DSA 1024]----+
-    |       . ..+.=+. |
-    |      . +o+ Bo.  |
-    |     . *oo+*+o   |
-    |      = .*E..o   |
-    |       oS..o  .  |
-    |      .o+.       |
-    |      o.*oo      |
-    |     . B.*       |
-    |      ===        |
-    +----[SHA256]-----+
-    [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
+       [root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
+       Generating public/private dsa key pair.
+       Created directory '/root/.ssh'.
+       Your identification has been saved in /root/.ssh/id_dsa.
+       Your public key has been saved in /root/.ssh/id_dsa.pub.
+       The key fingerprint is:
+       SHA256:ehR595AVLAVpvFgqYXiayds2qx8emkvnHmfQZMTZ4jM root@pcmk-1
+       The key's randomart image is:
+       +---[DSA 1024]----+
+       |       . ..+.=+. |
+       |      . +o+ Bo.  |
+       |     . *oo+*+o   |
+       |      = .*E..o   |
+       |       oS..o  .  |
+       |      .o+.       |
+       |      o.*oo      |
+       |     . B.*       |
+       |      ===        |
+       +----[SHA256]-----+
+       [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
 
 Install the key on the other node:
 
