@@ -1376,7 +1376,7 @@ gboolean
 stage5(pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    int log_prio = show_utilization? LOG_STDOUT : LOG_TRACE;
+    int log_prio = pcmk_is_set(data_set->flags, pe_flag_show_utilization)? LOG_STDOUT : LOG_TRACE;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GListPtr nodes = g_list_copy(data_set->nodes);

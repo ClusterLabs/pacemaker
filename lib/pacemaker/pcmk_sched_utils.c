@@ -343,7 +343,7 @@ native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
     chosen->details->num_resources++;
     chosen->count++;
     calculate_utilization(chosen->details->utilization, rsc->utilization, FALSE);
-    dump_rsc_utilization((show_utilization? LOG_STDOUT : LOG_TRACE),
+    dump_rsc_utilization(pcmk_is_set(rsc->cluster->flags, pe_flag_show_utilization)? LOG_STDOUT : LOG_TRACE,
                          __func__, rsc, chosen);
 
     return TRUE;

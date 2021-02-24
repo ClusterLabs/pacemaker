@@ -22,8 +22,6 @@
 #include <pacemaker-internal.h>
 #include <crm/common/ipc_internal.h>
 
-gboolean show_utilization = FALSE;
-
 static void
 log_resource_details(pe_working_set_t *data_set)
 {

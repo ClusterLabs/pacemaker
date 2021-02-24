@@ -51,6 +51,7 @@ struct {
     char *quorum;
     long long repeat;
     gboolean show_scores;
+    gboolean show_utilization;
     gboolean simulate;
     gboolean store;
     gchar *test_dir;
@@ -213,7 +214,7 @@ ticket_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 static gboolean
 utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.process = TRUE;
-    show_utilization = TRUE;
+    options.show_utilization = TRUE;
     return TRUE;
 }
 
@@ -947,6 +948,9 @@ main(int argc, char **argv)
     if (options.show_scores) {
         pe__set_working_set_flags(data_set, pe_flag_show_scores);
     }
+    if (options.show_utilization) {
+        pe__set_working_set_flags(data_set, pe_flag_show_utilization);
+    }
     pe__set_working_set_flags(data_set, pe_flag_no_compat);
 
     if (options.test_dir != NULL) {
@@ -984,6 +988,9 @@ main(int argc, char **argv)
     }
     if (options.show_scores) {
         pe__set_working_set_flags(data_set, pe_flag_show_scores);
+    }
+    if (options.show_utilization) {
+        pe__set_working_set_flags(data_set, pe_flag_show_utilization);
     }
     pe__set_working_set_flags(data_set, pe_flag_stdout);
     cluster_status(data_set);
@@ -1033,6 +1040,9 @@ main(int argc, char **argv)
         if (options.show_scores) {
             pe__set_working_set_flags(data_set, pe_flag_show_scores);
         }
+        if (options.show_utilization) {
+            pe__set_working_set_flags(data_set, pe_flag_show_utilization);
+        }
         pe__set_working_set_flags(data_set, pe_flag_stdout);
         cluster_status(data_set);
     }
@@ -1050,11 +1060,11 @@ main(int argc, char **argv)
     if (options.process || options.simulate) {
         crm_time_t *local_date = NULL;
 
-        if (pcmk_is_set(data_set->flags, pe_flag_show_scores) && show_utilization) {
+        if (pcmk_all_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)) {
             printf("Allocation scores and utilization information:\n");
         } else if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
             fprintf(stdout, "Allocation scores:\n");
-        } else if (show_utilization) {
+        } else if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
             printf("Utilization information:\n");
         }
 
@@ -1074,7 +1084,7 @@ main(int argc, char **argv)
         if (quiet == FALSE) {
             GListPtr gIter = NULL;
 
-            quiet_log("%sTransition Summary:\n", pcmk_is_set(data_set->flags, pe_flag_show_scores) || show_utilization
+            quiet_log("%sTransition Summary:\n", pcmk_any_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)
                       || options.modified ? "\n" : "");
             fflush(stdout);
 
@@ -1100,6 +1110,9 @@ main(int argc, char **argv)
 
             if (options.show_scores) {
                 pe__set_working_set_flags(data_set, pe_flag_show_scores);
+            }
+            if (options.show_utilization) {
+                pe__set_working_set_flags(data_set, pe_flag_show_utilization);
             }
             pe__set_working_set_flags(data_set, pe_flag_stdout);
 
