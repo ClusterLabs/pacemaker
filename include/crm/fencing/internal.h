@@ -164,4 +164,18 @@ int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
                            const char *agent, GHashTable *params, const char *host_arg,
                            int timeout, char **output, char **error_output);
 
+/*!
+ * \internal
+ * \brief Is a fencing operation in pending state?
+ *
+ * \param[in] state     State as enum op_state value
+ *
+ * \return A boolean
+ */
+static inline bool
+stonith__op_state_pending(enum op_state state)
+{
+    return state != st_failed && state != st_done;
+}
+
 #endif
