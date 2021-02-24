@@ -24,7 +24,7 @@ Pacemaker's key features include:
   one of two roles), and containerized services
 * Unified, scriptable cluster management tools
 
-.. note:: Fencing
+.. note:: **Fencing**
 
    *Fencing*, also known as *STONITH* (an acronym for Shoot The Other Node In
    The Head), is the ability to ensure that it is not possible for a node to be
