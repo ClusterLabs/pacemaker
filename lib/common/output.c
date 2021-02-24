@@ -125,6 +125,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
 
     fn = g_hash_table_lookup(out->messages, message_id);
     if (fn == NULL) {
+        crm_debug("Called unknown output message '%s' for format '%s'",
+                  message_id, out->fmt_name);
         return EINVAL;
     }
 
