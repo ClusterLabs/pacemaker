@@ -2149,6 +2149,7 @@ mon_refresh_display(gpointer user_data)
     pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
 
     mon_data_set->input = cib_copy;
+    mon_data_set->priv = out;
     cluster_status(mon_data_set);
 
     /* Unpack constraints if any section will need them

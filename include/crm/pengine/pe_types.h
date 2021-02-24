@@ -185,6 +185,8 @@ struct pe_working_set_s {
     int ninstances;     // Total number of resource instances
     guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
     int priority_fencing_delay; // Priority fencing delay
+
+    void *priv;
 };
 
 enum pe_check_parameters {

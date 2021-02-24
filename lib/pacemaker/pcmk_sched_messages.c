@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,6 +26,7 @@ static void
 log_resource_details(pe_working_set_t *data_set)
 {
     int rc = pcmk_rc_ok;
+    pcmk__output_t *prev_out = NULL;
     pcmk__output_t *out = NULL;
     const char* argv[] = { "", NULL };
     GListPtr all = NULL;
@@ -50,6 +51,9 @@ log_resource_details(pe_working_set_t *data_set)
     }
     pe__register_messages(out);
 
+    prev_out = data_set->priv;
+    data_set->priv = out;
+
     for (GList *item = data_set->resources; item != NULL; item = item->next) {
         pe_resource_t *rsc = (pe_resource_t *) item->data;
 
@@ -62,6 +66,7 @@ log_resource_details(pe_working_set_t *data_set)
 
     out->finish(out, CRM_EX_OK, true, NULL);
     pcmk__output_free(out);
+    data_set->priv = prev_out;
     g_list_free_full(all, free);
 }
 

@@ -238,6 +238,7 @@ main(int argc, char **argv)
         goto done;
     }
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
+    data_set->priv = out;
 
     if (cib_object == NULL) {
     } else if (status != NULL || options.use_live_cib) {
