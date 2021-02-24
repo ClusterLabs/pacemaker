@@ -2357,18 +2357,6 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 }
 
-#define log_change(a, fmt, args...)  do {                         \
-        if(a && a->reason && terminal) {                          \
-            printf(" * "fmt" \tdue to %s\n", ##args, a->reason);    \
-        } else if(a && a->reason) {                               \
-            crm_notice(fmt" \tdue to %s", ##args, a->reason);       \
-        } else if(terminal) {                                     \
-            printf(" * "fmt"\n", ##args);                         \
-        } else {                                                  \
-            crm_notice(fmt, ##args);                              \
-        }                                                         \
-    } while(0)
-
 #define STOP_SANITY_ASSERT(lineno) do {                                 \
         if(current && current->details->unclean) {                      \
             /* It will be a pseudo op */                                \
