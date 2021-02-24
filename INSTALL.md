@@ -47,7 +47,7 @@ Also: GNU make
 | documentation                                   |                | inkscape                | inkscape                | inkscape                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
 | documentation                                   |                | python3-sphinx          | python3-sphinx          | python3-sphinx          |
-| documentation (PDF)                             |                | texlive, texlive-titlesec, texlive-framed, texlive-threeparttable texlive-wrapfig texlive-multirow | texlive, texlive-latex  | texlive, texlive-latex-extra |
+| documentation (PDF)                             |                | latexmk texlive texlive-capt-of texlive-collection-xetex texlive-fncychap texlive-framed texlive-multirow texlive-needspace texlive-tabulary texlive-titlesec texlive-threeparttable texlive-upquote texlive-wrapfig texlive-xetex | texlive texlive-latex  | texlive texlive-latex-extra |
 | RPM packages via "make rpm"                     | 4.11 or later  | rpm                     | rpm                     | (n/a)                   |
 
 ## Optional testing dependencies
