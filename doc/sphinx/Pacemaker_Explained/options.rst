@@ -91,11 +91,10 @@ holds. So the decision was made to place them in an easy-to-find location.
    |                  | use this to make the configurations on any inactive nodes |
    |                  | obsolete.                                                 |
    |                  |                                                           |
-   |                  | .. warning::                                              |
-   |                  |    Never set this value to zero. In such cases, the       |
-   |                  |    cluster cannot tell the difference between your        |
-   |                  |    configuration and the "empty" one used when nothing is |
-   |                  |    found on disk.                                         |
+   |                  | **Warning:** Never set this value to zero. In such cases, |
+   |                  | the cluster cannot tell the difference between your       |
+   |                  | configuration and the "empty" one used when nothing is    |
+   |                  | found on disk.                                            |
    +------------------+-----------------------------------------------------------+
    | epoch            | .. index::                                                |
    |                  |    pair: epoch; cib                                       |
@@ -340,25 +339,23 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         | If this is set to a positive value, unseen nodes   |
    |                           |         | are assumed to self-fence within this much time.   |
    |                           |         |                                                    |
-   |                           |         | .. warning::                                       |
-   |                           |         |    It must be ensured that this value is larger    |
-   |                           |         |    than the ``SBD_WATCHDOG_TIMEOUT`` environment   |
-   |                           |         |    variable on all nodes. Pacemaker verifies the   |
-   |                           |         |    settings individually on all nodes and prevents |
-   |                           |         |    startup or shuts down if configured wrongly on  |
-   |                           |         |    the fly. It is strongly recommended that        |
-   |                           |         |    ``SBD_WATCHDOG_TIMEOUT`` be set to the same     |
-   |                           |         |    value on all nodes.                             |
+   |                           |         | **Warning:** It must be ensured that this value is |
+   |                           |         | larger than the ``SBD_WATCHDOG_TIMEOUT``           |
+   |                           |         | environment variable on all nodes. Pacemaker       |
+   |                           |         | verifies the settings individually on all nodes    |
+   |                           |         | and prevents startup or shuts down if configured   |
+   |                           |         | wrongly on the fly. It is strongly recommended     |
+   |                           |         | that ``SBD_WATCHDOG_TIMEOUT`` be set to the same   |
+   |                           |         | value on all nodes.                                |
    |                           |         |                                                    |
    |                           |         | If this is set to a negative value, and            |
    |                           |         | ``SBD_WATCHDOG_TIMEOUT`` is set, twice that value  |
    |                           |         | will be used.                                      |
    |                           |         |                                                    |
-   |                           |         | .. warning::                                       |
-   |                           |         |    In this case, it is essential (and currently    |
-   |                           |         |    not verified by pacemaker) that                 |
-   |                           |         |    ``SBD_WATCHDOG_TIMEOUT`` is set to the same     |
-   |                           |         |    value on all nodes.                             |
+   |                           |         | **Warning:** In this case, it is essential (and    |
+   |                           |         | currently not verified by pacemaker) that          |
+   |                           |         | ``SBD_WATCHDOG_TIMEOUT`` is set to the same        |
+   |                           |         | value on all nodes.                                |
    +---------------------------+---------+----------------------------------------------------+
    | concurrent-fencing        | false   | .. index::                                         |
    |                           |         |    pair: cluster option; concurrent-fencing        |

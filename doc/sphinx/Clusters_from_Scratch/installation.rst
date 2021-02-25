@@ -18,9 +18,6 @@ After starting the installation, select your language and keyboard layout at
 the welcome screen.
 
 .. figure:: images/WelcomeToCentos.png
-    :scale: 80%
-    :width: 1024
-    :height: 800
     :align: center
     :alt: Installation Welcome Screen
 
@@ -32,9 +29,6 @@ ____________________
 At this point, you get a chance to tweak the default installation options.
 
 .. figure:: images/InstallationSummary.png
-    :scale: 80%
-    :width: 1024
-    :height: 800
     :align: center
     :alt: Installation Summary Screen
 
@@ -46,9 +40,6 @@ we need, but we will change the environment to a **Minimal Install** here, so th
 can see exactly what software is required later, and press **Done**.
 
 .. figure:: images/SoftwareSelection.png
-    :scale: 80%
-    :width: 1024
-    :height: 800
     :align: center
     :alt: Software Selection Screen
 
@@ -68,9 +59,6 @@ In the **NETWORK & HOSTNAME** section:
 - Flip the switch to turn your network device on, and press **Done**.
 
 .. figure:: images/NetworkAndHostName.png
-    :scale: 80%
-    :width: 1024
-    :height: 800
     :align: center
     :alt: Editing network settings
 
@@ -104,9 +92,6 @@ the **Size policy:** to **As large as possible**, to make the reclaimed space
 available inside the LVM volume group. We'll add the additional volume later.
 
 .. figure:: images/ManualPartitioning.png
-    :scale: 80%
-    :width: 1024
-    :height: 800
     :align: center
     :alt: Manual Partitioning Screen
 
@@ -131,9 +116,6 @@ ______________________________
 In order to continue to the next step, a **Root Password** must be set.
 
 .. figure:: images/RootPassword.png
-    :scale: 80%
-    :width: 1024
-    :height: 800
     :align: center
     :alt: Root Password Screen
 
@@ -149,9 +131,6 @@ as instructed.  After the node reboots, you'll see a login prompt on
 the console. Login using **root** and the password you created earlier.
 
 .. figure:: images/ConsolePrompt.png
-    :scale: 80%
-    :width: 1024
-    :height: 768
     :align: center
     :alt: Console Prompt
 
@@ -170,6 +149,7 @@ _________________
 Ensure that the machine has the static IP address you configured earlier.
 
 .. code-block:: none
+
     [root@pcmk-1 ~]# ip addr
     1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
 	link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -387,30 +367,30 @@ Create a new key and allow anyone with that key to log in:
 .. index::
     single: SSH; key
 
-.Creating and Activating a new SSH Key
+.. topic:: Creating and Activating a new SSH Key
 
-.. code-block:: none
+   .. code-block:: none
 
-    [root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
-    Generating public/private dsa key pair.
-    Created directory '/root/.ssh'.
-    Your identification has been saved in /root/.ssh/id_dsa.
-    Your public key has been saved in /root/.ssh/id_dsa.pub.
-    The key fingerprint is:
-    SHA256:ehR595AVLAVpvFgqYXiayds2qx8emkvnHmfQZMTZ4jM root@pcmk-1
-    The key's randomart image is:
-    +---[DSA 1024]----+
-    |       . ..+.=+. |
-    |      . +o+ Bo.  |
-    |     . *oo+*+o   |
-    |      = .*E..o   |
-    |       oS..o  .  |
-    |      .o+.       |
-    |      o.*oo      |
-    |     . B.*       |
-    |      ===        |
-    +----[SHA256]-----+
-    [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
+       [root@pcmk-1 ~]# ssh-keygen -t dsa -f ~/.ssh/id_dsa -N ""
+       Generating public/private dsa key pair.
+       Created directory '/root/.ssh'.
+       Your identification has been saved in /root/.ssh/id_dsa.
+       Your public key has been saved in /root/.ssh/id_dsa.pub.
+       The key fingerprint is:
+       SHA256:ehR595AVLAVpvFgqYXiayds2qx8emkvnHmfQZMTZ4jM root@pcmk-1
+       The key's randomart image is:
+       +---[DSA 1024]----+
+       |       . ..+.=+. |
+       |      . +o+ Bo.  |
+       |     . *oo+*+o   |
+       |      = .*E..o   |
+       |       oS..o  .  |
+       |      .o+.       |
+       |      o.*oo      |
+       |     . B.*       |
+       |      ===        |
+       +----[SHA256]-----+
+       [root@pcmk-1 ~]# cp ~/.ssh/id_dsa.pub ~/.ssh/authorized_keys
 
 Install the key on the other node:
 

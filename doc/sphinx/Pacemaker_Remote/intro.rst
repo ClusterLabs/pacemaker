@@ -172,8 +172,6 @@ Traditional HA Stack
 ____________________
 
 .. image:: images/pcmk-ha-cluster-stack.png
-   :width: 17cm
-   :height: 9cm
    :alt: Traditional Pacemaker+Corosync Stack
    :align: center
 
@@ -181,8 +179,6 @@ HA Stack With Guest Nodes
 _________________________
 
 .. image:: images/pcmk-ha-remote-stack.png
-   :width: 20cm
-   :height: 10cm
    :alt: Pacemaker+Corosync Stack with pacemaker_remoted
    :align: center
 
