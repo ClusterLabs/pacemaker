@@ -33,10 +33,6 @@ AM_V_SCHEMA = $(am__v_SCHEMA_$(V))
 am__v_SCHEMA_0 = @echo "  SCHEMA   $@";
 am__v_SCHEMA_1 = 
 
-AM_V_PUB = $(am__v_PUB_$(V))
-am__v_PUB_0 = @echo "  PUB     $@: $(DOCBOOK_FORMATS)";
-am__v_PUB_1 = 
-
 AM_V_BOOK = $(am__v_BOOK_$(V))
 am__v_BOOK_0 = @echo "  BOOK    $(@:%/_build=%): $(BOOK_FORMATS)";
 am__v_BOOK_1 = 
