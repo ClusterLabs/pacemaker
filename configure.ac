@@ -217,7 +217,7 @@ enable_systemd=$?
 
 AC_ARG_ENABLE([upstart],
     [AS_HELP_STRING([--enable-upstart],
-        [enable support for managing resources via Upstart @<:@try@:>@])]
+        [enable support for managing resources via Upstart (deprecated) @<:@try@:>@])]
 )
 yes_no_try "$enable_upstart" "try"
 enable_upstart=$?

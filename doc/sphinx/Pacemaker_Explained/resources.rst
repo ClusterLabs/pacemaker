@@ -42,8 +42,8 @@ Pacemaker supports several classes of agents:
 
 * OCF
 * LSB
-* Upstart
 * Systemd
+* Upstart (deprecated)
 * Service
 * Fencing
 * Nagios Plugins
@@ -128,9 +128,9 @@ with a Pacemaker cluster, they must conform to the LSB specification [#]_.
 Systemd
 _______
 
-Some newer distributions have replaced the old
+Most Linux distributions have replaced the old
 `SysV <http://en.wikipedia.org/wiki/Init#SysV-style>`_ style of
-initialization daemons and scripts with an alternative called
+initialization daemons and scripts with
 `Systemd <http://www.freedesktop.org/wiki/Software/systemd>`_.
 
 Pacemaker is able to manage these services `if they are present`.
@@ -151,20 +151,28 @@ are online guides for converting from init scripts [#]_.
 Upstart
 _______
 
-Some newer distributions have replaced the old
+Some distributions replaced the old
 `SysV <http://en.wikipedia.org/wiki/Init#SysV-style>`_ style of
-initialization daemons (and scripts) with an alternative called
+initialization daemons (and scripts) with
 `Upstart <http://upstart.ubuntu.com/>`_.
 
 Pacemaker is able to manage these services `if they are present`.
 
-Instead of init scripts, upstart has `jobs`.  Generally, the
+Instead of init scripts, Upstart has `jobs`.  Generally, the
 services (jobs) are provided by the OS distribution.
 
 .. important::
 
    Remember to make sure the computer is `not` configured to start any
    services at boot time -- that should be controlled by the cluster.
+
+.. warning::
+
+   Upstart support is deprecated in Pacemaker. Upstart is no longer an actively
+   maintained project, and test platforms for it are no longer readily usable.
+   Support will likely be dropped entirely at the next major release of
+   Pacemaker.
+
 
 .. index::
    single: Resource; System Services
