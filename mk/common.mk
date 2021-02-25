@@ -10,9 +10,6 @@
 #
 # Some variables to help with silent rules
 # https://www.gnu.org/software/automake/manual/html_node/Automake-silent_002drules-Option.html
-#
-# We require a minimum automake version of 1.11, which includes AM_V_GEN and
-# AM_V_at, but AM_V_P is not available until 1.13.
 
 V ?= $(AM_DEFAULT_VERBOSITY)
 
@@ -32,10 +29,6 @@ am__v_MAN_1 =
 AM_V_SCHEMA = $(am__v_SCHEMA_$(V))
 am__v_SCHEMA_0 = @echo "  SCHEMA   $@";
 am__v_SCHEMA_1 = 
-
-AM_V_PUB = $(am__v_PUB_$(V))
-am__v_PUB_0 = @echo "  PUB     $@: $(DOCBOOK_FORMATS)";
-am__v_PUB_1 = 
 
 AM_V_BOOK = $(am__v_BOOK_$(V))
 am__v_BOOK_0 = @echo "  BOOK    $(@:%/_build=%): $(BOOK_FORMATS)";

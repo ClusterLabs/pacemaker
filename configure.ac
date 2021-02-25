@@ -59,25 +59,17 @@ dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
 
-dnl 1.11:           minimum automake version required
+dnl 1.13:           minimum automake version required
 dnl foreign:        don't require GNU-standard top-level files
 dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
-dnl silent-rules:   allow "--enable-silent-rules" (no-op in 1.13+)
 dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
-AM_INIT_AUTOMAKE([1.11 foreign tar-ustar silent-rules subdir-objects])
+AM_INIT_AUTOMAKE([1.13 foreign tar-ustar subdir-objects])
 
-dnl Require pkg-config (with a minimum version)
-PKG_PROG_PKG_CONFIG(0.18)
+dnl Require minimum version of pkg-config
+PKG_PROG_PKG_CONFIG(0.27)
 AS_IF([test "x${PKG_CONFIG}" != x], [],
-      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.18 or later)])])
-dnl PKG_NOARCH_INSTALLDIR is not available prior to pkg-config 0.27 and
-dnl pkgconf 0.8.10 (uncomment next line to mimic that scenario)
-dnl m4_ifdef([PKG_NOARCH_INSTALLDIR], [m4_undefine([PKG_NOARCH_INSTALLDIR])])
-m4_ifndef([PKG_NOARCH_INSTALLDIR], [
-    AC_DEFUN([PKG_NOARCH_INSTALLDIR], [
-        AC_SUBST([noarch_pkgconfigdir], ['${datadir}/pkgconfig'])
-    ])
-])
+      [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.27 or later)])])
+PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
@@ -764,8 +756,8 @@ dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
 dnl Ensure PYTHON is an absolute path
 AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 
-dnl Pacemaker requires a minimum Python version of 3.2
-AM_PATH_PYTHON([3.2])
+dnl Require a minimum Python version
+AM_PATH_PYTHON([3.4])
 
 AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
@@ -897,8 +889,8 @@ else
 fi
 AC_SUBST(PC_LIBS_RT)
 
-# Require glib 2.32.0 (2012-03) or later
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.32.0],
+# Require minimum glib version
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
                   [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
                    LIBS="${LIBS} ${GLIB_LIBS}"])
 

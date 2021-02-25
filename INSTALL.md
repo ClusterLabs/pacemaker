@@ -4,18 +4,18 @@
 
 | Version         | Fedora-based       | Suse-based         | Debian-based   |
 |:---------------:|:------------------:|:------------------:|:--------------:|
-| 1.11 or later   | automake           | automake           | automake       |
+| 1.13 or later   | automake           | automake           | automake       |
 | 2.64 or later   | autoconf           | autoconf           | autoconf       |
 |                 | libtool            | libtool            | libtool        |
 |                 | libtool-ltdl-devel |                    | libltdl-dev    |
 |                 | libuuid-devel      | libuuid-devel      | uuid-dev       |
-|                 | pkgconfig          | pkgconfig          | pkg-config     |
-| 2.32.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
+| 0.27 or later   | pkgconfig          | pkgconfig          | pkg-config     |
+| 2.42.0 or later | glib2-devel        | glib2-devel        | libglib2.0-dev |
 |                 | libxml2-devel      | libxml2-devel      | libxml2-dev    |
 |                 | libxslt-devel      | libxslt-devel      | libxslt-dev    |
 |                 | bzip2-devel        | libbz2-devel       | libbz2-dev     |
-|                 | libqb-devel        | libqb-devel        | libqb-dev      |
-| 3.2 or later    | python3            | python3            | python3        |
+| 0.17.0 or later | libqb-devel        | libqb-devel        | libqb-dev      |
+| 3.4 or later    | python3            | python3            | python3        |
 
 Also: GNU make
 
@@ -36,7 +36,7 @@ Also: GNU make
 
 | Feature Enabled                                 | Version        | Fedora-based            | Suse-based              | Debian-based            |
 |:-----------------------------------------------:|:--------------:|:-----------------------:|:-----------------------:|:-----------------------:|
-| Pacemaker Remote and encrypted remote CIB admin | 2.1.7 or later | gnutls-devel            | libgnutls-devel         | libgnutls-dev           |
+| Pacemaker Remote and encrypted remote CIB admin | 2.12.0 or later| gnutls-devel            | libgnutls-devel         | libgnutls-dev           |
 | encrypted remote CIB admin                      |                | pam-devel               | pam-devel               | libpam0g-dev            |
 | interactive crm_mon                             |                | ncurses-devel           | ncurses-devel           | ncurses-dev             |
 | systemd support                                 |                | systemd-devel           | systemd-devel           | libsystemd-dev          |

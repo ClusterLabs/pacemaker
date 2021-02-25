@@ -1,5 +1,5 @@
 /*
- * Copyright 2001-2020 the Pacemaker project contributors
+ * Copyright 2001-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,12 +66,6 @@ char *strndup(const char *str, size_t len);
 #  endif
 
 #  include <glib.h>
-
-#  if !GLIB_CHECK_VERSION(2,38,0)
-#    define g_assert_true(expr) g_assert_cmpint((expr), ==, TRUE)
-#    define g_assert_false(expr) g_assert_cmpint((expr), !=, TRUE)
-#    define g_assert_null(expr)  g_assert_cmpint((expr) == NULL, ==, TRUE)
-#  endif
 
 #  if SUPPORT_DBUS
 #    ifndef HAVE_DBUSBASICVALUE
