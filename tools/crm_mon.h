@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -71,18 +71,17 @@ typedef enum mon_output_format_e {
 
 #define mon_op_default              (mon_op_print_pending | mon_op_fence_history | mon_op_fence_connect)
 
-void print_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                  crm_exit_t history_rc, stonith_history_t *stonith_history,
-                  unsigned int mon_ops, unsigned int show, char *prefix,
-                  char *only_node, char *only_rsc);
-void print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                      crm_exit_t history_rc, stonith_history_t *stonith_history,
-                      unsigned int mon_ops, unsigned int show, char *prefix,
-                      char *only_node, char *only_rsc);
-int print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                      crm_exit_t history_rc, stonith_history_t *stonith_history,
-                      unsigned int mon_ops, unsigned int show, char *prefix,
-                      char *only_node, char *only_rsc);
+void print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
+                  stonith_history_t *stonith_history, unsigned int mon_ops,
+                  unsigned int show, char *prefix, char *only_node, char *only_rsc);
+void print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
+                      stonith_history_t *stonith_history, unsigned int mon_ops,
+                      unsigned int show, char *prefix, char *only_node,
+                      char *only_rsc);
+int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
+                      stonith_history_t *stonith_history, unsigned int mon_ops,
+                      unsigned int show, char *prefix, char *only_node,
+                      char *only_rsc);
 
 GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,8 +14,9 @@
 
 #define cons_string(x) x?x:"NA"
 void
-cli_resource_print_cts_constraints(pcmk__output_t *out, pe_working_set_t * data_set)
+cli_resource_print_cts_constraints(pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     xmlNode *xml_obj = NULL;
     xmlNode *lifetime = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
@@ -85,10 +86,10 @@ cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
-                              const char *host_uname, bool active,
-                              pe_working_set_t * data_set)
+cli_resource_print_operations(const char *rsc_id, const char *host_uname,
+                              bool active, pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_no_output;
     GListPtr ops = find_operations(rsc_id, host_uname, active, data_set);
 
@@ -110,9 +111,9 @@ cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc,
-                   pe_working_set_t *data_set, bool expanded)
+cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
+    pcmk__output_t *out = data_set->priv;
     unsigned int opts = pe_print_pending;
     GListPtr all = NULL;
 
