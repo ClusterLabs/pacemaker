@@ -1,0 +1,273 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="18" operation="stop" operation_key="SAS_PROD_FENCE_stop_0" on_node="node1" on_node_uuid="1">
+        <primitive id="SAS_PROD_FENCE" class="stonith" type="fence_vmware_soap"/>
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  ipaddr="1.2.3.4" login="fenceuser" login_timeout="60" passwd="****" pcmk_host_map="node1:node1;node2:node2;node3:node3;node4:node4;node5:node5;node6:node6;node7:node7;node8:node8;node9:node9" pcmk_monitor_timeout="120" power_timeout="200" power_wait="90" retry_on="1" shell_timeout="120" ssl_insecure="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="17" operation="start" operation_key="SAS_PROD_FENCE_start_0" on_node="node1" on_node_uuid="1">
+        <primitive id="SAS_PROD_FENCE" class="stonith" type="fence_vmware_soap"/>
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  ipaddr="1.2.3.4" login="fenceuser" login_timeout="60" passwd="****" pcmk_host_map="node1:node1;node2:node2;node3:node3;node4:node4;node5:node5;node6:node6;node7:node7;node8:node8;node9:node9" pcmk_monitor_timeout="120" power_timeout="200" power_wait="90" retry_on="1" shell_timeout="120" ssl_insecure="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="SAS_PROD_FENCE_stop_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="SAS_PROD_FENCE_monitor_60000" on_node="node1" on_node_uuid="1">
+        <primitive id="SAS_PROD_FENCE" class="stonith" type="fence_vmware_soap"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  ipaddr="1.2.3.4" login="fenceuser" login_timeout="60" passwd="****" pcmk_host_map="node1:node1;node2:node2;node3:node3;node4:node4;node5:node5;node6:node6;node7:node7;node8:node8;node9:node9" pcmk_monitor_timeout="120" power_timeout="200" power_wait="90" retry_on="1" shell_timeout="120" ssl_insecure="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="start" operation_key="SAS_PROD_FENCE_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="43" operation="monitor" operation_key="SASHOME_monitor_10000" internal_operation_key="SASHOME:0_monitor_10000" on_node="node6" on_node_uuid="6">
+        <primitive id="SASHOME" long-id="SASHOME:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="node6" CRM_meta_on_node_uuid="6" CRM_meta_timeout="120000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:0_start_0" on_node="node6" on_node_uuid="6"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="42" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:0_start_0" on_node="node6" on_node_uuid="6">
+        <primitive id="SASHOME" long-id="SASHOME:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="node6" CRM_meta_on_node_uuid="6" CRM_meta_timeout="60000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:0_stop_0" on_node="node8" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="start" operation_key="SASHOME-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="41" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:0_stop_0" on_node="node8" on_node_uuid="8">
+        <primitive id="SASHOME" long-id="SASHOME:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="node8" CRM_meta_on_node_uuid="8" CRM_meta_timeout="300000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="SASHOME-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="46" operation="monitor" operation_key="SASHOME_monitor_10000" internal_operation_key="SASHOME:1_monitor_10000" on_node="node8" on_node_uuid="8">
+        <primitive id="SASHOME" long-id="SASHOME:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="node8" CRM_meta_on_node_uuid="8" CRM_meta_timeout="120000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="45" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:1_start_0" on_node="node8" on_node_uuid="8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="45" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:1_start_0" on_node="node8" on_node_uuid="8">
+        <primitive id="SASHOME" long-id="SASHOME:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="node8" CRM_meta_on_node_uuid="8" CRM_meta_timeout="60000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="44" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:1_stop_0" on_node="node9" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="start" operation_key="SASHOME-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="44" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:1_stop_0" on_node="node9" on_node_uuid="9">
+        <primitive id="SASHOME" long-id="SASHOME:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="node9" CRM_meta_on_node_uuid="9" CRM_meta_timeout="300000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="SASHOME-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="49" operation="monitor" operation_key="SASHOME_monitor_10000" internal_operation_key="SASHOME:2_monitor_10000" on_node="node9" on_node_uuid="9">
+        <primitive id="SASHOME" long-id="SASHOME:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="node9" CRM_meta_on_node_uuid="9" CRM_meta_timeout="120000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:2_start_0" on_node="node9" on_node_uuid="9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="48" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:2_start_0" on_node="node9" on_node_uuid="9">
+        <primitive id="SASHOME" long-id="SASHOME:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="node9" CRM_meta_on_node_uuid="9" CRM_meta_timeout="60000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="47" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:2_stop_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="start" operation_key="SASHOME-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="47" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:2_stop_0" on_node="node1" on_node_uuid="1">
+        <primitive id="SASHOME" long-id="SASHOME:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="300000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="SASHOME-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="54" operation="monitor" operation_key="SASHOME_monitor_10000" internal_operation_key="SASHOME:4_monitor_10000" on_node="node1" on_node_uuid="1">
+        <primitive id="SASHOME" long-id="SASHOME:4" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="fence" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:4_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="53" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:4_start_0" on_node="node1" on_node_uuid="1">
+        <primitive id="SASHOME" long-id="SASHOME:4" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="52" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:4_stop_0" on_node="node6" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="start" operation_key="SASHOME-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="52" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:4_stop_0" on_node="node6" on_node_uuid="6">
+        <primitive id="SASHOME" long-id="SASHOME:4" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="node6" CRM_meta_on_node_uuid="6" CRM_meta_timeout="300000"  device="/dev/vg_NBISGFSSASHOME/SASHOME" directory="/SASHome" fstype="gfs2" options="noatime"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="SASHOME-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15" priority="1000000">
+    <action_set>
+      <pseudo_event id="60" operation="stopped" operation_key="SASHOME-clone_stopped_0">
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:0_stop_0" on_node="node8" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="44" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:1_stop_0" on_node="node9" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="47" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:2_stop_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="52" operation="stop" operation_key="SASHOME_stop_0" internal_operation_key="SASHOME:4_stop_0" on_node="node6" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="stop" operation_key="SASHOME-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <pseudo_event id="59" operation="stop" operation_key="SASHOME-clone_stop_0">
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="17" priority="1000000">
+    <action_set>
+      <pseudo_event id="58" operation="running" operation_key="SASHOME-clone_running_0">
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:0_start_0" on_node="node6" on_node_uuid="6"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="45" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:1_start_0" on_node="node8" on_node_uuid="8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:2_start_0" on_node="node9" on_node_uuid="9"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="53" operation="start" operation_key="SASHOME_start_0" internal_operation_key="SASHOME:4_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="57" operation="start" operation_key="SASHOME-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <pseudo_event id="57" operation="start" operation_key="SASHOME-clone_start_0">
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="60" operation="stopped" operation_key="SASHOME-clone_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
