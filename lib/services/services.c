@@ -146,6 +146,7 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
     return expanded_class;
 }
 
+#if SUPPORT_NAGIOS
 /*!
  * \brief Duplicate a file path, inserting a prefix if not absolute
  *
@@ -160,6 +161,7 @@ dup_file_path(const char *filename, const char *dirname)
     return (*filename == '/')? strdup(filename)
            : crm_strdup_printf("%s/%s", dirname, filename);
 }
+#endif
 
 svc_action_t *
 resources_action_create(const char *name, const char *standard,
