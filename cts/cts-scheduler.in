@@ -1293,7 +1293,7 @@ class CtsScheduler(object):
 
         # (Intermediate) test outputs
         output_filename = "%s/%s.out" % (self.args.out_dir, test_name)
-        dot_output_filename = "%s/%s.pe.dot" % (self.args.out_dir, test_name)
+        dot_output_filename = "%s/%s.dot.pe" % (self.args.out_dir, test_name)
         score_output_filename = "%s/%s.scores.pe" % (self.args.out_dir, test_name)
         summary_output_filename = "%s/%s.summary.pe" % (self.args.out_dir, test_name)
         stderr_output_filename = "%s/%s.stderr.pe" % (self.args.out_dir, test_name)

@@ -92,7 +92,7 @@ scheduler-list:
 CLEANFILES	= $(builddir)/.regression.failed.diff
 
 clean-local:
-	rm -f scheduler/*.pe.*
+	rm -f scheduler/*.pe
 
 SUBDIRS	= benchmark
 
