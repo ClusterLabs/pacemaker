@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -98,7 +98,6 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
     if (print_timing) {
         char *last_change_str = NULL;
-        char *last_run_str = NULL;
         char *exec_str = NULL;
         char *queue_str = NULL;
 
@@ -110,13 +109,6 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
             && (epoch > 0)) {
             char *time = pcmk_format_named_time(XML_RSC_OP_LAST_CHANGE, epoch);
             last_change_str = crm_strdup_printf(" %s", time);
-            free(time);
-        }
-
-        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_RUN, &epoch) == pcmk_ok)
-            && (epoch > 0)) {
-            char *time = pcmk_format_named_time(XML_RSC_OP_LAST_RUN, epoch);
-            last_run_str = crm_strdup_printf(" %s", time);
             free(time);
         }
 
@@ -134,20 +126,15 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
             free(pair);
         }
 
-        buf = crm_strdup_printf("(%s) %s:%s%s%s%s%s rc=%d (%s)", call, task,
+        buf = crm_strdup_printf("(%s) %s:%s%s%s%s rc=%d (%s)", call, task,
                                 interval_str ? interval_str : "",
                                 last_change_str ? last_change_str : "",
-                                last_run_str ? last_run_str : "",
                                 exec_str ? exec_str : "",
                                 queue_str ? queue_str : "",
                                 rc, services_ocf_exitcode_str(rc));
 
         if (last_change_str) {
             free(last_change_str);
-        }
-
-        if (last_run_str) {
-            free(last_run_str);
         }
 
         if (exec_str) {
@@ -1649,14 +1636,6 @@ op_history_xml(pcmk__output_t *out, va_list args) {
             time_t int_value = (time_t) crm_parse_int(value, NULL);
             if (int_value > 0) {
                 crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, pcmk__epoch2str(&int_value));
-            }
-        }
-
-        value = crm_element_value(xml_op, XML_RSC_OP_LAST_RUN);
-        if (value) {
-            time_t int_value = (time_t) crm_parse_int(value, NULL);
-            if (int_value > 0) {
-                crm_xml_add(node, XML_RSC_OP_LAST_RUN, pcmk__epoch2str(&int_value));
             }
         }
 

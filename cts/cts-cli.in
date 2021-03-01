@@ -1674,12 +1674,11 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
-    # last-run= and last-rc-change= are always numeric in the CIB.  However,
-    # for the crm_mon test we also need to compare against the XML output of
-    # the crm_mon program.  There, these are shown as human readable strings
-    # (like the output of the `date` command).
+    # last-rc-change= is always numeric in the CIB. However, for the crm_mon
+    # test we also need to compare against the XML output of the crm_mon
+    # program. There, these are shown as human readable strings (like the
+    # output of the `date` command).
     sed -e 's/cib-last-written.*>/>/'\
-        -e 's/ last-run=\"[A-Za-z0-9: ]*\"//'\
         -e 's/Last updated: .*/Last updated:/' \
         -e 's/Last change: .*/Last change:/' \
         -e 's/(version .*)/(version)/' \
