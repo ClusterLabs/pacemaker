@@ -1916,6 +1916,13 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/CTSvars.py                                      \
                 cts/benchmark/Makefile                              \
                 cts/pacemaker-cts-dummyd@.service                   \
+                cts/scheduler/Makefile                              \
+                cts/scheduler/dot/Makefile                          \
+                cts/scheduler/exp/Makefile                          \
+                cts/scheduler/scores/Makefile                       \
+                cts/scheduler/stderr/Makefile                       \
+                cts/scheduler/summary/Makefile                      \
+                cts/scheduler/xml/Makefile                          \
                 daemons/Makefile                                    \
                 daemons/attrd/Makefile                              \
                 daemons/based/Makefile                              \

@@ -192,7 +192,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
                    chosen->details->uname, rsc->id, multiple, score);
     }
 
-    result = native_assign_node(rsc, nodes, chosen, FALSE);
+    result = native_assign_node(rsc, chosen, FALSE);
     g_list_free(nodes);
     return result;
 }
@@ -607,11 +607,11 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
         pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
                     (assign_to? assign_to->details->uname : "no node"), reason);
-        native_assign_node(rsc, NULL, assign_to, TRUE);
+        native_assign_node(rsc, assign_to, TRUE);
 
     } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
         pe_rsc_debug(rsc, "Forcing %s to stop", rsc->id);
-        native_assign_node(rsc, NULL, NULL, TRUE);
+        native_assign_node(rsc, NULL, TRUE);
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_provisional)
                && native_choose_node(rsc, prefer, data_set)) {

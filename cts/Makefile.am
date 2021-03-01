@@ -75,26 +75,17 @@ dist_cli_DATA	= cli/constraints.xml \
 		  cli/regression.upgrade.exp	\
 		  cli/regression.validity.exp
 
-PE_TESTS	= $(wildcard scheduler/*.scores)
-pedir		= $(testdir)/scheduler
-dist_pe_DATA	= $(PE_TESTS) \
-		  $(PE_TESTS:%.scores=%.xml) \
-		  $(PE_TESTS:%.scores=%.exp) \
-		  $(PE_TESTS:%.scores=%.dot) \
-		  $(PE_TESTS:%.scores=%.summary) \
-		  $(wildcard scheduler/*.stderr)
-
 scheduler-list:
-	@for T in "$(srcdir)"/scheduler/*.xml; do       \
+	@for T in "$(srcdir)"/scheduler/xml/*.xml; do       \
 		echo $$(basename $$T .xml);             \
 	done
 
 CLEANFILES	= $(builddir)/.regression.failed.diff
 
 clean-local:
-	rm -f scheduler/*.pe.*
+	rm -f scheduler/*/*.pe
 
-SUBDIRS	= benchmark
+SUBDIRS	= benchmark scheduler
 
 cts-support-install: cts-support
 	./cts-support install

@@ -1284,19 +1284,19 @@ class CtsScheduler(object):
         self.num_tests = self.num_tests + 1
 
         # Test inputs
-        input_filename = "%s/%s.xml" % (self.args.io_dir, test_name)
-        expected_filename = "%s/%s.exp" % (self.args.io_dir, test_name)
-        dot_expected_filename = "%s/%s.dot" % (self.args.io_dir, test_name)
-        scores_filename = "%s/%s.scores" % (self.args.io_dir, test_name)
-        summary_filename = "%s/%s.summary" % (self.args.io_dir, test_name)
-        stderr_expected_filename = "%s/%s.stderr" % (self.args.io_dir, test_name)
+        input_filename = "%s/xml/%s.xml" % (self.args.io_dir, test_name)
+        expected_filename = "%s/exp/%s.exp" % (self.args.io_dir, test_name)
+        dot_expected_filename = "%s/dot/%s.dot" % (self.args.io_dir, test_name)
+        scores_filename = "%s/scores/%s.scores" % (self.args.io_dir, test_name)
+        summary_filename = "%s/summary/%s.summary" % (self.args.io_dir, test_name)
+        stderr_expected_filename = "%s/stderr/%s.stderr" % (self.args.io_dir, test_name)
 
         # (Intermediate) test outputs
         output_filename = "%s/%s.out" % (self.args.out_dir, test_name)
-        dot_output_filename = "%s/%s.pe.dot" % (self.args.out_dir, test_name)
-        score_output_filename = "%s/%s.scores.pe" % (self.args.out_dir, test_name)
-        summary_output_filename = "%s/%s.summary.pe" % (self.args.out_dir, test_name)
-        stderr_output_filename = "%s/%s.stderr.pe" % (self.args.out_dir, test_name)
+        dot_output_filename = "%s/dot/%s.dot.pe" % (self.args.out_dir, test_name)
+        score_output_filename = "%s/scores/%s.scores.pe" % (self.args.out_dir, test_name)
+        summary_output_filename = "%s/summary/%s.summary.pe" % (self.args.out_dir, test_name)
+        stderr_output_filename = "%s/stderr/%s.stderr.pe" % (self.args.out_dir, test_name)
         valgrind_output_filename = "%s/%s.valgrind" % (self.args.out_dir, test_name)
 
         # Common arguments for running test

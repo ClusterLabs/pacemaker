@@ -1052,9 +1052,10 @@ native_resource_state(const pe_resource_t * rsc, gboolean current)
  *
  * \param[in]  rsc      Resource to check
  * \param[out] list     List to add result to
- * \param[in]  current  0 = where known, 1 = running, 2 = running or pending
+ * \param[in]  current  0 = where allocated, 1 = where running,
+ *                      2 = where running or pending
  *
- * \return If list contains only one node, that node
+ * \return If list contains only one node, that node, or NULL otherwise
  */
 pe_node_t *
 native_location(const pe_resource_t *rsc, GList **list, int current)
