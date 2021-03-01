@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,7 +25,6 @@ noinst_SCRIPTS		= pcmk_simtimes
 
 EXTRA_DIST		= crm_diff.8.inc \
 				  crm_error.8.inc \
-			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
 			  crm_resource.8.inc \

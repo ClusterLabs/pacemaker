@@ -9,5 +9,25 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
+configdir		= @CONFIGDIR@
+CONFIGS			= crm_mon pacemaker
+
 logrotatedir		= $(sysconfdir)/logrotate.d
 logrotate_DATA		= logrotate.d/pacemaker
+
+EXTRA_DIST		= $(foreach f,$(CONFIGS),sysconfig/$(f))
+
+# Don't overwrite user's existing config files
+install-data-local:
+	$(AM_V_AT)$(MKDIR_P) $(DESTDIR)$(configdir)
+	$(AM_V_AT)for f in $(CONFIGS); do				\
+		dest="$(DESTDIR)$(configdir)/$$f";			\
+		[ -e "$$dest" ] && dest="$$dest.new";			\
+		$(INSTALL_DATA) "$(srcdir)/sysconfig/$$f" "$$dest";	\
+	done
+
+uninstall-local:
+	$(AM_V_AT)for f in $(CONFIGS); do		\
+		dest="$(DESTDIR)$(configdir)/$$f";	\
+		rm -f "$$dest" "$$dest.new";		\
+	done

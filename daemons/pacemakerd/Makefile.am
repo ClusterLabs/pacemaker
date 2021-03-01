@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2020 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,8 +16,6 @@ sbin_PROGRAMS		= pacemakerd
 if BUILD_SYSTEMD
 systemdsystemunit_DATA	= pacemaker.service
 endif
-
-EXTRA_DIST		= pacemaker.sysconfig
 
 ## SOURCES
 
