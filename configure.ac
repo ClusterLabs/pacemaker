@@ -1938,7 +1938,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/pacemaker_remote.service              \
                 daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
-                daemons/pacemakerd/pacemaker                        \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
@@ -1948,6 +1947,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Makefile                                        \
                 doc/sphinx/Makefile                                 \
                 etc/Makefile                                        \
+                etc/init.d/pacemaker                                \
                 etc/logrotate.d/pacemaker                           \
                 extra/Makefile                                      \
                 extra/alerts/Makefile                               \

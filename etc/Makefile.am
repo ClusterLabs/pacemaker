@@ -12,6 +12,9 @@ MAINTAINERCLEANFILES    = Makefile.in
 configdir		= @CONFIGDIR@
 CONFIGS			= crm_mon pacemaker
 
+initdir			= $(INITDIR)
+init_SCRIPTS		= init.d/pacemaker
+
 logrotatedir		= $(sysconfdir)/logrotate.d
 logrotate_DATA		= logrotate.d/pacemaker
 

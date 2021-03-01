@@ -9,8 +9,6 @@
 
 include $(top_srcdir)/mk/common.mk
 
-initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker
 sbin_PROGRAMS		= pacemakerd
 
 if BUILD_SYSTEMD

@@ -71,11 +71,11 @@ ylwrap
 /daemons/execd/pacemaker_remote
 /daemons/execd/pacemaker_remote.service
 /daemons/fenced/fence_legacy
-/daemons/pacemakerd/pacemaker
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
 /daemons/pacemakerd/pacemaker.upstart
 /doc/Doxyfile
+/etc/init.d/pacemaker
 /etc/logrotate.d/pacemaker
 /extra/resources/ClusterMon
 /extra/resources/HealthSMART
@@ -201,6 +201,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /crmd
 /cts/HBDummy
 /daemons/based/cibmon
+/daemons/pacemakerd/pacemaker
 /depcomp
 /doc/*.build
 /doc/*/en-US/Ap-*.xml
