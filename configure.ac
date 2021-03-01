@@ -1576,16 +1576,19 @@ AS_IF([test -n "${SANITIZERS}"], [
             [asan|ASAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=address"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=address -lasan"
+                PCMK_FEATURES="$PCMK_FEATURES asan"
                 REQUIRE_LIB([asan],[main])
             ],
             [ubsan|UBSAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=undefined"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=undefined -lubsan"
+                PCMK_FEATURES="$PCMK_FEATURES ubsan"
                 REQUIRE_LIB([ubsan],[main])
             ],
             [tsan|TSAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=thread"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=thread -ltsan"
+                PCMK_FEATURES="$PCMK_FEATURES tsan"
                 REQUIRE_LIB([tsan],[main])
             ])
   done
