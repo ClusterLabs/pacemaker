@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,7 +9,7 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-SUBDIRS		= alerts resources logrotate
+SUBDIRS		= alerts resources
 
 mibdir		= $(datadir)/snmp/mibs
 dist_mib_DATA	= PCMK-MIB.txt

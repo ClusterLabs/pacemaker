@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2019 the Pacemaker project contributors
+# Copyright 2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,4 +10,4 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 logrotatedir		= $(sysconfdir)/logrotate.d
-logrotate_DATA		= pacemaker
+logrotate_DATA		= logrotate.d/pacemaker

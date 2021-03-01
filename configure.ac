@@ -1947,11 +1947,11 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Doxyfile                                        \
                 doc/Makefile                                        \
                 doc/sphinx/Makefile                                 \
+                etc/Makefile                                        \
+                etc/logrotate.d/pacemaker                           \
                 extra/Makefile                                      \
                 extra/alerts/Makefile                               \
                 extra/resources/Makefile                            \
-                extra/logrotate/Makefile                            \
-                extra/logrotate/pacemaker                           \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
