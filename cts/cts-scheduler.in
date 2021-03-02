@@ -1240,6 +1240,13 @@ class CtsScheduler(object):
         if self.args.io_dir is None:
             self.args.io_dir = os.path.join(self.test_home, "scheduler")
 
+        self.xml_input_dir = os.path.join(self.args.io_dir, "xml")
+        self.expected_dir = os.path.join(self.args.io_dir, "exp")
+        self.dot_expected_dir = os.path.join(self.args.io_dir, "dot")
+        self.scores_dir = os.path.join(self.args.io_dir, "scores")
+        self.summary_dir = os.path.join(self.args.io_dir, "summary")
+        self.stderr_expected_dir = os.path.join(self.args.io_dir, "stderr")
+
         # Where to store generated files
         if self.args.out_dir is None:
             self.args.out_dir = self.args.io_dir
@@ -1248,6 +1255,13 @@ class CtsScheduler(object):
             self.failed_filename = os.path.join(self.args.out_dir, ".regression.failed.diff")
         os.environ['CIB_shadow_dir'] = self.args.out_dir
         self.failed_file = None
+
+        self.outfile_out_dir = self.args.out_dir
+        self.dot_out_dir = os.path.join(self.args.out_dir, "dot")
+        self.scores_out_dir = os.path.join(self.args.out_dir, "scores")
+        self.summary_out_dir = os.path.join(self.args.out_dir, "summary")
+        self.stderr_out_dir = os.path.join(self.args.out_dir, "stderr")
+        self.valgrind_out_dir = self.args.out_dir
 
         # Single test mode (if requested)
         try:
@@ -1284,20 +1298,32 @@ class CtsScheduler(object):
         self.num_tests = self.num_tests + 1
 
         # Test inputs
-        input_filename = "%s/xml/%s.xml" % (self.args.io_dir, test_name)
-        expected_filename = "%s/exp/%s.exp" % (self.args.io_dir, test_name)
-        dot_expected_filename = "%s/dot/%s.dot" % (self.args.io_dir, test_name)
-        scores_filename = "%s/scores/%s.scores" % (self.args.io_dir, test_name)
-        summary_filename = "%s/summary/%s.summary" % (self.args.io_dir, test_name)
-        stderr_expected_filename = "%s/stderr/%s.stderr" % (self.args.io_dir, test_name)
+        input_filename = os.path.join(
+            self.xml_input_dir, "%s.xml" % test_name)
+        expected_filename = os.path.join(
+            self.expected_dir, "%s.exp" % test_name)
+        dot_expected_filename = os.path.join(
+            self.dot_expected_dir, "%s.dot" % test_name)
+        scores_filename = os.path.join(
+            self.scores_dir, "%s.scores" % test_name)
+        summary_filename = os.path.join(
+            self.summary_dir, "%s.summary" % test_name)
+        stderr_expected_filename = os.path.join(
+            self.stderr_expected_dir, "%s.stderr" % test_name)
 
         # (Intermediate) test outputs
-        output_filename = "%s/%s.out" % (self.args.out_dir, test_name)
-        dot_output_filename = "%s/dot/%s.dot.pe" % (self.args.out_dir, test_name)
-        score_output_filename = "%s/scores/%s.scores.pe" % (self.args.out_dir, test_name)
-        summary_output_filename = "%s/summary/%s.summary.pe" % (self.args.out_dir, test_name)
-        stderr_output_filename = "%s/stderr/%s.stderr.pe" % (self.args.out_dir, test_name)
-        valgrind_output_filename = "%s/%s.valgrind" % (self.args.out_dir, test_name)
+        output_filename = os.path.join(
+            self.outfile_out_dir, "%s.out" % test_name)
+        dot_output_filename = os.path.join(
+            self.dot_out_dir, "%s.dot.pe" % test_name)
+        score_output_filename = os.path.join(
+            self.scores_out_dir, "%s.scores.pe" % test_name)
+        summary_output_filename = os.path.join(
+            self.summary_out_dir, "%s.summary.pe" % test_name)
+        stderr_output_filename = os.path.join(
+            self.stderr_out_dir, "%s.stderr.pe" % test_name)
+        valgrind_output_filename = os.path.join(
+            self.valgrind_out_dir, "%s.valgrind" % test_name)
 
         # Common arguments for running test
         test_cmd = []
