@@ -49,6 +49,15 @@ struct trigger_s {
 
 };
 
+struct mainloop_timer_s {
+        guint id;
+        guint period_ms;
+        bool repeat;
+        char *name;
+        GSourceFunc cb;
+        void *userdata;
+};
+
 static gboolean
 crm_trigger_prepare(GSource * source, gint * timeout)
 {
@@ -875,6 +884,22 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
     return pcmk_rc_ok;
 }
 
+/*!
+ * \brief Get period for mainloop timer
+ *
+ * \param[in]  timer      Timer
+ *
+ * \return Period in ms
+ */
+guint
+pcmk__mainloop_timer_get_period(mainloop_timer_t *timer)
+{
+    if (timer) {
+        return timer->period_ms;
+    }
+    return 0;
+}
+
 mainloop_io_t *
 mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                         void *userdata, struct ipc_client_callbacks *callbacks)
@@ -1251,15 +1276,6 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
 {
     mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, callback);
 }
-
-struct mainloop_timer_s {
-        guint id;
-        guint period_ms;
-        bool repeat;
-        char *name;
-        GSourceFunc cb;
-        void *userdata;
-};
 
 static gboolean
 mainloop_timer_cb(gpointer user_data)

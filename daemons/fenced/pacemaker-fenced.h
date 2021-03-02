@@ -41,6 +41,7 @@ typedef struct stonith_device_s {
     GHashTable *params;
     GHashTable *aliases;
     GList *pending_ops;
+    mainloop_timer_t *timer;
     crm_trigger_t *work;
     xmlNode *agent_metadata;
 

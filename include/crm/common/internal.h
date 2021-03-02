@@ -96,6 +96,7 @@ pcmk__open_devnull(int flags)
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
+guint pcmk__mainloop_timer_get_period(mainloop_timer_t *timer);
 
 
 /* internal messaging utilities (from messages.c) */
