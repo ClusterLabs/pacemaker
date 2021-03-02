@@ -76,22 +76,24 @@ CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3.xsl			\
 			  $(abs_srcdir)/upgrade-2.10.xsl		\
 			  $(wildcard $(abs_srcdir)/upgrade-*enter.xsl)	\
 			  $(wildcard $(abs_srcdir)/upgrade-*leave.xsl)
-MON_abs_files		= $(abs_srcdir)/crm_mon.rng
+MON_abs_files 		= $(abs_srcdir)/crm_mon.rng
 API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)*.rng))
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
 CIB_xsl			= $(srcdir)/upgrade-1.3.xsl			\
 			  $(srcdir)/upgrade-2.10.xsl		\
 			  $(wildcard $(srcdir)/upgrade-*enter.xsl)	\
 			  $(wildcard $(srcdir)/upgrade-*leave.xsl)
-MON_files		= $(srcdir)/crm_mon.rng
+MON_files 		= $(srcdir)/crm_mon.rng
 
 # Sorted lists of all numeric schema versions
 API_numeric_versions	= $(call numeric_versions,${API_files})
 CIB_numeric_versions	= $(call numeric_versions,${CIB_files})
+MON_numeric_versions 	= $(call numeric_versions,$(wildcard $(srcdir)/api/crm_mon*.rng))
 
 # The highest numeric schema version
 API_max			?= $(lastword $(API_numeric_versions))
 CIB_max			?= $(lastword $(CIB_numeric_versions))
+MON_max 			?= $(lastword $(MON_numeric_versions))
 
 # Sorted lists of all schema versions (including "next")
 API_versions		= next $(API_numeric_versions)
@@ -100,11 +102,12 @@ CIB_versions		= next $(CIB_numeric_versions)
 # Build tree locations of static schema files and transforms (for VPATH builds)
 API_build_copies	= $(foreach f,$(API_abs_files),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
 CIB_build_copies	= $(foreach f,$(CIB_abs_files) $(CIB_abs_xsl),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
-MON_build_copies	= $(foreach f,$(MON_abs_files),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
+MON_build_copies 	= $(foreach f,$(MON_abs_files),$(subst $(abs_srcdir),$(abs_builddir),$(f)))
 
 # Dynamically generated schema files
 API_generated		= api/api-result.rng $(foreach base,$(API_versions),api/api-result-$(base).rng)
 CIB_generated		= pacemaker.rng $(foreach base,$(CIB_versions),pacemaker-$(base).rng) versions.rng
+MON_generated 		= crm_mon.rng
 
 CIB_version_pairs	= $(call version_pairs,${CIB_numeric_versions})
 CIB_version_pairs_cnt	= $(words ${CIB_version_pairs})
@@ -112,10 +115,10 @@ CIB_version_pairs_last  = $(call version_pairs_last,${CIB_version_pairs_cnt},${C
 
 dist_API_DATA		= $(API_files)
 dist_CIB_DATA		= $(CIB_files) $(CIB_xsl)
-dist_MON_DATA		= $(MON_files)
 
 nodist_API_DATA		= $(API_generated)
 nodist_CIB_DATA		= $(CIB_generated)
+nodist_MON_DATA		= $(MON_generated)
 
 EXTRA_DIST		= README.md			\
 			  best-match.sh			\
@@ -160,6 +163,21 @@ api/api-result-%.rng: $(API_build_copies) best-match.sh Makefile.am
 	$(AM_V_at)$(srcdir)/best-match.sh api/status $(*) $(@) "      " || :
 	$(AM_V_at)echo '    </element>' >> $@
 	$(AM_V_at)echo '  </start>' >> $@
+	$(AM_V_SCHEMA)echo '</grammar>' >> $@
+
+crm_mon.rng: api/crm_mon-$(MON_max).rng
+	$(AM_V_at)echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
+	$(AM_V_at)echo '<grammar xmlns="http://relaxng.org/ns/structure/1.0"' >> $@
+	$(AM_V_at)echo '         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">' >> $@
+	$(AM_V_at)echo '    <start>' >> $@
+	$(AM_V_at)echo '        <ref name="element-crm_mon-old"/>' >> $@
+	$(AM_V_at)echo '    </start>' >> $@
+	$(AM_V_at)echo '    <define name="element-crm_mon-old">' >> $@
+	$(AM_V_at)echo '        <element name="crm_mon">' >> $@
+	$(AM_V_at)echo '            <attribute name="version"> <text/> </attribute>' >> $@
+	$(AM_V_at)echo '            <externalRef href="$(<)" />' >> $@
+	$(AM_V_at)echo '        </element>' >> $@
+	$(AM_V_at)echo '    </define>' >> $@
 	$(AM_V_SCHEMA)echo '</grammar>' >> $@
 
 # Dynamically generated top-level CIB schema
@@ -256,7 +274,7 @@ fulldiff: best-match.sh
 	@echo "#  Comparing all changes across all the subsequent increments"
 	$(call version_diff,${CIB_version_pairs})
 
-CLEANFILES = $(API_generated) $(CIB_generated)
+CLEANFILES = $(API_generated) $(CIB_generated) $(MON_generated)
 
 clean-local:
 	if [ "x$(srcdir)" != "x$(builddir)" ]; then					\
