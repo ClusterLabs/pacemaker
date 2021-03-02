@@ -1873,12 +1873,15 @@ dnl Put the above variables to use
 LIBTOOL="${LIBTOOL} --tag=CC \$(QUIET_LIBTOOL_OPTS)"
 MAKEFLAGS="${MAKEFLAGS} ${QUIET_MAKE_OPTS}"
 
+# Make features list available (sorted alphabetically, without leading space)
+PCMK_FEATURES=`echo "$PCMK_FEATURES" | sed -e 's/^ //' -e 's/ /\n/g' | sort | xargs`
+AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
+AC_SUBST(PCMK_FEATURES)
+
 AC_SUBST(CC)
 AC_SUBST(MAKEFLAGS)
 AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
-AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
-AC_SUBST(PCMK_FEATURES)
 
 dnl Files we output that need to be executable
 CONFIG_FILES_EXEC([cts/CTSlab.py],
@@ -2001,9 +2004,6 @@ AC_CONFIG_FILES(Makefile                                            \
 dnl Now process the entire list of files added by previous
 dnl  calls to AC_CONFIG_FILES()
 AC_OUTPUT()
-
-# Strip leading space from features list
-PCMK_FEATURES=`echo -e "$PCMK_FEATURES" | sed -e 's/^ //'`
 
 dnl *****************
 dnl Configure summary
