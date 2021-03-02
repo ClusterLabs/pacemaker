@@ -41,18 +41,25 @@ typedef struct subst_s {
 } subst_t;
 
 static subst_t substitutions[] = {
-    { "Active Resources",               "resources" },
-    { "Full List of Resources",         "resources" },
-    { "Inactive Resources",             "resources" },
-    { "Cluster Summary",                "summary" },
-    { "Failed Resource Actions",        "failures" },
-    { "Fencing History",                "fence_history" },
-    { "Migration Summary",              "node_history" },
-    { "Operations",                     "node_history" },
-    { "Negative Location Constraints",  "bans" },
-    { "Node Attributes",                "node_attributes" },
-    { "Resource Config",                "resource_config" },
-    { "Resource Operations",            "operations" },
+    { "Active Resources",                               "resources" },
+    { "Allocation Scores",                              "allocations" },
+    { "Allocation Scores and Utilization Information",  "allocations_utilizations" },
+    { "Cluster Summary",                                "summary" },
+    { "Current cluster status",                         "cluster_status" },
+    { "Executing Cluster Transition",                   "transition" },
+    { "Failed Resource Actions",                        "failures" },
+    { "Fencing History",                                "fence_history" },
+    { "Full List of Resources",                         "resources" },
+    { "Inactive Resources",                             "resources" },
+    { "Migration Summary",                              "node_history" },
+    { "Negative Location Constraints",                  "bans" },
+    { "Node Attributes",                                "node_attributes" },
+    { "Operations",                                     "node_history" },
+    { "Resource Config",                                "resource_config" },
+    { "Resource Operations",                            "operations" },
+    { "Revised Cluster Status",                         "revised_cluster_status" },
+    { "Transition Summary",                             "actions" },
+    { "Utilization Information",                        "utilizations" },
 
     { NULL, NULL }
 };
