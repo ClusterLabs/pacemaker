@@ -1047,12 +1047,13 @@ class BuildVars(object):
     CRM_SCHEMA_DIRECTORY = "@CRM_SCHEMA_DIRECTORY@"
 
 
-# These values must be kept in sync with include/crm/crm.h
+# These values must be kept in sync with crm_exit_t
 class CrmExit(object):
     OK                   =    0
     ERROR                =    1
     NOT_INSTALLED        =    5
     NOINPUT              =   66
+    CANTCREAT            =   73
 
 
 def is_executable(path):
@@ -1256,12 +1257,12 @@ class CtsScheduler(object):
         os.environ['CIB_shadow_dir'] = self.args.out_dir
         self.failed_file = None
 
-        self.outfile_out_dir = self.args.out_dir
+        self.outfile_out_dir = os.path.join(self.args.out_dir, "out")
         self.dot_out_dir = os.path.join(self.args.out_dir, "dot")
         self.scores_out_dir = os.path.join(self.args.out_dir, "scores")
         self.summary_out_dir = os.path.join(self.args.out_dir, "summary")
         self.stderr_out_dir = os.path.join(self.args.out_dir, "stderr")
-        self.valgrind_out_dir = self.args.out_dir
+        self.valgrind_out_dir = os.path.join(self.args.out_dir, "valgrind")
 
         # Single test mode (if requested)
         try:
@@ -1279,6 +1280,32 @@ class CtsScheduler(object):
         # Test counters
         self.num_failed = 0
         self.num_tests = 0
+
+        # Ensure that the main output directory exists
+        # We don't want to create it with os.makedirs below
+        if not os.path.isdir(self.args.out_dir):
+            self._error("Output directory missing; can't create output files")
+            sys.exit(CrmExit.CANTCREAT)
+
+        # Create output subdirectories if they don't exist
+        try:
+            os.makedirs(self.outfile_out_dir, 0o755, True)
+            os.makedirs(self.dot_out_dir, 0o755, True)
+            os.makedirs(self.scores_out_dir, 0o755, True)
+            os.makedirs(self.summary_out_dir, 0o755, True)
+            os.makedirs(self.stderr_out_dir, 0o755, True)
+            if self.valgrind_args:
+                os.makedirs(self.valgrind_out_dir, 0o755, True)
+        except OSError as ex:
+            self._error("Unable to create output subdirectory: %s" % ex)
+            remove_files([
+                self.outfile_out_dir,
+                self.dot_out_dir,
+                self.scores_out_dir,
+                self.summary_out_dir,
+                self.stderr_out_dir,
+            ])
+            sys.exit(CrmExit.CANTCREAT)
 
     def _compare_files(self, filename1, filename2):
         """ Add any file differences to failed results """
