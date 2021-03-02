@@ -147,6 +147,7 @@ scratch
 /tools/iso8601
 /tools/stonith_admin
 xml/crm.dtd
+xml/crm_mon.rng
 xml/pacemaker*.rng
 xml/versions.rng
 xml/api/api-result*.rng
