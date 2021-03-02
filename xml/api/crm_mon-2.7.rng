@@ -198,7 +198,7 @@
                     <attribute name="name"> <text /> </attribute>
                     <attribute name="value"> <text /> </attribute>
                     <optional>
-                        <attribute name="expected"> <data type="nonNegativeInteger" /> </attribute>
+                        <attribute name="expected"> <data type="integer" /> </attribute>
                     </optional>
                 </element>
             </zeroOrMore>
@@ -269,7 +269,7 @@
             <attribute name="exitstatus"> <text /> </attribute>
             <attribute name="exitreason"> <text /> </attribute>
             <attribute name="exitcode"> <data type="nonNegativeInteger" /> </attribute>
-            <attribute name="call"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="call"> <data type="integer" /> </attribute>
             <attribute name="status"> <text /> </attribute>
             <optional>
                 <group>

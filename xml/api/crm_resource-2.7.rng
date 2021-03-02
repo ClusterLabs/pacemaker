@@ -217,7 +217,7 @@
             </optional>
             <attribute name="op"> <text/> </attribute>
             <attribute name="node"> <text/> </attribute>
-            <attribute name="call"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="call"> <data type="integer" /> </attribute>
             <attribute name="rc"> <data type="nonNegativeInteger" /> </attribute>
             <optional>
                 <attribute name="last-rc-change"> <text/> </attribute>
