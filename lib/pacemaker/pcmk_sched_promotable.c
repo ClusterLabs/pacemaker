@@ -17,6 +17,8 @@
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
+extern bool pcmk__is_daemon;
+
 static void
 child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
                             pe_resource_t * rsc, pe_resource_t * child, pe_resource_t * last,
@@ -753,11 +755,10 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         score2char_stack(child_rsc->sort_index, score, len);
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-        if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-            if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-                printf("%s promotion score on %s: %s\n",
-                       child_rsc->id,
-                       (chosen? chosen->details->uname : "none"), score);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_scores) && !pcmk__is_daemon) {
+            if (data_set->priv != NULL) {
+                pcmk__output_t *out = data_set->priv;
+                out->message(out, "promotion-score", child_rsc, chosen, score);
             }
 
         } else {

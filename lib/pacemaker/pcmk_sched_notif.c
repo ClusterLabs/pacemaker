@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
+
+extern bool pcmk__is_daemon;
 
 typedef struct notify_entry_s {
     pe_resource_t *rsc;
@@ -582,7 +584,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_inactive_resource", rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
-    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
+    if (!pcmk__is_daemon) {
         /* If printing to stdout, sort the node list, for consistent
          * regression test output (while avoiding the performance hit
          * for the live cluster).

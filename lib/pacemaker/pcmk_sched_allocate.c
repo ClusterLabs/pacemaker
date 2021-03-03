@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,6 +23,8 @@
 #include <pacemaker-internal.h>
 
 CRM_TRACE_INIT_DATA(pacemaker);
+
+extern bool pcmk__is_daemon;
 
 void set_alloc_actions(pe_working_set_t * data_set);
 extern void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
@@ -280,11 +282,12 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
        && digest_secure
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
-        if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-            printf("Only 'private' parameters to " PCMK__OP_FMT
-                   " on %s changed: %s\n",
-                   rsc->id, task, interval_ms, active_node->details->uname,
-                   crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        if (!pcmk__is_daemon && data_set->priv != NULL) {
+            pcmk__output_t *out = data_set->priv;
+            out->info(out, "Only 'private' parameters to "
+                      PCMK__OP_FMT " on %s changed: %s", rsc->id, task,
+                      interval_ms, active_node->details->uname,
+                      crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
 
     } else if (digest_data->rc == RSC_DIGEST_RESTART) {

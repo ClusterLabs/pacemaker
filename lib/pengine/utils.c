@@ -21,6 +21,8 @@
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
+extern bool pcmk__is_daemon;
+
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -2079,8 +2081,10 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
                     crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
-                    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-                        fprintf(stdout, "  notice: Unfencing %s (remote): because the definition of %s changed\n", node->details->uname, match->id);
+                    if (!pcmk__is_daemon && data_set->priv != NULL) {
+                        pcmk__output_t *out = data_set->priv;
+                        out->info(out, "notice: Unfencing %s (remote): because the definition of %s changed",
+                                  node->details->uname, match->id);
                     }
                 }
 

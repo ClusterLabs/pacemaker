@@ -944,7 +944,6 @@ main(int argc, char **argv)
     if (options.show_utilization) {
         pe__set_working_set_flags(data_set, pe_flag_show_utilization);
     }
-    pe__set_working_set_flags(data_set, pe_flag_stdout);
     cluster_status(data_set);
 
     if (!out->is_quiet(out)) {
@@ -1002,7 +1001,6 @@ main(int argc, char **argv)
         if (options.show_utilization) {
             pe__set_working_set_flags(data_set, pe_flag_show_utilization);
         }
-        pe__set_working_set_flags(data_set, pe_flag_stdout);
         cluster_status(data_set);
     }
 
@@ -1092,7 +1090,6 @@ main(int argc, char **argv)
             if (options.show_utilization) {
                 pe__set_working_set_flags(data_set, pe_flag_show_utilization);
             }
-            pe__set_working_set_flags(data_set, pe_flag_stdout);
 
             cluster_status(data_set);
             print_cluster_status(data_set, 0);

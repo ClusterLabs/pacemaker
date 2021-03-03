@@ -25,6 +25,8 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
+extern bool pcmk__is_daemon;
+
 static void Recurring(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
                       pe_working_set_t *data_set);
 static void RecurringOp(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
@@ -1473,9 +1475,10 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
         allowed_nodes = g_hash_table_get_values(rsc->allowed_nodes);
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
+    if (!pcmk__is_daemon) {
         allowed_nodes = g_list_sort(allowed_nodes, sort_node_uname);
     }
+
     return allowed_nodes;
 }
 
