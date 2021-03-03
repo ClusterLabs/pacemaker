@@ -33,7 +33,7 @@
 #  include <gnutls/gnutls.h>
 gnutls_anon_client_credentials_t anon_cred_c;
 
-#  define DEFAULT_CLIENT_HANDSHAKE_TIMEOUT 5000 /* 5 seconds */
+#define TLS_HANDSHAKE_TIMEOUT_MS 5000
 
 const int kx_prio[] = {
     GNUTLS_KX_ANON_DH,
@@ -189,16 +189,6 @@ cib_tls_close(cib_t * cib)
     return 0;
 }
 
-static inline int
-cib__tls_client_handshake(pcmk__remote_t *remote)
-{
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    return pcmk__tls_client_handshake(remote, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT);
-#else
-    return 0;
-#endif
-}
-
 static int
 cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 {
@@ -245,7 +235,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             return -1;
         }
 
-        if (cib__tls_client_handshake(connection) != pcmk_rc_ok) {
+        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT_MS)
+                != pcmk_rc_ok) {
             crm_err("Session creation for %s:%d failed", private->server, private->port);
 
             gnutls_deinit(*connection->tls_session);
