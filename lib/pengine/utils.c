@@ -1370,42 +1370,6 @@ find_rsc_op_entry(pe_resource_t * rsc, const char *key)
     return find_rsc_op_entry_helper(rsc, key, FALSE);
 }
 
-void
-print_node(const char *pre_text, pe_node_t * node, gboolean details)
-{
-    if (node == NULL) {
-        crm_trace("%s%s: <NULL>", pre_text == NULL ? "" : pre_text, pre_text == NULL ? "" : ": ");
-        return;
-    }
-
-    CRM_ASSERT(node->details);
-    crm_trace("%s%s%sNode %s: (weight=%d, fixed=%s)",
-              pre_text == NULL ? "" : pre_text,
-              pre_text == NULL ? "" : ": ",
-              node->details->online ? "" : "Unavailable/Unclean ",
-              node->details->uname, node->weight, node->fixed ? "True" : "False");
-
-    if (details) {
-        int log_level = LOG_TRACE;
-
-        char *pe_mutable = strdup("\t\t");
-        GListPtr gIter = node->details->running_rsc;
-
-        crm_trace("\t\t===Node Attributes");
-        g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
-        free(pe_mutable);
-
-        crm_trace("\t\t=== Resources");
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-            rsc->fns->print(rsc, "\t\t", pe_print_log|pe_print_pending,
-                            &log_level);
-        }
-    }
-}
-
 /*
  * Used by the HashTable for-loop
  */
