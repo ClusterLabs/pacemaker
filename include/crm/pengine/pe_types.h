@@ -46,6 +46,7 @@ typedef struct resource_object_functions_s {
     /* parameter result must be free'd */
     char *(*parameter) (pe_resource_t*, pe_node_t*, gboolean, const char*,
                         pe_working_set_t*);
+    //! \deprecated will be removed in a future release
     void (*print) (pe_resource_t*, const char*, long, void*);
     gboolean (*active) (pe_resource_t*, gboolean);
     enum rsc_role_e (*state) (const pe_resource_t*, gboolean);
