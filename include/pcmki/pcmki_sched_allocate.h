@@ -143,10 +143,9 @@ extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
 extern gboolean unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set);
 
-void LogNodeActions(pe_working_set_t * data_set, gboolean terminal);
-void LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal);
-void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
-                              gboolean terminal);
+void LogNodeActions(pe_working_set_t * data_set);
+void LogActions(pe_resource_t * rsc, pe_working_set_t * data_set);
+void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
 
 extern void rsc_stonith_ordering(pe_resource_t * rsc, pe_action_t * stonith_op,
                                  pe_working_set_t * data_set);

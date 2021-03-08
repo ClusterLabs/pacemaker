@@ -873,6 +873,7 @@ main(int argc, char **argv)
 
     crm_simulate_register_messages(out);
     pe__register_messages(out);
+    pcmk__register_lib_messages(out);
 
     out->quiet = args->quiet;
 
@@ -1016,16 +1017,27 @@ main(int argc, char **argv)
 
     if (options.process || options.simulate) {
         crm_time_t *local_date = NULL;
+        int began_list = pcmk_rc_ok;
 
         if (pcmk_all_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)) {
-            printf("Allocation scores and utilization information:\n");
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Allocation Scores and Utilization Information");
+            printed = pcmk_rc_ok;
         } else if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-            fprintf(stdout, "Allocation scores:\n");
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Allocation Scores");
+            printed = pcmk_rc_ok;
         } else if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-            printf("Utilization information:\n");
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Utilization Information");
+            printed = pcmk_rc_ok;
+        } else {
+            began_list = pcmk_rc_error;
         }
 
         pcmk__schedule_actions(data_set, input, local_date);
+        PCMK__OUTPUT_LIST_FOOTER(out, began_list);
+
         input = NULL;           /* Don't try and free it twice */
 
         if (options.graph_file != NULL) {
@@ -1044,11 +1056,11 @@ main(int argc, char **argv)
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Transition Summary");
 
-            LogNodeActions(data_set, TRUE);
+            LogNodeActions(data_set);
             for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
                 pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-                LogActions(rsc, data_set, TRUE);
+                LogActions(rsc, data_set);
             }
 
             out->end_list(out);

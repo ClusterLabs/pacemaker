@@ -2802,6 +2802,8 @@ order_probes(pe_working_set_t * data_set)
 gboolean
 stage7(pe_working_set_t * data_set)
 {
+    pcmk__output_t *prev_out = data_set->priv;
+    pcmk__output_t *out = NULL;
     GList *gIter = NULL;
 
     crm_trace("Applying ordering constraints");
@@ -2868,12 +2870,31 @@ stage7(pe_working_set_t * data_set)
         }
     }
 
-    LogNodeActions(data_set, FALSE);
+    /* stage7 only ever outputs to the log, so ignore whatever output object was
+     * previously set and just log instead.
+     */
+    out = pcmk__new_logger();
+    if (out == NULL) {
+        return FALSE;
+    }
+
+    pcmk__output_set_log_level(out, LOG_NOTICE);
+    data_set->priv = out;
+
+    out->begin_list(out, NULL, NULL, "Actions");
+    LogNodeActions(data_set);
+
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-        LogActions(rsc, data_set, FALSE);
+        LogActions(rsc, data_set);
     }
+
+    out->end_list(out);
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
+
+    data_set->priv = prev_out;
     return TRUE;
 }
 
@@ -3019,8 +3040,9 @@ stage8(pe_working_set_t * data_set)
 }
 
 void
-LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
+LogNodeActions(pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     GList *gIter = NULL;
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
@@ -3048,17 +3070,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
             task = crm_strdup_printf("Fence (%s)", op);
         }
 
-        if(task == NULL) {
-            /* Nothing to report */
-        } else if(terminal && action->reason) {
-            printf(" * %s %s '%s'\n", task, node_name, action->reason);
-        } else if(terminal) {
-            printf(" * %s %s\n", task, node_name);
-        } else if(action->reason) {
-            crm_notice(" * %s %s '%s'\n", task, node_name, action->reason);
-        } else {
-            crm_notice(" * %s %s\n", task, node_name);
-        }
+        out->message(out, "node-action", task, node_name, action->reason);
 
         free(node_name);
         free(task);

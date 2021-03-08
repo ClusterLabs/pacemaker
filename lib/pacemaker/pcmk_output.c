@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/results.h>
-#include <crm/common/output_internal.h>
+#include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
@@ -100,6 +100,248 @@ do_locations_list_xml(pcmk__output_t *out, pe_resource_t *rsc, bool add_header)
     }
 
     return rc;
+}
+
+PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pe_resource_t *",
+                  "pe_node_t *", "pe_node_t *", "pe_action_t *",
+                  "pe_action_t *")
+static int
+rsc_action_item(pcmk__output_t *out, va_list args)
+{
+    const char *change = va_arg(args, const char *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *origin = va_arg(args, pe_node_t *);
+    pe_node_t *destination = va_arg(args, pe_node_t *);
+    pe_action_t *action = va_arg(args, pe_action_t *);
+    pe_action_t *source = va_arg(args, pe_action_t *);
+
+    int len = 0;
+    char *reason = NULL;
+    char *details = NULL;
+    bool same_host = FALSE;
+    bool same_role = FALSE;
+    bool need_role = FALSE;
+
+    static int rsc_width = 5;
+    static int detail_width = 5;
+
+    CRM_ASSERT(action);
+    CRM_ASSERT(destination != NULL || origin != NULL);
+
+    if(source == NULL) {
+        source = action;
+    }
+
+    len = strlen(rsc->id);
+    if(len > rsc_width) {
+        rsc_width = len + 2;
+    }
+
+    if(rsc->role > RSC_ROLE_STARTED || rsc->next_role > RSC_ROLE_SLAVE) {
+        need_role = TRUE;
+    }
+
+    if(origin != NULL && destination != NULL && origin->details == destination->details) {
+        same_host = TRUE;
+    }
+
+    if(rsc->role == rsc->next_role) {
+        same_role = TRUE;
+    }
+
+    if (need_role && (origin == NULL)) {
+        /* Starting and promoting a promotable clone instance */
+        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), destination->details->uname);
+
+    } else if (origin == NULL) {
+        /* Starting a resource */
+        details = crm_strdup_printf("%s", destination->details->uname);
+
+    } else if (need_role && (destination == NULL)) {
+        /* Stopping a promotable clone instance */
+        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
+
+    } else if (destination == NULL) {
+        /* Stopping a resource */
+        details = crm_strdup_printf("%s", origin->details->uname);
+
+    } else if (need_role && same_role && same_host) {
+        /* Recovering, restarting or re-promoting a promotable clone instance */
+        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
+
+    } else if (same_role && same_host) {
+        /* Recovering or Restarting a normal resource */
+        details = crm_strdup_printf("%s", origin->details->uname);
+
+    } else if (need_role && same_role) {
+        /* Moving a promotable clone instance */
+        details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
+
+    } else if (same_role) {
+        /* Moving a normal resource */
+        details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
+
+    } else if (same_host) {
+        /* Promoting or demoting a promotable clone instance */
+        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
+
+    } else {
+        /* Moving and promoting/demoting */
+        details = crm_strdup_printf("%s %s -> %s %s", role2text(rsc->role), origin->details->uname, role2text(rsc->next_role), destination->details->uname);
+    }
+
+    len = strlen(details);
+    if(len > detail_width) {
+        detail_width = len;
+    }
+
+    if(source->reason && !pcmk_is_set(action->flags, pe_action_runnable)) {
+        reason = crm_strdup_printf("due to %s (blocked)", source->reason);
+
+    } else if(source->reason) {
+        reason = crm_strdup_printf("due to %s", source->reason);
+
+    } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+        reason = strdup("blocked");
+
+    }
+
+    out->list_item(out, NULL, "%-8s   %-*s   ( %*s )%s%s", change, rsc_width,
+                   rsc->id, detail_width, details, reason ? "  " : "", reason ? reason : "");
+
+    free(details);
+    free(reason);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("rsc-action-item", "const char *", "pe_resource_t *",
+                  "pe_node_t *", "pe_node_t *", "pe_action_t *",
+                  "pe_action_t *")
+static int
+rsc_action_item_xml(pcmk__output_t *out, va_list args)
+{
+    const char *change = va_arg(args, const char *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *origin = va_arg(args, pe_node_t *);
+    pe_node_t *destination = va_arg(args, pe_node_t *);
+    pe_action_t *action = va_arg(args, pe_action_t *);
+    pe_action_t *source = va_arg(args, pe_action_t *);
+
+    char *change_str = NULL;
+
+    bool same_host = FALSE;
+    bool same_role = FALSE;
+    bool need_role = FALSE;
+    xmlNode *xml = NULL;
+
+    CRM_ASSERT(action);
+    CRM_ASSERT(destination != NULL || origin != NULL);
+
+    if (source == NULL) {
+        source = action;
+    }
+
+    if(rsc->role > RSC_ROLE_STARTED || rsc->next_role > RSC_ROLE_SLAVE) {
+        need_role = TRUE;
+    }
+
+    if(origin != NULL && destination != NULL && origin->details == destination->details) {
+        same_host = TRUE;
+    }
+
+    if(rsc->role == rsc->next_role) {
+        same_role = TRUE;
+    }
+
+    change_str = g_ascii_strdown(change, -1);
+    xml = pcmk__output_create_xml_node(out, "rsc_action",
+                                       "action", change_str,
+                                       "resource", rsc->id,
+                                       NULL);
+    g_free(change_str);
+
+    if (need_role && (origin == NULL)) {
+        /* Starting and promoting a promotable clone instance */
+        pcmk__xe_set_props(xml,
+                           "role", role2text(rsc->role),
+                           "next-role", role2text(rsc->next_role),
+                           "dest", destination->details->uname,
+                           NULL);
+
+    } else if (origin == NULL) {
+        /* Starting a resource */
+        crm_xml_add(xml, "node", destination->details->uname);
+
+    } else if (need_role && (destination == NULL)) {
+        /* Stopping a promotable clone instance */
+        pcmk__xe_set_props(xml,
+                           "role", role2text(rsc->role),
+                           "node", origin->details->uname,
+                           NULL);
+
+    } else if (destination == NULL) {
+        /* Stopping a resource */
+        crm_xml_add(xml, "node", origin->details->uname);
+
+    } else if (need_role && same_role && same_host) {
+        /* Recovering, restarting or re-promoting a promotable clone instance */
+        pcmk__xe_set_props(xml,
+                           "role", role2text(rsc->role),
+                           "source", origin->details->uname,
+                           NULL);
+
+    } else if (same_role && same_host) {
+        /* Recovering or Restarting a normal resource */
+        crm_xml_add(xml, "source", origin->details->uname);
+
+    } else if (need_role && same_role) {
+        /* Moving a promotable clone instance */
+        pcmk__xe_set_props(xml,
+                           "source", origin->details->uname,
+                           "dest", destination->details->uname,
+                           "role", role2text(rsc->role),
+                           NULL);
+
+    } else if (same_role) {
+        /* Moving a normal resource */
+        pcmk__xe_set_props(xml,
+                           "source", origin->details->uname,
+                           "dest", destination->details->uname,
+                           NULL);
+
+    } else if (same_host) {
+        /* Promoting or demoting a promotable clone instance */
+        pcmk__xe_set_props(xml,
+                           "role", role2text(rsc->role),
+                           "next-role", role2text(rsc->next_role),
+                           "source", origin->details->uname,
+                           NULL);
+
+    } else {
+        /* Moving and promoting/demoting */
+        pcmk__xe_set_props(xml,
+                           "role", role2text(rsc->role),
+                           "source", origin->details->uname,
+                           "next-role", role2text(rsc->next_role),
+                           "dest", destination->details->uname,
+                           NULL);
+    }
+
+    if (source->reason && !pcmk_is_set(action->flags, pe_action_runnable)) {
+        pcmk__xe_set_props(xml,
+                           "reason", source->reason,
+                           "blocked", "true",
+                           NULL);
+
+    } else if(source->reason) {
+        crm_xml_add(xml, "reason", source->reason);
+
+    } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
+        crm_xml_add(xml, "blocked", "true");
+
+    }
+
+    return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("rsc-is-colocated-with-list", "pe_resource_t *", "gboolean")
@@ -579,6 +821,245 @@ digests_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+#define STOP_SANITY_ASSERT(lineno) do {                                 \
+        if(current && current->details->unclean) {                      \
+            /* It will be a pseudo op */                                \
+        } else if(stop == NULL) {                                       \
+            crm_err("%s:%d: No stop action exists for %s",              \
+                    __func__, lineno, rsc->id);                         \
+            CRM_ASSERT(stop != NULL);                                   \
+        } else if (pcmk_is_set(stop->flags, pe_action_optional)) {      \
+            crm_err("%s:%d: Action %s is still optional",               \
+                    __func__, lineno, stop->uuid);                      \
+            CRM_ASSERT(!pcmk_is_set(stop->flags, pe_action_optional));  \
+        }                                                               \
+    } while(0)
+
+PCMK__OUTPUT_ARGS("rsc-action", "pe_resource_t *", "pe_node_t *", "pe_node_t *",
+                  "gboolean")
+static int
+rsc_action_default(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *current = va_arg(args, pe_node_t *);
+    pe_node_t *next = va_arg(args, pe_node_t *);
+    gboolean moving = va_arg(args, gboolean);
+
+    GList *possible_matches = NULL;
+    char *key = NULL;
+    int rc = pcmk_rc_no_output;
+
+    pe_node_t *start_node = NULL;
+    pe_action_t *start = NULL;
+    pe_action_t *stop = NULL;
+    pe_action_t *promote = NULL;
+    pe_action_t *demote = NULL;
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
+        || (current == NULL && next == NULL)) {
+        pe_rsc_info(rsc, "Leave   %s\t(%s%s)",
+                    rsc->id, role2text(rsc->role),
+                    !pcmk_is_set(rsc->flags, pe_rsc_managed)? " unmanaged" : "");
+        return rc;
+    }
+
+    if (current != NULL && next != NULL && !pcmk__str_eq(current->details->id, next->details->id, pcmk__str_casei)) {
+        moving = TRUE;
+    }
+
+    possible_matches = pe__resource_actions(rsc, next, RSC_START, FALSE);
+    if (possible_matches) {
+        start = possible_matches->data;
+        g_list_free(possible_matches);
+    }
+
+    if ((start == NULL) || !pcmk_is_set(start->flags, pe_action_runnable)) {
+        start_node = NULL;
+    } else {
+        start_node = current;
+    }
+    possible_matches = pe__resource_actions(rsc, start_node, RSC_STOP, FALSE);
+    if (possible_matches) {
+        stop = possible_matches->data;
+        g_list_free(possible_matches);
+    }
+
+    possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, FALSE);
+    if (possible_matches) {
+        promote = possible_matches->data;
+        g_list_free(possible_matches);
+    }
+
+    possible_matches = pe__resource_actions(rsc, next, RSC_DEMOTE, FALSE);
+    if (possible_matches) {
+        demote = possible_matches->data;
+        g_list_free(possible_matches);
+    }
+
+    if (rsc->role == rsc->next_role) {
+        pe_action_t *migrate_op = NULL;
+
+        possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, FALSE);
+        if (possible_matches) {
+            migrate_op = possible_matches->data;
+        }
+
+        CRM_CHECK(next != NULL,);
+        if (next == NULL) {
+        } else if ((migrate_op != NULL) && (current != NULL)
+                   && pcmk_is_set(migrate_op->flags, pe_action_runnable)) {
+            rc = out->message(out, "rsc-action-item", "Migrate", rsc, current,
+                              next, start, NULL);
+
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
+            rc = out->message(out, "rsc-action-item", "Reload", rsc, current,
+                              next, start, NULL);
+
+        } else if (start == NULL || pcmk_is_set(start->flags, pe_action_optional)) {
+            if ((demote != NULL) && (promote != NULL)
+                && !pcmk_is_set(demote->flags, pe_action_optional)
+                && !pcmk_is_set(promote->flags, pe_action_optional)) {
+                rc = out->message(out, "rsc-action-item", "Re-promote", rsc,
+                                  current, next, promote, demote);
+            } else {
+                pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
+                            role2text(rsc->role), next->details->uname);
+            }
+
+        } else if (!pcmk_is_set(start->flags, pe_action_runnable)) {
+            rc = out->message(out, "rsc-action-item", "Stop", rsc, current,
+                              NULL, stop, (stop && stop->reason)? stop : start);
+            STOP_SANITY_ASSERT(__LINE__);
+
+        } else if (moving && current) {
+            rc = out->message(out, "rsc-action-item", pcmk_is_set(rsc->flags, pe_rsc_failed)? "Recover" : "Move",
+                              rsc, current, next, stop, NULL);
+
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
+            rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
+                              NULL, stop, NULL);
+            STOP_SANITY_ASSERT(__LINE__);
+
+        } else {
+            rc = out->message(out, "rsc-action-item", "Restart", rsc, current,
+                              next, start, NULL);
+            /* STOP_SANITY_ASSERT(__LINE__); False positive for migrate-fail-7 */
+        }
+
+        g_list_free(possible_matches);
+        return rc;
+    }
+
+    if(stop
+       && (rsc->next_role == RSC_ROLE_STOPPED
+           || (start && !pcmk_is_set(start->flags, pe_action_runnable)))) {
+
+        GList *gIter = NULL;
+
+        key = stop_key(rsc);
+        for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
+            pe_node_t *node = (pe_node_t *) gIter->data;
+            pe_action_t *stop_op = NULL;
+
+            possible_matches = find_actions(rsc->actions, key, node);
+            if (possible_matches) {
+                stop_op = possible_matches->data;
+                g_list_free(possible_matches);
+            }
+
+            if (stop_op && (stop_op->flags & pe_action_runnable)) {
+                STOP_SANITY_ASSERT(__LINE__);
+            }
+
+            if (out->message(out, "rsc-action-item", "Stop", rsc, node, NULL,
+                             stop_op, (stop_op && stop_op->reason)? stop_op : start) == pcmk_rc_ok) {
+                rc = pcmk_rc_ok;
+            }
+        }
+
+        free(key);
+
+    } else if ((stop != NULL)
+               && pcmk_all_flags_set(rsc->flags, pe_rsc_failed|pe_rsc_stop)) {
+        /* 'stop' may be NULL if the failure was ignored */
+        rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
+                          next, stop, start);
+        STOP_SANITY_ASSERT(__LINE__);
+
+    } else if (moving) {
+        rc = out->message(out, "rsc-action-item", "Move", rsc, current, next,
+                          stop, NULL);
+        STOP_SANITY_ASSERT(__LINE__);
+
+    } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
+        rc = out->message(out, "rsc-action-item", "Reload", rsc, current, next,
+                          start, NULL);
+
+    } else if (stop != NULL && !pcmk_is_set(stop->flags, pe_action_optional)) {
+        rc = out->message(out, "rsc-action-item", "Restart", rsc, current,
+                          next, start, NULL);
+        STOP_SANITY_ASSERT(__LINE__);
+
+    } else if (rsc->role == RSC_ROLE_MASTER) {
+        CRM_LOG_ASSERT(current != NULL);
+        rc = out->message(out, "rsc-action-item", "Demote", rsc, current,
+                          next, demote, NULL);
+
+    } else if(rsc->next_role == RSC_ROLE_MASTER) {
+        CRM_LOG_ASSERT(next);
+        rc = out->message(out, "rsc-action-item", "Promote", rsc, current,
+                          next, promote, NULL);
+
+    } else if (rsc->role == RSC_ROLE_STOPPED && rsc->next_role > RSC_ROLE_STOPPED) {
+        rc = out->message(out, "rsc-action-item", "Start", rsc, current, next,
+                          start, NULL);
+    }
+
+    return rc;
+}
+
+PCMK__OUTPUT_ARGS("node-action", "char *", "char *", "char *")
+static int
+node_action(pcmk__output_t *out, va_list args)
+{
+    char *task = va_arg(args, char *);
+    char *node_name = va_arg(args, char *);
+    char *reason = va_arg(args, char *);
+
+    if (task == NULL) {
+        return pcmk_rc_no_output;
+    } else if (reason) {
+        out->list_item(out, NULL, "%s %s '%s'", task, node_name, reason);
+    } else {
+        crm_notice(" * %s %s\n", task, node_name);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-action", "char *", "char *", "char *")
+static int
+node_action_xml(pcmk__output_t *out, va_list args)
+{
+    char *task = va_arg(args, char *);
+    char *node_name = va_arg(args, char *);
+    char *reason = va_arg(args, char *);
+
+    if (task == NULL) {
+        return pcmk_rc_no_output;
+    } else if (reason) {
+        pcmk__output_create_xml_node(out, "node_action",
+                                     "task", task,
+                                     "node", node_name,
+                                     "reason", reason,
+                                     NULL);
+    } else {
+        crm_notice(" * %s %s\n", task, node_name);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "crmadmin-node", "default", crmadmin_node_text },
     { "crmadmin-node", "xml", crmadmin_node_xml },
@@ -590,8 +1071,13 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "health", "xml", health_xml },
     { "locations-list", "default", locations_list },
     { "locations-list", "xml", locations_list_xml },
+    { "node-action", "default", node_action },
+    { "node-action", "xml", node_action_xml },
     { "pacemakerd-health", "default", pacemakerd_health_text },
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
+    { "rsc-action", "default", rsc_action_default },
+    { "rsc-action-item", "default", rsc_action_item },
+    { "rsc-action-item", "xml", rsc_action_item_xml },
     { "rsc-is-colocated-with-list", "default", rsc_is_colocated_with_list },
     { "rsc-is-colocated-with-list", "xml", rsc_is_colocated_with_list_xml },
     { "rscs-colocated-with-list", "default", rscs_colocated_with_list },
