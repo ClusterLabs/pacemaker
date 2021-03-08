@@ -229,6 +229,7 @@ static GOptionEntry addl_entries[] = {
 
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_HTML,
+    PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }

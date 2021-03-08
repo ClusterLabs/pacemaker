@@ -135,6 +135,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 }
 
 static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
