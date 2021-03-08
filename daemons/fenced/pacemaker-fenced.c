@@ -1503,6 +1503,7 @@ main(int argc, char **argv)
     CRM_ASSERT(fenced_data_set != NULL);
     pe__set_working_set_flags(fenced_data_set,
                               pe_flag_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(fenced_data_set, pe_flag_show_utilization);
 
     if (stand_alone == FALSE) {
 

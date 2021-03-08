@@ -13,6 +13,24 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
+static void
+add_dump_node(gpointer key, gpointer value, gpointer user_data)
+{
+    xmlNodePtr node = user_data;
+    pcmk_create_xml_text_node(node, (const char *) key, (const char *) value);
+}
+
+static void
+append_dump_text(gpointer key, gpointer value, gpointer user_data)
+{
+    char **dump_text = user_data;
+    char *new_text = crm_strdup_printf("%s %s=%s",
+                                       *dump_text, (char *)key, (char *)value);
+
+    free(*dump_text);
+    *dump_text = new_text;
+}
+
 static char *
 failed_action_string(xmlNodePtr xml_op) {
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
@@ -1390,6 +1408,39 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-capacity", "pe_node_t *", "const char *")
+static int
+node_capacity(pcmk__output_t *out, va_list args)
+{
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    const char *comment = va_arg(args, const char *);
+
+    char *dump_text = crm_strdup_printf("%s: %s capacity:",
+                                        comment, node->details->uname);
+
+    g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
+    out->list_item(out, NULL, "%s", dump_text);
+    free(dump_text);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-capacity", "pe_node_t *", "const char *")
+static int
+node_capacity_xml(pcmk__output_t *out, va_list args)
+{
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    const char *comment = va_arg(args, const char *);
+
+    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "capacity",
+                                                       "node", node->details->uname,
+                                                       "comment", comment,
+                                                       NULL);
+    g_hash_table_foreach(node->details->utilization, add_dump_node, &xml_node);
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean", "gboolean", "gboolean")
 static int
 node_list_html(pcmk__output_t *out, va_list args) {
@@ -1865,6 +1916,42 @@ resource_list(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("resource-util", "pe_resource_t *", "pe_node_t *", "const char *")
+static int
+resource_util(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    const char *fn = va_arg(args, const char *);
+
+    char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
+                                        fn, rsc->id, node->details->uname);
+
+    g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
+    out->list_item(out, NULL, "%s", dump_text);
+    free(dump_text);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-util", "pe_resource_t *", "pe_node_t *", "const char *")
+static int
+resource_util_xml(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    const char *fn = va_arg(args, const char *);
+
+    xmlNodePtr xml_node = pcmk__output_create_xml_node(out, "utilization",
+                                                       "resource", rsc->id,
+                                                       "node", node->details->uname,
+                                                       "function", fn,
+                                                       NULL);
+    g_hash_table_foreach(rsc->utilization, add_dump_node, &xml_node);
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("ticket", "pe_ticket_t *")
 static int
 ticket_html(pcmk__output_t *out, va_list args) {
@@ -1979,6 +2066,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node", "xml", pe__node_xml },
     { "node-and-op", "default", node_and_op },
     { "node-and-op", "xml", node_and_op_xml },
+    { "node-capacity", "default", node_capacity },
+    { "node-capacity", "xml", node_capacity_xml },
     { "node-list", "html", node_list_html },
     { "node-list", "log", pe__node_list_text },
     { "node-list", "text", pe__node_list_text },
@@ -1997,6 +2086,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "resource-history", "default", pe__resource_history_text },
     { "resource-history", "xml", resource_history_xml },
     { "resource-list", "default", resource_list },
+    { "resource-util", "default", resource_util },
+    { "resource-util", "xml", resource_util_xml },
     { "ticket", "html", ticket_html },
     { "ticket", "log", pe__ticket_text },
     { "ticket", "text", pe__ticket_text },

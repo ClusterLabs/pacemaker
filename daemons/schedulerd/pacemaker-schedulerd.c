@@ -107,6 +107,8 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             CRM_ASSERT(sched_data_set != NULL);
             pe__set_working_set_flags(sched_data_set,
                                       pe_flag_no_counts|pe_flag_no_compat);
+            pe__set_working_set_flags(sched_data_set,
+                                      pe_flag_show_utilization);
             sched_data_set->priv = out;
         }
 

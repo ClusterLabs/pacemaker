@@ -333,53 +333,6 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
     }
 }
 
-static void
-append_dump_text(gpointer key, gpointer value, gpointer user_data)
-{
-    char **dump_text = user_data;
-    char *new_text = crm_strdup_printf("%s %s=%s",
-                                       *dump_text, (char *)key, (char *)value);
-
-    free(*dump_text);
-    *dump_text = new_text;
-}
-
-void
-dump_node_capacity(int level, const char *comment, pe_node_t * node)
-{
-    char *dump_text = crm_strdup_printf("%s: %s capacity:",
-                                        comment, node->details->uname);
-
-    g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
-
-    if (level == LOG_STDOUT) {
-        fprintf(stdout, "%s\n", dump_text);
-    } else {
-        crm_trace("%s", dump_text);
-    }
-
-    free(dump_text);
-}
-
-void
-dump_rsc_utilization(int level, const char *comment, pe_resource_t * rsc, pe_node_t * node)
-{
-    char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
-                                        comment, rsc->id, node->details->uname);
-
-    g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
-    switch (level) {
-        case LOG_STDOUT:
-            fprintf(stdout, "%s\n", dump_text);
-            break;
-        case LOG_NEVER:
-            break;
-        default:
-            crm_trace("%s", dump_text);
-    }
-    free(dump_text);
-}
-
 gint
 sort_rsc_index(gconstpointer a, gconstpointer b)
 {

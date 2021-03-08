@@ -1375,8 +1375,8 @@ cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
 gboolean
 stage5(pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     GList *gIter = NULL;
-    int log_prio = pcmk_is_set(data_set->flags, pe_flag_show_utilization)? LOG_STDOUT : LOG_TRACE;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GList *nodes = g_list_copy(data_set->nodes);
@@ -1392,7 +1392,9 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(log_prio, "Original", node);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            out->message(out, "node-capacity", node, "Original");
+        }
     }
 
     crm_trace("Allocating services");
@@ -1404,7 +1406,9 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(log_prio, "Remaining", node);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            out->message(out, "node-capacity", node, "Remaining");
+        }
     }
 
     // Process deferred action checks
