@@ -114,7 +114,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
+    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);

@@ -127,6 +127,9 @@ enum pe_find {
  */
 #  define pe_flag_no_compat             0x01000000ULL
 
+#  define pe_flag_show_scores           0x02000000ULL
+#  define pe_flag_show_utilization      0x04000000ULL
+
 struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;
@@ -182,6 +185,8 @@ struct pe_working_set_s {
     int ninstances;     // Total number of resource instances
     guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
     int priority_fencing_delay; // Priority fencing delay
+
+    void *priv;
 };
 
 enum pe_check_parameters {

@@ -2149,6 +2149,7 @@ mon_refresh_display(gpointer user_data)
     pe__set_working_set_flags(mon_data_set, pe_flag_no_compat);
 
     mon_data_set->input = cib_copy;
+    mon_data_set->priv = out;
     cluster_status(mon_data_set);
 
     /* Unpack constraints if any section will need them
@@ -2167,7 +2168,7 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(out, mon_data_set, crm_errno2exit(history_rc),
+            if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
                                   stonith_history, options.mon_ops,
                                   show, options.neg_location_prefix,
                                   options.only_node, options.only_rsc) != 0) {
@@ -2179,7 +2180,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_legacy_xml:
         case mon_output_xml:
-            print_xml_status(out, mon_data_set, crm_errno2exit(history_rc),
+            print_xml_status(mon_data_set, crm_errno2exit(history_rc),
                              stonith_history, options.mon_ops, show,
                              options.neg_location_prefix, options.only_node,
                              options.only_rsc);
@@ -2199,7 +2200,7 @@ mon_refresh_display(gpointer user_data)
              */
 #if CURSES_ENABLED
             blank_screen();
-            print_status(out, mon_data_set, crm_errno2exit(history_rc), stonith_history,
+            print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
                          options.mon_ops, show, options.neg_location_prefix,
                          options.only_node, options.only_rsc);
             refresh();
@@ -2207,7 +2208,7 @@ mon_refresh_display(gpointer user_data)
 #endif
 
         case mon_output_plain:
-            print_status(out, mon_data_set, crm_errno2exit(history_rc), stonith_history,
+            print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
                          options.mon_ops, show, options.neg_location_prefix,
                          options.only_node, options.only_rsc);
             break;

@@ -51,6 +51,7 @@ pe_free_working_set(pe_working_set_t *data_set)
 {
     if (data_set != NULL) {
         pe_reset_working_set(data_set);
+        data_set->priv = NULL;
         free(data_set);
     }
 }

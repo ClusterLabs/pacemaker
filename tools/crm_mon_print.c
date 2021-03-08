@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,29 +32,29 @@
 
 #include "crm_mon.h"
 
-static int print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set,
-                             pe_node_t *node, xmlNode *rsc_entry, unsigned int mon_ops,
+static int print_rsc_history(pe_working_set_t *data_set, pe_node_t *node,
+                             xmlNode *rsc_entry, unsigned int mon_ops,
                              GListPtr op_list);
-static int print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
-                              pe_node_t *node, xmlNode *node_state, gboolean operations,
-                              unsigned int mon_ops, GListPtr only_node, GListPtr only_rsc);
-static gboolean add_extra_info(pcmk__output_t *out, pe_node_t *node,
-                               GListPtr rsc_list, pe_working_set_t *data_set,
-                               const char *attrname, int *expected_score);
+static int print_node_history(pe_working_set_t *data_set, pe_node_t *node,
+                              xmlNode *node_state, gboolean operations,
+                              unsigned int mon_ops, GListPtr only_node,
+                              GListPtr only_rsc);
+static gboolean add_extra_info(pe_node_t *node, GListPtr rsc_list,
+                               pe_working_set_t *data_set, const char *attrname,
+                               int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
-static int print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
-                              gboolean operations, unsigned int mon_ops,
-                              GListPtr only_node, GListPtr only_rsc, gboolean print_spacer);
-static int print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
+static int print_node_summary(pe_working_set_t * data_set, gboolean operations,
+                              unsigned int mon_ops, GListPtr only_node,
+                              GListPtr only_rsc, gboolean print_spacer);
+static int print_cluster_tickets(pe_working_set_t * data_set, gboolean print_spacer);
+static int print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
+                               const char *prefix, GListPtr only_rsc,
+                               gboolean print_spacer);
+static int print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
+                                 GListPtr only_node, GListPtr only_rsc,
                                  gboolean print_spacer);
-static int print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
-                               unsigned int mon_ops, const char *prefix,
-                               GListPtr only_rsc, gboolean print_spacer);
-static int print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
-                                 unsigned int mon_ops, GListPtr only_node,
-                                 GListPtr only_rsc, gboolean print_spacer);
-static int print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
-                                GListPtr only_node, GListPtr only_rsc, gboolean print_spacer);
+static int print_failed_actions(pe_working_set_t *data_set, GListPtr only_node,
+                                GListPtr only_rsc, gboolean print_spacer);
 
 static GListPtr
 build_uname_list(pe_working_set_t *data_set, const char *s) {
@@ -165,7 +165,6 @@ get_operation_list(xmlNode *rsc_entry) {
  * \internal
  * \brief Print resource operation/failure history
  *
- * \param[in] out       The output functions structure.
  * \param[in] data_set  Cluster state to display.
  * \param[in] node      Node that ran this resource.
  * \param[in] rsc_entry Root of XML tree describing resource status.
@@ -173,9 +172,10 @@ get_operation_list(xmlNode *rsc_entry) {
  * \param[in] op_list   A list of operations to print.
  */
 static int
-print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *node,
-                  xmlNode *rsc_entry, unsigned int mon_ops, GListPtr op_list)
+print_rsc_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *rsc_entry,
+                  unsigned int mon_ops, GListPtr op_list)
 {
+    pcmk__output_t *out = data_set->priv;
     GListPtr gIter = NULL;
     int rc = pcmk_rc_no_output;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
@@ -221,17 +221,17 @@ print_rsc_history(pcmk__output_t *out, pe_working_set_t *data_set, pe_node_t *no
  * \internal
  * \brief Print node operation/failure history
  *
- * \param[in] out        The output functions structure.
  * \param[in] data_set   Cluster state to display.
  * \param[in] node_state Root of XML tree describing node status.
  * \param[in] operations Whether to print operations or just failcounts.
  * \param[in] mon_ops    Bitmask of mon_op_*.
  */
 static int
-print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
-                   pe_node_t *node, xmlNode *node_state, gboolean operations,
-                   unsigned int mon_ops, GListPtr only_node, GListPtr only_rsc)
+print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_state,
+                   gboolean operations, unsigned int mon_ops,
+                   GListPtr only_node, GListPtr only_rsc)
 {
+    pcmk__output_t *out = data_set->priv;
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
     int rc = pcmk_rc_no_output;
@@ -306,7 +306,7 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
                              only_node, only_rsc);
             }
 
-            print_rsc_history(out, data_set, node, rsc_entry, mon_ops, op_list);
+            print_rsc_history(data_set, node, rsc_entry, mon_ops, op_list);
         }
     }
 
@@ -318,7 +318,6 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Determine whether extended information about an attribute should be added.
  *
- * \param[in]  out            The output functions structure.
  * \param[in]  node           Node that ran this resource.
  * \param[in]  rsc_list       The list of resources for this node.
  * \param[in]  attrname       The attribute to find.
@@ -330,9 +329,8 @@ print_node_history(pcmk__output_t *out, pe_working_set_t *data_set,
  *       or degraded.
  */
 static gboolean
-add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
-               pe_working_set_t *data_set, const char *attrname,
-               int *expected_score)
+add_extra_info(pe_node_t *node, GListPtr rsc_list, pe_working_set_t *data_set,
+               const char *attrname, int *expected_score)
 {
     GListPtr gIter = NULL;
 
@@ -343,7 +341,7 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
         GHashTable *params = NULL;
 
         if (rsc->children != NULL) {
-            if (add_extra_info(out, node, rsc->children, data_set, attrname,
+            if (add_extra_info(node, rsc->children, data_set, attrname,
                                expected_score)) {
                 return TRUE;
             }
@@ -384,7 +382,6 @@ add_extra_info(pcmk__output_t *out, pe_node_t *node, GListPtr rsc_list,
 
 /* structure for passing multiple user data to g_list_foreach() */
 struct mon_attr_data {
-    pcmk__output_t *out;
     pe_node_t *node;
     pe_working_set_t *data_set;
 };
@@ -396,31 +393,32 @@ print_node_attribute(gpointer name, gpointer user_data)
     int expected_score = 0;
     gboolean add_extra = FALSE;
     struct mon_attr_data *data = (struct mon_attr_data *) user_data;
+    pcmk__output_t *out = data->data_set->priv;
 
     value = pe_node_attribute_raw(data->node, name);
 
-    add_extra = add_extra_info(data->out, data->node, data->node->details->running_rsc,
+    add_extra = add_extra_info(data->node, data->node->details->running_rsc,
                                data->data_set, name, &expected_score);
 
     /* Print attribute name and value */
-    data->out->message(data->out, "node-attribute", name, value, add_extra,
-                       expected_score);
+    out->message(out, "node-attribute", name, value, add_extra,
+                 expected_score);
 }
 
 /*!
  * \internal
  * \brief Print history for all nodes.
  *
- * \param[in] out        The output functions structure.
  * \param[in] data_set   Cluster state to display.
  * \param[in] operations Whether to print operations or just failcounts.
  * \param[in] mon_ops    Bitmask of mon_op_*.
  */
 static int
-print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
-                   gboolean operations, unsigned int mon_ops, GListPtr only_node,
+print_node_summary(pe_working_set_t * data_set, gboolean operations,
+                   unsigned int mon_ops, GListPtr only_node,
                    GListPtr only_rsc, gboolean print_spacer)
 {
+    pcmk__output_t *out = data_set->priv;
     xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
     int rc = pcmk_rc_no_output;
@@ -450,7 +448,7 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
 
-        print_node_history(out, data_set, node, node_state, operations, mon_ops,
+        print_node_history(data_set, node, node_state, operations, mon_ops,
                            only_node, only_rsc);
     }
 
@@ -462,13 +460,12 @@ print_node_summary(pcmk__output_t *out, pe_working_set_t * data_set,
  * \internal
  * \brief Print all tickets.
  *
- * \param[in] out      The output functions structure.
  * \param[in] data_set Cluster state to display.
  */
 static int
-print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
-                      gboolean print_spacer)
+print_cluster_tickets(pe_working_set_t * data_set, gboolean print_spacer)
 {
+    pcmk__output_t *out = data_set->priv;
     GHashTableIter iter;
     gpointer key, value;
 
@@ -497,16 +494,16 @@ print_cluster_tickets(pcmk__output_t *out, pe_working_set_t * data_set,
  * \internal
  * \brief Print section for negative location constraints
  *
- * \param[in] out      The output functions structure.
  * \param[in] data_set Cluster state to display.
  * \param[in] mon_ops  Bitmask of mon_op_*.
  * \param[in] prefix   ID prefix to filter results by.
  */
 static int
-print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
-                    unsigned int mon_ops, const char *prefix, GListPtr only_rsc,
+print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
+                    const char *prefix, GListPtr only_rsc,
                     gboolean print_spacer)
 {
+    pcmk__output_t *out = data_set->priv;
     GListPtr gIter, gIter2;
     int rc = pcmk_rc_no_output;
 
@@ -541,15 +538,14 @@ print_neg_locations(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Print node attributes section
  *
- * \param[in] out      The output functions structure.
  * \param[in] data_set Cluster state to display.
  * \param[in] mon_ops  Bitmask of mon_op_*.
  */
 static int
-print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
-                      unsigned int mon_ops, GListPtr only_node,
-                      GListPtr only_rsc, gboolean print_spacer)
+print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
+                      GListPtr only_node, GListPtr only_rsc, gboolean print_spacer)
 {
+    pcmk__output_t *out = data_set->priv;
     GListPtr gIter = NULL;
     int rc = pcmk_rc_no_output;
 
@@ -557,7 +553,6 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         struct mon_attr_data data;
 
-        data.out = out;
         data.node = (pe_node_t *) gIter->data;
         data.data_set = data_set;
 
@@ -601,13 +596,13 @@ print_node_attributes(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Print a section for failed actions
  *
- * \param[in] out      The output functions structure.
  * \param[in] data_set Cluster state to display.
  */
 static int
-print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
-                     GListPtr only_node, GListPtr only_rsc, gboolean print_spacer)
+print_failed_actions(pe_working_set_t *data_set, GListPtr only_node,
+                     GListPtr only_rsc, gboolean print_spacer)
 {
+    pcmk__output_t *out = data_set->priv;
     xmlNode *xml_op = NULL;
     int rc = pcmk_rc_no_output;
 
@@ -654,7 +649,6 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Top-level printing function for text/curses output.
  *
- * \param[in] out             The output functions structure.
  * \param[in] data_set        Cluster state to display.
  * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
@@ -663,11 +657,11 @@ print_failed_actions(pcmk__output_t *out, pe_working_set_t *data_set,
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
-print_status(pcmk__output_t *out, pe_working_set_t *data_set,
-             crm_exit_t history_rc, stonith_history_t *stonith_history,
-             unsigned int mon_ops, unsigned int show, char *prefix,
-             char *only_node, char *only_rsc)
+print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
+             stonith_history_t *stonith_history, unsigned int mon_ops,
+             unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
+    pcmk__output_t *out = data_set->priv;
     GListPtr unames = NULL;
     GListPtr resources = NULL;
 
@@ -706,7 +700,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
-        CHECK_RC(rc, print_node_attributes(out, data_set, mon_ops, unames, resources,
+        CHECK_RC(rc, print_node_attributes(data_set, mon_ops, unames, resources,
                                            rc == pcmk_rc_ok));
     }
 
@@ -716,7 +710,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_operations)
         || pcmk_is_set(show, mon_show_failcounts)) {
 
-        CHECK_RC(rc, print_node_summary(out, data_set,
+        CHECK_RC(rc, print_node_summary(data_set,
                                         pcmk_is_set(show, mon_show_operations),
                                         mon_ops, unames, resources,
                                         (rc == pcmk_rc_ok)));
@@ -726,7 +720,7 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        CHECK_RC(rc, print_failed_actions(out, data_set, unames, resources,
+        CHECK_RC(rc, print_failed_actions(data_set, unames, resources,
                                           rc == pcmk_rc_ok));
     }
 
@@ -756,12 +750,12 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print tickets if requested */
     if (pcmk_is_set(show, mon_show_tickets)) {
-        CHECK_RC(rc, print_cluster_tickets(out, data_set, rc == pcmk_rc_ok));
+        CHECK_RC(rc, print_cluster_tickets(data_set, rc == pcmk_rc_ok));
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(show, mon_show_bans)) {
-        CHECK_RC(rc, print_neg_locations(out, data_set, mon_ops, prefix, resources,
+        CHECK_RC(rc, print_neg_locations(data_set, mon_ops, prefix, resources,
                                          rc == pcmk_rc_ok));
     }
 
@@ -803,7 +797,6 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Top-level printing function for XML output.
  *
- * \param[in] out             The output functions structure.
  * \param[in] data_set        Cluster state to display.
  * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
@@ -812,11 +805,11 @@ print_status(pcmk__output_t *out, pe_working_set_t *data_set,
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
-print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                 crm_exit_t history_rc, stonith_history_t *stonith_history,
-                 unsigned int mon_ops, unsigned int show, char *prefix,
-                 char *only_node, char *only_rsc)
+print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
+                 stonith_history_t *stonith_history, unsigned int mon_ops,
+                 unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
+    pcmk__output_t *out = data_set->priv;
     GListPtr unames = NULL;
     GListPtr resources = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
@@ -851,7 +844,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
-        print_node_attributes(out, data_set, mon_ops, unames, resources, FALSE);
+        print_node_attributes(data_set, mon_ops, unames, resources, FALSE);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -860,7 +853,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_operations)
         || pcmk_is_set(show, mon_show_failcounts)) {
 
-        print_node_summary(out, data_set,
+        print_node_summary(data_set,
                            pcmk_is_set(show, mon_show_operations),
                            mon_ops, unames, resources, FALSE);
     }
@@ -869,7 +862,7 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        print_failed_actions(out, data_set, unames, resources, FALSE);
+        print_failed_actions(data_set, unames, resources, FALSE);
     }
 
     /* Print stonith history */
@@ -883,12 +876,12 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print tickets if requested */
     if (pcmk_is_set(show, mon_show_tickets)) {
-        print_cluster_tickets(out, data_set, FALSE);
+        print_cluster_tickets(data_set, FALSE);
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(show, mon_show_bans)) {
-        print_neg_locations(out, data_set, mon_ops, prefix, resources, FALSE);
+        print_neg_locations(data_set, mon_ops, prefix, resources, FALSE);
     }
 
     g_list_free_full(unames, free);
@@ -899,7 +892,6 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
  * \internal
  * \brief Top-level printing function for HTML output.
  *
- * \param[in] out             The output functions structure.
  * \param[in] data_set        Cluster state to display.
  * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
@@ -908,11 +900,11 @@ print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
  * \param[in] prefix          ID prefix to filter results by.
  */
 int
-print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                  crm_exit_t history_rc, stonith_history_t *stonith_history,
-                  unsigned int mon_ops, unsigned int show, char *prefix,
-                  char *only_node, char *only_rsc)
+print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
+                  stonith_history_t *stonith_history, unsigned int mon_ops,
+                  unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
+    pcmk__output_t *out = data_set->priv;
     GListPtr unames = NULL;
     GListPtr resources = NULL;
 
@@ -950,7 +942,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
-        print_node_attributes(out, data_set, mon_ops, unames, resources, FALSE);
+        print_node_attributes(data_set, mon_ops, unames, resources, FALSE);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -959,7 +951,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_operations)
         || pcmk_is_set(show, mon_show_failcounts)) {
 
-        print_node_summary(out, data_set,
+        print_node_summary(data_set,
                            pcmk_is_set(show, mon_show_operations),
                            mon_ops, unames, resources, FALSE);
     }
@@ -968,7 +960,7 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        print_failed_actions(out, data_set, unames, resources, FALSE);
+        print_failed_actions(data_set, unames, resources, FALSE);
     }
 
     /* Print failed stonith actions */
@@ -1022,12 +1014,12 @@ print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
 
     /* Print tickets if requested */
     if (pcmk_is_set(show, mon_show_tickets)) {
-        print_cluster_tickets(out, data_set, FALSE);
+        print_cluster_tickets(data_set, FALSE);
     }
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(show, mon_show_bans)) {
-        print_neg_locations(out, data_set, mon_ops, prefix, resources, FALSE);
+        print_neg_locations(data_set, mon_ops, prefix, resources, FALSE);
     }
 
     g_list_free_full(unames, free);

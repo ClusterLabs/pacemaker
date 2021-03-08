@@ -609,24 +609,24 @@ digests_xml(pcmk__output_t *out, va_list args)
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "crmadmin-node", "default", crmadmin_node_text },
+    { "crmadmin-node", "xml", crmadmin_node_xml },
+    { "dc", "default", dc_text },
+    { "dc", "xml", dc_xml },
+    { "digests", "default", digests_text },
+    { "digests", "xml", digests_xml },
+    { "health", "default", health_text },
+    { "health", "xml", health_xml },
+    { "locations-list", "default", locations_list },
+    { "locations-list", "xml", locations_list_xml },
+    { "pacemakerd-health", "default", pacemakerd_health_text },
+    { "pacemakerd-health", "xml", pacemakerd_health_xml },
     { "rsc-is-colocated-with-list", "default", rsc_is_colocated_with_list },
     { "rsc-is-colocated-with-list", "xml", rsc_is_colocated_with_list_xml },
     { "rscs-colocated-with-list", "default", rscs_colocated_with_list },
     { "rscs-colocated-with-list", "xml", rscs_colocated_with_list_xml },
-    { "locations-list", "default", locations_list },
-    { "locations-list", "xml", locations_list_xml },
     { "stacks-constraints", "default", stacks_and_constraints },
     { "stacks-constraints", "xml", stacks_and_constraints_xml },
-    { "health", "default", health_text },
-    { "health", "xml", health_xml },
-    { "pacemakerd-health", "default", pacemakerd_health_text },
-    { "pacemakerd-health", "xml", pacemakerd_health_xml },
-    { "dc", "default", dc_text },
-    { "dc", "xml", dc_xml },
-    { "crmadmin-node", "default", crmadmin_node_text },
-    { "crmadmin-node", "xml", crmadmin_node_xml },
-    { "digests", "default", digests_text },
-    { "digests", "xml", digests_xml },
 
     { NULL, NULL, NULL }
 };

@@ -584,7 +584,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         pe__set_next_role(rsc, rsc->role, "no-quorum-policy=freeze");
     }
 
-    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
+    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes);
     if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
         && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
@@ -2355,18 +2356,6 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         child_rsc->cmds->expand(child_rsc, data_set);
     }
 }
-
-#define log_change(a, fmt, args...)  do {                         \
-        if(a && a->reason && terminal) {                          \
-            printf(" * "fmt" \tdue to %s\n", ##args, a->reason);    \
-        } else if(a && a->reason) {                               \
-            crm_notice(fmt" \tdue to %s", ##args, a->reason);       \
-        } else if(terminal) {                                     \
-            printf(" * "fmt"\n", ##args);                         \
-        } else {                                                  \
-            crm_notice(fmt, ##args);                              \
-        }                                                         \
-    } while(0)
 
 #define STOP_SANITY_ASSERT(lineno) do {                                 \
         if(current && current->details->unclean) {                      \
