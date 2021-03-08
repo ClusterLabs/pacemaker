@@ -30,10 +30,6 @@
 
 #define SUMMARY "crm_simulate - simulate a Pacemaker cluster's response to events"
 
-/* show_scores and show_utilization can't be added to this struct.  They
- * actually come from include/pcmki/pcmki_scheduler.h where they are
- * defined as extern.
- */
 struct {
     gboolean all_actions;
     char *dot_file;
