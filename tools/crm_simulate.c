@@ -905,6 +905,7 @@ main(int argc, char **argv)
     pe__set_working_set_flags(data_set, pe_flag_no_compat);
 
     if (options.test_dir != NULL) {
+        data_set->priv = out;
         profile_all(options.test_dir, options.repeat, data_set, options.use_date);
         rc = pcmk_rc_ok;
         goto done;
@@ -1016,7 +1017,7 @@ main(int argc, char **argv)
 
     if (options.process || options.simulate) {
         crm_time_t *local_date = NULL;
-        int began_list = pcmk_rc_ok;
+        pcmk__output_t *logger_out = NULL;
 
         if (pcmk_all_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
@@ -1031,11 +1032,23 @@ main(int argc, char **argv)
             out->begin_list(out, NULL, NULL, "Utilization Information");
             printed = pcmk_rc_ok;
         } else {
-            began_list = pcmk_rc_error;
+            logger_out = pcmk__new_logger();
+            if (logger_out == NULL) {
+                goto done;
+            }
+
+            data_set->priv = logger_out;
         }
 
         pcmk__schedule_actions(data_set, input, local_date);
-        PCMK__OUTPUT_LIST_FOOTER(out, began_list);
+
+        if (logger_out == NULL) {
+            out->end_list(out);
+        } else {
+            logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+            pcmk__output_free(logger_out);
+            data_set->priv = out;
+        }
 
         input = NULL;           /* Don't try and free it twice */
 
