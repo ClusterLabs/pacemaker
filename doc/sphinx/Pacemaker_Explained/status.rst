@@ -208,13 +208,6 @@ this tuple are used to create the id of the ``lrm_rsc_op`` object.
    |                  | of *Pacemaker Administration* for details on what the    |
    |                  | values here mean and how they are interpreted.           |
    +------------------+----------------------------------------------------------+
-   | last-run         | .. index::                                               |
-   |                  |    single: last-run; action status                       |
-   |                  |    single: action; status, last-run                      |
-   |                  |                                                          |
-   |                  | Machine-local date/time, in seconds since epoch, at      |
-   |                  | which the job was executed. For diagnostic purposes.     |
-   +------------------+----------------------------------------------------------+
    | last-rc-change   | .. index::                                               |
    |                  |    single: last-rc-change; action status                 |
    |                  |    single: action; status, last-rc-change                |
@@ -296,7 +289,7 @@ ________________________________
           op-digest="2e3da9274d3550dc6526fb24bfcbcba0"
           transition-key="22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a"
           transition-magic="0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a"
-          last-run="1239008085" last-rc-change="1239008085" exec-time="10" queue-time="0"/>
+          last-rc-change="1239008085" exec-time="10" queue-time="0"/>
       </lrm_resource>
 
 In the above example, the job is a non-recurring monitor operation
@@ -329,22 +322,22 @@ _________________________________
           rc-code="0" op-status="0" interval="30000"
           crm-debug-origin="do_update_resource" crm_feature_set="3.0.1"
           transition-key="10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a"
-          last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0"/>
+          last-rc-change="1239009741" exec-time="10" queue-time="0"/>
         <lrm_rsc_op id="pingd:0_stop_0" operation="stop"
           crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" call-id="32"
           rc-code="0" op-status="0" interval="0"
           transition-key="11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a"
-          last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0"/>
+          last-rc-change="1239009741" exec-time="10" queue-time="0"/>
         <lrm_rsc_op id="pingd:0_start_0" operation="start" call-id="33"
           rc-code="0" op-status="0" interval="0"
           crm-debug-origin="do_update_resource" crm_feature_set="3.0.1"
           transition-key="31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a"
-          last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" />
+          last-rc-change="1239009741" exec-time="10" queue-time="0" />
         <lrm_rsc_op id="pingd:0_monitor_0" operation="monitor" call-id="3"
           rc-code="0" op-status="0" interval="0"
           crm-debug-origin="do_update_resource" crm_feature_set="3.0.1"
           transition-key="23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a"
-          last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0"/>
+          last-rc-change="1239008085" exec-time="20" queue-time="0"/>
         </lrm_resource>
    
 When more than one job record exists, it is important to first sort

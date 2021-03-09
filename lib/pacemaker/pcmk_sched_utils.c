@@ -711,21 +711,11 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
                       op->rsc_id, op->op_type, op->interval_ms,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
-            if (op->interval_ms == 0) {
-                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
-                               (long long) op->t_run);
-
-                // @COMPAT last-run is deprecated
-                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_RUN,
-                               (long long) op->t_run);
-
-            } else if(op->t_rcchange) {
-                /* last-run is not accurate for recurring ops */
+            if ((op->interval_ms != 0) && (op->t_rcchange != 0)) {
+                // Recurring ops may have changed rc after initial run
                 crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
                                (long long) op->t_rcchange);
-
             } else {
-                /* ...but is better than nothing otherwise */
                 crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
                                (long long) op->t_run);
             }

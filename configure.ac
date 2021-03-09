@@ -217,7 +217,7 @@ enable_systemd=$?
 
 AC_ARG_ENABLE([upstart],
     [AS_HELP_STRING([--enable-upstart],
-        [enable support for managing resources via Upstart @<:@try@:>@])]
+        [enable support for managing resources via Upstart (deprecated) @<:@try@:>@])]
 )
 yes_no_try "$enable_upstart" "try"
 enable_upstart=$?
@@ -1576,16 +1576,19 @@ AS_IF([test -n "${SANITIZERS}"], [
             [asan|ASAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=address"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=address -lasan"
+                PCMK_FEATURES="$PCMK_FEATURES asan"
                 REQUIRE_LIB([asan],[main])
             ],
             [ubsan|UBSAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=undefined"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=undefined -lubsan"
+                PCMK_FEATURES="$PCMK_FEATURES ubsan"
                 REQUIRE_LIB([ubsan],[main])
             ],
             [tsan|TSAN], [
                 SANITIZERS_CFLAGS="$SANITIZERS_CFLAGS -fsanitize=thread"
                 SANITIZERS_LDFLAGS="$SANITIZERS_LDFLAGS -fsanitize=thread -ltsan"
+                PCMK_FEATURES="$PCMK_FEATURES tsan"
                 REQUIRE_LIB([tsan],[main])
             ])
   done
@@ -1870,12 +1873,15 @@ dnl Put the above variables to use
 LIBTOOL="${LIBTOOL} --tag=CC \$(QUIET_LIBTOOL_OPTS)"
 MAKEFLAGS="${MAKEFLAGS} ${QUIET_MAKE_OPTS}"
 
+# Make features list available (sorted alphabetically, without leading space)
+PCMK_FEATURES=`echo "$PCMK_FEATURES" | sed -e 's/^ //' -e 's/ /\n/g' | sort | xargs`
+AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
+AC_SUBST(PCMK_FEATURES)
+
 AC_SUBST(CC)
 AC_SUBST(MAKEFLAGS)
 AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
-AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
-AC_SUBST(PCMK_FEATURES)
 
 dnl Files we output that need to be executable
 CONFIG_FILES_EXEC([cts/CTSlab.py],
@@ -1932,7 +1938,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/pacemaker_remote.service              \
                 daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
-                daemons/pacemakerd/pacemaker                        \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
@@ -1941,11 +1946,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Doxyfile                                        \
                 doc/Makefile                                        \
                 doc/sphinx/Makefile                                 \
+                etc/Makefile                                        \
+                etc/init.d/pacemaker                                \
+                etc/logrotate.d/pacemaker                           \
                 extra/Makefile                                      \
                 extra/alerts/Makefile                               \
                 extra/resources/Makefile                            \
-                extra/logrotate/Makefile                            \
-                extra/logrotate/pacemaker                           \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
@@ -1998,9 +2004,6 @@ AC_CONFIG_FILES(Makefile                                            \
 dnl Now process the entire list of files added by previous
 dnl  calls to AC_CONFIG_FILES()
 AC_OUTPUT()
-
-# Strip leading space from features list
-PCMK_FEATURES=`echo -e "$PCMK_FEATURES" | sed -e 's/^ //'`
 
 dnl *****************
 dnl Configure summary

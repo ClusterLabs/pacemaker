@@ -71,12 +71,12 @@ ylwrap
 /daemons/execd/pacemaker_remote
 /daemons/execd/pacemaker_remote.service
 /daemons/fenced/fence_legacy
-/daemons/pacemakerd/pacemaker
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
 /daemons/pacemakerd/pacemaker.upstart
 /doc/Doxyfile
-/extra/logrotate/pacemaker
+/etc/init.d/pacemaker
+/etc/logrotate.d/pacemaker
 /extra/resources/ClusterMon
 /extra/resources/HealthSMART
 /extra/resources/SysInfo
@@ -201,6 +201,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /crmd
 /cts/HBDummy
 /daemons/based/cibmon
+/daemons/pacemakerd/pacemaker
 /depcomp
 /doc/*.build
 /doc/*/en-US/Ap-*.xml
@@ -215,6 +216,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /doc/shared/en-US/*.xml
 /doc/shared/en-US/images/pcmk-*.png
 /doc/shared/en-US/images/Policy-Engine-*.png
+/extra/logrotate/pacemaker
 /fencing
 /install-sh
 /lib/common/tests/flags/pcmk__clear_flags_as

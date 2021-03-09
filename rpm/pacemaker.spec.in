@@ -497,10 +497,6 @@ make install \
   DESTDIR=%{buildroot} V=1 docdir=%{pcmk_docdir} \
   %{?_python_bytecompile_extra:%{?py_byte_compile:am__py_compile=true}}
 
-mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
-install -m 644 daemons/pacemakerd/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
-install -m 644 tools/crm_mon.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/crm_mon
-
 %if %{with upstart_job}
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
 install -m 644 pacemakerd/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
