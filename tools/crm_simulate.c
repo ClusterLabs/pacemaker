@@ -65,16 +65,9 @@ struct {
 
 cib_t *global_cib = NULL;
 bool action_numbers = FALSE;
-gboolean quiet = FALSE;
 char *temp_shadow = NULL;
 extern gboolean bringing_nodes_online;
 crm_exit_t exit_code = CRM_EX_OK;
-
-#define quiet_log(fmt, args...) do {		\
-	if(quiet == FALSE) {			\
-	    printf(fmt , ##args);		\
-	}					\
-    } while(0)
 
 #define INDENT "                                   "
 
@@ -364,13 +357,14 @@ static GOptionEntry source_entries[] = {
 static void
 get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
 {
+    pcmk__output_t *out = data_set->priv;
     time_t original_date = 0;
 
     crm_element_value_epoch(data_set->input, "execution-date", &original_date);
 
     if (use_date) {
         data_set->now = crm_time_new(use_date);
-        quiet_log(" + Setting effective cluster time: %s", use_date);
+        out->info(out, "Setting effective cluster time: %s", use_date);
         crm_time_log(LOG_NOTICE, "Pretending 'now' is", data_set->now,
                      crm_time_log_date | crm_time_log_timeofday);
 
@@ -904,6 +898,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
+    int printed = pcmk_rc_no_output;
     int rc = pcmk_rc_ok;
     pe_working_set_t *data_set = NULL;
     pcmk__output_t *out = NULL;
@@ -935,6 +930,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    out->quiet = args->quiet;
+
     if (args->version) {
         out->version(out, false);
         goto done;
@@ -945,10 +942,6 @@ main(int argc, char **argv)
         close(STDERR_FILENO);
         dup2(STDOUT_FILENO, STDERR_FILENO);
         action_numbers = TRUE;
-    }
-
-    if (args->quiet) {
-        quiet = TRUE;
     }
 
     data_set = pe_new_working_set();
@@ -1009,28 +1002,33 @@ main(int argc, char **argv)
     pe__set_working_set_flags(data_set, pe_flag_stdout);
     cluster_status(data_set);
 
-    if (quiet == FALSE) {
+    if (!out->is_quiet(out)) {
         int opts = options.print_pending ? pe_print_pending : 0;
 
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-            quiet_log("\n              *** Resource management is DISABLED ***");
-            quiet_log("\n  The cluster will not attempt to start, stop or recover services");
-            quiet_log("\n");
+            printed = out->message(out, "maint-mode", data_set->flags);
         }
 
         if (data_set->disabled_resources || data_set->blocked_resources) {
-            quiet_log("%d of %d resource instances DISABLED and %d BLOCKED "
-                      "from further action due to failure\n",
-                      data_set->disabled_resources, data_set->ninstances,
-                      data_set->blocked_resources);
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            printed = out->info(out, "%d of %d resource instances DISABLED and %d BLOCKED "
+                                "from further action due to failure",
+                                data_set->disabled_resources, data_set->ninstances,
+                                data_set->blocked_resources);
         }
 
-        quiet_log("\nCurrent cluster status:\n");
+        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+        /* Most formatted output headers use caps for each word, but this one
+         * only has the first word capitalized for compatibility with pcs.
+         */
+        out->begin_list(out, NULL, NULL, "Current cluster status");
         print_cluster_status(data_set, opts);
+        out->end_list(out);
+        printed = pcmk_rc_ok;
     }
 
     if (options.modified) {
-        quiet_log("Performing requested modifications\n");
+        out->info(out, "Performing requested modifications");
         modify_configuration(data_set, global_cib, options.quorum, options.watchdog, options.node_up,
                              options.node_down, options.node_fail, options.op_inject,
                              options.ticket_grant, options.ticket_revoke, options.ticket_standby,
@@ -1096,12 +1094,11 @@ main(int argc, char **argv)
             }
         }
 
-        if (quiet == FALSE) {
+        if (!out->is_quiet(out)) {
             GList *gIter = NULL;
 
-            quiet_log("%sTransition Summary:\n", pcmk_any_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)
-                      || options.modified ? "\n" : "");
-            fflush(stdout);
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Transition Summary");
 
             LogNodeActions(data_set, TRUE);
             for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
@@ -1109,19 +1106,28 @@ main(int argc, char **argv)
 
                 LogActions(rsc, data_set, TRUE);
             }
+
+            out->end_list(out);
+            printed = pcmk_rc_ok;
         }
     }
 
     rc = pcmk_rc_ok;
 
     if (options.simulate) {
-        if (run_simulation(data_set, global_cib, options.op_fail, quiet) != pcmk_rc_ok) {
+        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+        if (run_simulation(data_set, global_cib, options.op_fail, out->is_quiet(out)) != pcmk_rc_ok) {
             rc = pcmk_rc_error;
         }
-        if(quiet == FALSE) {
+
+        printed = pcmk_rc_ok;
+
+        if (!out->is_quiet(out)) {
             get_date(data_set, true, options.use_date);
 
-            quiet_log("\nRevised cluster status:\n");
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Revised Cluster Status");
+            printed = pcmk_rc_ok;
 
             if (options.show_scores) {
                 pe__set_working_set_flags(data_set, pe_flag_show_scores);
@@ -1133,6 +1139,8 @@ main(int argc, char **argv)
 
             cluster_status(data_set);
             print_cluster_status(data_set, 0);
+
+            out->end_list(out);
         }
     }
 
