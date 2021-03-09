@@ -25,15 +25,9 @@
 static void
 log_resource_details(pe_working_set_t *data_set)
 {
-    int rc = pcmk_rc_ok;
     pcmk__output_t *prev_out = NULL;
     pcmk__output_t *out = NULL;
-    const char* argv[] = { "", NULL };
     GList *all = NULL;
-    pcmk__supported_format_t formats[] = {
-        PCMK__SUPPORTED_FORMAT_LOG,
-        { NULL, NULL, NULL }
-    };
 
     /* We need a list of nodes that we are allowed to output information for.
      * This is necessary because out->message for all the resource-related
@@ -42,14 +36,10 @@ log_resource_details(pe_working_set_t *data_set)
      */
     all = g_list_prepend(all, strdup("*"));
 
-    pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
-    if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        crm_err("Can't log resource details due to internal error: %s\n",
-                pcmk_rc_str(rc));
+    out = pcmk__new_logger();
+    if (out == NULL) {
         return;
     }
-    pe__register_messages(out);
 
     prev_out = data_set->priv;
     data_set->priv = out;
