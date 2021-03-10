@@ -1,21 +1,23 @@
-
 Current cluster status:
-Online: [ cardhu dualamd1 dualamd3 ]
+  * Node List:
+    * Online: [ cardhu dualamd1 dualamd3 ]
 
- domU-test01	(ocf:heartbeat:Xen):	 Started dualamd1
- Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]
-     Started: [ dualamd1 dualamd3 ]
+  * Full List of Resources:
+    * domU-test01	(ocf:heartbeat:Xen):	 Started dualamd1
+    * Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]:
+      * Started: [ dualamd1 dualamd3 ]
 
 Transition Summary:
 
-Executing cluster transition:
- * Resource action: domU-test01     monitor on cardhu
- * Resource action: dom0-iscsi1-cnx1:0 monitor on cardhu
+Executing Cluster Transition:
+  * Resource action: domU-test01     monitor on cardhu
+  * Resource action: dom0-iscsi1-cnx1:0 monitor on cardhu
 
-Revised cluster status:
-Online: [ cardhu dualamd1 dualamd3 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cardhu dualamd1 dualamd3 ]
 
- domU-test01	(ocf:heartbeat:Xen):	 Started dualamd1
- Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]
-     Started: [ dualamd1 dualamd3 ]
-
+  * Full List of Resources:
+    * domU-test01	(ocf:heartbeat:Xen):	 Started dualamd1
+    * Clone Set: clone-dom0-iscsi1 [dom0-iscsi1-cnx1]:
+      * Started: [ dualamd1 dualamd3 ]

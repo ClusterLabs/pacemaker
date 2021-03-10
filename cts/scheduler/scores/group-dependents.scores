@@ -1,4 +1,4 @@
-Allocation scores:
+
 drbd:0 promotion score on asttest1: 1
 drbd:1 promotion score on asttest2: 9
 pcmk__clone_allocate: cl_route allocation score on asttest1: 0

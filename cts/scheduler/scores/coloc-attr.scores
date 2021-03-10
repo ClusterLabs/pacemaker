@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: group_test1 allocation score on power720-1: 0
 pcmk__group_allocate: group_test1 allocation score on power720-2: -INFINITY
 pcmk__group_allocate: group_test1 allocation score on power720-3: 0

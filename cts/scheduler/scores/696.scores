@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: DoFencing allocation score on hadev1: 0
 pcmk__clone_allocate: DoFencing allocation score on hadev2: 0
 pcmk__clone_allocate: DoFencing allocation score on hadev3: 0

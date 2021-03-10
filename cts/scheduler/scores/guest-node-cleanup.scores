@@ -1,5 +1,4 @@
-Allocation scores:
-Using the original execution date of: 2018-10-15 16:02:04Z
+
 lxc-ms:0 promotion score on lxc2: INFINITY
 lxc-ms:1 promotion score on lxc1: INFINITY
 pcmk__clone_allocate: lxc-ms-master allocation score on lxc1: INFINITY

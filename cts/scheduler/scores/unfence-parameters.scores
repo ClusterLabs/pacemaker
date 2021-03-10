@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clvmd-clone allocation score on virt-1: 0
 pcmk__clone_allocate: clvmd-clone allocation score on virt-2: 0
 pcmk__clone_allocate: clvmd-clone allocation score on virt-3: 0

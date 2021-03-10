@@ -1,4 +1,4 @@
-Allocation scores:
+
 galera:0 promotion score on galera-bundle-0: -1
 pcmk__bundle_allocate: galera-bundle allocation score on undercloud: 0
 pcmk__bundle_allocate: galera-bundle-0 allocation score on undercloud: INFINITY

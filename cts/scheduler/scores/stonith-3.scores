@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clnStonith allocation score on rh5node1: 0
 pcmk__clone_allocate: clnStonith allocation score on rh5node2: 0
 pcmk__clone_allocate: grpStonith:0 allocation score on rh5node1: 0

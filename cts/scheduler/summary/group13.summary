@@ -1,25 +1,27 @@
-
 Current cluster status:
-Online: [ jamesltc ]
+  * Node List:
+    * Online: [ jamesltc ]
 
- Resource Group: nfs
-     resource_nfs	(lsb:nfs):	 Started jamesltc
- Resource Group: fs
-     resource_fs	(ocf:heartbeat:Filesystem):	 Stopped
+  * Full List of Resources:
+    * Resource Group: nfs:
+      * resource_nfs	(lsb:nfs):	 Started jamesltc
+    * Resource Group: fs:
+      * resource_fs	(ocf:heartbeat:Filesystem):	 Stopped
 
 Transition Summary:
- * Stop       resource_nfs     ( jamesltc )   due to node availability
+  * Stop       resource_nfs     ( jamesltc )  due to node availability
 
-Executing cluster transition:
- * Pseudo action:   nfs_stop_0
- * Resource action: resource_nfs    stop on jamesltc
- * Pseudo action:   nfs_stopped_0
+Executing Cluster Transition:
+  * Pseudo action:   nfs_stop_0
+  * Resource action: resource_nfs    stop on jamesltc
+  * Pseudo action:   nfs_stopped_0
 
-Revised cluster status:
-Online: [ jamesltc ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ jamesltc ]
 
- Resource Group: nfs
-     resource_nfs	(lsb:nfs):	 Stopped
- Resource Group: fs
-     resource_fs	(ocf:heartbeat:Filesystem):	 Stopped
-
+  * Full List of Resources:
+    * Resource Group: nfs:
+      * resource_nfs	(lsb:nfs):	 Stopped
+    * Resource Group: fs:
+      * resource_fs	(ocf:heartbeat:Filesystem):	 Stopped

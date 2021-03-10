@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: IPaddr_192_168_1_101 allocation score on xen-b: 100
 pcmk__group_allocate: IPaddr_192_168_1_101 allocation score on xen-c: 0
 pcmk__group_allocate: IPaddr_192_168_1_102 allocation score on xen-b: 0

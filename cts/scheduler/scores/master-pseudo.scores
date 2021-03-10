@@ -1,4 +1,4 @@
-Allocation scores:
+
 drbd_float:0 promotion score on sambuca.linbit: 50
 pcmk__clone_allocate: drbd_float:0 allocation score on raki.linbit: 0
 pcmk__clone_allocate: drbd_float:0 allocation score on sambuca.linbit: 51

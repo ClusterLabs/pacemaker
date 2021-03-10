@@ -1,11 +1,4 @@
-Allocation scores:
-Only 'private' parameters to stonith-fence_ipmilan-5254005e097a_monitor_60000 on controller-0 changed: 0:0;218:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
-Only 'private' parameters to stonith-fence_ipmilan-5254005e097a_start_0 on controller-0 changed: 0:0;217:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
-Only 'private' parameters to stonith-fence_ipmilan-525400985679_monitor_60000 on controller-1 changed: 0:0;224:64:0:515fab44-df8e-4e73-a22c-ed4886e03330
-Only 'private' parameters to stonith-fence_ipmilan-525400985679_start_0 on controller-1 changed: 0:0;223:64:0:515fab44-df8e-4e73-a22c-ed4886e03330
-Only 'private' parameters to stonith-fence_ipmilan-525400afe30e_monitor_60000 on controller-2 changed: 0:0;220:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
-Only 'private' parameters to stonith-fence_ipmilan-525400afe30e_start_0 on controller-2 changed: 0:0;219:60:0:515fab44-df8e-4e73-a22c-ed4886e03330
-Using the original execution date of: 2020-05-14 10:49:31Z
+
 galera:0 promotion score on galera-bundle-0: 100
 galera:1 promotion score on galera-bundle-1: 100
 galera:2 promotion score on galera-bundle-2: 100

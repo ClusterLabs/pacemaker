@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: configstoreclone:0 allocation score on x32c47: 0
 pcmk__clone_allocate: configstoreclone:0 allocation score on x32c48: 0
 pcmk__clone_allocate: configstoreclone:1 allocation score on x32c47: 0

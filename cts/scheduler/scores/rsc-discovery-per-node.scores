@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: FAKECLONE1-clone allocation score on 18builder: 0
 pcmk__clone_allocate: FAKECLONE1-clone allocation score on 18node1: 0
 pcmk__clone_allocate: FAKECLONE1-clone allocation score on 18node2: 0

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: rsc2-master allocation score on node1: 0
 pcmk__clone_allocate: rsc2-master allocation score on node2: 0
 pcmk__clone_allocate: rsc2-master allocation score on remote1: -INFINITY

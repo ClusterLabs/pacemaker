@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl-cdeprod allocation score on dresproddns01: 0
 pcmk__clone_allocate: cl-cdeprod allocation score on dresproddns02: 0
 pcmk__clone_allocate: cl-haproxy allocation score on dresproddns01: 0

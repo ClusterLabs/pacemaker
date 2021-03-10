@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl_tomcat_nms allocation score on TCS-1: 0
 pcmk__clone_allocate: cl_tomcat_nms allocation score on TCS-2: 0
 pcmk__clone_allocate: d_tomcat_nms:0 allocation score on TCS-1: 0

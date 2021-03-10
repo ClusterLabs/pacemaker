@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: test allocation score on router1: 100
 pcmk__group_allocate: test allocation score on router2: 0
 pcmk__group_allocate: test_ip allocation score on router1: 100

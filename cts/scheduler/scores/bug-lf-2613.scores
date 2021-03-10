@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: grpPostgreSQLDB1 allocation score on act1: 200
 pcmk__group_allocate: grpPostgreSQLDB1 allocation score on act2: 0
 pcmk__group_allocate: grpPostgreSQLDB1 allocation score on act3: 0

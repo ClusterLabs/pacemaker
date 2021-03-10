@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: ms_drbd_7788 allocation score on arc-dknightlx: 0
 pcmk__clone_allocate: ms_drbd_7788 allocation score on arc-tkincaidlx.wsicorp.com: 0
 pcmk__clone_allocate: rsc_drbd_7788:0 allocation score on arc-dknightlx: 1

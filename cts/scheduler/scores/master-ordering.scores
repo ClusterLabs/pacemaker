@@ -1,4 +1,4 @@
-Allocation scores:
+
 drbd_mysql:0 promotion score on webcluster01: -1
 drbd_mysql:1 promotion score on none: 0
 drbd_www:0 promotion score on webcluster01: -1

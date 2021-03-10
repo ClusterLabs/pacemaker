@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: group-1 allocation score on pcmk-1: 0
 pcmk__group_allocate: group-1 allocation score on pcmk-2: 0
 pcmk__group_allocate: r192.168.122.113 allocation score on pcmk-1: 0

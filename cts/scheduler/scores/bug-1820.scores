@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: gr1 allocation score on star: INFINITY
 pcmk__group_allocate: gr1 allocation score on world: 1000
 pcmk__group_allocate: test1 allocation score on star: INFINITY

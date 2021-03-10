@@ -1,4 +1,4 @@
-Allocation scores:
+
 drbd0:0 promotion score on mysql-02: INFINITY
 drbd0:1 promotion score on mysql-01: 75
 drbd0:2 promotion score on none: 0

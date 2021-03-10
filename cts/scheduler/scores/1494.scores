@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: ima_cloneid allocation score on hb1: -INFINITY
 pcmk__clone_allocate: ima_cloneid allocation score on hb2: 0
 pcmk__clone_allocate: ima_cloneid allocation score on hb3: 0

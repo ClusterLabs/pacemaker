@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cinder-api:0 allocation score on rhos4-node3: 0
 pcmk__clone_allocate: cinder-api:0 allocation score on rhos4-node4: 100
 pcmk__clone_allocate: cinder-api:1 allocation score on rhos4-node3: 100

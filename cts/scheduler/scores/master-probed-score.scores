@@ -1,6 +1,6 @@
+
 AdminDrbd:0 promotion score on hypatia-corosync.nevis.columbia.edu: 5
 AdminDrbd:1 promotion score on orestes-corosync.nevis.columbia.edu: INFINITY
-Allocation scores:
 pcmk__clone_allocate: AdminClone allocation score on hypatia-corosync.nevis.columbia.edu: 0
 pcmk__clone_allocate: AdminClone allocation score on orestes-corosync.nevis.columbia.edu: INFINITY
 pcmk__clone_allocate: AdminDrbd:0 allocation score on hypatia-corosync.nevis.columbia.edu: 5

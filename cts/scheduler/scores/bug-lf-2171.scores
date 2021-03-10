@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl_res_Dummy1 allocation score on xenserver1: 0
 pcmk__clone_allocate: cl_res_Dummy1 allocation score on xenserver2: 0
 pcmk__clone_allocate: res_Dummy1:0 allocation score on xenserver1: 200

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clvmd-clone allocation score on RNVM1: 0
 pcmk__clone_allocate: clvmd-clone allocation score on lama2: 0
 pcmk__clone_allocate: clvmd-clone allocation score on lama3: 0

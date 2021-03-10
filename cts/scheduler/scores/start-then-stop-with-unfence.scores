@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: jrummy-clone allocation score on rhel7-node1.example.com: 500
 pcmk__clone_allocate: jrummy-clone allocation score on rhel7-node2.example.com: 500
 pcmk__clone_allocate: jrummy:0 allocation score on rhel7-node1.example.com: 0

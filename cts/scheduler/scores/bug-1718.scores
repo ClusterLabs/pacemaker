@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: Apache_IP allocation score on biggame.ds9: 0
 pcmk__group_allocate: Apache_IP allocation score on defiant.ds9: 100
 pcmk__group_allocate: Apache_IP allocation score on heartbeat.ds9: 0

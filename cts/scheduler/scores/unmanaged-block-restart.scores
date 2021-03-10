@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: group1 allocation score on yingying.site: 0
 pcmk__group_allocate: rsc1 allocation score on yingying.site: 0
 pcmk__group_allocate: rsc2 allocation score on yingying.site: 0

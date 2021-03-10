@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: bar allocation score on node1: 0
 pcmk__group_allocate: bar allocation score on node2: 0
 pcmk__group_allocate: foo allocation score on node1: 0

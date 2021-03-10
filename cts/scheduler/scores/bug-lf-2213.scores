@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl-test allocation score on fs1: -INFINITY
 pcmk__clone_allocate: cl-test allocation score on fs2: -INFINITY
 pcmk__clone_allocate: cl-test allocation score on web1: 1

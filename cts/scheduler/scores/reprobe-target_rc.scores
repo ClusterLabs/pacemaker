@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: d00 allocation score on node-0: 0
 pcmk__native_allocate: d00 allocation score on node-1: 0
 pcmk__native_allocate: d01 allocation score on node-0: 0

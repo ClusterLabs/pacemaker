@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: CloneSet allocation score on c001n02: 0
 pcmk__clone_allocate: CloneSet allocation score on c001n03: 0
 pcmk__clone_allocate: CloneSet allocation score on c001n04: 0

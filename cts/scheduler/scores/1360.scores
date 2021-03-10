@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: dollies:0 allocation score on ssgtest1a: 0
 pcmk__clone_allocate: dollies:0 allocation score on ssgtest1b: INFINITY
 pcmk__clone_allocate: dolly allocation score on ssgtest1a: 0

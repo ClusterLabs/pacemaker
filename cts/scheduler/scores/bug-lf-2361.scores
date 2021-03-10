@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl_dummy2 allocation score on alice.demo: 0
 pcmk__clone_allocate: cl_dummy2 allocation score on bob.demo: 0
 pcmk__clone_allocate: dummy2:0 allocation score on alice.demo: 0

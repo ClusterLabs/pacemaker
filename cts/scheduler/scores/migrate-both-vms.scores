@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: c-fs-bind-libvirt-VM-cvmh allocation score on cvmh01: 0
 pcmk__clone_allocate: c-fs-bind-libvirt-VM-cvmh allocation score on cvmh02: 0
 pcmk__clone_allocate: c-fs-bind-libvirt-VM-cvmh allocation score on cvmh03: 0

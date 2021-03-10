@@ -1,16 +1,18 @@
-
 Current cluster status:
-Online: [ node1 ]
+  * Node List:
+    * Online: [ node1 ]
 
- resD	(ocf:heartbeat:Dummy):	 Started node1
+  * Full List of Resources:
+    * resD	(ocf:heartbeat:Dummy):	 Started node1
 
 Transition Summary:
 
-Executing cluster transition:
- * Resource action: resD            monitor=3600000 on node1
+Executing Cluster Transition:
+  * Resource action: resD            monitor=3600000 on node1
 
-Revised cluster status:
-Online: [ node1 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 ]
 
- resD	(ocf:heartbeat:Dummy):	 Started node1
-
+  * Full List of Resources:
+    * resD	(ocf:heartbeat:Dummy):	 Started node1

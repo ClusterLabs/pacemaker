@@ -1,5 +1,4 @@
-Allocation scores:
-Using the original execution date of: 2017-08-21 17:12:54Z
+
 pcmk__clone_allocate: Connectivity allocation score on remote-rhel7-3: 0
 pcmk__clone_allocate: Connectivity allocation score on rhel7-1: 0
 pcmk__clone_allocate: Connectivity allocation score on rhel7-2: 0

@@ -1,5 +1,4 @@
-Allocation scores:
-Using the original execution date of: 2018-05-09 09:54:39Z
+
 pcmk__native_allocate: fencer allocation score on node1: -INFINITY
 pcmk__native_allocate: fencer allocation score on node2: 0
 pcmk__native_allocate: fencer allocation score on node3: 0

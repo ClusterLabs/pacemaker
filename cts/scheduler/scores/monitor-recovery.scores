@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl_tomcat allocation score on CSE-1: -INFINITY
 pcmk__clone_allocate: cl_tomcat allocation score on CSE-2: 0
 pcmk__clone_allocate: d_tomcat:0 allocation score on CSE-1: -INFINITY

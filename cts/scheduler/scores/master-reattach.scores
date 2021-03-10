@@ -1,4 +1,4 @@
-Allocation scores:
+
 drbd1:0 promotion score on dktest1: INFINITY
 drbd1:1 promotion score on dktest2: -INFINITY
 pcmk__clone_allocate: drbd1:0 allocation score on dktest1: INFINITY

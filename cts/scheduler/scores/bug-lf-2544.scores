@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: ms0 allocation score on node-0: 0
 pcmk__clone_allocate: ms0 allocation score on node-1: 0
 pcmk__clone_allocate: s0:0 allocation score on node-0: 6

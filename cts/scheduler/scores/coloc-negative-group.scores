@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: grp_1 allocation score on lenny-a: 0
 pcmk__group_allocate: grp_1 allocation score on lenny-b: 0
 pcmk__group_allocate: res_Dummy_1 allocation score on lenny-a: 0

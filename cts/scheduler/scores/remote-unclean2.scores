@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: rhel7-auto4 allocation score on rhel7-auto1: 0
 pcmk__native_allocate: rhel7-auto4 allocation score on rhel7-auto2: 0
 pcmk__native_allocate: rhel7-auto4 allocation score on rhel7-auto3: 0

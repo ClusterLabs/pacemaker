@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: DcIPaddr allocation score on c001n01: -INFINITY
 pcmk__native_allocate: DcIPaddr allocation score on c001n02: 0
 pcmk__native_allocate: DcIPaddr allocation score on c001n03: -INFINITY

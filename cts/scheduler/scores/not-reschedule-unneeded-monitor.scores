@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: base-clone allocation score on castor: 0
 pcmk__clone_allocate: base-clone allocation score on kimball: 0
 pcmk__clone_allocate: c-vm-fs allocation score on castor: 0

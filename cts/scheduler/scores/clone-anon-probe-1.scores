@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: drbd0:0 allocation score on mysql-01: 0
 pcmk__clone_allocate: drbd0:0 allocation score on mysql-02: 0
 pcmk__clone_allocate: drbd0:1 allocation score on mysql-01: 0

@@ -1,23 +1,26 @@
 1 of 2 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
-Online: [ fc16-builder ]
+  * Node List:
+    * Online: [ fc16-builder ]
 
- Resource Group: group1
-     ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
- Resource Group: group2
-     ClusterIP2	(ocf:heartbeat:IPaddr2):	 Stopped
+  * Full List of Resources:
+    * Resource Group: group1:
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+    * Resource Group: group2:
+      * ClusterIP2	(ocf:heartbeat:IPaddr2):	 Stopped
 
 Transition Summary:
- * Start      ClusterIP2     ( fc16-builder )   due to unrunnable group1 running (blocked)
+  * Start      ClusterIP2     ( fc16-builder )  due to unrunnable group1 running (blocked)
 
-Executing cluster transition:
+Executing Cluster Transition:
 
-Revised cluster status:
-Online: [ fc16-builder ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ fc16-builder ]
 
- Resource Group: group1
-     ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
- Resource Group: group2
-     ClusterIP2	(ocf:heartbeat:IPaddr2):	 Stopped
-
+  * Full List of Resources:
+    * Resource Group: group1:
+      * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped (disabled)
+    * Resource Group: group2:
+      * ClusterIP2	(ocf:heartbeat:IPaddr2):	 Stopped

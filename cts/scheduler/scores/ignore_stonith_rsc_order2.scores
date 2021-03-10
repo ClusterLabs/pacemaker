@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: A allocation score on fc16-builder: 0
 pcmk__group_allocate: MIXED_GROUP allocation score on fc16-builder: 0
 pcmk__group_allocate: S_B allocation score on fc16-builder: 0
