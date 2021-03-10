@@ -92,18 +92,22 @@ Verify the start is successful.
 .. code-block:: none
 
     # systemctl status pacemaker_remote
-    pacemaker_remote.service - Pacemaker Remote Service
-       Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)
-       Active: active (running) since Fri 2018-01-12 15:21:20 CDT; 20s ago
-     Main PID: 21273 (pacemaker_remot)
+    ● pacemaker_remote.service - Pacemaker Remote executor daemon
+       Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled; vendor preset: disabled)
+       Active: active (running) since Tue 2021-03-02 10:42:40 EST; 1min 23s ago
+         Docs: man:pacemaker-remoted
+               https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Remote/index.html
+     Main PID: 1139 (pacemaker-remot)
+        Tasks: 1
+       Memory: 5.4M
        CGroup: /system.slice/pacemaker_remote.service
-               └─21273 /usr/sbin/pacemaker-remoted
+               └─1139 /usr/sbin/pacemaker-remoted
+    
+    Mar 02 10:42:40 remote1 systemd[1]: Started Pacemaker Remote executor daemon.
+    Mar 02 10:42:40 remote1 pacemaker-remoted[1139]:  notice: Additional logging available in /var/log/pacemaker/pacemaker.log
+    Mar 02 10:42:40 remote1 pacemaker-remoted[1139]:  notice: Starting Pacemaker remote executor
+    Mar 02 10:42:41 remote1 pacemaker-remoted[1139]:  notice: Pacemaker remote executor successfully started and accepting connections
 
-    Jan 12 15:21:20 remote1 systemd[1]: Starting Pacemaker Remote Service...
-    Jan 12 15:21:20 remote1 systemd[1]: Started Pacemaker Remote Service.
-    Jan 12 15:21:20 remote1 pacemaker-remoted[21273]: notice: crm_add_logfile: Additional logging available in /var/log/pacemaker.log
-    Jan 12 15:21:20 remote1 pacemaker-remoted[21273]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
-    Jan 12 15:21:20 remote1 pacemaker-remoted[21273]: notice: bind_and_listen: Listening on address ::
 
 Verify Connection to Remote Node
 ################################
@@ -213,6 +217,7 @@ Verify corosync membership
     ----------------------
         Nodeid      Votes Name
              1          1 node1 (local)
+             2          1 node2
 
 Verify Pacemaker status. At first, the ``pcs cluster status`` output will look
 like this.
@@ -221,13 +226,24 @@ like this.
 
     # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: NONE
-    Last updated: Fri Jan 12 16:14:05 2018
-    Last change: Fri Jan 12 14:02:14 2018
-
-    1 node configured
-    0 resources configured
+    
+    WARNINGS:
+    No stonith devices and stonith-enabled is not false
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: NONE
+      * Last updated: Wed Mar  3 10:47:03 2021
+      * Last change:  Tue Mar  2 15:42:26 2021 by hacluster via crmd on node1
+      * 2 nodes configured
+      * 0 resource instances configured
+    
+    Node List:
+      * Node node1: UNCLEAN (offline)
+      * Node node2: UNCLEAN (offline)
+    
+    Full List of Resources:
+      * No resources
 
 After about a minute, you should see your two cluster nodes come online.
 
@@ -235,15 +251,23 @@ After about a minute, you should see your two cluster nodes come online.
 
     # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 16:16:32 2018
-    Last change: Fri Jan 12 14:02:14 2018
-
-    2 nodes configured
-    0 resources configured
-
-    Online: [ node1 node2 ]
+    
+    WARNINGS:
+    No stonith devices and stonith-enabled is not false
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: node1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar  3 10:47:03 2021
+      * Last change:  Tue Mar  2 15:42:26 2021 by hacluster via crmd on node1
+      * 2 nodes configured
+      * 0 resource instances configured
+    
+    Node List:
+      * Online: [ node1 node2 ]
+    
+    Full List of Resources:
+      * No resources
 
 For the sake of this tutorial, we are going to disable stonith to avoid having
 to cover fencing device configuration.
@@ -264,37 +288,35 @@ the ``/usr/lib/ocf/resource.d/pacemaker/remote`` file that describes what option
 are available, but there is no actual **ocf:pacemaker:remote** resource agent
 script that performs any work.
 
-Define the remote node connection resource to our remote node,
+Before we integrate the remote node, we'll need to authorize it.
+.. code-block:: none
+    # pcs host auth remote1
+
+Now, define the remote node connection resource to our remote node,
 **remote1**, using the following command on any cluster node.
 
 .. code-block:: none
-
-    # pcs resource create remote1 ocf:pacemaker:remote
+    # pcs cluster node add-remote remote1
 
 That's it.  After a moment you should see the remote node come online.
 
 .. code-block:: none
-
+    # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 17:13:09 2018
-    Last change: Fri Jan 12 17:02:02 2018
-
-    3 nodes configured
-    1 resources configured
-
-    Online: [ node1 node2 ]
-    RemoteOnline: [ remote1 ]
-
-    Full list of resources:
-
-     remote1 (ocf::pacemaker:remote):	Started node1
-
-    Daemon Status:
-      corosync: active/disabled
-      pacemaker: active/disabled
-      pcsd: active/enabled
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: node1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar  3 11:02:03 2021
+      * Last change:  Wed Mar  3 11:01:57 2021 by root via cibadmin on node1
+      * 3 nodes configured
+      * 1 resource instance configured
+    
+    Node List:
+      * Online: [ node1 node2 ]
+      * RemoteOnline: [ remote1 ]
+    
+    Full List of Resources:
+      * remote1	(ocf::pacemaker:remote):	 Started node1
 
 Starting Resources on Remote Node
 #################################
