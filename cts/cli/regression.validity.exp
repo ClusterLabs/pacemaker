@@ -321,24 +321,22 @@ update_validation 	info: Transformed the configuration from pacemaker-1.2 to pac
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-
 Current cluster status:
-
- dummy1	(ocf:pacemaker:Dummy):	 Stopped
- dummy2	(ocf:pacemaker:Dummy):	 Stopped
-
-Transition Summary:
+  * Full List of Resources:
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
-Executing cluster transition:
+Transition Summary:
 
-Revised cluster status:
+Executing Cluster Transition:
 
- dummy1	(ocf:pacemaker:Dummy):	 Stopped
- dummy2	(ocf:pacemaker:Dummy):	 Stopped
-
+Revised Cluster Status:
+  * Full List of Resources:
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= End test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)
 =#=#=#= Begin test: Make resulting CIB valid, although without validate-with attribute =#=#=#=
@@ -364,24 +362,22 @@ Schema validation of configuration is disabled (enabling is encouraged and preve
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-
 Current cluster status:
-
- dummy1	(ocf:pacemaker:Dummy):	 Stopped
- dummy2	(ocf:pacemaker:Dummy):	 Stopped
-
-Transition Summary:
+  * Full List of Resources:
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
-Executing cluster transition:
+Transition Summary:
 
-Revised cluster status:
+Executing Cluster Transition:
 
- dummy1	(ocf:pacemaker:Dummy):	 Stopped
- dummy2	(ocf:pacemaker:Dummy):	 Stopped
-
+Revised Cluster Status:
+  * Full List of Resources:
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= End test: Run crm_simulate with valid CIB, but without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with valid CIB, but without validate-with attribute
 =#=#=#= Begin test: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
@@ -495,24 +491,22 @@ validity.bad.xml:10: element rsc_order: Relax-NG validity error : Element constr
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-unpack_simple_rsc_order 	error: Cannot invert constraint 'ord_1-2' (please specify inverse manually)
-
 Current cluster status:
-
- dummy1	(ocf:pacemaker:Dummy):	 Stopped
- dummy2	(ocf:pacemaker:Dummy):	 Stopped
-
-Transition Summary:
+  * Full List of Resources:
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
+unpack_simple_rsc_order 	error: Cannot invert constraint 'ord_1-2' (please specify inverse manually)
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 
-Executing cluster transition:
+Transition Summary:
 
-Revised cluster status:
+Executing Cluster Transition:
 
- dummy1	(ocf:pacemaker:Dummy):	 Stopped
- dummy2	(ocf:pacemaker:Dummy):	 Stopped
-
+Revised Cluster Status:
+  * Full List of Resources:
+    * dummy1	(ocf:pacemaker:Dummy):	 Stopped
+    * dummy2	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= End test: Run crm_simulate with invalid CIB, also without validate-with attribute - OK (0) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB, also without validate-with attribute
