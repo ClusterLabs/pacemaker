@@ -296,7 +296,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
     }
-    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes, data_set);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -317,7 +317,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         node->weight = pe__add_scores(child->sort_index, node->weight);
     }
 
-    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -373,7 +373,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
-    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
 
     /* write them back and sort */
 
@@ -745,7 +745,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
-    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes, data_set);
     promotion_order(rsc, data_set);
 
     /* mark the first N as masters */

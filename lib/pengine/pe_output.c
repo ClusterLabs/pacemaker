@@ -1637,6 +1637,47 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
+static int
+node_weight(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const char *prefix = va_arg(args, const char *);
+    const char *uname = va_arg(args, const char *);
+    char *score = va_arg(args, char *);
+
+    if (rsc) {
+        out->list_item(out, NULL, "%s: %s allocation score on %s: %s",
+                       prefix, rsc->id, uname, score);
+    } else {
+        out->list_item(out, NULL, "%s: %s = %s", prefix, uname, score);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
+static int
+node_weight_xml(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    const char *prefix = va_arg(args, const char *);
+    const char *uname = va_arg(args, const char *);
+    char *score = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "node_weight",
+                                                   "function", prefix,
+                                                   "node", uname,
+                                                   "score", score,
+                                                   NULL);
+
+    if (rsc) {
+        crm_xml_add(node, "id", rsc->id);
+    }
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int", "gboolean")
 int
 pe__op_history_text(pcmk__output_t *out, va_list args) {
@@ -2072,6 +2113,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-list", "log", pe__node_list_text },
     { "node-list", "text", pe__node_list_text },
     { "node-list", "xml", node_list_xml },
+    { "node-weight", "default", node_weight },
+    { "node-weight", "xml", node_weight_xml },
     { "node-attribute", "html", node_attribute_html },
     { "node-attribute", "log", pe__node_attribute_text },
     { "node-attribute", "text", pe__node_attribute_text },

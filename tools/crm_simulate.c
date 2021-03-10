@@ -865,7 +865,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)) {
+    if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches) &&
+        !options.show_scores && !options.show_utilization) {
         pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
     } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
         pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());

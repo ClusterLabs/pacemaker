@@ -231,8 +231,9 @@ sort_node_uname(gconstpointer a, gconstpointer b)
  */
 static void
 pe__output_node_weights(pe_resource_t *rsc, const char *comment,
-                        GHashTable *nodes)
+                        GHashTable *nodes, pe_working_set_t *data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     char score[128]; // Stack-allocated since this is called frequently
 
     // Sort the nodes so the output is consistent for regression tests
@@ -242,12 +243,7 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
         pe_node_t *node = (pe_node_t *) gIter->data;
 
         score2char_stack(node->weight, score, sizeof(score));
-        if (rsc) {
-            printf("%s: %s allocation score on %s: %s\n",
-                   comment, rsc->id, node->details->uname, score);
-        } else {
-            printf("%s: %s = %s\n", comment, node->details->uname, score);
-        }
+        out->message(out, "node-weight", rsc, comment, node->details->uname, score);
     }
     g_list_free(list);
 }
@@ -307,7 +303,7 @@ pe__log_node_weights(const char *file, const char *function, int line,
 void
 pe__show_node_weights_as(const char *file, const char *function, int line,
                          bool to_log, pe_resource_t *rsc, const char *comment,
-                         GHashTable *nodes)
+                         GHashTable *nodes, pe_working_set_t *data_set)
 {
     if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         // Don't show allocation scores for orphans
@@ -321,7 +317,7 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
     if (to_log) {
         pe__log_node_weights(file, function, line, rsc, comment, nodes);
     } else {
-        pe__output_node_weights(rsc, comment, nodes);
+        pe__output_node_weights(rsc, comment, nodes, data_set);
     }
 
     // If this resource has children, repeat recursively for each
@@ -330,7 +326,7 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             pe__show_node_weights_as(file, function, line, to_log, child,
-                                     comment, child->allowed_nodes);
+                                     comment, child->allowed_nodes, data_set);
         }
     }
 }
