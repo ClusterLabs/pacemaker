@@ -467,45 +467,47 @@ can_run_instance(pe_resource_t * rsc, pe_node_t * node, int limit)
     return NULL;
 }
 
-static pe_node_t *
+/*!
+ * \internal
+ * \brief (Pre-)allocate a clone instance if possible
+ *
+ * \param[in] rsc        Clone child to be allocated
+ * \param[in] prefer     Child's current node, if any
+ * \param[in] all_coloc  If true, consider dependents' positive colocations
+ * \param[in] limit      Maximum number of instances per host
+ * \param[in] data_set   Cluster working set
+ *
+ * \return NULL if child could be allocated, or string describing why not
+ */
+static const char *
 allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
                   int limit, pe_working_set_t *data_set)
 {
     pe_node_t *chosen = NULL;
     GHashTable *backup = NULL;
 
-    CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "Checking allocation of %s (preferring %s, using %s parent colocations)",
-                 rsc->id, (prefer? prefer->details->uname: "none"),
-                 (all_coloc? "all" : "some"));
-
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
-        return rsc->fns->location(rsc, NULL, FALSE);
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
-        return NULL;
+        chosen = rsc->fns->location(rsc, NULL, FALSE);
+        goto done;
     }
 
-    /* Only include positive colocation preferences of dependent resources
-     * if not every node will get a copy of the clone
-     */
+    if (pcmk_is_set(rsc->flags, pe_rsc_allocating)) {
+        return "Dependency loop detected";
+    }
+
     append_parent_colocation(rsc->parent, rsc, all_coloc);
 
     if (prefer) {
         pe_node_t *local_prefer = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
 
         if (local_prefer == NULL || local_prefer->weight < 0) {
-            pe_rsc_trace(rsc, "Not pre-allocating %s to %s - unavailable", rsc->id,
-                         prefer->details->uname);
-            return NULL;
+            return "Node cannot run this resource";
         }
     }
 
     can_run_instance(rsc, NULL, limit);
 
     backup = pcmk__copy_node_table(rsc->allowed_nodes);
-    pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if (chosen && prefer && (chosen->details != prefer->details)) {
         crm_info("Not pre-allocating %s to %s because %s is better",
@@ -513,9 +515,9 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
         g_hash_table_destroy(rsc->allowed_nodes);
         rsc->allowed_nodes = backup;
         native_deallocate(rsc);
-        chosen = NULL;
-        backup = NULL;
+        return "Another node is better";
     }
+
     if (chosen) {
         pe_node_t *local_node = parent_node_instance(rsc, chosen);
 
@@ -533,7 +535,9 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
     if(backup) {
         g_hash_table_destroy(backup);
     }
-    return chosen;
+
+done:
+    return (chosen == NULL)? "Resource cannot run" : NULL;
 }
 
 static void
@@ -597,14 +601,17 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         loop_max = 1;
     }
 
-    pe_rsc_debug(rsc, "Allocating up to %d %s instances to a possible %d nodes (at most %d per host, %d optimal)",
-                 max, rsc->id, available_nodes, per_host_max, loop_max);
+    pe_rsc_debug(rsc, "Allocating up to %d %s instances to a possible %d nodes "
+                      "(at most %d per host, %d optimal)%s",
+                 max, rsc->id, available_nodes, per_host_max, loop_max,
+                 all_coloc? "" : " considering dependents' anti-colocations only");
 
     /* Pre-allocate as many instances as we can to their current location */
     for (GList *gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
         pe_node_t *child_node = NULL;
         pe_node_t *local_node = NULL;
+        const char *reason = NULL;
 
         if ((child->running_on == NULL)
             || !pcmk_is_set(child->flags, pe_rsc_provisional)
@@ -616,33 +623,37 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         child_node = pe__current_node(child);
         local_node = parent_node_instance(child, child_node);
 
-        pe_rsc_trace(rsc,
-                     "Checking pre-allocation of %s to %s (%d remaining of %d)",
-                     child->id, child_node->details->uname, max - allocated,
-                     max);
+        if (child_node->weight < 0) {
+            reason = "Node is not allowed to run it";
 
-        if (!can_run_resources(child_node) || (child_node->weight < 0)) {
-            pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
-                         child_node->details->uname, child->id);
-            continue;
+        } else if (!can_run_resources(child_node)) {
+            reason = "Node can't run resources";
+
+        } else if ((local_node != NULL) && (local_node->count >= loop_max)) {
+            reason = "Optimal instances already allocated to node";
+
+        } else {
+            reason = allocate_instance(child, child_node, all_coloc,
+                                       per_host_max, data_set);
         }
 
-        if ((local_node != NULL) && (local_node->count >= loop_max)) {
-            pe_rsc_trace(rsc,
-                         "Not pre-allocating because %s already allocated "
-                         "optimal instances", child_node->details->uname);
-            continue;
-        }
-
-        if (allocate_instance(child, child_node, all_coloc, per_host_max,
-                              data_set)) {
-            pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
-                         child_node->details->uname);
+        if (reason == NULL) {
             allocated++;
+            pe_rsc_trace(rsc, "Pre-allocated %s to %s "
+                              "(%d of %d instances still unallocated)",
+                         child->id, child_node->details->uname,
+                         max - allocated, max);
+
+        } else {
+            pe_rsc_trace(rsc, "Not pre-allocating %s to %s: %s "
+                              "(%d of %d instances still unallocated)",
+                         child->id, child_node->details->uname, reason,
+                         max - allocated, max);
         }
     }
 
-    pe_rsc_trace(rsc, "Done pre-allocating (%d of %d)", allocated, max);
+    pe_rsc_trace(rsc, "Pre-allocated %d of %d instances of %s",
+                 allocated, max, rsc->id);
 
     for (GList *gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -661,16 +672,15 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         } else if (allocated >= max) {
             pe_rsc_debug(rsc, "Child %s not allocated - limit reached %d %d", child->id, allocated, max);
             resource_location(child, NULL, -INFINITY, "clone:limit_reached", data_set);
-        } else {
-            if (allocate_instance(child, NULL, all_coloc, per_host_max,
-                                  data_set)) {
-                allocated++;
-            }
+
+        } else if (allocate_instance(child, NULL, all_coloc, per_host_max,
+                                     data_set) == NULL) {
+            allocated++;
         }
     }
 
-    pe_rsc_debug(rsc, "Allocated %d %s instances of a possible %d",
-                 allocated, rsc->id, max);
+    pe_rsc_debug(rsc, "Allocated %d of %d instances of %s",
+                 allocated, max, rsc->id);
 }
 
 
@@ -735,7 +745,6 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     pe__clear_resource_flags(rsc, pe_rsc_provisional|pe_rsc_allocating);
-    pe_rsc_trace(rsc, "Done allocating %s", rsc->id);
     return NULL;
 }
 
