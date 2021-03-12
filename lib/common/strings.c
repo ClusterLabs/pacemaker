@@ -370,7 +370,7 @@ crm_get_msec(const char *input)
     } else if (!strncasecmp(units, "h", 1) || !strncasecmp(units, "hr", 2)) {
         multiplier = 60 * 60 * 1000;
         divisor = 1;
-    } else if ((*units != EOS) && (*units != '\n') && (*units != '\r')) {
+    } else if ((*units != '\0') && (*units != '\n') && (*units != '\r')) {
         return PCMK__PARSE_INT_DEFAULT;
     }
 

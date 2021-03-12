@@ -53,7 +53,6 @@ extern "C" {
  */
 #  define CRM_FEATURE_SET		"3.7.3"
 
-#  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
 
 #  ifndef MAX_NAME
@@ -224,6 +223,10 @@ crm_action_str(const char *task, guint interval_ms) {
     }
     return task;
 }
+
+#ifndef PCMK__NO_COMPAT
+#include <crm/crm_compat.h>
+#endif
 
 #ifdef __cplusplus
 }
