@@ -1,6 +1,6 @@
 #!@PYTHON@
 
-__copyright__ = "Copyright 2018-2020 Andrew Beekhof <andrew@beekhof.net>"
+__copyright__ = "Copyright 2018-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
