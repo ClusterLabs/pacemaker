@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -67,25 +67,6 @@ pcmk__build_path(const char *path_c, mode_t mode)
 done:
     free(path);
     return rc;
-}
-
-/*!
- * \brief Create a directory, including any parent directories needed
- *
- * \param[in] path_c Pathname of the directory to create
- * \param[in] mode Permissions to be used (with current umask) when creating
- *
- * \note This logs errors but does not return them to the caller.
- */
-void
-crm_build_path(const char *path_c, mode_t mode)
-{
-    int rc = pcmk__build_path(path_c, mode);
-
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not create directory '%s': %s",
-                path_c, pcmk_rc_str(rc));
-    }
 }
 
 /*!
@@ -633,3 +614,20 @@ pcmk__close_fds_in_child(bool all)
         close(lpc);
     }
 }
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/common/util_compat.h>
+
+void
+crm_build_path(const char *path_c, mode_t mode)
+{
+    int rc = pcmk__build_path(path_c, mode);
+
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not create directory '%s': %s",
+                path_c, pcmk_rc_str(rc));
+    }
+}
+
+// End deprecated API

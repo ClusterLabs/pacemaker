@@ -48,9 +48,6 @@ long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
-/* public I/O functions (from io.c) */
-void crm_build_path(const char *path_c, mode_t mode);
-
 guint crm_parse_interval_spec(const char *input);
 int char2score(const char *score);
 char *score2char(int score);
