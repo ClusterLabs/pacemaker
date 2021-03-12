@@ -42,7 +42,6 @@ extern "C" {
 int crm_default_remote_port(void);
 
 /* public string functions (from strings.c) */
-char *crm_itoa_stack(int an_int, char *buf, size_t len);
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
 long long crm_parse_ll(const char *text, const char *default_text);

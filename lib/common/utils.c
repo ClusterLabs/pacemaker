@@ -95,14 +95,16 @@ char2score(const char *score)
 char *
 score2char_stack(int score, char *buf, size_t len)
 {
+    CRM_CHECK((buf != NULL) && (len >= sizeof(CRM_MINUS_INFINITY_S)),
+              return NULL);
+
     if (score >= CRM_SCORE_INFINITY) {
         strncpy(buf, CRM_INFINITY_S, 9);
     } else if (score <= -CRM_SCORE_INFINITY) {
         strncpy(buf, CRM_MINUS_INFINITY_S , 10);
     } else {
-        return crm_itoa_stack(score, buf, len);
+        snprintf(buf, len, "%d", score);
     }
-
     return buf;
 }
 
