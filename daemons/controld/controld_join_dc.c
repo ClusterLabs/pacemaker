@@ -328,7 +328,7 @@ do_dc_join_filter_offer(long long action,
             XML_ATTR_NUMUPDATES,
         };
 
-        for (lpc = 0; cmp == 0 && lpc < DIMOF(attributes); lpc++) {
+        for (lpc = 0; cmp == 0 && lpc < PCMK__NELEM(attributes); lpc++) {
             cmp = compare_int_fields(max_generation_xml, generation, attributes[lpc]);
         }
     }

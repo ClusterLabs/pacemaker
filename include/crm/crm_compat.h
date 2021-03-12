@@ -26,6 +26,9 @@ extern "C" {
 //! \deprecated Use '\0' instead
 #define EOS '\0'
 
+//! \deprecated This macro will be removed in a future release
+#define DIMOF(a) ((int) (sizeof(a)/sizeof(a[0])))
+
 #ifdef __cplusplus
 }
 #endif

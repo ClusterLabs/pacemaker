@@ -172,7 +172,7 @@ cib_get_operation_id(const char *op, int *operation)
 
     if (operation_hash == NULL) {
         int lpc = 0;
-        int max_msg_types = DIMOF(cib_server_ops);
+        int max_msg_types = PCMK__NELEM(cib_server_ops);
 
         operation_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
         for (lpc = 1; lpc < max_msg_types; lpc++) {
@@ -241,14 +241,14 @@ cib_msg_copy(xmlNode * msg, gboolean with_data)
 
     CRM_ASSERT(copy != NULL);
 
-    for (lpc = 0; lpc < DIMOF(field_list); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
         field = field_list[lpc];
         value = crm_element_value(msg, field);
         if (value != NULL) {
             crm_xml_add(copy, field, value);
         }
     }
-    for (lpc = 0; with_data && lpc < DIMOF(data_list); lpc++) {
+    for (lpc = 0; with_data && lpc < PCMK__NELEM(data_list); lpc++) {
         field = data_list[lpc];
         value_struct = get_message_xml(msg, field);
         if (value_struct != NULL) {

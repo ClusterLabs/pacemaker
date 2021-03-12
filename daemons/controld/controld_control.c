@@ -661,19 +661,20 @@ crmd_metadata(void)
                                 "Pacemaker controller options",
                                 "Cluster options used by Pacemaker's "
                                     "controller (formerly called crmd)",
-                                crmd_opts, DIMOF(crmd_opts));
+                                crmd_opts, PCMK__NELEM(crmd_opts));
 }
 
 static void
 verify_crmd_options(GHashTable * options)
 {
-    pcmk__validate_cluster_options(options, crmd_opts, DIMOF(crmd_opts));
+    pcmk__validate_cluster_options(options, crmd_opts, PCMK__NELEM(crmd_opts));
 }
 
 static const char *
 crmd_pref(GHashTable * options, const char *name)
 {
-    return pcmk__cluster_option(options, crmd_opts, DIMOF(crmd_opts), name);
+    return pcmk__cluster_option(options, crmd_opts, PCMK__NELEM(crmd_opts),
+                                name);
 }
 
 static void

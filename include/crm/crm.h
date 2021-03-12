@@ -53,8 +53,6 @@ extern "C" {
  */
 #  define CRM_FEATURE_SET		"3.7.3"
 
-#  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
-
 #  ifndef MAX_NAME
 #    define MAX_NAME	256
 #  endif

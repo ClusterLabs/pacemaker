@@ -802,7 +802,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     xmlNode *result_cib = NULL;
     cib_op_t *fn = NULL;
     int lpc = 0;
-    static int max_msg_types = DIMOF(cib_file_ops);
+    static int max_msg_types = PCMK__NELEM(cib_file_ops);
     cib_file_opaque_t *private = cib->variant_opaque;
 
     crm_info("Handling %s operation for %s as %s",

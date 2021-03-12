@@ -295,19 +295,19 @@ pe_metadata(void)
                                 "Pacemaker scheduler options",
                                 "Cluster options used by Pacemaker's scheduler"
                                     " (formerly called pengine)",
-                                pe_opts, DIMOF(pe_opts));
+                                pe_opts, PCMK__NELEM(pe_opts));
 }
 
 void
 verify_pe_options(GHashTable * options)
 {
-    pcmk__validate_cluster_options(options, pe_opts, DIMOF(pe_opts));
+    pcmk__validate_cluster_options(options, pe_opts, PCMK__NELEM(pe_opts));
 }
 
 const char *
 pe_pref(GHashTable * options, const char *name)
 {
-    return pcmk__cluster_option(options, pe_opts, DIMOF(pe_opts), name);
+    return pcmk__cluster_option(options, pe_opts, PCMK__NELEM(pe_opts), name);
 }
 
 const char *

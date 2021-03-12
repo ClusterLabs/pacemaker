@@ -25,6 +25,9 @@
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/strings_internal.h>
 
+// Number of elements in a statically defined array
+#define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
+
 // Internal ACL-related utilities (from acl.c)
 
 char *pcmk__uid2username(uid_t uid);

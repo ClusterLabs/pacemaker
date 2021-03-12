@@ -1130,7 +1130,7 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
             ((struct sockaddr_in *)(void*)addr)->sin_port = htons(port);
         }
 
-        memset(buffer, 0, DIMOF(buffer));
+        memset(buffer, 0, PCMK__NELEM(buffer));
         pcmk__sockaddr2str(addr, buffer);
         crm_info("Attempting remote connection to %s:%d", buffer, port);
 

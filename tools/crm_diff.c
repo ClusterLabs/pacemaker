@@ -196,7 +196,7 @@ strip_patch_cib_version(xmlNode *patch, const char **vfields, size_t nvfields)
             XML_TAG_DIFF_ADDED,
         };
 
-        for (i = 0; i < DIMOF(tags); i++) {
+        for (i = 0; i < PCMK__NELEM(tags); i++) {
             xmlNode *tmp = NULL;
             int lpc;
 
@@ -234,7 +234,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     if (no_version) {
         int lpc;
 
-        for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
             crm_copy_xml_element(object_1, object_2, vfields[lpc]);
         }
     }
@@ -262,7 +262,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         log_patch_cib_versions(output);
 
     } else if (no_version) {
-        strip_patch_cib_version(output, vfields, DIMOF(vfields));
+        strip_patch_cib_version(output, vfields, PCMK__NELEM(vfields));
     }
 
     xml_log_patchset(LOG_NOTICE, __func__, output);

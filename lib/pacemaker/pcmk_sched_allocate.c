@@ -162,7 +162,7 @@ check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
         XML_AGENT_ATTR_PROVIDER
     };
 
-    for (; attr_lpc < DIMOF(attr_list); attr_lpc++) {
+    for (; attr_lpc < PCMK__NELEM(attr_list); attr_lpc++) {
         value = crm_element_value(rsc->xml, attr_list[attr_lpc]);
         old_value = crm_element_value(rsc_entry, attr_list[attr_lpc]);
         if (value == old_value  /* i.e. NULL */
