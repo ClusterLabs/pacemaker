@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2020 the Pacemaker project contributors
+ * Copyright 2005-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1731,6 +1731,6 @@ pcmk__epoch2str(time_t *when)
     if (since_epoch == NULL) {
         return NULL;
     } else {
-        return crm_strip_trailing_newline(since_epoch);
+        return pcmk__trim(since_epoch);
     }
 }

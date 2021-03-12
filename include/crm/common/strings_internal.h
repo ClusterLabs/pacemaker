@@ -35,6 +35,7 @@ int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 bool pcmk__starts_with(const char *str, const char *prefix);
 bool pcmk__ends_with(const char *s, const char *match);
 bool pcmk__ends_with_ext(const char *s, const char *match);
+char *pcmk__trim(char *str);
 void pcmk__add_separated_word(char **list, size_t *len, const char *word,
                               const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,

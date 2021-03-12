@@ -443,8 +443,16 @@ crm_str_to_boolean(const char *s, int *ret)
     return -1;
 }
 
+/*!
+ * \internal
+ * \brief Replace any trailing newlines in a string with \0's
+ *
+ * \param[in] str  String to trim
+ *
+ * \return \p str
+ */
 char *
-crm_strip_trailing_newline(char *str)
+pcmk__trim(char *str)
 {
     int len;
 
@@ -1262,6 +1270,12 @@ crm_parse_int(const char *text, const char *default_text)
     }
 
     return (int) result;
+}
+
+char *
+crm_strip_trailing_newline(char *str)
+{
+    return pcmk__trim(str);
 }
 
 // End deprecated API

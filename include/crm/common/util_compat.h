@@ -108,6 +108,9 @@ crm_strcase_table_new(void)
 //! \deprecated Do not use Pacemaker for generic hash table manipulation
 GHashTable *crm_str_table_dup(GHashTable *old_table);
 
+//! \deprecated Don't use Pacemaker for string manipulation
+char *crm_strip_trailing_newline(char *str);
+
 #ifdef __cplusplus
 }
 #endif
