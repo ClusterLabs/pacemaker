@@ -56,6 +56,9 @@ gboolean safe_str_neq(const char *a, const char *b);
 //! \deprecated Use strcasecmp() instead
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
+//! \deprecated Use sscanf() instead
+int pcmk_scan_nvpair(const char *input, char **name, char **value);
+
 #ifdef __cplusplus
 }
 #endif

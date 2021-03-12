@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -207,6 +207,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 // convenience function for name=value strings
 
 /*!
+ * \internal
  * \brief Extract the name and value from an input string formatted as "name=value".
  * If unable to extract them, they are returned as NULL.
  *
@@ -218,7 +219,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
  *         and error code otherwise
  */
 int
-pcmk_scan_nvpair(const char *input, char **name, char **value)
+pcmk__scan_nvpair(const char *input, char **name, char **value)
 {
 #ifdef SSCANF_HAS_M
     *name = NULL;
@@ -952,3 +953,15 @@ xml2list(xmlNode *parent)
 
     return nvpair_hash;
 }
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/common/util_compat.h>
+
+int
+pcmk_scan_nvpair(const char *input, char **name, char **value)
+{
+    return pcmk__scan_nvpair(input, name, value);
+}
+
+// End deprecated API

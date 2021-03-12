@@ -107,6 +107,11 @@ guint pcmk__mainloop_timer_get_period(mainloop_timer_t *timer);
 const char *pcmk__message_name(const char *name);
 
 
+/* internal name/value utilities (from nvpair.c) */
+
+int pcmk__scan_nvpair(const char *input, char **name, char **value);
+
+
 /* internal procfs utilities (from procfs.c) */
 
 pid_t pcmk__procfs_pid_of(const char *name);

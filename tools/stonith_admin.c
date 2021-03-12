@@ -278,7 +278,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
 
     crm_info("Scanning: -o %s", optarg);
 
-    rc = pcmk_scan_nvpair(optarg, &name, &value);
+    rc = pcmk__scan_nvpair(optarg, &name, &value);
 
     if (rc != 2) {
         rc = pcmk_legacy2rc(rc);
