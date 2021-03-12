@@ -137,8 +137,8 @@ sort_node(gconstpointer a, gconstpointer b)
     const pcmk_controld_api_node_t *node_a = a;
     const pcmk_controld_api_node_t *node_b = b;
 
-    return pcmk_numeric_strcasecmp((node_a->uname? node_a->uname : ""),
-                                   (node_b->uname? node_b->uname : ""));
+    return pcmk__numeric_strcasecmp((node_a->uname? node_a->uname : ""),
+                                    (node_b->uname? node_b->uname : ""));
 }
 
 static void

@@ -1000,6 +1000,7 @@ pcmk__char_in_any_str(int ch, ...)
 }
 
 /*!
+ * \internal
  * \brief Sort strings, with numeric portions sorted numerically
  *
  * Sort two strings case-insensitively like strcasecmp(), but with any numeric
@@ -1015,7 +1016,7 @@ pcmk__char_in_any_str(int ch, ...)
  * \retval  1 \p s1 comes after \p s2
  */
 int
-pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+pcmk__numeric_strcasecmp(const char *s1, const char *s2)
 {
     while (*s1 && *s2) {
         if (isdigit(*s1) && isdigit(*s2)) {
@@ -1276,6 +1277,12 @@ char *
 crm_strip_trailing_newline(char *str)
 {
     return pcmk__trim(str);
+}
+
+int
+pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+{
+    return pcmk__numeric_strcasecmp(s1, s2);
 }
 
 // End deprecated API

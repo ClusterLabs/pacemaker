@@ -47,7 +47,6 @@ int crm_str_to_boolean(const char *s, int *ret);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
 
 static inline char *
 crm_itoa(int an_int)

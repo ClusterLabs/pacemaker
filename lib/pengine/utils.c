@@ -217,8 +217,8 @@ pe__node_list2table(GList *list)
 gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {
-    return pcmk_numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
-                                   ((const pe_node_t *) b)->details->uname);
+    return pcmk__numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
+                                    ((const pe_node_t *) b)->details->uname);
 }
 
 /*!
