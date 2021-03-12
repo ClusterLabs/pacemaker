@@ -91,7 +91,7 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
     char *buf = NULL;
 
     if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
-        char *pair = pcmk_format_nvpair("interval", interval_ms_s, "ms");
+        char *pair = pcmk__format_nvpair("interval", interval_ms_s, "ms");
         interval_str = crm_strdup_printf(" %s", pair);
         free(pair);
     }
@@ -114,14 +114,14 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
         value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
         if (value) {
-            char *pair = pcmk_format_nvpair(XML_RSC_OP_T_EXEC, value, "ms");
+            char *pair = pcmk__format_nvpair(XML_RSC_OP_T_EXEC, value, "ms");
             exec_str = crm_strdup_printf(" %s", pair);
             free(pair);
         }
 
         value = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
         if (value) {
-            char *pair = pcmk_format_nvpair(XML_RSC_OP_T_QUEUE, value, "ms");
+            char *pair = pcmk__format_nvpair(XML_RSC_OP_T_QUEUE, value, "ms");
             queue_str = crm_strdup_printf(" %s", pair);
             free(pair);
         }

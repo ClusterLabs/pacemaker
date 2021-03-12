@@ -278,9 +278,12 @@ pcmk__scan_nvpair(const char *input, char **name, char **value)
  * \param[in]     name  The name of the nvpair.
  * \param[in]     value The value of the nvpair.
  * \param[in]     units Optional units for the value, or NULL.
+ *
+ * \return Newly allocated string with name/value pair
  */
 char *
-pcmk_format_nvpair(const char *name, const char *value, const char *units) {
+pcmk__format_nvpair(const char *name, const char *value, const char *units)
+{
     return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
 }
 
@@ -288,7 +291,7 @@ pcmk_format_nvpair(const char *name, const char *value, const char *units) {
  * \internal
  * \brief Format a name/time pair.
  *
- * See pcmk_format_nvpair() for more details.
+ * See pcmk__format_nvpair() for more details.
  *
  * \note The caller is responsible for freeing the return value after use.
  *
@@ -962,6 +965,13 @@ int
 pcmk_scan_nvpair(const char *input, char **name, char **value)
 {
     return pcmk__scan_nvpair(input, name, value);
+}
+
+char *
+pcmk_format_nvpair(const char *name, const char *value,
+                   const char *units)
+{
+    return pcmk__format_nvpair(name, value, units);
 }
 
 // End deprecated API
