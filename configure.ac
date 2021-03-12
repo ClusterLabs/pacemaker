@@ -241,10 +241,10 @@ AS_IF([test $enable_compat_2_0 -ne $DISABLED],
 
 # Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
 # that users and tools can continue to invoke those names directly (e.g., for
-# meta-data). This option will be deprecated in a future release.
+# meta-data). This option will be removed in a future release.
 AC_ARG_ENABLE([legacy-links],
     [AS_HELP_STRING([--enable-legacy-links],
-        [add symlinks for old daemon names @<:@no@:>@])]
+        [add symlinks for old daemon names (deprecated) @<:@no@:>@])]
 )
 yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
