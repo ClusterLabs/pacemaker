@@ -78,9 +78,6 @@ extern char *crm_system_name;
 
 /* *INDENT-OFF* */
 
-// Used for some internal IPC timeouts (maybe should be configurable option)
-#  define MAX_IPC_DELAY   120
-
 // How we represent "infinite" scores
 #  define CRM_SCORE_INFINITY    1000000
 #  define CRM_INFINITY_S        "INFINITY"

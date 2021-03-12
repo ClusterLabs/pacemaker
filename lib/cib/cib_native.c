@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2020 the Pacemaker project contributors
+ * Later changes copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -155,7 +155,7 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
         .destroy = cib_native_destroy
     };
 
-    cib->call_timeout = MAX_IPC_DELAY;
+    cib->call_timeout = PCMK__IPC_TIMEOUT;
 
     if (type == cib_command) {
         cib->state = cib_connected_command;

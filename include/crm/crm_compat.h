@@ -26,6 +26,9 @@ extern "C" {
 //! \deprecated Use '\0' instead
 #define EOS '\0'
 
+//! \deprecated This defined constant will be removed in a future release
+#define MAX_IPC_DELAY 120
+
 //!@{
 //! \deprecated This macro will be removed in a future release
 
