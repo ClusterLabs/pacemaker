@@ -168,6 +168,12 @@ pcmk__str_empty(const char *s)
     return (s == NULL) || (s[0] == '\0');
 }
 
+static inline char *
+pcmk__itoa(int an_int)
+{
+    return crm_strdup_printf("%d", an_int);
+}
+
 // note this returns const not allocated
 static inline const char *
 pcmk__btoa(bool condition)

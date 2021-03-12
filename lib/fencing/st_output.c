@@ -133,7 +133,7 @@ full_history_xml(pcmk__output_t *out, va_list args) {
 
         PCMK__OUTPUT_LIST_FOOTER(out, rc);
     } else {
-        char *rc_s = crm_itoa(history_rc);
+        char *rc_s = pcmk__itoa(history_rc);
 
         pcmk__output_create_xml_node(out, "fence_history",
                                      "status", rc_s,
@@ -339,7 +339,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args) {
             break;
 
         default: {
-            char *state = crm_itoa(event->state);
+            char *state = pcmk__itoa(event->state);
             pcmk__xe_set_props(node, "status", "pending",
                                "extended-status", state,
                                NULL);

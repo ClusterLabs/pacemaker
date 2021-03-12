@@ -931,7 +931,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
             ((prov == NULL)? "" : PROVIDER_SEP), ((prov == NULL)? "" : prov),
             crm_element_value(rsc->xml, XML_ATTR_TYPE));
 
-    nodes_running_on = crm_itoa(g_list_length(rsc->running_on));
+    nodes_running_on = pcmk__itoa(g_list_length(rsc->running_on));
     priority = crm_ftoa(rsc->priority);
 
     rc = pe__name_and_nvpairs_xml(out, true, "resource", 12,

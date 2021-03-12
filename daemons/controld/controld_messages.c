@@ -1188,7 +1188,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
     crm_log_xml_trace(stored_msg, "message");
 
-    now_s = crm_itoa(now);
+    now_s = pcmk__itoa(now);
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 

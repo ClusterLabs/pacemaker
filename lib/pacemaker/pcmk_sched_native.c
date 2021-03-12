@@ -859,7 +859,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     }
 
     if (rsc->next_role == RSC_ROLE_MASTER) {
-        char *running_master = crm_itoa(PCMK_OCF_RUNNING_MASTER);
+        char *running_master = pcmk__itoa(PCMK_OCF_RUNNING_MASTER);
 
         add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
         free(running_master);
@@ -1020,7 +1020,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
         stopped_mon = custom_action(rsc, strdup(key), name, stop_node, is_optional, TRUE, data_set);
 
-        rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
+        rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
         add_hash_param(stopped_mon->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
         free(rc_inactive);
 
@@ -2647,8 +2647,8 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     static const char *rc_inactive = NULL;
 
     if (rc_inactive == NULL) {
-        rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
-        rc_master = crm_itoa(PCMK_OCF_RUNNING_MASTER);
+        rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
+        rc_master = pcmk__itoa(PCMK_OCF_RUNNING_MASTER);
     }
 
     CRM_CHECK(node != NULL, return FALSE);

@@ -125,7 +125,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
 
         if (value == NULL) {
-            client->name = crm_itoa(pcmk__client_pid(c));
+            client->name = pcmk__itoa(pcmk__client_pid(c));
         } else {
             client->name = strdup(value);
         }

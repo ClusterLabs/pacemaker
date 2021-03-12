@@ -76,8 +76,8 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     // Allocate instance numbers in numerical order (starting at 0)
-    inc_num = crm_itoa(clone_data->total_clones);
-    inc_max = crm_itoa(clone_data->clone_max);
+    inc_num = pcmk__itoa(clone_data->total_clones);
+    inc_max = pcmk__itoa(clone_data->clone_max);
 
     child_copy = copy_xml(clone_data->xml_obj_child);
 

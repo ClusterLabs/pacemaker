@@ -587,7 +587,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pe__location_t *location = va_arg(args, pe__location_t *);
     gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
 
-    char *weight_s = crm_itoa(pe_node->weight);
+    char *weight_s = pcmk__itoa(pe_node->weight);
 
     pcmk__output_create_xml_node(out, "ban",
                                  "id", location->id,
@@ -708,19 +708,19 @@ cluster_counts_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr nodes_node = pcmk__output_create_xml_node(out, "nodes_configured", NULL);
     xmlNodePtr resources_node = pcmk__output_create_xml_node(out, "resources_configured", NULL);
 
-    char *s = crm_itoa(nnodes);
+    char *s = pcmk__itoa(nnodes);
     crm_xml_add(nodes_node, "number", s);
     free(s);
 
-    s = crm_itoa(nresources);
+    s = pcmk__itoa(nresources);
     crm_xml_add(resources_node, "number", s);
     free(s);
 
-    s = crm_itoa(ndisabled);
+    s = pcmk__itoa(ndisabled);
     crm_xml_add(resources_node, "disabled", s);
     free(s);
 
-    s = crm_itoa(nblocked);
+    s = pcmk__itoa(nblocked);
     crm_xml_add(resources_node, "blocked", s);
     free(s);
 
@@ -1095,7 +1095,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
                        &status, 0);
 
-    rc_s = crm_itoa(rc);
+    rc_s = pcmk__itoa(rc);
     node = pcmk__output_create_xml_node(out, "failure",
                                         (op_key == NULL)? "id" : "op_key",
                                         (op_key == NULL)? ID(xml_op) : op_key,
@@ -1116,7 +1116,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         char *rc_change = NULL;
 
         crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
-        s = crm_itoa(interval_ms);
+        s = pcmk__itoa(interval_ms);
 
         crm_time_set_timet(crm_when, &epoch);
         rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
@@ -1339,7 +1339,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 
     if (full) {
         const char *node_type = "unknown";
-        char *length_s = crm_itoa(g_list_length(node->details->running_rsc));
+        char *length_s = pcmk__itoa(g_list_length(node->details->running_rsc));
 
         switch (node->details->type) {
             case node_member:
@@ -1581,7 +1581,7 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (add_extra) {
-        char *buf = crm_itoa(expected_score);
+        char *buf = pcmk__itoa(expected_score);
         crm_xml_add(node, "expected", buf);
         free(buf);
     }
@@ -1956,7 +1956,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     int rc = va_arg(args, int);
     gboolean print_timing = va_arg(args, gboolean);
 
-    char *rc_s = crm_itoa(rc);
+    char *rc_s = pcmk__itoa(rc);
     xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history",
                                                    "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                                                    "task", task,
@@ -2092,7 +2092,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     if (rsc == NULL) {
         crm_xml_add(node, "orphan", "true");
     } else if (all || failcount || last_failure > 0) {
-        char *migration_s = crm_itoa(rsc->migration_threshold);
+        char *migration_s = pcmk__itoa(rsc->migration_threshold);
 
         pcmk__xe_set_props(node, "orphan", "false",
                            "migration-threshold", migration_s,
@@ -2100,7 +2100,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
         free(migration_s);
 
         if (failcount > 0) {
-            char *s = crm_itoa(failcount);
+            char *s = pcmk__itoa(failcount);
 
             crm_xml_add(node, PCMK__FAIL_COUNT_PREFIX, s);
             free(s);

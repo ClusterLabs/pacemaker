@@ -122,7 +122,7 @@ score2char(int score)
     } else if (score <= -CRM_SCORE_INFINITY) {
         return strdup(CRM_MINUS_INFINITY_S);
     }
-    return crm_itoa(score);
+    return pcmk__itoa(score);
 }
 
 int
