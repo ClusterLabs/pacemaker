@@ -112,6 +112,7 @@ const char *pcmk__message_name(const char *name);
 int pcmk__scan_nvpair(const char *input, char **name, char **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
+char *pcmk__format_named_time(const char *name, time_t epoch_time);
 
 
 /* internal procfs utilities (from procfs.c) */

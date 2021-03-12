@@ -107,7 +107,8 @@ op_history_string(xmlNode *xml_op, const char *task, const char *interval_ms_s,
 
         if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE, &epoch) == pcmk_ok)
             && (epoch > 0)) {
-            char *time = pcmk_format_named_time(XML_RSC_OP_LAST_CHANGE, epoch);
+            char *time = pcmk__format_named_time(XML_RSC_OP_LAST_CHANGE, epoch);
+
             last_change_str = crm_strdup_printf(" %s", time);
             free(time);
         }
@@ -1872,7 +1873,9 @@ ticket_html(pcmk__output_t *out, va_list args) {
     pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     if (ticket->last_granted > -1) {
-        char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+        char *time = pcmk__format_named_time("last-granted",
+                                             ticket->last_granted);
+
         out->list_item(out, NULL, "%s:\t%s%s %s", ticket->id,
                        ticket->granted ? "granted" : "revoked",
                        ticket->standby ? " [standby]" : "",
@@ -1893,7 +1896,9 @@ pe__ticket_text(pcmk__output_t *out, va_list args) {
     pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     if (ticket->last_granted > -1) {
-        char *time = pcmk_format_named_time("last-granted", ticket->last_granted);
+        char *time = pcmk__format_named_time("last-granted",
+                                             ticket->last_granted);
+
         out->list_item(out, ticket->id, "%s%s %s",
                        ticket->granted ? "granted" : "revoked",
                        ticket->standby ? " [standby]" : "",

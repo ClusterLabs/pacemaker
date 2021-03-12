@@ -297,9 +297,12 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
  *
  * \param[in]     name       The name for the time.
  * \param[in]     epoch_time The time to format.
+ *
+ * \return Newly allocated string with name/value pair
  */
 char *
-pcmk_format_named_time(const char *name, time_t epoch_time) {
+pcmk__format_named_time(const char *name, time_t epoch_time)
+{
     const char *now_str = pcmk__epoch2str(&epoch_time);
 
     return crm_strdup_printf("%s=\"%s\"", name, now_str ? now_str : "");
@@ -972,6 +975,12 @@ pcmk_format_nvpair(const char *name, const char *value,
                    const char *units)
 {
     return pcmk__format_nvpair(name, value, units);
+}
+
+char *
+pcmk_format_named_time(const char *name, time_t epoch_time)
+{
+    return pcmk__format_named_time(name, epoch_time);
 }
 
 // End deprecated API

@@ -63,6 +63,9 @@ int pcmk_scan_nvpair(const char *input, char **name, char **value);
 char *pcmk_format_nvpair(const char *name, const char *value,
                          const char *units);
 
+//! \deprecated Use a standard printf()-style function instead
+char *pcmk_format_named_time(const char *name, time_t epoch_time);
+
 #ifdef __cplusplus
 }
 #endif

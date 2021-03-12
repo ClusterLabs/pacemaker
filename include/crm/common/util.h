@@ -38,9 +38,6 @@ extern "C" {
 #  define ONLINESTATUS  "online"  // Status of an online client
 #  define OFFLINESTATUS "offline" // Status of an offline client
 
-// public name/value pair functions (from nvpair.c)
-char *pcmk_format_named_time(const char *name, time_t epoch_time);
-
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
 
