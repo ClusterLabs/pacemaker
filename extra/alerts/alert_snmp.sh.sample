@@ -38,16 +38,6 @@
 # 1.3.6.1.4.1.32723 has been assigned to the project by IANA:
 # http://www.iana.org/assignments/enterprise-numbers
 
-if [ -z "$CRM_alert_version" ]; then
-    echo "$0 must be run by Pacemaker version 1.1.15 or later"
-    exit 0
-fi
-
-if [ -z "$CRM_alert_recipient" ]; then
-    echo "$0 requires a recipient configured with the SNMP server IP address"
-    exit 0
-fi
-
 # Defaults for user-configurable values
 trap_binary_default="/usr/bin/snmptrap"
 trap_version_default="2c"
@@ -86,6 +76,19 @@ trap_ignore_string_default="n/a"      # doesn't conflict with valid XML IDs
 : ${CRM_alert_target_rc=${trap_ignore_int32}}
 : ${CRM_alert_attribute_name=${trap_ignore_string}}
 : ${CRM_alert_attribute_value=${trap_ignore_string}}
+: ${CRM_alert_version:=""}
+: ${CRM_alert_recipient:=""}
+: ${CRM_alert_kind:=""}
+
+if [ -z "$CRM_alert_version" ]; then
+    echo "$0 must be run by Pacemaker version 1.1.15 or later"
+    exit 0
+fi
+
+if [ -z "$CRM_alert_recipient" ]; then
+    echo "$0 requires a recipient configured with the SNMP server IP address"
+    exit 0
+fi
 
 # Echo a high-resolution equivalent of the Pacemaker-provided time values
 # using NetSNMP's DateAndTime specification ("%Y-%m-%d,%H:%M:%S.%01N").
