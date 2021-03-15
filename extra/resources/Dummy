@@ -41,6 +41,18 @@
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
 
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_fake:="dummy"}
+: ${OCF_RESKEY_op_sleep:=0}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_envfile:=""}
+: ${OCF_RESKEY_fail_start_on:=""}
+: ${OCF_RESKEY_migrate_source:=""}
+: ${OCF_RESKEY_migrate_target:=""}
+: ${OCF_RESKEY_envfile:=""}
+: ${OCF_RESKEY_state:=""}
+
 #######################################################################
 
 meta_data() {
@@ -265,11 +277,6 @@ dummy_validate() {
     fi
     return $OCF_SUCCESS
 }
-
-: ${OCF_RESKEY_fake:="dummy"}
-: ${OCF_RESKEY_op_sleep:=0}
-: ${OCF_RESKEY_CRM_meta_interval:=0}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ -z "$OCF_RESKEY_state" ]; then
     OCF_RESKEY_state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"

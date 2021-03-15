@@ -21,6 +21,13 @@
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
 
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_notify_delay:=0}
+: ${OCF_RESKEY_envfile:=""}
+: ${OCF_RESKEY_state:=""}
+
 # Until we can assume the new name is available ...
 : ${OCF_RUNNING_PROMOTED:=$OCF_RUNNING_MASTER}
 
@@ -228,10 +235,6 @@ stateful_validate() {
 stateful_reload_agent() {
     return $OCF_SUCCESS
 }
-
-: ${OCF_RESKEY_CRM_meta_interval:=0}
-: ${OCF_RESKEY_notify_delay:=0}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ -z "$OCF_RESKEY_state" ]; then
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then

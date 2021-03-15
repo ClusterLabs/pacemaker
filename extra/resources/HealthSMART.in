@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthSMART resource agent
 #
-# Copyright 2009-2019 the Pacemaker project contributors
+# Copyright 2009-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,6 +25,16 @@
 #
 SMARTCTL=/usr/sbin/smartctl
 ATTRDUP=/usr/sbin/attrd_updater
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+: ${OCF_RESKEY_temp_warning:=""}
+: ${OCF_RESKEY_temp_lower_limit:=""}
+: ${OCF_RESKEY_temp_upper_limit:=""}
+: ${OCF_RESKEY_drives:=""}
+: ${OCF_RESKEY_devices:=""}
+: ${OCF_RESKEY_state:=""}
 
 #######################################################################
 
@@ -279,8 +289,6 @@ HealthSMART_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_CRM_meta_interval:=0}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
 if [ -z "$OCF_RESKEY_state" ]; then
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then

@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:ifspeed resource agent
 #
-# Copyright 2011-2019 the Pacemaker project contributors
+# Copyright 2011-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -51,10 +51,15 @@ OCF_RESKEY_bridge_ports_default="detect"
 OCF_RESKEY_weight_base_default=1000
 OCF_RESKEY_dampen_default=5
 
+# Explicitly list all environment variables used, to make static analysis happy
 : ${OCF_RESKEY_name:=${OCF_RESKEY_name_default}}
 : ${OCF_RESKEY_bridge_ports:=${OCF_RESKEY_bridge_ports_default}}
 : ${OCF_RESKEY_weight_base:=${OCF_RESKEY_weight_base_default}}
 : ${OCF_RESKEY_dampen:=${OCF_RESKEY_dampen_default}}
+: ${OCF_RESKEY_iface:=""}
+: ${OCF_RESKEY_ip:=""}
+: ${OCF_RESKEY_debug:="false"}
+
 
 meta_data() {
         cat <<END

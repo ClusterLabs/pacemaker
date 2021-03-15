@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:ping resource agent
 #
-# Copyright 2009-2019 the Pacemaker project contributors
+# Copyright 2009-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,6 +16,20 @@
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_CRM_meta_timeout:="20000"}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_name:="pingd"}
+: ${OCF_RESKEY_dampen:="5s"}
+: ${OCF_RESKEY_attempts:="3"}
+: ${OCF_RESKEY_multiplier:="1"}
+: ${OCF_RESKEY_debug:="false"}
+: ${OCF_RESKEY_failure_score:="0"}
+: ${OCF_RESKEY_use_fping:="1"}
+: ${OCF_RESKEY_host_list:=""}
+: ${OCF_RESKEY_options:=""}
+: ${OCF_RESKEY_timeout:=""}
 
 #######################################################################
 
@@ -340,17 +354,6 @@ hosts_family() {
     done
     return $family
 }
-
-: ${OCF_RESKEY_name:="pingd"}
-: ${OCF_RESKEY_dampen:="5s"}
-: ${OCF_RESKEY_attempts:="3"}
-: ${OCF_RESKEY_multiplier:="1"}
-: ${OCF_RESKEY_debug:="false"}
-: ${OCF_RESKEY_failure_score:="0"}
-: ${OCF_RESKEY_use_fping:="1"}
-
-: ${OCF_RESKEY_CRM_meta_timeout:="20000"}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 integer=$(echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*')
 case "${OCF_RESKEY_timeout}" in

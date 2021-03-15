@@ -3,7 +3,7 @@
 # ocf:pacemaker:ClusterMon resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2019 the Pacemaker project contributors
+# Later changes copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -13,19 +13,19 @@
 
 # Starts crm_mon in background which logs cluster status as
 # html to the specified file.
-#
-# OCF instance parameters:
-#  OCF_RESKEY_user
-#  OCF_RESKEY_pidfile
-#  OCF_RESKEY_update
-#  OCF_RESKEY_extra_options
-#  OCF_RESKEY_htmlfile
 
 #######################################################################
 # Initialization:
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_user:=""}
+: ${OCF_RESKEY_pidfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid"}
+: ${OCF_RESKEY_update:="15000"}
+: ${OCF_RESKEY_extra_options:=""}
+: ${OCF_RESKEY_htmlfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.html"}
 
 #######################################################################
 
@@ -236,10 +236,6 @@ if [ $# -ne 1 ]; then
     ClusterMon_usage
     exit $OCF_ERR_ARGS
 fi
-
-: ${OCF_RESKEY_update:="15000"}
-: ${OCF_RESKEY_pidfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid"}
-: ${OCF_RESKEY_htmlfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.html"}
 
 if [ ${OCF_RESKEY_update} -ge 1000 ]; then
     OCF_RESKEY_update=$(( $OCF_RESKEY_update / 1000 ))
