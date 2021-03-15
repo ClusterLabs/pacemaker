@@ -1,5 +1,11 @@
 #!/bin/sh
 #
+# Copyright 2010-2021 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 
 SSHOPTS="-l root -o PasswordAuthentication=no -o ConnectTimeout=5"
 
@@ -41,8 +47,12 @@ test -f $CTSCTRL ||  {
 : ${RUNS:=3}
 : ${CTSTESTS:="--benchmark"}
 : ${CTSDIR:="@datadir@/@PACKAGE@/tests/cts"}
+: ${CTS_node_list:=""}
+: ${CTS_boot:=""}
+: ${CTS_stonith:=""}
+: ${CTS_stonith_args:=""}
 
-[ "$CTS_node_list" ] || {
+[ -n "$CTS_node_list" ] || {
 	msg no node list specified
 	exit 1
 }
