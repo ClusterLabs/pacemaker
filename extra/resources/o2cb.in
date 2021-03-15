@@ -90,9 +90,9 @@ unload_filesystem() {
     fi
 
     case "$MODOUT" in
-    $FSNAME\ 0)
+    "$FSNAME 0")
         ;;
-    $FSNAME\ *)
+    "$FSNAME "*)
         # The driver is busy, leave it alone
         ocf_log err "Module $FSNAME is still in use"
         return 1
@@ -185,9 +185,9 @@ unload_module() {
     fi
 
     case "$MODOUT" in
-    $MODNAME\ 0)
+    "$MODNAME 0")
         ;;
-    $MODNAME\ *)
+    "$MODNAME "*)
         return 2
         ;;
     *)
@@ -265,7 +265,7 @@ o2cb_start() {
 o2cb_stop() {
     o2cb_monitor; rc=$?
     case $rc in
-        $OCF_NOT_RUNNING) return $OCF_SUCCESS;;
+        "$OCF_NOT_RUNNING") return $OCF_SUCCESS;;
     esac
 
     ocf_log info "Stopping $OCF_RESOURCE_INSTANCE"

@@ -140,8 +140,8 @@ controld_start() {
     controld_monitor; rc=$?
 
     case $rc in
-      $OCF_SUCCESS)     return $OCF_SUCCESS;;
-      $OCF_NOT_RUNNING) ;;
+      "$OCF_SUCCESS")     return $OCF_SUCCESS;;
+      "$OCF_NOT_RUNNING") ;;
       *) return $OCF_ERR_GENERIC;;
     esac
 
@@ -181,13 +181,13 @@ controld_start() {
 
         controld_monitor; rc=$?
         case $rc in
-          $OCF_SUCCESS)
+          "$OCF_SUCCESS")
             CS_ADDR_LIST="$(cat "${DLM_CONFIGFS_DIR}"/cluster/comms/*/addr_list 2>/dev/null)"
             if [ $? -eq 0 ] && [ -n "$CS_ADDR_LIST" ]; then
                 return $OCF_SUCCESS
             fi
             ;;
-          $OCF_NOT_RUNNING)
+          "$OCF_NOT_RUNNING")
             return $OCF_NOT_RUNNING
             ;;
           *)
