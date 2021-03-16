@@ -35,7 +35,6 @@ dist_noinst_SCRIPTS	= coccinelle/test/testrunner.sh
 EXTRA_DIST		= README gdbhelpers $(COCCI_FILES)		\
 			  coccinelle/ref-passed-variables-inited.cocci	\
 			  coccinelle/rename-fn.cocci			\
-			  coccinelle/string-replacements.cocci		\
 			  coccinelle/test/ref-passed-variables-inited.input.c \
 			  coccinelle/test/ref-passed-variables-inited.output
 
