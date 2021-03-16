@@ -72,14 +72,6 @@ extern "C" {
 #    define MAX_NAME	256
 #  endif
 
-#  ifndef __GNUC__
-#    define __builtin_expect(expr, result) (expr)
-#  endif
-
-/* Some handy macros used by the Linux kernel */
-#  define __likely(expr) __builtin_expect(expr, 1)
-#  define __unlikely(expr) __builtin_expect(expr, 0)
-
 #  define CRM_META			"CRM_meta"
 
 extern char *crm_system_name;

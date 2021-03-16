@@ -195,7 +195,7 @@ unsigned int get_crm_log_level(void);
     } while (0)
 
 #  define CRM_LOG_ASSERT(expr) do {					\
-        if(__unlikely((expr) == FALSE)) {				\
+        if (!(expr)) {                                                  \
             static struct qb_log_callsite *core_cs = NULL;              \
             if(core_cs == NULL) {                                       \
                 core_cs = qb_log_callsite_get(__func__, __FILE__,       \
@@ -211,7 +211,7 @@ unsigned int get_crm_log_level(void);
  * macro's do-while loop
  */
 #  define CRM_CHECK(expr, failure_action) do {				            \
-	    if (__unlikely((expr) == FALSE)) {				                \
+        if (!(expr)) {                                                  \
             static struct qb_log_callsite *core_cs = NULL;              \
             if (core_cs == NULL) {                                      \
                 core_cs = qb_log_callsite_get(__func__, __FILE__,       \
