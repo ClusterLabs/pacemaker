@@ -300,19 +300,16 @@ pe__log_node_weights(const char *file, const char *function, int line,
  * \param[in] to_log    Log if true, otherwise output
  * \param[in] rsc       Use allowed nodes for this resource
  * \param[in] comment   Text description to prefix lines with
- * \param[in] nodes     If rsc is not specified, use these nodes
+ * \param[in] nodes     Use these nodes
  */
 void
 pe__show_node_weights_as(const char *file, const char *function, int line,
                          bool to_log, pe_resource_t *rsc, const char *comment,
                          GHashTable *nodes)
 {
-    if (rsc != NULL) {
-        if (pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
-            // Don't show allocation scores for orphans
-            return;
-        }
-        nodes = rsc->allowed_nodes;
+    if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
+        // Don't show allocation scores for orphans
+        return;
     }
     if (nodes == NULL) {
         // Nothing to show
@@ -331,7 +328,7 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             pe__show_node_weights_as(file, function, line, to_log, child,
-                                     comment, nodes);
+                                     comment, child->allowed_nodes);
         }
     }
 }
