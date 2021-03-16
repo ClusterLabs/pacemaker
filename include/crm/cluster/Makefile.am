@@ -21,5 +21,5 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 headerdir=$(pkgincludedir)/crm/cluster
 
-noinst_HEADERS		= internal.h election.h
+noinst_HEADERS		= internal.h election_internal.h
 header_HEADERS		= compat.h

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
-#include <crm/cluster/election.h>
+#include <crm/cluster/election_internal.h>
 #include <crm/crm.h>
 
 #define STORM_INTERVAL   2      /* in seconds */

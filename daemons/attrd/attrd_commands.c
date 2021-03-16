@@ -18,7 +18,7 @@
 #include <crm/cib.h>
 #include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
-#include <crm/cluster/election.h>
+#include <crm/cluster/election_internal.h>
 #include <crm/cib/internal.h>
 
 #include "pacemaker-attrd.h"
