@@ -21,10 +21,10 @@
 #  include <stdbool.h>
 #  include <libxml/tree.h>
 
-/* Public API headers can guard deprecated code with this symbol, thus
- * preventing internal code (which includes this header) from using it, while
- * still allowing external code (which can't include this header) to use it,
- * for backward compatibility.
+/* Public API headers can guard including deprecated API headers with this
+ * symbol, thus preventing internal code (which includes this header) from using
+ * it, while still allowing external code (which can't include this header) to
+ * use it, for backward compatibility.
  */
 #define PCMK__NO_COMPAT
 

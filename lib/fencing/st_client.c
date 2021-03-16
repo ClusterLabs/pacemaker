@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2654,18 +2654,6 @@ stonith__event_state_neq(stonith_history_t *history, void *user_data)
     return history->state != GPOINTER_TO_INT(user_data);
 }
 
-// Deprecated functions kept only for backward API compatibility
-const char *get_stonith_provider(const char *agent, const char *provider);
-
-/*!
- * \brief Deprecated (use stonith_get_namespace() instead)
- */
-const char *
-get_stonith_provider(const char *agent, const char *provider)
-{
-    return stonith_namespace2text(stonith_get_namespace(agent, provider));
-}
-
 void
 stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
                                 xmlNode *metadata)
@@ -2707,3 +2695,15 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
     freeXpathObject(xpath);
 }
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/fencing/compat.h>
+
+const char *
+get_stonith_provider(const char *agent, const char *provider)
+{
+    return stonith_namespace2text(stonith_get_namespace(agent, provider));
+}
+
+// End deprecated API

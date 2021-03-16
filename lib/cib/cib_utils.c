@@ -715,12 +715,9 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
 }
 
 // Deprecated functions kept only for backward API compatibility
-int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
-                          int level);
 
-/*!
- * \deprecated
- */
+#include <crm/cib/util_compat.h>
+
 int
 cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                       int level)
@@ -763,3 +760,5 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
     return rc;
 }
+
+// End deprecated API

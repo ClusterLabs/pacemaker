@@ -1330,27 +1330,8 @@ pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 }
 
 // Deprecated functions kept only for backward API compatibility
-gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
-gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
-                   crm_time_t *now);
-gboolean pe_test_rule_re(xmlNode *rule, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now,
-                         pe_re_match_data_t *re_match_data);
-gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
-                           enum rsc_role_e role, crm_time_t *now,
-                           pe_match_data_t *match_data);
-gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now);
-gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
-                               enum rsc_role_e role, crm_time_t *now,
-                               pe_re_match_data_t *re_match_data);
-gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
-                                 enum rsc_role_e role, crm_time_t *now,
-                                 pe_match_data_t *match_data);
-void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
-                                const char *set_name, GHashTable *node_hash,
-                                GHashTable *hash, const char *always_first,
-                                gboolean overwrite, crm_time_t *now);
+
+#include <crm/pengine/rules_compat.h>
 
 gboolean
 test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
@@ -1425,3 +1406,5 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
     unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
                          overwrite, &rule_data, NULL, unpack_attr_set);
 }
+
+// End deprecated API

@@ -428,13 +428,7 @@ extern "C" {
 
 
 #ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated Use PCMK_STONITH_PROVIDES instead
-#  define XML_RSC_ATTR_PROVIDES		"provides"
-
+#include <crm/msg_xml_compat.h>
 #endif
 
 #ifdef __cplusplus

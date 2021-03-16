@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -212,13 +212,7 @@ crm_join_phase_str(enum crm_join_phase phase)
 }
 
 #ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-int crm_terminate_member(int nodeid, const char *uname, void *unused);
-int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
-                                     int *connection);
+#include <crm/cluster/compat.h>
 #endif
 
 #ifdef __cplusplus

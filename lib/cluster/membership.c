@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1291,24 +1291,18 @@ pcmk__search_known_node_cache(unsigned int id, const char *uname,
 
 // Deprecated functions kept only for backward API compatibility
 
-int crm_terminate_member(int nodeid, const char *uname, void *unused);
-int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
-                                     int *connection);
-/*!
- * \deprecated Use stonith_api_kick() from libstonithd instead
- */
+#include <crm/cluster/compat.h>
+
 int
 crm_terminate_member(int nodeid, const char *uname, void *unused)
 {
-    /* Always use the synchronous, non-mainloop version */
     return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
 
-/*!
- * \deprecated Use stonith_api_kick() from libstonithd instead
- */
 int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
     return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
+
+// End deprecated API

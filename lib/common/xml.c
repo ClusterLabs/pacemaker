@@ -2979,7 +2979,7 @@ pcmk__xe_set_props(xmlNodePtr node, ...)
 
 // Deprecated functions kept only for backward API compatibility
 
-xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
+#include <crm/common/xml_compat.h>
 
 xmlNode *
 find_entity(xmlNode *parent, const char *node_name, const char *id)
@@ -2987,3 +2987,5 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
     return pcmk__xe_match(parent, node_name,
                           ((id == NULL)? id : XML_ATTR_ID), id);
 }
+
+// End deprecated API

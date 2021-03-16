@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2016 the Pacemaker project contributors
+# Copyright 2012-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,4 +19,7 @@
 #
 MAINTAINERCLEANFILES	= Makefile.in
 
-noinst_HEADERS		= internal.h 
+headerdir=$(pkgincludedir)/crm/fencing
+
+header_HEADERS		= compat.h
+noinst_HEADERS		= internal.h

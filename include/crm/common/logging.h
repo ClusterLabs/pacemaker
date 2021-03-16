@@ -371,36 +371,8 @@ unsigned int get_crm_log_level(void);
 #  define crm_str(x)    (const char*)(x?x:"<null>")
 
 #ifndef PCMK__NO_COMPAT
-
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-/*!
- * \brief Log a message using constant priority
- *
- * \param[in] level     Priority at which to log the message
- * \param[in] fmt       printf-style format string literal for message
- * \param[in] args      Any arguments needed by format string
- *
- * \deprecated Use one of the other logging functions instead
- * \note This is a macro, and \p level may be evaluated more than once.
- *       This does nothing when level is LOG_STDOUT.
- */
-#  define do_crm_log_always(level, fmt, args...) do {                       \
-        switch (level) {                                                    \
-            case LOG_STDOUT: case LOG_NEVER:                                \
-                break;                                                      \
-            default:                                                        \
-                qb_log((level), fmt , ##args);                              \
-                break;                                                      \
-        }                                                                   \
-    } while (0)
-
-//! \deprecated Do not use Pacemaker for logging
-gboolean crm_log_cli_init(const char *entity);
-
-#endif // PCMK__NO_COMPAT
+#include <crm/common/logging_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

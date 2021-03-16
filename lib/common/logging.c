@@ -982,7 +982,7 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
 
 // Deprecated functions kept only for backward API compatibility
 
-gboolean crm_log_cli_init(const char *entity);
+#include <crm/common/logging_compat.h>
 
 gboolean
 crm_log_cli_init(const char *entity)
@@ -990,3 +990,5 @@ crm_log_cli_init(const char *entity)
     pcmk__cli_init_logging(entity, 0);
     return TRUE;
 }
+
+// End deprecated API

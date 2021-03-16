@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,13 +66,7 @@ void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
 
 #ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated This function will be removed in a future version of Pacemaker
-int cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level);
-
+#include <crm/common/util_compat.h>
 #endif
 
 #ifdef __cplusplus

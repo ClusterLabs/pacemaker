@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1645,12 +1645,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
 // Deprecated functions kept only for backward API compatibility
 
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
+#include <crm/common/xml_compat.h>
 
-/*!
- * \deprecated Use xml_apply_patchset() instead
- * \note This function will be removed in a future version of Pacemaker.
- */
 gboolean
 apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 {
@@ -1740,3 +1736,5 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 
     return result;
 }
+
+// End deprecated API

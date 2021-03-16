@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1069,11 +1069,8 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 
 // Deprecated functions kept only for backward API compatibility
 
-gboolean safe_str_neq(const char *a, const char *b);
+#include <crm/common/util_compat.h>
 
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-
-//! \deprecated Use pcmk__str_eq() instead
 gboolean
 safe_str_neq(const char *a, const char *b)
 {
@@ -1089,7 +1086,6 @@ safe_str_neq(const char *a, const char *b)
     return TRUE;
 }
 
-//! \deprecated Use pcmk__str_eq() instead
 gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case)
 {
@@ -1109,3 +1105,5 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     }
     return FALSE;
 }
+
+// End deprecated API
