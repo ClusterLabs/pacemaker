@@ -90,13 +90,13 @@ Example defining a remote node with the hostname **remote1**:
 
 .. code-block:: none
 
-    # pcs resource create remote1 remote
+    # pcs cluster node add-remote remote1
 
 Example defining a remote node to connect to a specific IP address and port:
 
 .. code-block:: none
 
-    # pcs resource create remote1 remote server=192.168.122.200 port=8938
+    # pcs cluster node add-remote remote1 192.168.122.200 port=8938
 
 .. index::
    single: configuration; environment variable
