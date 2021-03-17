@@ -385,7 +385,7 @@ health_text(pcmk__output_t *out, va_list args)
         out->info(out, "Controller on %s in state %s: %s", crm_str(host_from),
                         crm_str(fsa_state), crm_str(result));
     } else if (fsa_state != NULL) {
-        out->info(out, "%s", fsa_state);
+        pcmk__formatted_printf(out, "%s\n", fsa_state);
     }
 
     return pcmk_rc_ok;
@@ -421,7 +421,7 @@ pacemakerd_health_text(pcmk__output_t *out, va_list args)
                   crm_str(state), (!pcmk__str_empty(last_updated))?
                   "last updated":"", crm_str(last_updated));
     } else {
-        out->info(out, "%s", crm_str(state));
+        pcmk__formatted_printf(out, "%s\n", crm_str(state));
     }
 
     return pcmk_rc_ok;
@@ -451,7 +451,7 @@ dc_text(pcmk__output_t *out, va_list args)
     if (!out->is_quiet(out)) {
         out->info(out, "Designated Controller is: %s", crm_str(dc));
     } else if (dc != NULL) {
-        out->info(out, "%s", dc);
+        pcmk__formatted_printf(out, "%s\n", dc);
     }
 
     return pcmk_rc_ok;
@@ -479,7 +479,7 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
     gboolean BASH_EXPORT = va_arg(args, gboolean);
 
     if (out->is_quiet(out)) {
-        out->info(out, "%s", crm_str(name));
+        pcmk__formatted_printf(out, "%s\n", crm_str(name));
     } else if (BASH_EXPORT) {
         out->info(out, "export %s=%s", crm_str(name), crm_str(id));
     } else {

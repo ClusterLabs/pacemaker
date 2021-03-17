@@ -222,7 +222,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
 
     if (latest) {
         if (out->is_quiet(out)) {
-            out->info(out, "%lld", (long long) latest->completed);
+            pcmk__formatted_printf(out, "%lld\n", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
             out->message(out, "stonith-event", latest, 0, FALSE);
             out->increment_list(out);
