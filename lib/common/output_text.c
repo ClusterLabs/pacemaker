@@ -134,6 +134,10 @@ text_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
     int len = 0;
 
+    if (out->is_quiet(out)) {
+        return;
+    }
+
     va_start(ap, format);
 
     /* Informational output does not get indented, to separate it from other

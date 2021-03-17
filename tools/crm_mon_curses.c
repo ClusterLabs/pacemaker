@@ -142,6 +142,10 @@ static void
 curses_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
+    if (out->is_quiet(out)) {
+        return;
+    }
+
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
      */
