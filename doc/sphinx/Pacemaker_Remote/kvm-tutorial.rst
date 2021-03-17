@@ -75,7 +75,7 @@ replacing the cluster name and hostname as desired:
 
 .. code-block:: none
 
-    # pcs cluster setup --force --local --name mycluster example-host
+    # pcs cluster setup mycluster example-host
 
 .. NOTE::
 
@@ -129,18 +129,23 @@ Verify pacemaker status. At first, the output will look like this:
 
     # pcs status
     Cluster name: mycluster
-    WARNING: no stonith devices and stonith-enabled is not false
-    Stack: corosync
-    Current DC: NONE
-    Last updated: Fri Jan 12 15:18:32 2018
-    Last change: Fri Jan 12 12:42:21 2018 by root via cibadmin on example-host
+    
+    WARNINGS:
+    No stonith devices and stonith-enabled is not false
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Mar  2 14:32:02 2021
+      * Last change:  Tue Mar  2 14:32:01 2021 by hacluster via crmd on pcmk-2
+      * 1 node configured
+      * 0 resource instances configured
 
-    1 node configured
-    0 resources configured
+    Node List:
+      * Node example-host: UNCLEAN (offline)
 
-    Node example-host: UNCLEAN (offline)
-
-    No active resources
+    Full List of Resources:
+      * No resources
 
     Daemon Status:
       corosync: active/disabled
@@ -154,18 +159,23 @@ cluster:
 
     # pcs status
     Cluster name: mycluster
-    WARNING: no stonith devices and stonith-enabled is not false
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition WITHOUT quorum
-    Last updated: Fri Jan 12 15:20:05 2018
-    Last change: Fri Jan 12 12:42:21 2018 by root via cibadmin on example-host
+    
+    WARNINGS:
+    No stonith devices and stonith-enabled is not false
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Mar  2 14:35:12 2021
+      * Last change:  Tue Mar  2 14:35:11 2021 by hacluster via crmd on pcmk-2
+      * 1 node configured
+      * 0 resource instances configured
 
-    1 node configured
-    0 resources configured
+    Node List:
+      * Online: [ example-host ]
 
-    Online: [ example-host ]
-
-    No active resources
+    Full List of Resources:
+      * No resources
 
     Daemon Status:
       corosync: active/disabled
@@ -197,17 +207,19 @@ Now, the status output should look similar to this:
 
     # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 15:22:49 2018
-    Last change: Fri Jan 12 15:22:46 2018 by root via cibadmin on example-host
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Mar  2 14:35:54 2021
+      * Last change:  Tue Mar  2 14:35:49 2021 by hacluster via crmd on pcmk-2
+      * 1 node configured
+      * 0 resource instances configured
 
-    1 node configured
-    0 resources configured
+    Node List:
+      * Online: [ example-host ]
 
-    Online: [ example-host ]
-
-    No active resources
+    Full List of Resources:
+      * No resources
 
     Daemon Status:
       corosync: active/disabled
@@ -225,7 +237,7 @@ _______________________________
 
 .. code-block:: none
 
-    # yum install -y kvm libvirt qemu-system qemu-kvm bridge-utils virt-manager
+    # yum install -y libvirt qemu-kvm virt-manager
     # systemctl enable libvirtd.service
 
 Reboot the host.
@@ -289,17 +301,23 @@ Start ``pacemaker_remoted``, and verify the start was successful:
 
     # systemctl start pacemaker_remote
     # systemctl status pacemaker_remote
+    
+    ● pacemaker_remote.service - Pacemaker Remote executor daemon
+       Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled; vendor preset: disabled)
+       Active: active (running) since Wed 2021-03-17 08:31:01 EDT; 1min 5s ago
+         Docs: man:pacemaker-remoted
+               https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/    Pacemaker_Remote/index.html
+     Main PID: 90160 (pacemaker-remot)
+        Tasks: 1
+       Memory: 1.4M
+       CGroup: /system.slice/pacemaker_remote.service
+               └─90160 /usr/sbin/pacemaker-remoted
+    
+    Mar 17 08:31:01 guest1 systemd[1]: Started Pacemaker Remote executor daemon.
+    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Additional logging available in /var/log/pacemaker/pacemaker.log
+    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Starting Pacemaker remote executor
+    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Pacemaker remote executor successfully started and accepting connections
 
-      pacemaker_remote.service - Pacemaker Remote Service
-          Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)
-          Active: active (running) since Thu 2013-03-14 18:24:04 EDT; 2min 8s ago
-        Main PID: 1233 (pacemaker_remot)
-          CGroup: name=systemd:/system/pacemaker_remote.service
-              └─1233 /usr/sbin/pacemaker-remoted
-
-      Mar 14 18:24:04 guest1 systemd[1]: Starting Pacemaker Remote Service...
-      Mar 14 18:24:04 guest1 systemd[1]: Started Pacemaker Remote Service.
-      Mar 14 18:24:04 guest1 pacemaker-remoted[1233]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
 
 Verify Host Connection to Guest
 _______________________________
@@ -320,7 +338,8 @@ address can be discovered.
     END
 
 If running the ``ssh`` command on one of the cluster nodes results in this
-output before disconnecting, the connection works:
+output before disconnecting, the connection works, because port 3121 is
+attached to the pacemaker remote service:
 
 .. code-block:: none
 
@@ -338,6 +357,14 @@ If you see one of these, the connection is not working:
 
     # ssh -p 3121 guest1
     ssh: connect to host guest1 port 3121: Connection refused
+
+If you see this, then the connection is working, but port 3121 is attached
+to SSH, which it should not be.
+
+.. code-block:: none
+
+    # ssh -p 3121 guest1
+    kex_exchange_identification: banner line contains invalid characters
 
 Once you can successfully connect to the guest from the host, shutdown the
 guest. Pacemaker will be managing the virtual machine from this point forward.
@@ -396,8 +423,7 @@ Now just register the resource with Pacemaker, and you're set!
 
 .. code-block:: none
 
-    # pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" \
-        config="/etc/pacemaker/guest1.xml" meta remote-node=guest1
+    # pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta
 
 .. NOTE::
 
@@ -421,25 +447,27 @@ something like this.
 
     # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 18:00:45 2018
-    Last change: Fri Jan 12 17:53:44 2018 by root via crm_resource on example-host
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:37:37 2021
+      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ example-host ]
+      * GuestOnline: [ guest1@example-host ]
 
-    2 nodes configured
-    2 resources configured
-
-    Online: [ example-host ]
-    GuestOnline: [ guest1@example-host ]
-
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 example-host
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
+
 
 Starting Resources on KVM Guest
 _______________________________
@@ -467,14 +495,13 @@ cluster node, and some started on the guest node.
 
 .. code-block:: none
 
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-     FAKE1	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE2	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE3	(ocf::pacemaker:Dummy):	Started example-host
-     FAKE4	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started example-host
+      * FAKE1	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE2	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE3	(ocf::pacemaker:Dummy):	 Started example-host
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started example-host
 
 The guest node, **guest1**, reacts just like any other node in the cluster. For
 example, pick out a resource that is running on your cluster node. For my
@@ -490,14 +517,13 @@ Now, looking at the bottom of the `pcs status` output you'll see FAKE3 is on
 
 .. code-block:: none
 
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-     FAKE1	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE2	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE3	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE4	(ocf::pacemaker:Dummy):	Started example-host
-     FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started example-host
+      * FAKE1	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE2	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE3	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started example-host
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started example-host
 
 Testing Recovery and Fencing
 ____________________________
@@ -522,33 +548,36 @@ and the **guest1** node will not be shown while it is being recovered.
 
     # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 18:08:35 2018
-    Last change: Fri Jan 12 18:07:00 2018 by root via cibadmin on example-host
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:37:37 2021
+      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 7 resource instances configured
+    
+    Node List:
+      * Online: [ example-host ]
+      * GuestOnline: [ guest1@example-host ]
 
-    2 nodes configured
-    7 resources configured
-
-    Online: [ example-host ]
-
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-     FAKE1	(ocf::pacemaker:Dummy):	Stopped
-     FAKE2	(ocf::pacemaker:Dummy):	Stopped
-     FAKE3	(ocf::pacemaker:Dummy):	Stopped
-     FAKE4	(ocf::pacemaker:Dummy):	Started example-host
-     FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 example-host
+      * FAKE1	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE2	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE3	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started example-host
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started example-host
 
     Failed Actions:
     * guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',
-        last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
+        last-rc-change='Wed Mar 17 08:32:01 2021', queued=0ms, exec=0ms
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
+
 
 .. NOTE::
 
@@ -564,11 +593,43 @@ something like this.
 
 .. code-block:: none
 
+    # pcs status
+    Cluster name: mycluster
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:37:37 2021
+      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 7 resource instances configured
+    
+    Node List:
+      * Online: [ example-host ]
+      * GuestOnline: [ guest1@example-host ]
+
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 example-host
+      * FAKE1	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE2	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE3	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started example-host
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started example-host
+
+    Failed Actions:
+    * guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',
+        last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
+
+    Daemon Status:
+      corosync: active/disabled
+      pacemaker: active/disabled
+      pcsd: active/enabled
+
     Cluster name: mycluster
     Stack: corosync
     Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 18:18:30 2018
-    Last change: Fri Jan 12 18:07:00 2018 by root via cibadmin on example-host
+    Last updated: Fri Jan 12 18:15: 2021
+    Last change: Fri Jan 12 08:33:0- 2021 by root via cibadmin on example-host
 
     2 nodes configured
     7 resources configured
@@ -587,7 +648,7 @@ something like this.
 
     Failed Actions:
     * guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',
-        last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
+        last-rc-change='Wed Mar 17 08:32:01 2021', queued=0ms, exec=0ms
 
     Daemon Status:
       corosync: active/disabled
