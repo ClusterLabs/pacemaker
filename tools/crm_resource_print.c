@@ -164,7 +164,7 @@ attribute_list_text(pcmk__output_t *out, va_list args) {
         value = g_hash_table_lookup(params, attr);
     }
     if (value != NULL) {
-        out->info(out, "%s", value);
+        pcmk__formatted_printf(out, "%s\n", value);
     } else {
         out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
     }
@@ -198,7 +198,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
     const char *value = crm_element_value(rsc->xml, attr);
 
     if (value != NULL) {
-        out->info(out, "%s", value);
+        pcmk__formatted_printf(out, "%s\n", value);
     }
 
     return pcmk_rc_ok;

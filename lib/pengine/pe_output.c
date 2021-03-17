@@ -681,12 +681,12 @@ pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
     if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
-        out->info(out, "\n              *** Resource management is DISABLED ***");
-        out->info(out, "  The cluster will not attempt to start, stop or recover services");
+        pcmk__formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
+        pcmk__formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
     } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
-        out->info(out, "\n    *** Resource management is DISABLED ***");
-        out->info(out, "  The cluster will keep all resources stopped");
+        pcmk__formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
+        pcmk__formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;
     } else {
         return pcmk_rc_no_output;
@@ -1670,7 +1670,7 @@ resource_config(pcmk__output_t *out, va_list args) {
         rsc_xml = dump_xml_formatted(rsc->xml);
     }
 
-    out->info(out, "Resource XML:");
+    pcmk__formatted_printf(out, "Resource XML:\n");
     out->output_xml(out, "xml", rsc_xml);
 
     free(rsc_xml);
