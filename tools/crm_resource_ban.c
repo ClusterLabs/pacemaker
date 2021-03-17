@@ -88,17 +88,15 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     location = create_xml_node(fragment, XML_CONS_TAG_RSC_LOCATION);
     crm_xml_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
 
-    if (!out->is_quiet(out)) {
-        out->info(out, "WARNING: Creating rsc_location constraint '%s' with a "
-                       "score of -INFINITY for resource %s on %s.\n\tThis will "
-                       "prevent %s from %s on %s until the constraint is removed "
-                       "using the clear option or by editing the CIB with an "
-                       "appropriate tool\n\tThis will be the case even if %s "
-                       "is the last node in the cluster",
-                       ID(location), rsc_id, host, rsc_id,
-                       (promoted_role_only? "being promoted" : "running"),
-                       host, host);
-    }
+    out->info(out, "WARNING: Creating rsc_location constraint '%s' with a "
+                   "score of -INFINITY for resource %s on %s.\n\tThis will "
+                   "prevent %s from %s on %s until the constraint is removed "
+                   "using the clear option or by editing the CIB with an "
+                   "appropriate tool\n\tThis will be the case even if %s "
+                   "is the last node in the cluster",
+                   ID(location), rsc_id, host, rsc_id,
+                   (promoted_role_only? "being promoted" : "running"),
+                   host, host);
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(promoted_role_only) {
