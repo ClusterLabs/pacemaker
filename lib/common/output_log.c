@@ -19,6 +19,7 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/strings_internal.h>
 
 GOptionEntry pcmk__log_output_entries[] = {
     { NULL }
@@ -27,6 +28,7 @@ GOptionEntry pcmk__log_output_entries[] = {
 typedef struct private_data_s {
     /* gathered in log_begin_list */
     GQueue/*<char*>*/ *prefixes;
+    int log_level;
 } private_data_t;
 
 static void
@@ -50,6 +52,7 @@ log_free_priv(pcmk__output_t *out) {
 
 static bool
 log_init(pcmk__output_t *out) {
+    private_data_t *priv = NULL;
 
     /* If log_init was previously called on this output struct, just return. */
     if (out->priv != NULL) {
@@ -60,7 +63,12 @@ log_init(pcmk__output_t *out) {
     if (out->priv == NULL) {
          return false;
     }
-    ((private_data_t *)out->priv)->prefixes = g_queue_new();
+
+    priv = out->priv;
+
+    priv->prefixes = g_queue_new();
+    priv->log_level = LOG_INFO;
+
     return true;
 }
 
@@ -82,12 +90,16 @@ log_reset(pcmk__output_t *out) {
 
 static void
 log_version(pcmk__output_t *out, bool extended) {
+    private_data_t *priv = out->priv;
+
+    CRM_ASSERT(priv != NULL);
+
     if (extended) {
-        crm_info("Pacemaker %s (Build: %s): %s",
+        do_crm_log(priv->log_level, "Pacemaker %s (Build: %s): %s",
                    PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
-        crm_info("Pacemaker %s", PACEMAKER_VERSION);
-        crm_info("Written by Andrew Beekhof");
+        do_crm_log(priv->log_level, "Pacemaker %s", PACEMAKER_VERSION);
+        do_crm_log(priv->log_level, "Written by Andrew Beekhof");
     }
 }
 
@@ -119,7 +131,7 @@ log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 
     node = create_xml_node(NULL, name);
     xmlNodeSetContent(node, (pcmkXmlStr) buf);
-    crm_log_xml_info(node, name);
+    do_crm_log_xml(priv->log_level, name, node);
     free(node);
 }
 
@@ -176,15 +188,15 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     if (strcmp(buffer, "") != 0) { /* We don't want empty messages */
         if ((name != NULL) && (strcmp(name, "") != 0)) {
             if (strcmp(prefix, "") != 0) {
-                crm_info("%s: %s: %s", prefix, name, buffer);
+                do_crm_log(priv->log_level, "%s: %s: %s", prefix, name, buffer);
             } else {
-                crm_info("%s: %s", name, buffer);
+                do_crm_log(priv->log_level, "%s: %s", name, buffer);
             }
         } else {
             if (strcmp(prefix, "") != 0) {
-                crm_info("%s: %s", prefix, buffer);
+                do_crm_log(priv->log_level, "%s: %s", prefix, buffer);
             } else {
-                crm_info("%s", buffer);
+                do_crm_log(priv->log_level, "%s", buffer);
             }
         }
     }
@@ -207,16 +219,19 @@ log_end_list(pcmk__output_t *out) {
 G_GNUC_PRINTF(2, 3)
 static void
 log_info(pcmk__output_t *out, const char *format, ...) {
+    private_data_t *priv = out->priv;
     int len = 0;
     va_list ap;
     char* buffer = NULL;
+
+    CRM_ASSERT(priv != NULL);
 
     va_start(ap, format);
     len = vasprintf(&buffer, format, ap);
     CRM_ASSERT(len >= 0);
     va_end(ap);
 
-    crm_info("%s", buffer);
+    do_crm_log(priv->log_level, "%s", buffer);
 
     free(buffer);
 }
@@ -276,4 +291,18 @@ pcmk__mk_log_output(char **argv) {
     retval->prompt = log_prompt;
 
     return retval;
+}
+
+void
+pcmk__output_set_log_level(pcmk__output_t *out, int log_level) {
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "log", pcmk__str_none)) {
+        return;
+    }
+
+    priv = out->priv;
+    priv->log_level = log_level;
 }
