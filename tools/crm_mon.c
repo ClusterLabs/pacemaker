@@ -1051,8 +1051,8 @@ get_option_desc(char c)
     return desc;
 }
 
-#define print_option_help(output_format, option, condition) \
-    out->info(out, "%c %c: \t%s", ((condition)? '*': ' '), option, get_option_desc(option));
+#define print_option_help(out, option, condition) \
+    curses_formatted_printf(out, "%c %c: \t%s\n", ((condition)? '*': ' '), option, get_option_desc(option));
 
 /* This function is called from the main loop when there is something to be read
  * on stdin, like an interactive user's keystroke.  All it does is read the keystroke,
@@ -1146,7 +1146,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
 
         blank_screen();
 
-        out->info(out, "%s", "Display option change mode\n");
+        curses_formatted_printf(out, "%s", "Display option change mode\n");
         print_option_help(out, 'c', pcmk_is_set(show, mon_show_tickets));
         print_option_help(out, 'f', pcmk_is_set(show, mon_show_failcounts));
         print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
@@ -1159,8 +1159,8 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
-        out->info(out, "%d m: \t%s", interactive_fence_level, get_option_desc('m'));
-        out->info(out, "%s", "\nToggle fields via field letter, type any other key to return");
+        curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
+        curses_formatted_printf(out, "%s", "\nToggle fields via field letter, type any other key to return\n");
     }
 
 refresh:
