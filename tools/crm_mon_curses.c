@@ -347,6 +347,25 @@ crm_mon_mk_curses_output(char **argv) {
 
 G_GNUC_PRINTF(2, 0)
 void
+curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    vw_printw(stdscr, format, args);
+
+    clrtoeol();
+    refresh();
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+curses_formatted_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    curses_formatted_vprintf(out, format, ap);
+    va_end(ap);
+}
+
+G_GNUC_PRINTF(2, 0)
+void
 curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int level = 0;
     private_data_t *priv = out->priv;
@@ -363,10 +382,7 @@ curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
         printw("* ");
     }
 
-    vw_printw(stdscr, format, args);
-
-    clrtoeol();
-    refresh();
+    curses_formatted_vprintf(out, format, args);
 }
 
 G_GNUC_PRINTF(2, 3)
