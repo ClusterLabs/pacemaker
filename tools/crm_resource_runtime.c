@@ -1400,7 +1400,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
-            out->info(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
+            out->err(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
             display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
@@ -1475,7 +1475,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
         if(before == g_list_length(list_delta)) {
             /* aborted during start phase, print the contents of list_delta */
-            out->info(out, "Could not complete restart of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
+            out->err(out, "Could not complete restart of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
             display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
@@ -1746,9 +1746,9 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                       action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
                       services_ocf_exitcode_str(op->rc), op->rc);
         } else {
-            out->info(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
-                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                      services_lrm_status_str(op->status), op->status);
+            out->err(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
+                     action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
+                     services_lrm_status_str(op->status), op->status);
         }
 
         /* hide output for validate-all if not in verbose */
