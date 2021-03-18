@@ -134,6 +134,10 @@ text_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
     int len = 0;
 
+    if (out->is_quiet(out)) {
+        return;
+    }
+
     va_start(ap, format);
 
     /* Informational output does not get indented, to separate it from other
@@ -304,9 +308,26 @@ pcmk__mk_text_output(char **argv) {
 
 G_GNUC_PRINTF(2, 0)
 void
-pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int len = 0;
 
+    len = vfprintf(out->dest, format, args);
+    CRM_ASSERT(len >= 0);
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    pcmk__formatted_vprintf(out, format, ap);
+    va_end(ap);
+}
+
+G_GNUC_PRINTF(2, 0)
+void
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     if (fancy) {
         int level = 0;
         private_data_t *priv = out->priv;
@@ -324,8 +345,7 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
         }
     }
 
-    len = vfprintf(out->dest, format, args);
-    CRM_ASSERT(len >= 0);
+    pcmk__formatted_vprintf(out, format, args);
 }
 
 G_GNUC_PRINTF(2, 3)

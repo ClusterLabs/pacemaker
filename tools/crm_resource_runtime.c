@@ -245,10 +245,8 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
         if(rc != pcmk_rc_ok) {
             rsc = rsc->parent;
-            if (!out->is_quiet(out)) {
-                out->info(out, "Performing %s of '%s' on '%s', the parent of '%s'",
-                          cmd, attr_name, rsc->id, rsc_id);
-            }
+            out->info(out, "Performing %s of '%s' on '%s', the parent of '%s'",
+                      cmd, attr_name, rsc->id, rsc_id);
         }
         return g_list_append(result, rsc);
     } else if(rsc->parent == NULL && rsc->children && pe_clone == rsc->variant) {
@@ -261,10 +259,8 @@ find_matching_attr_resources(pcmk__output_t *out, pe_resource_t * rsc,
 
             if(rc == pcmk_rc_ok) {
                 rsc = child;
-                if (!out->is_quiet(out)) {
-                    out->info(out, "A value for '%s' already exists in child '%s', performing %s on that instead of '%s'",
-                              attr_name, lookup_id, cmd, rsc_id);
-                }
+                out->info(out, "A value for '%s' already exists in child '%s', performing %s on that instead of '%s'",
+                          attr_name, lookup_id, cmd, rsc_id);
             }
 
             free(local_attr_id);
@@ -385,7 +381,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
         rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
+        if (rc == pcmk_rc_ok) {
             out->info(out, "Set '%s' option: id=%s%s%s%s%s value=%s", lookup_id, local_attr_id,
                       attr_set ? " set=" : "", attr_set ? attr_set : "",
                       attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
@@ -487,7 +483,7 @@ cli_resource_delete_attribute(pe_resource_t *rsc, const char *requested_name,
         rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
         rc = pcmk_legacy2rc(rc);
 
-        if (rc == pcmk_rc_ok && !out->is_quiet(out)) {
+        if (rc == pcmk_rc_ok) {
             out->info(out, "Deleted '%s' option: id=%s%s%s%s%s", lookup_id, local_attr_id,
                       attr_set ? " set=" : "", attr_set ? attr_set : "",
                       attr_name ? " name=" : "", attr_name ? attr_name : "");
@@ -1404,7 +1400,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
-            out->info(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
+            out->err(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
             display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
@@ -1479,7 +1475,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
         if(before == g_list_length(list_delta)) {
             /* aborted during start phase, print the contents of list_delta */
-            out->info(out, "Could not complete restart of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
+            out->err(out, "Could not complete restart of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
             display_list(out, list_delta, " * ");
             rc = ETIME;
             goto failure;
@@ -1750,9 +1746,9 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                       action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
                       services_ocf_exitcode_str(op->rc), op->rc);
         } else {
-            out->info(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
-                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                      services_lrm_status_str(op->status), op->status);
+            out->err(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
+                     action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
+                     services_lrm_status_str(op->status), op->status);
         }
 
         /* hide output for validate-all if not in verbose */

@@ -647,6 +647,34 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
 void
 pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 
+
+/*!
+ * \internal
+ * \brief A printf-like function.
+ *
+ * This function writes to out->dest without indenting the text.  This should be
+ * used with implementing custom message functions instead of printf.
+ *
+ * \param[in,out] out The output functions structure.
+ */
+void
+pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+
+/*!
+ * \internal
+ * \brief A vprintf-like function.
+ *
+ * This function is like pcmk__formatted_printf(), except it takes a va_list instead
+ * of a list of arguments.  This should be used when implementing custom message
+ * functions instead of vprintf.
+ *
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     args   A list of arguments to apply to the format string.
+ */
+void
+pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
+
 /*!
  * \internal
  * \brief Prompt the user for input.
