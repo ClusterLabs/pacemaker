@@ -136,7 +136,7 @@ main(int argc, char **argv)
 
         /* Skip #1 because that's the program name. */
         for (lpc = 1; processed_args[lpc] != NULL; lpc++) {
-            rc = crm_atoi(processed_args[lpc], NULL);
+            pcmk__scan_min_int(processed_args[lpc], &rc, INT_MIN);
             get_strings(rc, &name, &desc);
             if (options.with_name) {
                 printf("%s - %s\n", name, desc);
