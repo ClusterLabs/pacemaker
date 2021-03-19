@@ -434,7 +434,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         const char *require_all_s = crm_element_value(xml_obj, "require-all");
 
         if (min_clones_s) {
-            min_required_before = crm_parse_int(min_clones_s, "0");
+            pcmk__scan_min_int(min_clones_s, &min_required_before, 0);
 
         } else if (require_all_s) {
             pe_warn_once(pe_wo_require_all,
