@@ -97,7 +97,10 @@ print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
             }
             fprintf(stdout, "%s=", name);
             if (pcmk__str_any_of(name, "last-granted", "expires", NULL)) {
-                print_date(crm_parse_int(value, 0));
+                long long time_ll;
+
+                pcmk__scan_ll(value, &time_ll, 0);
+                print_date((time_t) time_ll);
             } else {
                 fprintf(stdout, "%s", value);
             }

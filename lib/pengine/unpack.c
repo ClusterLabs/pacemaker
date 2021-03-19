@@ -919,7 +919,10 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
 
     last_granted = g_hash_table_lookup(ticket->state, "last-granted");
     if (last_granted) {
-        ticket->last_granted = crm_parse_int(last_granted, 0);
+        long long last_granted_ll;
+
+        pcmk__scan_ll(last_granted, &last_granted_ll, 0LL);
+        ticket->last_granted = (time_t) last_granted_ll;
     }
 
     standby = g_hash_table_lookup(ticket->state, "standby");
