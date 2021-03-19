@@ -212,6 +212,7 @@ text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     }
 
     fputc('\n', out->dest);
+    fflush(out->dest);
     va_end(ap);
 
     out->increment_list(out);
