@@ -273,14 +273,11 @@ get_action_limit(stonith_device_t * device)
     int action_limit = 1;
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_ACTION_LIMIT);
-    if (value) {
-       action_limit = crm_parse_int(value, "1");
-       if (action_limit == 0) {
-           /* pcmk_action_limit should not be 0. Enforce it to be 1. */
-           action_limit = 1;
-       }
+    if ((value == NULL)
+        || (pcmk__scan_min_int(value, &action_limit, INT_MIN) != pcmk_rc_ok)
+        || (action_limit == 0)) {
+        action_limit = 1;
     }
-
     return action_limit;
 }
 
