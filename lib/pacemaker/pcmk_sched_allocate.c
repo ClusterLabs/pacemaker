@@ -840,7 +840,8 @@ apply_system_health(pe_working_set_t * data_set)
          * Defaults are provided by the pe_prefs table
          * Also, custom health "base score" can be used
          */
-        base_health = crm_parse_int(pe_pref(data_set->config_hash, "node-health-base"), "0");
+        base_health = char2score(pe_pref(data_set->config_hash,
+                                         "node-health-base"));
 
     } else if (pcmk__str_eq(health_strategy, "custom", pcmk__str_casei)) {
 

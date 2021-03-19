@@ -598,7 +598,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     (*rsc)->failure_timeout = 0;
 
     value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
-    (*rsc)->priority = crm_parse_int(value, "0");
+    (*rsc)->priority = char2score(value);
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_CRITICAL);
     if ((value == NULL) || crm_is_true(value)) {
