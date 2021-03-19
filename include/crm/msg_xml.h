@@ -427,7 +427,7 @@ extern "C" {
 #  define TYPE(x) crm_element_name(x)
 
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/msg_xml_compat.h>
 #endif
 

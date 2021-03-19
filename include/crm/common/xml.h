@@ -293,7 +293,7 @@ void crm_xml_set_id(xmlNode *xml, const char *format, ...)
  */
 void crm_destroy_xml(gpointer data);
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/xml_compat.h>
 #endif
 

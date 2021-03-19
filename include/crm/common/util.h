@@ -206,7 +206,7 @@ char *pcmk_hostname(void);
 bool pcmk_str_is_infinity(const char *s);
 bool pcmk_str_is_minus_infinity(const char *s);
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/util_compat.h>
 #endif
 

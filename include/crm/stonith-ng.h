@@ -558,7 +558,7 @@ bool stonith_agent_exists(const char *agent, int timeout);
  */
 const char *stonith_action_str(const char *action);
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/fencing/compat.h>
 #endif
 

@@ -73,7 +73,7 @@ gboolean pe_eval_expr(xmlNode *rule, pe_rule_eval_data_t *rule_data,
 gboolean pe_eval_subexpr(xmlNode *expr, pe_rule_eval_data_t *rule_data,
                          crm_time_t *next_change);
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/pengine/rules_compat.h>
 #endif
 

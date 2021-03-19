@@ -29,6 +29,21 @@ extern "C" {
 
 #  include <libxml/tree.h>
 
+#ifndef PCMK_ALLOW_DEPRECATED
+/*!
+ * \brief Allow use of deprecated Pacemaker APIs
+ *
+ * By default, external code using Pacemaker headers is allowed to use
+ * deprecated Pacemaker APIs. If PCMK_ALLOW_DEPRECATED is defined to 0 before
+ * including any Pacemaker headers, deprecated APIs will be unusable. It is
+ * strongly recommended to leave this unchanged for production and release
+ * builds, to avoid breakage when users upgrade to new Pacemaker releases that
+ * deprecate more APIs. This should be defined to 0 only for development and
+ * testing builds when desiring to check for usage of currently deprecated APIs.
+ */
+#define PCMK_ALLOW_DEPRECATED 1
+#endif
+
 /*!
  * The CRM feature set assists with compatibility in mixed-version clusters.
  * The major version number increases when nodes with different versions
@@ -222,7 +237,7 @@ crm_action_str(const char *task, guint interval_ms) {
     return task;
 }
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/crm_compat.h>
 #endif
 

@@ -370,7 +370,7 @@ unsigned int get_crm_log_level(void);
 
 #  define crm_str(x)    (const char*)(x?x:"<null>")
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/logging_compat.h>
 #endif
 

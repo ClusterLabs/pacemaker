@@ -65,7 +65,7 @@ xmlNode *cib_get_generation(cib_t * cib);
 void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/common/util_compat.h>
 #endif
 

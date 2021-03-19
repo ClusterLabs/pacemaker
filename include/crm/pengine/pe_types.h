@@ -525,7 +525,7 @@ typedef struct pe_action_wrapper_s {
     pe_action_t *action;
 } pe_action_wrapper_t;
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/pengine/pe_types_compat.h>
 #endif
 

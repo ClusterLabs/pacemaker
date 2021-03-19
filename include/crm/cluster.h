@@ -211,7 +211,7 @@ crm_join_phase_str(enum crm_join_phase phase)
     return "invalid";
 }
 
-#ifndef PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 #include <crm/cluster/compat.h>
 #endif
 
