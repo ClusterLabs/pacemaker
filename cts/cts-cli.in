@@ -851,6 +851,22 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     unset CIB_file
+
+    export CIB_file="-"
+
+    desc="Check that CIB_file=\"-\" works - crm_mon"
+    cmd="cat $test_home/cli/crm_mon.xml | crm_mon -1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Check that CIB_file=\"-\" works - crm_resource"
+    cmd="cat $test_home/cli/crm_resource_digests.xml | crm_resource --digests -r rsc1 -N node1 --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    desc="Check that CIB_file=\"-\" works - crmadmin"
+    cmd="cat $test_home/cli/crmadmin-cluster-remote-guest-nodes.xml | crmadmin -N | wc -l | grep 11"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
 }
 
 INVALID_PERIODS=(

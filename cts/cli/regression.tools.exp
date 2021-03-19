@@ -4095,3 +4095,56 @@ resource promotable-rsc:0 is running on: cluster02 Master
 resource promotable-rsc:1 is running on: cluster01
 =#=#=#= End test: List another instance of a promotable clone resource - OK (0) =#=#=#=
 * Passed: crm_resource   - List another instance of a promotable clone resource
+=#=#=#= Begin test: Check that CIB_file="-" works - crm_mon =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 32 resource instances configured (4 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 cluster02 ]
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+  * Resource Group: exim-group:
+    * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
+  * Clone Set: mysql-clone-group [mysql-group]:
+    * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Masters: [ cluster02 ]
+    * Slaves: [ cluster01 ]
+=#=#=#= End test: Check that CIB_file="-" works - crm_mon - OK (0) =#=#=#=
+* Passed: cat            - Check that CIB_file="-" works - crm_mon
+=#=#=#= Begin test: Check that CIB_file="-" works - crm_resource =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml">
+  <digests resource="rsc1" node="node1" task="start" interval="0ms">
+    <digest type="all" hash="3acdbe4c12734ebeb1251a59545af936">
+      <parameters passwd="secret" fake="0"/>
+    </digest>
+    <digest type="nonprivate" hash="279c477dbc38c621904a00ab9e599b2f">
+      <parameters fake="0"/>
+    </digest>
+    <digest type="nonreloadable" hash="5de1fd72a2e7762ed41543231034f6d7">
+      <parameters passwd="secret"/>
+    </digest>
+  </digests>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check that CIB_file="-" works - crm_resource - OK (0) =#=#=#=
+* Passed: cat            - Check that CIB_file="-" works - crm_resource
+=#=#=#= Begin test: Check that CIB_file="-" works - crmadmin =#=#=#=
+11
+=#=#=#= End test: Check that CIB_file="-" works - crmadmin - OK (0) =#=#=#=
+* Passed: cat            - Check that CIB_file="-" works - crmadmin
