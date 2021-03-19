@@ -80,12 +80,17 @@ char2score(const char *score)
         score_f = pcmk__score_green;
 
     } else {
-        score_f = crm_parse_int(score, NULL);
-        if (score_f > 0 && score_f > CRM_SCORE_INFINITY) {
+        long long score_ll;
+
+        pcmk__scan_ll(score, &score_ll, 0LL);
+        if (score_ll > CRM_SCORE_INFINITY) {
             score_f = CRM_SCORE_INFINITY;
 
-        } else if (score_f < 0 && score_f < -CRM_SCORE_INFINITY) {
+        } else if (score_ll < -CRM_SCORE_INFINITY) {
             score_f = -CRM_SCORE_INFINITY;
+
+        } else {
+            score_f = (int) score_ll;
         }
     }
 

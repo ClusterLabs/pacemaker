@@ -75,9 +75,9 @@ add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
         /* To identify the resource with the attribute name. */
         if (pcmk__str_eq(name, attrname, pcmk__str_casei)) {
             int host_list_num = 0;
-            /* int value = crm_parse_int(attrvalue, "0"); */
             const char *hosts = g_hash_table_lookup(params, "host_list");
             const char *multiplier = g_hash_table_lookup(params, "multiplier");
+            int multiplier_i;
 
             if (hosts) {
                 char **host_list = g_strsplit(hosts, " ", 0);
@@ -85,8 +85,16 @@ add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
                 g_strfreev(host_list);
             }
 
-            /* pingd multiplier is the same as the default value. */
-            *expected_score = host_list_num * crm_parse_int(multiplier, "1");
+            if ((multiplier == NULL)
+                || (pcmk__scan_min_int(multiplier, &multiplier_i,
+                                       INT_MIN) != pcmk_rc_ok)) {
+                /* The ocf:pacemaker:ping resource agent defaults multiplier to
+                 * 1. The agent currently does not handle invalid text, but it
+                 * should, and this would be a reasonable choice ...
+                 */
+                multiplier_i = 1;
+            }
+            *expected_score = host_list_num * multiplier_i;
 
             return TRUE;
         }
@@ -1395,8 +1403,13 @@ pe__node_attribute_text(pcmk__output_t *out, va_list args) {
     int expected_score = va_arg(args, int);
 
     if (add_extra) {
-        int v = crm_parse_int(value, "0");
+        int v;
 
+        if (value == NULL) {
+            v = 0;
+        } else {
+            pcmk__scan_min_int(value, &v, INT_MIN);
+        }
         if (v <= 0) {
             out->list_item(out, NULL, "%-32s\t: %-10s\t: Connectivity is lost", name, value);
         } else if (v < expected_score) {
@@ -1420,9 +1433,15 @@ node_attribute_html(pcmk__output_t *out, va_list args) {
     int expected_score = va_arg(args, int);
 
     if (add_extra) {
-        int v = crm_parse_int(value, "0");
+        int v;
         char *s = crm_strdup_printf("%s: %s", name, value);
         xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li", NULL);
+
+        if (value == NULL) {
+            v = 0;
+        } else {
+            pcmk__scan_min_int(value, &v, INT_MIN);
+        }
 
         pcmk_create_html_node(item_node, "span", NULL, NULL, s);
         free(s);

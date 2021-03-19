@@ -219,8 +219,13 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
             new_graph->stonith_timeout = crm_parse_interval_spec(time);
         }
 
+        // Use 0 (dynamic limit) as default/invalid, -1 (no limit) as minimum
         t_id = crm_element_value(xml_graph, "batch-limit");
-        new_graph->batch_limit = crm_parse_int(t_id, "0");
+        if ((t_id == NULL)
+            || (pcmk__scan_min_int(t_id, &(new_graph->batch_limit),
+                                   -1) != pcmk_rc_ok)) {
+            new_graph->batch_limit = 0;
+        }
 
         t_id = crm_element_value(xml_graph, "migration-limit");
         pcmk__scan_min_int(t_id, &(new_graph->migration_limit), -1);

@@ -570,9 +570,13 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
     if (value) {
-        errno = 0;
-        *dest = crm_parse_int(value, NULL);
-        if (errno == 0) {
+        long long value_ll;
+
+        if ((pcmk__scan_ll(value, &value_ll, 0LL) != pcmk_rc_ok)
+            || (value_ll < INT_MIN) || (value_ll > INT_MAX)) {
+            *dest = PCMK__PARSE_INT_DEFAULT;
+        } else {
+            *dest = (int) value_ll;
             return 0;
         }
     }
