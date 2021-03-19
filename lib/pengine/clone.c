@@ -145,8 +145,20 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
                                                     XML_RSC_ATTR_MASTER_NODEMAX);
         }
 
-        clone_data->promoted_max = crm_parse_int(promoted_max, "1");
-        clone_data->promoted_node_max = crm_parse_int(promoted_node_max, "1");
+        // Use 1 as default but 0 for minimum and invalid
+        if (promoted_max == NULL) {
+            clone_data->promoted_max = 1;
+        } else {
+            pcmk__scan_min_int(promoted_max, &(clone_data->promoted_max), 0);
+        }
+
+        // Use 1 as default but 0 for minimum and invalid
+        if (promoted_node_max == NULL) {
+            clone_data->promoted_node_max = 1;
+        } else {
+            pcmk__scan_min_int(promoted_node_max,
+                               &(clone_data->promoted_node_max), 0);
+        }
     }
 
     // Implied by calloc()
