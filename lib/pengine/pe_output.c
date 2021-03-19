@@ -1070,11 +1070,11 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    const char *last = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
     int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
     int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
 
+    time_t epoch = 0;
     char *rc_s = crm_itoa(rc);
     char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
     xmlNodePtr node = pcmk__output_create_xml_node(out, "failure",
@@ -1087,17 +1087,17 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                                    "status", services_lrm_status_str(status),
                                                    NULL);
 
-    if (last) {
+    if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                 &epoch) == pcmk_ok) && (epoch > 0)) {
         guint interval_ms = 0;
         char *s = NULL;
-        time_t when = crm_parse_int(last, "0");
-        crm_time_t *crm_when = crm_time_new(NULL);
+        crm_time_t *crm_when = crm_time_new_undefined();
         char *rc_change = NULL;
 
         crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
         s = crm_itoa(interval_ms);
 
-        crm_time_set_timet(crm_when, &when);
+        crm_time_set_timet(crm_when, &epoch);
         rc_change = crm_time_as_string(crm_when, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 
         pcmk__xe_set_props(node, XML_RSC_OP_LAST_CHANGE, rc_change,
@@ -1937,13 +1937,11 @@ op_history_xml(pcmk__output_t *out, va_list args) {
 
     if (print_timing) {
         const char *value = NULL;
+        time_t epoch = 0;
 
-        value = crm_element_value(xml_op, XML_RSC_OP_LAST_CHANGE);
-        if (value) {
-            time_t int_value = (time_t) crm_parse_int(value, NULL);
-            if (int_value > 0) {
-                crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, pcmk__epoch2str(&int_value));
-            }
+        if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                     &epoch) == pcmk_ok) && (epoch > 0)) {
+            crm_xml_add(node, XML_RSC_OP_LAST_CHANGE, pcmk__epoch2str(&epoch));
         }
 
         value = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
