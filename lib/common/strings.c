@@ -112,6 +112,35 @@ pcmk__scan_ll(const char *text, long long *result, long long default_value)
 }
 
 /*!
+ * \internal
+ * \brief Scan a TCP port number from a string
+ *
+ * \param[in]  text  The string to scan
+ * \param[out] port  Where to store result (or NULL to ignore)
+ *
+ * \return Standard Pacemaker return code
+ * \note \p port will be -1 if \p text is NULL or invalid
+ */
+int
+pcmk__scan_port(const char *text, int *port)
+{
+    long long port_ll;
+    int rc = pcmk__scan_ll(text, &port_ll, -1LL);
+
+    if ((text != NULL) && (rc == pcmk_rc_ok) // wasn't default or invalid
+        && ((port_ll < 0LL) || (port_ll > 65535LL))) {
+        crm_warn("Ignoring port specification '%s' "
+                 "not in valid range (0-65535)", text);
+        rc = (port_ll < 0LL)? pcmk_rc_before_range : pcmk_rc_after_range;
+        port_ll = -1LL;
+    }
+    if (port != NULL) {
+        *port = (int) port_ll;
+    }
+    return rc;
+}
+
+/*!
  * \brief Parse a long long integer value from a string
  *
  * \param[in] text          The string to parse
