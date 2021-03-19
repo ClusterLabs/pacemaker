@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -152,7 +152,12 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
     // Implied by calloc()
     /* clone_data->xml_obj_child = NULL; */
 
-    clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
+    // Use 1 as default but 0 for minimum and invalid
+    if (max_clones_node == NULL) {
+        clone_data->clone_node_max = 1;
+    } else {
+        pcmk__scan_min_int(max_clones_node, &(clone_data->clone_node_max), 0);
+    }
 
     if (max_clones) {
         clone_data->clone_max = crm_parse_int(max_clones, "1");
