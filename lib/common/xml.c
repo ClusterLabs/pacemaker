@@ -1059,7 +1059,7 @@ filename2xml(const char *filename)
         uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
     }
 
-    if (filename == NULL) {
+    if (filename == NULL || !strcmp(filename, "-")) {
         /* STDIN_FILENO == fileno(stdin) */
         output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
                                PCMK__XML_PARSE_OPTS);

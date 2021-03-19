@@ -549,7 +549,7 @@ load_file_cib(const char *filename)
     xmlNode *root = NULL;
 
     /* Ensure file is readable */
-    if (stat(filename, &buf) < 0) {
+    if (strcmp(filename, "-") && (stat(filename, &buf) < 0)) {
         return -ENXIO;
     }
 
