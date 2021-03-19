@@ -2399,10 +2399,11 @@ stonith_fence(xmlNode * msg)
         const char *host = crm_element_value(dev, F_STONITH_TARGET);
 
         if (cmd->options & st_opt_cs_nodeid) {
-            int nodeid = crm_atoi(host, NULL);
-            crm_node_t *node = pcmk__search_known_node_cache(nodeid, NULL,
-                                                             CRM_GET_PEER_ANY);
+            int nodeid;
+            crm_node_t *node;
 
+            pcmk__scan_min_int(host, &nodeid, 0);
+            node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
             if (node) {
                 host = node->uname;
             }

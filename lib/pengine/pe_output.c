@@ -133,11 +133,15 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 static char *
 failed_action_string(xmlNodePtr xml_op) {
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
-    int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
+    int rc;
+    int status;
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
 
     time_t last_change = 0;
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+                       &status, 0);
 
     if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                 &last_change) == pcmk_ok) {
@@ -1070,22 +1074,31 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    int rc = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), "0");
-    int status = crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS), "0");
+    int rc;
+    int status;
     const char *exit_reason = crm_element_value(xml_op, XML_LRM_ATTR_EXIT_REASON);
 
     time_t epoch = 0;
-    char *rc_s = crm_itoa(rc);
+    char *rc_s = NULL;
     char *reason_s = crm_xml_escape(exit_reason ? exit_reason : "none");
-    xmlNodePtr node = pcmk__output_create_xml_node(out, "failure",
-                                                   op_key ? "op_key" : "id", op_key ? op_key : ID(xml_op),
-                                                   "node", crm_element_value(xml_op, XML_ATTR_UNAME),
-                                                   "exitstatus", services_ocf_exitcode_str(rc),
-                                                   "exitreason", reason_s,
-                                                   "exitcode", rc_s,
-                                                   "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                                   "status", services_lrm_status_str(status),
-                                                   NULL);
+    xmlNodePtr node = NULL;
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+                       &status, 0);
+
+    rc_s = crm_itoa(rc);
+    node = pcmk__output_create_xml_node(out, "failure",
+                                        (op_key == NULL)? "id" : "op_key",
+                                        (op_key == NULL)? ID(xml_op) : op_key,
+                                        "node", crm_element_value(xml_op, XML_ATTR_UNAME),
+                                        "exitstatus", services_ocf_exitcode_str(rc),
+                                        "exitreason", reason_s,
+                                        "exitcode", rc_s,
+                                        "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                        "status", services_lrm_status_str(status),
+                                        NULL);
+    free(rc_s);
 
     if ((crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
                                  &epoch) == pcmk_ok) && (epoch > 0)) {
@@ -1113,7 +1126,6 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     }
 
     free(reason_s);
-    free(rc_s);
     return pcmk_rc_ok;
 }
 
@@ -1440,10 +1452,12 @@ node_and_op(pcmk__output_t *out, va_list args) {
     char *last_change_str = NULL;
 
     const char *op_rsc = crm_element_value(xml_op, "resource");
-    const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    int status = crm_parse_int(status_s, "0");
+    int status;
     time_t last_change = 0;
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+                       &status, 0);
 
     rsc = pe_find_resource(data_set->resources, op_rsc);
 
@@ -1491,18 +1505,20 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     pe_resource_t *rsc = NULL;
     const char *op_rsc = crm_element_value(xml_op, "resource");
-    const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
     const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    int status = crm_parse_int(status_s, "0");
+    int status;
     time_t last_change = 0;
+    xmlNode *node = NULL;
 
-    xmlNode *node = pcmk__output_create_xml_node(out, "operation",
-                                                 "op", op_key ? op_key : ID(xml_op),
-                                                 "node", crm_element_value(xml_op, XML_ATTR_UNAME),
-                                                 "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                                 "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
-                                                 "status", services_lrm_status_str(status),
-                                                 NULL);
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+                       &status, 0);
+    node = pcmk__output_create_xml_node(out, "operation",
+                                        "op", op_key ? op_key : ID(xml_op),
+                                        "node", crm_element_value(xml_op, XML_ATTR_UNAME),
+                                        "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
+                                        "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
+                                        "status", services_lrm_status_str(status),
+                                        NULL);
 
     rsc = pe_find_resource(data_set->resources, op_rsc);
 

@@ -41,6 +41,7 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
                    char **result, unsigned int *result_len);
 
 int pcmk__scan_ll(const char *text, long long *result, long long default_value);
+int pcmk__scan_min_int(const char *text, int *result, int minimum);
 int pcmk__scan_port(const char *text, int *port);
 int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
 

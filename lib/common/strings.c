@@ -113,6 +113,42 @@ pcmk__scan_ll(const char *text, long long *result, long long default_value)
 
 /*!
  * \internal
+ * \brief Scan an integer value from a string, constrained to a minimum
+ *
+ * \param[in]  text           The string to scan (may be NULL)
+ * \param[out] result         Where to store result (or NULL to ignore)
+ * \param[in]  minimum        Value to use as default and minimum
+ *
+ * \return Standard Pacemaker return code
+ * \note If the value is larger than the maximum integer, EOVERFLOW will be
+ *       returned and \p result will be set to the maximum integer.
+ */
+int
+pcmk__scan_min_int(const char *text, int *result, int minimum)
+{
+    int rc;
+    long long result_ll;
+
+    rc = pcmk__scan_ll(text, &result_ll, (long long) minimum);
+
+    if (result_ll < (long long) minimum) {
+        crm_warn("Clipped '%s' to minimum acceptable value %d", text, minimum);
+        result_ll = (long long) minimum;
+
+    } else if (result_ll > INT_MAX) {
+        crm_warn("Clipped '%s' to maximum integer %d", text, INT_MAX);
+        result_ll = (long long) INT_MAX;
+        rc = EOVERFLOW;
+    }
+
+    if (result != NULL) {
+        *result = (int) result_ll;
+    }
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Scan a TCP port number from a string
  *
  * \param[in]  text  The string to scan

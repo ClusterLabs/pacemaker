@@ -37,7 +37,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
         return NULL;
     }
 
-    action->id = crm_parse_int(value, NULL);
+    pcmk__scan_min_int(value, &(action->id), -1);
     action->type = action_type_rsc;
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
@@ -55,14 +55,15 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     action->params = xml2list(action->xml);
 
     value = g_hash_table_lookup(action->params, "CRM_meta_timeout");
-    if (value != NULL) {
-        action->timeout = crm_parse_int(value, NULL);
-    }
+    pcmk__scan_min_int(value, &(action->timeout), 0);
 
     /* Take start-delay into account for the timeout of the action timer */
     value = g_hash_table_lookup(action->params, "CRM_meta_start_delay");
-    if (value != NULL) {
-        action->timeout += crm_parse_int(value, NULL);
+    {
+        int start_delay;
+
+        pcmk__scan_min_int(value, &start_delay, 0);
+        action->timeout += start_delay;
     }
 
     if (pcmk__guint_from_hash(action->params,
@@ -99,12 +100,10 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     crm_trace("looking in synapse %s", ID(xml_synapse));
 
     new_synapse = calloc(1, sizeof(synapse_t));
-    new_synapse->id = crm_parse_int(ID(xml_synapse), NULL);
+    pcmk__scan_min_int(ID(xml_synapse), &(new_synapse->id), 0);
 
     value = crm_element_value(xml_synapse, XML_CIB_ATTR_PRIORITY);
-    if (value != NULL) {
-        new_synapse->priority = crm_parse_int(value, NULL);
-    }
+    pcmk__scan_min_int(value, &(new_synapse->priority), 0);
 
     CRM_CHECK(new_synapse->id >= 0, free(new_synapse);
               return NULL);
@@ -206,7 +205,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         t_id = crm_element_value(xml_graph, "transition_id");
         CRM_CHECK(t_id != NULL, free(new_graph);
                   return NULL);
-        new_graph->id = crm_parse_int(t_id, "-1");
+        pcmk__scan_min_int(t_id, &(new_graph->id), -1);
 
         time = crm_element_value(xml_graph, "cluster-delay");
         CRM_CHECK(time != NULL, free(new_graph);
@@ -224,7 +223,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         new_graph->batch_limit = crm_parse_int(t_id, "0");
 
         t_id = crm_element_value(xml_graph, "migration-limit");
-        new_graph->migration_limit = crm_parse_int(t_id, "-1");
+        pcmk__scan_min_int(t_id, &(new_graph->migration_limit), -1);
     }
 
     for (synapse = pcmk__xml_first_child(xml_graph); synapse != NULL;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -440,10 +440,11 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     if (dev) {
         target = crm_element_value(dev, F_STONITH_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
-            int nodeid = crm_atoi(target, NULL);
-            crm_node_t *node = pcmk__search_known_node_cache(nodeid, NULL,
-                                                             CRM_GET_PEER_ANY);
+            int nodeid;
+            crm_node_t *node;
 
+            pcmk__scan_min_int(target, &nodeid, 0);
+            node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
             if (node) {
                 target = node->uname;
             }

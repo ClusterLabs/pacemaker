@@ -156,7 +156,9 @@ get_operation_list(xmlNode *rsc_entry) {
         const char *interval_ms_s = crm_element_value(rsc_op,
                                                       XML_LRM_ATTR_INTERVAL_MS);
         const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
-        int op_rc_i = crm_parse_int(op_rc, "0");
+        int op_rc_i;
+
+        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
 
         /* Display 0-interval monitors as "probe" */
         if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
@@ -205,7 +207,9 @@ print_rsc_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *rsc_entr
         const char *interval_ms_s = crm_element_value(xml_op,
                                                       XML_LRM_ATTR_INTERVAL_MS);
         const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-        int op_rc_i = crm_parse_int(op_rc, "0");
+        int op_rc_i;
+
+        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
 
         /* Display 0-interval monitors as "probe" */
         if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)

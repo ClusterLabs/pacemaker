@@ -812,13 +812,14 @@ fence_with_delay(const char *target, const char *type, const char *delay)
 {
     uint32_t options = st_opt_none; // Group of enum stonith_call_options
     int timeout_sec = (int) (transition_graph->stonith_timeout / 1000);
+    int delay_i;
 
     if (crmd_join_phase_count(crm_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_suicide);
     }
+    pcmk__scan_min_int(delay, &delay_i, 0);
     return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
-                                               type, timeout_sec, 0,
-                                               crm_atoi(delay, "0"));
+                                               type, timeout_sec, 0, delay_i);
 }
 
 gboolean

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1269,11 +1269,12 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
             cnt++;
             if (lrm_state && lrm_state->remote_ra_data &&
                 ((remote_ra_data_t *) lrm_state->remote_ra_data)->active) {
-                cnt_remote++;
-                remote_ra_maintenance(lrm_state,
-                                        crm_atoi(crm_element_value(node,
-                                            XML_NODE_IS_MAINTENANCE), "0"));
+                int is_maint;
 
+                cnt_remote++;
+                pcmk__scan_min_int(crm_element_value(node, XML_NODE_IS_MAINTENANCE),
+                                   &is_maint, 0);
+                remote_ra_maintenance(lrm_state, is_maint);
             }
         }
         crm_trace("Action holds %d nodes (%d remotes found) "
