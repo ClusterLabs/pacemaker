@@ -1747,6 +1747,41 @@ op_history_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "char *")
+static int
+promotion_score(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *chosen = va_arg(args, pe_node_t *);
+    char *score = va_arg(args, char *);
+
+    out->list_item(out, NULL, "%s promotion score on %s: %s",
+                   child_rsc->id,
+                   chosen? chosen->details->uname : "none",
+                   score);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("promotion-score", "pe_resource_t *", "pe_node_t *", "char *")
+static int
+promotion_score_xml(pcmk__output_t *out, va_list args)
+{
+    pe_resource_t *child_rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *chosen = va_arg(args, pe_node_t *);
+    char *score = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "promotion_score",
+                                                   "id", child_rsc->id,
+                                                   "score", score,
+                                                   NULL);
+
+    if (chosen) {
+        crm_xml_add(node, "node", chosen->details->uname);
+    }
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("resource-config", "pe_resource_t *", "gboolean")
 static int
 resource_config(pcmk__output_t *out, va_list args) {
@@ -2125,6 +2160,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "primitive", "html",  pe__resource_html },
     { "primitive", "text",  pe__resource_text },
     { "primitive", "log",  pe__resource_text },
+    { "promotion-score", "default", promotion_score },
+    { "promotion-score", "xml", promotion_score_xml },
     { "resource-config", "default", resource_config },
     { "resource-history", "default", pe__resource_history_text },
     { "resource-history", "xml", resource_history_xml },
