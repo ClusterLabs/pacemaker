@@ -90,9 +90,10 @@ log_reset(pcmk__output_t *out) {
 
 static void
 log_version(pcmk__output_t *out, bool extended) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     if (extended) {
         do_crm_log(priv->log_level, "Pacemaker %s (Build: %s): %s",
@@ -110,6 +111,8 @@ log_err(pcmk__output_t *out, const char *format, ...) {
     char* buffer = NULL;
     int len = 0;
 
+    CRM_ASSERT(out != NULL);
+
     va_start(ap, format);
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
@@ -126,8 +129,10 @@ log_err(pcmk__output_t *out, const char *format, ...) {
 static void
 log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     xmlNodePtr node = NULL;
-    private_data_t *priv = out->priv;
-    CRM_ASSERT(priv != NULL);
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     node = create_xml_node(NULL, name);
     xmlNodeSetContent(node, (pcmkXmlStr) buf);
@@ -142,8 +147,10 @@ log_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
     int len = 0;
     va_list ap;
     char* buffer = NULL;
-    private_data_t *priv = out->priv;
-    CRM_ASSERT(priv != NULL);
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     va_start(ap, format);
     len = vasprintf(&buffer, format, ap);
@@ -165,12 +172,13 @@ static void
 log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     int len = 0;
     va_list ap;
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     char prefix[LINE_MAX] = { 0 };
     int offset = 0;
     char* buffer = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     for (GList* gIter = priv->prefixes->head; gIter; gIter = gIter->next) {
         if (strcmp(prefix, "") != 0) {
@@ -205,8 +213,11 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
 
 static void
 log_end_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
-    CRM_ASSERT(priv != NULL);
+    private_data_t *priv = NULL;
+
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     if (priv->prefixes == NULL) {
       return;
     }
@@ -219,12 +230,13 @@ log_end_list(pcmk__output_t *out) {
 G_GNUC_PRINTF(2, 3)
 static void
 log_info(pcmk__output_t *out, const char *format, ...) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     int len = 0;
     va_list ap;
     char* buffer = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     va_start(ap, format);
     len = vasprintf(&buffer, format, ap);
