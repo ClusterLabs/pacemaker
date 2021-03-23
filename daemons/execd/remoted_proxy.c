@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -431,7 +431,7 @@ ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
 void
 ipc_proxy_init(void)
 {
-    ipc_clients = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+    ipc_clients = pcmk__strkey_table(NULL, NULL);
 
     pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_shm, &cib_proxy_callbacks_ro,
                           &cib_proxy_callbacks_rw);

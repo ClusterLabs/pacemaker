@@ -198,7 +198,7 @@ gboolean
 unpack_config(xmlNode * config, pe_working_set_t * data_set)
 {
     const char *value = NULL;
-    GHashTable *config_hash = crm_str_table_new();
+    GHashTable *config_hash = pcmk__strkey_table(free, free);
 
     pe_rule_eval_data_t rule_data = {
         .node_hash = NULL,
@@ -426,7 +426,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
         new_node->details->type = node_member;
     }
 
-    new_node->details->attrs = crm_str_table_new();
+    new_node->details->attrs = pcmk__strkey_table(free, free);
 
     if (pe__is_guest_or_remote_node(new_node)) {
         g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
@@ -436,11 +436,9 @@ pe_create_node(const char *id, const char *uname, const char *type,
                             strdup("cluster"));
     }
 
-    new_node->details->utilization = crm_str_table_new();
-
-    new_node->details->digest_cache = g_hash_table_new_full(crm_str_hash,
-                                                            g_str_equal, free,
-                                                            pe__free_digests);
+    new_node->details->utilization = pcmk__strkey_table(free, free);
+    new_node->details->digest_cache = pcmk__strkey_table(free,
+                                                          pe__free_digests);
 
     data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
     return new_node;
@@ -770,9 +768,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     xmlNode *xml_obj = NULL;
     GList *gIter = NULL;
 
-    data_set->template_rsc_sets = g_hash_table_new_full(crm_str_hash,
-                                                        g_str_equal, free,
-                                                        destroy_tag);
+    data_set->template_rsc_sets = pcmk__strkey_table(free, destroy_tag);
 
     for (xml_obj = pcmk__xe_first_child(xml_resources); xml_obj != NULL;
          xml_obj = pcmk__xe_next(xml_obj)) {
@@ -832,8 +828,7 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 {
     xmlNode *xml_tag = NULL;
 
-    data_set->tags = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
-                                           destroy_tag);
+    data_set->tags = pcmk__strkey_table(free, destroy_tag);
 
     for (xml_tag = pcmk__xe_first_child(xml_tags); xml_tag != NULL;
          xml_tag = pcmk__xe_next(xml_tag)) {
@@ -1256,8 +1251,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     crm_trace("Beginning unpack");
 
     if (data_set->tickets == NULL) {
-        data_set->tickets = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                  free, destroy_ticket);
+        data_set->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
     for (state = pcmk__xe_first_child(status); state != NULL;

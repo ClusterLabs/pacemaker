@@ -487,7 +487,7 @@ make_args(const char *agent, const char *action, const char *victim,
 
     CRM_CHECK(action != NULL, return NULL);
 
-    arg_list = crm_str_table_new();
+    arg_list = pcmk__strkey_table(free, free);
 
     // Add action to arguments (using an alias if requested)
     if (device_args) {
@@ -2036,7 +2036,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     const char *target = "node1";
     const char *host_arg = NULL;
 
-    GHashTable *params_table = crm_str_table_new();
+    GHashTable *params_table = pcmk__strkey_table(free, free);
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {

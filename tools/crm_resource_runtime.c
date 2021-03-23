@@ -633,7 +633,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
      * clean each resource only once (per node) regardless of how many failed
      * operations it has.
      */
-    rscs = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+    rscs = pcmk__strkey_table(NULL, NULL);
 
     // Normalize interval to milliseconds for comparison to history entry
     if (operation) {
@@ -937,7 +937,7 @@ generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
     char *key = NULL;
     char *value = NULL;
 
-    combined = crm_str_table_new();
+    combined = pcmk__strkey_table(free, free);
 
     params = pe_rsc_params(rsc, node, data_set);
     if (params != NULL) {
@@ -947,7 +947,7 @@ generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
         }
     }
 
-    meta = crm_str_table_new();
+    meta = pcmk__strkey_table(free, free);
     get_meta_attributes(meta, rsc, node, data_set);
     if (meta != NULL) {
         g_hash_table_iter_init(&iter, meta);

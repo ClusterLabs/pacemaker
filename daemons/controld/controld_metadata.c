@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 the Pacemaker project contributors
+ * Copyright 2017-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -52,8 +52,7 @@ metadata_free(void *metadata)
 GHashTable *
 metadata_cache_new()
 {
-    return g_hash_table_new_full(crm_str_hash, g_str_equal, free,
-                                 metadata_free);
+    return pcmk__strkey_table(free, metadata_free);
 }
 
 void

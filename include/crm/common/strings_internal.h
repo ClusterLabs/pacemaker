@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,6 +41,10 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
                    char **result, unsigned int *result_len);
 
 int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
+
+GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
+                               GDestroyNotify value_destroy_func);
+
 gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;

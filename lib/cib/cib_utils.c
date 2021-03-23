@@ -189,7 +189,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
     if(pcmk_acl_required(user)) {
         const char *value = NULL;
-        GHashTable *options = crm_str_table_new();
+        GHashTable *options = pcmk__strkey_table(free, free);
 
         cib_read_config(options, xml);
         value = cib_pref(options, "enable-acl");

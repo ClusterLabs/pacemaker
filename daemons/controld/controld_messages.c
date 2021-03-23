@@ -704,7 +704,7 @@ handle_lrm_delete(xmlNode *stored_msg)
             op = lrmd_new_event(rsc_id, CRMD_ACTION_DELETE, 0);
             op->type = lrmd_event_exec_complete;
             op->user_data = strdup(transition? transition : FAKE_TE_ID);
-            op->params = crm_str_table_new();
+            op->params = pcmk__strkey_table(free, free);
             g_hash_table_insert(op->params, strdup(XML_ATTR_CRM_VERSION),
                                 strdup(CRM_FEATURE_SET));
             controld_rc2event(op, rc);

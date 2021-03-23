@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -265,7 +265,7 @@ void
 init_stonith_remote_op_hash_table(GHashTable **table)
 {
     if (*table == NULL) {
-        *table = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_remote_op);
+        *table = pcmk__strkey_table(NULL, free_remote_op);
     }
 }
 
@@ -1875,7 +1875,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
     // cppcheck-suppress memleak
     CRM_CHECK(result != NULL, return NULL);
     result->host = strdup(host);
-    result->devices = crm_str_table_new();
+    result->devices = pcmk__strkey_table(free, free);
 
     /* Each child element describes one capable device available to the peer */
     for (child = pcmk__xml_first_child(xml); child != NULL;

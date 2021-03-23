@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1775,7 +1775,7 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
         return stonith_get_metadata(provider, type, output);
     }
 
-    params_table = crm_str_table_new();
+    params_table = pcmk__strkey_table(free, free);
     for (const lrmd_key_value_t *param = params; param; param = param->next) {
         g_hash_table_insert(params_table, strdup(param->key), strdup(param->value));
     }

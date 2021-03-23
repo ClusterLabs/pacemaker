@@ -3080,8 +3080,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (data_set->tickets == NULL) {
-        data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, free, destroy_ticket);
+        data_set->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
     if (ticket_str == NULL) {

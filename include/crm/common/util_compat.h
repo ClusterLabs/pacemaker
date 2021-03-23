@@ -69,6 +69,13 @@ char *pcmk_format_nvpair(const char *name, const char *value,
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_named_time(const char *name, time_t epoch_time);
 
+//! \deprecated Use g_hash_table_new_full() instead
+static inline GHashTable *
+crm_str_table_new(void)
+{
+    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+}
+
 #ifdef __cplusplus
 }
 #endif

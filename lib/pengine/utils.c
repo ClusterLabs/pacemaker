@@ -203,7 +203,7 @@ pe__node_list2table(GList *list)
 {
     GHashTable *result = NULL;
 
-    result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    result = pcmk__strkey_table(NULL, free);
     for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
         pe_node_t *new_node = pe__copy_node((pe_node_t *) gIter->data);
 
@@ -483,7 +483,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
     }
 
     if(data_set->singletons == NULL) {
-        data_set->singletons = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+        data_set->singletons = pcmk__strkey_table(NULL, NULL);
     }
 
     if (possible_matches != NULL) {
@@ -535,8 +535,8 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             pe__clear_action_flags(action, pe_action_optional);
         }
 
-        action->extra = crm_str_table_new();
-        action->meta = crm_str_table_new();
+        action->extra = pcmk__strkey_table(free, free);
+        action->meta = pcmk__strkey_table(free, free);
 
         if (save_action) {
             data_set->actions = g_list_prepend(data_set->actions, action);
@@ -914,7 +914,7 @@ pe_get_configured_timeout(pe_resource_t *rsc, const char *action, pe_working_set
     }
 
     if (timeout_spec == NULL && data_set->op_defaults) {
-        action_meta = crm_str_table_new();
+        action_meta = pcmk__strkey_table(free, free);
         pe__unpack_dataset_nvpairs(data_set->op_defaults, XML_TAG_META_SETS,
                                    &rule_data, action_meta, NULL, FALSE, data_set);
         timeout_spec = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
@@ -1926,9 +1926,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
     }
 
     if (data_set->tickets == NULL) {
-        data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, free,
-                                  destroy_ticket);
+        data_set->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
@@ -1946,7 +1944,7 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
         ticket->granted = FALSE;
         ticket->last_granted = -1;
         ticket->standby = FALSE;
-        ticket->state = crm_str_table_new();
+        ticket->state = pcmk__strkey_table(free, free);
 
         g_hash_table_insert(data_set->tickets, strdup(ticket->id), ticket);
     }

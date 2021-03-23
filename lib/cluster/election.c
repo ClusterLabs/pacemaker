@@ -488,7 +488,7 @@ record_vote(election_t *e, struct vote *vote)
 
     CRM_ASSERT(e && vote && vote->from && vote->op);
     if (e->voted == NULL) {
-        e->voted = crm_str_table_new();
+        e->voted = pcmk__strkey_table(free, free);
     }
 
     voter_copy = strdup(vote->from);

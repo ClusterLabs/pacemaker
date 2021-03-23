@@ -117,24 +117,14 @@ lrm_state_create(const char *node_name)
     }
 
     state->node_name = strdup(node_name);
-
-    state->rsc_info_cache = g_hash_table_new_full(crm_str_hash,
-                                                g_str_equal, NULL, free_rsc_info);
-
-    state->deletion_ops = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
-                                                free_deletion_op);
-
-    state->pending_ops = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
-                                               free_recurring_op);
-
-    state->resource_history = g_hash_table_new_full(crm_str_hash,
-                                                    g_str_equal, NULL, history_free);
-
+    state->rsc_info_cache = pcmk__strkey_table(NULL, free_rsc_info);
+    state->deletion_ops = pcmk__strkey_table(free, free_deletion_op);
+    state->pending_ops = pcmk__strkey_table(free, free_recurring_op);
+    state->resource_history = pcmk__strkey_table(NULL, history_free);
     state->metadata_cache = metadata_cache_new();
 
     g_hash_table_insert(lrm_state_table, (char *)state->node_name, state);
     return state;
-
 }
 
 void
@@ -457,7 +447,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     } else {
         lrmd_t * lrmd = (lrmd_t *)user_data;
         crm_time_t *now = crm_time_new(NULL);
-        GHashTable *config_hash = crm_str_table_new();
+        GHashTable *config_hash = pcmk__strkey_table(free, free);
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 

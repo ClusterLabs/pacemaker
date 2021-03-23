@@ -770,7 +770,7 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         return FALSE;
     }
     if (options.cmdline_params == NULL) {
-        options.cmdline_params = crm_str_table_new();
+        options.cmdline_params = pcmk__strkey_table(free, free);
     }
     g_hash_table_replace(options.cmdline_params, name, value);
     return TRUE;
@@ -898,7 +898,7 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
     options.operation = g_strdup(option_name + 2); // skip "--"
     options.find_flags = pe_find_renamed|pe_find_anon;
     if (options.override_params == NULL) {
-        options.override_params = crm_str_table_new();
+        options.override_params = pcmk__strkey_table(free, free);
     }
     return TRUE;
 }
@@ -919,7 +919,7 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     SET_COMMAND(cmd_digests);
     options.find_flags = pe_find_renamed|pe_find_anon;
     if (options.override_params == NULL) {
-        options.override_params = crm_str_table_new();
+        options.override_params = pcmk__strkey_table(free, free);
     }
     options.require_node = TRUE;
     options.require_dataset = TRUE;
@@ -1429,7 +1429,7 @@ validate_cmdline_config(void)
     }
 
     if (options.cmdline_params == NULL) {
-        options.cmdline_params = crm_str_table_new();
+        options.cmdline_params = pcmk__strkey_table(free, free);
     }
     options.require_resource = FALSE;
     options.require_dataset = FALSE;
@@ -1957,11 +1957,11 @@ main(int argc, char **argv)
                 free_params = false;
 
             } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
-                params = crm_str_table_new();
+                params = pcmk__strkey_table(free, free);
                 get_meta_attributes(params, rsc, current, data_set);
 
             } else {
-                params = crm_str_table_new();
+                params = pcmk__strkey_table(free, free);
                 pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
                                            NULL, FALSE, data_set);
             }

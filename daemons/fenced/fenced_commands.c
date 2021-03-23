@@ -618,8 +618,7 @@ void
 init_device_list(void)
 {
     if (device_list == NULL) {
-        device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
-                                            free_device);
+        device_list = pcmk__strkey_table(NULL, free_device);
     }
 }
 
@@ -703,7 +702,7 @@ free_metadata_cache(void) {
 static void
 init_metadata_cache(void) {
     if (metadata_cache == NULL) {
-        metadata_cache = crm_str_table_new();
+        metadata_cache = pcmk__strkey_table(free, free);
     }
 }
 
@@ -1336,8 +1335,7 @@ void
 init_topology_list(void)
 {
     if (topology == NULL) {
-        topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
-                                         free_topology_entry);
+        topology = pcmk__strkey_table(NULL, free_topology_entry);
     }
 }
 

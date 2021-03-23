@@ -103,10 +103,8 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
     pe_node_t *current_node2 = pe__current_node(rsc2);
     GList *list1 = NULL;
     GList *list2 = NULL;
-    GHashTable *hash1 =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
-    GHashTable *hash2 =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    GHashTable *hash1 = pcmk__strkey_table(NULL, free);
+    GHashTable *hash2 = pcmk__strkey_table(NULL, free);
 
     /* Clone instances must have parents */
     CRM_ASSERT(rsc1->parent != NULL);

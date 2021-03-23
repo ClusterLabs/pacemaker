@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 the Pacemaker project contributors
+ * Copyright 2014-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -237,7 +237,7 @@ sum_unallocated_utilization(pe_resource_t * rsc, GList *colocated_rscs)
 {
     GList *gIter = NULL;
     GList *all_rscs = NULL;
-    GHashTable *all_utilization = crm_str_table_new();
+    GHashTable *all_utilization = pcmk__strkey_table(free, free);
 
     all_rscs = g_list_copy(colocated_rscs);
     if (g_list_find(all_rscs, rsc) == FALSE) {

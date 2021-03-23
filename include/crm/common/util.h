@@ -75,19 +75,6 @@ crm_ttoa(time_t epoch_time)
 }
 
 /*!
- * \brief Create hash table with dynamically allocated string keys/values
- *
- * \return Newly allocated hash table
- * \note It is the caller's responsibility to free the result, using
- *       g_hash_table_destroy().
- */
-static inline GHashTable *
-crm_str_table_new(void)
-{
-    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
-}
-
-/*!
  * \brief Create hash table with case-insensitive dynamically allocated string keys/values
  *
  * \return Newly allocated hash table

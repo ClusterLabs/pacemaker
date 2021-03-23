@@ -544,6 +544,25 @@ g_str_hash_traditional(gconstpointer v)
     return h;
 }
 
+/*!
+ * \internal
+ * \brief Create a hash table with case-sensitive strings as keys
+ *
+ * \param[in] key_destroy_func    Function to free a key
+ * \param[in] value_destroy_func  Function to free a value
+ *
+ * \return Newly allocated hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+GHashTable *
+pcmk__strkey_table(GDestroyNotify key_destroy_func,
+                   GDestroyNotify value_destroy_func)
+{
+    return g_hash_table_new_full(g_str_hash_traditional, g_str_equal,
+                                 key_destroy_func, value_destroy_func);
+}
+
 /* used with hash tables where case does not matter */
 gboolean
 crm_strcase_equal(gconstpointer a, gconstpointer b)
@@ -577,7 +596,7 @@ crm_str_table_dup(GHashTable *old_table)
     GHashTable *new_table = NULL;
 
     if (old_table) {
-        new_table = crm_str_table_new();
+        new_table = pcmk__strkey_table(free, free);
         g_hash_table_foreach(old_table, copy_str_table_entry, new_table);
     }
     return new_table;

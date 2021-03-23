@@ -1162,7 +1162,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 
                 node_table = g_hash_table_lookup(active_table, node->details->uname);
                 if (node_table == NULL) {
-                    node_table = crm_str_table_new();
+                    node_table = pcmk__strkey_table(free, free);
                     g_hash_table_insert(active_table, strdup(node->details->uname), node_table);
                 }
 
@@ -1192,9 +1192,8 @@ void
 print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
                  void *print_data, gboolean print_all)
 {
-    GHashTable *rsc_table = crm_str_table_new();
-    GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                     free, destroy_node_table);
+    GHashTable *rsc_table = pcmk__strkey_table(free, free);
+    GHashTable *active_table = pcmk__strkey_table(free, destroy_node_table);
     GHashTableIter hash_iter;
     char *type = NULL;
     int *rsc_counter = NULL;
@@ -1271,9 +1270,8 @@ print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
 int
 pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboolean print_all)
 {
-    GHashTable *rsc_table = crm_str_table_new();
-    GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                     free, destroy_node_table);
+    GHashTable *rsc_table = pcmk__strkey_table(free, free);
+    GHashTable *active_table = pcmk__strkey_table(free, destroy_node_table);
     GList *sorted_rscs;
     int rc = pcmk_rc_no_output;
 

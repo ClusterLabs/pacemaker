@@ -712,10 +712,10 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
 GHashTable*
 pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
 {
-    GHashTable *hash = crm_str_table_new();
+    GHashTable *hash = pcmk__strkey_table(free, free);
 
     if (versioned_params && ra_version) {
-        GHashTable *node_hash = crm_str_table_new();
+        GHashTable *node_hash = pcmk__strkey_table(free, free);
         xmlNode *attr_set = pcmk__xe_first_child(versioned_params);
 
         if (attr_set) {

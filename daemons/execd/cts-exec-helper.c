@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -483,7 +483,7 @@ generate_params(void)
     }
 
     params = pe_rsc_params(rsc, NULL, data_set);
-    meta = crm_str_table_new();
+    meta = pcmk__strkey_table(free, free);
 
     get_meta_attributes(meta, rsc, NULL, data_set);
 

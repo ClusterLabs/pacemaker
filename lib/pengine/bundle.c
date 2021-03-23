@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -786,9 +786,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         if (replica->child->allowed_nodes != NULL) {
             g_hash_table_destroy(replica->child->allowed_nodes);
         }
-        replica->child->allowed_nodes = g_hash_table_new_full(crm_str_hash,
-                                                              g_str_equal,
-                                                              NULL, free);
+        replica->child->allowed_nodes = pcmk__strkey_table(NULL, free);
         g_hash_table_insert(replica->child->allowed_nodes,
                             (gpointer) replica->node->details->id,
                             pe__copy_node(replica->node));
