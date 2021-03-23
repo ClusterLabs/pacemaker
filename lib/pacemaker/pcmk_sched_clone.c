@@ -96,7 +96,6 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
                              pe_working_set_t *data_set)
 {
     int rc = 0;
-    int max = 0;
     pe_node_t *n = NULL;
     pe_node_t *node1 = NULL;
     pe_node_t *node2 = NULL;
@@ -210,14 +209,14 @@ order_instance_by_colocation(const pe_resource_t *rsc1,
 
     list1 = sort_nodes_by_weight(list1, current_node1, data_set);
     list2 = sort_nodes_by_weight(list2, current_node2, data_set);
-    max = g_list_length(list1);
-    if (max < g_list_length(list2)) {
-        max = g_list_length(list2);
-    }
 
-    for (int lpc = 0; lpc < max; lpc++) {
-        node1 = g_list_nth_data(list1, lpc);
-        node2 = g_list_nth_data(list2, lpc);
+    for (GList *gIter1 = list1, *gIter2 = list2;
+         (gIter1 != NULL) && (gIter2 != NULL);
+         gIter1 = gIter1->next, gIter2 = gIter2->next) {
+
+        node1 = (pe_node_t *) gIter1->data;
+        node2 = (pe_node_t *) gIter2->data;
+
         if (node1 == NULL) {
             crm_trace("%s < %s: colocated score NULL", rsc1->id, rsc2->id);
             rc = 1;
