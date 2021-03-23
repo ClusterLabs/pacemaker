@@ -203,41 +203,6 @@ crm_parse_ll(const char *text, const char *default_text)
 }
 
 /*!
- * \brief Parse an integer value from a string
- *
- * \param[in] text          The string to parse
- * \param[in] default_text  Default string to parse if text is NULL
- *
- * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to
- *         ERANGE) if parsed value is out of integer range, otherwise
- *         PCMK__PARSE_INT_DEFAULT (and set errno)
- */
-int
-crm_parse_int(const char *text, const char *default_text)
-{
-    long long result = crm_parse_ll(text, default_text);
-
-    if (result < INT_MIN) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MIN;
-
-    } else if (result > INT_MAX) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MAX;
-    }
-
-    return (int) result;
-}
-
-/*!
  * \internal
  * \brief Scan a double-precision floating-point value from a string
  *
@@ -1281,6 +1246,31 @@ GHashTable *
 crm_str_table_dup(GHashTable *old_table)
 {
     return pcmk__str_table_dup(old_table);
+}
+
+int
+crm_parse_int(const char *text, const char *default_text)
+{
+    long long result = crm_parse_ll(text, default_text);
+
+    if (result < INT_MIN) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MIN;
+
+    } else if (result > INT_MAX) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MAX;
+    }
+
+    return (int) result;
 }
 
 // End deprecated API

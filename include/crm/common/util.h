@@ -45,7 +45,6 @@ int crm_default_remote_port(void);
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
 long long crm_parse_ll(const char *text, const char *default_text);
-int crm_parse_int(const char *text, const char *default_text);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
