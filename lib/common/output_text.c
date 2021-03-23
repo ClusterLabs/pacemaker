@@ -12,8 +12,7 @@
 #include <glib.h>
 #include <termios.h>
 
-#include <crm/crm.h>
-#include <crm/common/output_internal.h>
+#include <crm_internal.h>
 
 static gboolean fancy = FALSE;
 
@@ -348,6 +347,10 @@ G_GNUC_PRINTF(2, 0)
 void
 pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     CRM_ASSERT(out != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "text", pcmk__str_none)) {
+        return;
+    }
 
     if (fancy) {
         int level = 0;

@@ -6,20 +6,13 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
+
+#include <crm_internal.h>
 
 #include <ctype.h>
-#include <libxml/HTMLtree.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/strings_internal.h>
 
 GOptionEntry pcmk__log_output_entries[] = {
     { NULL }

@@ -7,14 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
-#ifndef PCMK__CONFIG_H
-#  define PCMK__CONFIG_H
-#  include <config.h>
-#endif
+#include <crm_internal.h>
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -22,10 +15,7 @@
 #include <stdio.h>
 #include <glib.h>
 
-#include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
-#include <crm/common/output_internal.h>
 
 static gboolean legacy_xml = FALSE;
 static gboolean simple_list = FALSE;
@@ -447,6 +437,10 @@ pcmk__output_xml_add_node(pcmk__output_t *out, xmlNodePtr node) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_ASSERT(node != NULL);
 
+    if (!pcmk__str_any_of(out->fmt_name, "xml", "html", NULL)) {
+        return;
+    }
+
     priv = out->priv;
 
     xmlAddChild(g_queue_peek_tail(priv->parent_q), node);
@@ -459,6 +453,8 @@ pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...) {
     va_list args;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
+    CRM_ASSERT(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL));
+
     priv = out->priv;
 
     node = create_xml_node(g_queue_peek_tail(priv->parent_q), name);
@@ -487,6 +483,10 @@ pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
     CRM_ASSERT(out != NULL && out->priv != NULL);
     CRM_ASSERT(parent != NULL);
 
+    if (!pcmk__str_any_of(out->fmt_name, "xml", "html", NULL)) {
+        return;
+    }
+
     priv = out->priv;
 
     g_queue_push_tail(priv->parent_q, parent);
@@ -497,6 +497,10 @@ pcmk__output_xml_pop_parent(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
+
+    if (!pcmk__str_any_of(out->fmt_name, "xml", "html", NULL)) {
+        return;
+    }
 
     priv = out->priv;
 
@@ -509,6 +513,8 @@ pcmk__output_xml_peek_parent(pcmk__output_t *out) {
     private_data_t *priv = NULL;
 
     CRM_ASSERT(out != NULL && out->priv != NULL);
+    CRM_ASSERT(pcmk__str_any_of(out->fmt_name, "xml", "html", NULL));
+
     priv = out->priv;
 
     /* If queue is empty NULL will be returned */
