@@ -54,8 +54,6 @@ guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
 
-#  define crm_str_hash g_str_hash_traditional
-
 static inline char *
 crm_itoa(int an_int)
 {
