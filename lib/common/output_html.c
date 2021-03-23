@@ -51,10 +51,18 @@ GOptionEntry pcmk__html_output_entries[] = {
     { NULL }
 };
 
+/* The first several elements of this struct must be the same as the first
+ * several elements of private_data_s in lib/common/output_xml.c.  This
+ * struct gets passed to a bunch of the pcmk__output_xml_* functions which
+ * assume an XML private_data_s.  Keeping them laid out the same means this
+ * still works.
+ */
 typedef struct private_data_s {
+    /* Begin members that must match the XML version */
     xmlNode *root;
     GQueue *parent_q;
     GSList *errors;
+    /* End members that must match the XML version */
 } private_data_t;
 
 static void
