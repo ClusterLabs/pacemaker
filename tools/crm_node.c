@@ -491,7 +491,7 @@ remove_node(const char *target_uname)
         return;
     }
 
-    for (d = 0; d < DIMOF(daemons); d++) {
+    for (d = 0; d < PCMK__NELEM(daemons); d++) {
         if (tools_remove_node_cache(node_name, nodeid, daemons[d])) {
             crm_err("Failed to connect to %s to remove node '%s'",
                     daemons[d], target_uname);

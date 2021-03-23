@@ -2455,7 +2455,7 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
 
         crm_trace("Creating a result reply with%s reply output (rc=%d)",
                   (data? "" : "out"), rc);
-        for (int lpc = 0; lpc < DIMOF(names); lpc++) {
+        for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
             name = names[lpc];
             value = crm_element_value(request, name);
             crm_xml_add(reply, name, value);

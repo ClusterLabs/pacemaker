@@ -1221,7 +1221,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
         }
 
-        for (lpc = 0; lpc < DIMOF(attr_list); lpc++) {
+        for (lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
             crm_xml_add(rsc_xml, attr_list[lpc],
                         g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
         }

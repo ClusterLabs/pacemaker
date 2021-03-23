@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -155,23 +155,6 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
     return pcmk_ok;
 }
 
-// Deprecated functions kept only for backward API compatibility
-bool crm_provider_required(const char *standard);
-
-/*!
- * \deprecated
- * \brief Check whether a resource standard requires a provider to be specified
- *
- * \param[in] standard  Standard name
- *
- * \return TRUE if standard requires a provider, FALSE otherwise
- */
-bool
-crm_provider_required(const char *standard)
-{
-    return pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
-}
-
 /*!
  * \brief Check whether a given stonith parameter is handled by Pacemaker
  *
@@ -210,3 +193,15 @@ pcmk_stonith_param(const char *param)
     param = strchr(param + 5, '_'); // Skip past "pcmk_ACTION"
     return pcmk__str_any_of(param, "_action", "_timeout", "_retries", NULL);
 }
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/common/agents_compat.h>
+
+bool
+crm_provider_required(const char *standard)
+{
+    return pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+}
+
+// End deprecated API

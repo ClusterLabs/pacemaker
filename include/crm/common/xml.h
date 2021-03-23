@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -293,15 +293,8 @@ void crm_xml_set_id(xmlNode *xml, const char *format, ...)
  */
 void crm_destroy_xml(gpointer data);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
-
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
-
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/xml_compat.h>
 #endif
 
 #ifdef __cplusplus

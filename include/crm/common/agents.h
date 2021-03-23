@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 the Pacemaker project contributors
+ * Copyright 2017-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,15 +55,9 @@ int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                          char **type);
 bool pcmk_stonith_param(const char *param);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated Use pcmk_get_ra_caps() instead
-bool crm_provider_required(const char *standard);
-
-#endif // PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/agents_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

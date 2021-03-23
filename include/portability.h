@@ -9,9 +9,6 @@
 #ifndef PORTABILITY_H
 #  define PORTABILITY_H
 
-#  define	EOS			'\0'
-#  define	DIMOF(a)		((int) (sizeof(a)/sizeof(a[0])) )
-
 /* Needs to be defined before any other includes, otherwise some system
  * headers do not behave as expected! Major black magic... */
 #  undef _GNU_SOURCE            /* in case it was defined on the command line */

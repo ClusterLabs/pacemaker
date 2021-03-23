@@ -288,7 +288,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
         size_t i;
 
         sigwait(&set, &sig);
-        for (i = 0; i < DIMOF(sigmap); i++) {
+        for (i = 0; i < PCMK__NELEM(sigmap); i++) {
             if (sigmap[i].sig == sig) {
                 sigmap[i].handler();
                 break;

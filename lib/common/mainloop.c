@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1457,15 +1457,13 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
 }
 
 // Deprecated functions kept only for backward API compatibility
-gboolean crm_signal(int sig, void (*dispatch) (int sig));
 
-/*
- * \brief Use crm_signal_handler() instead
- * \deprecated
- */
+#include <crm/common/mainloop_compat.h>
+
 gboolean
 crm_signal(int sig, void (*dispatch) (int sig))
 {
     return crm_signal_handler(sig, dispatch) != SIG_ERR;
 }
 
+// End deprecated API

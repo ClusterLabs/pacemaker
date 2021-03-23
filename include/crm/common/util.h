@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -206,45 +206,9 @@ char *pcmk_hostname(void);
 bool pcmk_str_is_infinity(const char *s);
 bool pcmk_str_is_minus_infinity(const char *s);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated Use crm_parse_interval_spec() instead
-#define crm_get_interval crm_parse_interval_spec
-
-//! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
-static inline gboolean
-is_not_set(long long word, long long bit)
-{
-    return ((word & bit) == 0);
-}
-
-//! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
-static inline gboolean
-is_set(long long word, long long bit)
-{
-    return ((word & bit) == bit);
-}
-
-//! \deprecated Use pcmk_any_flags_set() instead
-static inline gboolean
-is_set_any(long long word, long long bit)
-{
-    return ((word & bit) != 0);
-}
-
-//! \deprecated Use strcmp or strcasecmp instead
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-
-//! \deprecated Use strcmp instead
-gboolean safe_str_neq(const char *a, const char *b);
-
-//! \deprecated Use strcasecmp instead
-#define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
-
-#endif // PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/util_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

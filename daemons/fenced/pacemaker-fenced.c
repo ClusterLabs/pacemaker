@@ -1420,7 +1420,7 @@ main(int argc, char **argv)
         printf("  </parameter>\n");
 
 
-        for (lpc = 0; lpc < DIMOF(actions); lpc++) {
+        for (lpc = 0; lpc < PCMK__NELEM(actions); lpc++) {
             printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
             printf
                 ("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n",

@@ -117,7 +117,7 @@ const char *
 get_object_path(const char *object_type)
 {
     int lpc = 0;
-    int max = DIMOF(known_paths);
+    int max = PCMK__NELEM(known_paths);
 
     for (; lpc < max; lpc++) {
         if ((object_type == NULL && known_paths[lpc].name == NULL)
@@ -132,7 +132,7 @@ const char *
 get_object_parent(const char *object_type)
 {
     int lpc = 0;
-    int max = DIMOF(known_paths);
+    int max = PCMK__NELEM(known_paths);
 
     for (; lpc < max; lpc++) {
         if (pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
@@ -634,19 +634,20 @@ cib_metadata(void)
                                 "Cluster Information Base manager options",
                                 "Cluster options used by Pacemaker's "
                                     "Cluster Information Base manager",
-                                cib_opts, DIMOF(cib_opts));
+                                cib_opts, PCMK__NELEM(cib_opts));
 }
 
 void
 verify_cib_options(GHashTable * options)
 {
-    pcmk__validate_cluster_options(options, cib_opts, DIMOF(cib_opts));
+    pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));
 }
 
 const char *
 cib_pref(GHashTable * options, const char *name)
 {
-    return pcmk__cluster_option(options, cib_opts, DIMOF(cib_opts), name);
+    return pcmk__cluster_option(options, cib_opts, PCMK__NELEM(cib_opts),
+                                name);
 }
 
 gboolean
@@ -715,12 +716,9 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
 }
 
 // Deprecated functions kept only for backward API compatibility
-int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
-                          int level);
 
-/*!
- * \deprecated
- */
+#include <crm/cib/util_compat.h>
+
 int
 cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                       int level)
@@ -763,3 +761,5 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
     return rc;
 }
+
+// End deprecated API
