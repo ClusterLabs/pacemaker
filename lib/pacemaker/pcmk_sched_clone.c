@@ -280,7 +280,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     current_node1 = pe__find_active_on(resource1, &nnodes1, NULL);
     current_node2 = pe__find_active_on(resource2, &nnodes2, NULL);
 
-    if (nnodes1 && nnodes2) {
+    /* If both instances are running and at least one is multiply
+     * active, give precedence to the one that's running on fewer nodes.
+     */
+    if ((nnodes1 > 0) && (nnodes2 > 0)) {
         if (nnodes1 < nnodes2) {
             crm_trace("%s < %s: running_on", resource1->id, resource2->id);
             return -1;
@@ -291,9 +294,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         }
     }
 
+    /* Instance whose current location is available sorts first */
     node1 = current_node1;
     node2 = current_node2;
-    if (node1) {
+    if (node1 != NULL) {
         pe_node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
 
         if (match == NULL || match->weight < 0) {
@@ -303,7 +307,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         }
     }
 
-    if (node2) {
+    if (node2 != NULL) {
         pe_node_t *match = pe_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
 
         if (match == NULL || match->weight < 0) {
@@ -313,65 +317,74 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         }
     }
 
-    if (can1 != can2) {
-        if (can1) {
-            crm_trace("%s < %s: availability of current location", resource1->id, resource2->id);
-            return -1;
-        }
-        crm_trace("%s > %s: availability of current location", resource1->id, resource2->id);
-        return 1;
-    }
-
-    if (resource1->priority < resource2->priority) {
-        crm_trace("%s < %s: priority", resource1->id, resource2->id);
-        return 1;
-
-    } else if (resource1->priority > resource2->priority) {
-        crm_trace("%s > %s: priority", resource1->id, resource2->id);
+    if (can1 && !can2) {
+        crm_trace("%s < %s: availability of current location", resource1->id,
+                  resource2->id);
         return -1;
+
+    } else if (!can1 && can2) {
+        crm_trace("%s > %s: availability of current location", resource1->id,
+                  resource2->id);
+        return 1;
     }
 
+    /* Higher-priority instance sorts first */
+    if (resource1->priority > resource2->priority) {
+        crm_trace("%s < %s: priority", resource1->id, resource2->id);
+        return -1;
+
+    } else if (resource1->priority < resource2->priority) {
+        crm_trace("%s > %s: priority", resource1->id, resource2->id);
+        return 1;
+    }
+
+    /* Active instance sorts first */
     if (node1 == NULL && node2 == NULL) {
         crm_trace("%s == %s: not active", resource1->id, resource2->id);
         return 0;
+
+    } else if (node1 == NULL) {
+        crm_trace("%s > %s: active", resource1->id, resource2->id);
+        return 1;
+
+    } else if (node2 == NULL) {
+        crm_trace("%s < %s: active", resource1->id, resource2->id);
+        return -1;
     }
 
-    if (node1 != node2) {
-        if (node1 == NULL) {
-            crm_trace("%s > %s: active", resource1->id, resource2->id);
-            return 1;
-        } else if (node2 == NULL) {
-            crm_trace("%s < %s: active", resource1->id, resource2->id);
-            return -1;
-        }
-    }
-
+    /* Instance whose current node can run resources sorts first */
     can1 = can_run_resources(node1);
     can2 = can_run_resources(node2);
-    if (can1 != can2) {
-        if (can1) {
-            crm_trace("%s < %s: can", resource1->id, resource2->id);
-            return -1;
-        }
+    if (can1 && !can2) {
+        crm_trace("%s < %s: can", resource1->id, resource2->id);
+        return -1;
+
+    } else if (!can1 && can2) {
         crm_trace("%s > %s: can", resource1->id, resource2->id);
         return 1;
     }
 
+    /* Is the parent allowed to run on the instance's current node?
+     * Instance with parent allowed sorts first.
+     */
     node1 = parent_node_instance(resource1, node1);
     node2 = parent_node_instance(resource2, node2);
-    if (node1 != NULL && node2 == NULL) {
-        crm_trace("%s < %s: not allowed", resource1->id, resource2->id);
-        return -1;
-    } else if (node1 == NULL && node2 != NULL) {
-        crm_trace("%s > %s: not allowed", resource1->id, resource2->id);
-        return 1;
-    }
-
-    if (node1 == NULL || node2 == NULL) {
+    if (node1 == NULL && node2 == NULL) {
         crm_trace("%s == %s: not allowed", resource1->id, resource2->id);
         return 0;
+
+    } else if (node1 == NULL) {
+        crm_trace("%s > %s: not allowed", resource1->id, resource2->id);
+        return 1;
+
+    } else if (node2 == NULL) {
+        crm_trace("%s < %s: not allowed", resource1->id, resource2->id);
+        return -1;
     }
 
+    /* Does one node have more instances allocated?
+     * Instance whose current node has fewer instances sorts first.
+     */
     if (node1->count < node2->count) {
         crm_trace("%s < %s: count", resource1->id, resource2->id);
         return -1;
@@ -381,13 +394,13 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         return 1;
     }
 
+    /* Failed instance sorts first */
     can1 = did_fail(resource1);
     can2 = did_fail(resource2);
-    if (can1 != can2) {
-        if (can1) {
-            crm_trace("%s > %s: failed", resource1->id, resource2->id);
-            return 1;
-        }
+    if (can1 && !can2) {
+        crm_trace("%s > %s: failed", resource1->id, resource2->id);
+        return 1;
+    } else if (!can1 && can2) {
         crm_trace("%s < %s: failed", resource1->id, resource2->id);
         return -1;
     }
@@ -397,7 +410,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         return rc;
     }
 
-    /* Order by reverse uname - same as sort_node_weight() does? */
+    /* Default to lexicographic order by ID */
     rc = strcmp(resource1->id, resource2->id);
     crm_trace("%s %c %s: default", resource1->id, rc < 0 ? '<' : '>', resource2->id);
     return rc;
