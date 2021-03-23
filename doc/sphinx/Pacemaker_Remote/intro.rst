@@ -26,30 +26,30 @@ Terms
     execute fencing actions, count toward cluster quorum, and serve as the
     cluster's Designated Controller (DC).
 
-.. index:: pacemaker_remoted
+.. index:: pacemaker-remoted
 
-**pacemaker_remoted**
+**pacemaker-remoted**
     A small service daemon that allows a host to be used as a Pacemaker node
-    without running the full cluster stack. Nodes running ``pacemaker_remoted``
+    without running the full cluster stack. Nodes running ``pacemaker-remoted``
     may run cluster resources and most command-line tools, but cannot perform
     other functions of full cluster nodes such as fencing execution, quorum
-    voting, or DC eligibility. The ``pacemaker_remoted`` daemon is an enhanced
-    version of Pacemaker's local resource management daemon (LRMD).
+    voting, or DC eligibility. The ``pacemaker-remoted`` daemon is an enhanced
+    version of Pacemaker's local executor daemon (pacemaker-execd).
 
 .. index::
    single: remote node
    single: node; remote node
 
 **pacemaker_remote**
-    The name of the systemd service that manages ``pacemaker_remoted``
+    The name of the systemd service that manages ``pacemaker-remoted``
 
 **Pacemaker Remote**
     A way to refer to the general technology implementing nodes running
-    ``pacemaker_remoted``, including the cluster-side implementation
+    ``pacemaker-remoted``, including the cluster-side implementation
     and the communication protocol between them.
 
 **remote node**
-    A physical host running ``pacemaker_remoted``. Remote nodes have a special
+    A physical host running ``pacemaker-remoted``. Remote nodes have a special
     resource that manages communication with the cluster. This is sometimes
     referred to as the *bare metal* case.
 
@@ -58,7 +58,7 @@ Terms
    single: node; guest node
 
 **guest node**
-    A virtual host running ``pacemaker_remoted``. Guest nodes differ from remote
+    A virtual host running ``pacemaker-remoted``. Guest nodes differ from remote
     nodes mainly in that the guest node is itself a resource that the cluster
     manages.
 
@@ -79,7 +79,7 @@ Terms
     * A virtual machine can be managed by the cluster as a resource, without the
       cluster having any awareness of the services running inside the virtual
       machine. The virtual machine is *opaque* to the cluster.
-    * A virtual machine can be a cluster resource, and run ``pacemaker_remoted``
+    * A virtual machine can be a cluster resource, and run ``pacemaker-remoted``
       to make it a guest node, allowing the cluster to manage services
       inside it. The virtual machine is *transparent* to the cluster.
 
@@ -93,7 +93,7 @@ Guest Nodes
 want Pacemaker to be able to manage the resources that live within those
 virtual machines."**
 
-Without ``pacemaker_remoted``, the possibilities for implementing the above use
+Without ``pacemaker-remoted``, the possibilities for implementing the above use
 case have significant limitations:
 
 * The cluster stack could be run on the physical hosts only, which loses the
@@ -103,13 +103,13 @@ case have significant limitations:
 * The cluster stack could be run on the guests using the same cluster as the
   physical hosts, which also hits scalability issues and complicates fencing.
 
-With ``pacemaker_remoted``:
+With ``pacemaker-remoted``:
 
 * The physical hosts are cluster nodes (running the full cluster stack).
-* The virtual machines are guest nodes (running ``pacemaker_remoted``).
+* The virtual machines are guest nodes (running ``pacemaker-remoted``).
   Nearly zero configuration is required on the virtual machine.
 * The cluster stack on the cluster nodes launches the virtual machines and
-  immediately connects to ``pacemaker_remoted`` on them, allowing the
+  immediately connects to ``pacemaker-remoted`` on them, allowing the
   virtual machines to integrate into the cluster.
 
 The key difference here between the guest nodes and the cluster nodes is that
@@ -132,14 +132,14 @@ To solidify the concept, below is an example that is very similar to an actual
 deployment we test in our developer environment to verify guest node scalability:
 
 * 16 cluster nodes running the full Corosync + Pacemaker stack
-* 64 Pacemaker-managed virtual machine resources running ``pacemaker_remoted``
+* 64 Pacemaker-managed virtual machine resources running ``pacemaker-remoted``
   configured as guest nodes
 * 64 Pacemaker-managed webserver and database resources configured to run on
   the 64 guest nodes
 
 With this deployment, you would have 64 webservers and databases running on 64
 virtual machines on 16 hardware nodes, all of which are managed and monitored by
-the same Pacemaker deployment. It is known that ``pacemaker_remoted`` can scale
+the same Pacemaker deployment. It is known that ``pacemaker-remoted`` can scale
 to these lengths and possibly much further depending on the specific scenario.
 
 Remote Nodes
@@ -165,7 +165,7 @@ cluster nodes.
 Expanding the Cluster Stack
 ###########################
 
-With ``pacemaker_remoted``, the traditional view of the high-availability stack
+With ``pacemaker-remoted``, the traditional view of the high-availability stack
 can be expanded to include a new layer:
 
 Traditional HA Stack
@@ -179,7 +179,7 @@ HA Stack With Guest Nodes
 _________________________
 
 .. image:: images/pcmk-ha-remote-stack.png
-   :alt: Pacemaker+Corosync Stack with pacemaker_remoted
+   :alt: Pacemaker+Corosync Stack with pacemaker-remoted
    :align: center
 
 .. [#] See the `<https://www.clusterlabs.org/doc/>`_ Pacemaker documentation,
