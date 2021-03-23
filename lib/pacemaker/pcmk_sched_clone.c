@@ -74,6 +74,182 @@ did_fail(const pe_resource_t * rsc)
     return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Compare instances based on colocation scores.
+ *
+ * Determines the relative order in which \c rsc1 and \c rsc2 should be
+ * allocated. If one resource compares less than the other, then it
+ * should be allocated first.
+ *
+ * \param[in] rsc1  The first instance to compare.
+ * \param[in] rsc2  The second instance to compare.
+ * \param[in] data_set  Cluster working set.
+ *
+ * \return -1 if `rsc1 < rsc2`,
+ *          0 if `rsc1 == rsc2`, or
+ *          1 if `rsc1 > rsc2`
+ */
+static int
+order_instance_by_colocation(const pe_resource_t *rsc1,
+                             const pe_resource_t *rsc2,
+                             pe_working_set_t *data_set)
+{
+    int rc = 0;
+    int max = 0;
+    pe_node_t *n = NULL;
+    pe_node_t *node1 = NULL;
+    pe_node_t *node2 = NULL;
+    pe_node_t *current_node1 = pe__current_node(rsc1);
+    pe_node_t *current_node2 = pe__current_node(rsc2);
+    GList *list1 = NULL;
+    GList *list2 = NULL;
+    GHashTable *hash1 =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    GHashTable *hash2 =
+        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+
+    /* Clone instances must have parents */
+    CRM_ASSERT(rsc1->parent != NULL);
+    CRM_ASSERT(rsc2->parent != NULL);
+
+    n = pe__copy_node(current_node1);
+    g_hash_table_insert(hash1, (gpointer) n->details->id, n);
+
+    n = pe__copy_node(current_node2);
+    g_hash_table_insert(hash2, (gpointer) n->details->id, n);
+
+    /* Apply rsc1's parental colocations */
+    for (GList *gIter = rsc1->parent->rsc_cons; gIter != NULL;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        crm_trace("Applying %s to %s", constraint->id, rsc1->id);
+
+        hash1 = pcmk__native_merge_weights(constraint->rsc_rh, rsc1->id, hash1,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           0);
+    }
+
+    for (GList *gIter = rsc1->parent->rsc_cons_lhs; gIter != NULL;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        if (!pcmk__colocation_has_influence(constraint, rsc1)) {
+            continue;
+        }
+        crm_trace("Applying %s to %s", constraint->id, rsc1->id);
+
+        hash1 = pcmk__native_merge_weights(constraint->rsc_lh, rsc1->id, hash1,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           pe_weights_positive);
+    }
+
+    /* Apply rsc2's parental colocations */
+    for (GList *gIter = rsc2->parent->rsc_cons; gIter != NULL;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        crm_trace("Applying %s to %s", constraint->id, rsc2->id);
+
+        hash2 = pcmk__native_merge_weights(constraint->rsc_rh, rsc2->id, hash2,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           0);
+    }
+
+    for (GList *gIter = rsc2->parent->rsc_cons_lhs; gIter;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        if (!pcmk__colocation_has_influence(constraint, rsc2)) {
+            continue;
+        }
+        crm_trace("Applying %s to %s", constraint->id, rsc2->id);
+
+        hash2 = pcmk__native_merge_weights(constraint->rsc_lh, rsc2->id, hash2,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           pe_weights_positive);
+    }
+
+    /* Current location score */
+    node1 = g_hash_table_lookup(hash1, current_node1->details->id);
+    node2 = g_hash_table_lookup(hash2, current_node2->details->id);
+
+    if (node1->weight < node2->weight) {
+        if (node1->weight < 0) {
+            crm_trace("%s > %s: current score: %d %d",
+                      rsc1->id, rsc2->id, node1->weight, node2->weight);
+            rc = -1;
+            goto out;
+
+        } else {
+            crm_trace("%s < %s: current score: %d %d",
+                      rsc1->id, rsc2->id, node1->weight, node2->weight);
+            rc = 1;
+            goto out;
+        }
+
+    } else if (node1->weight > node2->weight) {
+        crm_trace("%s > %s: current score: %d %d",
+                  rsc1->id, rsc2->id, node1->weight, node2->weight);
+        rc = -1;
+        goto out;
+    }
+
+    /* All location scores */
+    list1 = g_hash_table_get_values(hash1);
+    list2 = g_hash_table_get_values(hash2);
+
+    list1 = sort_nodes_by_weight(list1, current_node1, data_set);
+    list2 = sort_nodes_by_weight(list2, current_node2, data_set);
+    max = g_list_length(list1);
+    if (max < g_list_length(list2)) {
+        max = g_list_length(list2);
+    }
+
+    for (int lpc = 0; lpc < max; lpc++) {
+        node1 = g_list_nth_data(list1, lpc);
+        node2 = g_list_nth_data(list2, lpc);
+        if (node1 == NULL) {
+            crm_trace("%s < %s: colocated score NULL", rsc1->id, rsc2->id);
+            rc = 1;
+            break;
+
+        } else if (node2 == NULL) {
+            crm_trace("%s > %s: colocated score NULL", rsc1->id, rsc2->id);
+            rc = -1;
+            break;
+        }
+
+        if (node1->weight < node2->weight) {
+            crm_trace("%s < %s: colocated score", rsc1->id, rsc2->id);
+            rc = 1;
+            break;
+
+        } else if (node1->weight > node2->weight) {
+            crm_trace("%s > %s: colocated score", rsc1->id, rsc2->id);
+            rc = -1;
+            break;
+        }
+    }
+
+out:
+    g_hash_table_destroy(hash1);
+    g_hash_table_destroy(hash2);
+    g_list_free(list1);
+    g_list_free(list2);
+
+    return rc;
+}
+
 gint
 sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 {
@@ -217,153 +393,12 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         return -1;
     }
 
-    if (node1 && node2) {
-        int lpc = 0;
-        int max = 0;
-        pe_node_t *n = NULL;
-        GList *gIter = NULL;
-        GList *list1 = NULL;
-        GList *list2 = NULL;
-        GHashTable *hash1 =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
-        GHashTable *hash2 =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
-
-        n = pe__copy_node(current_node1);
-        g_hash_table_insert(hash1, (gpointer) n->details->id, n);
-
-        n = pe__copy_node(current_node2);
-        g_hash_table_insert(hash2, (gpointer) n->details->id, n);
-
-        if(resource1->parent) {
-            for (gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                crm_trace("Applying %s to %s", constraint->id, resource1->id);
-
-                hash1 = pcmk__native_merge_weights(constraint->rsc_rh,
-                                                   resource1->id, hash1,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   0);
-            }
-
-            for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                if (!pcmk__colocation_has_influence(constraint, resource1)) {
-                    continue;
-                }
-                crm_trace("Applying %s to %s", constraint->id, resource1->id);
-
-                hash1 = pcmk__native_merge_weights(constraint->rsc_lh,
-                                                   resource1->id, hash1,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   pe_weights_positive);
-            }
-        }
-
-        if(resource2->parent) {
-            for (gIter = resource2->parent->rsc_cons; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                crm_trace("Applying %s to %s", constraint->id, resource2->id);
-
-                hash2 = pcmk__native_merge_weights(constraint->rsc_rh,
-                                                   resource2->id, hash2,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   0);
-            }
-
-            for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                if (!pcmk__colocation_has_influence(constraint, resource2)) {
-                    continue;
-                }
-                crm_trace("Applying %s to %s", constraint->id, resource2->id);
-
-                hash2 = pcmk__native_merge_weights(constraint->rsc_lh,
-                                                   resource2->id, hash2,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   pe_weights_positive);
-            }
-        }
-
-        /* Current location score */
-        node1 = g_hash_table_lookup(hash1, current_node1->details->id);
-        node2 = g_hash_table_lookup(hash2, current_node2->details->id);
-
-        if (node1->weight < node2->weight) {
-            if (node1->weight < 0) {
-                crm_trace("%s > %s: current score: %d %d", resource1->id, resource2->id, node1->weight, node2->weight);
-                rc = -1;
-                goto out;
-
-            } else {
-                crm_trace("%s < %s: current score: %d %d", resource1->id, resource2->id, node1->weight, node2->weight);
-                rc = 1;
-                goto out;
-            }
-
-        } else if (node1->weight > node2->weight) {
-            crm_trace("%s > %s: current score: %d %d", resource1->id, resource2->id, node1->weight, node2->weight);
-            rc = -1;
-            goto out;
-        }
-
-        /* All location scores */
-        list1 = g_hash_table_get_values(hash1);
-        list2 = g_hash_table_get_values(hash2);
-
-        list1 = sort_nodes_by_weight(list1, current_node1, data_set);
-        list2 = sort_nodes_by_weight(list2, current_node2, data_set);
-        max = g_list_length(list1);
-        if (max < g_list_length(list2)) {
-            max = g_list_length(list2);
-        }
-
-        for (; lpc < max; lpc++) {
-            node1 = g_list_nth_data(list1, lpc);
-            node2 = g_list_nth_data(list2, lpc);
-            if (node1 == NULL) {
-                crm_trace("%s < %s: colocated score NULL", resource1->id, resource2->id);
-                rc = 1;
-                break;
-
-            } else if (node2 == NULL) {
-                crm_trace("%s > %s: colocated score NULL", resource1->id, resource2->id);
-                rc = -1;
-                break;
-            }
-
-            if (node1->weight < node2->weight) {
-                crm_trace("%s < %s: colocated score", resource1->id, resource2->id);
-                rc = 1;
-                break;
-
-            } else if (node1->weight > node2->weight) {
-                crm_trace("%s > %s: colocated score", resource1->id, resource2->id);
-                rc = -1;
-                break;
-            }
-        }
-
-        /* Order by reverse uname - same as sort_node_weight() does? */
-  out:
-        g_hash_table_destroy(hash1);    /* Free mem */
-        g_hash_table_destroy(hash2);    /* Free mem */
-        g_list_free(list1);
-        g_list_free(list2);
-
-        if (rc != 0) {
-            return rc;
-        }
+    rc = order_instance_by_colocation(resource1, resource2, data_set);
+    if (rc != 0) {
+        return rc;
     }
 
+    /* Order by reverse uname - same as sort_node_weight() does? */
     rc = strcmp(resource1->id, resource2->id);
     crm_trace("%s %c %s: default", resource1->id, rc < 0 ? '<' : '>', resource2->id);
     return rc;
