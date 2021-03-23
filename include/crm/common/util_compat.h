@@ -69,6 +69,9 @@ char *pcmk_format_nvpair(const char *name, const char *value,
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_named_time(const char *name, time_t epoch_time);
 
+//! \deprecated Use strtoll() instead
+#  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
+
 //! \deprecated Use g_str_hash() instead
 guint g_str_hash_traditional(gconstpointer v);
 

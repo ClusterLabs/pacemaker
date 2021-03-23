@@ -69,8 +69,6 @@ crm_ttoa(time_t epoch_time)
     return crm_strdup_printf("%lld", (long long) epoch_time);
 }
 
-#  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
-
 /* public I/O functions (from io.c) */
 void crm_build_path(const char *path_c, mode_t mode);
 
