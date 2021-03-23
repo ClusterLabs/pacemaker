@@ -358,8 +358,11 @@ pe_reset_working_set(pe_working_set_t *data_set)
 void
 set_working_set_defaults(pe_working_set_t * data_set)
 {
+    void *priv = data_set->priv;
+
     memset(data_set, 0, sizeof(pe_working_set_t));
 
+    data_set->priv = priv;
     data_set->order_id = 1;
     data_set->action_id = 1;
     data_set->no_quorum_policy = no_quorum_stop;
