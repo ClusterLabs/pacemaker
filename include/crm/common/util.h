@@ -71,19 +71,6 @@ crm_ttoa(time_t epoch_time)
     return crm_strdup_printf("%lld", (long long) epoch_time);
 }
 
-/*!
- * \brief Create hash table with case-insensitive dynamically allocated string keys/values
- *
- * \return Newly allocated hash table
- * \note It is the caller's responsibility to free the result, using
- *       g_hash_table_destroy().
- */
-static inline GHashTable *
-crm_strcase_table_new(void)
-{
-    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, free);
-}
-
 GHashTable *crm_str_table_dup(GHashTable *old_table);
 
 #  define crm_atoi(text, default_text) crm_parse_int(text, default_text)

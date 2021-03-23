@@ -588,6 +588,25 @@ crm_strcase_hash(gconstpointer v)
     return h;
 }
 
+/*!
+ * \internal
+ * \brief Create a hash table with case-insensitive strings as keys
+ *
+ * \param[in] key_destroy_func    Function to free a key
+ * \param[in] value_destroy_func  Function to free a value
+ *
+ * \return Newly allocated hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+GHashTable *
+pcmk__strikey_table(GDestroyNotify key_destroy_func,
+                    GDestroyNotify value_destroy_func)
+{
+    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal,
+                                 key_destroy_func, value_destroy_func);
+}
+
 static void
 copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
 {

@@ -472,9 +472,7 @@ pe_rsc_params(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
 
     // Find the parameter table for given node
     if (rsc->parameter_cache == NULL) {
-        rsc->parameter_cache = g_hash_table_new_full(crm_strcase_hash,
-                                                     crm_strcase_equal, free,
-                                                     free_params_table);
+        rsc->parameter_cache = pcmk__strikey_table(free, free_params_table);
     } else {
         params_on_node = g_hash_table_lookup(rsc->parameter_cache, node_name);
     }

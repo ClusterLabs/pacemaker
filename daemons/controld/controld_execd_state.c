@@ -217,14 +217,12 @@ lrm_state_init_local(void)
         return TRUE;
     }
 
-    lrm_state_table =
-        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, internal_lrm_state_destroy);
+    lrm_state_table = pcmk__strikey_table(NULL, internal_lrm_state_destroy);
     if (!lrm_state_table) {
         return FALSE;
     }
 
-    proxy_table =
-        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, remote_proxy_free);
+    proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
     if (!proxy_table) {
         g_hash_table_destroy(lrm_state_table);
         lrm_state_table = NULL;

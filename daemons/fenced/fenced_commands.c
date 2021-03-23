@@ -627,7 +627,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
 {
     char *name = NULL;
     int last = 0, lpc = 0, max = 0, added = 0;
-    GHashTable *aliases = crm_strcase_table_new();
+    GHashTable *aliases = pcmk__strikey_table(free, free);
 
     if (hostmap == NULL) {
         return aliases;
