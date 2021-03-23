@@ -177,32 +177,6 @@ pcmk__scan_port(const char *text, int *port)
 }
 
 /*!
- * \brief Parse a long long integer value from a string
- *
- * \param[in] text          The string to parse
- * \param[in] default_text  Default string to parse if text is NULL
- *
- * \return Parsed value on success, PCMK__PARSE_INT_DEFAULT (and set
- *         errno) on error
- */
-long long
-crm_parse_ll(const char *text, const char *default_text)
-{
-    long long result;
-
-    if (text == NULL) {
-        text = default_text;
-        if (text == NULL) {
-            crm_err("No default conversion value supplied");
-            errno = EINVAL;
-            return PCMK__PARSE_INT_DEFAULT;
-        }
-    }
-    scan_ll(text, &result, PCMK__PARSE_INT_DEFAULT, NULL);
-    return result;
-}
-
-/*!
  * \internal
  * \brief Scan a double-precision floating-point value from a string
  *
@@ -1246,6 +1220,23 @@ GHashTable *
 crm_str_table_dup(GHashTable *old_table)
 {
     return pcmk__str_table_dup(old_table);
+}
+
+long long
+crm_parse_ll(const char *text, const char *default_text)
+{
+    long long result;
+
+    if (text == NULL) {
+        text = default_text;
+        if (text == NULL) {
+            crm_err("No default conversion value supplied");
+            errno = EINVAL;
+            return PCMK__PARSE_INT_DEFAULT;
+        }
+    }
+    scan_ll(text, &result, PCMK__PARSE_INT_DEFAULT, NULL);
+    return result;
 }
 
 int
