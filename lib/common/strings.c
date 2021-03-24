@@ -570,8 +570,8 @@ pcmk__strkey_table(GDestroyNotify key_destroy_func,
 }
 
 /* used with hash tables where case does not matter */
-gboolean
-crm_strcase_equal(gconstpointer a, gconstpointer b)
+static gboolean
+pcmk__strcase_equal(gconstpointer a, gconstpointer b)
 {
     return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
@@ -603,7 +603,7 @@ GHashTable *
 pcmk__strikey_table(GDestroyNotify key_destroy_func,
                     GDestroyNotify value_destroy_func)
 {
-    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal,
+    return g_hash_table_new_full(crm_strcase_hash, pcmk__strcase_equal,
                                  key_destroy_func, value_destroy_func);
 }
 
@@ -1153,6 +1153,12 @@ guint
 g_str_hash_traditional(gconstpointer v)
 {
     return pcmk__str_hash(v);
+}
+
+gboolean
+crm_strcase_equal(gconstpointer a, gconstpointer b)
+{
+    return pcmk__strcase_equal(a, b);
 }
 
 // End deprecated API

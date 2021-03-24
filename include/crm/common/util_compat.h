@@ -75,6 +75,9 @@ guint g_str_hash_traditional(gconstpointer v);
 //! \deprecated Use g_str_hash() instead
 #define crm_str_hash g_str_hash_traditional
 
+//! \deprecated Do not use Pacemaker for generic string comparison
+gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
+
 //! \deprecated Use g_hash_table_new_full() instead
 static inline GHashTable *
 crm_str_table_new(void)
