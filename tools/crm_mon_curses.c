@@ -496,6 +496,18 @@ crm_mon_mk_curses_output(char **argv) {
 
 G_GNUC_PRINTF(2, 0)
 void
+curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    return;
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+curses_formatted_printf(pcmk__output_t *out, const char *format, ...) {
+    return;
+}
+
+G_GNUC_PRINTF(2, 0)
+void
 curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     return;
 }
