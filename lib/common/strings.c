@@ -576,8 +576,8 @@ pcmk__strcase_equal(gconstpointer a, gconstpointer b)
     return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
-guint
-crm_strcase_hash(gconstpointer v)
+static guint
+pcmk__strcase_hash(gconstpointer v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -603,7 +603,7 @@ GHashTable *
 pcmk__strikey_table(GDestroyNotify key_destroy_func,
                     GDestroyNotify value_destroy_func)
 {
-    return g_hash_table_new_full(crm_strcase_hash, pcmk__strcase_equal,
+    return g_hash_table_new_full(pcmk__strcase_hash, pcmk__strcase_equal,
                                  key_destroy_func, value_destroy_func);
 }
 
@@ -1159,6 +1159,12 @@ gboolean
 crm_strcase_equal(gconstpointer a, gconstpointer b)
 {
     return pcmk__strcase_equal(a, b);
+}
+
+guint
+crm_strcase_hash(gconstpointer v)
+{
+    return pcmk__strcase_hash(v);
 }
 
 // End deprecated API
