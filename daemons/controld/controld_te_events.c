@@ -28,8 +28,8 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     const char *router_uuid = NULL;
     xmlNode *last_action = NULL;
 
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    GList *gIter = NULL;
+    GList *gIter2 = NULL;
 
     if (graph == NULL || graph->complete) {
         return FALSE;
@@ -216,8 +216,8 @@ controld_get_action(int id)
 crm_action_t *
 get_cancel_action(const char *id, const char *node)
 {
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    GList *gIter = NULL;
+    GList *gIter2 = NULL;
 
     gIter = transition_graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -291,7 +291,7 @@ match_down_event(const char *target)
 {
     crm_action_t *match = NULL;
     xmlXPathObjectPtr xpath_ret = NULL;
-    GListPtr gIter, gIter2;
+    GList *gIter, *gIter2;
 
     char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
 

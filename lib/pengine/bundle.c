@@ -226,7 +226,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
         }
 
-        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
             if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
@@ -248,7 +248,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             }
         }
 
-        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
@@ -392,7 +392,7 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
         }
 
-        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
             if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
@@ -414,7 +414,7 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             }
         }
 
-        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
@@ -556,7 +556,7 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
         }
 
-        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
             if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
@@ -584,7 +584,7 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             volid++;
         }
 
-        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
@@ -683,7 +683,7 @@ disallow_node(pe_resource_t *rsc, const char *uname)
         ((pe_node_t *) match)->rsc_discover_mode = pe_discover_never;
     }
     if (rsc->children) {
-        GListPtr child;
+        GList *child;
 
         for (child = rsc->children; child != NULL; child = child->next) {
             disallow_node((pe_resource_t *) (child->data), uname);
@@ -698,7 +698,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
-        GListPtr rsc_iter = NULL;
+        GList *rsc_iter = NULL;
         pe_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
         char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
@@ -1205,7 +1205,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     if(xml_resource) {
         int lpc = 0;
-        GListPtr childIter = NULL;
+        GList *childIter = NULL;
         pe_resource_t *new_rsc = NULL;
         pe__bundle_port_t *port = NULL;
 
@@ -1352,7 +1352,7 @@ gboolean
 pe__bundle_active(pe_resource_t *rsc, gboolean all)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
-    GListPtr iter = NULL;
+    GList *iter = NULL;
 
     get_bundle_variant_data(bundle_data, rsc);
     for (iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
@@ -2069,7 +2069,7 @@ pe__count_bundle(pe_resource_t *rsc)
 }
 
 gboolean
-pe__bundle_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
     gboolean passes = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;

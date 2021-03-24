@@ -151,7 +151,7 @@ crmd_fast_exit(crm_exit_t exit_code)
 crm_exit_t
 crmd_exit(crm_exit_t exit_code)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     GMainLoop *mloop = crmd_mainloop;
 
     static bool in_progress = FALSE;

@@ -1027,7 +1027,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 {
     GList *standards = NULL;
     GList *providers = NULL;
-    GListPtr iter = NULL;
+    GList *iter = NULL;
     gboolean rc = FALSE;
     gboolean has_providers = FALSE;
 

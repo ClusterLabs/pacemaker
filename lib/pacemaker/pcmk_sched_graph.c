@@ -456,7 +456,7 @@ static void
 mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
                    pe_working_set_t *data_set)
 {
-    GListPtr gIter = rsc->actions;
+    GList *gIter = rsc->actions;
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -478,7 +478,7 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
 void
 update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     pe_resource_t *rsc = NULL;
 
     if (!pcmk_is_set(action->flags, pe_action_runnable)
@@ -521,7 +521,7 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 gboolean
 update_action(pe_action_t *then, pe_working_set_t *data_set)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     enum pe_graph_flags changed = pe_graph_none;
     int last_flags = then->flags;
 
@@ -666,7 +666,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         }
 
         if (changed & pe_graph_updated_first) {
-            GListPtr lpc2 = NULL;
+            GList *lpc2 = NULL;
 
             crm_trace("Updated %s (first %s %s %s), processing dependents ",
                       first->uuid,
@@ -720,7 +720,7 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
     /* add the stop to the before lists so it counts as a pre-req
      * for the shutdown
      */
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     for (lpc = data_set->actions; lpc != NULL; lpc = lpc->next) {
         pe_action_t *action = (pe_action_t *) lpc->data;
@@ -914,7 +914,7 @@ add_node_to_xml(const pe_node_t *node, void *xml)
 static int
 add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xmlNode *maintenance =
         xml?create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE):NULL;
     int count = 0;
@@ -1001,7 +1001,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
         /* Stopping a remote connection resource makes connected node down,
          * unless it's part of a migration
          */
-        GListPtr iter;
+        GList *iter;
         pe_action_t *input;
         gboolean migrating = FALSE;
 
@@ -1383,7 +1383,7 @@ should_dump_action(pe_action_t *action)
 
     } else if (pcmk_is_set(action->flags, pe_action_pseudo)
                && pcmk__str_eq(action->task, CRM_OP_PROBED, pcmk__str_casei)) {
-        GListPtr lpc = NULL;
+        GList *lpc = NULL;
 
         /* This is a horrible but convenient hack
          *

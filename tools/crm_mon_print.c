@@ -34,31 +34,31 @@
 
 static int print_rsc_history(pe_working_set_t *data_set, pe_node_t *node,
                              xmlNode *rsc_entry, unsigned int mon_ops,
-                             GListPtr op_list);
+                             GList *op_list);
 static int print_node_history(pe_working_set_t *data_set, pe_node_t *node,
                               xmlNode *node_state, gboolean operations,
-                              unsigned int mon_ops, GListPtr only_node,
-                              GListPtr only_rsc);
-static gboolean add_extra_info(pe_node_t *node, GListPtr rsc_list,
+                              unsigned int mon_ops, GList *only_node,
+                              GList *only_rsc);
+static gboolean add_extra_info(pe_node_t *node, GList *rsc_list,
                                pe_working_set_t *data_set, const char *attrname,
                                int *expected_score);
 static void print_node_attribute(gpointer name, gpointer user_data);
 static int print_node_summary(pe_working_set_t * data_set, gboolean operations,
-                              unsigned int mon_ops, GListPtr only_node,
-                              GListPtr only_rsc, gboolean print_spacer);
+                              unsigned int mon_ops, GList *only_node,
+                              GList *only_rsc, gboolean print_spacer);
 static int print_cluster_tickets(pe_working_set_t * data_set, gboolean print_spacer);
 static int print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
-                               const char *prefix, GListPtr only_rsc,
+                               const char *prefix, GList *only_rsc,
                                gboolean print_spacer);
 static int print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
-                                 GListPtr only_node, GListPtr only_rsc,
+                                 GList *only_node, GList *only_rsc,
                                  gboolean print_spacer);
-static int print_failed_actions(pe_working_set_t *data_set, GListPtr only_node,
-                                GListPtr only_rsc, gboolean print_spacer);
+static int print_failed_actions(pe_working_set_t *data_set, GList *only_node,
+                                GList *only_rsc, gboolean print_spacer);
 
-static GListPtr
+static GList *
 build_uname_list(pe_working_set_t *data_set, const char *s) {
-    GListPtr unames = NULL;
+    GList *unames = NULL;
 
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         /* Nothing was given so return a list of all node names.  Or, '*' was
@@ -88,9 +88,9 @@ build_uname_list(pe_working_set_t *data_set, const char *s) {
     return unames;
 }
 
-static GListPtr
+static GList *
 build_rsc_list(pe_working_set_t *data_set, const char *s) {
-    GListPtr resources = NULL;
+    GList *resources = NULL;
 
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         resources = g_list_prepend(resources, strdup("*"));
@@ -128,9 +128,9 @@ failure_count(pe_working_set_t *data_set, pe_node_t *node, pe_resource_t *rsc, t
                : 0;
 }
 
-static GListPtr
+static GList *
 get_operation_list(xmlNode *rsc_entry) {
-    GListPtr op_list = NULL;
+    GList *op_list = NULL;
     xmlNode *rsc_op = NULL;
 
     for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
@@ -173,10 +173,10 @@ get_operation_list(xmlNode *rsc_entry) {
  */
 static int
 print_rsc_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *rsc_entry,
-                  unsigned int mon_ops, GListPtr op_list)
+                  unsigned int mon_ops, GList *op_list)
 {
     pcmk__output_t *out = data_set->priv;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     int rc = pcmk_rc_no_output;
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
@@ -229,7 +229,7 @@ print_rsc_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *rsc_entr
 static int
 print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_state,
                    gboolean operations, unsigned int mon_ops,
-                   GListPtr only_node, GListPtr only_rsc)
+                   GList *only_node, GList *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
     xmlNode *lrm_rsc = NULL;
@@ -290,7 +290,7 @@ print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_st
             out->message(out, "resource-history", rsc, rsc_id, FALSE,
                          failcount, last_failure, FALSE);
         } else {
-            GListPtr op_list = get_operation_list(rsc_entry);
+            GList *op_list = get_operation_list(rsc_entry);
 
             if (op_list == NULL) {
                 continue;
@@ -329,10 +329,10 @@ print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_st
  *       or degraded.
  */
 static gboolean
-add_extra_info(pe_node_t *node, GListPtr rsc_list, pe_working_set_t *data_set,
+add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
                const char *attrname, int *expected_score)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -415,8 +415,8 @@ print_node_attribute(gpointer name, gpointer user_data)
  */
 static int
 print_node_summary(pe_working_set_t * data_set, gboolean operations,
-                   unsigned int mon_ops, GListPtr only_node,
-                   GListPtr only_rsc, gboolean print_spacer)
+                   unsigned int mon_ops, GList *only_node,
+                   GList *only_rsc, gboolean print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     xmlNode *node_state = NULL;
@@ -500,11 +500,11 @@ print_cluster_tickets(pe_working_set_t * data_set, gboolean print_spacer)
  */
 static int
 print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
-                    const char *prefix, GListPtr only_rsc,
+                    const char *prefix, GList *only_rsc,
                     gboolean print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
-    GListPtr gIter, gIter2;
+    GList *gIter, *gIter2;
     int rc = pcmk_rc_no_output;
 
     /* Print each ban */
@@ -543,10 +543,10 @@ print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
  */
 static int
 print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
-                      GListPtr only_node, GListPtr only_rsc, gboolean print_spacer)
+                      GList *only_node, GList *only_rsc, gboolean print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     int rc = pcmk_rc_no_output;
 
     /* Display each node's attributes */
@@ -599,8 +599,8 @@ print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
  * \param[in] data_set Cluster state to display.
  */
 static int
-print_failed_actions(pe_working_set_t *data_set, GListPtr only_node,
-                     GListPtr only_rsc, gboolean print_spacer)
+print_failed_actions(pe_working_set_t *data_set, GList *only_node,
+                     GList *only_rsc, gboolean print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     xmlNode *xml_op = NULL;
@@ -662,8 +662,8 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
              unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
-    GListPtr unames = NULL;
-    GListPtr resources = NULL;
+    GList *unames = NULL;
+    GList *resources = NULL;
 
     unsigned int print_opts = get_resource_display_options(mon_ops);
     int rc = pcmk_rc_no_output;
@@ -810,8 +810,8 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
-    GListPtr unames = NULL;
-    GListPtr resources = NULL;
+    GList *unames = NULL;
+    GList *resources = NULL;
     unsigned int print_opts = get_resource_display_options(mon_ops);
 
     out->message(out, "cluster-summary", data_set,
@@ -905,8 +905,8 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   unsigned int show, char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
-    GListPtr unames = NULL;
-    GListPtr resources = NULL;
+    GList *unames = NULL;
+    GList *resources = NULL;
 
     unsigned int print_opts = get_resource_display_options(mon_ops);
     bool already_printed_failure = false;

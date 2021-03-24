@@ -24,7 +24,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
 {
     pe_node_t *node = NULL;
     pe_node_t *group_node = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
@@ -86,7 +86,7 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     pe_action_t *op = NULL;
     const char *value = NULL;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
@@ -130,7 +130,7 @@ group_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 void
 group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
 {
-    GListPtr gIter = child->actions;
+    GList *gIter = child->actions;
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, parent);
@@ -167,7 +167,7 @@ group_update_pseudo_status(pe_resource_t * parent, pe_resource_t * child)
 void
 group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
     pe_resource_t *last_active = NULL;
     pe_resource_t *top = uber_parent(rsc);
@@ -291,7 +291,7 @@ group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                         pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     group_variant_data_t *group_data = NULL;
 
     if (rsc_lh == NULL) {
@@ -334,7 +334,7 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                         pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
-    GListPtr gIter = rsc_rh->children;
+    GList *gIter = rsc_rh->children;
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc_rh);
@@ -380,7 +380,7 @@ group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 enum pe_action_flags
 group_action_flags(pe_action_t * action, pe_node_t * node)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
 
     for (gIter = action->rsc->children; gIter != NULL; gIter = gIter->next) {
@@ -427,7 +427,7 @@ group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                      enum pe_action_flags flags, enum pe_action_flags filter,
                      enum pe_ordering type, pe_working_set_t *data_set)
 {
-    GListPtr gIter = then->rsc->children;
+    GList *gIter = then->rsc->children;
     enum pe_graph_flags changed = pe_graph_none;
 
     CRM_ASSERT(then->rsc != NULL);
@@ -451,9 +451,9 @@ group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 void
 group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    GListPtr gIter = rsc->children;
-    GListPtr saved = constraint->node_list_rh;
-    GListPtr zero = pcmk__copy_node_list(constraint->node_list_rh, true);
+    GList *gIter = rsc->children;
+    GList *saved = constraint->node_list_rh;
+    GList *zero = pcmk__copy_node_list(constraint->node_list_rh, true);
     gboolean reset_scores = TRUE;
     group_variant_data_t *group_data = NULL;
 
@@ -485,7 +485,7 @@ group_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
     native_expand(rsc, data_set);
 
-    for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         child_rsc->cmds->expand(child_rsc, data_set);
@@ -497,7 +497,7 @@ pcmk__group_merge_weights(pe_resource_t *rsc, const char *rhs,
                           GHashTable *nodes, const char *attr, float factor,
                           uint32_t flags)
 {
-    GListPtr gIter = rsc->rsc_cons_lhs;
+    GList *gIter = rsc->rsc_cons_lhs;
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);

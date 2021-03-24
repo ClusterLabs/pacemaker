@@ -16,8 +16,8 @@
 #include <crm/pengine/common.h>
 #include <crm/pengine/rules.h>
 
-GListPtr pe_unpack_alerts(xmlNode *alerts);
-void pe_free_alert_list(GListPtr alert_list);
+GList *pe_unpack_alerts(xmlNode *alerts);
+void pe_free_alert_list(GList *alert_list);
 
 crm_time_t *pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec);
 

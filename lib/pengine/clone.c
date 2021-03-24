@@ -236,7 +236,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 gboolean
 clone_active(pe_resource_t * rsc, gboolean all)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -310,7 +310,7 @@ clone_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
 {
     char *child_text = crm_strdup_printf("%s    ", pre_text);
     const char *target_role = configured_role_str(rsc);
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
@@ -338,7 +338,7 @@ clone_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
 
 bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any)
 {
-    GListPtr gIter;
+    GList *gIter;
     bool all = !any;
 
     if (pcmk_is_set(rsc->flags, flag)) {
@@ -375,9 +375,9 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GListPtr master_list = NULL;
-    GListPtr started_list = NULL;
-    GListPtr gIter = rsc->children;
+    GList *master_list = NULL;
+    GList *started_list = NULL;
+    GList *gIter = rsc->children;
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
@@ -539,8 +539,8 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
         if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
-            GListPtr nIter;
-            GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
+            GList *nIter;
+            GList *list = g_hash_table_get_values(rsc->allowed_nodes);
 
             /* Custom stopped list for non-unique clones */
             free(stopped_list);
@@ -1115,7 +1115,7 @@ clone_free(pe_resource_t * rsc)
 
     pe_rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
@@ -1144,7 +1144,7 @@ enum rsc_role_e
 clone_resource_state(const pe_resource_t * rsc, gboolean current)
 {
     enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -1182,7 +1182,7 @@ pe__is_universal_clone(pe_resource_t *rsc,
 }
 
 gboolean
-pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
     gboolean passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
@@ -1194,7 +1194,7 @@ pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_pare
         passes = pcmk__str_in_list(only_rsc, ID(clone_data->xml_obj_child));
 
         if (!passes) {
-            for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
                 pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
                 if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {

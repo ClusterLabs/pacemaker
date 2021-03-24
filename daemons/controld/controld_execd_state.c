@@ -752,7 +752,7 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
  * Functions for sending alerts via local executor connection
  */
 
-static GListPtr crmd_alert_list = NULL;
+static GList *crmd_alert_list = NULL;
 
 void
 crmd_unpack_alerts(xmlNode *alerts)

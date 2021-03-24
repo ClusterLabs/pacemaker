@@ -29,7 +29,7 @@ log_resource_details(pe_working_set_t *data_set)
     pcmk__output_t *prev_out = NULL;
     pcmk__output_t *out = NULL;
     const char* argv[] = { "", NULL };
-    GListPtr all = NULL;
+    GList *all = NULL;
     pcmk__supported_format_t formats[] = {
         PCMK__SUPPORTED_FORMAT_LOG,
         { NULL, NULL, NULL }
@@ -82,7 +82,7 @@ xmlNode *
 pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                        crm_time_t *now)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
 

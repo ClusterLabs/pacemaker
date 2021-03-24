@@ -47,9 +47,9 @@ int cli_resource_prefer(pcmk__output_t *out, const char *rsc_id, const char *hos
                         const char *move_lifetime, cib_t * cib_conn, int cib_options,
                         gboolean promoted_role_only);
 int cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
-                     const char *move_lifetime, GListPtr allnodes, cib_t * cib_conn,
+                     const char *move_lifetime, GList *allnodes, cib_t * cib_conn,
                      int cib_options, gboolean promoted_role_only);
-int cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes,
+int cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes,
                        cib_t * cib_conn, int cib_options, bool clear_ban_constraints, gboolean force);
 int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_options,
                                    const char *rsc, const char *node, gboolean promoted_role_only);
@@ -67,7 +67,7 @@ int cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 int cli_resource_check(pcmk__output_t *out, cib_t * cib, pe_resource_t *rsc);
 int cli_resource_fail(pcmk_ipc_api_t *controld_api, const char *host_uname,
                       const char *rsc_id, pe_working_set_t *data_set);
-GListPtr cli_resource_search(pe_resource_t *rsc, const char *requested_name,
+GList *cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                              pe_working_set_t *data_set);
 int cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
                         pe_resource_t *rsc, const char *operation,

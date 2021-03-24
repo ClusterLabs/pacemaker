@@ -391,7 +391,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
 static void
 check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     int offset = -1;
     int stop_index = 0;
     int start_index = 0;
@@ -399,8 +399,8 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
     const char *task = NULL;
 
     xmlNode *rsc_op = NULL;
-    GListPtr op_list = NULL;
-    GListPtr sorted_op_list = NULL;
+    GList *op_list = NULL;
+    GList *sorted_op_list = NULL;
 
     CRM_CHECK(node != NULL, return);
 
@@ -492,11 +492,11 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
     g_list_free(sorted_op_list);
 }
 
-static GListPtr
-find_rsc_list(GListPtr result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
+static GList *
+find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
               gboolean partial, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean match = FALSE;
 
     if (id == NULL) {
@@ -592,8 +592,8 @@ check_actions(pe_working_set_t * data_set)
                     if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 
                         if (xml_has_children(rsc_entry)) {
-                            GListPtr gIter = NULL;
-                            GListPtr result = NULL;
+                            GList *gIter = NULL;
+                            GList *result = NULL;
                             const char *rsc_id = ID(rsc_entry);
 
                             CRM_CHECK(rsc_id != NULL, return);
@@ -697,7 +697,7 @@ static void
 common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -754,7 +754,7 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
 void
 complex_set_cmds(pe_resource_t * rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     rsc->cmds = &resource_class_alloc_functions[rsc->variant];
 
@@ -769,7 +769,7 @@ void
 set_alloc_actions(pe_working_set_t * data_set)
 {
 
-    GListPtr gIter = data_set->resources;
+    GList *gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -803,7 +803,7 @@ calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
 static gboolean
 apply_system_health(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     const char *health_strategy = pe_pref(data_set->config_hash, "node-health-strategy");
     int base_health = 0;
 
@@ -869,7 +869,7 @@ apply_system_health(pe_working_set_t * data_set)
          */
         if (system_health != 0) {
 
-            GListPtr gIter2 = data_set->resources;
+            GList *gIter2 = data_set->resources;
 
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
@@ -911,7 +911,7 @@ probe_resources(pe_working_set_t * data_set)
 {
     pe_action_t *probe_node_complete = NULL;
 
-    for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
         const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
 
@@ -940,7 +940,7 @@ probe_resources(pe_working_set_t * data_set)
             continue;
         }
 
-        for (GListPtr gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
+        for (GList *gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
             rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set);
@@ -952,7 +952,7 @@ probe_resources(pe_working_set_t * data_set)
 static void
 rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     pe_resource_t *top = uber_parent(rsc);
     pe_node_t *match;
 
@@ -1078,7 +1078,7 @@ apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
 gboolean
 stage2(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
@@ -1102,7 +1102,7 @@ stage2(pe_working_set_t * data_set)
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
-        GListPtr gIter2 = NULL;
+        GList *gIter2 = NULL;
         pe_node_t *node = (pe_node_t *) gIter->data;
 
         gIter2 = data_set->resources;
@@ -1124,7 +1124,7 @@ gboolean
 stage3(pe_working_set_t * data_set)
 {
 
-    GListPtr gIter = data_set->resources;
+    GList *gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -1161,13 +1161,13 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 
     const char *reason = "existence";
 
-    const GListPtr nodes = (GListPtr) data;
+    GList *nodes = (GList *) data;
     const pe_resource_t *resource1 = a;
     const pe_resource_t *resource2 = b;
 
     pe_node_t *r1_node = NULL;
     pe_node_t *r2_node = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
 
@@ -1283,7 +1283,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 static void
 allocate_resources(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         /* Allocate remote connection resources first (which will also allocate
@@ -1348,7 +1348,7 @@ order_action_then_stop(pe_action_t *lh_action, pe_resource_t *rh_rsc,
 static void
 cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -1375,11 +1375,11 @@ cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
 gboolean
 stage5(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     int log_prio = pcmk_is_set(data_set->flags, pe_flag_show_utilization)? LOG_STDOUT : LOG_TRACE;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        GListPtr nodes = g_list_copy(data_set->nodes);
+        GList *nodes = g_list_copy(data_set->nodes);
 
         nodes = sort_nodes_by_weight(nodes, NULL, data_set);
         data_set->resources =
@@ -1479,7 +1479,7 @@ stage5(pe_working_set_t * data_set)
 static gboolean
 is_managed(const pe_resource_t * rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         return TRUE;
@@ -1500,7 +1500,7 @@ static gboolean
 any_managed_resources(pe_working_set_t * data_set)
 {
 
-    GListPtr gIter = data_set->resources;
+    GList *gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -1609,8 +1609,8 @@ stage6(pe_working_set_t * data_set)
     pe_action_t *stonith_op = NULL;
     gboolean integrity_lost = FALSE;
     gboolean need_stonith = TRUE;
-    GListPtr gIter;
-    GListPtr stonith_ops = NULL;
+    GList *gIter;
+    GList *stonith_ops = NULL;
     GList *shutdown_ops = NULL;
 
     /* Remote ordering constraints need to happen prior to calculating fencing
@@ -1760,10 +1760,10 @@ stage6(pe_working_set_t * data_set)
  * Mark dependencies of un-runnable actions un-runnable
  *
  */
-static GListPtr
-find_actions_by_task(GListPtr actions, pe_resource_t * rsc, const char *original_key)
+static GList *
+find_actions_by_task(GList *actions, pe_resource_t * rsc, const char *original_key)
 {
-    GListPtr list = NULL;
+    GList *list = NULL;
 
     list = find_actions(actions, original_key, NULL);
     if (list == NULL) {
@@ -1791,8 +1791,8 @@ static void
 rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
                pe__ordering_t *order)
 {
-    GListPtr gIter = NULL;
-    GListPtr rh_actions = NULL;
+    GList *gIter = NULL;
+    GList *rh_actions = NULL;
     pe_action_t *rh_action = NULL;
     enum pe_ordering type;
 
@@ -1850,8 +1850,8 @@ static void
 rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
                 pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
-    GListPtr lh_actions = NULL;
+    GList *gIter = NULL;
+    GList *lh_actions = NULL;
     pe_action_t *lh_action = order->lh_action;
     pe_resource_t *rh_rsc = order->rh_rsc;
 
@@ -2235,7 +2235,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         return;
     }
 
-    for (GListPtr gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
         pe_resource_t *remote = NULL;
 
@@ -2357,7 +2357,7 @@ order_first_probe_unneeded(pe_action_t * probe, pe_action_t * rh_action)
 static void
 order_first_probes_imply_stops(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
         pe__ordering_t *order = gIter->data;
@@ -2370,10 +2370,10 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
         const char *lh_action_task = order->lh_action_task;
         const char *rh_action_task = order->rh_action_task;
 
-        GListPtr probes = NULL;
-        GListPtr rh_actions = NULL;
+        GList *probes = NULL;
+        GList *rh_actions = NULL;
 
-        GListPtr pIter = NULL;
+        GList *pIter = NULL;
 
         if (lh_rsc == NULL) {
             continue;
@@ -2462,7 +2462,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
 
         for (pIter = probes; pIter != NULL; pIter = pIter->next) {
             pe_action_t *probe = (pe_action_t *) pIter->data;
-            GListPtr rIter = NULL;
+            GList *rIter = NULL;
 
             for (rIter = rh_actions; rIter != NULL; rIter = rIter->next) {
                 pe_action_t *rh_action_iter = (pe_action_t *) rIter->data;
@@ -2484,7 +2484,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
                                          pe_action_t * after,
                                          pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     bool interleave = FALSE;
     pe_resource_t *compatible_rsc = NULL;
 
@@ -2520,7 +2520,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
         && after->rsc->variant == pe_native
         && probe->rsc != after->rsc) {
 
-            GListPtr then_actions = NULL;
+            GList *then_actions = NULL;
             enum pe_ordering probe_order_type = pe_order_optional;
 
             if (pcmk__str_eq(after->task, RSC_START, pcmk__str_casei)) {
@@ -2613,7 +2613,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
 
 static void clear_actions_tracking_flag(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
@@ -2627,8 +2627,8 @@ static void clear_actions_tracking_flag(pe_working_set_t * data_set)
 static void
 order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
-    GListPtr probes = NULL;
+    GList *gIter = NULL;
+    GList *probes = NULL;
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t * child = (pe_resource_t *) gIter->data;
@@ -2644,7 +2644,7 @@ order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     for (gIter = probes; gIter != NULL; gIter= gIter->next) {
         pe_action_t *probe = (pe_action_t *) gIter->data;
-        GListPtr aIter = NULL;
+        GList *aIter = NULL;
 
         for (aIter = probe->actions_after; aIter != NULL; aIter = aIter->next) {
             pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) aIter->data;
@@ -2660,7 +2660,7 @@ order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
 static void
 order_first_probes(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -2675,7 +2675,7 @@ static void
 order_then_probes(pe_working_set_t * data_set)
 {
 #if 0
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -2723,8 +2723,8 @@ order_then_probes(pe_working_set_t * data_set)
          * should remain disabled until someone gets smarter.
          */
         pe_action_t *start = NULL;
-        GListPtr actions = NULL;
-        GListPtr probes = NULL;
+        GList *actions = NULL;
+        GList *probes = NULL;
 
         actions = pe__resource_actions(rsc, NULL, RSC_START, FALSE);
 
@@ -2743,12 +2743,12 @@ order_then_probes(pe_working_set_t * data_set)
         for (actions = start->actions_before; actions != NULL; actions = actions->next) {
             pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
 
-            GListPtr pIter = NULL;
+            GList *pIter = NULL;
             pe_action_t *first = before->action;
             pe_resource_t *first_rsc = first->rsc;
 
             if(first->required_runnable_before) {
-                GListPtr clone_actions = NULL;
+                GList *clone_actions = NULL;
                 for (clone_actions = first->actions_before; clone_actions != NULL; clone_actions = clone_actions->next) {
                     before = (pe_action_wrapper_t *) clone_actions->data;
 
@@ -2908,7 +2908,7 @@ pcmk__log_transition_summary(const char *filename)
 gboolean
 stage8(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     const char *value = NULL;
 
     transition_id++;
@@ -3017,7 +3017,7 @@ stage8(pe_working_set_t * data_set)
 void
 LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         char *node_name = NULL;

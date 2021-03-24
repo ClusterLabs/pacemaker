@@ -602,7 +602,7 @@ setup_container(pe_resource_t * rsc, pe_working_set_t * data_set)
     const char *container_id = NULL;
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -768,7 +768,7 @@ gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
     xmlNode *xml_obj = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     data_set->template_rsc_sets = g_hash_table_new_full(crm_str_hash,
                                                         g_str_equal, free,
@@ -1300,7 +1300,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
      * we can stop connections for node shutdowns, and check the online status
      * of remote/guest nodes that didn't have any node history to unpack.
      */
-    for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *this_node = gIter->data;
 
         if (!pe__is_guest_or_remote_node(this_node)) {
@@ -1748,7 +1748,7 @@ static pe_resource_t *
 find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_t * parent,
                      const char *rsc_id)
 {
-    GListPtr rIter = NULL;
+    GList *rIter = NULL;
     pe_resource_t *rsc = NULL;
     pe_resource_t *inactive_instance = NULL;
     gboolean skip_inactive = FALSE;
@@ -1760,7 +1760,7 @@ find_anonymous_clone(pe_working_set_t * data_set, pe_node_t * node, pe_resource_
     // Check for active (or partially active, for cloned groups) instance
     pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
-        GListPtr locations = NULL;
+        GList *locations = NULL;
         pe_resource_t *child = rIter->data;
 
         /* Check whether this instance is already known to be active or pending
@@ -2181,7 +2181,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     } else {
         GList *possible_matches = pe__resource_actions(rsc, node, RSC_STOP,
                                                        FALSE);
-        GListPtr gIter = possible_matches;
+        GList *gIter = possible_matches;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *stop = (pe_action_t *) gIter->data;
@@ -2197,12 +2197,12 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 static void
 process_recurring(pe_node_t * node, pe_resource_t * rsc,
                   int start_index, int stop_index,
-                  GListPtr sorted_op_list, pe_working_set_t * data_set)
+                  GList *sorted_op_list, pe_working_set_t * data_set)
 {
     int counter = -1;
     const char *task = NULL;
     const char *status = NULL;
-    GListPtr gIter = sorted_op_list;
+    GList *gIter = sorted_op_list;
 
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s: Start index %d, stop index = %d", rsc->id, start_index, stop_index);
@@ -2250,14 +2250,14 @@ process_recurring(pe_node_t * node, pe_resource_t * rsc,
 }
 
 void
-calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
+calculate_active_ops(GList *sorted_op_list, int *start_index, int *stop_index)
 {
     int counter = -1;
     int implied_monitor_start = -1;
     int implied_clone_start = -1;
     const char *task = NULL;
     const char *status = NULL;
-    GListPtr gIter = sorted_op_list;
+    GList *gIter = sorted_op_list;
 
     *stop_index = -1;
     *start_index = -1;
@@ -2334,7 +2334,7 @@ static pe_resource_t *
 unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
                     pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     int stop_index = -1;
     int start_index = -1;
     enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
@@ -2343,8 +2343,8 @@ unpack_lrm_resource(pe_node_t *node, xmlNode *lrm_resource,
     const char *rsc_id = ID(lrm_resource);
 
     pe_resource_t *rsc = NULL;
-    GListPtr op_list = NULL;
-    GListPtr sorted_op_list = NULL;
+    GList *op_list = NULL;
+    GList *sorted_op_list = NULL;
 
     xmlNode *migrate_op = NULL;
     xmlNode *rsc_op = NULL;
@@ -3974,7 +3974,7 @@ add_node_attrs(xmlNode *xml_obj, pe_node_t *node, bool overwrite,
     }
 }
 
-static GListPtr
+static GList *
 extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gboolean active_filter)
 {
     int counter = -1;
@@ -3983,9 +3983,9 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
     xmlNode *rsc_op = NULL;
 
-    GListPtr gIter = NULL;
-    GListPtr op_list = NULL;
-    GListPtr sorted_op_list = NULL;
+    GList *gIter = NULL;
+    GList *op_list = NULL;
+    GList *sorted_op_list = NULL;
 
     /* extract operations */
     op_list = NULL;
@@ -4038,12 +4038,12 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
     return op_list;
 }
 
-GListPtr
+GList *
 find_operations(const char *rsc, const char *node, gboolean active_filter,
                 pe_working_set_t * data_set)
 {
-    GListPtr output = NULL;
-    GListPtr intermediate = NULL;
+    GList *output = NULL;
+    GList *intermediate = NULL;
 
     xmlNode *tmp = NULL;
     xmlNode *status = find_xml_node(data_set->input, XML_CIB_TAG_STATUS, TRUE);

@@ -388,7 +388,7 @@ start_delay_helper(gpointer data)
 static gboolean
 merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     lrmd_cmd_t * dup = NULL;
     gboolean dup_pending = FALSE;
 
@@ -1459,14 +1459,14 @@ lrmd_rsc_dispatch(gpointer user_data)
 void
 free_rsc(gpointer data)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     lrmd_rsc_t *rsc = data;
     int is_stonith = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
                                   pcmk__str_casei);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
-        GListPtr next = gIter->next;
+        GList *next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
         /* command was never executed */
@@ -1480,7 +1480,7 @@ free_rsc(gpointer data)
 
     gIter = rsc->recurring_ops;
     while (gIter != NULL) {
-        GListPtr next = gIter->next;
+        GList *next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
         if (is_stonith) {
@@ -1664,7 +1664,7 @@ process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 static int
 cancel_op(const char *rsc_id, const char *action, guint interval_ms)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, rsc_id);
 
     /* How to cancel an action.

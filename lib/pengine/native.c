@@ -68,7 +68,7 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
      * node as well. */
     if (node->details->remote_rsc
         && node->details->remote_rsc->container) {
-        GListPtr gIter = node->details->remote_rsc->container->running_on;
+        GList *gIter = node->details->remote_rsc->container->running_on;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_node_t *a_node = gIter->data;
@@ -88,7 +88,7 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
 void
 native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
-    GListPtr gIter = rsc->running_on;
+    GList *gIter = rsc->running_on;
 
     CRM_CHECK(node != NULL, return);
     for (; gIter != NULL; gIter = gIter->next) {
@@ -158,7 +158,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
                 if (rsc->parent
                     && (rsc->parent->variant == pe_group || rsc->parent->variant == pe_container)
                     && rsc->parent->recovery_type == recovery_block) {
-                    GListPtr gIter = rsc->parent->children;
+                    GList *gIter = rsc->parent->children;
 
                     for (; gIter != NULL; gIter = gIter->next) {
                         pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -244,7 +244,7 @@ rsc_is_on_node(pe_resource_t *rsc, const pe_node_t *node, int flags)
 
     if (pcmk_is_set(flags, pe_find_current) && rsc->running_on) {
 
-        for (GListPtr iter = rsc->running_on; iter; iter = iter->next) {
+        for (GList *iter = rsc->running_on; iter; iter = iter->next) {
             pe_node_t *loc = (pe_node_t *) iter->data;
 
             if (loc->details == node->details) {
@@ -307,7 +307,7 @@ native_find_rsc(pe_resource_t * rsc, const char *id, const pe_node_t *on_node,
         return rsc;
     }
 
-    for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         result = rsc->fns->find_rsc(child, id, on_node, flags);
@@ -492,7 +492,7 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
         status_print("/>\n");
         /* do nothing */
     } else if (rsc->running_on != NULL) {
-        GListPtr gIter = rsc->running_on;
+        GList *gIter = rsc->running_on;
 
         status_print(">\n");
         for (; gIter != NULL; gIter = gIter->next) {
@@ -832,7 +832,7 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
     if (!pcmk_is_set(options, pe_print_rsconly)
         && pcmk__list_of_multiple(rsc->running_on)) {
 
-        GListPtr gIter = rsc->running_on;
+        GList *gIter = rsc->running_on;
         int counter = 0;
 
         if (options & pe_print_html) {
@@ -1061,10 +1061,10 @@ pe_node_t *
 native_location(const pe_resource_t *rsc, GList **list, int current)
 {
     pe_node_t *one = NULL;
-    GListPtr result = NULL;
+    GList *result = NULL;
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -1091,7 +1091,7 @@ native_location(const pe_resource_t *rsc, GList **list, int current)
     }
 
     if (list) {
-        GListPtr gIter = result;
+        GList *gIter = result;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node = (pe_node_t *) gIter->data;
@@ -1107,9 +1107,9 @@ native_location(const pe_resource_t *rsc, GList **list, int current)
 }
 
 static void
-get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_table)
+get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_table)
 {
-    GListPtr gIter = rsc_list;
+    GList *gIter = rsc_list;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -1150,7 +1150,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         if (active_table) {
-            GListPtr gIter2 = rsc->running_on;
+            GList *gIter2 = rsc->running_on;
 
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
                 pe_node_t *node = (pe_node_t *) gIter2->data;
@@ -1189,7 +1189,7 @@ destroy_node_table(gpointer data)
 }
 
 void
-print_rscs_brief(GListPtr rsc_list, const char *pre_text, long options,
+print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
                  void *print_data, gboolean print_all)
 {
     GHashTable *rsc_table = crm_str_table_new();
@@ -1269,12 +1269,12 @@ print_rscs_brief(GListPtr rsc_list, const char *pre_text, long options,
 }
 
 int
-pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all)
+pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboolean print_all)
 {
     GHashTable *rsc_table = crm_str_table_new();
     GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                                      free, destroy_node_table);
-    GListPtr sorted_rscs;
+    GList *sorted_rscs;
     int rc = pcmk_rc_no_output;
 
     get_rscs_brief(rsc_list, rsc_table, active_table);
@@ -1285,7 +1285,7 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
     sorted_rscs = g_hash_table_get_keys(rsc_table);
     sorted_rscs = g_list_sort(sorted_rscs, (GCompareFunc) strcmp);
 
-    for (GListPtr gIter = sorted_rscs; gIter; gIter = gIter->next) {
+    for (GList *gIter = sorted_rscs; gIter; gIter = gIter->next) {
         char *type = (char *) gIter->data;
         int *rsc_counter = g_hash_table_lookup(rsc_table, type);
 
@@ -1347,7 +1347,7 @@ pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboo
 }
 
 gboolean
-pe__native_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
     if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
         pcmk__str_in_list(only_rsc, rsc->id)) {

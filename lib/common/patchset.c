@@ -194,7 +194,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 static bool
 is_config_change(xmlNode *xml)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xml_private_t *p = NULL;
     xmlNode *config = first_named_child(xml, XML_CIB_TAG_CONFIGURATION);
 
@@ -306,7 +306,7 @@ static xmlNode *
 xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xml_private_t *doc = NULL;
 
     xmlNode *v = NULL;
@@ -1144,8 +1144,8 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_rc_ok;
     xmlNode *change = NULL;
-    GListPtr change_objs = NULL;
-    GListPtr gIter = NULL;
+    GList *change_objs = NULL;
+    GList *gIter = NULL;
 
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {

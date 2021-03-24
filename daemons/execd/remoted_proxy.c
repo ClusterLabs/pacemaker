@@ -401,7 +401,7 @@ ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
     pcmk__client_t *ipc_client = NULL;
     char *key = NULL;
     GList *remove_these = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     ipc_providers = g_list_remove(ipc_providers, ipc_proxy);
 

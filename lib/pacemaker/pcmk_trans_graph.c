@@ -19,7 +19,7 @@ crm_graph_functions_t *graph_fns = NULL;
 static gboolean
 update_synapse_ready(synapse_t * synapse, int action_id)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     gboolean updates = FALSE;
 
     CRM_CHECK(synapse->executed == FALSE, return FALSE);
@@ -51,7 +51,7 @@ update_synapse_ready(synapse_t * synapse, int action_id)
 static gboolean
 update_synapse_confirmed(synapse_t * synapse, int action_id)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     gboolean updates = FALSE;
     gboolean is_confirmed = TRUE;
 
@@ -92,7 +92,7 @@ update_graph(crm_graph_t * graph, crm_action_t * action)
 {
     gboolean rc = FALSE;
     gboolean updates = FALSE;
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
@@ -119,7 +119,7 @@ update_graph(crm_graph_t * graph, crm_action_t * action)
 static gboolean
 should_fire_synapse(crm_graph_t * graph, synapse_t * synapse)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     CRM_CHECK(synapse->executed == FALSE, return FALSE);
     CRM_CHECK(synapse->confirmed == FALSE, return FALSE);
@@ -203,7 +203,7 @@ initiate_action(crm_graph_t * graph, crm_action_t * action)
 static gboolean
 fire_synapse(crm_graph_t * graph, synapse_t * synapse)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     CRM_CHECK(synapse != NULL, return FALSE);
     CRM_CHECK(synapse->ready, return FALSE);
@@ -235,7 +235,7 @@ fire_synapse(crm_graph_t * graph, synapse_t * synapse)
 int
 run_graph(crm_graph_t * graph)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     int stat_log_level = LOG_DEBUG;
     int pass_result = transition_active;
 

@@ -311,7 +311,7 @@ op_phase_off(remote_fencing_op_t *op)
 static void
 op_phase_on(remote_fencing_op_t *op)
 {
-    GListPtr iter = NULL;
+    GList *iter = NULL;
 
     crm_info("Remapped 'off' targeting %s complete, "
              "remapping to 'on' for %s " CRM_XS " id=%.8s",
@@ -323,7 +323,7 @@ op_phase_on(remote_fencing_op_t *op)
      * when the node rejoins.
      */
     for (iter = op->automatic_list; iter != NULL; iter = iter->next) {
-        GListPtr match = g_list_find_custom(op->devices_list, iter->data,
+        GList *match = g_list_find_custom(op->devices_list, iter->data,
                                             sort_strings);
 
         if (match) {
@@ -434,7 +434,7 @@ handle_local_reply_and_notify(remote_fencing_op_t * op, xmlNode * data, int rc)
 static void
 handle_duplicates(remote_fencing_op_t * op, xmlNode * data, int rc)
 {
-    GListPtr iter = NULL;
+    GList *iter = NULL;
 
     for (iter = op->duplicates; iter != NULL; iter = iter->next) {
         remote_fencing_op_t *other = iter->data;
@@ -689,7 +689,7 @@ topology_is_empty(stonith_topology_t *tp)
 static void
 add_required_device(remote_fencing_op_t *op, const char *device)
 {
-    GListPtr match  = g_list_find_custom(op->automatic_list, device,
+    GList *match  = g_list_find_custom(op->automatic_list, device,
                                          sort_strings);
 
     if (!match) {
@@ -707,7 +707,7 @@ add_required_device(remote_fencing_op_t *op, const char *device)
 static void
 remove_required_device(remote_fencing_op_t *op, const char *device)
 {
-    GListPtr match = g_list_find_custom(op->automatic_list, device,
+    GList *match = g_list_find_custom(op->automatic_list, device,
                                         sort_strings);
 
     if (match) {
@@ -717,9 +717,9 @@ remove_required_device(remote_fencing_op_t *op, const char *device)
 
 /* deep copy the device list */
 static void
-set_op_device_list(remote_fencing_op_t * op, GListPtr devices)
+set_op_device_list(remote_fencing_op_t * op, GList *devices)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     if (op->devices_list) {
         g_list_free_full(op->devices_list, free);
@@ -1204,7 +1204,7 @@ enum find_best_peer_options {
 static st_query_result_t *
 find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer_options options)
 {
-    GListPtr iter = NULL;
+    GList *iter = NULL;
     gboolean verified_devices_only = (options & FIND_PEER_VERIFIED_ONLY) ? TRUE : FALSE;
 
     if (!device && pcmk_is_set(op->call_options, st_opt_topology)) {
@@ -1372,8 +1372,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
 
     if (pcmk_is_set(op->call_options, st_opt_topology) && tp) {
         int i;
-        GListPtr device_list = NULL;
-        GListPtr iter = NULL;
+        GList *device_list = NULL;
+        GList *iter = NULL;
 
         /* Yep, this looks scary, nested loops all over the place.
          * Here is what is going on.
@@ -1411,7 +1411,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
 static void
 report_timeout_period(remote_fencing_op_t * op, int op_timeout)
 {
-    GListPtr iter = NULL;
+    GList *iter = NULL;
     xmlNode *update = NULL;
     const char *client_node = NULL;
     const char *client_id = NULL;
@@ -1709,8 +1709,8 @@ sort_peers(gconstpointer a, gconstpointer b)
 static gboolean
 all_topology_devices_found(remote_fencing_op_t * op)
 {
-    GListPtr device = NULL;
-    GListPtr iter = NULL;
+    GList *device = NULL;
+    GList *iter = NULL;
     device_properties_t *match = NULL;
     stonith_topology_t *tp = NULL;
     gboolean skip_target = FALSE;

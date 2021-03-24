@@ -41,15 +41,15 @@ cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
     return rc;
 }
 
-static GListPtr
+static GList *
 build_node_info_list(pe_resource_t *rsc)
 {
-    GListPtr retval = NULL;
+    GList *retval = NULL;
 
-    for (GListPtr iter = rsc->children; iter != NULL; iter = iter->next) {
+    for (GList *iter = rsc->children; iter != NULL; iter = iter->next) {
         pe_resource_t *child = (pe_resource_t *) iter->data;
 
-        for (GListPtr iter2 = child->running_on; iter2 != NULL; iter2 = iter2->next) {
+        for (GList *iter2 = child->running_on; iter2 != NULL; iter2 = iter2->next) {
             pe_node_t *node = (pe_node_t *) iter2->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
@@ -63,11 +63,11 @@ build_node_info_list(pe_resource_t *rsc)
     return retval;
 }
 
-GListPtr
+GList *
 cli_resource_search(pe_resource_t *rsc, const char *requested_name,
                     pe_working_set_t *data_set)
 {
-    GListPtr retval = NULL;
+    GList *retval = NULL;
     pe_resource_t *parent = uber_parent(rsc);
 
     if (pe_rsc_is_clone(rsc)) {
@@ -83,7 +83,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
         retval = build_node_info_list(parent);
 
     } else if (rsc->running_on != NULL) {
-        for (GListPtr iter = rsc->running_on; iter != NULL; iter = iter->next) {
+        for (GList *iter = rsc->running_on; iter != NULL; iter = iter->next) {
             pe_node_t *node = (pe_node_t *) iter->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
@@ -394,7 +394,7 @@ cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
         free(local_attr_set);
 
         if(recursive && pcmk__str_eq(attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
-            GListPtr lpc = NULL;
+            GList *lpc = NULL;
 
             if(need_init) {
                 xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
@@ -731,7 +731,7 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return ENXIO;
 
     } else if (rsc->children) {
-        GListPtr lpc = NULL;
+        GList *lpc = NULL;
 
         for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *child = (pe_resource_t *) lpc->data;
@@ -746,8 +746,8 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, const char *host_uname,
         return pcmk_rc_ok;
 
     } else if (host_uname == NULL) {
-        GListPtr lpc = NULL;
-        GListPtr nodes = g_hash_table_get_values(rsc->known_on);
+        GList *lpc = NULL;
+        GList *nodes = g_hash_table_get_values(rsc->known_on);
 
         if(nodes == NULL && force) {
             nodes = pcmk__copy_node_list(data_set->nodes, false);
@@ -965,8 +965,8 @@ generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
 bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 {
     bool found = TRUE;
-    GListPtr hIter = NULL;
-    GListPtr hosts = NULL;
+    GList *hIter = NULL;
+    GList *hosts = NULL;
 
     if(rsc == NULL) {
         return FALSE;
@@ -1537,9 +1537,9 @@ static inline bool action_is_pending(pe_action_t *action)
  * \return TRUE if any actions in the list are pending, FALSE otherwise
  */
 static bool
-actions_are_pending(GListPtr actions)
+actions_are_pending(GList *actions)
 {
-    GListPtr action;
+    GList *action;
 
     for (action = actions; action != NULL; action = action->next) {
         pe_action_t *a = (pe_action_t *)action->data;
@@ -1552,9 +1552,9 @@ actions_are_pending(GListPtr actions)
 }
 
 static void
-print_pending_actions(pcmk__output_t *out, GListPtr actions)
+print_pending_actions(pcmk__output_t *out, GList *actions)
 {
-    GListPtr action;
+    GList *action;
 
     out->info(out, "Pending actions:");
     for (action = actions; action != NULL; action = action->next) {
@@ -1798,7 +1798,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
         action = rsc_action+6;
 
         if(pe_rsc_is_clone(rsc)) {
-            GListPtr nodes = cli_resource_search(rsc, requested_name, data_set);
+            GList *nodes = cli_resource_search(rsc, requested_name, data_set);
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          action, rsc->id);
@@ -1878,7 +1878,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
     current = pe__find_active_requires(rsc, &count);
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        GListPtr iter = NULL;
+        GList *iter = NULL;
         unsigned int master_count = 0;
         pe_node_t *master_node = NULL;
 

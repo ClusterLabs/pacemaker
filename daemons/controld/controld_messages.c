@@ -22,7 +22,7 @@
 
 #include <pacemaker-controld.h>
 
-GListPtr fsa_message_queue = NULL;
+GList *fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
 static enum crmd_fsa_input handle_message(xmlNode *msg,
@@ -174,7 +174,7 @@ void
 fsa_dump_queue(int log_level)
 {
     int offset = 0;
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     for (lpc = fsa_message_queue; lpc != NULL; lpc = lpc->next) {
         fsa_data_t *data = (fsa_data_t *) lpc->data;

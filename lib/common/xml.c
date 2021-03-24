@@ -385,7 +385,7 @@ pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact)
 void
 xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xml_private_t *doc = NULL;
 
     if (log_level == LOG_NEVER) {

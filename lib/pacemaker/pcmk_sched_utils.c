@@ -300,7 +300,7 @@ native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
     pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
     if (chosen == NULL) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
         char *rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
 
         crm_debug("Could not allocate a node for %s", rsc->id);
@@ -419,7 +419,7 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
     }
 
     if (details) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         crm_trace("\t\t====== Preceding Actions");
 

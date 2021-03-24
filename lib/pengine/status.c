@@ -151,10 +151,10 @@ cluster_status(pe_working_set_t * data_set)
  * \todo Refactor pe_node_t to strdup() the node name.
  */
 static void
-pe_free_resources(GListPtr resources)
+pe_free_resources(GList *resources)
 {
     pe_resource_t *rsc = NULL;
-    GListPtr iterator = resources;
+    GList *iterator = resources;
 
     while (iterator != NULL) {
         rsc = (pe_resource_t *) iterator->data;
@@ -167,9 +167,9 @@ pe_free_resources(GListPtr resources)
 }
 
 static void
-pe_free_actions(GListPtr actions)
+pe_free_actions(GList *actions)
 {
-    GListPtr iterator = actions;
+    GList *iterator = actions;
 
     while (iterator != NULL) {
         pe_free_action(iterator->data);
@@ -181,7 +181,7 @@ pe_free_actions(GListPtr actions)
 }
 
 static void
-pe_free_nodes(GListPtr nodes)
+pe_free_nodes(GList *nodes)
 {
     for (GList *iterator = nodes; iterator != NULL; iterator = iterator->next) {
         pe_node_t *node = (pe_node_t *) iterator->data;
@@ -221,9 +221,9 @@ pe_free_nodes(GListPtr nodes)
 }
 
 static void
-pe__free_ordering(GListPtr constraints)
+pe__free_ordering(GList *constraints)
 {
-    GListPtr iterator = constraints;
+    GList *iterator = constraints;
 
     while (iterator != NULL) {
         pe__ordering_t *order = iterator->data;
@@ -240,9 +240,9 @@ pe__free_ordering(GListPtr constraints)
 }
 
 static void
-pe__free_location(GListPtr constraints)
+pe__free_location(GList *constraints)
 {
-    GListPtr iterator = constraints;
+    GList *iterator = constraints;
 
     while (iterator != NULL) {
         pe__location_t *cons = iterator->data;
@@ -376,15 +376,15 @@ set_working_set_defaults(pe_working_set_t * data_set)
 }
 
 pe_resource_t *
-pe_find_resource(GListPtr rsc_list, const char *id)
+pe_find_resource(GList *rsc_list, const char *id)
 {
     return pe_find_resource_with_flags(rsc_list, id, pe_find_renamed);
 }
 
 pe_resource_t *
-pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags)
+pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
 {
-    GListPtr rIter = NULL;
+    GList *rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pe_resource_t *parent = rIter->data;
@@ -400,7 +400,7 @@ pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flag
 }
 
 pe_node_t *
-pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
+pe_find_node_any(GList *nodes, const char *id, const char *uname)
 {
     pe_node_t *match = pe_find_node_id(nodes, id);
 
@@ -412,9 +412,9 @@ pe_find_node_any(GListPtr nodes, const char *id, const char *uname)
 }
 
 pe_node_t *
-pe_find_node_id(GListPtr nodes, const char *id)
+pe_find_node_id(GList *nodes, const char *id)
 {
-    GListPtr gIter = nodes;
+    GList *gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -428,9 +428,9 @@ pe_find_node_id(GListPtr nodes, const char *id)
 }
 
 pe_node_t *
-pe_find_node(GListPtr nodes, const char *uname)
+pe_find_node(GList *nodes, const char *uname)
 {
-    GListPtr gIter = nodes;
+    GList *gIter = nodes;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;

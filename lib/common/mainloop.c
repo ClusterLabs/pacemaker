@@ -998,7 +998,7 @@ mainloop_del_fd(mainloop_io_t * client)
     }
 }
 
-static GListPtr child_list = NULL;
+static GList *child_list = NULL;
 
 pid_t
 mainloop_child_pid(mainloop_child_t * child)
@@ -1183,7 +1183,7 @@ child_signal_init(gpointer p)
 gboolean
 mainloop_child_kill(pid_t pid)
 {
-    GListPtr iter;
+    GList *iter;
     mainloop_child_t *child = NULL;
     mainloop_child_t *match = NULL;
     /* It is impossible to block SIGKILL, this allows us to

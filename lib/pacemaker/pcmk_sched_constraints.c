@@ -190,9 +190,9 @@ get_ordering_type(xmlNode * xml_obj)
 }
 
 static pe_resource_t *
-pe_find_constraint_resource(GListPtr rsc_list, const char *id)
+pe_find_constraint_resource(GList *rsc_list, const char *id)
 {
-    GListPtr rIter = NULL;
+    GList *rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pe_resource_t *parent = rIter->data;
@@ -452,7 +452,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
      * the 'then' action is runnable, we use a pseudo action as an intermediate step
      * start min number of clones -> pseudo action is runnable -> dependency runnable. */
     if (min_required_before) {
-        GListPtr rIter = NULL;
+        GList *rIter = NULL;
         char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
         free(task);
@@ -534,8 +534,8 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
          set = pcmk__xe_next(set)) {
 
         xmlNode *xml_rsc = NULL;
-        GListPtr tag_refs = NULL;
-        GListPtr gIter = NULL;
+        GList *tag_refs = NULL;
+        GList *gIter = NULL;
 
         if (!pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_casei)) {
             continue;
@@ -670,7 +670,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
         return FALSE;
 
     } else if (tag) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         /* A template/tag is referenced by the "attr" attribute (first, then, rsc or with-rsc).
            Add the template/tag's corresponding "resource_set" which contains the resources derived
@@ -733,7 +733,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     if(value) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
         bool invert = FALSE;
-        GListPtr rIter = NULL;
+        GList *rIter = NULL;
 
         if(value[0] == '!') {
             value++;
@@ -1072,8 +1072,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     const char *boolean = NULL;
     const char *role = NULL;
 
-    GListPtr gIter = NULL;
-    GListPtr match_L = NULL;
+    GList *gIter = NULL;
+    GList *match_L = NULL;
 
     gboolean do_and = TRUE;
     gboolean accept = TRUE;
@@ -1133,7 +1133,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         }
     }
     if (do_and) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         match_L = pcmk__copy_node_list(data_set->nodes, true);
         for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
@@ -1687,8 +1687,8 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
                  pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
-    GListPtr set_iter = NULL;
-    GListPtr resources = NULL;
+    GList *set_iter = NULL;
+    GList *resources = NULL;
 
     pe_resource_t *last = NULL;
     pe_resource_t *resource = NULL;
@@ -1783,7 +1783,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
         if (local_kind == pe_order_kind_serialize) {
             /* Serialize before everything that comes after */
 
-            GListPtr gIter = NULL;
+            GList *gIter = NULL;
 
             for (gIter = set_iter; gIter != NULL; gIter = gIter->next) {
                 pe_resource_t *then_rsc = (pe_resource_t *) gIter->data;

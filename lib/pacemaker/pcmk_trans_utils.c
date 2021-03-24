@@ -107,14 +107,14 @@ actiontype2text(action_type_e type)
 static crm_action_t *
 find_action(crm_graph_t * graph, int id)
 {
-    GListPtr sIter = NULL;
+    GList *sIter = NULL;
 
     if (graph == NULL) {
         return NULL;
     }
 
     for (sIter = graph->synapses; sIter != NULL; sIter = sIter->next) {
-        GListPtr aIter = NULL;
+        GList *aIter = NULL;
         synapse_t *synapse = (synapse_t *) sIter->data;
 
         for (aIter = synapse->actions; aIter != NULL; aIter = aIter->next) {
@@ -236,7 +236,7 @@ print_action(int log_level, const char *prefix, crm_action_t * action)
 void
 print_graph(unsigned int log_level, crm_graph_t * graph)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     if (graph == NULL || graph->num_actions == 0) {
         if (log_level == LOG_TRACE) {

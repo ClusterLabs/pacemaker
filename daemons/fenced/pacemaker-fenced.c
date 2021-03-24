@@ -586,7 +586,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     /* If this is a complex resource, check children rather than this resource itself. */
     if(rsc->children) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             cib_device_update(gIter->data, data_set);
             if(pe_rsc_is_clone(rsc)) {
@@ -679,7 +679,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 static void
 cib_devices_update(void)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     GHashTableIter iter;
     stonith_device_t *device = NULL;
 

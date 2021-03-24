@@ -22,7 +22,6 @@ extern "C" {
 
 #  include <glib.h>                 // gboolean
 #  include <stdbool.h>              // bool
-#  include <crm/crm.h>              // GListPtr
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 #  include <crm/pengine/pe_types.h> // pe_node_t, pe_resource_t, etc.
@@ -35,12 +34,12 @@ void pe_free_working_set(pe_working_set_t *data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
 void pe_reset_working_set(pe_working_set_t *data_set);
-pe_resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
-pe_resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
-pe_node_t *pe_find_node(GListPtr node_list, const char *uname);
-pe_node_t *pe_find_node_id(GListPtr node_list, const char *id);
-pe_node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
-GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
+pe_resource_t *pe_find_resource(GList *rsc_list, const char *id_rh);
+pe_resource_t *pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags);
+pe_node_t *pe_find_node(GList *node_list, const char *uname);
+pe_node_t *pe_find_node_id(GList *node_list, const char *id);
+pe_node_t *pe_find_node_any(GList *node_list, const char *id, const char *uname);
+GList *find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
 int pe_bundle_replicas(const pe_resource_t *rsc);
 #if ENABLE_VERSIONED_ATTRS

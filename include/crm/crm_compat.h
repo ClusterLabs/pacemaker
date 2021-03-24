@@ -29,6 +29,9 @@ extern "C" {
 //! \deprecated This macro will be removed in a future release
 #define DIMOF(a) ((int) (sizeof(a)/sizeof(a[0])))
 
+//! \deprecated Use GList * instead
+typedef GList *GListPtr;
+
 #ifdef __cplusplus
 }
 #endif

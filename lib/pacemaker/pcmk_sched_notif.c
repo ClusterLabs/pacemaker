@@ -72,9 +72,9 @@ static notify_entry_t *dup_notify_entry(notify_entry_t *entry)
 }
 
 static void
-expand_node_list(GListPtr list, char **uname, char **metal)
+expand_node_list(GList *list, char **uname, char **metal)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     char *node_list = NULL;
     char *metal_list = NULL;
     size_t node_list_len = 0;
@@ -264,7 +264,7 @@ pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe
     }
 
     if (n_data->post_done) {
-        GListPtr gIter = rsc->actions;
+        GList *gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *mon = (pe_action_t *) gIter->data;
@@ -413,7 +413,7 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
     }
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -463,7 +463,7 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
         notify_entry_t *entry = NULL;
         enum action_tasks task;
 
-        GListPtr gIter = rsc->actions;
+        GList *gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;
@@ -532,7 +532,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     char *node_list = NULL;
     char *metal_list = NULL;
     const char *source = NULL;
-    GListPtr nodes = NULL;
+    GList *nodes = NULL;
 
     n_data->stop = expand_list(n_data->stop, &rsc_list, &node_list);
     if (!pcmk__str_eq(" ", rsc_list, pcmk__str_null_matches)
@@ -642,7 +642,7 @@ find_remote_start(pe_action_t *action)
 void
 create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     pe_action_t *stop = NULL;
     pe_action_t *start = NULL;
     enum action_tasks task = text2task(n_data->action);
