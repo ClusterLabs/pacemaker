@@ -519,8 +519,14 @@ pcmk__ends_with_ext(const char *s, const char *match)
     return ends_with(s, match, true);
 }
 
-/*
- * This re-implements g_str_hash as it was prior to glib2-2.28:
+/*!
+ * \internal
+ * \brief Create a hash of a string suitable for use with GHashTable
+ *
+ * \param[in] v  String to hash
+ *
+ * \return A hash of \p v compatible with g_str_hash() before glib 2.28
+ * \note glib changed their hash implementation:
  *
  * https://gitlab.gnome.org/GNOME/glib/commit/354d655ba8a54b754cb5a3efb42767327775696c
  *
@@ -532,8 +538,8 @@ pcmk__ends_with_ext(const char *s, const char *match)
  * also appears to have some minor impact on the ordering of a few
  * pseudo_event IDs in the transition graph.
  */
-guint
-g_str_hash_traditional(gconstpointer v)
+static guint
+pcmk__str_hash(gconstpointer v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -559,7 +565,7 @@ GHashTable *
 pcmk__strkey_table(GDestroyNotify key_destroy_func,
                    GDestroyNotify value_destroy_func)
 {
-    return g_hash_table_new_full(g_str_hash_traditional, g_str_equal,
+    return g_hash_table_new_full(pcmk__str_hash, g_str_equal,
                                  key_destroy_func, value_destroy_func);
 }
 
@@ -1122,6 +1128,12 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
         snprintf(buffer, len, "%d", an_int);
     }
     return buffer;
+}
+
+guint
+g_str_hash_traditional(gconstpointer v)
+{
+    return pcmk__str_hash(v);
 }
 
 // End deprecated API

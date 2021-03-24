@@ -50,7 +50,6 @@ long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
 gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
 guint crm_strcase_hash(gconstpointer v);
-guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
 
