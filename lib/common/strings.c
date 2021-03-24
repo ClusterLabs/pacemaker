@@ -24,16 +24,6 @@
 #include <bzlib.h>
 #include <sys/types.h>
 
-char *
-crm_itoa_stack(int an_int, char *buffer, size_t len)
-{
-    if (buffer != NULL) {
-        snprintf(buffer, len, "%d", an_int);
-    }
-
-    return buffer;
-}
-
 /*!
  * \internal
  * \brief Scan a long long integer from a string
@@ -1104,6 +1094,15 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
         return TRUE;
     }
     return FALSE;
+}
+
+char *
+crm_itoa_stack(int an_int, char *buffer, size_t len)
+{
+    if (buffer != NULL) {
+        snprintf(buffer, len, "%d", an_int);
+    }
+    return buffer;
 }
 
 // End deprecated API

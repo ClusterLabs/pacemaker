@@ -766,7 +766,7 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     char *name = NULL;
     char *value = NULL;
 
-    if (pcmk_scan_nvpair(optarg, &name, &value) != 2) {
+    if (pcmk__scan_nvpair(optarg, &name, &value) != 2) {
         return FALSE;
     }
     if (options.cmdline_params == NULL) {

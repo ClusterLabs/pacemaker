@@ -26,8 +26,24 @@ extern "C" {
 //! \deprecated Use '\0' instead
 #define EOS '\0'
 
+//! \deprecated This defined constant will be removed in a future release
+#define MAX_IPC_DELAY 120
+
+//!@{
 //! \deprecated This macro will be removed in a future release
+
 #define DIMOF(a) ((int) (sizeof(a)/sizeof(a[0])))
+
+#  ifndef __GNUC__
+#    define __builtin_expect(expr, result) (expr)
+#  endif
+
+#define __likely(expr) __builtin_expect(expr, 1)
+
+#define __unlikely(expr) __builtin_expect(expr, 0)
+
+// This ends the doxygen deprecation comment
+//!@}
 
 //! \deprecated Use GList * instead
 typedef GList *GListPtr;

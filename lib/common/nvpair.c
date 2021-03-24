@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -207,6 +207,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 // convenience function for name=value strings
 
 /*!
+ * \internal
  * \brief Extract the name and value from an input string formatted as "name=value".
  * If unable to extract them, they are returned as NULL.
  *
@@ -218,7 +219,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
  *         and error code otherwise
  */
 int
-pcmk_scan_nvpair(const char *input, char **name, char **value)
+pcmk__scan_nvpair(const char *input, char **name, char **value)
 {
 #ifdef SSCANF_HAS_M
     *name = NULL;
@@ -277,9 +278,12 @@ pcmk_scan_nvpair(const char *input, char **name, char **value)
  * \param[in]     name  The name of the nvpair.
  * \param[in]     value The value of the nvpair.
  * \param[in]     units Optional units for the value, or NULL.
+ *
+ * \return Newly allocated string with name/value pair
  */
 char *
-pcmk_format_nvpair(const char *name, const char *value, const char *units) {
+pcmk__format_nvpair(const char *name, const char *value, const char *units)
+{
     return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
 }
 
@@ -287,15 +291,18 @@ pcmk_format_nvpair(const char *name, const char *value, const char *units) {
  * \internal
  * \brief Format a name/time pair.
  *
- * See pcmk_format_nvpair() for more details.
+ * See pcmk__format_nvpair() for more details.
  *
  * \note The caller is responsible for freeing the return value after use.
  *
  * \param[in]     name       The name for the time.
  * \param[in]     epoch_time The time to format.
+ *
+ * \return Newly allocated string with name/value pair
  */
 char *
-pcmk_format_named_time(const char *name, time_t epoch_time) {
+pcmk__format_named_time(const char *name, time_t epoch_time)
+{
     const char *now_str = pcmk__epoch2str(&epoch_time);
 
     return crm_strdup_printf("%s=\"%s\"", name, now_str ? now_str : "");
@@ -952,3 +959,28 @@ xml2list(xmlNode *parent)
 
     return nvpair_hash;
 }
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/common/util_compat.h>
+
+int
+pcmk_scan_nvpair(const char *input, char **name, char **value)
+{
+    return pcmk__scan_nvpair(input, name, value);
+}
+
+char *
+pcmk_format_nvpair(const char *name, const char *value,
+                   const char *units)
+{
+    return pcmk__format_nvpair(name, value, units);
+}
+
+char *
+pcmk_format_named_time(const char *name, time_t epoch_time)
+{
+    return pcmk__format_named_time(name, epoch_time);
+}
+
+// End deprecated API

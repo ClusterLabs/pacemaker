@@ -1528,7 +1528,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
             } else {
 #if HAVE_MSGFROMIPC_TIMEOUT
-                stonith->call_timeout = MAX_IPC_DELAY;
+                stonith->call_timeout = PCMK__IPC_TIMEOUT;
 #endif
                 crm_debug("Connection to fencer by %s succeeded (registration token: %s)",
                           display_name, native->token);

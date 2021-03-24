@@ -56,6 +56,19 @@ gboolean safe_str_neq(const char *a, const char *b);
 //! \deprecated Use strcasecmp() instead
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
+//! \deprecated Use snprintf() instead
+char *crm_itoa_stack(int an_int, char *buf, size_t len);
+
+//! \deprecated Use sscanf() instead
+int pcmk_scan_nvpair(const char *input, char **name, char **value);
+
+//! \deprecated Use a standard printf()-style function instead
+char *pcmk_format_nvpair(const char *name, const char *value,
+                         const char *units);
+
+//! \deprecated Use a standard printf()-style function instead
+char *pcmk_format_named_time(const char *name, time_t epoch_time);
+
 #ifdef __cplusplus
 }
 #endif
