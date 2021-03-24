@@ -312,7 +312,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     if (pcmk_is_set(flags, pe_fc_fillers) && rsc->fillers
         && !pe_rsc_is_bundled(rsc)) {
 
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *filler = (pe_resource_t *) gIter->data;

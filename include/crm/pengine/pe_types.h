@@ -23,7 +23,6 @@ extern "C" {
 #  include <stdbool.h>              // bool
 #  include <sys/types.h>            // time_t
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
-#  include <crm/crm.h>              // GListPtr
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 
@@ -53,7 +52,7 @@ typedef struct resource_object_functions_s {
     pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (pe_resource_t*);
     void (*count) (pe_resource_t*);
-    gboolean (*is_filtered) (pe_resource_t*, GListPtr, gboolean);
+    gboolean (*is_filtered) (pe_resource_t*, GList *, gboolean);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
@@ -151,14 +150,14 @@ struct pe_working_set_s {
     // Actions for which there can be only one (e.g. fence nodeX)
     GHashTable *singletons;
 
-    GListPtr nodes;
-    GListPtr resources;
-    GListPtr placement_constraints;
-    GListPtr ordering_constraints;
-    GListPtr colocation_constraints;
-    GListPtr ticket_constraints;
+    GList *nodes;
+    GList *resources;
+    GList *placement_constraints;
+    GList *ordering_constraints;
+    GList *colocation_constraints;
+    GList *ticket_constraints;
 
-    GListPtr actions;
+    GList *actions;
     xmlNode *failed;
     xmlNode *op_defaults;
     xmlNode *rsc_defaults;
@@ -225,8 +224,8 @@ struct pe_node_shared_s {
 
     int num_resources;
     pe_resource_t *remote_rsc;
-    GListPtr running_rsc;       /* pe_resource_t* */
-    GListPtr allocated_rsc;     /* pe_resource_t* */
+    GList *running_rsc;       /* pe_resource_t* */
+    GList *allocated_rsc;     /* pe_resource_t* */
 
     GHashTable *attrs;          /* char* => char* */
     GHashTable *utilization;
@@ -349,17 +348,17 @@ struct pe_resource_s {
 
     //!@{
     //! This field should be treated as internal to Pacemaker
-    GListPtr rsc_cons_lhs;      // List of pcmk__colocation_t*
-    GListPtr rsc_cons;          // List of pcmk__colocation_t*
-    GListPtr rsc_location;      // List of pe__location_t*
-    GListPtr actions;           // List of pe_action_t*
-    GListPtr rsc_tickets;       // List of rsc_ticket*
+    GList *rsc_cons_lhs;      // List of pcmk__colocation_t*
+    GList *rsc_cons;          // List of pcmk__colocation_t*
+    GList *rsc_location;      // List of pe__location_t*
+    GList *actions;           // List of pe_action_t*
+    GList *rsc_tickets;       // List of rsc_ticket*
     //!@}
 
     pe_node_t *allocated_to;
     pe_node_t *partial_migration_target;
     pe_node_t *partial_migration_source;
-    GListPtr running_on;        /* pe_node_t*   */
+    GList *running_on;        /* pe_node_t*   */
     GHashTable *known_on;       /* pe_node_t*   */
     GHashTable *allowed_nodes;  /* pe_node_t*   */
 
@@ -370,11 +369,11 @@ struct pe_resource_s {
     GHashTable *parameters; //! \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;
 
-    GListPtr children;          /* pe_resource_t*   */
-    GListPtr dangling_migrations;       /* pe_node_t*       */
+    GList *children;          /* pe_resource_t*   */
+    GList *dangling_migrations;       /* pe_node_t*       */
 
     pe_resource_t *container;
-    GListPtr fillers;
+    GList *fillers;
 
     pe_node_t *pending_node;    // Node on which pending_task is happening
     pe_node_t *lock_node;       // Resource is shutdown-locked to this node
@@ -440,8 +439,8 @@ struct pe_action_s {
      * to be considered runnable */ 
     int required_runnable_before;
 
-    GListPtr actions_before;    /* pe_action_wrapper_t* */
-    GListPtr actions_after;     /* pe_action_wrapper_t* */
+    GList *actions_before;    /* pe_action_wrapper_t* */
+    GList *actions_after;     /* pe_action_wrapper_t* */
 
     /* Some of the above fields could be moved to the details,
      * except for API backward compatibility.
@@ -459,7 +458,7 @@ typedef struct pe_ticket_s {
 
 typedef struct pe_tag_s {
     char *id;
-    GListPtr refs;
+    GList *refs;
 } pe_tag_t;
 
 //! Internal tracking for transition graph creation

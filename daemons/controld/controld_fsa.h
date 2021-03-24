@@ -505,7 +505,7 @@ extern char *fsa_our_uuid;
 extern char *fsa_pe_ref;        // Last invocation of the scheduler
 extern char *fsa_our_dc;
 extern char *fsa_our_dc_version;
-extern GListPtr fsa_message_queue;
+extern GList *fsa_message_queue;
 
 extern char *fsa_cluster_name;
 

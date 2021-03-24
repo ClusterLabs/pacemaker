@@ -176,5 +176,5 @@ gboolean update_action(pe_action_t *action, pe_working_set_t *data_set);
 void complex_set_cmds(pe_resource_t * rsc);
 void pcmk__log_transition_summary(const char *filename);
 void clone_create_pseudo_actions(
-    pe_resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
+    pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
 #endif

@@ -18,7 +18,7 @@
 #include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
 
-static GListPtr attrd_alert_list = NULL;
+static GList *attrd_alert_list = NULL;
 
 static void
 attrd_lrmd_callback(lrmd_event_data_t * op)

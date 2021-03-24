@@ -59,7 +59,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 // \return Standard Pacemaker return code
 int
 cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
-                 const char *move_lifetime, GListPtr allnodes, cib_t * cib_conn,
+                 const char *move_lifetime, GList *allnodes, cib_t * cib_conn,
                  int cib_options, gboolean promoted_role_only)
 {
     char *later_s = NULL;
@@ -68,7 +68,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
     xmlNode *location = NULL;
 
     if(host == NULL) {
-        GListPtr n = allnodes;
+        GList *n = allnodes;
         for(; n && rc == pcmk_rc_ok; n = n->next) {
             pe_node_t *target = n->data;
 
@@ -282,7 +282,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 
 // \return Standard Pacemaker return code
 int
-cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn,
+cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t * cib_conn,
                    int cib_options, bool clear_ban_constraints, gboolean force)
 {
     int rc = pcmk_rc_ok;
@@ -305,7 +305,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
         }
 
     } else {
-        GListPtr n = allnodes;
+        GList *n = allnodes;
 
         /* Iterate over all nodes, attempting to clear the constraint from each.
          * On the first error, abort.

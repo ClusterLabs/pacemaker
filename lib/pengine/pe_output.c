@@ -2022,8 +2022,8 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
 
     if (details) {
         char *pe_mutable = strdup("\t\t");
-        GListPtr gIter = node->details->running_rsc;
-        GListPtr all = NULL;
+        GList *gIter = node->details->running_rsc;
+        GList *all = NULL;
 
         all = g_list_prepend(all, strdup("*"));
 

@@ -11,14 +11,14 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
-static GListPtr find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc,
+static GList *find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc,
                                     pe_resource_t * orig_rsc);
 
-static GListPtr group_find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc,
+static GList *group_find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc,
                                           pe_resource_t * orig_rsc);
 
 static void group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                                              GListPtr all_rscs);
+                                              GList *all_rscs);
 
 struct compare_data {
     const pe_node_t *node1;
@@ -175,7 +175,7 @@ native_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t *
 
 static void
 add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                    GListPtr all_rscs, pe_resource_t * orig_rsc)
+                    GList *all_rscs, pe_resource_t * orig_rsc)
 {
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
@@ -192,14 +192,14 @@ add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
         group_add_unallocated_utilization(all_utilization, rsc, all_rscs);
 
     } else if (pe_rsc_is_clone(rsc)) {
-        GListPtr gIter1 = NULL;
+        GList *gIter1 = NULL;
         gboolean existing = FALSE;
 
         /* Check if there's any child already existing in the list */
         gIter1 = rsc->children;
         for (; gIter1 != NULL; gIter1 = gIter1->next) {
             pe_resource_t *child = (pe_resource_t *) gIter1->data;
-            GListPtr gIter2 = NULL;
+            GList *gIter2 = NULL;
 
             if (g_list_find(all_rscs, child)) {
                 existing = TRUE;
@@ -233,10 +233,10 @@ add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
 }
 
 static GHashTable *
-sum_unallocated_utilization(pe_resource_t * rsc, GListPtr colocated_rscs)
+sum_unallocated_utilization(pe_resource_t * rsc, GList *colocated_rscs)
 {
-    GListPtr gIter = NULL;
-    GListPtr all_rscs = NULL;
+    GList *gIter = NULL;
+    GList *all_rscs = NULL;
     GHashTable *all_utilization = crm_str_table_new();
 
     all_rscs = g_list_copy(colocated_rscs);
@@ -260,10 +260,10 @@ sum_unallocated_utilization(pe_resource_t * rsc, GListPtr colocated_rscs)
     return all_utilization;
 }
 
-static GListPtr
-find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
+static GList *
+find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (rsc == NULL) {
         return colocated_rscs;
@@ -333,7 +333,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
     CRM_CHECK(rsc && prefer && data_set, return);
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GHashTableIter iter;
-        GListPtr colocated_rscs = NULL;
+        GList *colocated_rscs = NULL;
         gboolean any_capable = FALSE;
         pe_node_t *node = NULL;
 
@@ -414,14 +414,14 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>
 
-GListPtr
-group_find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
+GList *
+group_find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
 {
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
     if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -442,13 +442,13 @@ group_find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resou
 
 static void
 group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                                  GListPtr all_rscs)
+                                  GList *all_rscs)
 {
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
     if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;

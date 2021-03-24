@@ -878,7 +878,7 @@ common_update_score(pe_resource_t * rsc, const char *id, int score)
     }
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;

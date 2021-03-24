@@ -1923,7 +1923,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
         stonith_count = 1;
 
     } else {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
         GList *agents = resources_list_agents(class, provider);
 
         for (gIter = agents; gIter != NULL; gIter = gIter->next) {
@@ -1956,7 +1956,7 @@ does_provider_have_agent(const char *agent, const char *provider, const char *cl
 {
     int found = 0;
     GList *agents = NULL;
-    GListPtr gIter2 = NULL;
+    GList *gIter2 = NULL;
 
     agents = resources_list_agents(class, provider);
     for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
@@ -1975,7 +1975,7 @@ lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** pro
     int rc = pcmk_ok;
     char *provider = NULL;
     GList *ocf_providers = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     ocf_providers = resources_list_providers(PCMK_RESOURCE_CLASS_OCF);
 
@@ -1997,7 +1997,7 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
 {
     int rc = 0;
     GList *standards = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     standards = resources_list_standards();
 

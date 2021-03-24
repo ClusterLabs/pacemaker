@@ -934,7 +934,7 @@ fail_all_monitor_cmds(GList * list)
 {
     GList *rm_list = NULL;
     remote_ra_cmd_t *cmd = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
@@ -965,7 +965,7 @@ static GList *
 remove_cmd(GList * list, const char *action, guint interval_ms)
 {
     remote_ra_cmd_t *cmd = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;

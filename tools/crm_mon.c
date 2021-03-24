@@ -1692,7 +1692,7 @@ static void
 print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
                     unsigned int mon_ops)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     int nodes_online = 0;
     int nodes_standby = 0;
     int nodes_maintenance = 0;

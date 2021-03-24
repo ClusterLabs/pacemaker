@@ -223,8 +223,6 @@ extern char *crm_system_name;
 #  define RSC_METADATA	CRMD_ACTION_METADATA
 /* *INDENT-ON* */
 
-typedef GList *GListPtr;
-
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 

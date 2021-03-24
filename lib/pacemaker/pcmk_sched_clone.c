@@ -58,7 +58,7 @@ parent_node_instance(const pe_resource_t * rsc, pe_node_t * node)
 static gboolean
 did_fail(const pe_resource_t * rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         return TRUE;
@@ -221,9 +221,9 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         int lpc = 0;
         int max = 0;
         pe_node_t *n = NULL;
-        GListPtr gIter = NULL;
-        GListPtr list1 = NULL;
-        GListPtr list2 = NULL;
+        GList *gIter = NULL;
+        GList *list1 = NULL;
+        GList *list2 = NULL;
         GHashTable *hash1 =
             g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
         GHashTable *hash2 =
@@ -495,7 +495,7 @@ static void
 append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all)
 {
 
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -521,11 +521,11 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
 
 
 void
-distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
+distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                     int max, int per_host_max, pe_working_set_t * data_set);
 
 void
-distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
+distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                     int max, int per_host_max, pe_working_set_t * data_set) 
 {
     int loop_max = 0;
@@ -533,7 +533,7 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
     int available_nodes = 0;
 
     /* count now tracks the number of clones currently allocated */
-    for(GListPtr nIter = nodes; nIter != NULL; nIter = nIter->next) {
+    for(GList *nIter = nodes; nIter != NULL; nIter = nIter->next) {
         pe_node_t *node = nIter->data;
 
         node->count = 0;
@@ -553,7 +553,7 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
                  max, rsc->id, available_nodes, per_host_max, loop_max);
 
     /* Pre-allocate as many instances as we can to their current location */
-    for (GListPtr gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
+    for (GList *gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         if (child->running_on && pcmk_is_set(child->flags, pe_rsc_provisional)
@@ -585,7 +585,7 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
 
     pe_rsc_trace(rsc, "Done pre-allocating (%d of %d)", allocated, max);
 
-    for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         if (child->running_on != NULL) {
@@ -619,7 +619,7 @@ pe_node_t *
 pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      pe_working_set_t *data_set)
 {
-    GListPtr nodes = NULL;
+    GList *nodes = NULL;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -641,7 +641,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     /* this information is used by sort_clone_instance() when deciding in which 
      * order to allocate clone instances
      */
-    for (GListPtr gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         pe_rsc_trace(rsc, "%s: Allocating %s first",
@@ -649,7 +649,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
     }
 
-    for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (!pcmk__colocation_has_influence(constraint, NULL)) {
@@ -684,7 +684,7 @@ static void
 clone_update_pseudo_status(pe_resource_t * rsc, gboolean * stopping, gboolean * starting,
                            gboolean * active)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (rsc->children) {
 
@@ -749,13 +749,13 @@ find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
                 GList **list)
 {
     pe_action_t *match = NULL;
-    GListPtr possible = NULL;
-    GListPtr active = NULL;
+    GList *possible = NULL;
+    GList *active = NULL;
 
     possible = pe__resource_actions(rsc, NULL, task, FALSE);
 
     if (active_only) {
-        GListPtr gIter = possible;
+        GList *gIter = possible;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;
@@ -800,7 +800,7 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_action_t *start = NULL;
     pe_action_t *last_stop = NULL;
     pe_action_t *last_start = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean active_only = TRUE;        /* change to false to get the old behavior */
     clone_variant_data_t *clone_data = NULL;
 
@@ -850,7 +850,7 @@ clone_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
 void
 clone_create_pseudo_actions(
-    pe_resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
+    pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
 {
     gboolean child_active = FALSE;
     gboolean child_starting = FALSE;
@@ -865,7 +865,7 @@ clone_create_pseudo_actions(
 
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
-    for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean starting = FALSE;
         gboolean stopping = FALSE;
@@ -915,7 +915,7 @@ void
 clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe_resource_t *last_rsc = NULL;
-    GListPtr gIter;
+    GList *gIter;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -967,7 +967,7 @@ assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force)
 
     if (rsc->children) {
 
-        for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             changed |= assign_node(child_rsc, node, force);
@@ -1020,8 +1020,8 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
                       pe_working_set_t *data_set)
 {
     pe_resource_t *pair = NULL;
-    GListPtr gIter = NULL;
-    GListPtr scratch = NULL;
+    GList *gIter = NULL;
+    GList *scratch = NULL;
     pe_node_t *local_node = NULL;
 
     local_node = local_child->fns->location(local_child, NULL, current);
@@ -1065,7 +1065,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                         pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean do_interleave = FALSE;
     const char *interleave_s = NULL;
 
@@ -1129,7 +1129,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
 
     } else if (constraint->score >= INFINITY) {
-        GListPtr rhs = NULL;
+        GList *rhs = NULL;
 
         gIter = rsc_rh->children;
         for (; gIter != NULL; gIter = gIter->next) {
@@ -1201,9 +1201,9 @@ clone_child_action(pe_action_t * action)
     } while (0)
 
 enum pe_action_flags
-summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
+summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean any_runnable = FALSE;
     gboolean check_runnable = TRUE;
     enum action_tasks task = clone_child_action(action);
@@ -1253,7 +1253,7 @@ clone_action_flags(pe_action_t * action, pe_node_t * node)
 void
 clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
@@ -1269,7 +1269,7 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 void
 clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);

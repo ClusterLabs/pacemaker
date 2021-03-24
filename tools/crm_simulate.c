@@ -36,11 +36,11 @@ struct {
     char *graph_file;
     gchar *input_file;
     guint modified;
-    GListPtr node_up;
-    GListPtr node_down;
-    GListPtr node_fail;
-    GListPtr op_fail;
-    GListPtr op_inject;
+    GList *node_up;
+    GList *node_down;
+    GList *node_fail;
+    GList *op_fail;
+    GList *op_inject;
     gchar *output_file;
     gboolean print_pending;
     gboolean process;
@@ -51,10 +51,10 @@ struct {
     gboolean simulate;
     gboolean store;
     gchar *test_dir;
-    GListPtr ticket_grant;
-    GListPtr ticket_revoke;
-    GListPtr ticket_standby;
-    GListPtr ticket_activate;
+    GList *ticket_grant;
+    GList *ticket_revoke;
+    GList *ticket_standby;
+    GList *ticket_activate;
     char *use_date;
     char *watchdog;
     char *xml_file;
@@ -397,7 +397,7 @@ print_cluster_status(pe_working_set_t * data_set, long options)
     size_t offline_nodes_len = 0;
     size_t offline_remote_nodes_len = 0;
 
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -595,7 +595,7 @@ static bool
 create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_actions,
                GError **error)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
@@ -654,7 +654,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        GListPtr gIter2 = NULL;
+        GList *gIter2 = NULL;
 
         for (gIter2 = action->actions_before; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_action_wrapper_t *before = (pe_action_wrapper_t *) gIter2->data;
@@ -1078,7 +1078,7 @@ main(int argc, char **argv)
         }
 
         if (quiet == FALSE) {
-            GListPtr gIter = NULL;
+            GList *gIter = NULL;
 
             quiet_log("%sTransition Summary:\n", pcmk_any_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)
                       || options.modified ? "\n" : "");

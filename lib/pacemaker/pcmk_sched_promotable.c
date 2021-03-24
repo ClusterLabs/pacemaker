@@ -93,7 +93,7 @@ static void
 check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
                          gboolean *promoting)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (rsc->children) {
         gIter = rsc->children;
@@ -127,10 +127,10 @@ check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
     }
 }
 
-static void apply_master_location(pe_resource_t *child, GListPtr location_constraints, pe_node_t *chosen)
+static void apply_master_location(pe_resource_t *child, GList *location_constraints, pe_node_t *chosen)
 {
     CRM_CHECK(child && chosen, return);
-    for (GListPtr gIter = location_constraints; gIter; gIter = gIter->next) {
+    for (GList *gIter = location_constraints; gIter; gIter = gIter->next) {
         pe_node_t *cons_node = NULL;
         pe__location_t *cons = gIter->data;
 
@@ -174,7 +174,7 @@ can_be_master(pe_resource_t * rsc)
 #endif
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -273,7 +273,7 @@ sort_promotable_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 static void
 promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -404,7 +404,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 static gboolean
 filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
 {
-    GListPtr rIter = NULL;
+    GList *rIter = NULL;
     char *key = clone_strip(rsc->id);
     pe_resource_t *parent = uber_parent(rsc);
 
@@ -478,7 +478,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
     CRM_CHECK(node != NULL, return not_set_value);
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -561,7 +561,7 @@ void
 apply_master_prefs(pe_resource_t *rsc)
 {
     int score, new_score;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -611,7 +611,7 @@ apply_master_prefs(pe_resource_t *rsc)
 static void
 set_role_slave(pe_resource_t * rsc, gboolean current)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (current) {
         if (rsc->role == RSC_ROLE_STARTED) {
@@ -619,7 +619,7 @@ set_role_slave(pe_resource_t * rsc, gboolean current)
         }
 
     } else {
-        GListPtr allocated = NULL;
+        GList *allocated = NULL;
 
         rsc->fns->location(rsc, &allocated, FALSE);
         pe__set_next_role(rsc, (allocated? RSC_ROLE_SLAVE : RSC_ROLE_STOPPED),
@@ -637,7 +637,7 @@ set_role_slave(pe_resource_t * rsc, gboolean current)
 static void
 set_role_master(pe_resource_t * rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (rsc->next_role == RSC_ROLE_UNKNOWN) {
         pe__set_next_role(rsc, RSC_ROLE_MASTER, "promoted instance");
@@ -654,8 +654,8 @@ pe_node_t *
 pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     int promoted = 0;
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    GList *gIter = NULL;
+    GList *gIter2 = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
@@ -676,7 +676,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
      * assign priority
      */
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        GListPtr list = NULL;
+        GList *list = NULL;
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         pe_rsc_trace(rsc, "Assigning priority for %s: %s", child_rsc->id,
@@ -809,7 +809,7 @@ void
 create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     pe_action_t *action = NULL;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     pe_action_t *action_complete = NULL;
     gboolean any_promoting = FALSE;
     gboolean any_demoting = FALSE;
@@ -917,7 +917,7 @@ promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 void
 promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
     clone_variant_data_t *clone_data = NULL;
 
@@ -972,10 +972,10 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                          pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
-        GListPtr rhs = NULL;
+        GList *rhs = NULL;
 
         for (gIter = rsc_rh->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;

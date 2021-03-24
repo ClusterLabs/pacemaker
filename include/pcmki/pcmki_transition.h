@@ -37,8 +37,8 @@ typedef struct synapse_s {
     gboolean executed;
     gboolean confirmed;
 
-    GListPtr actions;           /* crm_action_t* */
-    GListPtr inputs;            /* crm_action_t* */
+    GList *actions;           /* crm_action_t* */
+    GList *inputs;            /* crm_action_t* */
 } synapse_t;
 
 typedef struct crm_action_s {
@@ -98,7 +98,7 @@ struct crm_graph_s {
     int completed;
     int incomplete;
 
-    GListPtr synapses;          /* synapse_t* */
+    GList *synapses;          /* synapse_t* */
 
     int migration_limit;
 };

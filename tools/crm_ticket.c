@@ -330,11 +330,11 @@ ticket_warning(const char *ticket_id, const char *action)
 }
 
 static gboolean
-allow_modification(const char *ticket_id, GListPtr attr_delete,
+allow_modification(const char *ticket_id, GList *attr_delete,
                    GHashTable *attr_set)
 {
     const char *value = NULL;
-    GListPtr list_iter = NULL;
+    GList *list_iter = NULL;
 
     if (do_force) {
         return TRUE;
@@ -364,7 +364,7 @@ allow_modification(const char *ticket_id, GListPtr attr_delete,
 }
 
 static int
-modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * attr_set,
+modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * attr_set,
                     cib_t * cib, pe_working_set_t * data_set)
 {
     int rc = pcmk_ok;
@@ -372,7 +372,7 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     xmlNode *ticket_state_xml = NULL;
     gboolean found = FALSE;
 
-    GListPtr list_iter = NULL;
+    GList *list_iter = NULL;
     GHashTableIter hash_iter;
 
     char *key = NULL;
@@ -720,7 +720,7 @@ main(int argc, char **argv)
     int flag;
     guint modified = 0;
 
-    GListPtr attr_delete = NULL;
+    GList *attr_delete = NULL;
     GHashTable *attr_set = crm_str_table_new();
 
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);

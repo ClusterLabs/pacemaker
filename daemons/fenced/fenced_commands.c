@@ -58,7 +58,7 @@ struct device_search_s {
     /* function to call when all replies have been received */
     void (*callback) (GList * devices, void *user_data);
     /* devices capable of performing requested action (or off if remapping) */
-    GListPtr capable;
+    GList *capable;
 };
 
 static gboolean stonith_device_dispatch(gpointer user_data);
@@ -96,8 +96,8 @@ typedef struct async_command_s {
     char *device;
     char *mode;
 
-    GListPtr device_list;
-    GListPtr device_next;
+    GList *device_list;
+    GList *device_next;
 
     void *internal_user_data;
     void (*done_cb) (GPid pid, int rc, const char *output, gpointer user_data);
@@ -288,8 +288,8 @@ static int
 get_active_cmds(stonith_device_t * device)
 {
     int counter = 0;
-    GListPtr gIter = NULL;
-    GListPtr gIterNext = NULL;
+    GList *gIter = NULL;
+    GList *gIterNext = NULL;
 
     CRM_CHECK(device != NULL, return 0);
 
@@ -355,8 +355,8 @@ stonith_device_execute(stonith_device_t * device)
     stonith_action_t *action = NULL;
     int active_cmds = 0;
     int action_limit = 0;
-    GListPtr gIter = NULL;
-    GListPtr gIterNext = NULL;
+    GList *gIter = NULL;
+    GList *gIterNext = NULL;
 
     CRM_CHECK(device != NULL, return FALSE);
 
@@ -575,7 +575,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 static void
 free_device(gpointer data)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     stonith_device_t *device = data;
 
     g_hash_table_destroy(device->params);
@@ -624,7 +624,7 @@ init_device_list(void)
 }
 
 static GHashTable *
-build_port_aliases(const char *hostmap, GListPtr * targets)
+build_port_aliases(const char *hostmap, GList ** targets)
 {
     char *name = NULL;
     int last = 0, lpc = 0, max = 0, added = 0;
@@ -1034,7 +1034,7 @@ schedule_internal_command(const char *origin,
 }
 
 gboolean
-string_in_list(GListPtr list, const char *item)
+string_in_list(GList *list, const char *item)
 {
     int lpc = 0;
     int max = g_list_length(list);
@@ -1969,7 +1969,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     int available_devices = 0;
     xmlNode *dev = NULL;
     xmlNode *list = NULL;
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     /* Pack the results into XML */
     list = create_xml_node(NULL, __func__);
@@ -2215,8 +2215,8 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     stonith_device_t *next_device = NULL;
     async_command_t *cmd = user_data;
 
-    GListPtr gIter = NULL;
-    GListPtr gIterNext = NULL;
+    GList *gIter = NULL;
+    GList *gIterNext = NULL;
 
     CRM_CHECK(cmd != NULL, return);
 
@@ -2238,7 +2238,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
               cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
 
     if (rc == 0) {
-        GListPtr iter;
+        GList *iter;
         /* see if there are any required devices left to execute for this op */
         for (iter = cmd->device_next; iter != NULL; iter = iter->next) {
             next_device = g_hash_table_lookup(device_list, iter->data);
@@ -2594,7 +2594,7 @@ remove_relay_op(xmlNode * request)
 
             /* If the operation to be deleted is registered as a duplicate, delete the registration. */
             while (g_hash_table_iter_next(&iter, NULL, (void **)&list_op)) {
-                GListPtr dup_iter = NULL;
+                GList *dup_iter = NULL;
                 if (list_op != relay_op) {
                     for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
                         remote_fencing_op_t *other = dup_iter->data;

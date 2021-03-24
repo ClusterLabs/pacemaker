@@ -267,7 +267,7 @@ abort_for_stonith_failure(enum transition_action abort_action,
  * notifications once a new DC is elected.
  */
 
-static GListPtr stonith_cleanup_list = NULL;
+static GList *stonith_cleanup_list = NULL;
 
 /*!
  * \internal
@@ -289,10 +289,10 @@ add_stonith_cleanup(const char *target) {
 void
 remove_stonith_cleanup(const char *target)
 {
-    GListPtr iter = stonith_cleanup_list;
+    GList *iter = stonith_cleanup_list;
 
     while (iter != NULL) {
-        GListPtr tmp = iter;
+        GList *tmp = iter;
         char *iter_name = tmp->data;
 
         iter = iter->next;
@@ -312,7 +312,7 @@ void
 purge_stonith_cleanup()
 {
     if (stonith_cleanup_list) {
-        GListPtr iter = NULL;
+        GList *iter = NULL;
 
         for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
             char *target = iter->data;
@@ -332,7 +332,7 @@ purge_stonith_cleanup()
 void
 execute_stonith_cleanup()
 {
-    GListPtr iter;
+    GList *iter;
 
     for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
@@ -362,7 +362,7 @@ static char *te_client_id = NULL;
 static gboolean
 fail_incompletable_stonith(crm_graph_t *graph)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     const char *task = NULL;
     xmlNode *last_action = NULL;
 
@@ -371,7 +371,7 @@ fail_incompletable_stonith(crm_graph_t *graph)
     }
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        GListPtr lpc2 = NULL;
+        GList *lpc2 = NULL;
         synapse_t *synapse = (synapse_t *) lpc->data;
 
         if (synapse->confirmed) {

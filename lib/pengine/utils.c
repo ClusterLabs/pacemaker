@@ -156,11 +156,11 @@ pe__copy_node(const pe_node_t *this_node)
 
 /* any node in list1 or list2 and not in the other gets a score of -INFINITY */
 void
-node_list_exclude(GHashTable * hash, GListPtr list, gboolean merge_scores)
+node_list_exclude(GHashTable * hash, GList *list, gboolean merge_scores)
 {
     GHashTable *result = hash;
     pe_node_t *other_node = NULL;
-    GListPtr gIter = list;
+    GList *gIter = list;
 
     GHashTableIter iter;
     pe_node_t *node = NULL;
@@ -466,7 +466,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
               pe_working_set_t * data_set)
 {
     pe_action_t *action = NULL;
-    GListPtr possible_matches = NULL;
+    GList *possible_matches = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
     CRM_CHECK(task != NULL, free(key); return NULL);
@@ -1405,12 +1405,12 @@ pe_free_action(pe_action_t * action)
     free(action);
 }
 
-GListPtr
-find_recurring_actions(GListPtr input, pe_node_t * not_on_node)
+GList *
+find_recurring_actions(GList *input, pe_node_t * not_on_node)
 {
     const char *value = NULL;
-    GListPtr result = NULL;
-    GListPtr gIter = input;
+    GList *result = NULL;
+    GList *gIter = input;
 
     CRM_CHECK(input != NULL, return NULL);
 
@@ -1463,9 +1463,9 @@ get_complex_task(pe_resource_t * rsc, const char *name, gboolean allow_non_atomi
 }
 
 pe_action_t *
-find_first_action(GListPtr input, const char *uuid, const char *task, pe_node_t * on_node)
+find_first_action(GList *input, const char *uuid, const char *task, pe_node_t * on_node)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     CRM_CHECK(uuid || task, return NULL);
 
@@ -1492,11 +1492,11 @@ find_first_action(GListPtr input, const char *uuid, const char *task, pe_node_t 
     return NULL;
 }
 
-GListPtr
-find_actions(GListPtr input, const char *key, const pe_node_t *on_node)
+GList *
+find_actions(GList *input, const char *key, const pe_node_t *on_node)
 {
-    GListPtr gIter = input;
-    GListPtr result = NULL;
+    GList *gIter = input;
+    GList *result = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
 
@@ -1610,7 +1610,7 @@ resource_node_score(pe_resource_t * rsc, pe_node_t * node, int score, const char
         return;
 
     } else if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -1636,7 +1636,7 @@ resource_location(pe_resource_t * rsc, pe_node_t * node, int score, const char *
         resource_node_score(rsc, node, score, tag);
 
     } else if (data_set != NULL) {
-        GListPtr gIter = data_set->nodes;
+        GList *gIter = data_set->nodes;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_node_t *node_iter = (pe_node_t *) gIter->data;
@@ -1845,9 +1845,9 @@ get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
 gboolean
 order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     pe_action_wrapper_t *wrapper = NULL;
-    GListPtr list = NULL;
+    GList *list = NULL;
 
     if (order == pe_order_none) {
         return FALSE;
@@ -1989,10 +1989,10 @@ pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags)
     }
 }
 
-static GListPtr
-find_unfencing_devices(GListPtr candidates, GListPtr matches) 
+static GList *
+find_unfencing_devices(GList *candidates, GList *matches) 
 {
-    for (GListPtr gIter = candidates; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *candidate = gIter->data;
         const char *provides = g_hash_table_lookup(candidate->meta,
                                                    PCMK_STONITH_PROVIDES);
@@ -2017,7 +2017,7 @@ node_priority_fencing_delay(pe_node_t * node, pe_working_set_t * data_set)
     int online_count = 0;
     int top_priority = 0;
     int lowest_priority = 0;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     // `priority-fencing-delay` is disabled
     if (data_set->priority_fencing_delay <= 0) {
@@ -2114,9 +2114,9 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
 
             char *digests_all = calloc(max, sizeof(char));
             char *digests_secure = calloc(max, sizeof(char));
-            GListPtr matches = find_unfencing_devices(data_set->resources, NULL);
+            GList *matches = find_unfencing_devices(data_set->resources, NULL);
 
-            for (GListPtr gIter = matches; gIter != NULL; gIter = gIter->next) {
+            for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
                 pe_resource_t *match = gIter->data;
                 const char *agent = g_hash_table_lookup(match->meta,
                                                         XML_ATTR_TYPE);
@@ -2222,7 +2222,7 @@ gboolean
 add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
 {
     pe_tag_t *tag = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean is_existing = FALSE;
 
     CRM_CHECK(tags && tag_name && obj_ref, return FALSE);
@@ -2434,9 +2434,9 @@ pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
 }
 
 bool
-pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list)
+pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list)
 {
-    for (GListPtr ele = rsc->running_on; ele; ele = ele->next) {
+    for (GList *ele = rsc->running_on; ele; ele = ele->next) {
         pe_node_t *node = (pe_node_t *) ele->data;
         if (pcmk__str_in_list(node_list, node->details->uname)) {
             return true;
@@ -2447,17 +2447,17 @@ pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list)
 }
 
 bool
-pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GListPtr only_node)
+pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GList *only_node)
 {
     return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any_node_in_list(rsc, only_node));
 }
 
-GListPtr
-pe__filter_rsc_list(GListPtr rscs, GListPtr filter)
+GList *
+pe__filter_rsc_list(GList *rscs, GList *filter)
 {
-    GListPtr retval = NULL;
+    GList *retval = NULL;
 
-    for (GListPtr gIter = rscs; gIter; gIter = gIter->next) {
+    for (GList *gIter = rscs; gIter; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
         /* I think the second condition is safe here for all callers of this

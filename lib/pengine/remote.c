@@ -120,7 +120,7 @@ void
 pe_foreach_guest_node(const pe_working_set_t *data_set, const pe_node_t *host,
                       void (*helper)(const pe_node_t*, void*), void *user_data)
 {
-    GListPtr iter;
+    GList *iter;
 
     CRM_CHECK(data_set && host && host->details && helper, return);
     if (!pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {

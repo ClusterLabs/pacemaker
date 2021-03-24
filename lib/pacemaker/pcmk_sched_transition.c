@@ -29,8 +29,8 @@
 
 static bool fake_quiet = FALSE;
 static cib_t *fake_cib = NULL;
-static GListPtr fake_resource_list = NULL;
-static GListPtr fake_op_fail_list = NULL;
+static GList *fake_resource_list = NULL;
+static GList *fake_op_fail_list = NULL;
 gboolean bringing_nodes_online = FALSE;
 
 #define STATUS_PATH_MAX 512
@@ -402,12 +402,12 @@ set_ticket_state_attr(const char *ticket_id, const char *attr_name,
 
 void
 modify_configuration(pe_working_set_t * data_set, cib_t *cib,
-                     const char *quorum, const char *watchdog, GListPtr node_up, GListPtr node_down, GListPtr node_fail,
-                     GListPtr op_inject, GListPtr ticket_grant, GListPtr ticket_revoke,
-                     GListPtr ticket_standby, GListPtr ticket_activate)
+                     const char *quorum, const char *watchdog, GList *node_up, GList *node_down, GList *node_fail,
+                     GList *op_inject, GList *ticket_grant, GList *ticket_revoke,
+                     GList *ticket_standby, GList *ticket_activate)
 {
     int rc = pcmk_ok;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
@@ -610,7 +610,7 @@ static gboolean
 exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 {
     int rc = 0;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     lrmd_event_data_t *op = NULL;
     int target_outcome = 0;
 
@@ -805,7 +805,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
 }
 
 int
-run_simulation(pe_working_set_t * data_set, cib_t *cib, GListPtr op_fail_list, bool quiet)
+run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list, bool quiet)
 {
     crm_graph_t *transition = NULL;
     enum transition_status graph_rc = -1;

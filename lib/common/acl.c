@@ -242,7 +242,7 @@ acl_to_text(enum xml_private_flags flags)
 void
 pcmk__apply_acl(xmlNode *xml)
 {
-    GListPtr aIter = NULL;
+    GList *aIter = NULL;
     xml_private_t *p = xml->doc->_private;
     xmlXPathObjectPtr xpathObj = NULL;
 
@@ -403,7 +403,7 @@ bool
 xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                       xmlNode **result)
 {
-    GListPtr aIter = NULL;
+    GList *aIter = NULL;
     xmlNode *target = NULL;
     xml_private_t *doc = NULL;
 

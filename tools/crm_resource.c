@@ -305,10 +305,10 @@ compare_id(gconstpointer a, gconstpointer b)
     return strcmp((const char *)a, (const char *)b);
 }
 
-static GListPtr
+static GList *
 build_constraint_list(xmlNode *root)
 {
-    GListPtr retval = NULL;
+    GList *retval = NULL;
     xmlNode *cib_constraints = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
     int ndx = 0;
@@ -960,7 +960,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         int count = 0;
-        GListPtr iter = NULL;
+        GList *iter = NULL;
 
         current = NULL;
         for(iter = rsc->children; iter; iter = iter->next) {
@@ -1029,10 +1029,10 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 static int
 clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 {
-    GListPtr before = NULL;
-    GListPtr after = NULL;
-    GListPtr remaining = NULL;
-    GListPtr ele = NULL;
+    GList *before = NULL;
+    GList *after = NULL;
+    GList *remaining = NULL;
+    GList *ele = NULL;
     pe_node_t *dest = NULL;
     int rc = pcmk_rc_ok;
 
@@ -1754,7 +1754,7 @@ main(int argc, char **argv)
 
     switch (options.rsc_cmd) {
         case cmd_list_resources: {
-            GListPtr all = NULL;
+            GList *all = NULL;
             all = g_list_prepend(all, strdup("*"));
             rc = out->message(out, "resource-list", data_set,
                               pe_print_rsconly | pe_print_pending,
@@ -1874,7 +1874,7 @@ main(int argc, char **argv)
             break;
 
         case cmd_locate: {
-            GListPtr nodes = cli_resource_search(rsc, options.rsc_id, data_set);
+            GList *nodes = cli_resource_search(rsc, options.rsc_id, data_set);
             rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
             g_list_free_full(nodes, free);
             break;

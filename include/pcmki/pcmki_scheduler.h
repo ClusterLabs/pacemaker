@@ -75,7 +75,7 @@ extern gboolean stage6(pe_working_set_t * data_set);
 extern gboolean stage7(pe_working_set_t * data_set);
 extern gboolean stage8(pe_working_set_t * data_set);
 
-extern gboolean summary(GListPtr resources);
+extern gboolean summary(GList *resources);
 
 extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
 
