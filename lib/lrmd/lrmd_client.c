@@ -226,7 +226,7 @@ lrmd_copy_event(lrmd_event_data_t * event)
     copy->output = event->output ? strdup(event->output) : NULL;
     copy->exit_reason = event->exit_reason ? strdup(event->exit_reason) : NULL;
     copy->remote_nodename = event->remote_nodename ? strdup(event->remote_nodename) : NULL;
-    copy->params = crm_str_table_dup(event->params);
+    copy->params = pcmk__str_table_dup(event->params);
 
     return copy;
 }

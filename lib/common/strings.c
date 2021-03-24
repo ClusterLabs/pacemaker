@@ -615,8 +615,18 @@ copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Copy a hash table that uses dynamically allocated strings
+ *
+ * \param[in] old_table  Hash table to duplicate
+ *
+ * \return New hash table with copies of everything in \p old_table
+ * \note This assumes the hash table uses dynamically allocated strings -- that
+ *       is, both the key and value free functions are free().
+ */
 GHashTable *
-crm_str_table_dup(GHashTable *old_table)
+pcmk__str_table_dup(GHashTable *old_table)
 {
     GHashTable *new_table = NULL;
 
@@ -1165,6 +1175,12 @@ guint
 crm_strcase_hash(gconstpointer v)
 {
     return pcmk__strcase_hash(v);
+}
+
+GHashTable *
+crm_str_table_dup(GHashTable *old_table)
+{
+    return pcmk__str_table_dup(old_table);
 }
 
 // End deprecated API

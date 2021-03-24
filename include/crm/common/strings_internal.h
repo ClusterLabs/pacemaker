@@ -46,6 +46,7 @@ GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                GDestroyNotify value_destroy_func);
 GHashTable *pcmk__strikey_table(GDestroyNotify key_destroy_func,
                                 GDestroyNotify value_destroy_func);
+GHashTable *pcmk__str_table_dup(GHashTable *old_table);
 
 gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
