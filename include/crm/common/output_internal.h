@@ -689,6 +689,21 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest);
 
 /*!
  * \internal
+ * \brief Set the log level used by the formatted output logger.
+ *
+ * \param[in,out] out       The output functions structure.
+ * \param[in]     log_level The log level constant (LOG_INFO, LOG_ERR, etc.)
+ *                          to use.
+ *
+ * \note By default, LOG_INFO is used.
+ * \note Almost all formatted output messages will respect this setting.
+ *       However, out->err will always log at LOG_ERR.
+ */
+void
+pcmk__output_set_log_level(pcmk__output_t *out, int log_level);
+
+/*!
+ * \internal
  * \brief Create and return a new XML node with the given name, as a child of the
  *        current list parent.  The new node is then added as the new list parent,
  *        meaning all subsequent nodes will be its children.  This is used when

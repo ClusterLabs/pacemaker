@@ -11,8 +11,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
-#include <crm/common/curses_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
@@ -76,6 +74,8 @@ curses_init(pcmk__output_t *out) {
 
 static void
 curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    CRM_ASSERT(out != NULL);
+
     echo();
     nocbreak();
     endwin();
@@ -92,6 +92,8 @@ curses_reset(pcmk__output_t *out) {
 static void
 curses_subprocess_output(pcmk__output_t *out, int exit_status,
                          const char *proc_stdout, const char *proc_stderr) {
+    CRM_ASSERT(out != NULL);
+
     if (proc_stdout != NULL) {
         printw("%s\n", proc_stdout);
     }
@@ -109,6 +111,8 @@ curses_subprocess_output(pcmk__output_t *out, int exit_status,
  */
 static void
 curses_ver(pcmk__output_t *out, bool extended) {
+    CRM_ASSERT(out != NULL);
+
     if (extended) {
         printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
@@ -121,6 +125,8 @@ G_GNUC_PRINTF(2, 3)
 static void
 curses_error(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
+
+    CRM_ASSERT(out != NULL);
 
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
@@ -142,6 +148,8 @@ static void
 curses_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
+    CRM_ASSERT(out != NULL);
+
     if (out->is_quiet(out)) {
         return;
     }
@@ -162,9 +170,7 @@ curses_info(pcmk__output_t *out, const char *format, ...) {
 
 static void
 curses_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
-    private_data_t *priv = out->priv;
-
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
     curses_indented_printf(out, "%s", buf);
 }
 
@@ -172,11 +178,12 @@ G_GNUC_PRINTF(4, 5)
 static void
 curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
                   const char *format, ...) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     curses_list_data_t *new_list = NULL;
     va_list ap;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     va_start(ap, format);
 
@@ -196,10 +203,9 @@ curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *pl
 G_GNUC_PRINTF(3, 4)
 static void
 curses_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
-    private_data_t *priv = out->priv;
     va_list ap;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     va_start(ap, format);
 
@@ -218,10 +224,12 @@ curses_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
 
 static void
 curses_increment_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     gpointer tail;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     tail = g_queue_peek_tail(priv->parent_q);
     CRM_ASSERT(tail != NULL);
     ((curses_list_data_t *) tail)->len++;
@@ -229,10 +237,12 @@ curses_increment_list(pcmk__output_t *out) {
 
 static void
 curses_end_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     curses_list_data_t *node = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     node = g_queue_pop_tail(priv->parent_q);
 
     if (node->singular_noun != NULL && node->plural_noun != NULL) {
@@ -248,16 +258,20 @@ curses_end_list(pcmk__output_t *out) {
 
 static bool
 curses_is_quiet(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     return out->quiet;
 }
 
 static void
 curses_spacer(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     addch('\n');
 }
 
 static void
 curses_progress(pcmk__output_t *out, bool end) {
+    CRM_ASSERT(out != NULL);
+
     if (end) {
         printw(".\n");
     } else {
@@ -478,6 +492,18 @@ pcmk__output_t *
 crm_mon_mk_curses_output(char **argv) {
     /* curses was disabled in the build, so fall back to text. */
     return pcmk__mk_text_output(argv);
+}
+
+G_GNUC_PRINTF(2, 0)
+void
+curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    return;
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+curses_formatted_printf(pcmk__output_t *out, const char *format, ...) {
+    return;
 }
 
 G_GNUC_PRINTF(2, 0)

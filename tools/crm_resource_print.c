@@ -252,7 +252,6 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     pe_resource_t *parent = uber_parent(checks->rsc);
-    int rc = pcmk_rc_no_output;
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
                                                    "id", parent->id,
@@ -274,7 +273,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
         crm_xml_add(node, "locked-to", checks->lock_node);
     }
 
-    return rc;
+    return pcmk_rc_ok;
 }
 
 PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "gchar *")

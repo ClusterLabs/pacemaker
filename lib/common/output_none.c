@@ -7,11 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <stdlib.h>
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/common/output_internal.h>
 
 GOptionEntry pcmk__none_output_entries[] = {
     { NULL }

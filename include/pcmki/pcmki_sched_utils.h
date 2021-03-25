@@ -98,4 +98,6 @@ void modify_configuration(
 
 int run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list, bool quiet);
 
+pcmk__output_t *pcmk__new_logger(void);
+
 #endif

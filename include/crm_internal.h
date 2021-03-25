@@ -32,6 +32,8 @@
 #  include <crm/common/logging_internal.h>
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
+#  include <crm/common/output_internal.h>
+#  include <crm/common/xml_internal.h>
 #  include <crm/common/internal.h>
 
 

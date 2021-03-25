@@ -7,9 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
+#include <crm_internal.h>
 
 #include <ctype.h>
 #include <libxml/HTMLtree.h>
@@ -17,10 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <crm/crm.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 static const char *stylesheet_default =
     ".bold { font-weight: bold }\n"
@@ -56,10 +51,18 @@ GOptionEntry pcmk__html_output_entries[] = {
     { NULL }
 };
 
+/* The first several elements of this struct must be the same as the first
+ * several elements of private_data_s in lib/common/output_xml.c.  This
+ * struct gets passed to a bunch of the pcmk__output_xml_* functions which
+ * assume an XML private_data_s.  Keeping them laid out the same means this
+ * still works.
+ */
 typedef struct private_data_s {
+    /* Begin members that must match the XML version */
     xmlNode *root;
     GQueue *parent_q;
     GSList *errors;
+    /* End members that must match the XML version */
 } private_data_t;
 
 static void
@@ -201,8 +204,8 @@ static void
 html_subprocess_output(pcmk__output_t *out, int exit_status,
                       const char *proc_stdout, const char *proc_stderr) {
     char *rc_buf = NULL;
-    private_data_t *priv = out->priv;
-    CRM_ASSERT(priv != NULL);
+
+    CRM_ASSERT(out != NULL);
 
     rc_buf = crm_strdup_printf("Return code: %d", exit_status);
 
@@ -223,8 +226,7 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 html_version(pcmk__output_t *out, bool extended) {
-    private_data_t *priv = out->priv;
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     pcmk__output_create_xml_text_node(out, "h2", "Version Information");
     pcmk__output_create_html_node(out, "div", NULL, NULL, "Program: Pacemaker");
@@ -237,12 +239,14 @@ html_version(pcmk__output_t *out, bool extended) {
 G_GNUC_PRINTF(2, 3)
 static void
 html_err(pcmk__output_t *out, const char *format, ...) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     int len = 0;
     char *buf = NULL;
     va_list ap;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
     CRM_ASSERT(len >= 0);
@@ -260,9 +264,8 @@ html_info(pcmk__output_t *out, const char *format, ...) {
 static void
 html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     htmlNodePtr node = NULL;
-    private_data_t *priv = out->priv;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
     crm_xml_add(node, "lang", "xml");
@@ -273,10 +276,11 @@ static void
 html_begin_list(pcmk__output_t *out, const char *singular_noun,
                 const char *plural_noun, const char *format, ...) {
     int q_len = 0;
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     xmlNodePtr node = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     /* If we are already in a list (the queue depth is always at least
      * one because of the <html> element), first create a <li> element
@@ -313,13 +317,12 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
 G_GNUC_PRINTF(3, 4)
 static void
 html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
-    private_data_t *priv = out->priv;
     htmlNodePtr item_node = NULL;
     va_list ap;
     char *buf = NULL;
     int len;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     va_start(ap, format);
     len = vasprintf(&buf, format, ap);
@@ -341,9 +344,10 @@ html_increment_list(pcmk__output_t *out) {
 
 static void
 html_end_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     /* Remove the <ul> tag. */
     g_queue_pop_tail(priv->parent_q);
@@ -362,6 +366,7 @@ html_is_quiet(pcmk__output_t *out) {
 
 static void
 html_spacer(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     pcmk__output_create_xml_node(out, "br", NULL);
 }
 
@@ -411,7 +416,11 @@ pcmk__mk_html_output(char **argv) {
 xmlNodePtr
 pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
                        const char *class_name, const char *text) {
-    htmlNodePtr node = pcmk__output_create_xml_text_node(out, element_name, text);
+    htmlNodePtr node = NULL;
+
+    CRM_ASSERT(out != NULL);
+
+    node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
         crm_xml_add(node, "class", class_name);
