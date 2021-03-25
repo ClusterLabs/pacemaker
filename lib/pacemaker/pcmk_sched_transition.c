@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,21 +27,13 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
-static bool fake_quiet = FALSE;
+static pcmk__output_t *out = NULL;
 static cib_t *fake_cib = NULL;
 static GList *fake_resource_list = NULL;
 static GList *fake_op_fail_list = NULL;
 gboolean bringing_nodes_online = FALSE;
 
 #define STATUS_PATH_MAX 512
-
-#define quiet_log(fmt, args...) do {              \
-              if(fake_quiet) {                         \
-                  crm_trace(fmt, ##args);         \
-              } else {                            \
-                  printf(fmt , ##args);           \
-              }                                   \
-    } while(0)
 
 #define NEW_NODE_TEMPLATE "//"XML_CIB_TAG_NODE"[@uname='%s']"
 #define NODE_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']"
@@ -53,13 +45,9 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
 {
     xmlNode *attrs = NULL;
     xmlNode *instance_attrs = NULL;
-    xmlChar *node_path;
     const char *node_uuid = ID(cib_node);
 
-    node_path = xmlGetNodePath(cib_node);
-    quiet_log(" + Injecting attribute %s=%s into %s '%s'\n",
-              name, value, node_path, ID(cib_node));
-    free(node_path);
+    out->message(out, "inject-attr", name, value, cib_node);
 
     attrs = first_named_child(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
     if (attrs == NULL) {
@@ -275,19 +263,19 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
     /* One day, add query for class, provider, type */
 
     if (rclass == NULL || rtype == NULL) {
-        fprintf(stderr, "Resource %s not found in the status section of %s."
-                "  Please supply the class and type to continue\n", resource, ID(cib_node));
+        out->err(out, "Resource %s not found in the status section of %s."
+                 "  Please supply the class and type to continue", resource, ID(cib_node));
         return NULL;
 
     } else if (!pcmk__strcase_any_of(rclass, PCMK_RESOURCE_CLASS_OCF, PCMK_RESOURCE_CLASS_STONITH,
                                      PCMK_RESOURCE_CLASS_SERVICE, PCMK_RESOURCE_CLASS_UPSTART,
                                      PCMK_RESOURCE_CLASS_SYSTEMD, PCMK_RESOURCE_CLASS_LSB, NULL)) {
-        fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
+        out->err(out, "Invalid class for %s: %s", resource, rclass);
         return NULL;
 
     } else if (pcmk_is_set(pcmk_get_ra_caps(rclass), pcmk_ra_cap_provider)
                 && (rprovider == NULL)) {
-        fprintf(stderr, "Please specify the provider for resource %s\n", resource);
+        out->err(out, "Please specify the provider for resource %s", resource);
         return NULL;
     }
 
@@ -352,7 +340,7 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     crm_log_xml_debug(xml_search, "Match");
     if (xml_has_children(xml_search)) {
         if (ticket_id) {
-            fprintf(stdout, "Multiple ticket_states match ticket_id=%s\n", ticket_id);
+            out->err(out, "Multiple ticket_states match ticket_id=%s", ticket_id);
         }
         *ticket_state_xml = xml_search;
     } else {
@@ -415,10 +403,13 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
     lrmd_event_data_t *op = NULL;
 
+    out = data_set->priv;
+
+    out->message(out, "inject-modify-config", quorum, watchdog);
+
     if (quorum) {
         xmlNode *top = create_xml_node(NULL, XML_TAG_CIB);
 
-        quiet_log(" + Setting quorum: %s\n", quorum);
         /* crm_xml_add(top, XML_ATTR_DC_UUID, dc_uuid);      */
         crm_xml_add(top, XML_ATTR_HAVE_QUORUM, quorum);
 
@@ -427,8 +418,6 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
     }
 
     if (watchdog) {
-        quiet_log(" + Setting watchdog: %s\n", watchdog);
-
         rc = update_attr_delegate(cib, cib_sync_call | cib_scope_local,
                              XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                              XML_ATTR_HAVE_WATCHDOG, watchdog, FALSE, NULL, NULL);
@@ -439,7 +428,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
     for (gIter = node_up; gIter != NULL; gIter = gIter->next) {
         char *node = (char *)gIter->data;
 
-        quiet_log(" + Bringing node %s online\n", node);
+        out->message(out, "inject-modify-node", "Online", node);
+
         cib_node = modify_node(cib, node, TRUE);
         CRM_ASSERT(cib_node != NULL);
 
@@ -453,7 +443,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         char xpath[STATUS_PATH_MAX];
         char *node = (char *)gIter->data;
 
-        quiet_log(" + Taking node %s offline\n", node);
+        out->message(out, "inject-modify-node", "Offline", node);
+
         cib_node = modify_node(cib, node, FALSE);
         CRM_ASSERT(cib_node != NULL);
 
@@ -476,7 +467,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
     for (gIter = node_fail; gIter != NULL; gIter = gIter->next) {
         char *node = (char *)gIter->data;
 
-        quiet_log(" + Failing node %s\n", node);
+        out->message(out, "inject-modify-node", "Failing", node);
+
         cib_node = modify_node(cib, node, TRUE);
         crm_xml_add(cib_node, XML_NODE_IN_CLUSTER, XML_BOOLEAN_NO);
         CRM_ASSERT(cib_node != NULL);
@@ -490,7 +482,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
     for (gIter = ticket_grant; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
-        quiet_log(" + Granting ticket %s\n", ticket_id);
+        out->message(out, "inject-modify-ticket", "Granting", ticket_id);
+
         rc = set_ticket_state_attr(ticket_id, "granted", "true",
                                    cib, cib_sync_call | cib_scope_local);
 
@@ -500,7 +493,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
     for (gIter = ticket_revoke; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
-        quiet_log(" + Revoking ticket %s\n", ticket_id);
+        out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
+
         rc = set_ticket_state_attr(ticket_id, "granted", "false",
                                    cib, cib_sync_call | cib_scope_local);
 
@@ -510,7 +504,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
     for (gIter = ticket_standby; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
-        quiet_log(" + Making ticket %s standby\n", ticket_id);
+        out->message(out, "inject-modify-ticket", "Standby", ticket_id);
+
         rc = set_ticket_state_attr(ticket_id, "standby", "true",
                                    cib, cib_sync_call | cib_scope_local);
 
@@ -520,7 +515,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
     for (gIter = ticket_activate; gIter != NULL; gIter = gIter->next) {
         char *ticket_id = (char *)gIter->data;
 
-        quiet_log(" + Activating ticket %s\n", ticket_id);
+        out->message(out, "inject-modify-ticket", "Activating", ticket_id);
+
         rc = set_ticket_state_attr(ticket_id, "standby", "false",
                                    cib, cib_sync_call | cib_scope_local);
 
@@ -545,13 +541,13 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
         pe_resource_t *rsc = NULL;
 
-        quiet_log(" + Injecting %s into the configuration\n", spec);
+        out->message(out, "inject-spec", spec);
 
         key = calloc(1, strlen(spec) + 1);
         node = calloc(1, strlen(spec) + 1);
         rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
         if (rc != 3) {
-            fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc);
+            out->err(out, "Invalid operation spec: %s.  Only found %d fields", spec, rc);
             free(key);
             free(node);
             continue;
@@ -561,7 +557,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
         rsc = pe_find_resource(data_set->resources, resource);
         if (rsc == NULL) {
-            fprintf(stderr, " - Invalid resource name: %s\n", resource);
+            out->err(out, "Invalid resource name: %s", resource);
         } else {
             rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
             rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
@@ -591,6 +587,10 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         free(node);
         free(key);
     }
+
+    if (!out->is_quiet(out)) {
+        out->end_list(out);
+    }
 }
 
 static gboolean
@@ -600,8 +600,8 @@ exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
     const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 
     action->confirmed = TRUE;
+    out->message(out, "inject-pseudo-action", node, task);
 
-    quiet_log(" * Pseudo action:   %s%s%s\n", task, node ? " on " : "", node ? node : "");
     update_graph(graph, action);
     return TRUE;
 }
@@ -657,7 +657,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     if (pcmk__strcase_any_of(operation, "delete", RSC_METADATA, NULL)) {
-        quiet_log(" * Resource action: %-15s %s on %s\n", resource, operation, node);
+        out->message(out, "inject-rsc-action", resource, operation, node, (guint) 0);
         goto done;
     }
 
@@ -685,12 +685,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
-    if (op->interval_ms) {
-        quiet_log(" * Resource action: %-15s %s=%u on %s\n",
-                  resource, op->op_type, op->interval_ms, node);
-    } else {
-        quiet_log(" * Resource action: %-15s %s on %s\n", resource, op->op_type, node);
-    }
+
+    out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
 
     for (gIter = fake_op_fail_list; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
@@ -720,14 +716,14 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
             // ${match_name}_${task}_${interval_in_ms}@${node}=${rc}
 
             if (rc != 1) {
-                fprintf(stderr,
-                        "Invalid failed operation spec: %s. Result code must be integer\n",
-                        spec);
+                out->err(out,
+                         "Invalid failed operation spec: %s. Result code must be integer",
+                         spec);
                 continue;
             }
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
-            printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
+            out->info(out, "Pretending action %d failed with rc=%d", action->id, op->rc);
             update_failcounts(cib_node, match_name, op->op_type,
                               op->interval_ms, op->rc);
             break;
@@ -757,12 +753,7 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
     xmlNode *rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
 
     action->confirmed = TRUE;
-
-    if(rsc) {
-        quiet_log(" * Cluster action:  %s for %s on %s\n", task, ID(rsc), node);
-    } else {
-        quiet_log(" * Cluster action:  %s on %s\n", task, node);
-    }
+    out->message(out, "inject-cluster-action", node, task, rsc);
     update_graph(graph, action);
     return TRUE;
 }
@@ -773,7 +764,8 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     const char *op = crm_meta_value(action->params, "stonith_action");
     char *target = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
 
-    quiet_log(" * Fencing %s (%s)\n", target, op);
+    out->message(out, "inject-fencing-action", target, op);
+
     if(!pcmk__str_eq(op, "on", pcmk__str_casei)) {
         int rc = 0;
         char xpath[STATUS_PATH_MAX];
@@ -805,7 +797,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
 }
 
 int
-run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list, bool quiet)
+run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 {
     crm_graph_t *transition = NULL;
     enum transition_status graph_rc = -1;
@@ -817,11 +809,14 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list, boo
         exec_stonith_action,
     };
 
+    out = data_set->priv;
+
     fake_cib = cib;
-    fake_quiet = quiet;
     fake_op_fail_list = op_fail_list;
 
-    quiet_log("\nExecuting cluster transition:\n");
+    if (!out->is_quiet(out)) {
+        out->begin_list(out, NULL, NULL, "Executing Cluster Transition");
+    }
 
     set_graph_functions(&exec_fns);
     transition = unpack_graph(data_set->graph, crm_system_name);
@@ -835,21 +830,23 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list, boo
     fake_resource_list = NULL;
 
     if (graph_rc != transition_complete) {
-        fprintf(stdout, "Transition failed: %s\n", transition_status(graph_rc));
+        out->err(out, "Transition failed: %s", transition_status(graph_rc));
         print_graph(LOG_ERR, transition);
     }
     destroy_graph(transition);
     if (graph_rc != transition_complete) {
-        fprintf(stdout, "An invalid transition was produced\n");
+        out->err(out, "An invalid transition was produced");
     }
 
-    if (quiet == FALSE) {
+    if (!out->is_quiet(out)) {
         xmlNode *cib_object = NULL;
         int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
         pe_reset_working_set(data_set);
         data_set->input = cib_object;
+
+        out->end_list(out);
     }
 
     if (graph_rc != transition_complete) {

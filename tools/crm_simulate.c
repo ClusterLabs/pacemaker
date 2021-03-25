@@ -973,11 +973,12 @@ main(int argc, char **argv)
     }
 
     if (options.modified) {
-        out->info(out, "Performing requested modifications");
+        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
         modify_configuration(data_set, global_cib, options.quorum, options.watchdog, options.node_up,
                              options.node_down, options.node_fail, options.op_inject,
                              options.ticket_grant, options.ticket_revoke, options.ticket_standby,
                              options.ticket_activate);
+        printed = pcmk_rc_ok;
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
         if (rc != pcmk_rc_ok) {
@@ -1072,7 +1073,7 @@ main(int argc, char **argv)
 
     if (options.simulate) {
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        if (run_simulation(data_set, global_cib, options.op_fail, out->is_quiet(out)) != pcmk_rc_ok) {
+        if (run_simulation(data_set, global_cib, options.op_fail) != pcmk_rc_ok) {
             rc = pcmk_rc_error;
         }
 

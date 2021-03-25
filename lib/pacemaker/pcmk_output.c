@@ -1060,6 +1060,389 @@ node_action_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("inject-cluster-action", "const char *", "const char *", "xmlNodePtr")
+static int
+inject_cluster_action(pcmk__output_t *out, va_list args)
+{
+    const char *node = va_arg(args, const char *);
+    const char *task = va_arg(args, const char *);
+    xmlNodePtr rsc = va_arg(args, xmlNodePtr);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    if(rsc) {
+        out->list_item(out, NULL, "Cluster action:  %s for %s on %s", task, ID(rsc), node);
+    } else {
+        out->list_item(out, NULL, "Cluster action:  %s on %s", task, node);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-cluster-action", "const char *", "const char *", "xmlNodePtr")
+static int
+inject_cluster_action_xml(pcmk__output_t *out, va_list args)
+{
+    const char *node = va_arg(args, const char *);
+    const char *task = va_arg(args, const char *);
+    xmlNodePtr rsc = va_arg(args, xmlNodePtr);
+
+    xmlNodePtr xml_node = NULL;
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    xml_node = pcmk__output_create_xml_node(out, "cluster_action",
+                                            "task", task,
+                                            "node", node,
+                                            NULL);
+
+    if (rsc) {
+        crm_xml_add(xml_node, "id", ID(rsc));
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-fencing-action", "char *", "const char *")
+static int
+inject_fencing_action(pcmk__output_t *out, va_list args)
+{
+    char *target = va_arg(args, char *);
+    const char *op = va_arg(args, const char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    out->list_item(out, NULL, "Fencing %s (%s)", target, op);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-fencing-action", "char *", "const char *")
+static int
+inject_fencing_action_xml(pcmk__output_t *out, va_list args)
+{
+    char *target = va_arg(args, char *);
+    const char *op = va_arg(args, const char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_create_xml_node(out, "fencing_action",
+                                 "target", target,
+                                 "op", op,
+                                 NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-attr", "const char *", "const char *", "xmlNodePtr")
+static int
+inject_attr(pcmk__output_t *out, va_list args)
+{
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    xmlNodePtr cib_node = va_arg(args, xmlNodePtr);
+
+    xmlChar *node_path = NULL;
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    node_path = xmlGetNodePath(cib_node);
+
+    out->list_item(out, NULL, "Injecting attribute %s=%s into %s '%s'",
+                   name, value, node_path, ID(cib_node));
+
+    free(node_path);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-attr", "const char *", "const char *", "xmlNodePtr")
+static int
+inject_attr_xml(pcmk__output_t *out, va_list args)
+{
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+    xmlNodePtr cib_node = va_arg(args, xmlNodePtr);
+
+    xmlChar *node_path = NULL;
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    node_path = xmlGetNodePath(cib_node);
+
+    pcmk__output_create_xml_node(out, "inject_attr",
+                                 "name", name,
+                                 "value", value,
+                                 "node_path", node_path,
+                                 "cib_node", ID(cib_node),
+                                 NULL);
+    free(node_path);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-spec", "char *")
+static int
+inject_spec(pcmk__output_t *out, va_list args)
+{
+    char *spec = va_arg(args, char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    out->list_item(out, NULL, "Injecting %s into the configuration", spec);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-spec", "char *")
+static int
+inject_spec_xml(pcmk__output_t *out, va_list args)
+{
+    char *spec = va_arg(args, char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_create_xml_node(out, "inject_spec",
+                                 "spec", spec,
+                                 NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+static int
+inject_modify_config(pcmk__output_t *out, va_list args)
+{
+    const char *quorum = va_arg(args, const char *);
+    const char *watchdog = va_arg(args, const char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    out->begin_list(out, NULL, NULL, "Performing Requested Modifications");
+
+    if (quorum) {
+        out->list_item(out, NULL, "Setting quorum: %s", quorum);
+    }
+
+    if (watchdog) {
+        out->list_item(out, NULL, "Setting watchdog: %s", watchdog);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-modify-config", "const char *", "const char *")
+static int
+inject_modify_config_xml(pcmk__output_t *out, va_list args)
+{
+    const char *quorum = va_arg(args, const char *);
+    const char *watchdog = va_arg(args, const char *);
+
+    xmlNodePtr node = NULL;
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    node = pcmk__output_xml_create_parent(out, "modifications", NULL);
+
+    if (quorum) {
+        crm_xml_add(node, "quorum", quorum);
+    }
+
+    if (watchdog) {
+        crm_xml_add(node, "watchdog", watchdog);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-modify-node", "const char *", "char *")
+static int
+inject_modify_node(pcmk__output_t *out, va_list args)
+{
+    const char *action = va_arg(args, const char *);
+    char *node = va_arg(args, char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    if (pcmk__str_eq(action, "Online", pcmk__str_none)) {
+        out->list_item(out, NULL, "Bringing node %s online", node);
+        return pcmk_rc_ok;
+    } else if (pcmk__str_eq(action, "Offline", pcmk__str_none)) {
+        out->list_item(out, NULL, "Taking node %s offline", node);
+        return pcmk_rc_ok;
+    } else if (pcmk__str_eq(action, "Failing", pcmk__str_none)) {
+        out->list_item(out, NULL, "Failing node %s", node);
+        return pcmk_rc_ok;
+    }
+
+    return pcmk_rc_no_output;
+}
+
+PCMK__OUTPUT_ARGS("inject-modify-node", "const char *", "char *")
+static int
+inject_modify_node_xml(pcmk__output_t *out, va_list args)
+{
+    const char *action = va_arg(args, const char *);
+    char *node = va_arg(args, char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_create_xml_node(out, "modify_node",
+                                 "action", action,
+                                 "node", node,
+                                 NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-modify-ticket", "const char *", "char *")
+static int
+inject_modify_ticket(pcmk__output_t *out, va_list args)
+{
+    const char *action = va_arg(args, const char *);
+    char *ticket = va_arg(args, char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    if (pcmk__str_eq(action, "Standby", pcmk__str_none)) {
+        out->list_item(out, NULL, "Making ticket %s standby", ticket);
+    } else {
+        out->list_item(out, NULL, "%s ticket %s", action, ticket);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-modify-ticket", "const char *", "char *")
+static int
+inject_modify_ticket_xml(pcmk__output_t *out, va_list args)
+{
+    const char *action = va_arg(args, const char *);
+    char *ticket = va_arg(args, char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_create_xml_node(out, "modify_ticket",
+                                 "action", action,
+                                 "ticket", ticket,
+                                 NULL);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-pseudo-action", "const char *", "const char *")
+static int
+inject_pseudo_action(pcmk__output_t *out, va_list args)
+{
+    const char *node = va_arg(args, const char *);
+    const char *task = va_arg(args, const char *);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    out->list_item(out, NULL, "Pseudo action:   %s%s%s", task, node ? " on " : "",
+                   node ? node : "");
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-pseudo-action", "const char *", "const char *")
+static int
+inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
+{
+    const char *node = va_arg(args, const char *);
+    const char *task = va_arg(args, const char *);
+
+    xmlNodePtr xml_node = NULL;
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    xml_node = pcmk__output_create_xml_node(out, "pseudo_action",
+                                            "task", task,
+                                            NULL);
+    if (node) {
+        crm_xml_add(xml_node, "node", node);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *", "char *", "guint")
+static int
+inject_rsc_action(pcmk__output_t *out, va_list args)
+{
+    const char *rsc = va_arg(args, const char *);
+    const char *operation = va_arg(args, const char *);
+    char *node = va_arg(args, char *);
+    guint interval_ms = va_arg(args, guint);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    if (interval_ms) {
+        out->list_item(out, NULL, "Resource action: %-15s %s=%u on %s",
+                       rsc, operation, interval_ms, node);
+    } else {
+        out->list_item(out, NULL, "Resource action: %-15s %s on %s",
+                       rsc, operation, node);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *", "char *", "guint")
+static int
+inject_rsc_action_xml(pcmk__output_t *out, va_list args)
+{
+    const char *rsc = va_arg(args, const char *);
+    const char *operation = va_arg(args, const char *);
+    char *node = va_arg(args, char *);
+    guint interval_ms = va_arg(args, guint);
+
+    xmlNodePtr xml_node = NULL;
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
+
+    xml_node = pcmk__output_create_xml_node(out, "rsc_action",
+                                            "resource", rsc,
+                                            "op", operation,
+                                            "node", node,
+                                            NULL);
+
+    if (interval_ms) {
+        char *interval_s = crm_itoa(interval_ms);
+        crm_xml_add(xml_node, "interval", interval_s);
+        free(interval_s);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "crmadmin-node", "default", crmadmin_node_text },
     { "crmadmin-node", "xml", crmadmin_node_xml },
@@ -1069,6 +1452,24 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "digests", "xml", digests_xml },
     { "health", "default", health_text },
     { "health", "xml", health_xml },
+    { "inject-attr", "default", inject_attr },
+    { "inject-attr", "xml", inject_attr_xml },
+    { "inject-cluster-action", "default", inject_cluster_action },
+    { "inject-cluster-action", "xml", inject_cluster_action_xml },
+    { "inject-fencing-action", "default", inject_fencing_action },
+    { "inject-fencing-action", "xml", inject_fencing_action_xml },
+    { "inject-modify-config", "default", inject_modify_config },
+    { "inject-modify-config", "xml", inject_modify_config_xml },
+    { "inject-modify-node", "default", inject_modify_node },
+    { "inject-modify-node", "xml", inject_modify_node_xml },
+    { "inject-modify-ticket", "default", inject_modify_ticket },
+    { "inject-modify-ticket", "xml", inject_modify_ticket_xml },
+    { "inject-pseudo-action", "default", inject_pseudo_action },
+    { "inject-pseudo-action", "xml", inject_pseudo_action_xml },
+    { "inject-rsc-action", "default", inject_rsc_action },
+    { "inject-rsc-action", "xml", inject_rsc_action_xml },
+    { "inject-spec", "default", inject_spec },
+    { "inject-spec", "xml", inject_spec_xml },
     { "locations-list", "default", locations_list },
     { "locations-list", "xml", locations_list_xml },
     { "node-action", "default", node_action },
