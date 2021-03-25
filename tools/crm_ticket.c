@@ -419,7 +419,7 @@ modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * att
             && (ticket == NULL || ticket->granted == FALSE)
             && crm_is_true(value)) {
 
-            char *now = crm_ttoa(time(NULL));
+            char *now = pcmk__ttoa(time(NULL));
 
             crm_xml_add(ticket_state_xml, "last-granted", now);
             free(now);

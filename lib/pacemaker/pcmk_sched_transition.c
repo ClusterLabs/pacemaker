@@ -76,7 +76,7 @@ update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
 
     } else {
         char *name = NULL;
-        char *now = crm_ttoa(time(NULL));
+        char *now = pcmk__ttoa(time(NULL));
 
         name = pcmk__failcount_name(resource, task, interval_ms);
         inject_transient_attr(cib_node, name, "value++");

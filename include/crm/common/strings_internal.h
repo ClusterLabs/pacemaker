@@ -180,6 +180,12 @@ pcmk__ftoa(double a_float)
     return crm_strdup_printf("%f", a_float);
 }
 
+static inline char *
+pcmk__ttoa(time_t epoch_time)
+{
+    return crm_strdup_printf("%lld", (long long) epoch_time);
+}
+
 // note this returns const not allocated
 static inline const char *
 pcmk__btoa(bool condition)

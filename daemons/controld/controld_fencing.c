@@ -756,7 +756,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
             te_action_confirmed(action, NULL);
             if (pcmk__str_eq("on", op, pcmk__str_casei)) {
                 const char *value = NULL;
-                char *now = crm_ttoa(time(NULL));
+                char *now = pcmk__ttoa(time(NULL));
 
                 update_attrd(target, CRM_ATTR_UNFENCED, now, NULL, FALSE);
                 free(now);
