@@ -981,10 +981,10 @@ shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
     time_t result = 0;
 
     if (shutdown) {
-        errno = 0;
-        result = (time_t) crm_parse_ll(shutdown, NULL);
-        if (errno != 0) {
-            result = 0;
+        long long result_ll;
+
+        if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
+            result = (time_t) result_ll;
         }
     }
     return result? result : get_effective_time(data_set);
@@ -2940,6 +2940,7 @@ stage8(pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
     const char *value = NULL;
+    long long limit = 0LL;
 
     transition_id++;
     crm_trace("Creating transition graph %d.", transition_id);
@@ -2966,7 +2967,7 @@ stage8(pe_working_set_t * data_set)
     crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 
     value = pe_pref(data_set->config_hash, "migration-limit");
-    if (crm_parse_ll(value, NULL) > 0) {
+    if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
         crm_xml_add(data_set->graph, "migration-limit", value);
     }
 

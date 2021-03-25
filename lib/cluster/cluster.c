@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -244,14 +244,15 @@ crm_peer_uname(const char *uuid)
 
 #if SUPPORT_COROSYNC
     if (is_corosync_cluster()) {
-        uint32_t id = (uint32_t) crm_parse_ll(uuid, NULL);
+        long long id;
 
-        if (id != 0) {
-            node = pcmk__search_cluster_node_cache(id, NULL);
-        } else {
-            crm_err("Invalid node id: %s", uuid);
+        if ((pcmk__scan_ll(uuid, &id, 0LL) != pcmk_rc_ok)
+            || (id < 1LL) || (id > UINT32_MAX))  {
+            crm_err("Invalid Corosync node ID '%s'", uuid);
+            return NULL;
         }
 
+        node = pcmk__search_cluster_node_cache((uint32_t) id, NULL);
         if (node != NULL) {
             crm_info("Setting uuid for node %s[%u] to %s",
                      node->uname, node->id, uuid);

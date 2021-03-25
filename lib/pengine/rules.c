@@ -910,13 +910,13 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             cmp = strcasecmp(l_val, r_val);
 
         } else if (pcmk__str_eq(type, "integer", pcmk__str_casei)) {
-            long long l_val_num = crm_parse_ll(l_val, NULL);
-            int rc1 = errno;
+            long long l_val_num;
+            int rc1 = pcmk__scan_ll(l_val, &l_val_num, 0LL);
 
-            long long r_val_num = crm_parse_ll(r_val, NULL);
-            int rc2 = errno;
+            long long r_val_num;
+            int rc2 = pcmk__scan_ll(r_val, &r_val_num, 0LL);
 
-            if (rc1 == 0 && rc2 == 0) {
+            if ((rc1 == pcmk_rc_ok) && (rc2 == pcmk_rc_ok)) {
                 if (l_val_num < r_val_num) {
                     cmp = -1;
                 } else if (l_val_num > r_val_num) {

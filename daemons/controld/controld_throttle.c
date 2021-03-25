@@ -405,14 +405,14 @@ throttle_set_load_target(float target)
 void
 throttle_update_job_max(const char *preference)
 {
-    long long max = -1;
+    long long max = 0LL;
     const char *env_limit = getenv("PCMK_node_action_limit");
 
     if (env_limit != NULL) {
         preference = env_limit; // Per-node override
     }
-    if (preference) {
-        max = crm_parse_ll(preference, NULL);
+    if (preference != NULL) {
+        pcmk__scan_ll(preference, &max, 0LL);
     }
     if (max > 0) {
         throttle_job_max = (int) max;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -270,8 +270,11 @@ compare_int_fields(xmlNode * left, xmlNode * right, const char *field)
     const char *elem_l = crm_element_value(left, field);
     const char *elem_r = crm_element_value(right, field);
 
-    long long int_elem_l = elem_l? crm_parse_ll(elem_l, NULL) : -1;
-    long long int_elem_r = elem_r? crm_parse_ll(elem_r, NULL) : -1;
+    long long int_elem_l;
+    long long int_elem_r;
+
+    pcmk__scan_ll(elem_l, &int_elem_l, -1LL);
+    pcmk__scan_ll(elem_r, &int_elem_r, -1LL);
 
     if (int_elem_l < int_elem_r) {
         return -1;

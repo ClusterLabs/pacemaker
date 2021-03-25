@@ -162,9 +162,8 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         if (interval_s != NULL) {
             long long value_ll;
 
-            errno = 0;
-            value_ll = crm_parse_ll(interval_s, NULL);
-            if ((errno == 0) && (value_ll >= 0) && (value_ll <= G_MAXUINT)) {
+            if ((pcmk__scan_ll(interval_s, &value_ll, 0LL) == pcmk_rc_ok)
+                && (value_ll >= 0) && (value_ll <= G_MAXUINT)) {
                 *interval_ms = (guint) value_ll;
             }
         }
