@@ -174,6 +174,12 @@ pcmk__itoa(int an_int)
     return crm_strdup_printf("%d", an_int);
 }
 
+static inline char *
+pcmk__ftoa(double a_float)
+{
+    return crm_strdup_printf("%f", a_float);
+}
+
 // note this returns const not allocated
 static inline const char *
 pcmk__btoa(bool condition)

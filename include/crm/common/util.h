@@ -49,12 +49,6 @@ char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
 static inline char *
-crm_ftoa(double a_float)
-{
-    return crm_strdup_printf("%f", a_float);
-}
-
-static inline char *
 crm_ttoa(time_t epoch_time)
 {
     return crm_strdup_printf("%lld", (long long) epoch_time);
