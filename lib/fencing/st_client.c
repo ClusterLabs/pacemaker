@@ -1271,15 +1271,13 @@ stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
     if (all_callbacks) {
         private->op_callback = NULL;
         g_hash_table_destroy(private->stonith_op_callback_table);
-        private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                                   NULL,
-                                                                   stonith_destroy_op_callback);
+        private->stonith_op_callback_table = pcmk__intkey_table(stonith_destroy_op_callback);
 
     } else if (call_id == 0) {
         private->op_callback = NULL;
 
     } else {
-        g_hash_table_remove(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+        pcmk__intkey_table_remove(private->stonith_op_callback_table, call_id);
     }
     return pcmk_ok;
 }
@@ -1321,8 +1319,8 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
 
     CRM_CHECK(call_id > 0, crm_log_xml_err(msg, "Bad result"));
 
-    blob = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
-
+    blob = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
+                                     call_id);
     if (blob != NULL) {
         local_blob = *blob;
         blob = NULL;
@@ -1398,7 +1396,8 @@ update_callback_timeout(int call_id, int timeout, stonith_t * st)
     stonith_callback_client_t *callback = NULL;
     stonith_private_t *private = st->st_private;
 
-    callback = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+    callback = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
+                                         call_id);
     if (!callback || !callback->allow_timeout_updates) {
         return;
     }
@@ -1683,7 +1682,8 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
         set_callback_timeout(blob, stonith, call_id, timeout);
     }
 
-    g_hash_table_insert(private->stonith_op_callback_table, GINT_TO_POINTER(call_id), blob);
+    pcmk__intkey_table_insert(private->stonith_op_callback_table, call_id,
+                              blob);
     crm_trace("Added callback to %s for call %d", callback_name, call_id);
 
     return TRUE;
@@ -2111,8 +2111,7 @@ stonith_api_new(void)
     }
     new_stonith->st_private = private;
 
-    private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                               NULL, stonith_destroy_op_callback);
+    private->stonith_op_callback_table = pcmk__intkey_table(stonith_destroy_op_callback);
     private->notify_list = NULL;
     private->notify_refcnt = 0;
     private->notify_deletes = FALSE;

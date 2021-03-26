@@ -445,12 +445,12 @@ check_local_notify(int bcast_id)
         return;
     }
 
-    notify = g_hash_table_lookup(local_notify_queue, GINT_TO_POINTER(bcast_id));
+    notify = pcmk__intkey_table_lookup(local_notify_queue, bcast_id);
 
     if (notify) {
         do_local_notify(notify->notify_src, notify->client_id, notify->sync_reply,
                         notify->from_peer);
-        g_hash_table_remove(local_notify_queue, GINT_TO_POINTER(bcast_id));
+        pcmk__intkey_table_remove(local_notify_queue, bcast_id);
     }
 }
 
@@ -466,12 +466,9 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
     notify->from_peer = from_peer;
 
     if (!local_notify_queue) {
-        local_notify_queue = g_hash_table_new_full(g_direct_hash,
-                                                   g_direct_equal, NULL,
-                                                   local_notify_destroy_callback);
+        local_notify_queue = pcmk__intkey_table(local_notify_destroy_callback);
     }
-
-    g_hash_table_insert(local_notify_queue, GINT_TO_POINTER(cib_local_bcast_num), notify);
+    pcmk__intkey_table_insert(local_notify_queue, cib_local_bcast_num, notify);
     // cppcheck doesn't know notify will get freed when hash table is destroyed
     // cppcheck-suppress memleak
 }

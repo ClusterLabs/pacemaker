@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -641,7 +641,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
     }
 
     crm_trace("Adding callback %s for call %d", callback_name, call_id);
-    g_hash_table_insert(cib_op_callback_table, GINT_TO_POINTER(call_id), blob);
+    pcmk__intkey_table_insert(cib_op_callback_table, call_id, blob);
 
     return TRUE;
 }
@@ -651,10 +651,9 @@ remove_cib_op_callback(int call_id, gboolean all_callbacks)
 {
     if (all_callbacks) {
         destroy_op_callback_table();
-        cib_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                      NULL, cib_destroy_op_callback);
+        cib_op_callback_table = pcmk__intkey_table(cib_destroy_op_callback);
     } else {
-        g_hash_table_remove(cib_op_callback_table, GINT_TO_POINTER(call_id));
+        pcmk__intkey_table_remove(cib_op_callback_table, call_id);
     }
 }
 

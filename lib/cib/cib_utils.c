@@ -538,7 +538,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         output = get_message_xml(msg, F_CIB_CALLDATA);
     }
 
-    blob = g_hash_table_lookup(cib_op_callback_table, GINT_TO_POINTER(call_id));
+    blob = pcmk__intkey_table_lookup(cib_op_callback_table, call_id);
     if (blob == NULL) {
         crm_trace("No callback found for call %d", call_id);
     }
