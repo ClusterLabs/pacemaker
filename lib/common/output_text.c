@@ -134,7 +134,7 @@ text_err(pcmk__output_t *out, const char *format, ...) {
 }
 
 G_GNUC_PRINTF(2, 3)
-static void
+static int
 text_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
     int len = 0;
@@ -142,7 +142,7 @@ text_info(pcmk__output_t *out, const char *format, ...) {
     CRM_ASSERT(out != NULL);
 
     if (out->is_quiet(out)) {
-        return;
+        return pcmk_rc_no_output;
     }
 
     va_start(ap, format);
@@ -156,6 +156,7 @@ text_info(pcmk__output_t *out, const char *format, ...) {
 
     /* Add a newline. */
     fprintf(out->dest, "\n");
+    return pcmk_rc_ok;
 }
 
 static void

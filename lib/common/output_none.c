@@ -58,9 +58,9 @@ none_err(pcmk__output_t *out, const char *format, ...) {
 }
 
 G_GNUC_PRINTF(2, 3)
-static void
+static int
 none_info(pcmk__output_t *out, const char *format, ...) {
-    /* This function intentionally left blank */
+    return pcmk_rc_no_output;
 }
 
 static void

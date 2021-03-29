@@ -755,11 +755,9 @@ cluster_options_log(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
-        return pcmk_rc_ok;
+        return out->info(out, "Resource management is DISABLED.  The cluster will not attempt to start, stop or recover services.");
     } else if (pcmk_is_set(data_set->flags, pe_flag_stop_everything)) {
-        out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
-        return pcmk_rc_ok;
+        return out->info(out, "Resource management is DISABLED.  The cluster has stopped all resources.");
     } else {
         return pcmk_rc_no_output;
     }
