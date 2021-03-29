@@ -221,7 +221,7 @@ log_end_list(pcmk__output_t *out) {
 }
 
 G_GNUC_PRINTF(2, 3)
-static void
+static int
 log_info(pcmk__output_t *out, const char *format, ...) {
     private_data_t *priv = NULL;
     int len = 0;
@@ -239,6 +239,7 @@ log_info(pcmk__output_t *out, const char *format, ...) {
     do_crm_log(priv->log_level, "%s", buffer);
 
     free(buffer);
+    return pcmk_rc_ok;
 }
 
 static bool

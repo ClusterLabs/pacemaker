@@ -144,14 +144,14 @@ curses_error(pcmk__output_t *out, const char *format, ...) {
 }
 
 G_GNUC_PRINTF(2, 3)
-static void
+static int
 curses_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
     CRM_ASSERT(out != NULL);
 
     if (out->is_quiet(out)) {
-        return;
+        return pcmk_rc_no_output;
     }
 
     /* Informational output does not get indented, to separate it from other
@@ -166,6 +166,7 @@ curses_info(pcmk__output_t *out, const char *format, ...) {
 
     clrtoeol();
     refresh();
+    return pcmk_rc_ok;
 }
 
 static void

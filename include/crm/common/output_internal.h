@@ -360,8 +360,13 @@ struct pcmk__output_s {
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
      * \param[in]     ... Arguments to be formatted.
+     *
+     * \return A standard Pacemaker return code.  Generally: pcmk_rc_ok
+     *         if output was produced and pcmk_rc_no_output if it was not.
+     *         As not all formatters implement this function, those that
+     *         do not will always just return pcmk_rc_no_output.
      */
-    void (*info) (pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+    int (*info) (pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 
     /*!
      * \internal
