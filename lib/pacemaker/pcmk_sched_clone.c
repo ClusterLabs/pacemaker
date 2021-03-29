@@ -578,6 +578,7 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
     int loop_max = 0;
     int allocated = 0;
     int available_nodes = 0;
+    bool all_coloc = false;
 
     /* count now tracks the number of clones currently allocated */
     for(GList *nIter = nodes; nIter != NULL; nIter = nIter->next) {
@@ -588,6 +589,8 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
             available_nodes++;
         }
     }
+
+    all_coloc = (max < available_nodes) ? true : false;
 
     if(available_nodes) {
         loop_max = max / available_nodes;
@@ -602,31 +605,42 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
     /* Pre-allocate as many instances as we can to their current location */
     for (GList *gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
+        pe_node_t *child_node = NULL;
+        pe_node_t *local_node = NULL;
 
-        if (child->running_on && pcmk_is_set(child->flags, pe_rsc_provisional)
-            && !pcmk_is_set(child->flags, pe_rsc_failed)) {
-            pe_node_t *child_node = pe__current_node(child);
-            pe_node_t *local_node = parent_node_instance(child, child_node);
+        if ((child->running_on == NULL)
+            || !pcmk_is_set(child->flags, pe_rsc_provisional)
+            || pcmk_is_set(child->flags, pe_rsc_failed)) {
 
-            pe_rsc_trace(rsc, "Checking pre-allocation of %s to %s (%d remaining of %d)",
-                         child->id, child_node->details->uname, max - allocated, max);
+            continue;
+        }
 
-            if (can_run_resources(child_node) == FALSE || child_node->weight < 0) {
-                pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
-                             child_node->details->uname, child->id);
+        child_node = pe__current_node(child);
+        local_node = parent_node_instance(child, child_node);
 
-            } else if(local_node && local_node->count >= loop_max) {
-                pe_rsc_trace(rsc,
-                             "Not pre-allocating because %s already allocated optimal instances",
-                             child_node->details->uname);
+        pe_rsc_trace(rsc,
+                     "Checking pre-allocation of %s to %s (%d remaining of %d)",
+                     child->id, child_node->details->uname, max - allocated,
+                     max);
 
-            } else if (allocate_instance(child, child_node,
-                                         max < available_nodes, per_host_max,
-                                         data_set)) {
-                pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
-                             child_node->details->uname);
-                allocated++;
-            }
+        if (!can_run_resources(child_node) || (child_node->weight < 0)) {
+            pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
+                         child_node->details->uname, child->id);
+            continue;
+        }
+
+        if ((local_node != NULL) && (local_node->count >= loop_max)) {
+            pe_rsc_trace(rsc,
+                         "Not pre-allocating because %s already allocated "
+                         "optimal instances", child_node->details->uname);
+            continue;
+        }
+
+        if (allocate_instance(child, child_node, all_coloc, per_host_max,
+                              data_set)) {
+            pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
+                         child_node->details->uname);
+            allocated++;
         }
     }
 
@@ -650,8 +664,8 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
             pe_rsc_debug(rsc, "Child %s not allocated - limit reached %d %d", child->id, allocated, max);
             resource_location(child, NULL, -INFINITY, "clone:limit_reached", data_set);
         } else {
-            if (allocate_instance(child, NULL, max < available_nodes,
-                                  per_host_max, data_set)) {
+            if (allocate_instance(child, NULL, all_coloc, per_host_max,
+                                  data_set)) {
                 allocated++;
             }
         }
