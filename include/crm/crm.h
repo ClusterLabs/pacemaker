@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_LRM_OP_INVALID and PCMK_LRM_OP_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.7.3"
+#  define CRM_FEATURE_SET		"3.7.4"
 
 #  ifndef MAX_NAME
 #    define MAX_NAME	256
