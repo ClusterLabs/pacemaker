@@ -200,7 +200,7 @@ pcmk__native_allocate: drbd-r1:0 allocation score on hex-2: 1001
 pcmk__native_allocate: drbd-r1:0 allocation score on hex-3: -INFINITY
 pcmk__native_allocate: drbd-r1:0 allocation score on hex-3: INFINITY
 pcmk__native_allocate: drbd-r1:1 allocation score on hex-1: -INFINITY
-pcmk__native_allocate: drbd-r1:1 allocation score on hex-2: 0
+pcmk__native_allocate: drbd-r1:1 allocation score on hex-2: -INFINITY
 pcmk__native_allocate: drbd-r1:1 allocation score on hex-3: INFINITY
 pcmk__native_allocate: dummy1 allocation score on hex-1: -INFINITY
 pcmk__native_allocate: dummy1 allocation score on hex-2: -INFINITY

@@ -12,19 +12,13 @@ Current cluster status:
     * node3-rem	(ocf:pacemaker:remote):	 Started node1
 
 Transition Summary:
-  * Move       stateful:0     ( Unpromoted node1 -> Promoted node2 )
-  * Start      stateful:2     (                              node1 )
+  * Promote    stateful:2     ( Stopped -> Promoted node2 )
 
 Executing Cluster Transition:
   * Resource action: stateful        monitor=11000 on node3-rem
-  * Pseudo action:   stateful-clone_stop_0
-  * Resource action: stateful        stop on node1
-  * Pseudo action:   stateful-clone_stopped_0
   * Pseudo action:   stateful-clone_start_0
   * Resource action: stateful        start on node2
-  * Resource action: stateful        start on node1
   * Pseudo action:   stateful-clone_running_0
-  * Resource action: stateful        monitor=11000 on node1
   * Pseudo action:   stateful-clone_promote_0
   * Resource action: stateful        promote on node2
   * Pseudo action:   stateful-clone_promoted_0

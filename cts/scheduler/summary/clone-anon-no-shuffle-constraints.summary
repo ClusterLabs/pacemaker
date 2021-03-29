@@ -11,32 +11,12 @@ Current cluster status:
       * Stopped: [ node4 node5 node7 ]
 
 Transition Summary:
-  * Restart    SAS_PROD_FENCE     (          node1 )  due to resource definition change
-  * Move       SASHOME:0          ( node8 -> node6 )
-  * Move       SASHOME:1          ( node9 -> node8 )
-  * Move       SASHOME:2          ( node1 -> node9 )
-  * Move       SASHOME:4          ( node6 -> node1 )
+  * Restart    SAS_PROD_FENCE     ( node1 )  due to resource definition change
 
 Executing Cluster Transition:
   * Resource action: SAS_PROD_FENCE  stop on node1
   * Resource action: SAS_PROD_FENCE  start on node1
   * Resource action: SAS_PROD_FENCE  monitor=60000 on node1
-  * Pseudo action:   SASHOME-clone_stop_0
-  * Resource action: SASHOME         stop on node8
-  * Resource action: SASHOME         stop on node9
-  * Resource action: SASHOME         stop on node1
-  * Resource action: SASHOME         stop on node6
-  * Pseudo action:   SASHOME-clone_stopped_0
-  * Pseudo action:   SASHOME-clone_start_0
-  * Resource action: SASHOME         start on node6
-  * Resource action: SASHOME         start on node8
-  * Resource action: SASHOME         start on node9
-  * Resource action: SASHOME         start on node1
-  * Pseudo action:   SASHOME-clone_running_0
-  * Resource action: SASHOME         monitor=10000 on node6
-  * Resource action: SASHOME         monitor=10000 on node8
-  * Resource action: SASHOME         monitor=10000 on node9
-  * Resource action: SASHOME         monitor=10000 on node1
 
 Revised Cluster Status:
   * Node List:
