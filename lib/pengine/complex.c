@@ -255,8 +255,8 @@ template_op_key(xmlNode * op)
     char *key = NULL;
 
     if ((role == NULL)
-        || pcmk__str_any_of(role, RSC_ROLE_STARTED_S, RSC_ROLE_UNPROMOTED_S,
-                            RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
+        || pcmk__strcase_any_of(role, RSC_ROLE_STARTED_S, RSC_ROLE_UNPROMOTED_S,
+                                RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
         role = RSC_ROLE_UNKNOWN_S;
     }
 
