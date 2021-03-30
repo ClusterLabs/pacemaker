@@ -235,6 +235,8 @@
     <choice>
       <value>Stopped</value>
       <value>Started</value>
+      <value>Promoted</value>
+      <value>Unpromoted</value>
       <value>Master</value>
       <value>Slave</value>
     </choice>
