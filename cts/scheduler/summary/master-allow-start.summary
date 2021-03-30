@@ -4,8 +4,8 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
-      * Masters: [ sles11-a ]
-      * Slaves: [ sles11-b ]
+      * Promoted: [ sles11-a ]
+      * Unpromoted: [ sles11-b ]
 
 Transition Summary:
 
@@ -17,5 +17,5 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
-      * Masters: [ sles11-a ]
-      * Slaves: [ sles11-b ]
+      * Promoted: [ sles11-a ]
+      * Unpromoted: [ sles11-b ]

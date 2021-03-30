@@ -4,10 +4,10 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
-      * Masters: [ sles11-a sles11-b ]
+      * Promoted: [ sles11-a sles11-b ]
 
 Transition Summary:
-  * Demote     res_Stateful_1:1     ( Master -> Slave sles11-a )
+  * Demote     res_Stateful_1:1     ( Promoted -> Unpromoted sles11-a )
 
 Executing Cluster Transition:
   * Pseudo action:   ms_res_Stateful_1_demote_0
@@ -20,5 +20,5 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
-      * Masters: [ sles11-b ]
-      * Slaves: [ sles11-a ]
+      * Promoted: [ sles11-b ]
+      * Unpromoted: [ sles11-a ]

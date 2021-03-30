@@ -6,8 +6,8 @@ Current cluster status:
     * Clone Set: pingd-clone [pingd-1]:
       * Started: [ pollux sirius ]
     * Clone Set: drbd-msr [drbd-r0] (promotable):
-      * Masters: [ pollux ]
-      * Slaves: [ sirius ]
+      * Promoted: [ pollux ]
+      * Unpromoted: [ sirius ]
     * Resource Group: group-1:
       * fs-1	(ocf:heartbeat:Filesystem):	 Stopped
       * ip-198	(ocf:heartbeat:IPaddr2):	 Stopped
@@ -38,8 +38,8 @@ Revised Cluster Status:
     * Clone Set: pingd-clone [pingd-1]:
       * Started: [ pollux sirius ]
     * Clone Set: drbd-msr [drbd-r0] (promotable):
-      * Masters: [ pollux ]
-      * Slaves: [ sirius ]
+      * Promoted: [ pollux ]
+      * Unpromoted: [ sirius ]
     * Resource Group: group-1:
       * fs-1	(ocf:heartbeat:Filesystem):	 Started pollux
       * ip-198	(ocf:heartbeat:IPaddr2):	 Started pollux

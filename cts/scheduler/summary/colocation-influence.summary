@@ -44,13 +44,13 @@ Current cluster status:
       * bundle11-1 (192.168.122.135)	(ocf:pacemaker:Dummy):	 Stopped
     * rsc13a	(ocf:pacemaker:Dummy):	 Started rhel7-3
     * Clone Set: rsc13b-clone [rsc13b] (promotable):
-      * Masters: [ rhel7-3 ]
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-4 ]
+      * Promoted: [ rhel7-3 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-4 ]
       * Stopped: [ rhel7-5 ]
     * rsc14b	(ocf:pacemaker:Dummy):	 Started rhel7-4
     * Clone Set: rsc14a-clone [rsc14a] (promotable):
-      * Masters: [ rhel7-4 ]
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-3 ]
+      * Promoted: [ rhel7-4 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 ]
       * Stopped: [ rhel7-5 ]
 
 Transition Summary:
@@ -71,7 +71,7 @@ Transition Summary:
   * Start      bundle11-1     (            rhel7-5 )  due to unrunnable bundle11-docker-1 start (blocked)
   * Start      bundle11a:1    (         bundle11-1 )  due to unrunnable bundle11-docker-1 start (blocked)
   * Stop       rsc13a         (            rhel7-3 )  due to node availability
-  * Stop       rsc14a:1       (     Master rhel7-4 )  due to node availability
+  * Stop       rsc14a:1       (   Promoted rhel7-4 )  due to node availability
 
 Executing Cluster Transition:
   * Resource action: rsc1a           stop on rhel7-2
@@ -161,10 +161,10 @@ Revised Cluster Status:
       * bundle11-1 (192.168.122.135)	(ocf:pacemaker:Dummy):	 Stopped
     * rsc13a	(ocf:pacemaker:Dummy):	 Stopped
     * Clone Set: rsc13b-clone [rsc13b] (promotable):
-      * Masters: [ rhel7-3 ]
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-4 ]
+      * Promoted: [ rhel7-3 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-4 ]
       * Stopped: [ rhel7-5 ]
     * rsc14b	(ocf:pacemaker:Dummy):	 Started rhel7-4
     * Clone Set: rsc14a-clone [rsc14a] (promotable):
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-3 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 ]
       * Stopped: [ rhel7-4 rhel7-5 ]

@@ -10,17 +10,17 @@ Current cluster status:
     * compute-0	(ocf:pacemaker:remote):	 Started controller-1
     * compute-1	(ocf:pacemaker:remote):	 Started controller-2
     * Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Master database-0
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master database-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 Master database-2
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted database-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted database-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted database-2
     * Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]:
       * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-0
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Stopped
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-2
     * Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master controller-2
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-0
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-1
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-0
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-1
     * ip-192.168.24.150	(ocf:heartbeat:IPaddr2):	 Started controller-1
     * ip-10.0.0.150	(ocf:heartbeat:IPaddr2):	 Started controller-2
     * ip-172.17.1.151	(ocf:heartbeat:IPaddr2):	 Started controller-1
@@ -33,8 +33,8 @@ Current cluster status:
       * haproxy-bundle-podman-2	(ocf:heartbeat:podman):	 Started controller-1
     * Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]:
       * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Stopped
-      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Slave controller-2
-      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Slave controller-1
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
     * ip-172.17.1.87	(ocf:heartbeat:IPaddr2):	 Stopped
     * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started database-1
     * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
@@ -63,7 +63,7 @@ Transition Summary:
   * Start      ovndb_servers:0                        (                 ovn-dbs-bundle-0 )
   * Move       ovn-dbs-bundle-podman-1                (     controller-2 -> controller-0 )
   * Move       ovn-dbs-bundle-1                       (     controller-2 -> controller-0 )
-  * Restart    ovndb_servers:1                        ( Slave -> Master ovn-dbs-bundle-1 )  due to required ovn-dbs-bundle-podman-1 start
+  * Restart    ovndb_servers:1                        ( Unpromoted -> Promoted ovn-dbs-bundle-1 )  due to required ovn-dbs-bundle-podman-1 start
   * Start      ip-172.17.1.87                         (                     controller-0 )
   * Move       stonith-fence_ipmilan-52540040bb56     (        messaging-2 -> database-0 )
   * Move       stonith-fence_ipmilan-525400e1534e     (        database-1 -> messaging-2 )
@@ -165,17 +165,17 @@ Revised Cluster Status:
     * compute-0	(ocf:pacemaker:remote):	 Started controller-1
     * compute-1	(ocf:pacemaker:remote):	 Started controller-2
     * Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Master database-0
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master database-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 Master database-2
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted database-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted database-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted database-2
     * Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]:
       * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-0
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Stopped
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-2
     * Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master controller-2
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-0
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-1
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-0
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-1
     * ip-192.168.24.150	(ocf:heartbeat:IPaddr2):	 Started controller-1
     * ip-10.0.0.150	(ocf:heartbeat:IPaddr2):	 Started controller-2
     * ip-172.17.1.151	(ocf:heartbeat:IPaddr2):	 Started controller-1
@@ -187,9 +187,9 @@ Revised Cluster Status:
       * haproxy-bundle-podman-1	(ocf:heartbeat:podman):	 Started controller-0
       * haproxy-bundle-podman-2	(ocf:heartbeat:podman):	 Started controller-1
     * Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]:
-      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Slave controller-2
-      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Master controller-0
-      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Slave controller-1
+      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Promoted controller-0
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
     * ip-172.17.1.87	(ocf:heartbeat:IPaddr2):	 Started controller-0
     * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started database-1
     * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:

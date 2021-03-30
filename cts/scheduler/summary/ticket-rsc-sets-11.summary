@@ -11,7 +11,7 @@ Current cluster status:
     * Clone Set: clone4 [rsc4]:
       * Stopped: [ node1 node2 ]
     * Clone Set: ms5 [rsc5] (promotable):
-      * Slaves: [ node1 node2 ]
+      * Unpromoted: [ node1 node2 ]
 
 Transition Summary:
 
@@ -30,4 +30,4 @@ Revised Cluster Status:
     * Clone Set: clone4 [rsc4]:
       * Stopped: [ node1 node2 ]
     * Clone Set: ms5 [rsc5] (promotable):
-      * Slaves: [ node1 node2 ]
+      * Unpromoted: [ node1 node2 ]

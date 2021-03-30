@@ -6,12 +6,12 @@ Current cluster status:
 
   * Full List of Resources:
     * Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Slave ra1
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Unpromoted ra1
       * redis-bundle-1	(ocf:heartbeat:redis):	 Stopped ra2
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave ra3
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted ra3
 
 Transition Summary:
-  * Promote    redis:0                   ( Slave -> Master redis-bundle-0 )
+  * Promote    redis:0                   ( Unpromoted -> Promoted redis-bundle-0 )
   * Stop       redis-bundle-docker-1     (                            ra2 )  due to node availability
   * Stop       redis-bundle-1            (                            ra2 )  due to unrunnable redis-bundle-docker-1 start
   * Start      redis:1                   (                 redis-bundle-1 )  due to unrunnable redis-bundle-docker-1 start (blocked)
@@ -59,6 +59,6 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Container bundle set: redis-bundle [docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master ra1
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted ra1
       * redis-bundle-1	(ocf:heartbeat:redis):	 Stopped
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave ra3
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted ra3

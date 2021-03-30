@@ -15,8 +15,8 @@ Current cluster status:
     * Clone Set: Connectivity [ping-1]:
       * Started: [ 18node1 18node3 remote1 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ 18node1 ]
-      * Slaves: [ 18node3 ]
+      * Promoted: [ 18node1 ]
+      * Unpromoted: [ 18node3 ]
       * Stopped: [ 18node2 ]
     * Resource Group: group-1:
       * r192.168.122.87	(ocf:heartbeat:IPaddr2):	 Started 18node1
@@ -59,8 +59,8 @@ Revised Cluster Status:
       * Started: [ 18node1 18node3 ]
       * Stopped: [ 18node2 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ 18node1 ]
-      * Slaves: [ 18node3 ]
+      * Promoted: [ 18node1 ]
+      * Unpromoted: [ 18node3 ]
       * Stopped: [ 18node2 ]
     * Resource Group: group-1:
       * r192.168.122.87	(ocf:heartbeat:IPaddr2):	 Started 18node1

@@ -9,7 +9,7 @@ Current cluster status:
 
 Transition Summary:
   * Start      rsc1:0     (                   node2 )
-  * Promote    rsc1:1     ( Stopped -> Master node1 )
+  * Promote    rsc1:1     ( Stopped -> Promoted node1 )
 
 Executing Cluster Transition:
   * Pseudo action:   ms1_start_0
@@ -27,5 +27,5 @@ Revised Cluster Status:
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Clone Set: ms1 [rsc1] (promotable):
-      * Masters: [ node1 ]
-      * Slaves: [ node2 ]
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]

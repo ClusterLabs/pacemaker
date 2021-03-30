@@ -103,7 +103,7 @@ Revised Cluster Status:
       * ip-booth	(ocf:heartbeat:IPaddr2):	 Started lustre02-left
       * boothd	(ocf:pacemaker:booth-site):	 Started lustre02-left
     * Clone Set: ms-drbd-mgs [drbd-mgs] (promotable):
-      * Slaves: [ lustre01-left lustre02-left ]
+      * Unpromoted: [ lustre01-left lustre02-left ]
     * Clone Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000] (promotable):
       * Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
     * Clone Set: ms-drbd-testfs-mdt0000-left [drbd-testfs-mdt0000-left] (promotable):

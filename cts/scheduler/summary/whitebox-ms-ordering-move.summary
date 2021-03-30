@@ -17,8 +17,8 @@ Current cluster status:
       * Started: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
       * Stopped: [ lxc1 lxc2 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ rhel7-3 ]
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
+      * Promoted: [ rhel7-3 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
     * Resource Group: group-1:
       * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
       * petulant	(service:DummySD):	 Started rhel7-3
@@ -27,12 +27,12 @@ Current cluster status:
     * container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Masters: [ lxc1 ]
-      * Slaves: [ lxc2 ]
+      * Promoted: [ lxc1 ]
+      * Unpromoted: [ lxc2 ]
 
 Transition Summary:
   * Move       container1     ( rhel7-1 -> rhel7-2 )
-  * Restart    lxc-ms:0       (        Master lxc1 )  due to required container1 start
+  * Restart    lxc-ms:0       (      Promoted lxc1 )  due to required container1 start
   * Move       lxc1           ( rhel7-1 -> rhel7-2 )
 
 Executing Cluster Transition:
@@ -93,8 +93,8 @@ Revised Cluster Status:
       * Started: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
       * Stopped: [ lxc1 lxc2 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ rhel7-3 ]
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
+      * Promoted: [ rhel7-3 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
     * Resource Group: group-1:
       * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-3
       * petulant	(service:DummySD):	 Started rhel7-3
@@ -103,5 +103,5 @@ Revised Cluster Status:
     * container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-2
     * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Masters: [ lxc1 ]
-      * Slaves: [ lxc2 ]
+      * Promoted: [ lxc1 ]
+      * Unpromoted: [ lxc2 ]

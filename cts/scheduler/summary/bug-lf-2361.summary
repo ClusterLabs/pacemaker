@@ -39,6 +39,6 @@ Revised Cluster Status:
   * Full List of Resources:
     * dummy1	(ocf:heartbeat:Dummy):	 Stopped
     * Clone Set: ms_stateful [stateful] (promotable):
-      * Slaves: [ alice.demo bob.demo ]
+      * Unpromoted: [ alice.demo bob.demo ]
     * Clone Set: cl_dummy2 [dummy2]:
       * Stopped: [ alice.demo bob.demo ]

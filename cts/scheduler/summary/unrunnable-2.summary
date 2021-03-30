@@ -9,7 +9,7 @@ Current cluster status:
     * Clone Set: haproxy-clone [haproxy]:
       * Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: galera-master [galera] (promotable):
-      * Masters: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+      * Promoted: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: memcached-clone [memcached]:
       * Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: rabbitmq-clone [rabbitmq]:
@@ -17,8 +17,8 @@ Current cluster status:
     * Clone Set: openstack-core-clone [openstack-core] (disabled):
       * Stopped (disabled): [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: redis-master [redis] (promotable):
-      * Masters: [ overcloud-controller-1 ]
-      * Slaves: [ overcloud-controller-0 overcloud-controller-2 ]
+      * Promoted: [ overcloud-controller-1 ]
+      * Unpromoted: [ overcloud-controller-0 overcloud-controller-2 ]
     * ip-192.0.2.11	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-1
     * Clone Set: mongod-clone [mongod]:
       * Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
@@ -100,7 +100,7 @@ Revised Cluster Status:
     * Clone Set: haproxy-clone [haproxy]:
       * Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: galera-master [galera] (promotable):
-      * Masters: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+      * Promoted: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: memcached-clone [memcached]:
       * Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: rabbitmq-clone [rabbitmq]:
@@ -108,8 +108,8 @@ Revised Cluster Status:
     * Clone Set: openstack-core-clone [openstack-core] (disabled):
       * Stopped (disabled): [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
     * Clone Set: redis-master [redis] (promotable):
-      * Masters: [ overcloud-controller-1 ]
-      * Slaves: [ overcloud-controller-0 overcloud-controller-2 ]
+      * Promoted: [ overcloud-controller-1 ]
+      * Unpromoted: [ overcloud-controller-0 overcloud-controller-2 ]
     * ip-192.0.2.11	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-1
     * Clone Set: mongod-clone [mongod]:
       * Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]

@@ -7,9 +7,9 @@ Current cluster status:
     * Container bundle: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]:
       * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started undercloud
     * Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Master undercloud
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted undercloud
     * Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master undercloud
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted undercloud
     * ip-192.168.122.254	(ocf:heartbeat:IPaddr2):	 Started undercloud
     * ip-192.168.122.250	(ocf:heartbeat:IPaddr2):	 Started undercloud
     * ip-192.168.122.249	(ocf:heartbeat:IPaddr2):	 Started undercloud
@@ -27,10 +27,10 @@ Transition Summary:
   * Stop       rabbitmq:0                           (      rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-0 start
   * Stop       galera-bundle-docker-0               (             undercloud )  due to node availability
   * Stop       galera-bundle-0                      (             undercloud )  due to node availability
-  * Stop       galera:0                             ( Master galera-bundle-0 )  due to unrunnable galera-bundle-0 start
+  * Stop       galera:0                             ( Promoted galera-bundle-0 )  due to unrunnable galera-bundle-0 start
   * Stop       redis-bundle-docker-0                (             undercloud )  due to node availability
   * Stop       redis-bundle-0                       (             undercloud )  due to node availability
-  * Stop       redis:0                              (  Master redis-bundle-0 )  due to unrunnable redis-bundle-0 start
+  * Stop       redis:0                              (  Promoted redis-bundle-0 )  due to unrunnable redis-bundle-0 start
   * Stop       ip-192.168.122.254                   (             undercloud )  due to node availability
   * Stop       ip-192.168.122.250                   (             undercloud )  due to node availability
   * Stop       ip-192.168.122.249                   (             undercloud )  due to node availability

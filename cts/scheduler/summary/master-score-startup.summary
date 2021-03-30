@@ -8,7 +8,7 @@ Current cluster status:
     * pgsql-master-ip	(ocf:heartbeat:IPaddr2):	 Stopped
 
 Transition Summary:
-  * Promote    pgsqld:0            ( Stopped -> Master srv1 )
+  * Promote    pgsqld:0            ( Stopped -> Promoted srv1 )
   * Start      pgsqld:1            (                   srv2 )
   * Start      pgsql-master-ip     (                   srv1 )
 
@@ -49,6 +49,6 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: pgsql-ha [pgsqld] (promotable):
-      * Masters: [ srv1 ]
-      * Slaves: [ srv2 ]
+      * Promoted: [ srv1 ]
+      * Unpromoted: [ srv2 ]
     * pgsql-master-ip	(ocf:heartbeat:IPaddr2):	 Started srv1

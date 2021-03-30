@@ -11,10 +11,10 @@ Current cluster status:
       * child_rsc1:4	(ocf:heartbeat:apache):	 Stopped
 
 Transition Summary:
-  * Promote    child_rsc1:0     ( Stopped -> Master node1 )
+  * Promote    child_rsc1:0     ( Stopped -> Promoted node1 )
   * Start      child_rsc1:1     (                   node2 )
   * Start      child_rsc1:2     (                   node1 )
-  * Promote    child_rsc1:3     ( Stopped -> Master node2 )
+  * Promote    child_rsc1:3     ( Stopped -> Promoted node2 )
 
 Executing Cluster Transition:
   * Resource action: child_rsc1:0    monitor on node2
@@ -68,8 +68,8 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: rsc1 [child_rsc1] (promotable) (unique):
-      * child_rsc1:0	(ocf:heartbeat:apache):	 Master node1
-      * child_rsc1:1	(ocf:heartbeat:apache):	 Slave node2
-      * child_rsc1:2	(ocf:heartbeat:apache):	 Slave node1
-      * child_rsc1:3	(ocf:heartbeat:apache):	 Master node2
+      * child_rsc1:0	(ocf:heartbeat:apache):	 Promoted node1
+      * child_rsc1:1	(ocf:heartbeat:apache):	 Unpromoted node2
+      * child_rsc1:2	(ocf:heartbeat:apache):	 Unpromoted node1
+      * child_rsc1:3	(ocf:heartbeat:apache):	 Promoted node2
       * child_rsc1:4	(ocf:heartbeat:apache):	 Stopped

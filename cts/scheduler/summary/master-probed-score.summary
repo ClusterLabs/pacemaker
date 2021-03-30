@@ -39,8 +39,8 @@ Current cluster status:
     * Proxy	(ocf:heartbeat:VirtualDomain):	 Stopped
 
 Transition Summary:
-  * Promote    AdminDrbd:0                ( Stopped -> Master hypatia-corosync.nevis.columbia.edu )
-  * Promote    AdminDrbd:1                ( Stopped -> Master orestes-corosync.nevis.columbia.edu )
+  * Promote    AdminDrbd:0                ( Stopped -> Promoted hypatia-corosync.nevis.columbia.edu )
+  * Promote    AdminDrbd:1                ( Stopped -> Promoted orestes-corosync.nevis.columbia.edu )
   * Start      CronAmbientTemperature     (                   hypatia-corosync.nevis.columbia.edu )
   * Start      StonithHypatia             (                   orestes-corosync.nevis.columbia.edu )
   * Start      StonithOrestes             (                   hypatia-corosync.nevis.columbia.edu )
@@ -296,7 +296,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: AdminClone [AdminDrbd] (promotable):
-      * Masters: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
+      * Promoted: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
     * CronAmbientTemperature	(ocf:heartbeat:symlink):	 Started hypatia-corosync.nevis.columbia.edu
     * StonithHypatia	(stonith:fence_nut):	 Started orestes-corosync.nevis.columbia.edu
     * StonithOrestes	(stonith:fence_nut):	 Started hypatia-corosync.nevis.columbia.edu

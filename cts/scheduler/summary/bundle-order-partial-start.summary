@@ -9,7 +9,7 @@ Current cluster status:
     * Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
       * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
     * Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Slave undercloud
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Unpromoted undercloud
     * ip-192.168.122.254	(ocf:heartbeat:IPaddr2):	 Started undercloud
     * ip-192.168.122.250	(ocf:heartbeat:IPaddr2):	 Started undercloud
     * ip-192.168.122.249	(ocf:heartbeat:IPaddr2):	 Started undercloud
@@ -26,7 +26,7 @@ Transition Summary:
   * Start      galera-bundle-docker-0     (                     undercloud )
   * Start      galera-bundle-0            (                     undercloud )
   * Start      galera:0                   (                galera-bundle-0 )
-  * Promote    redis:0                    ( Slave -> Master redis-bundle-0 )
+  * Promote    redis:0                    ( Unpromoted -> Promoted redis-bundle-0 )
   * Start      haproxy-bundle-docker-0    (                     undercloud )
 
 Executing Cluster Transition:
@@ -82,9 +82,9 @@ Revised Cluster Status:
     * Container bundle: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]:
       * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started undercloud
     * Container bundle: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Slave undercloud
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Unpromoted undercloud
     * Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master undercloud
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted undercloud
     * ip-192.168.122.254	(ocf:heartbeat:IPaddr2):	 Started undercloud
     * ip-192.168.122.250	(ocf:heartbeat:IPaddr2):	 Started undercloud
     * ip-192.168.122.249	(ocf:heartbeat:IPaddr2):	 Started undercloud

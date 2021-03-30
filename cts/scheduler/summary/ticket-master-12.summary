@@ -5,8 +5,8 @@ Current cluster status:
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Clone Set: ms1 [rsc1] (promotable):
-      * Masters: [ node1 ]
-      * Slaves: [ node2 ]
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]
 
 Transition Summary:
 
@@ -19,5 +19,5 @@ Revised Cluster Status:
   * Full List of Resources:
     * rsc_stonith	(stonith:null):	 Started node1
     * Clone Set: ms1 [rsc1] (promotable):
-      * Masters: [ node1 ]
-      * Slaves: [ node2 ]
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]

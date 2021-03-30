@@ -7,8 +7,8 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: stateful [dummy] (promotable):
-      * dummy	(ocf:pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
-      * Slaves: [ dl380g5d ]
+      * dummy	(ocf:pacemaker:Stateful):	 FAILED Promoted dl380g5c (blocked)
+      * Unpromoted: [ dl380g5d ]
 
 Transition Summary:
 
@@ -22,5 +22,5 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: stateful [dummy] (promotable):
-      * dummy	(ocf:pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
-      * Slaves: [ dl380g5d ]
+      * dummy	(ocf:pacemaker:Stateful):	 FAILED Promoted dl380g5c (blocked)
+      * Unpromoted: [ dl380g5d ]

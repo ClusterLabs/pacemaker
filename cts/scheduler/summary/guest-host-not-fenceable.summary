@@ -12,9 +12,9 @@ Current cluster status:
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node2 (UNCLEAN)
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node3 (UNCLEAN)
     * Container bundle set: galera-bundle [192.168.122.139:8787/rhosp13/openstack-mariadb:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 FAILED Master node1
-      * galera-bundle-1	(ocf:heartbeat:galera):	 FAILED Master node2 (UNCLEAN)
-      * galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Master node3 (UNCLEAN)
+      * galera-bundle-0	(ocf:heartbeat:galera):	 FAILED Promoted node1
+      * galera-bundle-1	(ocf:heartbeat:galera):	 FAILED Promoted node2 (UNCLEAN)
+      * galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Promoted node3 (UNCLEAN)
     * stonith-fence_ipmilan-node1	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
     * stonith-fence_ipmilan-node3	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
     * stonith-fence_ipmilan-node2	(stonith:fence_ipmilan):	 Started node3 (UNCLEAN)
@@ -31,13 +31,13 @@ Transition Summary:
   * Stop       rabbitmq:2                      (      rabbitmq-bundle-2 )  due to no quorum (blocked)
   * Stop       galera-bundle-docker-0          (                  node1 )  due to no quorum
   * Stop       galera-bundle-0                 (                  node1 )  due to no quorum
-  * Stop       galera:0                        ( Master galera-bundle-0 )  due to no quorum
+  * Stop       galera:0                        ( Promoted galera-bundle-0 )  due to no quorum
   * Stop       galera-bundle-docker-1          (                  node2 )  due to node availability (blocked)
   * Stop       galera-bundle-1                 (                  node2 )  due to no quorum (blocked)
-  * Stop       galera:1                        ( Master galera-bundle-1 )  due to no quorum (blocked)
+  * Stop       galera:1                        ( Promoted galera-bundle-1 )  due to no quorum (blocked)
   * Stop       galera-bundle-docker-2          (                  node3 )  due to node availability (blocked)
   * Stop       galera-bundle-2                 (                  node3 )  due to no quorum (blocked)
-  * Stop       galera:2                        ( Master galera-bundle-2 )  due to no quorum (blocked)
+  * Stop       galera:2                        ( Promoted galera-bundle-2 )  due to no quorum (blocked)
   * Stop       stonith-fence_ipmilan-node1     (                  node2 )  due to node availability (blocked)
   * Stop       stonith-fence_ipmilan-node3     (                  node2 )  due to no quorum (blocked)
   * Stop       stonith-fence_ipmilan-node2     (                  node3 )  due to no quorum (blocked)
@@ -84,8 +84,8 @@ Revised Cluster Status:
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 FAILED node3 (UNCLEAN)
     * Container bundle set: galera-bundle [192.168.122.139:8787/rhosp13/openstack-mariadb:pcmklatest]:
       * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
-      * galera-bundle-1	(ocf:heartbeat:galera):	 FAILED Master node2 (UNCLEAN)
-      * galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Master node3 (UNCLEAN)
+      * galera-bundle-1	(ocf:heartbeat:galera):	 FAILED Promoted node2 (UNCLEAN)
+      * galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Promoted node3 (UNCLEAN)
     * stonith-fence_ipmilan-node1	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
     * stonith-fence_ipmilan-node3	(stonith:fence_ipmilan):	 Started node2 (UNCLEAN)
     * stonith-fence_ipmilan-node2	(stonith:fence_ipmilan):	 Started node3 (UNCLEAN)

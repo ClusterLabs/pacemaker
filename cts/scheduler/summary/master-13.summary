@@ -4,15 +4,15 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms_drbd [drbd0] (promotable):
-      * Masters: [ frigg ]
-      * Slaves: [ odin ]
+      * Promoted: [ frigg ]
+      * Unpromoted: [ odin ]
     * Resource Group: group:
       * IPaddr0	(ocf:heartbeat:IPaddr):	 Stopped
       * MailTo	(ocf:heartbeat:MailTo):	 Stopped
 
 Transition Summary:
-  * Promote    drbd0:0     (  Slave -> Master odin )
-  * Demote     drbd0:1     ( Master -> Slave frigg )
+  * Promote    drbd0:0     (  Unpromoted -> Promoted odin )
+  * Demote     drbd0:1     ( Promoted -> Unpromoted frigg )
   * Start      IPaddr0     (                  odin )
   * Start      MailTo      (                  odin )
 
@@ -55,8 +55,8 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms_drbd [drbd0] (promotable):
-      * Masters: [ odin ]
-      * Slaves: [ frigg ]
+      * Promoted: [ odin ]
+      * Unpromoted: [ frigg ]
     * Resource Group: group:
       * IPaddr0	(ocf:heartbeat:IPaddr):	 Started odin
       * MailTo	(ocf:heartbeat:MailTo):	 Started odin

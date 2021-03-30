@@ -10,11 +10,11 @@ Current cluster status:
       * d0	(ocf:pacemaker:Dummy):	 Stopped (disabled)
       * d1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
     * Clone Set: ms0 [s0] (promotable):
-      * Masters: [ hex-14 ]
-      * Slaves: [ hex-13 ]
+      * Promoted: [ hex-14 ]
+      * Unpromoted: [ hex-13 ]
 
 Transition Summary:
-  * Demote     s0:0    ( Master -> Slave hex-14 )
+  * Demote     s0:0    ( Promoted -> Unpromoted hex-14 )
 
 Executing Cluster Transition:
   * Resource action: s0:1            cancel=20000 on hex-14
@@ -33,4 +33,4 @@ Revised Cluster Status:
       * d0	(ocf:pacemaker:Dummy):	 Stopped (disabled)
       * d1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
     * Clone Set: ms0 [s0] (promotable):
-      * Slaves: [ hex-13 hex-14 ]
+      * Unpromoted: [ hex-13 hex-14 ]

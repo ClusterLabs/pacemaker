@@ -5,7 +5,7 @@ Current cluster status:
   * Full List of Resources:
     * A-master	(ocf:heartbeat:Dummy):	 Started srv02
     * Clone Set: msPostgresql [pgsql] (promotable):
-      * Slaves: [ srv01 srv02 ]
+      * Unpromoted: [ srv01 srv02 ]
 
 Transition Summary:
 
@@ -19,4 +19,4 @@ Revised Cluster Status:
   * Full List of Resources:
     * A-master	(ocf:heartbeat:Dummy):	 Started srv02
     * Clone Set: msPostgresql [pgsql] (promotable):
-      * Slaves: [ srv01 srv02 ]
+      * Unpromoted: [ srv01 srv02 ]

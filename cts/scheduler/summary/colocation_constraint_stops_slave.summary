@@ -7,11 +7,11 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: MASTER_RSC_A [NATIVE_RSC_A] (promotable):
-      * Slaves: [ fc16-builder ]
+      * Unpromoted: [ fc16-builder ]
     * NATIVE_RSC_B	(ocf:pacemaker:Dummy):	 Started fc16-builder (disabled)
 
 Transition Summary:
-  * Stop       NATIVE_RSC_A:0     ( Slave fc16-builder )  due to node availability
+  * Stop       NATIVE_RSC_A:0     ( Unpromoted fc16-builder )  due to node availability
   * Stop       NATIVE_RSC_B       (       fc16-builder )  due to node availability
 
 Executing Cluster Transition:

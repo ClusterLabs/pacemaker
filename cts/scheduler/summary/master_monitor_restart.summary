@@ -5,7 +5,7 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable):
-      * Masters: [ node1 ]
+      * Promoted: [ node1 ]
       * Stopped: [ node2 ]
 
 Transition Summary:
@@ -20,5 +20,5 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable):
-      * Masters: [ node1 ]
+      * Promoted: [ node1 ]
       * Stopped: [ node2 ]

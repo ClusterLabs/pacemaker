@@ -16,11 +16,11 @@ Current cluster status:
       * res_ip_mysql1	(ocf:heartbeat:IPaddr2):	 Started bob.demo
       * res_mysql1	(ocf:heartbeat:mysql):	 Started bob.demo
     * Clone Set: ms_drbd_mysql1 [res_drbd_mysql1] (promotable):
-      * Masters: [ bob.demo ]
+      * Promoted: [ bob.demo ]
       * Stopped: [ alice.demo ]
     * Clone Set: ms_drbd_mysql2 [res_drbd_mysql2] (promotable):
-      * Masters: [ alice.demo ]
-      * Slaves: [ bob.demo ]
+      * Promoted: [ alice.demo ]
+      * Unpromoted: [ bob.demo ]
     * Resource Group: rg_mysql2:
       * res_fs_mysql2	(ocf:heartbeat:Filesystem):	 Started alice.demo
       * res_ip_mysql2	(ocf:heartbeat:IPaddr2):	 Started alice.demo
@@ -57,11 +57,11 @@ Revised Cluster Status:
       * res_ip_mysql1	(ocf:heartbeat:IPaddr2):	 Started bob.demo
       * res_mysql1	(ocf:heartbeat:mysql):	 Started bob.demo
     * Clone Set: ms_drbd_mysql1 [res_drbd_mysql1] (promotable):
-      * Masters: [ bob.demo ]
-      * Slaves: [ alice.demo ]
+      * Promoted: [ bob.demo ]
+      * Unpromoted: [ alice.demo ]
     * Clone Set: ms_drbd_mysql2 [res_drbd_mysql2] (promotable):
-      * Masters: [ alice.demo ]
-      * Slaves: [ bob.demo ]
+      * Promoted: [ alice.demo ]
+      * Unpromoted: [ bob.demo ]
     * Resource Group: rg_mysql2:
       * res_fs_mysql2	(ocf:heartbeat:Filesystem):	 Started alice.demo
       * res_ip_mysql2	(ocf:heartbeat:IPaddr2):	 Started alice.demo

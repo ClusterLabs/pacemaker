@@ -8,13 +8,13 @@ Current cluster status:
         * stateful-1:0	(ocf:heartbeat:Stateful):	 FAILED dl380g5b
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
       * Resource Group: group:1:
-        * stateful-1:1	(ocf:heartbeat:Stateful):	 Slave dl380g5a
-        * stateful-2:1	(ocf:heartbeat:Stateful):	 Slave dl380g5a
+        * stateful-1:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a
+        * stateful-2:1	(ocf:heartbeat:Stateful):	 Unpromoted dl380g5a
 
 Transition Summary:
-  * Stop       stateful-1:0     (           Slave dl380g5b )  due to node availability
-  * Promote    stateful-1:1     ( Slave -> Master dl380g5a )
-  * Promote    stateful-2:1     ( Slave -> Master dl380g5a )
+  * Stop       stateful-1:0     (             Unpromoted dl380g5b )  due to node availability
+  * Promote    stateful-1:1     ( Unpromoted -> Promoted dl380g5a )
+  * Promote    stateful-2:1     ( Unpromoted -> Promoted dl380g5a )
 
 Executing Cluster Transition:
   * Resource action: stateful-1:1    cancel=20000 on dl380g5a
@@ -43,5 +43,5 @@ Revised Cluster Status:
         * stateful-1:0	(ocf:heartbeat:Stateful):	 Stopped
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
       * Resource Group: group:1:
-        * stateful-1:1	(ocf:heartbeat:Stateful):	 Master dl380g5a
-        * stateful-2:1	(ocf:heartbeat:Stateful):	 Master dl380g5a
+        * stateful-1:1	(ocf:heartbeat:Stateful):	 Promoted dl380g5a
+        * stateful-2:1	(ocf:heartbeat:Stateful):	 Promoted dl380g5a

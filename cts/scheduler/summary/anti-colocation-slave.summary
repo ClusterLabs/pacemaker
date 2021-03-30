@@ -5,13 +5,13 @@ Current cluster status:
   * Full List of Resources:
     * st_sbd	(stonith:external/sbd):	 Started sle12sp2-1
     * Clone Set: ms1 [state1] (promotable):
-      * Masters: [ sle12sp2-1 ]
-      * Slaves: [ sle12sp2-2 ]
+      * Promoted: [ sle12sp2-1 ]
+      * Unpromoted: [ sle12sp2-2 ]
     * dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-1
 
 Transition Summary:
-  * Demote     state1:0     ( Master -> Slave sle12sp2-1 )
-  * Promote    state1:1     ( Slave -> Master sle12sp2-2 )
+  * Demote     state1:0     ( Promoted -> Unpromoted sle12sp2-1 )
+  * Promote    state1:1     ( Unpromoted -> Promoted sle12sp2-2 )
   * Move       dummy1       (   sle12sp2-1 -> sle12sp2-2 )
 
 Executing Cluster Transition:
@@ -31,6 +31,6 @@ Revised Cluster Status:
   * Full List of Resources:
     * st_sbd	(stonith:external/sbd):	 Started sle12sp2-1
     * Clone Set: ms1 [state1] (promotable):
-      * Masters: [ sle12sp2-2 ]
-      * Slaves: [ sle12sp2-1 ]
+      * Promoted: [ sle12sp2-2 ]
+      * Unpromoted: [ sle12sp2-1 ]
     * dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-2

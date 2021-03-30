@@ -4,8 +4,8 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: MS_DUMMY [DUMMY] (promotable):
-      * Masters: [ fc16-builder ]
-      * Slaves: [ fc16-builder2 ]
+      * Promoted: [ fc16-builder ]
+      * Unpromoted: [ fc16-builder2 ]
     * SLAVE_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder
     * MASTER_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder2
 
@@ -25,7 +25,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: MS_DUMMY [DUMMY] (promotable):
-      * Masters: [ fc16-builder ]
-      * Slaves: [ fc16-builder2 ]
+      * Promoted: [ fc16-builder ]
+      * Unpromoted: [ fc16-builder2 ]
     * SLAVE_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder2
     * MASTER_IP	(ocf:pacemaker:Dummy):	 Started fc16-builder

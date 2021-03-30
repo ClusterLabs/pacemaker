@@ -12,12 +12,12 @@ Current cluster status:
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
     * Container bundle set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb:pcmklatest]:
       * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master controller-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 Master controller-2
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted controller-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted controller-2
     * Container bundle set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis:pcmklatest]:
       * redis-bundle-0	(ocf:heartbeat:redis):	 Stopped
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-1
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Master controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-1
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Promoted controller-2
     * ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-2
     * ip-10.0.0.109	(ocf:heartbeat:IPaddr2):	 Started controller-1
     * ip-172.17.1.15	(ocf:heartbeat:IPaddr2):	 Started controller-2
@@ -77,12 +77,12 @@ Revised Cluster Status:
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
     * Container bundle set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb:pcmklatest]:
       * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master controller-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 Master controller-2
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted controller-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted controller-2
     * Container bundle set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis:pcmklatest]:
       * redis-bundle-0	(ocf:heartbeat:redis):	 Stopped
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-1
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Master controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-1
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Promoted controller-2
     * ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-2
     * ip-10.0.0.109	(ocf:heartbeat:IPaddr2):	 Started controller-1
     * ip-172.17.1.15	(ocf:heartbeat:IPaddr2):	 Started controller-2

@@ -20,18 +20,18 @@ Current cluster status:
       * Started: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]
       * Stopped: [ sles-5 ]
     * Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique):
-      * ocf_msdummy:0	(ocf:heartbeat:Stateful):	 Slave sles-3
-      * ocf_msdummy:1	(ocf:heartbeat:Stateful):	 Slave sles-4
-      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Slave sles-4
-      * ocf_msdummy:3	(ocf:heartbeat:Stateful):	 Slave sles-1
-      * ocf_msdummy:4	(ocf:heartbeat:Stateful):	 Slave sles-2
-      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Slave sles-1
+      * ocf_msdummy:0	(ocf:heartbeat:Stateful):	 Unpromoted sles-3
+      * ocf_msdummy:1	(ocf:heartbeat:Stateful):	 Unpromoted sles-4
+      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Unpromoted sles-4
+      * ocf_msdummy:3	(ocf:heartbeat:Stateful):	 Unpromoted sles-1
+      * ocf_msdummy:4	(ocf:heartbeat:Stateful):	 Unpromoted sles-2
+      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Unpromoted sles-1
       * ocf_msdummy:6	(ocf:heartbeat:Stateful):	 Stopped
       * ocf_msdummy:7	(ocf:heartbeat:Stateful):	 Stopped
-      * ocf_msdummy:8	(ocf:heartbeat:Stateful):	 Slave sles-6
-      * ocf_msdummy:9	(ocf:heartbeat:Stateful):	 Slave sles-6
-      * ocf_msdummy:10	(ocf:heartbeat:Stateful):	 Slave sles-2
-      * ocf_msdummy:11	(ocf:heartbeat:Stateful):	 Slave sles-3
+      * ocf_msdummy:8	(ocf:heartbeat:Stateful):	 Unpromoted sles-6
+      * ocf_msdummy:9	(ocf:heartbeat:Stateful):	 Unpromoted sles-6
+      * ocf_msdummy:10	(ocf:heartbeat:Stateful):	 Unpromoted sles-2
+      * ocf_msdummy:11	(ocf:heartbeat:Stateful):	 Unpromoted sles-3
 
 Transition Summary:
   * Fence (reboot) sles-5 'peer is no longer part of the cluster'
@@ -64,15 +64,15 @@ Revised Cluster Status:
       * Started: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]
       * Stopped: [ sles-5 ]
     * Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique):
-      * ocf_msdummy:0	(ocf:heartbeat:Stateful):	 Slave sles-3
-      * ocf_msdummy:1	(ocf:heartbeat:Stateful):	 Slave sles-4
-      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Slave sles-4
-      * ocf_msdummy:3	(ocf:heartbeat:Stateful):	 Slave sles-1
-      * ocf_msdummy:4	(ocf:heartbeat:Stateful):	 Slave sles-2
-      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Slave sles-1
+      * ocf_msdummy:0	(ocf:heartbeat:Stateful):	 Unpromoted sles-3
+      * ocf_msdummy:1	(ocf:heartbeat:Stateful):	 Unpromoted sles-4
+      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Unpromoted sles-4
+      * ocf_msdummy:3	(ocf:heartbeat:Stateful):	 Unpromoted sles-1
+      * ocf_msdummy:4	(ocf:heartbeat:Stateful):	 Unpromoted sles-2
+      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Unpromoted sles-1
       * ocf_msdummy:6	(ocf:heartbeat:Stateful):	 Stopped
       * ocf_msdummy:7	(ocf:heartbeat:Stateful):	 Stopped
-      * ocf_msdummy:8	(ocf:heartbeat:Stateful):	 Slave sles-6
-      * ocf_msdummy:9	(ocf:heartbeat:Stateful):	 Slave sles-6
-      * ocf_msdummy:10	(ocf:heartbeat:Stateful):	 Slave sles-2
-      * ocf_msdummy:11	(ocf:heartbeat:Stateful):	 Slave sles-3
+      * ocf_msdummy:8	(ocf:heartbeat:Stateful):	 Unpromoted sles-6
+      * ocf_msdummy:9	(ocf:heartbeat:Stateful):	 Unpromoted sles-6
+      * ocf_msdummy:10	(ocf:heartbeat:Stateful):	 Unpromoted sles-2
+      * ocf_msdummy:11	(ocf:heartbeat:Stateful):	 Unpromoted sles-3

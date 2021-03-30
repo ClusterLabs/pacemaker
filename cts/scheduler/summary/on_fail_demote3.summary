@@ -6,14 +6,14 @@ Current cluster status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-1
     * Clone Set: rsc1-clone [rsc1] (promotable):
-      * rsc1	(ocf:pacemaker:Stateful):	 FAILED Master rhel7-4
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-3 rhel7-5 ]
+      * rsc1	(ocf:pacemaker:Stateful):	 FAILED Promoted rhel7-4
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 rhel7-5 ]
     * Clone Set: rsc2-master [rsc2] (promotable):
-      * Masters: [ rhel7-4 ]
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-3 rhel7-5 ]
+      * Promoted: [ rhel7-4 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 rhel7-5 ]
 
 Transition Summary:
-  * Demote     rsc1:0     ( Master -> Slave rhel7-4 )
+  * Demote     rsc1:0     ( Promoted -> Unpromoted rhel7-4 )
 
 Executing Cluster Transition:
   * Resource action: rsc1            cancel=10000 on rhel7-4
@@ -30,7 +30,7 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-1
     * Clone Set: rsc1-clone [rsc1] (promotable):
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
     * Clone Set: rsc2-master [rsc2] (promotable):
-      * Masters: [ rhel7-4 ]
-      * Slaves: [ rhel7-1 rhel7-2 rhel7-3 rhel7-5 ]
+      * Promoted: [ rhel7-4 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 rhel7-5 ]

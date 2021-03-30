@@ -6,8 +6,8 @@ Current cluster status:
   * Full List of Resources:
     * xvmfence	(stonith:fence_xvm):	 Started rhel8-1
     * Clone Set: state-clone [state] (promotable):
-      * Masters: [ rhel8-1 ]
-      * Slaves: [ rhel8-2 ]
+      * Promoted: [ rhel8-1 ]
+      * Unpromoted: [ rhel8-2 ]
 
 Transition Summary:
 
@@ -21,5 +21,5 @@ Revised Cluster Status:
   * Full List of Resources:
     * xvmfence	(stonith:fence_xvm):	 Started rhel8-1
     * Clone Set: state-clone [state] (promotable):
-      * Masters: [ rhel8-1 ]
-      * Slaves: [ rhel8-2 ]
+      * Promoted: [ rhel8-1 ]
+      * Unpromoted: [ rhel8-2 ]

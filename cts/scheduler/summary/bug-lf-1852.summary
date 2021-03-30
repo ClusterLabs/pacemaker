@@ -4,7 +4,7 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms-drbd0 [drbd0] (promotable):
-      * Masters: [ mysql-02 ]
+      * Promoted: [ mysql-02 ]
       * Stopped: [ mysql-01 ]
     * Resource Group: fs_mysql_ip:
       * fs0	(ocf:heartbeat:Filesystem):	 Started mysql-02
@@ -32,8 +32,8 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms-drbd0 [drbd0] (promotable):
-      * Masters: [ mysql-02 ]
-      * Slaves: [ mysql-01 ]
+      * Promoted: [ mysql-02 ]
+      * Unpromoted: [ mysql-01 ]
     * Resource Group: fs_mysql_ip:
       * fs0	(ocf:heartbeat:Filesystem):	 Started mysql-02
       * mysqlid	(lsb:mysql):	 Started mysql-02

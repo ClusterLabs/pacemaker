@@ -5,13 +5,13 @@ Current cluster status:
   * Full List of Resources:
     * A	(ocf:pacemaker:Dummy):	 Started node1
     * Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable):
-      * Masters: [ node2 ]
-      * Slaves: [ node1 ]
+      * Promoted: [ node2 ]
+      * Unpromoted: [ node1 ]
 
 Transition Summary:
   * Move       A                   (        node1 -> node2 )
-  * Demote     MS_RSC_NATIVE:0     ( Master -> Slave node2 )
-  * Promote    MS_RSC_NATIVE:1     ( Slave -> Master node1 )
+  * Demote     MS_RSC_NATIVE:0     ( Promoted -> Unpromoted node2 )
+  * Promote    MS_RSC_NATIVE:1     ( Unpromoted -> Promoted node1 )
 
 Executing Cluster Transition:
   * Resource action: A               stop on node1
@@ -49,5 +49,5 @@ Revised Cluster Status:
   * Full List of Resources:
     * A	(ocf:pacemaker:Dummy):	 Started node2
     * Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable):
-      * Masters: [ node1 ]
-      * Slaves: [ node2 ]
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]

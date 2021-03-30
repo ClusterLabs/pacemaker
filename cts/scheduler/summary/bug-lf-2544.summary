@@ -4,10 +4,10 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms0 [s0] (promotable):
-      * Slaves: [ node-0 node-1 ]
+      * Unpromoted: [ node-0 node-1 ]
 
 Transition Summary:
-  * Promote    s0:1    ( Slave -> Master node-1 )
+  * Promote    s0:1    ( Unpromoted -> Promoted node-1 )
 
 Executing Cluster Transition:
   * Pseudo action:   ms0_promote_0
@@ -20,5 +20,5 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms0 [s0] (promotable):
-      * Masters: [ node-1 ]
-      * Slaves: [ node-0 ]
+      * Promoted: [ node-1 ]
+      * Unpromoted: [ node-0 ]

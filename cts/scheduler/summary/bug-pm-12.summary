@@ -5,15 +5,15 @@ Current cluster status:
   * Full List of Resources:
     * Clone Set: ms-sf [group] (promotable) (unique):
       * Resource Group: group:0:
-        * stateful-1:0	(ocf:heartbeat:Stateful):	 Slave node-b
-        * stateful-2:0	(ocf:heartbeat:Stateful):	 Slave node-b
+        * stateful-1:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
+        * stateful-2:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
       * Resource Group: group:1:
-        * stateful-1:1	(ocf:heartbeat:Stateful):	 Master node-a
-        * stateful-2:1	(ocf:heartbeat:Stateful):	 Master node-a
+        * stateful-1:1	(ocf:heartbeat:Stateful):	 Promoted node-a
+        * stateful-2:1	(ocf:heartbeat:Stateful):	 Promoted node-a
 
 Transition Summary:
-  * Restart    stateful-2:0     (  Slave node-b )  due to resource definition change
-  * Restart    stateful-2:1     ( Master node-a )  due to resource definition change
+  * Restart    stateful-2:0     ( Unpromoted node-b )  due to resource definition change
+  * Restart    stateful-2:1     (   Promoted node-a )  due to resource definition change
 
 Executing Cluster Transition:
   * Pseudo action:   ms-sf_demote_0
@@ -50,8 +50,8 @@ Revised Cluster Status:
   * Full List of Resources:
     * Clone Set: ms-sf [group] (promotable) (unique):
       * Resource Group: group:0:
-        * stateful-1:0	(ocf:heartbeat:Stateful):	 Slave node-b
-        * stateful-2:0	(ocf:heartbeat:Stateful):	 Slave node-b
+        * stateful-1:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
+        * stateful-2:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
       * Resource Group: group:1:
-        * stateful-1:1	(ocf:heartbeat:Stateful):	 Master node-a
-        * stateful-2:1	(ocf:heartbeat:Stateful):	 Master node-a
+        * stateful-1:1	(ocf:heartbeat:Stateful):	 Promoted node-a
+        * stateful-2:1	(ocf:heartbeat:Stateful):	 Promoted node-a

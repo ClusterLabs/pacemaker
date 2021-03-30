@@ -14,8 +14,8 @@ Transition Summary:
   * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
   * Start      container1     (     18node1 )
   * Start      container2     (     18node1 )
-  * Recover    lxc-ms:0       ( Master lxc1 )
-  * Recover    lxc-ms:1       (  Slave lxc2 )
+  * Recover    lxc-ms:0       (   Promoted lxc1 )
+  * Recover    lxc-ms:1       ( Unpromoted lxc2 )
   * Start      lxc1           (     18node1 )
   * Start      lxc2           (     18node1 )
 
@@ -69,5 +69,5 @@ Revised Cluster Status:
     * container1	(ocf:heartbeat:VirtualDomain):	 Started 18node1
     * container2	(ocf:heartbeat:VirtualDomain):	 Started 18node1
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Masters: [ lxc1 ]
-      * Slaves: [ lxc2 ]
+      * Promoted: [ lxc1 ]
+      * Unpromoted: [ lxc2 ]

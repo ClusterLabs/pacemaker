@@ -5,11 +5,11 @@ Current cluster status:
   * Full List of Resources:
     * HostingIsg	(ocf:heartbeat:Xen):	 Started ibm2.isg.si
     * Clone Set: ms_drbd_r0 [drbd_r0] (promotable):
-      * Masters: [ ibm2.isg.si ]
-      * Slaves: [ ibm1.isg.si ]
+      * Promoted: [ ibm2.isg.si ]
+      * Unpromoted: [ ibm1.isg.si ]
 
 Transition Summary:
-  * Promote    drbd_r0:1     ( Slave -> Master ibm1.isg.si )
+  * Promote    drbd_r0:1     ( Unpromoted -> Promoted ibm1.isg.si )
 
 Executing Cluster Transition:
   * Resource action: drbd_r0:0       cancel=30000 on ibm1.isg.si
@@ -33,4 +33,4 @@ Revised Cluster Status:
   * Full List of Resources:
     * HostingIsg	(ocf:heartbeat:Xen):	 Started ibm2.isg.si
     * Clone Set: ms_drbd_r0 [drbd_r0] (promotable):
-      * Masters: [ ibm1.isg.si ibm2.isg.si ]
+      * Promoted: [ ibm1.isg.si ibm2.isg.si ]

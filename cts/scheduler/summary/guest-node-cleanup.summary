@@ -10,13 +10,13 @@ Current cluster status:
     * container1	(ocf:heartbeat:VirtualDomain):	 FAILED
     * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Slaves: [ lxc2 ]
+      * Unpromoted: [ lxc2 ]
       * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
 Transition Summary:
   * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
   * Start      container1     (     rhel7-1 )
-  * Recover    lxc-ms:1       ( Master lxc1 )
+  * Recover    lxc-ms:1       ( Promoted lxc1 )
   * Restart    lxc1           (     rhel7-1 )  due to required container1 start
 
 Executing Cluster Transition:
@@ -51,5 +51,5 @@ Revised Cluster Status:
     * container1	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * container2	(ocf:heartbeat:VirtualDomain):	 Started rhel7-1
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
-      * Masters: [ lxc1 ]
-      * Slaves: [ lxc2 ]
+      * Promoted: [ lxc1 ]
+      * Unpromoted: [ lxc2 ]

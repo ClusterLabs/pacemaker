@@ -7,10 +7,10 @@ Current cluster status:
     * vm2	(ocf:heartbeat:VirtualDomain):	 Stopped
     * FAKE	(ocf:pacemaker:Dummy):	 Started dvossel-laptop2
     * Clone Set: W-master [W] (promotable):
-      * Masters: [ dvossel-laptop2 ]
+      * Promoted: [ dvossel-laptop2 ]
       * Stopped: [ 18builder 18node1 ]
     * Clone Set: X-master [X] (promotable):
-      * Masters: [ dvossel-laptop2 ]
+      * Promoted: [ dvossel-laptop2 ]
       * Stopped: [ 18builder 18node1 ]
 
 Transition Summary:
@@ -46,10 +46,10 @@ Revised Cluster Status:
     * vm2	(ocf:heartbeat:VirtualDomain):	 Stopped
     * FAKE	(ocf:pacemaker:Dummy):	 Started 18builder
     * Clone Set: W-master [W] (promotable):
-      * Masters: [ dvossel-laptop2 ]
-      * Slaves: [ 18builder ]
+      * Promoted: [ dvossel-laptop2 ]
+      * Unpromoted: [ 18builder ]
       * Stopped: [ 18node1 ]
     * Clone Set: X-master [X] (promotable):
-      * Masters: [ dvossel-laptop2 ]
-      * Slaves: [ 18builder ]
+      * Promoted: [ dvossel-laptop2 ]
+      * Unpromoted: [ 18builder ]
       * Stopped: [ 18node1 ]

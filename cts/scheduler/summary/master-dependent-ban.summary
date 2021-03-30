@@ -4,11 +4,11 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms_drbd-dtest1 [p_drbd-dtest1] (promotable):
-      * Slaves: [ c6 c7 ]
+      * Unpromoted: [ c6 c7 ]
     * p_dtest1	(ocf:heartbeat:Dummy):	 Stopped
 
 Transition Summary:
-  * Promote    p_drbd-dtest1:0     ( Slave -> Master c7 )
+  * Promote    p_drbd-dtest1:0     ( Unpromoted -> Promoted c7 )
   * Start      p_dtest1            (                 c7 )
 
 Executing Cluster Transition:
@@ -33,6 +33,6 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms_drbd-dtest1 [p_drbd-dtest1] (promotable):
-      * Masters: [ c7 ]
-      * Slaves: [ c6 ]
+      * Promoted: [ c7 ]
+      * Unpromoted: [ c6 ]
     * p_dtest1	(ocf:heartbeat:Dummy):	 Started c7

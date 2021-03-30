@@ -40,8 +40,8 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: rsc1 [child_rsc1] (promotable) (unique):
-      * child_rsc1:0	(ocf:heartbeat:apache):	 Slave node1
-      * child_rsc1:1	(ocf:heartbeat:apache):	 Slave node2
-      * child_rsc1:2	(ocf:heartbeat:apache):	 Slave node1
-      * child_rsc1:3	(ocf:heartbeat:apache):	 Slave node2
+      * child_rsc1:0	(ocf:heartbeat:apache):	 Unpromoted node1
+      * child_rsc1:1	(ocf:heartbeat:apache):	 Unpromoted node2
+      * child_rsc1:2	(ocf:heartbeat:apache):	 Unpromoted node1
+      * child_rsc1:3	(ocf:heartbeat:apache):	 Unpromoted node2
       * child_rsc1:4	(ocf:heartbeat:apache):	 Stopped

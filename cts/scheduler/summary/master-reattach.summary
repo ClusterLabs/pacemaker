@@ -4,8 +4,8 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms-drbd1 [drbd1] (promotable) (unmanaged):
-      * drbd1	(ocf:heartbeat:drbd):	 Master dktest1 (unmanaged)
-      * drbd1	(ocf:heartbeat:drbd):	 Slave dktest2 (unmanaged)
+      * drbd1	(ocf:heartbeat:drbd):	 Promoted dktest1 (unmanaged)
+      * drbd1	(ocf:heartbeat:drbd):	 Unpromoted dktest2 (unmanaged)
     * Resource Group: apache (unmanaged):
       * apache-vip	(ocf:heartbeat:IPaddr2):	 Started dktest1 (unmanaged)
       * mount	(ocf:heartbeat:Filesystem):	 Started dktest1 (unmanaged)
@@ -26,8 +26,8 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms-drbd1 [drbd1] (promotable) (unmanaged):
-      * drbd1	(ocf:heartbeat:drbd):	 Master dktest1 (unmanaged)
-      * drbd1	(ocf:heartbeat:drbd):	 Slave dktest2 (unmanaged)
+      * drbd1	(ocf:heartbeat:drbd):	 Promoted dktest1 (unmanaged)
+      * drbd1	(ocf:heartbeat:drbd):	 Unpromoted dktest2 (unmanaged)
     * Resource Group: apache (unmanaged):
       * apache-vip	(ocf:heartbeat:IPaddr2):	 Started dktest1 (unmanaged)
       * mount	(ocf:heartbeat:Filesystem):	 Started dktest1 (unmanaged)

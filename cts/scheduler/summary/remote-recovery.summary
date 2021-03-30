@@ -16,12 +16,12 @@ Current cluster status:
       * Started: [ messaging-0 messaging-1 messaging-2 ]
       * Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
     * Clone Set: galera-master [galera] (promotable):
-      * Masters: [ galera-0 galera-1 galera-2 ]
+      * Promoted: [ galera-0 galera-1 galera-2 ]
       * Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
     * Clone Set: redis-master [redis] (promotable):
-      * redis	(ocf:heartbeat:redis):	 Slave controller-1 (UNCLEAN)
-      * Masters: [ controller-0 ]
-      * Slaves: [ controller-2 ]
+      * redis	(ocf:heartbeat:redis):	 Unpromoted controller-1 (UNCLEAN)
+      * Promoted: [ controller-0 ]
+      * Unpromoted: [ controller-2 ]
       * Stopped: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
     * ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-0
     * ip-10.0.0.102	(ocf:heartbeat:IPaddr2):	 Started controller-0
@@ -43,7 +43,7 @@ Transition Summary:
   * Move       messaging-1                            ( controller-1 -> controller-2 )
   * Move       galera-0                               ( controller-1 -> controller-2 )
   * Move       galera-2                               ( controller-1 -> controller-2 )
-  * Stop       redis:0                                (           Slave controller-1 )  due to node availability
+  * Stop       redis:0                                (      Unpromoted controller-1 )  due to node availability
   * Move       ip-172.17.1.14                         ( controller-1 -> controller-2 )
   * Move       ip-172.17.1.17                         ( controller-1 -> controller-2 )
   * Move       ip-172.17.4.11                         ( controller-1 -> controller-2 )
@@ -111,11 +111,11 @@ Revised Cluster Status:
       * Started: [ messaging-0 messaging-1 messaging-2 ]
       * Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
     * Clone Set: galera-master [galera] (promotable):
-      * Masters: [ galera-0 galera-1 galera-2 ]
+      * Promoted: [ galera-0 galera-1 galera-2 ]
       * Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
     * Clone Set: redis-master [redis] (promotable):
-      * Masters: [ controller-0 ]
-      * Slaves: [ controller-2 ]
+      * Promoted: [ controller-0 ]
+      * Unpromoted: [ controller-2 ]
       * Stopped: [ controller-1 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
     * ip-192.168.24.6	(ocf:heartbeat:IPaddr2):	 Started controller-0
     * ip-10.0.0.102	(ocf:heartbeat:IPaddr2):	 Started controller-0

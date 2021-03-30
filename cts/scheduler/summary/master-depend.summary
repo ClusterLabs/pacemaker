@@ -49,7 +49,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: drbd [drbd0] (promotable):
-      * Slaves: [ vbox4 ]
+      * Unpromoted: [ vbox4 ]
       * Stopped: [ vbox3 ]
     * Clone Set: cman_clone [cman]:
       * Started: [ vbox4 ]

@@ -1381,9 +1381,15 @@ class CtsScheduler(object):
             simulation = subprocess.Popen(test_cmd_full, stdout=subprocess.PIPE,
                                           stderr=subprocess.STDOUT,
                                           env=os.environ)
-            # This makes diff happy regardless of PCMK__COMPAT_2_0
-            sed = subprocess.Popen(["sed", "-e", "s/ocf::/ocf:/g"],
-                                   stdin=simulation.stdout, stdout=f,
+            # This makes diff happy regardless of --enable-compat-2.0.
+            # Use sed -E to make Linux and BSD special characters more compatible.
+            sed = subprocess.Popen(["sed", "-E",
+                                    "-e", "s/ocf::/ocf:/g",
+                                    "-e", r"s/Masters:/Promoted:/",
+                                    "-e", r"s/Slaves:/Unpromoted:/",
+                                    "-e", r"s/ Master( |\[|$)/ Promoted\1/",
+                                    "-e", r"s/ Slave / Unpromoted /",
+                                   ], stdin=simulation.stdout, stdout=f,
                                    stderr=subprocess.STDOUT)
             simulation.stdout.close()
             sed.communicate()

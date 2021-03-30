@@ -5,8 +5,8 @@ Current cluster status:
   * Full List of Resources:
     * fs_1	(ocf:heartbeat:Filesystem):	 Started xen-1
     * Clone Set: ms-drbd0 [drbd0] (promotable):
-      * Masters: [ xen-1 ]
-      * Slaves: [ xen-2 ]
+      * Promoted: [ xen-1 ]
+      * Unpromoted: [ xen-2 ]
 
 Transition Summary:
 
@@ -19,5 +19,5 @@ Revised Cluster Status:
   * Full List of Resources:
     * fs_1	(ocf:heartbeat:Filesystem):	 Started xen-1
     * Clone Set: ms-drbd0 [drbd0] (promotable):
-      * Masters: [ xen-1 ]
-      * Slaves: [ xen-2 ]
+      * Promoted: [ xen-1 ]
+      * Unpromoted: [ xen-2 ]

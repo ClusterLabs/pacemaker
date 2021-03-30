@@ -76,4 +76,4 @@ Revised Cluster Status:
     * Container bundle: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]:
       * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started metal-2
     * Container bundle: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Slave metal-2
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Unpromoted metal-2
