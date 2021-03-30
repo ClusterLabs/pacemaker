@@ -401,17 +401,15 @@ void
 crm_peer_init(void)
 {
     if (crm_peer_cache == NULL) {
-        crm_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, destroy_crm_node);
+        crm_peer_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
 
     if (crm_remote_peer_cache == NULL) {
-        crm_remote_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, destroy_crm_node);
+        crm_remote_peer_cache = pcmk__strikey_table(NULL, destroy_crm_node);
     }
 
     if (known_node_cache == NULL) {
-        known_node_cache = g_hash_table_new_full(crm_strcase_hash,
-                                                 crm_strcase_equal, free,
-                                                 destroy_crm_node);
+        known_node_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
 }
 

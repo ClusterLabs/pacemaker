@@ -99,7 +99,7 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 static void
 expand_parents_fixed_nvpairs(pe_resource_t * rsc, pe_rule_eval_data_t * rule_data, GHashTable * meta_hash, pe_working_set_t * data_set)
 {
-    GHashTable *parent_orig_meta = crm_str_table_new();
+    GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
     pe_resource_t *p = rsc->parent;
 
     if (p == NULL) {
@@ -334,9 +334,7 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
     if (template_ops && rsc_ops) {
         xmlNode *op = NULL;
-        GHashTable *rsc_ops_hash = g_hash_table_new_full(crm_str_hash,
-                                                         g_str_equal, free,
-                                                         NULL);
+        GHashTable *rsc_ops_hash = pcmk__strkey_table(free, NULL);
 
         for (op = pcmk__xe_first_child(rsc_ops); op != NULL;
              op = pcmk__xe_next(op)) {
@@ -474,16 +472,14 @@ pe_rsc_params(pe_resource_t *rsc, pe_node_t *node, pe_working_set_t *data_set)
 
     // Find the parameter table for given node
     if (rsc->parameter_cache == NULL) {
-        rsc->parameter_cache = g_hash_table_new_full(crm_strcase_hash,
-                                                     crm_strcase_equal, free,
-                                                     free_params_table);
+        rsc->parameter_cache = pcmk__strikey_table(free, free_params_table);
     } else {
         params_on_node = g_hash_table_lookup(rsc->parameter_cache, node_name);
     }
 
     // If none exists yet, create one with parameters evaluated for node
     if (params_on_node == NULL) {
-        params_on_node = crm_str_table_new();
+        params_on_node = pcmk__strkey_table(free, free);
         get_rsc_attributes(params_on_node, rsc, node, data_set);
         g_hash_table_insert(rsc->parameter_cache, strdup(node_name),
                             params_on_node);
@@ -561,13 +557,9 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     (*rsc)->versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 #endif
 
-    (*rsc)->meta = crm_str_table_new();
-
-    (*rsc)->allowed_nodes =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
-
-    (*rsc)->known_on = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
-                                             free);
+    (*rsc)->meta = pcmk__strkey_table(free, free);
+    (*rsc)->allowed_nodes = pcmk__strkey_table(NULL, free);
+    (*rsc)->known_on = pcmk__strkey_table(NULL, free);
 
     value = crm_element_value((*rsc)->xml, XML_RSC_ATTR_INCARNATION);
     if (value) {
@@ -851,7 +843,7 @@ common_unpack(xmlNode * xml_obj, pe_resource_t ** rsc,
     pe_rsc_trace((*rsc), "\tAction notification: %s",
                  pcmk_is_set((*rsc)->flags, pe_rsc_notify)? "required" : "not required");
 
-    (*rsc)->utilization = crm_str_table_new();
+    (*rsc)->utilization = pcmk__strkey_table(free, free);
 
     pe__unpack_dataset_nvpairs((*rsc)->xml, XML_TAG_UTILIZATION, &rule_data,
                                (*rsc)->utilization, NULL, FALSE, data_set);

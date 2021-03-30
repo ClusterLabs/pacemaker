@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -426,8 +426,7 @@ void
 throttle_init(void)
 {
     if(throttle_records == NULL) {
-        throttle_records = g_hash_table_new_full(
-            crm_str_hash, g_str_equal, NULL, throttle_record_free);
+        throttle_records = pcmk__strkey_table(NULL, throttle_record_free);
         throttle_timer = mainloop_timer_add("throttle", 30 * 1000, TRUE, throttle_timer_cb, NULL);
     }
 

@@ -315,7 +315,7 @@ cib_init(void)
 #endif
     }
 
-    config_hash = crm_str_table_new();
+    config_hash = pcmk__strkey_table(free, free);
 
     if (startCib("cib.xml") == FALSE) {
         crm_crit("Cannot start CIB... terminating");

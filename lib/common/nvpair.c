@@ -920,7 +920,7 @@ xml2list(xmlNode *parent)
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
     xmlNode *nvpair_list = NULL;
-    GHashTable *nvpair_hash = crm_str_table_new();
+    GHashTable *nvpair_hash = pcmk__strkey_table(free, free);
 
     CRM_CHECK(parent != NULL, return nvpair_hash);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -90,8 +90,7 @@ static inline void
 init_recurring_actions(void)
 {
     if (recurring_actions == NULL) {
-        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
-                                                  NULL);
+        recurring_actions = pcmk__strkey_table(NULL, NULL);
     }
 }
 

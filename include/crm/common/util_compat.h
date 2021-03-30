@@ -69,6 +69,36 @@ char *pcmk_format_nvpair(const char *name, const char *value,
 //! \deprecated Use a standard printf()-style function instead
 char *pcmk_format_named_time(const char *name, time_t epoch_time);
 
+//! \deprecated Use g_str_hash() instead
+guint g_str_hash_traditional(gconstpointer v);
+
+//! \deprecated Use g_str_hash() instead
+#define crm_str_hash g_str_hash_traditional
+
+//! \deprecated Do not use Pacemaker for generic string comparison
+gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
+
+//! \deprecated Do not use Pacemaker for generic string manipulation
+guint crm_strcase_hash(gconstpointer v);
+
+//! \deprecated Use g_hash_table_new_full() instead
+static inline GHashTable *
+crm_str_table_new(void)
+{
+    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+}
+
+//! \deprecated Use g_hash_table_new_full() instead
+static inline GHashTable *
+crm_strcase_table_new(void)
+{
+    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal,
+                                 free, free);
+}
+
+//! \deprecated Do not use Pacemaker for generic hash table manipulation
+GHashTable *crm_str_table_dup(GHashTable *old_table);
+
 #ifdef __cplusplus
 }
 #endif

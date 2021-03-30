@@ -67,8 +67,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     }
 
     (*out)->quiet = false;
-
-    (*out)->messages = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+    (*out)->messages = pcmk__strkey_table(free, NULL);
 
     if ((*out)->init(*out) == false) {
         pcmk__output_free(*out);
@@ -86,7 +85,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
     }
 
     if (formatters == NULL) {
-        formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+        formatters = pcmk__strkey_table(free, NULL);
     }
 
     if (options != NULL && group != NULL) {

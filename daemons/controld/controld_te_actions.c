@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -402,7 +402,7 @@ void te_reset_job_counts(void)
     struct te_peer_s *peer = NULL;
 
     if(te_targets == NULL) {
-        te_targets = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, te_peer_free);
+        te_targets = pcmk__strkey_table(NULL, te_peer_free);
     }
 
     g_hash_table_iter_init(&iter, te_targets);

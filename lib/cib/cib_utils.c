@@ -189,7 +189,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
     if(pcmk_acl_required(user)) {
         const char *value = NULL;
-        GHashTable *options = crm_str_table_new();
+        GHashTable *options = pcmk__strkey_table(free, free);
 
         cib_read_config(options, xml);
         value = cib_pref(options, "enable-acl");
@@ -538,7 +538,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         output = get_message_xml(msg, F_CIB_CALLDATA);
     }
 
-    blob = g_hash_table_lookup(cib_op_callback_table, GINT_TO_POINTER(call_id));
+    blob = pcmk__intkey_table_lookup(cib_op_callback_table, call_id);
     if (blob == NULL) {
         crm_trace("No callback found for call %d", call_id);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 the Pacemaker project contributors
+ * Copyright 2016-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,17 +28,17 @@ static inline void
 add_inflight_alert(int call_id, int timeout)
 {
     if (inflight_alerts == NULL) {
-        inflight_alerts = g_hash_table_new(g_direct_hash, g_direct_equal);
+        inflight_alerts = pcmk__intkey_table(NULL);
     }
-    g_hash_table_insert(inflight_alerts, GINT_TO_POINTER(call_id),
-                        GINT_TO_POINTER(timeout));
+    pcmk__intkey_table_insert(inflight_alerts, call_id,
+                              GINT_TO_POINTER(timeout));
 }
 
 static inline void
 remove_inflight_alert(int call_id)
 {
     if (inflight_alerts != NULL) {
-        g_hash_table_remove(inflight_alerts, GINT_TO_POINTER(call_id));
+        pcmk__intkey_table_remove(inflight_alerts, call_id);
     }
 }
 

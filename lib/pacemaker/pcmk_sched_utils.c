@@ -102,7 +102,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     if (nodes == NULL) {
         return NULL;
     }
-    new_table = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    new_table = pcmk__strkey_table(NULL, free);
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         pe_node_t *new_node = pe__copy_node(node);

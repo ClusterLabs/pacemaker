@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@ static void
 get_meta_attrs_from_cib(xmlNode *basenode, pcmk__alert_t *entry,
                         guint *max_timeout)
 {
-    GHashTable *config_hash = crm_str_table_new();
+    GHashTable *config_hash = pcmk__strkey_table(free, free);
     crm_time_t *now = crm_time_new(NULL);
     const char *value = NULL;
 
@@ -75,7 +75,7 @@ get_envvars_from_cib(xmlNode *basenode, pcmk__alert_t *entry)
     }
 
     if (entry->envvars == NULL) {
-        entry->envvars = crm_str_table_new();
+        entry->envvars = pcmk__strkey_table(free, free);
     }
 
     for (child = first_named_child(child, XML_CIB_TAG_NVPAIR); child != NULL;

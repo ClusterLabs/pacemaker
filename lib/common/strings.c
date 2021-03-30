@@ -519,8 +519,14 @@ pcmk__ends_with_ext(const char *s, const char *match)
     return ends_with(s, match, true);
 }
 
-/*
- * This re-implements g_str_hash as it was prior to glib2-2.28:
+/*!
+ * \internal
+ * \brief Create a hash of a string suitable for use with GHashTable
+ *
+ * \param[in] v  String to hash
+ *
+ * \return A hash of \p v compatible with g_str_hash() before glib 2.28
+ * \note glib changed their hash implementation:
  *
  * https://gitlab.gnome.org/GNOME/glib/commit/354d655ba8a54b754cb5a3efb42767327775696c
  *
@@ -532,8 +538,8 @@ pcmk__ends_with_ext(const char *s, const char *match)
  * also appears to have some minor impact on the ordering of a few
  * pseudo_event IDs in the transition graph.
  */
-guint
-g_str_hash_traditional(gconstpointer v)
+static guint
+pcmk__str_hash(gconstpointer v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -544,15 +550,34 @@ g_str_hash_traditional(gconstpointer v)
     return h;
 }
 
+/*!
+ * \internal
+ * \brief Create a hash table with case-sensitive strings as keys
+ *
+ * \param[in] key_destroy_func    Function to free a key
+ * \param[in] value_destroy_func  Function to free a value
+ *
+ * \return Newly allocated hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+GHashTable *
+pcmk__strkey_table(GDestroyNotify key_destroy_func,
+                   GDestroyNotify value_destroy_func)
+{
+    return g_hash_table_new_full(pcmk__str_hash, g_str_equal,
+                                 key_destroy_func, value_destroy_func);
+}
+
 /* used with hash tables where case does not matter */
-gboolean
-crm_strcase_equal(gconstpointer a, gconstpointer b)
+static gboolean
+pcmk__strcase_equal(gconstpointer a, gconstpointer b)
 {
     return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
-guint
-crm_strcase_hash(gconstpointer v)
+static guint
+pcmk__strcase_hash(gconstpointer v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -563,6 +588,25 @@ crm_strcase_hash(gconstpointer v)
     return h;
 }
 
+/*!
+ * \internal
+ * \brief Create a hash table with case-insensitive strings as keys
+ *
+ * \param[in] key_destroy_func    Function to free a key
+ * \param[in] value_destroy_func  Function to free a value
+ *
+ * \return Newly allocated hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+GHashTable *
+pcmk__strikey_table(GDestroyNotify key_destroy_func,
+                    GDestroyNotify value_destroy_func)
+{
+    return g_hash_table_new_full(pcmk__strcase_hash, pcmk__strcase_equal,
+                                 key_destroy_func, value_destroy_func);
+}
+
 static void
 copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
 {
@@ -571,13 +615,23 @@ copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Copy a hash table that uses dynamically allocated strings
+ *
+ * \param[in] old_table  Hash table to duplicate
+ *
+ * \return New hash table with copies of everything in \p old_table
+ * \note This assumes the hash table uses dynamically allocated strings -- that
+ *       is, both the key and value free functions are free().
+ */
 GHashTable *
-crm_str_table_dup(GHashTable *old_table)
+pcmk__str_table_dup(GHashTable *old_table)
 {
     GHashTable *new_table = NULL;
 
     if (old_table) {
-        new_table = crm_str_table_new();
+        new_table = pcmk__strkey_table(free, free);
         g_hash_table_foreach(old_table, copy_str_table_entry, new_table);
     }
     return new_table;
@@ -1103,6 +1157,30 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
         snprintf(buffer, len, "%d", an_int);
     }
     return buffer;
+}
+
+guint
+g_str_hash_traditional(gconstpointer v)
+{
+    return pcmk__str_hash(v);
+}
+
+gboolean
+crm_strcase_equal(gconstpointer a, gconstpointer b)
+{
+    return pcmk__strcase_equal(a, b);
+}
+
+guint
+crm_strcase_hash(gconstpointer v)
+{
+    return pcmk__strcase_hash(v);
+}
+
+GHashTable *
+crm_str_table_dup(GHashTable *old_table)
+{
+    return pcmk__str_table_dup(old_table);
 }
 
 // End deprecated API

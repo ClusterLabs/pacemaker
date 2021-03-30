@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,6 +41,78 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
                    char **result, unsigned int *result_len);
 
 int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
+
+GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
+                               GDestroyNotify value_destroy_func);
+GHashTable *pcmk__strikey_table(GDestroyNotify key_destroy_func,
+                                GDestroyNotify value_destroy_func);
+GHashTable *pcmk__str_table_dup(GHashTable *old_table);
+
+/*!
+ * \internal
+ * \brief Create a hash table with integer keys
+ *
+ * \param[in] value_destroy_func  Function to free a value
+ *
+ * \return Newly allocated hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+static inline GHashTable *
+pcmk__intkey_table(GDestroyNotify value_destroy_func)
+{
+    return g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL,
+                                 value_destroy_func);
+}
+
+/*!
+ * \internal
+ * \brief Insert a value into a hash table with integer keys
+ *
+ * \param[in,out] hash_table  Table to insert into
+ * \param[in]     key         Integer key to insert
+ * \param[in]     value       Value to insert
+ *
+ * \return Whether the key/value was already in the table
+ * \note This has the same semantics as g_hash_table_insert(). If the key
+ *       already exists in the table, the old value is freed and replaced.
+ */
+static inline gboolean
+pcmk__intkey_table_insert(GHashTable *hash_table, int key, gpointer value)
+{
+    return g_hash_table_insert(hash_table, GINT_TO_POINTER(key), value);
+}
+
+/*!
+ * \internal
+ * \brief Look up a value in a hash table with integer keys
+ *
+ * \param[in] hash_table  Table to check
+ * \param[in] key         Integer key to look for
+ *
+ * \return Value in table for \key (or NULL if not found)
+ */
+static inline gpointer
+pcmk__intkey_table_lookup(GHashTable *hash_table, int key)
+{
+    return g_hash_table_lookup(hash_table, GINT_TO_POINTER(key));
+}
+
+/*!
+ * \internal
+ * \brief Remove a key/value from a hash table with integer keys
+ *
+ * \param[in] hash_table  Table to modify
+ * \param[in] key         Integer key of entry to remove
+ *
+ * \return Whether \p key was found and removed from \p hash_table
+ */
+static inline gboolean
+pcmk__intkey_table_remove(GHashTable *hash_table, int key)
+{
+    return g_hash_table_remove(hash_table, GINT_TO_POINTER(key));
+}
+
 gboolean pcmk__str_in_list(GList *lst, const gchar *s);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;

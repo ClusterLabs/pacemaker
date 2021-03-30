@@ -48,13 +48,8 @@ long long crm_parse_ll(const char *text, const char *default_text);
 int crm_parse_int(const char *text, const char *default_text);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
-gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
-guint crm_strcase_hash(gconstpointer v);
-guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
-
-#  define crm_str_hash g_str_hash_traditional
 
 static inline char *
 crm_itoa(int an_int)
@@ -73,34 +68,6 @@ crm_ttoa(time_t epoch_time)
 {
     return crm_strdup_printf("%lld", (long long) epoch_time);
 }
-
-/*!
- * \brief Create hash table with dynamically allocated string keys/values
- *
- * \return Newly allocated hash table
- * \note It is the caller's responsibility to free the result, using
- *       g_hash_table_destroy().
- */
-static inline GHashTable *
-crm_str_table_new(void)
-{
-    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
-}
-
-/*!
- * \brief Create hash table with case-insensitive dynamically allocated string keys/values
- *
- * \return Newly allocated hash table
- * \note It is the caller's responsibility to free the result, using
- *       g_hash_table_destroy().
- */
-static inline GHashTable *
-crm_strcase_table_new(void)
-{
-    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, free);
-}
-
-GHashTable *crm_str_table_dup(GHashTable *old_table);
 
 #  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 

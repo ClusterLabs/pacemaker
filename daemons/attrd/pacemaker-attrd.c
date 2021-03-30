@@ -385,7 +385,7 @@ main(int argc, char **argv)
         old_instance = NULL;
     }
 
-    attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
+    attributes = pcmk__strkey_table(NULL, free_attribute);
 
     /* Connect to the CIB before connecting to the cluster or listening for IPC.
      * This allows us to assume the CIB is connected whenever we process a

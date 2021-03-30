@@ -721,7 +721,7 @@ main(int argc, char **argv)
     guint modified = 0;
 
     GList *attr_delete = NULL;
-    GHashTable *attr_set = crm_str_table_new();
+    GHashTable *attr_set = pcmk__strkey_table(free, free);
 
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,

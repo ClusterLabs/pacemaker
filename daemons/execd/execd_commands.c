@@ -1358,7 +1358,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 #endif
 
-    params_copy = crm_str_table_dup(cmd->params);
+    params_copy = pcmk__str_table_dup(cmd->params);
 
     action = resources_action_create(rsc->rsc_id, rsc->class, rsc->provider,
                                      rsc->type,
