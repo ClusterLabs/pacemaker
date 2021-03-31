@@ -26,6 +26,9 @@ extern "C" {
 //! \deprecated Use PCMK_STONITH_PROVIDES instead
 #define XML_RSC_ATTR_PROVIDES       "provides"
 
+//! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
+#define XML_CIB_TAG_MASTER PCMK_XE_PROMOTED_LEGACY
+
 #ifdef __cplusplus
 }
 #endif

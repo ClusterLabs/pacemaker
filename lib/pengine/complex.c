@@ -79,7 +79,7 @@ get_resource_type(const char *name)
     } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
         return pe_clone;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_MASTER, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_PROMOTABLE_LEGACY, pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
         return pe_clone;
 
@@ -423,7 +423,8 @@ detect_promotable(pe_resource_t *rsc)
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (pcmk__str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER, pcmk__str_casei)) {
+    if (pcmk__str_eq(crm_element_name(rsc->xml), PCMK_XE_PROMOTABLE_LEGACY,
+                     pcmk__str_casei)) {
         /* @TODO in some future version, pe_warn_once() here,
          *       then drop support in even later version
          */

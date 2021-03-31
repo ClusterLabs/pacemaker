@@ -14,6 +14,29 @@
 extern "C" {
 #endif
 
+/* This file defines constants for various XML syntax (mainly element and
+ * attribute names).
+ *
+ * For consistency, new constants should start with "PCMK_", followed by "XE"
+ * for XML element names and "XA" for XML attribute names. Old names that don't
+ * follow this policy should eventually be deprecated and replaced with names
+ * that do.
+ */
+
+/*
+ * XML elements
+ */
+
+/* This has been deprecated as a CIB element (an alias for <clone> with
+ * "promotable" set to "true") since 2.0.0.
+ */
+#define PCMK_XE_PROMOTABLE_LEGACY           "master"
+
+
+/*
+ * Older constants that don't follow current naming
+ */
+
 #  ifndef F_ORIG
 #    define F_ORIG    "src"
 #  endif
@@ -181,7 +204,6 @@ extern "C" {
 #  define XML_CIB_TAG_RESOURCE	  	"primitive"
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
-#  define XML_CIB_TAG_MASTER        "master" // deprecated since 2.0.0
 #  define XML_CIB_TAG_CONTAINER		"bundle"
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
