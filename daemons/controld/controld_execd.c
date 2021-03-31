@@ -527,6 +527,15 @@ build_parameter_list(const lrmd_event_data_t *op,
 
     *result = create_xml_node(NULL, XML_TAG_PARAMS);
 
+    /* Consider all parameters only except private ones to be consistent with
+     * what scheduler does with calculate_secure_digest().
+     */
+    if (param_type == ra_param_private
+        && compare_version(fsa_our_dc_version, "3.16.0") >= 0) {
+        g_hash_table_foreach(op->params, hash2field, *result);
+        pcmk__filter_op_for_digest(*result);
+    }
+
     for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
 
@@ -570,6 +579,10 @@ build_parameter_list(const lrmd_event_data_t *op,
                 crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
                 crm_xml_add(*result, param->rap_name, v);
             }
+
+        } else {
+                crm_trace("Removing attr %s from the xml result", param->rap_name);
+                xml_remove_prop(*result, param->rap_name);
         }
     }
 

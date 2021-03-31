@@ -229,6 +229,7 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *secure_list = NULL;
+    bool old_version = (compare_version(op_version, "3.16.0") < 0);
 
     if (xml_op == NULL) {
         secure_list = " passwd password user ";
@@ -236,22 +237,30 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
     }
 
-    data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
-    if (overrides != NULL) {
-        g_hash_table_foreach(overrides, hash2field, data->params_secure);
+    if (old_version) {
+        data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
+        if (overrides != NULL) {
+            g_hash_table_foreach(overrides, hash2field, data->params_secure);
+        }
+
+        g_hash_table_foreach(params, hash2field, data->params_secure);
+
+    } else {
+        // Start with a copy of all parameters
+        data->params_secure = copy_xml(data->params_all);
     }
 
-    g_hash_table_foreach(params, hash2field, data->params_secure);
     if (secure_list != NULL) {
         pcmk__xe_remove_matching_attrs(data->params_secure, attr_in_string,
                                        (void *) secure_list);
     }
-    if (pcmk_is_set(pcmk_get_ra_caps(class),
-                    pcmk_ra_cap_fence_params)) {
+    if (old_version
+        && pcmk_is_set(pcmk_get_ra_caps(class),
+                       pcmk_ra_cap_fence_params)) {
         /* For stonith resources, Pacemaker adds special parameters,
-         * but these are not listed in fence agent meta-data, so the
-         * controller will not hash them. That means we have to filter
-         * them out before calculating our hash for comparison.
+         * but these are not listed in fence agent meta-data, so with older
+         * versions of DC, the controller will not hash them. That means we have
+         * to filter them out before calculating our hash for comparison.
          */
         pcmk__xe_remove_matching_attrs(data->params_secure, is_fence_param,
                                        NULL);
@@ -259,14 +268,14 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
     pcmk__filter_op_for_digest(data->params_secure);
 
     /* CRM_meta_timeout *should* be part of a digest for recurring operations.
-     * However, currently the controller does not add timeout to secure digests,
-     * because it only includes parameters declared by the resource agent.
+     * However, with older versions of DC, the controller does not add timeout
+     * to secure digests, because it only includes parameters declared by the
+     * resource agent.
      * Remove any timeout that made it this far, to match.
-     *
-     * @TODO Update the controller to add the timeout (which will require
-     * bumping the feature set and checking that here).
      */
-    xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+    if (old_version) {
+        xml_remove_prop(data->params_secure, CRM_META "_" XML_ATTR_TIMEOUT);
+    }
 
     data->digest_secure_calc = calculate_operation_digest(data->params_secure,
                                                           op_version);
