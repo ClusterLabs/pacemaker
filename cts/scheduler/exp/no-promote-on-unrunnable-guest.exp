@@ -84,7 +84,7 @@
     <action_set>
       <rsc_op id="189" operation="monitor" operation_key="ovndb_servers_monitor_10000" internal_operation_key="ovndb_servers:1_monitor_10000" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-1">
         <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_op_target_rc="8" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="60000"  inactive_probe_interval="180000" listen_on_master_ip_only="no" manage_northd="yes" master_ip="172.17.1.247" nb_master_port="6641" sb_master_port="6642"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_op_target_rc="8" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="60000"  inactive_probe_interval="180000" listen_on_master_ip_only="no" manage_northd="yes" master_ip="172.17.1.247" nb_master_port="6641" sb_master_port="6642"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -119,7 +119,7 @@
     <action_set>
       <rsc_op id="40" operation="cancel" operation_key="ovndb_servers_monitor_30000" internal_operation_key="ovndb_servers:1_monitor_30000" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-1">
         <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="60000"  inactive_probe_interval="180000" listen_on_master_ip_only="no" manage_northd="yes" master_ip="172.17.1.247" nb_master_port="6641" sb_master_port="6642"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="60000"  inactive_probe_interval="180000" listen_on_master_ip_only="no" manage_northd="yes" master_ip="172.17.1.247" nb_master_port="6641" sb_master_port="6642"/>
       </rsc_op>
     </action_set>
     <inputs/>

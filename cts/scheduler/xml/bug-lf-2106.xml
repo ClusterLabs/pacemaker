@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="24" num_updates="1" cib-last-written="Fri Jul 13 13:51:01 2012" dc-uuid="cl-virt-1">
+<cib validate-with="pacemaker-3.7" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="24" num_updates="1" cib-last-written="Fri Jul 13 13:51:01 2012" dc-uuid="cl-virt-1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -92,8 +92,8 @@
             <nvpair id="drbd-itwiki-instance_attributes-drbd_resource" name="drbd_resource" value="itwiki"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-itwiki-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
-            <op id="drbd-itwiki-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+            <op id="drbd-itwiki-monitor-59" interval="59" name="monitor" role="Promoted" timeout="30"/>
+            <op id="drbd-itwiki-monitor-60" interval="60" name="monitor" role="Unpromoted" timeout="30"/>
           </operations>
         </primitive>
       </clone>
@@ -120,8 +120,8 @@
             <nvpair id="drbd-bugtrack-instance_attributes-drbd_resource" name="drbd_resource" value="bugtrack"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-bugtrack-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
-            <op id="drbd-bugtrack-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+            <op id="drbd-bugtrack-monitor-59" interval="59" name="monitor" role="Promoted" timeout="30"/>
+            <op id="drbd-bugtrack-monitor-60" interval="60" name="monitor" role="Unpromoted" timeout="30"/>
           </operations>
         </primitive>
       </clone>
@@ -148,8 +148,8 @@
             <nvpair id="drbd-servsyslog-instance_attributes-drbd_resource" name="drbd_resource" value="servsyslog"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-servsyslog-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
-            <op id="drbd-servsyslog-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+            <op id="drbd-servsyslog-monitor-59" interval="59" name="monitor" role="Promoted" timeout="30"/>
+            <op id="drbd-servsyslog-monitor-60" interval="60" name="monitor" role="Unpromoted" timeout="30"/>
           </operations>
         </primitive>
       </clone>
@@ -176,8 +176,8 @@
             <nvpair id="drbd-smsprod2-instance_attributes-drbd_resource" name="drbd_resource" value="smsprod2"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-smsprod2-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
-            <op id="drbd-smsprod2-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+            <op id="drbd-smsprod2-monitor-59" interval="59" name="monitor" role="Promoted" timeout="30"/>
+            <op id="drbd-smsprod2-monitor-60" interval="60" name="monitor" role="Unpromoted" timeout="30"/>
           </operations>
         </primitive>
       </clone>
@@ -204,8 +204,8 @@
             <nvpair id="drbd-medomus-cvs-instance_attributes-drbd_resource" name="drbd_resource" value="medomus-cvs"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-medomus-cvs-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
-            <op id="drbd-medomus-cvs-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+            <op id="drbd-medomus-cvs-monitor-59" interval="59" name="monitor" role="Promoted" timeout="30"/>
+            <op id="drbd-medomus-cvs-monitor-60" interval="60" name="monitor" role="Unpromoted" timeout="30"/>
           </operations>
         </primitive>
       </clone>
@@ -232,19 +232,19 @@
             <nvpair id="drbd-infotos-instance_attributes-drbd_resource" name="drbd_resource" value="infotos"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-infotos-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
-            <op id="drbd-infotos-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+            <op id="drbd-infotos-monitor-59" interval="59" name="monitor" role="Promoted" timeout="30"/>
+            <op id="drbd-infotos-monitor-60" interval="60" name="monitor" role="Unpromoted" timeout="30"/>
           </operations>
         </primitive>
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="smsprod2-on-ms-smsprod2" rsc="smsprod2" score="INFINITY" with-rsc="ms-smsprod2" with-rsc-role="Master"/>
-      <rsc_colocation id="itwiki-on-ms-itwiki" rsc="itwiki" score="INFINITY" with-rsc="ms-itwiki" with-rsc-role="Master"/>
-      <rsc_colocation id="bugtrack-on-ms-bugtrack" rsc="bugtrack" score="INFINITY" with-rsc="ms-bugtrack" with-rsc-role="Master"/>
-      <rsc_colocation id="servsyslog-on-ms-servsyslog" rsc="servsyslog" score="INFINITY" with-rsc="ms-servsyslog" with-rsc-role="Master"/>
-      <rsc_colocation id="infotos-on-ms-infotos" rsc="infotos" score="INFINITY" with-rsc="ms-infotos" with-rsc-role="Master"/>
-      <rsc_colocation id="medomus-cvs-on-ms-medomus-cvs" rsc="medomus-cvs" score="INFINITY" with-rsc="ms-medomus-cvs" with-rsc-role="Master"/>
+      <rsc_colocation id="smsprod2-on-ms-smsprod2" rsc="smsprod2" score="INFINITY" with-rsc="ms-smsprod2" with-rsc-role="Promoted"/>
+      <rsc_colocation id="itwiki-on-ms-itwiki" rsc="itwiki" score="INFINITY" with-rsc="ms-itwiki" with-rsc-role="Promoted"/>
+      <rsc_colocation id="bugtrack-on-ms-bugtrack" rsc="bugtrack" score="INFINITY" with-rsc="ms-bugtrack" with-rsc-role="Promoted"/>
+      <rsc_colocation id="servsyslog-on-ms-servsyslog" rsc="servsyslog" score="INFINITY" with-rsc="ms-servsyslog" with-rsc-role="Promoted"/>
+      <rsc_colocation id="infotos-on-ms-infotos" rsc="infotos" score="INFINITY" with-rsc="ms-infotos" with-rsc-role="Promoted"/>
+      <rsc_colocation id="medomus-cvs-on-ms-medomus-cvs" rsc="medomus-cvs" score="INFINITY" with-rsc="ms-medomus-cvs" with-rsc-role="Promoted"/>
       <rsc_order first="ms-smsprod2" first-action="promote" id="ms-smsprod2-before-smsprod2" then="smsprod2" then-action="start"/>
       <rsc_order first="ms-itwiki" first-action="promote" id="ms-itwiki-before-itwiki" then="itwiki" then-action="start"/>
       <rsc_order first="ms-bugtrack" first-action="promote" id="ms-bugtrack-before-bugtrack" then="bugtrack" then-action="start"/>
@@ -258,37 +258,37 @@
         </rule>
       </rsc_location>
       <rsc_location id="ms-itwiki-master-connected" rsc="ms-itwiki">
-        <rule boolean-op="or" id="ms-itwiki-master-connected-rule" role="Master" score="-INFINITY">
+        <rule boolean-op="or" id="ms-itwiki-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-itwiki-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-itwiki-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
       <rsc_location id="ms-smsprod2-master-connected" rsc="ms-smsprod2">
-        <rule boolean-op="or" id="ms-smsprod2-master-connected-rule" role="Master" score="-INFINITY">
+        <rule boolean-op="or" id="ms-smsprod2-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-smsprod2-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-smsprod2-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
       <rsc_location id="ms-servsyslog-master-connected" rsc="ms-servsyslog">
-        <rule boolean-op="or" id="ms-servsyslog-master-connected-rule" role="Master" score="-INFINITY">
+        <rule boolean-op="or" id="ms-servsyslog-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-servsyslog-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-servsyslog-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
       <rsc_location id="ms-bugtrack-master-connected" rsc="ms-bugtrack">
-        <rule boolean-op="or" id="ms-bugtrack-master-connected-rule" role="Master" score="-INFINITY">
+        <rule boolean-op="or" id="ms-bugtrack-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-bugtrack-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-bugtrack-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
       <rsc_location id="ms-infotos-master-connected" rsc="ms-infotos">
-        <rule boolean-op="or" id="ms-infotos-master-connected-rule" role="Master" score="-INFINITY">
+        <rule boolean-op="or" id="ms-infotos-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-infotos-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-infotos-master-connected-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
       <rsc_location id="ms-medomus-cvs-master-connected" rsc="ms-medomus-cvs">
-        <rule boolean-op="or" id="ms-medomus-cvs-master-connected-rule" role="Master" score="-INFINITY">
+        <rule boolean-op="or" id="ms-medomus-cvs-master-connected-rule" role="Promoted" score="-INFINITY">
           <expression attribute="pingd" id="ms-medomus-cvs-master-connected-expression" operation="not_defined"/>
           <expression attribute="pingd" id="ms-medomus-cvs-master-connected-expression-0" operation="lte" value="0"/>
         </rule>

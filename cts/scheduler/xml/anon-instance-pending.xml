@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.1.0" validate-with="pacemaker-3.1" epoch="1" num_updates="89" admin_epoch="0" have-quorum="1">
+<cib crm_feature_set="3.1.0" validate-with="pacemaker-3.7" epoch="1" num_updates="89" admin_epoch="0" have-quorum="1">
   <configuration>
     <crm_config/>
     <nodes>
@@ -21,7 +21,7 @@
         <primitive id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
           <operations>
             <op id="clone1rsc-monitor-interval-10s" interval="10s" name="monitor"/>
-            <op id="clone1rsc-monitor-interval-9s" interval="9s" name="monitor" role="Master"/>
+            <op id="clone1rsc-monitor-interval-9s" interval="9s" name="monitor" role="Promoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone1-meta_attributes">

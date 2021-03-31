@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="1" num_updates="28" dc-uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib admin_epoch="0" epoch="1" num_updates="28" dc-uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -45,16 +45,16 @@
           <primitive id="stateful-1" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
               <op name="start" interval="0" id="start-1" timeout="60s" on-fail="stop"/>
-              <op name="monitor" interval="10" id="monitor-1m" timeout="60s" on-fail="stop" role="Master"/>
-              <op name="monitor" interval="20" id="monitor-1s" timeout="60s" on-fail="stop" role="Slave"/>
+              <op name="monitor" interval="10" id="monitor-1m" timeout="60s" on-fail="stop" role="Promoted"/>
+              <op name="monitor" interval="20" id="monitor-1s" timeout="60s" on-fail="stop" role="Unpromoted"/>
               <op name="stop" interval="0" id="stop-1" timeout="60s" on-fail="stop"/>
             </operations>
           </primitive>
           <primitive id="stateful-2" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
               <op name="start" interval="0" id="start-2" timeout="60s" on-fail="stop"/>
-              <op name="monitor" interval="10" id="monitor-2m" timeout="60s" on-fail="stop" role="Master"/>
-              <op name="monitor" interval="20" id="monitor-2s" timeout="60s" on-fail="stop" role="Slave"/>
+              <op name="monitor" interval="10" id="monitor-2m" timeout="60s" on-fail="stop" role="Promoted"/>
+              <op name="monitor" interval="20" id="monitor-2s" timeout="60s" on-fail="stop" role="Unpromoted"/>
               <op name="stop" interval="0" id="stop-2" timeout="60s" on-fail="stop"/>
             </operations>
           </primitive>
@@ -73,10 +73,10 @@
     </resources>
     <constraints>
       <rsc_location id="rsc_location" rsc="ms-sf">
-        <rule id="location-0" role="Master" score="100">
+        <rule id="location-0" role="Promoted" score="100">
           <expression id="expression.id22304" attribute="#uname" operation="eq" value="dl380g5a"/>
         </rule>
-        <rule id="location-1" role="Master" score="500">
+        <rule id="location-1" role="Promoted" score="500">
           <expression id="expression.id22324" attribute="#uname" operation="eq" value="dl380g5b"/>
         </rule>
       </rsc_location>

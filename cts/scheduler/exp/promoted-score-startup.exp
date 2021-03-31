@@ -42,7 +42,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="pgsqld:0_monitor_15000" on_node="srv1" on_node_uuid="1">
         <primitive id="pgsqld" long-id="pgsqld:0" class="ocf" provider="heartbeat" type="pgsqlms"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="srv1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="10000" bindir="/usr/pgsql-10/bin"  pgdata="/var/lib/pgsql/10/data"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="15000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="srv1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="10000" bindir="/usr/pgsql-10/bin"  pgdata="/var/lib/pgsql/10/data"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -141,7 +141,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="pgsqld:1_monitor_16000" on_node="srv2" on_node_uuid="2">
         <primitive id="pgsqld" long-id="pgsqld:1" class="ocf" provider="heartbeat" type="pgsqlms"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="16000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="srv2" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="10000" bindir="/usr/pgsql-10/bin"  pgdata="/var/lib/pgsql/10/data"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="16000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="srv2" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="10000" bindir="/usr/pgsql-10/bin"  pgdata="/var/lib/pgsql/10/data"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -1,4 +1,4 @@
-<cib admin_epoch="0" num_updates="6" crm_feature_set="3.0.8" epoch="214" validate-with="pacemaker-3.0" cib-last-written="Mon Nov 11 15:48:14 2013" update-origin="sd01-0" update-client="crm_resource" have-quorum="1" dc-uuid="1">
+<cib admin_epoch="0" num_updates="6" crm_feature_set="3.0.8" epoch="214" validate-with="pacemaker-3.7" cib-last-written="Mon Nov 11 15:48:14 2013" update-origin="sd01-0" update-client="crm_resource" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -153,11 +153,11 @@
           <operations>
             <op name="start" interval="0" timeout="240" id="cdev-pool-0-drbd-start-0"/>
             <op name="stop" interval="0" timeout="100" id="cdev-pool-0-drbd-stop-0"/>
-            <op name="monitor" interval="20" role="Slave" timeout="20" id="cdev-pool-0-drbd-monitor-20"/>
+            <op name="monitor" interval="20" role="Unpromoted" timeout="20" id="cdev-pool-0-drbd-monitor-20"/>
             <op name="promote" interval="0" timeout="95" id="cdev-pool-0-drbd-promote-0"/>
             <op name="demote" interval="0" timeout="90" id="cdev-pool-0-drbd-demote-0"/>
             <op name="notify" interval="0" timeout="90" id="cdev-pool-0-drbd-notify-0"/>
-            <op name="monitor" interval="10" role="Master" timeout="20" id="cdev-pool-0-drbd-monitor-10"/>
+            <op name="monitor" interval="10" role="Promoted" timeout="20" id="cdev-pool-0-drbd-monitor-10"/>
           </operations>
         </primitive>
       </clone>
@@ -280,10 +280,10 @@
       <rsc_location id="loc-stonith-xvm-sd01-0" rsc="stonith-xvm-sd01-0" score="-INFINITY" node="sd01-0"/>
       <rsc_location id="loc-stonith-xvm-sd01-1" rsc="stonith-xvm-sd01-1" score="-INFINITY" node="sd01-1"/>
       <rsc_colocation id="cdev-pool-0-iscsi-target-with-ietd" score="INFINITY" rsc="cdev-pool-0-iscsi-export" with-rsc="cl-ietd"/>
-      <rsc_colocation id="cdev-pool-0-iscsi-target-with-storage" score="INFINITY" rsc="cdev-pool-0-iscsi-export" with-rsc="ms-cdev-pool-0-drbd" with-rsc-role="Master"/>
+      <rsc_colocation id="cdev-pool-0-iscsi-target-with-storage" score="INFINITY" rsc="cdev-pool-0-iscsi-export" with-rsc="ms-cdev-pool-0-drbd" with-rsc-role="Promoted"/>
       <rsc_order id="cdev-pool-0-iscsi-target-after-ietd" first="cl-ietd" first-action="start" then="cdev-pool-0-iscsi-export" then-action="start"/>
       <rsc_order id="cdev-pool-0-iscsi-target-after-storage" first="ms-cdev-pool-0-drbd" first-action="promote" then="cdev-pool-0-iscsi-export" then-action="start"/>
-      <rsc_colocation id="cdev-pool-0-iscsi-vips-fw-with-vips" score="INFINITY" rsc="ms-cdev-pool-0-iscsi-vips-fw" rsc-role="Master" with-rsc="cdev-pool-0-iscsi-vips" with-rsc-role="Started"/>
+      <rsc_colocation id="cdev-pool-0-iscsi-vips-fw-with-vips" score="INFINITY" rsc="ms-cdev-pool-0-iscsi-vips-fw" rsc-role="Promoted" with-rsc="cdev-pool-0-iscsi-vips" with-rsc-role="Started"/>
       <rsc_colocation id="cdev-pool-0-iscsi-vips-with-target" score="INFINITY" rsc="cdev-pool-0-iscsi-vips" with-rsc="cdev-pool-0-iscsi-export"/>
       <rsc_order id="cdev-pool-0-iscsi-vips-after-target" first="cdev-pool-0-iscsi-export" first-action="start" then="cdev-pool-0-iscsi-vips" then-action="start"/>
       <rsc_order id="cdev-pool-0-iscsi-vips-fw-after-target" first="cdev-pool-0-iscsi-export" first-action="start" then="ms-cdev-pool-0-iscsi-vips-fw" then-action="promote"/>

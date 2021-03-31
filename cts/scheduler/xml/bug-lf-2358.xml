@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="90" num_updates="1" cib-last-written="Fri Jul 13 13:51:02 2012" dc-uuid="0af1add7-22b5-4342-9816-67e6351605de">
+<cib validate-with="pacemaker-3.7" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="90" num_updates="1" cib-last-written="Fri Jul 13 13:51:02 2012" dc-uuid="0af1add7-22b5-4342-9816-67e6351605de">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -164,13 +164,13 @@
       </group>
     </resources>
     <constraints>
-      <rsc_colocation id="c_nfs_on_drbd" rsc="rg_nfs" score="INFINITY" with-rsc="ms_drbd_nfsexport" with-rsc-role="Master"/>
+      <rsc_colocation id="c_nfs_on_drbd" rsc="rg_nfs" score="INFINITY" with-rsc="ms_drbd_nfsexport" with-rsc-role="Promoted"/>
       <rsc_order first="ms_drbd_nfsexport" first-action="promote" id="o_drbd_before_nfs" then="rg_nfs" then-action="start"/>
       <rsc_order first="ms_drbd_mysql1" first-action="promote" id="o_drbd_before_mysql1" then="rg_mysql1" then-action="start"/>
-      <rsc_colocation id="c_mysql1_on_drbd" rsc="rg_mysql1" score="INFINITY" with-rsc="ms_drbd_mysql1" with-rsc-role="Master"/>
+      <rsc_colocation id="c_mysql1_on_drbd" rsc="rg_mysql1" score="INFINITY" with-rsc="ms_drbd_mysql1" with-rsc-role="Promoted"/>
       <rsc_order first="ms_drbd_mysql2" first-action="promote" id="o_drbd_before_mysql2" then="rg_mysql2" then-action="start"/>
-      <rsc_colocation id="c_mysql2_on_drbd" rsc="rg_mysql2" score="INFINITY" with-rsc="ms_drbd_mysql2" with-rsc-role="Master"/>
-      <rsc_colocation id="c_mysql1_not_on_mysql2" rsc="ms_drbd_mysql1" rsc-role="Master" score="-INFINITY" with-rsc="ms_drbd_mysql2" with-rsc-role="Master"/>
+      <rsc_colocation id="c_mysql2_on_drbd" rsc="rg_mysql2" score="INFINITY" with-rsc="ms_drbd_mysql2" with-rsc-role="Promoted"/>
+      <rsc_colocation id="c_mysql1_not_on_mysql2" rsc="ms_drbd_mysql1" rsc-role="Promoted" score="-INFINITY" with-rsc="ms_drbd_mysql2" with-rsc-role="Promoted"/>
     </constraints>
     <rsc_defaults/>
     <op_defaults/>

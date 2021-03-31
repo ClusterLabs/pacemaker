@@ -1,4 +1,4 @@
-<cib crm_feature_set="2.1" admin_epoch="1" epoch="4" num_updates="53" dc-uuid="f10a448b-abcb-4743-a7b9-cbb966b46462" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+<cib crm_feature_set="2.1" admin_epoch="1" epoch="4" num_updates="53" dc-uuid="f10a448b-abcb-4743-a7b9-cbb966b46462" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -68,12 +68,12 @@
             <nvpair id="nvpair.id22231" name="drbd_resource" value="r0"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="20s" id="drbd-r0-monitor-1" timeout="10s" role="Master" start-delay="10s"/>
-            <op name="monitor" interval="21s" id="drbd-r0-monitor-2" timeout="10s" role="Slave" start-delay="10s"/>
-            <op name="start" interval="0" id="drbd-r0-start-1" timeout="10s" role="Master"/>
-            <op name="start" interval="0" id="drbd-r0-start-2" timeout="10s" role="Slave"/>
-            <op name="stop" interval="0" id="drbd-r0-stop-1" timeout="10s" role="Master"/>
-            <op name="stop" interval="0" id="drbd-r0-stop-2" timeout="10s" role="Slave"/>
+            <op name="monitor" interval="20s" id="drbd-r0-monitor-1" timeout="10s" role="Promoted" start-delay="10s"/>
+            <op name="monitor" interval="21s" id="drbd-r0-monitor-2" timeout="10s" role="Unpromoted" start-delay="10s"/>
+            <op name="start" interval="0" id="drbd-r0-start-1" timeout="10s" role="Promoted"/>
+            <op name="start" interval="0" id="drbd-r0-start-2" timeout="10s" role="Unpromoted"/>
+            <op name="stop" interval="0" id="drbd-r0-stop-1" timeout="10s" role="Promoted"/>
+            <op name="stop" interval="0" id="drbd-r0-stop-2" timeout="10s" role="Unpromoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-drbd-msr.meta">
@@ -160,15 +160,15 @@
     </resources>
     <constraints>
       <rsc_location id="rsc-location-drbd-msr" rsc="drbd-msr">
-        <rule id="preferred-location-drbd-msr" role="Master" score="50">
+        <rule id="preferred-location-drbd-msr" role="Promoted" score="50">
           <expression id="expression.id22801" attribute="#uname" operation="eq" value="pollux"/>
         </rule>
-        <rule id="pingd-score-group-1" role="Master" score-attribute="pingd-1-node-attribute">
+        <rule id="pingd-score-group-1" role="Promoted" score-attribute="pingd-1-node-attribute">
           <expression id="expression.id22822" attribute="pingd-1-node-attribute" operation="defined"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="group-1-prefer-on-drbd-msr-master" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Master" score="INFINITY"/>
-      <rsc_colocation id="group-1-never-on-drbd-msr-slave" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Slave" score="-INFINITY"/>
+      <rsc_colocation id="group-1-prefer-on-drbd-msr-master" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Promoted" score="INFINITY"/>
+      <rsc_colocation id="group-1-never-on-drbd-msr-slave" rsc="group-1" with-rsc="drbd-msr" with-rsc-role="Unpromoted" score="-INFINITY"/>
       <rsc_order id="group-1-after-drbd-msr" first="drbd-msr" then="group-1" then-action="start" first-action="promote"/>
       <rsc_location id="pollux-fencing-placement" rsc="pollux-fencing">
         <rule id="pollux-fencing-placement-1" score="INFINITY">

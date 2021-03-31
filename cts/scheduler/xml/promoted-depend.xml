@@ -1,4 +1,4 @@
-<cib crm_feature_set="2.1" admin_epoch="0" epoch="165" num_updates="3" dc-uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib crm_feature_set="2.1" admin_epoch="0" epoch="165" num_updates="3" dc-uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -37,8 +37,8 @@
             <nvpair id="nvpair.id22041" name="drbd_resource" value="drbd0"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="59s" id="drbd0-op1" timeout="10s" role="Master"/>
-            <op name="monitor" interval="60s" id="drbd0-op2" timeout="10s" role="Slave"/>
+            <op name="monitor" interval="59s" id="drbd0-op1" timeout="10s" role="Promoted"/>
+            <op name="monitor" interval="60s" id="drbd0-op2" timeout="10s" role="Unpromoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-drbd.meta"/>
@@ -135,7 +135,7 @@
         </rule>
       </rsc_location>
       <rsc_order id="drbd_before_clvmd" first="drbd" then="clvmd_clone" then-action="start" first-action="promote"/>
-      <rsc_colocation id="clvmd_on_drbd0" rsc="clvmd_clone" with-rsc="drbd" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="clvmd_on_drbd0" rsc="clvmd_clone" with-rsc="drbd" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_order id="cman_before_clvmd" first="cman_clone" then="clvmd_clone" then-action="start" first-action="start"/>
       <rsc_colocation id="clvmd_on_cman" rsc="clvmd_clone" with-rsc="cman_clone" with-rsc-role="Started" score="INFINITY"/>
       <rsc_location id="vmnci36_location" rsc="vmnci36">

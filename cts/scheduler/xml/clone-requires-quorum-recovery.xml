@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.1.0" validate-with="pacemaker-3.0" epoch="218" num_updates="36" admin_epoch="0" cib-last-written="Thu May 24 10:29:26 2018" update-origin="rhel7-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4" execution-date="1527175796">
+<cib crm_feature_set="3.1.0" validate-with="pacemaker-3.7" epoch="218" num_updates="36" admin_epoch="0" cib-last-written="Thu May 24 10:29:26 2018" update-origin="rhel7-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4" execution-date="1527175796">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -98,8 +98,8 @@
             <nvpair id="dummy-boss-meta_attributes-requires" name="requires" value="quorum"/>
           </meta_attributes>
           <operations>
-            <op id="dummy-boss-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="dummy-boss-monitor-interval-11" interval="11" name="monitor" role="Slave" timeout="20"/>
+            <op id="dummy-boss-monitor-interval-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="dummy-boss-monitor-interval-11" interval="11" name="monitor" role="Unpromoted" timeout="20"/>
             <op id="dummy-boss-notify-interval-0s" interval="0s" name="notify" timeout="5"/>
             <op id="dummy-boss-start-interval-0s" interval="0s" name="start" timeout="20"/>
             <op id="dummy-boss-stop-interval-0s" interval="0s" name="stop" timeout="20"/>

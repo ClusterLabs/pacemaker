@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="6" num_updates="73" dc-uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:16 2012">
+<cib admin_epoch="0" epoch="6" num_updates="73" dc-uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:16 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -52,7 +52,7 @@
         </instance_attributes>
         <meta_attributes id="primitive-rsc_c001n02.meta">
           <nvpair id="is_managed.meta.auto-67" name="is-managed" value="1"/>
-          <nvpair id="nvpair.meta.auto-80" name="target-role" value="Slave"/>
+          <nvpair id="nvpair.meta.auto-80" name="target-role" value="Unpromoted"/>
         </meta_attributes>
       </primitive>
       <clone id="promoteme">
@@ -71,7 +71,7 @@
           </instance_attributes>
           <meta_attributes id="primitive-rsc_c001n03.meta">
             <nvpair id="is_managed.meta.auto-85" name="is-managed" value="1"/>
-            <nvpair id="nvpair.meta.auto-98" name="target-role" value="Master"/>
+            <nvpair id="nvpair.meta.auto-98" name="target-role" value="Promoted"/>
           </meta_attributes>
         </primitive>
       </clone>

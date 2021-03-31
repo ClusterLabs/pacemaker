@@ -1,4 +1,4 @@
-<cib epoch="1426" num_updates="561" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul  5 14:09:07 2013" update-origin="hex-1" update-client="cibadmin" update-user="root" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="hex-2">
+<cib epoch="1426" num_updates="561" admin_epoch="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul  5 14:09:07 2013" update-origin="hex-1" update-client="cibadmin" update-user="root" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="hex-2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -95,8 +95,8 @@
             <nvpair id="drbd-r0-instance_attributes-drbd_resource" name="drbd_resource" value="r0"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-r0-monitor-29" interval="29" name="monitor" role="Slave"/>
-            <op id="drbd-r0-monitor-31" interval="31" name="monitor" role="Master"/>
+            <op id="drbd-r0-monitor-29" interval="29" name="monitor" role="Unpromoted"/>
+            <op id="drbd-r0-monitor-31" interval="31" name="monitor" role="Promoted"/>
           </operations>
         </primitive>
       </clone>
@@ -165,8 +165,8 @@
             <nvpair id="drbd-r1-instance_attributes-drbd_resource" name="drbd_resource" value="r1"/>
           </instance_attributes>
           <operations>
-            <op id="drbd-r1-monitor-29" interval="29" name="monitor" role="Slave"/>
-            <op id="drbd-r1-monitor-31" interval="31" name="monitor" role="Master"/>
+            <op id="drbd-r1-monitor-29" interval="29" name="monitor" role="Unpromoted"/>
+            <op id="drbd-r1-monitor-31" interval="31" name="monitor" role="Promoted"/>
           </operations>
           <meta_attributes id="drbd-r1-meta_attributes">
             <nvpair id="drbd-r1-meta_attributes-target-role" name="target-role" value="Started"/>
@@ -184,7 +184,7 @@
     <constraints>
       <rsc_colocation id="colo-fs-1" rsc="fs-xfs-1" score="INFINITY" with-rsc="baseclone"/>
       <rsc_colocation id="colo-fs-2" rsc="fs2" score="INFINITY" with-rsc="baseclone"/>
-      <rsc_colocation id="colo-r0" rsc="r0-group" score="INFINITY" with-rsc="ms-r0" with-rsc-role="Master"/>
+      <rsc_colocation id="colo-r0" rsc="r0-group" score="INFINITY" with-rsc="ms-r0" with-rsc-role="Promoted"/>
       <rsc_order first="ms-r0" first-action="promote" id="order-r0" then="r0-group" then-action="start"/>
       <rsc_order first="fs2" id="order-dummy3" kind="Optional" then="dummy3"/>
       <rsc_order first="fs-xfs-1" id="order-dummy4" then="dummy4"/>

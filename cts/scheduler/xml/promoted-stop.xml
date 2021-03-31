@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="26" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:06 2012">
+<cib admin_epoch="0" epoch="26" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:06 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -21,11 +21,11 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_location id="beekhof-prefer-m1" rsc="m" role="Master" node="node1" score="1"/>
-      <rsc_location id="beekhof-prefer-m2" rsc="m" role="Master" node="node2" score="1"/>
-      <rsc_location id="beekhof-prefer-m3" rsc="m" role="Master" node="node3" score="1"/>
-      <rsc_location id="cli-ban-m-on-node1" rsc="m" role="Master" node="node1" score="-INFINITY"/>
-      <rsc_location id="cli-ban-m-on-node2" rsc="m" role="Master" node="node2" score="-INFINITY"/>
+      <rsc_location id="beekhof-prefer-m1" rsc="m" role="Promoted" node="node1" score="1"/>
+      <rsc_location id="beekhof-prefer-m2" rsc="m" role="Promoted" node="node2" score="1"/>
+      <rsc_location id="beekhof-prefer-m3" rsc="m" role="Promoted" node="node3" score="1"/>
+      <rsc_location id="cli-ban-m-on-node1" rsc="m" role="Promoted" node="node1" score="-INFINITY"/>
+      <rsc_location id="cli-ban-m-on-node2" rsc="m" role="Promoted" node="node2" score="-INFINITY"/>
       <rsc_location id="cli-ban-m-on-node3" rsc="m" role="Started" node="node3" score="-INFINITY"/>
     </constraints>
   </configuration>

@@ -1,4 +1,4 @@
-<cib epoch="1" num_updates="57" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:03 2012" have-quorum="1">
+<cib epoch="1" num_updates="57" admin_epoch="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:03 2012" have-quorum="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -34,8 +34,8 @@
         </meta_attributes>
         <primitive class="ocf" id="rsc3" provider="pacemaker" type="Stateful">
           <operations id="rsc3-operations">
-            <op id="rsc3-monitor-master-5" interval="5" name="monitor" role="Master"/>
-            <op id="rsc3-monitor-slave-5" interval="5" name="monitor" role="Slave"/>
+            <op id="rsc3-monitor-master-5" interval="5" name="monitor" role="Promoted"/>
+            <op id="rsc3-monitor-slave-5" interval="5" name="monitor" role="Unpromoted"/>
           </operations>
         </primitive>
       </clone>
@@ -44,7 +44,7 @@
       <rsc_location id="loc-rsc1" rsc="rsc1" node="node2" score="10"/>
       <rsc_location id="loc-rsc2" rsc="rsc2" node="node2" score="10"/>
       <rsc_location id="loc-ms3" rsc="ms3">
-        <rule id="loc-ms3-rule" role="Master" score="10">
+        <rule id="loc-ms3-rule" role="Promoted" score="10">
           <expression attribute="#uname" id="loc-ms3-expression" operation="eq" value="node2"/>
         </rule>
       </rsc_location>

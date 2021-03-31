@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="13" num_updates="99" dc-uuid="5d98a2ff-f9bf-45be-964b-27e4246c0085" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib admin_epoch="0" epoch="13" num_updates="99" dc-uuid="5d98a2ff-f9bf-45be-964b-27e4246c0085" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -50,18 +50,18 @@
     </resources>
     <constraints>
       <rsc_location id="rsc_location_group_0" rsc="ms-sf">
-        <rule id="preferred_location_group_0" role="Master" score="100">
+        <rule id="preferred_location_group_0" role="Promoted" score="100">
           <expression id="expression.id22103" attribute="#uname" operation="eq" value="sel3"/>
         </rule>
       </rsc_location>
       <rsc_location id="rsc_location_group_1" rsc="ms-drbd0">
-        <rule id="preferred_location_group_1" role="Master" score="100">
+        <rule id="preferred_location_group_1" role="Promoted" score="100">
           <expression id="expression.id22131" attribute="#uname" operation="eq" value="sel3"/>
         </rule>
       </rsc_location>
       <rsc_order id="drbd0_before_fs0" first="ms-drbd0" then="fs0" then-action="start" first-action="promote" kind="Optional"/>
       <rsc_order id="sf_before_fs0" first="ms-sf" then="fs0" then-action="start" first-action="promote" kind="Optional"/>
-      <rsc_colocation id="fs0_on_drbd0" rsc="fs0" with-rsc="ms-drbd0" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="fs0_on_drbd0" rsc="fs0" with-rsc="ms-drbd0" with-rsc-role="Promoted" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>

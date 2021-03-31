@@ -1,4 +1,4 @@
-<cib admin_epoch="0" cib-last-written="Fri Jul 13 13:51:13 2012" epoch="3" num_updates="19" validate-with="pacemaker-3.0">
+<cib admin_epoch="0" cib-last-written="Fri Jul 13 13:51:13 2012" epoch="3" num_updates="19" validate-with="pacemaker-3.7">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -32,15 +32,15 @@
           <resource_ref id="rsc2"/>
           <resource_ref id="rsc3"/>
         </resource_set>
-        <resource_set id="coloc-1-2" role="Master">
+        <resource_set id="coloc-1-2" role="Promoted">
           <resource_ref id="ms-rsc"/>
         </resource_set>
       </rsc_colocation>
       <rsc_location id="pref-ms-rsc-1" rsc="ms-rsc">
-        <rule id="prefer-master-1-rule-0" role="Master" score="500">
+        <rule id="prefer-master-1-rule-0" role="Promoted" score="500">
           <expression attribute="#uname" id="pref-ms-rsc-1-expression-0" operation="eq" value="node1"/>
         </rule>
-        <rule id="prefer-master-1-rule-1" role="Master" score="300">
+        <rule id="prefer-master-1-rule-1" role="Promoted" score="300">
           <expression attribute="#uname" id="pref-ms-rsc-1-expression-1" operation="eq" value="node2"/>
         </rule>
       </rsc_location>

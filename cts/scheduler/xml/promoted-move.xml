@@ -1,4 +1,4 @@
-<cib epoch="7" num_updates="44" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="22222222-2222-2222-2222-222222222222" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib epoch="7" num_updates="44" admin_epoch="0" validate-with="pacemaker-3.7" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="22222222-2222-2222-2222-222222222222" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -52,8 +52,8 @@
           </instance_attributes>
           <operations>
             <op id="prmDRBD-start-0s" interval="0s" name="start" on-fail="restart" timeout="240s"/>
-            <op id="prmDRBD-monitor-10s" interval="10s" name="monitor" on-fail="restart" role="Master" timeout="20s"/>
-            <op id="prmDRBD-monitor-20s" interval="20s" name="monitor" on-fail="restart" role="Slave" timeout="20s"/>
+            <op id="prmDRBD-monitor-10s" interval="10s" name="monitor" on-fail="restart" role="Promoted" timeout="20s"/>
+            <op id="prmDRBD-monitor-20s" interval="20s" name="monitor" on-fail="restart" role="Unpromoted" timeout="20s"/>
             <op id="prmDRBD-promote-0s" interval="0s" name="promote" on-fail="restart" timeout="90s"/>
             <op id="prmDRBD-demote-0s" interval="0s" name="demote" on-fail="block" timeout="90s"/>
             <op id="prmDRBD-stop-0s" interval="0s" name="stop" on-fail="block" timeout="100s"/>
@@ -70,7 +70,7 @@
           <expression attribute="#uname" id="rsc_location-1-expression-0" operation="eq" value="bl460g1n14"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="rsc_colocation-1" rsc="grpDRBD" score="INFINITY" with-rsc="msDRBD" with-rsc-role="Master"/>
+      <rsc_colocation id="rsc_colocation-1" rsc="grpDRBD" score="INFINITY" with-rsc="msDRBD" with-rsc-role="Promoted"/>
       <rsc_order first="msDRBD" first-action="promote" id="rsc_order-1" kind="Optional" then="grpDRBD" then-action="start"/>
     </constraints>
     <rsc_defaults>

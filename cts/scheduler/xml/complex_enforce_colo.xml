@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.9" validate-with="pacemaker-3.0" epoch="157" num_updates="0" admin_epoch="0" cib-last-written="Sat Feb 14 08:54:18 2015" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-3.7" epoch="157" num_updates="0" admin_epoch="0" cib-last-written="Sat Feb 14 08:54:18 2015" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -178,8 +178,8 @@
             <op id="galera-start-timeout-120" interval="0s" name="start" timeout="120"/>
             <op id="galera-stop-timeout-120" interval="0s" name="stop" timeout="120"/>
             <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
-            <op id="galera-monitor-interval-10-role-Master" interval="10" name="monitor" role="Master" timeout="30"/>
-            <op id="galera-monitor-interval-30-role-Slave" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-monitor-interval-10-role-Master" interval="10" name="monitor" role="Promoted" timeout="30"/>
+            <op id="galera-monitor-interval-30-role-Slave" interval="30" name="monitor" role="Unpromoted" timeout="30"/>
             <op id="galera-demote-timeout-120" interval="0s" name="demote" timeout="120"/>
             <op id="galera-promote-timeout-300s-on-fail-block" interval="0s" name="promote" on-fail="block" timeout="300s"/>
           </operations>

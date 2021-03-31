@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="13" num_updates="24" dc-uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+<cib admin_epoch="0" epoch="13" num_updates="24" dc-uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:00 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -55,7 +55,7 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_colocation id="colocation_shared_filesystem_shared_storage-master" rsc="shared_filesystem" with-rsc="shared_storage" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="colocation_shared_filesystem_shared_storage-master" rsc="shared_filesystem" with-rsc="shared_storage" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_order id="order_shared_filesystem_after_shared_storage-promote" first="shared_storage" then="shared_filesystem" then-action="start" first-action="promote"/>
     </constraints>
   </configuration>

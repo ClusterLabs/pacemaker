@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="28" num_updates="21" admin_epoch="0" cib-last-written="Tue Aug 29 12:51:46 2017" update-origin="srv1" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.7" epoch="28" num_updates="21" admin_epoch="0" cib-last-written="Tue Aug 29 12:51:46 2017" update-origin="srv1" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -34,8 +34,8 @@
             <op id="pgsqld-stop-interval-0s" interval="0s" name="stop" timeout="60s"/>
             <op id="pgsqld-promote-interval-0s" interval="0s" name="promote" timeout="30s"/>
             <op id="pgsqld-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
-            <op id="pgsqld-monitor-interval-15s" interval="15s" name="monitor" role="Master" timeout="10s"/>
-            <op id="pgsqld-monitor-interval-16s" interval="16s" name="monitor" role="Slave" timeout="10s"/>
+            <op id="pgsqld-monitor-interval-15s" interval="15s" name="monitor" role="Promoted" timeout="10s"/>
+            <op id="pgsqld-monitor-interval-16s" interval="16s" name="monitor" role="Unpromoted" timeout="10s"/>
             <op id="pgsqld-notify-interval-0s" interval="0s" name="notify" timeout="60s"/>
           </operations>
         </primitive>
@@ -60,7 +60,7 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_colocation id="colocation-pgsql-master-ip-pgsql-ha-INFINITY" rsc="pgsql-master-ip" rsc-role="Started" score="INFINITY" with-rsc="pgsql-ha" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-pgsql-master-ip-pgsql-ha-INFINITY" rsc="pgsql-master-ip" rsc-role="Started" score="INFINITY" with-rsc="pgsql-ha" with-rsc-role="Promoted"/>
       <rsc_order first="pgsql-ha" first-action="promote" id="order-pgsql-ha-pgsql-master-ip-Mandatory" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="start"/>
       <rsc_order first="pgsql-ha" first-action="demote" id="order-pgsql-ha-pgsql-master-ip-Mandatory-1" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="stop"/>
     </constraints>

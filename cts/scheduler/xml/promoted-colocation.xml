@@ -1,4 +1,4 @@
-<cib epoch="10" num_updates="5" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="box1" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib epoch="10" num_updates="5" admin_epoch="0" validate-with="pacemaker-3.7" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="box1" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -21,8 +21,8 @@
         </meta_attributes>
         <primitive class="ocf" id="conntrackd-stateful" provider="dk" type="conn">
           <operations>
-            <op id="conntrackd-stateful-monitor-30" interval="30" name="monitor" role="Master"/>
-            <op id="conntrackd-stateful-monitor-29" interval="29" name="monitor" role="Slave"/>
+            <op id="conntrackd-stateful-monitor-30" interval="30" name="monitor" role="Promoted"/>
+            <op id="conntrackd-stateful-monitor-29" interval="29" name="monitor" role="Unpromoted"/>
           </operations>
         </primitive>
       </clone>
@@ -60,7 +60,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_colocation id="ms-conntrackd-on-virtualips" rsc="ms-conntrackd" rsc-role="Master" score="INFINITY" with-rsc="virtualips"/>
+      <rsc_colocation id="ms-conntrackd-on-virtualips" rsc="ms-conntrackd" rsc-role="Promoted" score="INFINITY" with-rsc="virtualips"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc-options">

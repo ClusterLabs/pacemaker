@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="2526" num_updates="3" cib-last-written="Fri Jul 13 13:51:08 2012" dc-uuid="hex-13">
+<cib validate-with="pacemaker-3.7" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="2526" num_updates="3" cib-last-written="Fri Jul 13 13:51:08 2012" dc-uuid="hex-13">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -48,15 +48,15 @@
         </meta_attributes>
         <primitive class="ocf" id="s0" provider="pacemaker" type="Stateful">
           <operations>
-            <op id="s0-monitor-20s" interval="20s" name="monitor" role="Master"/>
-            <op id="s0-monitor-21s" interval="21s" name="monitor" role="Slave"/>
+            <op id="s0-monitor-20s" interval="20s" name="monitor" role="Promoted"/>
+            <op id="s0-monitor-21s" interval="21s" name="monitor" role="Unpromoted"/>
           </operations>
         </primitive>
       </clone>
     </resources>
     <constraints>
       <rsc_order first="g0" id="promote-after-g0" then="ms0" then-action="promote"/>
-      <rsc_colocation id="master-with-g0" rsc="ms0" rsc-role="Master" score="INFINITY" with-rsc="g0"/>
+      <rsc_colocation id="master-with-g0" rsc="ms0" rsc-role="Promoted" score="INFINITY" with-rsc="g0"/>
     </constraints>
     <rsc_defaults/>
     <op_defaults/>

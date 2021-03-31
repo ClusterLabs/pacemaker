@@ -1,4 +1,4 @@
-<cib epoch="89" num_updates="8" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.6" update-origin="node2" update-client="crm_attribute" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" dc-uuid="1031448768">
+<cib epoch="89" num_updates="8" admin_epoch="0" validate-with="pacemaker-3.7" crm_feature_set="3.0.6" update-origin="node2" update-client="crm_attribute" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" dc-uuid="1031448768">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -33,8 +33,8 @@
         </meta_attributes>
         <primitive class="ocf" id="MS_RSC_NATIVE" provider="pacemaker" type="Stateful">
           <operations>
-            <op id="drbd_pgdrive-monitor-4" interval="4s" name="monitor" role="Slave"/>
-            <op id="drbd_pgdrive-monitor-5" interval="5s" name="monitor" role="Master"/>
+            <op id="drbd_pgdrive-monitor-4" interval="4s" name="monitor" role="Unpromoted"/>
+            <op id="drbd_pgdrive-monitor-5" interval="5s" name="monitor" role="Promoted"/>
           </operations>
         </primitive>
       </clone>

@@ -327,7 +327,7 @@
     <action_set>
       <rsc_op id="42" operation="monitor" operation_key="pgsql_monitor_9000" internal_operation_key="pgsql:1_monitor_9000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="9000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_op_target_rc="8" CRM_meta_physical_host="bl460g8n3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="9000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_op_target_rc="8" CRM_meta_physical_host="bl460g8n3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

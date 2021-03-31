@@ -1,4 +1,4 @@
-<cib epoch="146" num_updates="33" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:00 2012" have-quorum="1" dc-uuid="fc16-builder">
+<cib epoch="146" num_updates="33" admin_epoch="0" validate-with="pacemaker-3.7" crm_feature_set="3.0.6" update-origin="fc16-builder" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:00 2012" have-quorum="1" dc-uuid="fc16-builder">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -16,7 +16,7 @@
       <clone id="MS_DUMMY">
         <meta_attributes id="MS_DUMMY-meta_attributes">
           <nvpair id="MS_DUMMY-meta_attributes-promotable" name="promotable" value="true"/>
-          <nvpair id="MS_DUMMY-meta_attributes-target-role" name="target-role" value="Master"/>
+          <nvpair id="MS_DUMMY-meta_attributes-target-role" name="target-role" value="Promoted"/>
           <nvpair id="MS_DUMMY-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="MS_DUMMY-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="MS_DUMMY-meta_attributes-promoted-max" name="promoted-max" value="1"/>
@@ -25,8 +25,8 @@
         </meta_attributes>
         <primitive class="ocf" id="DUMMY" provider="pacemaker" type="Stateful">
           <operations>
-            <op id="DUMMY-monitor-15s" interval="15" name="monitor" role="Slave" timeout="60s"/>
-            <op id="DUNNY-monitor-30s" interval="30" name="monitor" role="Master" timeout="60s"/>
+            <op id="DUMMY-monitor-15s" interval="15" name="monitor" role="Unpromoted" timeout="60s"/>
+            <op id="DUNNY-monitor-30s" interval="30" name="monitor" role="Promoted" timeout="60s"/>
           </operations>
         </primitive>
       </clone>
@@ -34,9 +34,9 @@
       <primitive class="ocf" id="MASTER_IP" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints>
-      <rsc_colocation id="master_ip_colocation" rsc="MASTER_IP" score="INFINITY" with-rsc="MS_DUMMY" with-rsc-role="Master"/>
-      <rsc_colocation id="slave_ip_primary" rsc="SLAVE_IP" score="101" with-rsc="MS_DUMMY" with-rsc-role="Master"/>
-      <rsc_colocation id="slave_ip_secondary" rsc="SLAVE_IP" score="1000" with-rsc="MS_DUMMY" with-rsc-role="Slave"/>
+      <rsc_colocation id="master_ip_colocation" rsc="MASTER_IP" score="INFINITY" with-rsc="MS_DUMMY" with-rsc-role="Promoted"/>
+      <rsc_colocation id="slave_ip_primary" rsc="SLAVE_IP" score="101" with-rsc="MS_DUMMY" with-rsc-role="Promoted"/>
+      <rsc_colocation id="slave_ip_secondary" rsc="SLAVE_IP" score="1000" with-rsc="MS_DUMMY" with-rsc-role="Unpromoted"/>
     </constraints>
   </configuration>
   <status>

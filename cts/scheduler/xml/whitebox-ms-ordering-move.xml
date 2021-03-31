@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="92" num_updates="7" admin_epoch="0" cib-last-written="Tue Mar  8 11:08:54 2016" update-origin="rhel7-1" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="5">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.7" epoch="92" num_updates="7" admin_epoch="0" cib-last-written="Tue Mar  8 11:08:54 2016" update-origin="rhel7-1" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="5">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -146,7 +146,7 @@
         <primitive class="ocf" id="stateful-1" provider="pacemaker" type="Stateful">
           <operations>
             <op id="stateful-1-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
-            <op id="stateful-1-monitor-16s" interval="16s" name="monitor" role="Master" timeout="60s"/>
+            <op id="stateful-1-monitor-16s" interval="16s" name="monitor" role="Promoted" timeout="60s"/>
           </operations>
         </primitive>
       </clone>
@@ -254,7 +254,7 @@
         </rule>
       </rsc_location>
       <rsc_order first="master-1" first-action="promote" id="group-1-after-master-1" kind="Mandatory" then="group-1" then-action="start"/>
-      <rsc_colocation id="group-1-with-master-1" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Master"/>
+      <rsc_colocation id="group-1-with-master-1" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Promoted"/>
       <rsc_order first="group-1" first-action="start" id="lsb-dummy-after-group-1" kind="Mandatory" then="lsb-dummy" then-action="start"/>
       <rsc_colocation id="lsb-dummy-with-group-1" rsc="lsb-dummy" score="INFINITY" with-rsc="group-1"/>
       <rsc_location id="cli-prefer-container1" rsc="container1" role="Started" node="rhel7-2" score="INFINITY"/>

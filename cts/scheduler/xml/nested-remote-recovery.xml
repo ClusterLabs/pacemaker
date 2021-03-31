@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="123" num_updates="49" admin_epoch="0" cib-last-written="Tue Sep 11 21:07:59 2018" update-origin="controller-1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2" execution-date="1536701005">
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-3.7" epoch="123" num_updates="49" admin_epoch="0" cib-last-written="Tue Sep 11 21:07:59 2018" update-origin="controller-1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2" execution-date="1536701005">
    <!-- This tests a bundle's remote connection being on a different node than
         its container. In this case, galera:0 has just failed in the
         galera-bundle-docker-0 container, which is running on database-0
@@ -157,7 +157,7 @@
         </operations>
       </primitive>
       <bundle id="galera-bundle">
-        <docker image="192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest" masters="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <docker image="192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3123"/>
         <storage>
           <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
@@ -179,14 +179,14 @@
           </instance_attributes>
           <meta_attributes id="galera-meta_attributes">
             <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
-            <nvpair id="galera-meta_attributes-master-max" name="master-max" value="3"/>
+            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
             <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
           </meta_attributes>
           <operations>
             <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
             <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
-            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
-            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Promoted" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Unpromoted" timeout="30"/>
             <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
             <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
             <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
@@ -225,7 +225,7 @@
         </primitive>
       </bundle>
       <bundle id="redis-bundle">
-        <docker image="192.168.24.1:8787/rhosp13/openstack-redis:pcmklatest" masters="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <docker image="192.168.24.1:8787/rhosp13/openstack-redis:pcmklatest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3124"/>
         <storage>
           <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>
@@ -254,8 +254,8 @@
           <operations>
             <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
             <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>
-            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Master" timeout="60"/>
-            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Slave" timeout="60"/>
+            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Promoted" timeout="60"/>
+            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Unpromoted" timeout="60"/>
             <op id="redis-notify-interval-0s" interval="0s" name="notify" timeout="90"/>
             <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
             <op id="redis-start-interval-0s" interval="0s" name="start" timeout="200s"/>

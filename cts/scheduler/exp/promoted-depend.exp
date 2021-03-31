@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="drbd0:0_monitor_60000" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
         <primitive id="drbd0" long-id="drbd0:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_master_max="2" CRM_meta_master_node_max="2" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="vbox4" CRM_meta_on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="2" CRM_meta_role="Slave" CRM_meta_timeout="10000"  drbd_resource="drbd0"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_master_max="2" CRM_meta_master_node_max="2" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="vbox4" CRM_meta_on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" CRM_meta_promoted_max="2" CRM_meta_promoted_node_max="2" CRM_meta_role="Unpromoted" CRM_meta_timeout="10000"  drbd_resource="drbd0"/>
       </rsc_op>
     </action_set>
     <inputs>

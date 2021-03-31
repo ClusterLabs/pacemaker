@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="80" num_updates="23" dc-uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib admin_epoch="0" epoch="80" num_updates="23" dc-uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -64,7 +64,7 @@
           <primitive id="master_slave_Stateful" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
               <op name="monitor" interval="5s" id="ms-sf_monitor" timeout="30s"/>
-              <op name="monitor" interval="6s" id="ms-sf_monitor_master" timeout="30s" role="Master"/>
+              <op name="monitor" interval="6s" id="ms-sf_monitor_master" timeout="30s" role="Promoted"/>
             </operations>
           </primitive>
           <meta_attributes id="group-grp_ms_sf.meta"/>
@@ -87,10 +87,10 @@
         </rule>
       </rsc_location>
       <rsc_location id="rsc_location_group_0" rsc="ms-sf">
-        <rule id="preferred_location_group_0" role="Master" score="100">
+        <rule id="preferred_location_group_0" role="Promoted" score="100">
           <expression id="expression.id22369" attribute="#uname" operation="eq" value="rh44-1"/>
         </rule>
-        <rule id="preferred_location_group_1" role="Master" score="50">
+        <rule id="preferred_location_group_1" role="Promoted" score="50">
           <expression id="expression.id22390" attribute="#uname" operation="eq" value="rh44-2"/>
         </rule>
       </rsc_location>

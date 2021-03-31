@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="340" num_updates="42004" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:08 2012">
+<cib admin_epoch="0" epoch="340" num_updates="42004" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:08 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="default">
@@ -256,14 +256,14 @@
       <rsc_order id="order_drbd_mysql_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_mysql"/>
       <rsc_order id="order_drbd_www_ip0" first-action="start" first="intip_1_master" then="ms_drbd_www"/>
       <rsc_order id="order_drbd_www_ip1" first-action="start" first="intip_2_slave" then="ms_drbd_www"/>
-      <rsc_colocation id="colo_drbd_mysql_ip0" rsc="drbd_mysql" with-rsc="intip_1_master" rsc-role="Master"/>
-      <rsc_colocation id="colo_drbd_mysql_ip1" rsc="drbd_mysql" with-rsc="intip_2_slave" rsc-role="Slave" score="100"/>
-      <rsc_colocation id="colo_drbd_www_ip0" rsc="drbd_www" with-rsc="intip_1_master" rsc-role="Master" score="100"/>
-      <rsc_colocation id="colo_drbd_www_ip1" rsc="drbd_www" with-rsc="intip_2_slave" rsc-role="Slave" score="100"/>
+      <rsc_colocation id="colo_drbd_mysql_ip0" rsc="drbd_mysql" with-rsc="intip_1_master" rsc-role="Promoted"/>
+      <rsc_colocation id="colo_drbd_mysql_ip1" rsc="drbd_mysql" with-rsc="intip_2_slave" rsc-role="Unpromoted" score="100"/>
+      <rsc_colocation id="colo_drbd_www_ip0" rsc="drbd_www" with-rsc="intip_1_master" rsc-role="Promoted" score="100"/>
+      <rsc_colocation id="colo_drbd_www_ip1" rsc="drbd_www" with-rsc="intip_2_slave" rsc-role="Unpromoted" score="100"/>
       <rsc_order id="drbd_before_fs_mysql" first="ms_drbd_mysql" then="fs_mysql" then-action="start" first-action="promote"/>
-      <rsc_colocation id="colo_drbd_fs_mysql" rsc="fs_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="colo_drbd_fs_mysql" rsc="fs_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_order id="drbd_before_ocfs2_www" first="ms_drbd_www" then="clone_ocfs2_www" then-action="start" first-action="promote"/>
-      <rsc_colocation id="colo_ddrbd_ocfs2_www" rsc="clone_ocfs2_www" with-rsc="ms_drbd_www" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="colo_ddrbd_ocfs2_www" rsc="clone_ocfs2_www" with-rsc="ms_drbd_www" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_order id="mysql-server_after_fs_mysql" first="fs_mysql" then="mysql-server" then-action="start" first-action="start"/>
       <rsc_colocation id="colo_mysql-server_and_fs_mysql" rsc="mysql-server" with-rsc="fs_mysql" with-rsc-role="Started" score="INFINITY"/>
       <rsc_order id="webservices_after_ocfs2_www" first="clone_ocfs2_www" then="clone_webservice" then-action="start" first-action="start"/>

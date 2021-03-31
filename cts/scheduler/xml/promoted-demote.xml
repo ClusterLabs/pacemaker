@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="253" num_updates="247" dc-uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib admin_epoch="0" epoch="253" num_updates="247" dc-uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="crm_config">
@@ -55,7 +55,7 @@
             <nvpair id="nvpair.id22158" name="drbd_resource" value="drbd3"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="10s" id="cyrus_drbd_mon_master" timeout="5s" role="Master"/>
+            <op name="monitor" interval="10s" id="cyrus_drbd_mon_master" timeout="5s" role="Promoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-cyrus_drbd.meta"/>
@@ -105,7 +105,7 @@
             <nvpair id="nvpair.id22460" name="drbd_resource" value="drbd4"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="10s" id="named_drbd_mon_master" timeout="5s" role="Master"/>
+            <op name="monitor" interval="10s" id="named_drbd_mon_master" timeout="5s" role="Promoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-named_drbd.meta"/>
@@ -159,7 +159,7 @@
         </rule>
       </rsc_location>
       <rsc_colocation id="cyrus_drbd_with_address" rsc="cyrus_address" with-rsc="cyrus_drbd" with-rsc-role="Started" score="INFINITY"/>
-      <rsc_colocation id="cyrus_volgroup_with_drbd" rsc="cyrus_volgroup" with-rsc="cyrus_drbd" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="cyrus_volgroup_with_drbd" rsc="cyrus_volgroup" with-rsc="cyrus_drbd" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_colocation id="cyrus_filesys_with_volgroup" rsc="cyrus_filesys" with-rsc="cyrus_volgroup" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="cyrus_syslogd_with_filesys" rsc="cyrus_syslogd" with-rsc="cyrus_filesys" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="cyrus_master_with_syslogd" rsc="cyrus_master" with-rsc="cyrus_syslogd" with-rsc-role="Started" score="INFINITY"/>

@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="3074cde6-2e91-4259-9868-7ac94007087e" admin_epoch="0" epoch="1280" num_updates="1" cib-last-written="Fri Jul 13 13:51:01 2012">
+<cib validate-with="pacemaker-3.7" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="3074cde6-2e91-4259-9868-7ac94007087e" admin_epoch="0" epoch="1280" num_updates="1" cib-last-written="Fri Jul 13 13:51:01 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -114,7 +114,7 @@
     <constraints>
       <rsc_order first="cl_tgtd" id="o_tgtd_before_iscsivg01" then="rg_iscsivg01"/>
       <!--rsc_order first="ms_drbd_iscsivg01" first-action="promote" id="o_drbd_before_iscsivg01" then="rg_iscsivg01" then-action="start"/-->
-      <rsc_colocation id="c_iscsivg01_on_drbd" rsc="rg_iscsivg01" score="INFINITY" with-rsc="ms_drbd_iscsivg01" with-rsc-role="Master"/>
+      <rsc_colocation id="c_iscsivg01_on_drbd" rsc="rg_iscsivg01" score="INFINITY" with-rsc="ms_drbd_iscsivg01" with-rsc-role="Promoted"/>
       <rsc_colocation id="c_iscsivg01_on_tgtd" rsc="rg_iscsivg01" score="INFINITY" with-rsc="cl_tgtd"/>
       <rsc_location id="l_iscsivg01_on_alice" rsc="rg_iscsivg01">
         <rule id="l_iscsivg01_on_alice-rule" score="100">

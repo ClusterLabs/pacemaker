@@ -1,4 +1,4 @@
-<cib epoch="1022" num_updates="54" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.5" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" update-origin="orestes-corosync.nevis.columbia.edu" update-client="crmd" dc-uuid="hypatia-corosync.nevis.columbia.edu">
+<cib epoch="1022" num_updates="54" admin_epoch="0" validate-with="pacemaker-3.7" crm_feature_set="3.0.5" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" update-origin="orestes-corosync.nevis.columbia.edu" update-client="crmd" dc-uuid="hypatia-corosync.nevis.columbia.edu">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -40,13 +40,13 @@
             <nvpair id="AdminDrbd-instance_attributes-drbd_resource" name="drbd_resource" value="admin"/>
           </instance_attributes>
           <operations>
-            <op id="AdminDrbd-monitor-59s" interval="59s" name="monitor" role="Master" timeout="30s"/>
-            <op id="AdminDrbd-monitor-60s" interval="60s" name="monitor" role="Slave" timeout="30s"/>
+            <op id="AdminDrbd-monitor-59s" interval="59s" name="monitor" role="Promoted" timeout="30s"/>
+            <op id="AdminDrbd-monitor-60s" interval="60s" name="monitor" role="Unpromoted" timeout="30s"/>
             <op id="AdminDrbd-stop-0" interval="0" name="stop" timeout="100"/>
             <op id="AdminDrbd-start-0" interval="0" name="start" timeout="240"/>
           </operations>
           <meta_attributes id="AdminDrbd-meta_attributes">
-            <nvpair id="AdminDrbd-meta_attributes-target-role" name="target-role" value="Master"/>
+            <nvpair id="AdminDrbd-meta_attributes-target-role" name="target-role" value="Promoted"/>
           </meta_attributes>
         </primitive>
       </clone>
@@ -543,7 +543,7 @@
       <rsc_order first="FilesystemClone" id="Filesystem_Before_Libvirtd" then="LibvirtdClone"/>
       <rsc_order first="FilesystemClone" id="Filesystem_Before_Temperature" then="CronAmbientTemperature"/>
       <rsc_order first="FilesystemClone" id="Filesystem_Before_Tftp" then="TftpClone"/>
-      <rsc_colocation id="Filesystem_With_Admin" rsc="FilesystemClone" score="INFINITY" with-rsc="AdminClone" with-rsc-role="Master"/>
+      <rsc_colocation id="Filesystem_With_Admin" rsc="FilesystemClone" score="INFINITY" with-rsc="AdminClone" with-rsc-role="Promoted"/>
       <rsc_order first="AdminClone" first-action="promote" id="Admin_Before_Filesystem" then="FilesystemClone" then-action="start"/>
       <rsc_colocation id="KVM-guest_With_Libvirtd" rsc="KVM-guest" score="INFINITY" with-rsc="LibvirtdClone"/>
       <rsc_colocation id="Proxy_With_Libvirtd" rsc="Proxy" score="INFINITY" with-rsc="LibvirtdClone"/>

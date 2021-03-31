@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="75" num_updates="3556" dc-uuid="5d9a8c11-8684-43ea-91.0.6e221530c193" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib admin_epoch="0" epoch="75" num_updates="3556" dc-uuid="5d9a8c11-8684-43ea-91.0.6e221530c193" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="default-options">
@@ -144,7 +144,7 @@
         <primitive id="ocf_msdummy" class="ocf" type="/usr/lib/heartbeat/cts/OCFMSDummy" provider="heartbeat">
           <operations>
             <op name="monitor" interval="5s" id="ocf_msdummy_monitor" timeout="10s"/>
-            <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" timeout="10s" role="Master"/>
+            <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" timeout="10s" role="Promoted"/>
           </operations>
           <instance_attributes id="instance_attributes.id22645">
             <nvpair id="nvpair.id22652" name="logfile" value="/var/log/cts_ocfdummy.log"/>
