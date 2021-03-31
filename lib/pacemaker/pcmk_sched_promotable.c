@@ -129,7 +129,9 @@ check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
     }
 }
 
-static void apply_master_location(pe_resource_t *child, GList *location_constraints, pe_node_t *chosen)
+static void
+apply_promoted_location(pe_resource_t *child, GList *location_constraints,
+                        pe_node_t *chosen)
 {
     CRM_CHECK(child && chosen, return);
     for (GList *gIter = location_constraints; gIter; gIter = gIter->next) {
@@ -161,7 +163,7 @@ guest_location(pe_node_t *guest_node)
 }
 
 static pe_node_t *
-can_be_master(pe_resource_t * rsc)
+node_to_be_promoted_on(pe_resource_t *rsc)
 {
     pe_node_t *node = NULL;
     pe_node_t *local_node = NULL;
@@ -181,7 +183,7 @@ can_be_master(pe_resource_t * rsc)
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-            if (can_be_master(child) == NULL) {
+            if (node_to_be_promoted_on(child) == NULL) {
                 pe_rsc_trace(rsc, "Child %s of %s can't be promoted", child->id, rsc->id);
                 return NULL;
             }
@@ -286,10 +288,10 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (clone_data->merged_master_weights) {
+    if (clone_data->added_promoted_constraints) {
         return;
     }
-    clone_data->merged_master_weights = TRUE;
+    clone_data->added_promoted_constraints = true;
     pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
@@ -562,7 +564,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
 }
 
 void
-apply_master_prefs(pe_resource_t *rsc)
+pcmk__add_promotion_scores(pe_resource_t *rsc)
 {
     int score, new_score;
     GList *gIter = rsc->children;
@@ -570,12 +572,12 @@ apply_master_prefs(pe_resource_t *rsc)
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (clone_data->applied_master_prefs) {
+    if (clone_data->added_promotion_scores) {
         /* Make sure we only do this once */
         return;
     }
 
-    clone_data->applied_master_prefs = TRUE;
+    clone_data->added_promotion_scores = true;
 
     for (; gIter != NULL; gIter = gIter->next) {
         GHashTableIter iter;
@@ -612,7 +614,7 @@ apply_master_prefs(pe_resource_t *rsc)
 }
 
 static void
-set_role_slave(pe_resource_t * rsc, gboolean current)
+set_role_unpromoted(pe_resource_t *rsc, bool current)
 {
     GList *gIter = rsc->children;
 
@@ -633,12 +635,12 @@ set_role_slave(pe_resource_t * rsc, gboolean current)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        set_role_slave(child_rsc, current);
+        set_role_unpromoted(child_rsc, current);
     }
 }
 
 static void
-set_role_master(pe_resource_t * rsc)
+set_role_promoted(pe_resource_t *rsc)
 {
     GList *gIter = rsc->children;
 
@@ -649,7 +651,7 @@ set_role_master(pe_resource_t * rsc)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        set_role_master(child_rsc);
+        set_role_promoted(child_rsc);
     }
 }
 
@@ -686,7 +688,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                      role2text(child_rsc->next_role));
 
         if (child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
-            set_role_slave(child_rsc, TRUE);
+            set_role_unpromoted(child_rsc, true);
         }
 
         chosen = child_rsc->fns->location(child_rsc, &list, FALSE);
@@ -728,8 +730,8 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                           crm_err("Unknown resource role: %d for %s", next_role, child_rsc->id));
         }
 
-        apply_master_location(child_rsc, child_rsc->rsc_location, chosen);
-        apply_master_location(child_rsc, rsc->rsc_location, chosen);
+        apply_promoted_location(child_rsc, child_rsc->rsc_location, chosen);
+        apply_promoted_location(child_rsc, rsc->rsc_location, chosen);
 
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter2->data;
@@ -775,13 +777,13 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         } else if ((promoted < clone_data->promoted_max)
                    || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            chosen = can_be_master(child_rsc);
+            chosen = node_to_be_promoted_on(child_rsc);
         }
 
         pe_rsc_debug(rsc, "%s promotion score: %d", child_rsc->id, child_rsc->priority);
 
         if (chosen == NULL) {
-            set_role_slave(child_rsc, FALSE);
+            set_role_unpromoted(child_rsc, false);
             continue;
 
         } else if ((child_rsc->role < RSC_ROLE_PROMOTED)
@@ -789,14 +791,14 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
               && data_set->no_quorum_policy == no_quorum_freeze) {
             crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                        child_rsc->id, role2text(child_rsc->role), role2text(child_rsc->next_role));
-            set_role_slave(child_rsc, FALSE);
+            set_role_unpromoted(child_rsc, false);
             continue;
         }
 
         chosen->count++;
         pe_rsc_info(rsc, "Promoting %s (%s %s)",
                     child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
-        set_role_master(child_rsc);
+        set_role_promoted(child_rsc);
         promoted++;
     }
 

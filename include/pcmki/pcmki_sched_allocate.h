@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -126,7 +126,7 @@ extern gboolean clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_act
                                    gboolean force, pe_working_set_t * data_set);
 extern void clone_append_meta(pe_resource_t * rsc, xmlNode * xml);
 
-void apply_master_prefs(pe_resource_t *rsc);
+void pcmk__add_promotion_scores(pe_resource_t *rsc);
 pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc,
                                     pe_working_set_t *data_set);
 void create_promotable_actions(pe_resource_t *rsc, pe_working_set_t *data_set);

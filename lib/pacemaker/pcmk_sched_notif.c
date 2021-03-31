@@ -445,12 +445,12 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
                 n_data->active = g_list_prepend(n_data->active, entry);
                 break;
             case RSC_ROLE_UNPROMOTED:
-                n_data->slave = g_list_prepend(n_data->slave, entry);
+                n_data->unpromoted = g_list_prepend(n_data->unpromoted, entry);
                 n_data->active = g_list_prepend(n_data->active,
                                                 dup_notify_entry(entry));
                 break;
             case RSC_ROLE_PROMOTED:
-                n_data->master = g_list_prepend(n_data->master, entry);
+                n_data->promoted = g_list_prepend(n_data->promoted, entry);
                 n_data->active = g_list_prepend(n_data->active,
                                                 dup_notify_entry(entry));
                 break;
@@ -572,11 +572,11 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_active_resource", rsc_list);
     add_notify_env_free(n_data, "notify_active_uname", node_list);
 
-    n_data->slave = expand_list(n_data->slave, &rsc_list, &node_list);
+    n_data->unpromoted = expand_list(n_data->unpromoted, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_slave_resource", rsc_list);
     add_notify_env_free(n_data, "notify_slave_uname", node_list);
 
-    n_data->master = expand_list(n_data->master, &rsc_list, &node_list);
+    n_data->promoted = expand_list(n_data->promoted, &rsc_list, &node_list);
     add_notify_env_free(n_data, "notify_master_resource", rsc_list);
     add_notify_env_free(n_data, "notify_master_uname", node_list);
 
@@ -784,8 +784,8 @@ free_notification_data(notify_data_t * n_data)
     g_list_free_full(n_data->start, free);
     g_list_free_full(n_data->demote, free);
     g_list_free_full(n_data->promote, free);
-    g_list_free_full(n_data->master, free);
-    g_list_free_full(n_data->slave, free);
+    g_list_free_full(n_data->promoted, free);
+    g_list_free_full(n_data->unpromoted, free);
     g_list_free_full(n_data->active, free);
     g_list_free_full(n_data->inactive, free);
     pcmk_free_nvpairs(n_data->keys);

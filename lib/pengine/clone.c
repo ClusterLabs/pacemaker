@@ -399,7 +399,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GList *master_list = NULL;
+    GList *promoted_list = NULL;
     GList *started_list = NULL;
     GList *gIter = rsc->children;
 
@@ -483,7 +483,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
                     print_full = TRUE;
 
                 } else if (a_role > RSC_ROLE_UNPROMOTED) {
-                    master_list = g_list_append(master_list, location);
+                    promoted_list = g_list_append(promoted_list, location);
 
                 } else {
                     started_list = g_list_append(started_list, location);
@@ -511,8 +511,8 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     }
 
     /* Promoted */
-    master_list = g_list_sort(master_list, sort_node_uname);
-    for (gIter = master_list; gIter; gIter = gIter->next) {
+    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
         pcmk__add_word(&list_text, &list_text_len, host->details->uname);
@@ -521,7 +521,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
 
     short_print(list_text, child_text, PROMOTED_INSTANCES, NULL, options,
                 print_data);
-    g_list_free(master_list);
+    g_list_free(promoted_list);
     free(list_text);
     list_text = NULL;
     list_text_len = 0;
@@ -677,7 +677,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GList *master_list = NULL;
+    GList *promoted_list = NULL;
     GList *started_list = NULL;
     GList *gIter = rsc->children;
 
@@ -762,7 +762,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
                     print_full = TRUE;
 
                 } else if (a_role > RSC_ROLE_UNPROMOTED) {
-                    master_list = g_list_append(master_list, location);
+                    promoted_list = g_list_append(promoted_list, location);
 
                 } else {
                     started_list = g_list_append(started_list, location);
@@ -796,8 +796,8 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     }
 
     /* Promoted */
-    master_list = g_list_sort(master_list, sort_node_uname);
-    for (gIter = master_list; gIter; gIter = gIter->next) {
+    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
         if (!pcmk__str_in_list(only_node, host->details->uname)) {
@@ -810,7 +810,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
     if (list_text != NULL) {
         out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]", list_text);
-        g_list_free(master_list);
+        g_list_free(promoted_list);
         free(list_text);
         list_text = NULL;
         list_text_len = 0;
@@ -917,7 +917,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GList *master_list = NULL;
+    GList *promoted_list = NULL;
     GList *started_list = NULL;
     GList *gIter = rsc->children;
 
@@ -1002,7 +1002,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
                     print_full = TRUE;
 
                 } else if (a_role > RSC_ROLE_UNPROMOTED) {
-                    master_list = g_list_append(master_list, location);
+                    promoted_list = g_list_append(promoted_list, location);
 
                 } else {
                     started_list = g_list_append(started_list, location);
@@ -1036,8 +1036,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     }
 
     /* Promoted */
-    master_list = g_list_sort(master_list, sort_node_uname);
-    for (gIter = master_list; gIter; gIter = gIter->next) {
+    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
         if (!pcmk__str_in_list(only_node, host->details->uname)) {
@@ -1050,7 +1050,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
     if (list_text != NULL) {
         out->list_item(out, PROMOTED_INSTANCES, "[ %s ]", list_text);
-        g_list_free(master_list);
+        g_list_free(promoted_list);
         free(list_text);
         list_text = NULL;
         list_text_len = 0;

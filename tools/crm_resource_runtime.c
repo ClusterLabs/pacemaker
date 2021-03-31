@@ -1891,8 +1891,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         GList *iter = NULL;
-        unsigned int master_count = 0;
-        pe_node_t *master_node = NULL;
+        unsigned int promoted_count = 0;
+        pe_node_t *promoted_node = NULL;
 
         for(iter = rsc->children; iter; iter = iter->next) {
             pe_resource_t *child = (pe_resource_t *)iter->data;
@@ -1900,13 +1900,13 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
             if (child_role == RSC_ROLE_PROMOTED) {
                 rsc = child;
-                master_node = pe__current_node(child);
-                master_count++;
+                promoted_node = pe__current_node(child);
+                promoted_count++;
             }
         }
-        if (promoted_role_only || master_count) {
-            count = master_count;
-            current = master_node;
+        if (promoted_role_only || (promoted_count != 0)) {
+            count = promoted_count;
+            current = promoted_node;
         }
 
     }

@@ -204,8 +204,8 @@ typedef struct notify_data_s {
     GList *stop;              /* notify_entry_t*  */
     GList *demote;            /* notify_entry_t*  */
     GList *promote;           /* notify_entry_t*  */
-    GList *master;            /* notify_entry_t*  */
-    GList *slave;             /* notify_entry_t*  */
+    GList *promoted;          /* notify_entry_t*  */
+    GList *unpromoted;        /* notify_entry_t*  */
     GHashTable *allowed_nodes;
 
 } notify_data_t;

@@ -859,10 +859,10 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     }
 
     if (rsc->next_role == RSC_ROLE_PROMOTED) {
-        char *running_master = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
+        char *running_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
 
-        add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
-        free(running_master);
+        add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_promoted);
+        free(running_promoted);
     }
 
     if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -2647,12 +2647,12 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     pe_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
 
-    static const char *rc_master = NULL;
+    static const char *rc_promoted = NULL;
     static const char *rc_inactive = NULL;
 
     if (rc_inactive == NULL) {
         rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
-        rc_master = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
+        rc_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
     }
 
     CRM_CHECK(node != NULL, return FALSE);
@@ -2822,7 +2822,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
         add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
 
     } else if (rsc->role == RSC_ROLE_PROMOTED) {
-        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_master);
+        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_promoted);
     }
 
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),

@@ -692,7 +692,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        apply_master_prefs(rsc);
+        pcmk__add_promotion_scores(rsc);
     }
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
