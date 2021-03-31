@@ -48,9 +48,9 @@ pe__free_digests(gpointer ptr)
     }
 }
 
-// Return true if XML attribute name is substring of a given string
+// Return true if XML attribute name is not substring of a given string
 static bool
-attr_in_string(xmlAttrPtr a, void *user_data)
+attr_not_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
     char *name = crm_strdup_printf(" %s ", (const char *) a->name);
@@ -64,9 +64,9 @@ attr_in_string(xmlAttrPtr a, void *user_data)
     return filter;
 }
 
-// Return true if XML attribute name is not substring of a given string
+// Return true if XML attribute name is substring of a given string
 static bool
-attr_not_in_string(xmlAttrPtr a, void *user_data)
+attr_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
     char *name = crm_strdup_printf(" %s ", (const char *) a->name);
@@ -243,7 +243,7 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
 
     g_hash_table_foreach(params, hash2field, data->params_secure);
     if (secure_list != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_secure, attr_not_in_string,
+        pcmk__xe_remove_matching_attrs(data->params_secure, attr_in_string,
                                        (void *) secure_list);
     }
     if (pcmk_is_set(pcmk_get_ra_caps(class),
@@ -305,7 +305,7 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
     if (value != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_restart, attr_in_string,
+        pcmk__xe_remove_matching_attrs(data->params_restart, attr_not_in_string,
                                        (void *) value);
     }
 
