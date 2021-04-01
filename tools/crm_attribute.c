@@ -371,8 +371,16 @@ main(int argc, char **argv)
         crm_exit(crm_errno2exit(rc));
     }
 
-    if (type == NULL && dest_uname != NULL) {
-	    type = "forever";
+    // Use default CIB location if not given
+    if (type == NULL) {
+        if (dest_uname != NULL) {
+            // Updating node attribute
+            type = "forever";
+
+        } else {
+            // Updating cluster options
+            type = XML_CIB_TAG_CRMCONFIG;
+        }
     }
 
     if (pcmk__str_eq(type, "reboot", pcmk__str_casei)) {
@@ -382,12 +390,9 @@ main(int argc, char **argv)
         type = XML_CIB_TAG_NODES;
     }
 
-    if (type == NULL && dest_uname == NULL) {
-        /* we're updating cluster options - don't populate dest_node */
-        type = XML_CIB_TAG_CRMCONFIG;
-
-    } else if (pcmk__str_eq(type, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
-    } else if (!pcmk__str_eq(type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+    // Use default node if not given (except for cluster options and tickets)
+    if (!pcmk__strcase_any_of(type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
+                              NULL)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
