@@ -82,6 +82,14 @@ static pcmk__cli_option_t long_options[] = {
         pcmk__option_default
     },
     {
+        "promotion", optional_argument, NULL, 'p',
+        "Operate on node attribute used as promotion score for specified "
+            "resource, or resource given in OCF_RESOURCE_INSTANCE environment "
+            "variable if none is specified; this also defaults -l/--lifetime "
+            "to reboot (normally invoked from an OCF resource agent)",
+        pcmk__option_default
+    },
+    {
         "set-name", required_argument, NULL, 's',
         "(Advanced) Operate on instance of specified attribute that is "
             "within set with this XML ID",
@@ -266,6 +274,7 @@ main(int argc, char **argv)
     int is_remote_node = 0;
 
     bool try_attrd = true;
+    bool promotion_score = false;
     int attrd_opts = pcmk__node_attr_none;
 
     pcmk__cli_init_logging("crm_attribute", 0);
@@ -323,6 +332,16 @@ main(int argc, char **argv)
             case 'n':
                 attr_name = strdup(optarg);
                 break;
+            case 'p':
+                promotion_score = true;
+                attr_name = pcmk_promotion_score_name(optarg);
+                if (attr_name == NULL) {
+                    fprintf(stderr, "-p/--promotion must be called from an "
+                                    " OCF resource agent or with a resource ID "
+                                    " specified\n\n");
+                    ++argerr;
+                }
+                break;
             case 'P':
                 attr_pattern = strdup(optarg);
                 break;
@@ -373,8 +392,12 @@ main(int argc, char **argv)
 
     // Use default CIB location if not given
     if (type == NULL) {
-        if (dest_uname != NULL) {
-            // Updating node attribute
+        if (promotion_score) {
+            // Updating a promotion score node attribute
+            type = "reboot";
+
+        } else if (dest_uname != NULL) {
+            // Updating some other node attribute
             type = "forever";
 
         } else {
