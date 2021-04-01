@@ -533,7 +533,7 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         | at most ``shutdown-lock-limit``, if set). Stonith  |
    |                           |         | resources and Pacemaker Remote connections are     |
    |                           |         | never locked. Clone and bundle instances and the   |
-   |                           |         | master role of promotable clones are currently     |
+   |                           |         | promoted role of promotable clones are currently   |
    |                           |         | never locked, though support could be added in a   |
    |                           |         | future release. Locks may be manually cleared      |
    |                           |         | using the ``--refresh`` option of ``crm_resource`` |

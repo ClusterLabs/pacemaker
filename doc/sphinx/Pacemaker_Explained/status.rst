@@ -155,7 +155,7 @@ removed from the ``configuration`` section. Specifically, the resource's
 
    .. code-block:: xml
 
-      <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith"/>
+      <lrm_resource id="apcstonith" type="fence_apc_snmp" class="stonith"/>
    
 Additionally, we store the last job for every combination of
 ``resource``, ``action`` and ``interval``.  The concatenation of the values in
@@ -282,7 +282,7 @@ ________________________________
 
    .. code-block:: xml
 
-      <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith">
+      <lrm_resource id="apcstonith" type="fence_apc_snmp" class="stonith">
         <lrm_rsc_op id="apcstonith_monitor_0" operation="monitor" call-id="2"
           rc-code="7" op-status="0" interval="0"
           crm-debug-origin="do_update_resource" crm_feature_set="3.0.1"

@@ -32,7 +32,7 @@ Distributed Lock Manager (DLM) required by cluster filesystems:
 .. NOTE::
 
     Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`_,
-    installing dlm is not trivial. This chapter will updated once the bug
+    installing dlm is not trivial. This chapter will be updated once the bug
     is resolved.
 
 Configure the Cluster for the DLM
@@ -147,8 +147,8 @@ are not only stopped, but stopped in the correct order.
      Clone Set: dlm-clone [dlm]
          Started: [ pcmk-1 pcmk-2 ]
 
-You can see that both Apache and WebFS have been stopped,
-and that **pcmk-1** is the current master for the DRBD device.
+You can see that both Apache and WebFS have been stopped, and that **pcmk-1**
+is currently running the promoted instance for the DRBD device.
 
 Now we can create a new GFS2 filesystem on the DRBD device.
 
@@ -288,11 +288,11 @@ Notice how pcs automatically updates the relevant constraints again.
     Ticket Constraints:
 
 Tell the cluster that it is now allowed to promote both instances to be DRBD
-Primary (aka. master).
+Primary.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone master-max=2
+    [root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone promoted-max=2
 
 Finally, load our configuration to the cluster, and re-enable the WebFS resource
 (which we disabled earlier).

@@ -47,12 +47,12 @@ Rule Properties
    |                 |             |                                           |
    |                 |             | The rule is in effect only when the       |
    |                 |             | resource is in the specified role.        |
-   |                 |             | Allowed values are ``Started``, ``Slave``,|
-   |                 |             | and ``Master``. A rule with a ``role`` of |
-   |                 |             | ``Master`` cannot determine the initial   |
-   |                 |             | location of a clone instance and will     |
-   |                 |             | only affect which of the active instances |
-   |                 |             | will be promoted.                         |
+   |                 |             | Allowed values are ``Started``,           |
+   |                 |             | ``Unpromoted``, and ``Promoted``. A rule  |
+   |                 |             | with a ``role`` of ``Promoted`` cannot    |
+   |                 |             | determine the initial location of a clone |
+   |                 |             | instance and will only affect which of    |
+   |                 |             | the active instances will be promoted.    |
    +-----------------+-------------+-------------------------------------------+
    | score           |             | .. index::                                |
    |                 |             |    pair: rule; score                      |

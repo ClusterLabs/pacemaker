@@ -374,12 +374,12 @@ Accessing Cluster Tools from Guest Node
 Besides allowing the cluster to manage resources on a guest node,
 pacemaker_remote has one other trick. The pacemaker_remote daemon allows
 nearly all the pacemaker tools (``crm_resource``, ``crm_mon``, ``crm_attribute``,
-``crm_master``, etc.) to work on guest nodes natively.
+etc.) to work on guest nodes natively.
 
 Try it: Run ``crm_mon`` on the guest after pacemaker has
 integrated the guest node into the cluster. These tools just work. This
 means resource agents such as promotable resources (which need access to tools
-like ``crm_master``) work seamlessly on the guest nodes.
+like ``crm_attribute``) work seamlessly on the guest nodes.
 
 Higher-level command shells such as ``pcs`` may have partial support
 on guest nodes, but it is recommended to run them from a cluster node.
@@ -440,8 +440,8 @@ Pacemaker command-line tools immediately become available to the guest node.
 This means things like ``crm_mon``, ``crm_resource``, and ``crm_attribute`` will work
 natively on the guest node, as long as the connection between the guest node
 and a cluster node exists. This is particularly important for any promotable
-clone resources executing on the guest node that need access to ``crm_master`` to
-set transient attributes.
+clone resources executing on the guest node that need access to
+``crm_attribute`` to set promotion scores.
 
 Mile-High View of Configuration Steps
 #####################################

@@ -193,12 +193,12 @@ Accessing Cluster Tools from a Remote Node
 Besides allowing the cluster to manage resources on a remote node,
 pacemaker_remote has one other trick. The pacemaker_remote daemon allows
 nearly all the pacemaker tools (``crm_resource``, ``crm_mon``,
-``crm_attribute``, ``crm_master``, etc.) to work on remote nodes natively.
+``crm_attribute``, etc.) to work on remote nodes natively.
 
 Try it: Run ``crm_mon`` on the remote node after pacemaker has
 integrated it into the cluster. These tools just work. These means resource
 agents such as promotable resources (which need access to tools like
-``crm_master``) work seamlessly on the remote nodes.
+``crm_attribute``) work seamlessly on the remote nodes.
 
 Higher-level command shells such as ``pcs`` may have partial support
 on remote nodes, but it is recommended to run them from a cluster node.

@@ -349,12 +349,12 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  | * ``Stopped:`` Force the resource to be stopped      |
    |                            |                                  | * ``Started:`` Allow the resource to be started      |
    |                            |                                  |   (and in the case of :ref:`promotable clone         |
-   |                            |                                  |   resources <s-resource-promotable>`, promoted to    |
-   |                            |                                  |   master if appropriate)                             |
-   |                            |                                  | * ``Slave:`` Allow the resource to be started, but   |
-   |                            |                                  |   only in Slave mode if the resource is              |
+   |                            |                                  |   resources <s-resource-promotable>`, promoted       |
+   |                            |                                  |   if appropriate)                                    |
+   |                            |                                  | * ``Unpromoted:`` Allow the resource to be started,  |
+   |                            |                                  |   but only in the unpromoted role if the resource is |
    |                            |                                  |   :ref:`promotable <s-resource-promotable>`          |
-   |                            |                                  | * ``Master:`` Equivalent to ``Started``              |
+   |                            |                                  | * ``Promoted:`` Equivalent to ``Started``            |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | is-managed                 | TRUE                             | .. index::                                           |
    |                            |                                  |    single: is-managed; resource option               |
@@ -715,8 +715,8 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |   or ``block`` otherwise          | The action to take if this action ever fails.       |
    |                | * ``demote``: ``on-fail`` of the  | Allowed values:                                     |
    |                |   ``monitor`` action with         |                                                     |
-   |                |   ``role`` set to ``Master``, if  | * ``ignore:`` Pretend the resource did not fail.    |
-   |                |   present, enabled, and           | * ``block:`` Don't perform any further operations   |
+   |                |   ``role`` set to ``Promoted``,   | * ``ignore:`` Pretend the resource did not fail.    |
+   |                |   if present, enabled, and        | * ``block:`` Don't perform any further operations   |
    |                |   configured to a value other     |   on the resource.                                  |
    |                |   than ``demote``, or ``restart`` | * ``stop:`` Stop the resource and do not start      |
    |                |   otherwise                       |   it elsewhere.                                     |
@@ -724,7 +724,7 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |                                   |   full restart. This is valid only for ``promote``  |
    |                |                                   |   actions, and for ``monitor`` actions with both    |
    |                |                                   |   a nonzero ``interval`` and ``role`` set to        |
-   |                |                                   |   ``Master``; for any other action, a               |
+   |                |                                   |   ``Promoted``; for any other action, a             |
    |                |                                   |   configuration error will be logged, and the       |
    |                |                                   |   default behavior will be used. *(since 2.0.5)*    |
    |                |                                   | * ``restart:`` Stop the resource and start it       |
@@ -769,28 +769,28 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |                                   | Allowed (case-sensitive) values: ``Stopped``,       |
    |                |                                   | ``Started``, and in the case of :ref:`promotable    |
    |                |                                   | clone resources <s-resource-promotable>`,           |
-   |                |                                   | ``Slave`` and ``Master``.                           |
+   |                |                                   | ``Unpromoted`` and ``Promoted``.                    |
    +----------------+-----------------------------------+-----------------------------------------------------+
 
 .. note::
 
-   When ``on-fail`` is set to ``demote``, recovery from failure by a successful demote
-   causes the cluster to recalculate whether and where a new instance should be
-   promoted. The node with the failure is eligible, so if master scores have not
-   changed, it will be promoted again.
+   When ``on-fail`` is set to ``demote``, recovery from failure by a successful
+   demote causes the cluster to recalculate whether and where a new instance
+   should be promoted. The node with the failure is eligible, so if promotion
+   scores have not changed, it will be promoted again.
 
-   There is no direct equivalent of ``migration-threshold`` for the master role, but
-   the same effect can be achieved with a location constraint using a
+   There is no direct equivalent of ``migration-threshold`` for the promoted
+   role, but the same effect can be achieved with a location constraint using a
    :ref:`rule <rules>` with a node attribute expression for the resource's fail
    count.
 
-   For example, to immediately ban the master role from a node with any failed
-   promote or master monitor:
+   For example, to immediately ban the promoted role from a node with any
+   failed promote or promoted instance monitor:
 
    .. code-block:: xml
 
       <rsc_location id="loc1" rsc="my_primitive">
-          <rule id="rule1" score="-INFINITY" role="Master" boolean-op="or">
+          <rule id="rule1" score="-INFINITY" role="Promoted" boolean-op="or">
             <expression id="expr1" attribute="fail-count-my_primitive#promote_0"
               operation="gte" value="1"/>
             <expression id="expr2" attribute="fail-count-my_primitive#monitor_10000"
@@ -801,7 +801,8 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    This example assumes that there is a promotable clone of the ``my_primitive``
    resource (note that the primitive name, not the clone name, is used in the
    rule), and that there is a recurring 10-second-interval monitor configured for
-   the master role (fail count attributes specify the interval in milliseconds).
+   the promoted role (fail count attributes specify the interval in
+   milliseconds).
 
 .. _s-resource-monitoring:
 

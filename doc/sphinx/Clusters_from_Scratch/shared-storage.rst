@@ -389,8 +389,9 @@ Let's see what the cluster did with the new configuration:
       pacemaker: active/disabled
       pcsd: active/enabled
 
-We can see that **WebData-clone** (our DRBD device) is running as master (DRBD's
-primary role) on **pcmk-1** and slave (DRBD's secondary role) on **pcmk-2**.
+We can see that **WebData-clone** (our DRBD device) is running as promoted
+(DRBD's primary role) on **pcmk-1** and unpromoted (DRBD's secondary role) on
+**pcmk-2**.
 
 .. IMPORTANT::
 

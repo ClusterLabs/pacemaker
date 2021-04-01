@@ -182,12 +182,12 @@ agent.
 
 Services that support such a special role have various terms for the special
 role and the default role: primary and secondary, master and replica,
-controller and worker, etc. Pacemaker uses the terms *master* and *slave* [#]_,
-but is agnostic to what the service calls them or what they do.
+controller and worker, etc. Pacemaker uses the terms *promoted* and
+*unpromoted* to be agnostic to what the service calls them or what they do.
    
-All that Pacemaker cares about is that an instance comes up in the default role
+All that Pacemaker cares about is that an instance comes up in the unpromoted role
 when started, and the resource agent supports the ``promote`` and ``demote`` actions
-to manage entering and exiting the special role.
+to manage entering and exiting the promoted role.
 
 .. index::
    pair: XML element; clone
@@ -322,9 +322,21 @@ _____________
    |                   |                 | promoted at one time on a single node                 |
    +-------------------+-----------------+-------------------------------------------------------+
    
-For backward compatibility, ``master-max`` and ``master-node-max`` are accepted as
-aliases for ``promoted-max`` and ``promoted-node-max``, but are deprecated since
-2.0.0, and support for them will be removed in a future version.
+.. note:: **Deprecated Terminology**
+
+   In older documentation and online examples, you may see promotable clones
+   referred to as *multi-state*, *stateful*, or *master/slave*; these mean the
+   same thing as *promotable*. Certain syntax is supported for backward
+   compatibility, but is deprecated and will be removed in a future version:
+
+   * Using a ``master`` tag, instead of a ``clone`` tag with the ``promotable``
+     meta-attribute set to ``true``
+   * Using the ``master-max`` meta-attribute instead of ``promoted-max``
+   * Using the ``master-node-max`` meta-attribute instead of
+     ``promoted-node-max``
+   * Using ``Master`` as a role name instead of ``Promoted``
+   * Using ``Slave`` as a role name instead of ``Unpromoted``
+
    
 Clone Contents
 ______________
@@ -404,7 +416,7 @@ Promotable Clone Constraints
    
 For promotable clone resources, the ``first-action`` and/or ``then-action`` fields
 for ordering constraints may be set to ``promote`` or ``demote`` to constrain the
-master role, and colocation constraints may contain ``rsc-role`` and/or
+promoted role, and colocation constraints may contain ``rsc-role`` and/or
 ``with-rsc-role`` fields.
 
 .. topic:: Constraints involving promotable clone resources       
@@ -413,27 +425,27 @@ master role, and colocation constraints may contain ``rsc-role`` and/or
 
       <constraints>
          <rsc_location id="db-prefers-node1" rsc="database" node="node1" score="500"/>
-         <rsc_colocation id="backup-with-db-slave" rsc="backup"
-           with-rsc="database" with-rsc-role="Slave"/>
-         <rsc_colocation id="myapp-with-db-master" rsc="myApp"
-           with-rsc="database" with-rsc-role="Master"/>
+         <rsc_colocation id="backup-with-db-unpromoted" rsc="backup"
+           with-rsc="database" with-rsc-role="Unpromoted"/>
+         <rsc_colocation id="myapp-with-db-promoted" rsc="myApp"
+           with-rsc="database" with-rsc-role="Promoted"/>
          <rsc_order id="start-db-before-backup" first="database" then="backup"/>
          <rsc_order id="promote-db-then-app" first="database" first-action="promote"
            then="myApp" then-action="start"/>
       </constraints> 
 
 In the example above, **myApp** will wait until one of the database
-copies has been started and promoted to master before being started
+copies has been started and promoted before being started
 itself on the same node.  Only if no copies can be promoted will **myApp** be
 prevented from being active.  Additionally, the cluster will wait for
 **myApp** to be stopped before demoting the database.
 
 Colocation of a primitive or group resource with a promotable clone
 resource means that it can run on any node with an active instance of
-the promotable clone resource that has the specified role (**master** or
-**slave**).  In the example above, the cluster will choose a location based on
-where database is running as a **master**, and if there are multiple
-**master** instances it will also factor in **myApp**'s own location
+the promotable clone resource that has the specified role (``Promoted`` or
+``Unpromoted``).  In the example above, the cluster will choose a location
+based on where database is running in the promoted role, and if there are
+multiple promoted instances it will also factor in **myApp**'s own location
 preferences when deciding which location to choose.
 
 Colocation with regular clones and other promotable clone resources is also
@@ -448,17 +460,17 @@ Using Promotable Clone Resources in Colocation Sets
 When a promotable clone is used in a :ref:`resource set <s-resource-sets>`
 inside a colocation constraint, the resource set may take a ``role`` attribute.
 
-In the following example **B**'s master must be located on the same node as **A**'s master.
-Additionally resources **C** and **D** must be located on the same node as **A**'s
-and **B**'s masters.
+In the following example, an instance of **B** may be promoted only on a node
+where **A** is in the promoted role. Additionally, resources **C** and **D**
+must be located on a node where both **A** and **B** are promoted.
    
-.. topic:: Colocate C and D with A's and B's master instances
+.. topic:: Colocate C and D with A's and B's promoted instances
 
    .. code-block:: xml
 
       <constraints>
           <rsc_colocation id="coloc-1" score="INFINITY" >
-            <resource_set id="colocated-set-example-1" sequential="true" role="Master">
+            <resource_set id="colocated-set-example-1" sequential="true" role="Promoted">
               <resource_ref id="A"/>
               <resource_ref id="B"/>
             </resource_set>
@@ -493,9 +505,9 @@ attribute.
           </rsc_order>
       </constraints>
    
-In the above example, **B** cannot be promoted to a master role until **A** has
-been promoted. Additionally, resources **C** and **D** must wait until **A** and **B**
-have been promoted before they can start.
+In the above example, **B** cannot be promoted until **A** has been promoted.
+Additionally, resources **C** and **D** must wait until **A** and **B** have
+been promoted before they can start.
 
 .. index::
    pair: resource-stickiness; clone
@@ -564,8 +576,8 @@ which are responsible for changing the state of the resource. Like **start** and
 a relevant error code if they did not.
 
 The states can mean whatever you wish, but when the resource is
-started, it must come up in the mode called **slave**.  From there the
-cluster will decide which instances to promote to **master**.
+started, it must come up in the unpromoted role. From there, the
+cluster will decide which instances to promote.
 
 In addition to the clone requirements for monitor actions, agents must
 also *accurately* report which state they are in.  The cluster relies
@@ -574,38 +586,38 @@ not indicate to the agent what role it currently believes it to be in.
    
 .. table:: **Role implications of OCF return codes**
 
-   +---------------------+------------------------------------------------+
-   | Monitor Return Code | Description                                    |
-   +=====================+================================================+
-   | OCF_NOT_RUNNING     | .. index::                                     |
-   |                     |    single: OCF_NOT_RUNNING                     |
-   |                     |    single: OCF return code; OCF_NOT_RUNNING    |
-   |                     |                                                |
-   |                     | Stopped                                        |
-   +---------------------+------------------------------------------------+
-   | OCF_SUCCESS         | .. index::                                     |
-   |                     |    single: OCF_SUCCESS                         |
-   |                     |    single: OCF return code; OCF_SUCCESS        |
-   |                     |                                                |
-   |                     | Running (Slave)                                |
-   +---------------------+------------------------------------------------+
-   | OCF_RUNNING_MASTER  | .. index::                                     |
-   |                     |    single: OCF_RUNNING_MASTER                  |
-   |                     |    single: OCF return code; OCF_RUNNING_MASTER |
-   |                     |                                                |
-   |                     | Running (Master)                               |
-   +---------------------+------------------------------------------------+
-   | OCF_FAILED_MASTER   | .. index::                                     |
-   |                     |    single: OCF_FAILED_MASTER                   |
-   |                     |    single: OCF return code; OCF_FAILED_MASTER  |
-   |                     |                                                |
-   |                     | Failed (Master)                                |
-   +---------------------+------------------------------------------------+
-   | Other               | .. index::                                     |
-   |                     |    single: return code                         |
-   |                     |                                                |
-   |                     | Failed (Slave)                                 |
-   +---------------------+------------------------------------------------+
+   +----------------------+--------------------------------------------------+
+   | Monitor Return Code  | Description                                      |
+   +======================+==================================================+
+   | OCF_NOT_RUNNING      | .. index::                                       |
+   |                      |    single: OCF_NOT_RUNNING                       |
+   |                      |    single: OCF return code; OCF_NOT_RUNNING      |
+   |                      |                                                  |
+   |                      | Stopped                                          |
+   +----------------------+--------------------------------------------------+
+   | OCF_SUCCESS          | .. index::                                       |
+   |                      |    single: OCF_SUCCESS                           |
+   |                      |    single: OCF return code; OCF_SUCCESS          |
+   |                      |                                                  |
+   |                      | Running (Unpromoted)                             |
+   +----------------------+--------------------------------------------------+
+   | OCF_RUNNING_PROMOTED | .. index::                                       |
+   |                      |    single: OCF_RUNNING_PROMOTED                  |
+   |                      |    single: OCF return code; OCF_RUNNING_PROMOTED |
+   |                      |                                                  |
+   |                      | Running (Promoted)                               |
+   +----------------------+--------------------------------------------------+
+   | OCF_FAILED_PROMOTED  | .. index::                                       |
+   |                      |    single: OCF_FAILED_PROMOTED                   |
+   |                      |    single: OCF return code; OCF_FAILED_PROMOTED  |
+   |                      |                                                  |
+   |                      | Failed (Promoted)                                |
+   +----------------------+--------------------------------------------------+
+   | Other                | .. index::                                       |
+   |                      |    single: return code                           |
+   |                      |                                                  |
+   |                      | Failed (Unpromoted)                              |
+   +----------------------+--------------------------------------------------+
    
 Clone Notifications
 ~~~~~~~~~~~~~~~~~~~
@@ -755,66 +767,66 @@ Extra Notifications for Promotable Clones
    
 .. table:: **Extra environment variables supplied for promotable clones**
 
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | Variable                                    | Description                                                                  |
-   +=============================================+==============================================================================+
-   | OCF_RESKEY_CRM_meta_notify_master_resource  | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_master_resource  |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_master_resource                        |
-   |                                             |                                                                              |
-   |                                             | Resources that are running in **Master** mode                                |
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | OCF_RESKEY_CRM_meta_notify_slave_resource   | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_slave_resource   |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_slave_resource                         |
-   |                                             |                                                                              |
-   |                                             | Resources that are running in **Slave** mode                                 |
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | OCF_RESKEY_CRM_meta_notify_promote_resource | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_promote_resource |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_promote_resource                       |
-   |                                             |                                                                              |
-   |                                             | Resources to be promoted                                                     |
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | OCF_RESKEY_CRM_meta_notify_demote_resource  | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_demote_resource  |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_demote_resource                        |
-   |                                             |                                                                              |
-   |                                             | Resources to be demoted                                                      |
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | OCF_RESKEY_CRM_meta_notify_promote_uname    | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_promote_uname    |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_promote_uname                          |
-   |                                             |                                                                              |
-   |                                             | Nodes on which resources will be promoted                                    |
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | OCF_RESKEY_CRM_meta_notify_demote_uname     | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_demote_uname     |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_demote_uname                           |
-   |                                             |                                                                              |
-   |                                             | Nodes on which resources will be demoted                                     |
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | OCF_RESKEY_CRM_meta_notify_master_uname     | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_master_uname     |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_master_uname                           |
-   |                                             |                                                                              |
-   |                                             | Nodes on which resources are running in **Master** mode                      |
-   +---------------------------------------------+------------------------------------------------------------------------------+
-   | OCF_RESKEY_CRM_meta_notify_slave_uname      | .. index::                                                                   |
-   |                                             |    single: environment variable; OCF_RESKEY_CRM_meta_notify_slave_uname      |
-   |                                             |    single: OCF_RESKEY_CRM_meta_notify_slave_uname                            |
-   |                                             |                                                                              |
-   |                                             | Nodes on which resources are running in **Slave** mode                       |
-   +---------------------------------------------+------------------------------------------------------------------------------+
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | Variable                                       | Description                                                                     |
+   +================================================+=================================================================================+
+   | OCF_RESKEY_CRM_meta_notify_promoted_resource   | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_promoted_resource   |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_promoted_resource                         |
+   |                                                |                                                                                 |
+   |                                                | Resources that are running in the promoted role                                 |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | OCF_RESKEY_CRM_meta_notify_unpromoted_resource | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_unpromoted_resource |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_unpromoted_resource                       |
+   |                                                |                                                                                 |
+   |                                                | Resources that are running in the unpromoted role                               |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | OCF_RESKEY_CRM_meta_notify_promote_resource    | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_promote_resource    |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_promote_resource                          |
+   |                                                |                                                                                 |
+   |                                                | Resources to be promoted                                                        |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | OCF_RESKEY_CRM_meta_notify_demote_resource     | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_demote_resource     |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_demote_resource                           |
+   |                                                |                                                                                 |
+   |                                                | Resources to be demoted                                                         |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | OCF_RESKEY_CRM_meta_notify_promote_uname       | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_promote_uname       |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_promote_uname                             |
+   |                                                |                                                                                 |
+   |                                                | Nodes on which resources will be promoted                                       |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | OCF_RESKEY_CRM_meta_notify_demote_uname        | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_demote_uname        |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_demote_uname                              |
+   |                                                |                                                                                 |
+   |                                                | Nodes on which resources will be demoted                                        |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | OCF_RESKEY_CRM_meta_notify_promoted_uname      | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_promoted_uname      |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_promoted_uname                            |
+   |                                                |                                                                                 |
+   |                                                | Nodes on which resources are running in the promoted role                       |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
+   | OCF_RESKEY_CRM_meta_notify_unpromoted_uname    | .. index::                                                                      |
+   |                                                |    single: environment variable; OCF_RESKEY_CRM_meta_notify_unpromoted_uname    |
+   |                                                |    single: OCF_RESKEY_CRM_meta_notify_unpromoted_uname                          |
+   |                                                |                                                                                 |
+   |                                                | Nodes on which resources are running in the unpromoted role                     |
+   +------------------------------------------------+---------------------------------------------------------------------------------+
    
 Interpretation of Promotable Notification Variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Pre-notification (demote):**
 
-* **Active** resources: ``$OCF_RESKEY_CRM_meta_notify_active_resource``
-* **Master** resources: ``$OCF_RESKEY_CRM_meta_notify_master_resource``
-* **Slave** resources: ``$OCF_RESKEY_CRM_meta_notify_slave_resource``
+* Active resources: ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+* Promoted resources: ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
+* Unpromoted resources: ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
 * Inactive resources: ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
 * Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
 * Resources to be promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
@@ -823,13 +835,13 @@ Interpretation of Promotable Notification Variables
 
 **Post-notification (demote) / Pre-notification (stop):**
 
-* **Active** resources: ``$OCF_RESKEY_CRM_meta_notify_active_resource``
-* **Master** resources:
+* Active resources: ``$OCF_RESKEY_CRM_meta_notify_active_resource``
+* Promoted resources:
 
-    * ``$OCF_RESKEY_CRM_meta_notify_master_resource``
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource`` 
 
-* **Slave** resources: ``$OCF_RESKEY_CRM_meta_notify_slave_resource``
+* Unpromoted resources: ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
 * Inactive resources: ``$OCF_RESKEY_CRM_meta_notify_inactive_resource``
 * Resources to be started: ``$OCF_RESKEY_CRM_meta_notify_start_resource``
 * Resources to be promoted: ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
@@ -839,19 +851,19 @@ Interpretation of Promotable Notification Variables
    
 **Post-notification (stop) / Pre-notification (start)**
    
-* **Active** resources:
+* Active resources:
 
     * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource`` 
 
-* **Master** resources:
+* Promoted resources:
 
-    * ``$OCF_RESKEY_CRM_meta_notify_master_resource``
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource`` 
 
-* **Slave** resources:
+* Unpromoted resources:
 
-    * ``$OCF_RESKEY_CRM_meta_notify_slave_resource``
+    * ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource`` 
 
 * Inactive resources:
@@ -868,20 +880,20 @@ Interpretation of Promotable Notification Variables
 
 **Post-notification (start) / Pre-notification (promote)**
 
-* **Active** resources:
+* Active resources:
 
     * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
     * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource`` 
 
-* **Master** resources:
+* Promoted resources:
 
-    * ``$OCF_RESKEY_CRM_meta_notify_master_resource``
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource`` 
 
-* **Slave** resources:
+* Unpromoted resources:
 
-    * ``$OCF_RESKEY_CRM_meta_notify_slave_resource``
+    * ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
     * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource`` 
 
@@ -901,21 +913,21 @@ Interpretation of Promotable Notification Variables
    
 **Post-notification (promote)**
    
-* **Active** resources:
+* Active resources:
 
     * ``$OCF_RESKEY_CRM_meta_notify_active_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
     * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource`` 
 
-* **Master** resources:
+* Promoted resources:
 
-    * ``$OCF_RESKEY_CRM_meta_notify_master_resource``
+    * ``$OCF_RESKEY_CRM_meta_notify_promoted_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_demote_resource``
     * plus ``$OCF_RESKEY_CRM_meta_notify_promote_resource``
 
-* **Slave** resources:
+* Unpromoted resources:
 
-    * ``$OCF_RESKEY_CRM_meta_notify_slave_resource``
+    * ``$OCF_RESKEY_CRM_meta_notify_unpromoted_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_stop_resource``
     * plus ``$OCF_RESKEY_CRM_meta_notify_start_resource``
     * minus ``$OCF_RESKEY_CRM_meta_notify_promote_resource`` 
@@ -942,21 +954,21 @@ The usual monitor actions are insufficient to monitor a promotable clone
 resource, because Pacemaker needs to verify not only that the resource is
 active, but also that its actual role matches its intended one.
 
-Define two monitoring actions: the usual one will cover the slave role,
-and an additional one with ``role="master"`` will cover the master role.
+Define two monitoring actions: the usual one will cover the unpromoted role,
+and an additional one with ``role="Promoted"`` will cover the promoted role.
    
 .. topic:: Monitoring both states of a promotable clone resource
 
    .. code-block:: xml
 
-      <clone id="myMasterRsc">
-         <meta_attributes id="myMasterRsc-meta">
+      <clone id="myPromotableRsc">
+         <meta_attributes id="myPromotableRsc-meta">
              <nvpair name="promotable" value="true"/>
          </meta_attributes>
          <primitive id="myRsc" class="ocf" type="myApp" provider="myCorp">
           <operations>
-           <op id="public-ip-slave-check" name="monitor" interval="60"/>
-           <op id="public-ip-master-check" name="monitor" interval="61" role="Master"/>
+           <op id="public-ip-unpromoted-check" name="monitor" interval="60"/>
+           <op id="public-ip-promoted-check" name="monitor" interval="61" role="Promoted"/>
           </operations>
          </primitive>
       </clone> 
@@ -978,23 +990,24 @@ ______________________________________
 Pacemaker can choose a promotable clone instance to be promoted in one of two
 ways:
 
-* Promotion scores: These are node attributes set via the ``crm_master`` utility,
-  which generally would be called by the resource agent's start action if it
-  supports promotable clones. This tool automatically detects both the resource
-  and host, and should be used to set a preference for being promoted. Based on
-  this, ``promoted-max``, and ``promoted-node-max``, the instance(s) with the
-  highest preference will be promoted.
+* Promotion scores: These are node attributes set via the ``crm_attribute``
+  command using the ``--promotion`` option, which generally would be called by
+  the resource agent's start action if it supports promotable clones. This tool
+  automatically detects both the resource and host, and should be used to set a
+  preference for being promoted. Based on this, ``promoted-max``, and
+  ``promoted-node-max``, the instance(s) with the highest preference will be
+  promoted.
 
 * Constraints: Location constraints can indicate which nodes are most preferred
-  as masters.
+  to be promoted.
    
-.. topic:: Explicitly preferring node1 to be promoted to master
+.. topic:: Explicitly preferring node1 to be promoted
 
    .. code-block:: xml
 
-      <rsc_location id="master-location" rsc="myMasterRsc">
-          <rule id="master-rule" score="100" role="Master">
-            <expression id="master-exp" attribute="#uname" operation="eq" value="node1"/>
+      <rsc_location id="promoted-location" rsc="myPromotableRsc">
+          <rule id="promoted-rule" score="100" role="Promoted">
+            <expression id="promoted-exp" attribute="#uname" operation="eq" value="node1"/>
           </rule>
       </rsc_location> 
 
@@ -1161,7 +1174,7 @@ ___________________________
    |                   |                                    | indicates that the containerized service          |
    |                   |                                    | should be treated as a promotable service,        |
    |                   |                                    | with this many replicas allowed to run the        |
-   |                   |                                    | service in the master role                        |
+   |                   |                                    | service in the promoted role                      |
    +-------------------+------------------------------------+---------------------------------------------------+
    | network           |                                    | .. index::                                        |
    |                   |                                    |    single: docker; attribute, network             |
@@ -1579,14 +1592,6 @@ A bundle with a primitive can run on a Pacemaker Remote node only if the bundle
 uses a distinct ``control-port``.
 
 .. [#] Of course, the service must support running multiple instances.
-
-.. [#] These are historical terms that will eventually be replaced, but the extensive
-   use of them and the need for backward compatibility makes it a long process.
-   You may see examples using a **master** tag instead of a **clone** tag with the
-   **promotable** meta-attribute set to **true**; the **master** tag is supported, but
-   deprecated, and will be removed in a future version. You may also see such
-   services referred to as *multi-state* or *stateful*; these mean the same thing
-   as *promotable*.
 
 .. [#] Docker is a trademark of Docker, Inc. No endorsement by or association with
    Docker, Inc. is implied.
