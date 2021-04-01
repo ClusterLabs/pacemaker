@@ -85,7 +85,7 @@ struct {
     gboolean force;               // --force was given
     gboolean clear_expired;       // --expired was given
     gboolean recursive;           // --recursive was given
-    gboolean promoted_role_only;  // --master was given
+    gboolean promoted_role_only;  // --promoted was given
     gchar *host_uname;            // Value of --node
     gchar *interval_spec;         // Value of --interval
     gchar *move_lifetime;         // Value of --lifetime
@@ -448,13 +448,13 @@ static GOptionEntry location_entries[] = {
       INDENT "this will return an error if the resource is already running\n"
       INDENT "on the specified node. If --force is specified, this will\n"
       INDENT "always ban the current node.\n"
-      INDENT "Optional: --lifetime, --master. NOTE: This may prevent the\n"
+      INDENT "Optional: --lifetime, --promoted. NOTE: This may prevent the\n"
       INDENT "resource from running on its previous location until the\n"
       INDENT "implicit constraint expires or is removed with --clear.",
       NULL },
     { "ban", 'B', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Create a constraint to keep resource off a node.\n"
-      INDENT "Optional: --node, --lifetime, --master.\n"
+      INDENT "Optional: --node, --lifetime, --promoted.\n"
       INDENT "NOTE: This will prevent the resource from running on the\n"
       INDENT "affected node until the implicit constraint expires or is\n"
       INDENT "removed with --clear. If --node is not specified, it defaults\n"
@@ -465,7 +465,7 @@ static GOptionEntry location_entries[] = {
       NULL },
     { "clear", 'U', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Remove all constraints created by the --ban and/or --move\n"
-      INDENT "commands. Requires: --resource. Optional: --node, --master,\n"
+      INDENT "commands. Requires: --resource. Optional: --node, --promoted,\n"
       INDENT "--expired. If --node is not specified, all constraints created\n"
       INDENT "by --ban and --move will be removed for the named resource. If\n"
       INDENT "--node and --force are specified, any constraint created by\n"
@@ -481,11 +481,17 @@ static GOptionEntry location_entries[] = {
       "Lifespan (as ISO 8601 duration) of created constraints (with\n"
       INDENT "-B, -M) see https://en.wikipedia.org/wiki/ISO_8601#Durations)",
       "TIMESPEC" },
-    { "master", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.promoted_role_only,
+    { "promoted", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.promoted_role_only,
       "Limit scope of command to promoted role (with -B, -M, -U). For\n"
       INDENT "-B and -M, previously promoted instances may remain\n"
       INDENT "active in the unpromoted role.",
       NULL },
+
+    // Deprecated since 2.1.0
+    { "master", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.promoted_role_only,
+      "Deprecated: Use --promoted instead", NULL },
 
     { NULL }
 };
@@ -986,7 +992,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
                         "To prevent '%s' from running on a specific location, "
                         "specify a node."
                         "To prevent '%s' from being promoted at a specific "
-                        "location, specify a node and the master option.",
+                        "location, specify a node and the --promoted option.",
                         options.rsc_id, nactive, count, options.rsc_id, options.rsc_id);
         }
 
