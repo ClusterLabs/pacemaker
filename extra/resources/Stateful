@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:Stateful resource agent
 #
-# Copyright 2006-2019 the Pacemaker project contributors
+# Copyright 2006-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -20,6 +20,12 @@
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
+
+# Until we can assume the new name is available ...
+: ${OCF_RUNNING_PROMOTED:=$OCF_RUNNING_MASTER}
+
+SCORE_UNPROMOTED=5
+SCORE_PROMOTED=10
 
 #######################################################################
 
@@ -67,8 +73,8 @@ to simulate a long-running notify.
 <actions>
 <action name="start"   timeout="20s" />
 <action name="stop"    timeout="20s" />
-<action name="monitor" depth="0" timeout="20s" interval="10s" role="Master"/>
-<action name="monitor" depth="0" timeout="20s" interval="11s" role="Slave"/>
+<action name="monitor" depth="0" timeout="20s" interval="10s" role="Promoted"/>
+<action name="monitor" depth="0" timeout="20s" interval="11s" role="Unpromoted"/>
 <action name="promote" timeout="10s" />
 <action name="demote"  timeout="10s" />
 <action name="notify"  timeout="5s" />
@@ -120,18 +126,18 @@ $(env | sort)
     fi
 }
 
-set_master_score() {
-    "${HA_SBIN_DIR}/crm_master" -l reboot -v "$1"
+set_promotion_score() {
+    "${HA_SBIN_DIR}/crm_attribute" --promotion -v "$1"
 }
 
 stateful_start() {
-    stateful_check_state master
+    stateful_check_state Promoted
     if [ $? -eq 0 ]; then
         # CRM Error - Should never happen
-        return $OCF_RUNNING_MASTER
+        return $OCF_RUNNING_PROMOTED
     fi
-    stateful_update slave
-    set_master_score "${slave_score}"
+    stateful_update Unpromoted
+    set_promotion_score $SCORE_UNPROMOTED
     return 0
 }
 
@@ -141,8 +147,8 @@ stateful_demote() {
         # CRM Error - Should never happen
         return $OCF_NOT_RUNNING
     fi
-    stateful_update slave
-    set_master_score "${slave_score}"
+    stateful_update Unpromoted
+    set_promotion_score $SCORE_UNPROMOTED
     return 0
 }
 
@@ -151,17 +157,17 @@ stateful_promote() {
     if [ $? -eq 0 ]; then
         return $OCF_NOT_RUNNING
     fi
-    stateful_update master
-    set_master_score "${master_score}"
+    stateful_update Promoted
+    set_promotion_score $SCORE_PROMOTED
     return 0
 }
 
 stateful_stop() {
-    "${HA_SBIN_DIR}/crm_master" -l reboot -D
-    stateful_check_state master
+    "${HA_SBIN_DIR}/crm_attribute" --promotion -D
+    stateful_check_state Promoted
     if [ $? -eq 0 ]; then
         # CRM Error - Should never happen
-        return $OCF_RUNNING_MASTER
+        return $OCF_RUNNING_PROMOTED
     fi
     if [ -f "${OCF_RESKEY_state}" ]; then
         rm "${OCF_RESKEY_state}"
@@ -177,20 +183,20 @@ stateful_monitor() {
         exit $rc
     fi
 
-    stateful_check_state "master"
+    stateful_check_state Promoted
     if [ $? -eq 0 ]; then
         if [ $OCF_RESKEY_CRM_meta_interval -eq 0 ]; then
-            # Restore the master setting during probes
-            set_master_score "${master_score}"
+            # Restore the promotion score during probes
+            set_promotion_score $SCORE_PROMOTED
         fi
-        return $OCF_RUNNING_MASTER
+        return $OCF_RUNNING_PROMOTED
     fi
 
-    stateful_check_state "slave"
+    stateful_check_state Unpromoted
     if [ $? -eq 0 ]; then
         if [ $OCF_RESKEY_CRM_meta_interval -eq 0 ]; then
-            # Restore the master setting during probes
-            set_master_score "${slave_score}"
+            # Restore the promotion score during probes
+            set_promotion_score $SCORE_UNPROMOTED
         fi
         return $OCF_SUCCESS
     fi
@@ -213,9 +219,6 @@ stateful_notify() {
 stateful_validate() {
     exit $OCF_SUCCESS
 }
-
-: ${slave_score:=5}
-: ${master_score:=10}
 
 : ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_notify_delay:=0}
