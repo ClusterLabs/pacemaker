@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,15 +65,35 @@ static pcmk__cli_option_t long_options[] = {
         "quiet", no_argument, NULL, 'q',
         "\tPrint only the value on stdout\n", pcmk__option_default
     },
+
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nOptions for selecting attribute:", pcmk__option_default
+    },
     {
         "name", required_argument, NULL, 'n',
-        "Name of the attribute/option to operate on", pcmk__option_default
+        "Operate on attribute or option with this name",
+        pcmk__option_default
     },
     {
         "pattern", required_argument, NULL, 'P',
-        "Pattern matching names of attributes (only with -v/-D and -l reboot)",
+        "Operate on all attributes matching this pattern "
+            "(with -v/-D and -l reboot)",
         pcmk__option_default
     },
+    {
+        "set-name", required_argument, NULL, 's',
+        "(Advanced) Operate on instance of specified attribute that is "
+            "within set with this XML ID",
+        pcmk__option_default
+    },
+    {
+        "id", required_argument, NULL, 'i',
+        "\t(Advanced) Operate on instance of specified attribute with this "
+            "XML ID",
+        pcmk__option_default
+    },
+
     {
         "-spacer-", no_argument, NULL, '-',
         "\nCommands:", pcmk__option_default
@@ -122,16 +142,6 @@ static pcmk__cli_option_t long_options[] = {
     {
         "utilization", no_argument, NULL, 'z',
         "Set an utilization attribute for the node.", pcmk__option_default
-    },
-    {
-        "set-name", required_argument, NULL, 's',
-        "(Advanced) The attribute set in which to place the value",
-        pcmk__option_default
-    },
-    {
-        "id", required_argument, NULL, 'i',
-        "\t(Advanced) The ID used to identify the attribute",
-        pcmk__option_default
     },
     {
         "default", required_argument, NULL, 'd',
