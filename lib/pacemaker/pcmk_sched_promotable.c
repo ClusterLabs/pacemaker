@@ -465,7 +465,7 @@ lookup_promotion_score(pe_resource_t *rsc, const pe_node_t *node, const char *na
     const char *attr_value = NULL;
 
     if (node && name) {
-        char *attr_name = crm_strdup_printf("master-%s", name);
+        char *attr_name = pcmk_promotion_score_name(name);
 
         attr_value = pe_node_attribute_calculated(node, attr_name, rsc);
         free(attr_name);
