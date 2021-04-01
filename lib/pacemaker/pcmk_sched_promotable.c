@@ -533,7 +533,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
 
     if (rsc->clone_name) {
         /* Use the name the lrm knows this resource as,
-         * since that's what crm_master would have used too
+         * since that's what crm_attribute --promotion would have used
          */
         name = rsc->clone_name;
     }
