@@ -105,17 +105,17 @@ enum rsc_role_e {
 #  define RSC_ROLE_MASTER_S  "Master"
 
 enum pe_print_options {
-    pe_print_log            = (1 << 0),
-    pe_print_html           = (1 << 1),
-    pe_print_ncurses        = (1 << 2),
-    pe_print_printf         = (1 << 3),
+    pe_print_log            = (1 << 0),  //! \deprecated
+    pe_print_html           = (1 << 1),  //! \deprecated
+    pe_print_ncurses        = (1 << 2),  //! \deprecated
+    pe_print_printf         = (1 << 3),  //! \deprecated
     pe_print_dev            = (1 << 4),  //! \deprecated Ignored
     pe_print_details        = (1 << 5),  //! \deprecated Ignored
     pe_print_max_details    = (1 << 6),  //! \deprecated Ignored
     pe_print_rsconly        = (1 << 7),
     pe_print_ops            = (1 << 8),
     pe_print_suppres_nl     = (1 << 9),
-    pe_print_xml            = (1 << 10),
+    pe_print_xml            = (1 << 10), //! \deprecated
     pe_print_brief          = (1 << 11),
     pe_print_pending        = (1 << 12),
     pe_print_clone_details  = (1 << 13),
