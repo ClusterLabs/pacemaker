@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-node-with-attributes"/>
+    </start>
+
+    <define name="element-node-with-attributes">
+        <element name="node">
+            <attribute name="name"> <text /> </attribute>
+            <zeroOrMore>
+                <element name="attribute">
+                    <attribute name="name"> <text /> </attribute>
+                    <attribute name="value"> <text /> </attribute>
+                    <optional>
+                        <attribute name="expected"> <data type="integer" /> </attribute>
+                    </optional>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+</grammar>
