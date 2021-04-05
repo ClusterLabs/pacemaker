@@ -23,7 +23,7 @@ have a ``.in`` extension, and its first line should be:
    #!@PYTHON@
 
 which will be replaced with the appropriate python executable when Pacemaker is
-built. To make that happen, add an ``AC_CONFIG_FILES()`` line to
+built. To make that happen, add an entry to ``CONFIG_FILES_EXEC()`` in
 ``configure.ac``, and add the file name without ``.in`` to ``.gitignore`` (see
 existing examples).
 
