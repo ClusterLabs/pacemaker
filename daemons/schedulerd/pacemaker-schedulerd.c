@@ -45,6 +45,10 @@ pcmk__supported_format_t formats[] = {
 static struct series_s {
     const char *name;
     const char *param;
+
+    /* Maximum number of inputs of this kind to save to disk. If -1, save all;
+     * if 0, save none.
+     */
     int wrap;
 } series[] = {
     { "pe-error", "pe-error-series-max", -1 },
@@ -125,7 +129,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             free(digest);
 
         } else if (pcmk__str_eq(digest, last_digest, pcmk__str_casei)) {
-            crm_info("Input has not changed since last time, not saving to disk");
             is_repoke = TRUE;
             free(digest);
 
@@ -169,7 +172,11 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         reply = create_reply(msg, sched_data_set->graph);
         CRM_ASSERT(reply != NULL);
 
-        if (is_repoke == FALSE) {
+        if (series_wrap == 0) { // Don't save any inputs of this kind
+            free(filename);
+            filename = NULL;
+
+        } else if (!is_repoke) { // Input changed, save to disk
             free(filename);
             filename = pcmk__series_filename(PE_STATE_DIR,
                                              series[series_id].name, seq, true);
@@ -206,14 +213,18 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         free_xml(reply);
         pcmk__log_transition_summary(filename);
 
-        if (is_repoke == FALSE && series_wrap != 0) {
+        if (series_wrap == 0) {
+            crm_debug("Not saving input to disk (disabled by configuration)");
+
+        } else if (is_repoke) {
+            crm_info("Input has not changed since last time, not saving to disk");
+
+        } else {
             unlink(filename);
             crm_xml_add_ll(xml_data, "execution-date", (long long) execution_date);
             write_xml_file(xml_data, filename, TRUE);
             pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
                                         ++seq, series_wrap);
-        } else {
-            crm_trace("Not writing out %s: %d & %d", filename, is_repoke, series_wrap);
         }
 
         free_xml(converted);

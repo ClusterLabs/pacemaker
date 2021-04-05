@@ -2916,16 +2916,22 @@ void
 pcmk__log_transition_summary(const char *filename)
 {
     if (was_processing_error) {
-        crm_err("Calculated transition %d (with errors), saving inputs in %s",
-                transition_id, filename);
+        crm_err("Calculated transition %d (with errors)%s%s",
+                transition_id,
+                (filename == NULL)? "" : ", saving inputs in ",
+                (filename == NULL)? "" : filename);
 
     } else if (was_processing_warning) {
-        crm_warn("Calculated transition %d (with warnings), saving inputs in %s",
-                 transition_id, filename);
+        crm_warn("Calculated transition %d (with warnings)%s%s",
+                 transition_id,
+                 (filename == NULL)? "" : ", saving inputs in ",
+                 (filename == NULL)? "" : filename);
 
     } else {
-        crm_notice("Calculated transition %d, saving inputs in %s",
-                   transition_id, filename);
+        crm_notice("Calculated transition %d%s%s",
+                   transition_id,
+                   (filename == NULL)? "" : ", saving inputs in ",
+                   (filename == NULL)? "" : filename);
     }
     if (pcmk__config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
