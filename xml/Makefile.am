@@ -71,14 +71,14 @@ CIB_base		= cib $(CIB_cfg_base) status score rule nvset
 # This is more complicated than it should be due to the need to support
 # VPATH builds and "make distcheck". We need the absolute paths for reliable
 # substitution back and forth, and relative paths for distributed files.
-API_abs_files		= $(foreach base,$(API_base),$(wildcard $(abs_srcdir)/api/$(base)*.rng))
+API_abs_files		= $(foreach base,$(API_base),$(wildcard $(abs_srcdir)/api/$(base)-*.rng))
 CIB_abs_files		= $(foreach base,$(CIB_base),$(wildcard $(abs_srcdir)/$(base).rng $(abs_srcdir)/$(base)-*.rng))
 CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3.xsl			\
 			  $(abs_srcdir)/upgrade-2.10.xsl		\
 			  $(wildcard $(abs_srcdir)/upgrade-*enter.xsl)	\
 			  $(wildcard $(abs_srcdir)/upgrade-*leave.xsl)
 MON_abs_files 		= $(abs_srcdir)/crm_mon.rng
-API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)*.rng))
+API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)-*.rng))
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
 CIB_xsl			= $(srcdir)/upgrade-1.3.xsl			\
 			  $(srcdir)/upgrade-2.10.xsl		\
