@@ -78,9 +78,6 @@ int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                       unsigned int show, char *prefix, char *only_node,
                       char *only_rsc);
 
-void blank_screen(void);
-unsigned int get_resource_display_options(unsigned int mon_ops);
-
 void crm_mon_register_messages(pcmk__output_t *out);
 
 pcmk__output_t *crm_mon_mk_curses_output(char **argv);

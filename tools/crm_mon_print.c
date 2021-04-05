@@ -47,6 +47,32 @@ static int print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
                                const char *prefix, GList *only_rsc,
                                gboolean print_spacer);
 
+/*!
+ * \internal
+ * \brief Return resource display options corresponding to command-line choices
+ *
+ * \return Bitmask of pe_print_options suitable for resource print functions
+ */
+static unsigned int
+get_resource_display_options(unsigned int mon_ops)
+{
+    int print_opts = 0;
+
+    if (pcmk_is_set(mon_ops, mon_op_print_pending)) {
+        print_opts |= pe_print_pending;
+    }
+    if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
+        print_opts |= pe_print_clone_details|pe_print_implicit;
+    }
+    if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
+        print_opts |= pe_print_clone_active;
+    }
+    if (pcmk_is_set(mon_ops, mon_op_print_brief)) {
+        print_opts |= pe_print_brief;
+    }
+    return print_opts;
+}
+
 static GList *
 build_uname_list(pe_working_set_t *data_set, const char *s) {
     GList *unames = NULL;
