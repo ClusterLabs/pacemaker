@@ -30,8 +30,8 @@ doc_license += " version 4.0 or later (CC-BY-SA v4.0+)"
 rst_prolog="""
 .. |CFS_DISTRO| replace:: CentOS Stream
 .. |CFS_DISTRO_VER| replace:: 8
-.. |REMOTE_DISTRO| replace:: CentOS
-.. |REMOTE_DISTRO_VER| replace:: 7.4
+.. |REMOTE_DISTRO| replace:: CentOS Stream
+.. |REMOTE_DISTRO_VER| replace:: 8
 """
 
 # If extensions (or modules to document with autodoc) are in another directory,

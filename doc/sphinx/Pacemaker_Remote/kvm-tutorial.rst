@@ -12,221 +12,36 @@ guest node.
 here are meant to get users familiar with the concept of guest nodes as quickly
 as possible.
 
-Configure the Physical Host
-###########################
+Configure Cluster Nodes
+#######################
 
-.. NOTE::
+This walk-through assumes you already have a Pacemaker cluster configured. For examples, we will use a cluster with two cluster nodes named pcmk-1 and pcmk-2. You can substitute whatever your node names are, for however many nodes you have. If you are not familiar with setting up basic Pacemaker clusters, follow the walk-through in the Clusters From Scratch document before attempting this one.
 
-    For this example, we will use a single physical host named **example-host**.
-    A production cluster would likely have multiple physical hosts, in which case
-    you would run the commands here on each one, unless noted otherwise.
+You will need to add the remote node's hostname (we're using **guest1** in
+this tutorial) to the cluster nodes' ``/etc/hosts`` files if you haven't already.
+This is required unless you have DNS set up in a way where guest1's address can be
+discovered.
 
-Configure Firewall on Host
-__________________________
-
-On the physical host, allow cluster-related services through the local firewall:
-
-.. code-block:: none
-
-    # firewall-cmd --permanent --add-service=high-availability
-    success
-    # firewall-cmd --reload
-    success
-
-.. NOTE::
-
-    If you are using iptables directly, or some other firewall solution besides
-    firewalld, simply open the following ports, which can be used by various
-    clustering components: TCP ports 2224, 3121, and 21064, and UDP port 5405.
-
-    If you run into any problems during testing, you might want to disable
-    the firewall and SELinux entirely until you have everything working.
-    This may create significant security issues and should not be performed on
-    machines that will be exposed to the outside world, but may be appropriate
-    during development and testing on a protected host.
-
-    To disable security measures:
-
-    .. code-block:: none
-
-        [root@pcmk-1 ~]# setenforce 0
-        [root@pcmk-1 ~]# sed -i.bak "s/SELINUX=enforcing/SELINUX=permissive/g" /etc/selinux/config
-        [root@pcmk-1 ~]# systemctl mask firewalld.service
-        [root@pcmk-1 ~]# systemctl stop firewalld.service
-        [root@pcmk-1 ~]# iptables --flush
-
-Install Cluster Software
-________________________
+Execute the following on each cluster node, replacing the IP address with the
+actual IP address of the remote node.
 
 .. code-block:: none
 
-    # yum install -y pacemaker corosync pcs resource-agents
-
-Configure Corosync
-__________________
-
-Corosync handles pacemaker's cluster membership and messaging. The corosync
-config file is located in ``/etc/corosync/corosync.conf``. That config file must
-be initialized with information about the cluster nodes before pacemaker can
-start.
-
-To initialize the corosync config file, execute the following ``pcs`` command,
-replacing the cluster name and hostname as desired:
-
-.. code-block:: none
-
-    # pcs cluster setup --force --local --name mycluster example-host
-
-.. NOTE::
-
-    If you have multiple physical hosts, you would execute the setup command on
-    only one host, but list all of them at the end of the command.
-
-Configure Pacemaker for Remote Node Communication
-_________________________________________________
-
-Create a place to hold an authentication key for use with pacemaker_remote:
-
-.. code-block:: none
-
-    # mkdir -p --mode=0750 /etc/pacemaker
-    # chgrp haclient /etc/pacemaker
-
-Generate a key:
-
-.. code-block:: none
-
-    # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
-
-.. NOTE::
-
-    If you have multiple physical hosts, you would generate the key on only one
-    host, and copy it to the same location on all hosts.
-
-Verify Cluster Software
-_______________________
-
-Start the cluster
-
-.. code-block:: none
-
-    # pcs cluster start
-
-Verify corosync membership
-
-.. code-block:: none
-
-    # pcs status corosync
-
-    Membership information
-    ----------------------
-        Nodeid      Votes Name
-             1          1 example-host (local)
-
-Verify pacemaker status. At first, the output will look like this:
-
-.. code-block:: none
-
-    # pcs status
-    Cluster name: mycluster
-    WARNING: no stonith devices and stonith-enabled is not false
-    Stack: corosync
-    Current DC: NONE
-    Last updated: Fri Jan 12 15:18:32 2018
-    Last change: Fri Jan 12 12:42:21 2018 by root via cibadmin on example-host
-
-    1 node configured
-    0 resources configured
-
-    Node example-host: UNCLEAN (offline)
-
-    No active resources
-
-    Daemon Status:
-      corosync: active/disabled
-      pacemaker: active/disabled
-      pcsd: active/enabled
-
-After a short amount of time, you should see your host as a single node in the
-cluster:
-
-.. code-block:: none
-
-    # pcs status
-    Cluster name: mycluster
-    WARNING: no stonith devices and stonith-enabled is not false
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition WITHOUT quorum
-    Last updated: Fri Jan 12 15:20:05 2018
-    Last change: Fri Jan 12 12:42:21 2018 by root via cibadmin on example-host
-
-    1 node configured
-    0 resources configured
-
-    Online: [ example-host ]
-
-    No active resources
-
-    Daemon Status:
-      corosync: active/disabled
-      pacemaker: active/disabled
-      pcsd: active/enabled
-
-Disable STONITH and Quorum
-__________________________
-
-Now, enable the cluster to work without quorum or stonith.  This is required
-for the sake of getting this tutorial to work with a single cluster node.
-
-.. code-block:: none
-
-    # pcs property set stonith-enabled=false
-    # pcs property set no-quorum-policy=ignore
-
-.. WARNING::
-
-    The use of ``stonith-enabled=false`` is completely inappropriate for a production
-    cluster. It tells the cluster to simply pretend that failed nodes are safely
-    powered off. Some vendors will refuse to support clusters that have STONITH
-    disabled. We disable STONITH here only to focus the discussion on
-    pacemaker_remote, and to be able to use a single physical host in the example.
-
-Now, the status output should look similar to this:
-
-.. code-block:: none
-
-    # pcs status
-    Cluster name: mycluster
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 15:22:49 2018
-    Last change: Fri Jan 12 15:22:46 2018 by root via cibadmin on example-host
-
-    1 node configured
-    0 resources configured
-
-    Online: [ example-host ]
-
-    No active resources
-
-    Daemon Status:
-      corosync: active/disabled
-      pacemaker: active/disabled
-      pcsd: active/enabled
-
-Go ahead and stop the cluster for now after verifying everything is in order.
-
-.. code-block:: none
-
-    # pcs cluster stop --force
+    # cat << END >> /etc/hosts
+    192.168.122.10    guest1
+    END
 
 Install Virtualization Software
 _______________________________
 
-.. code-block:: none
+On each node within your cluster, install virt-install, libvirt, and qemu-kvm.
+Start and enable libvirtd.
 
-    # yum install -y kvm libvirt qemu-system qemu-kvm bridge-utils virt-manager
-    # systemctl enable libvirtd.service
+  .. code-block:: none
+
+    # yum install -y virt-install libvirt qemu-kvm
+    # systemctl start libvirtd
+    # systemctl enable libvirtd
 
 Reboot the host.
 
@@ -243,10 +58,28 @@ Configure the KVM guest
 Create Guest
 ____________
 
-We will not outline here the installation steps required to create a KVM
-guest. There are plenty of tutorials available elsewhere that do that.
-Just be sure to configure the guest with a hostname and a static IP address
-(as an example here, we will use guest1 and 192.168.122.10).
+Create a KVM guest to use as a guest node. Be sure to configure the guest with a
+hostname and a static IP address (as an example here, we will use guest1 and 192.168.122.10).
+Here's an example way to create a guest:
+
+* Download an .iso file from the `CentOS Mirrors List <http://isoredirect.centos.org/centos/8-stream/isos/x86_64/>`_ into a directory on your cluster node.
+
+* Run the following command, using your own path for the **location** flag:
+
+  .. code-block:: none
+
+    # virt-install \
+      --name guest-vm \
+      --ram 1024 \
+      --disk path=./guest-vm.qcow2,size=1 \
+      --vcpus 2 \
+      --os-type linux \
+      --os-variant centos-stream8\
+      --network bridge=virbr0 \
+      --graphics none \
+      --console pty,target_type=serial \
+      --location <path to your .iso file> \
+      --extra-args 'console=ttyS0,115200n8 serial'
 
 .. index::
    single: guest node; firewall
@@ -254,8 +87,7 @@ Just be sure to configure the guest with a hostname and a static IP address
 Configure Firewall on Guest
 ___________________________
 
-On each guest, allow cluster-related services through the local firewall,
-following the same procedure as in `Configure Firewall on Host`_.
+On each guest, allow cluster-related services through the local firewall.
 
 Verify Connectivity
 ___________________
@@ -263,84 +95,17 @@ ___________________
 At this point, you should be able to ping and ssh into guests from hosts, and
 vice versa.
 
-Configure pacemaker_remoted
-___________________________
+Configure pacemaker_remote on Guest Node
+________________________________________
 
-Install ``pacemaker_remoted``, and enable it to run at start-up. Here, we also
-install the ``pacemaker`` package; it is not required, but it contains the
-dummy resource agent that we will use later for testing.
-
-.. code-block:: none
-
-    # yum install -y pacemaker pacemaker-remote resource-agents
-    # systemctl enable pacemaker_remote.service
-
-Copy the authentication key from a host:
+Install the pacemaker_remote daemon on the guest node. Here,
+we also install the ``pacemaker`` package; it is not required, but
+it contains the dummy resource agent that we will use later
+for testing.
 
 .. code-block:: none
 
-    # mkdir -p --mode=0750 /etc/pacemaker
-    # chgrp haclient /etc/pacemaker
-    # scp root@example-host:/etc/pacemaker/authkey /etc/pacemaker
-
-Start ``pacemaker_remoted``, and verify the start was successful:
-
-.. code-block:: none
-
-    # systemctl start pacemaker_remote
-    # systemctl status pacemaker_remote
-
-      pacemaker_remote.service - Pacemaker Remote Service
-          Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)
-          Active: active (running) since Thu 2013-03-14 18:24:04 EDT; 2min 8s ago
-        Main PID: 1233 (pacemaker_remot)
-          CGroup: name=systemd:/system/pacemaker_remote.service
-              └─1233 /usr/sbin/pacemaker-remoted
-
-      Mar 14 18:24:04 guest1 systemd[1]: Starting Pacemaker Remote Service...
-      Mar 14 18:24:04 guest1 systemd[1]: Started Pacemaker Remote Service.
-      Mar 14 18:24:04 guest1 pacemaker-remoted[1233]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
-
-Verify Host Connection to Guest
-_______________________________
-
-Before moving forward, it's worth verifying that the host can contact the guest
-on port 3121. Here's a trick you can use. Connect using ssh from the host. The
-connection will get destroyed, but how it is destroyed tells you whether it
-worked or not.
-
-First add guest1 to the host machine's ``/etc/hosts`` file if you haven't
-already. This is required unless you have DNS setup in a way where **guest1**'s
-address can be discovered.
-
-.. code-block:: none
-
-    # cat << END >> /etc/hosts
-    192.168.122.10    guest1 
-    END
-
-If running the ``ssh`` command on one of the cluster nodes results in this
-output before disconnecting, the connection works:
-
-.. code-block:: none
-
-    # ssh -p 3121 guest1
-    ssh_exchange_identification: read: Connection reset by peer
-
-If you see one of these, the connection is not working:
-
-.. code-block:: none
-
-    # ssh -p 3121 guest1
-    ssh: connect to host guest1 port 3121: No route to host
-
-.. code-block:: none
-
-    # ssh -p 3121 guest1
-    ssh: connect to host guest1 port 3121: Connection refused
-
-Once you can successfully connect to the guest from the host, shutdown the
-guest. Pacemaker will be managing the virtual machine from this point forward.
+    # yum install -y pacemaker-remote resource-agents pcs pacemaker
 
 Integrate Guest into Cluster
 ############################
@@ -357,92 +122,86 @@ On the host, start Pacemaker.
 
     # pcs cluster start
 
-Wait for the host to become the DC. The output of ``pcs status`` should look
-as it did in `Disable Stonith and Quorum`_.
+Wait for the host to become the DC.
 
-Integrate as Guest Node
-_______________________
+Integrate Guest Node into Cluster
+_________________________________
 
-If you didn't already do this earlier in the verify host to guest connection
-section, add the KVM guest's IP address to the host's ``/etc/hosts`` file so we
-can connect by hostname. For this example:
+We will use the following command, which creates the VirtualDomain resource,
+creates and copies the key, and enables pacemaker_remote:
 
 .. code-block:: none
 
-    # cat << END >> /etc/hosts
-    192.168.122.10    guest1 
-    END
-
-We will use the **VirtualDomain** resource agent for the management of the
-virtual machine.  This agent requires the virtual machine's XML config to be
-dumped to a file on disk.  To do this, pick out the name of the virtual machine
-you just created from the output of this list.
-
-.. code-block:: none
-
-    # virsh list --all
-     Id    Name                           State
-    ----------------------------------------------------
-     -     guest1                         shut off
-
-In my case I named it **guest1**. Dump the XML to a file somewhere on the host
-using the following command.
-
-.. code-block:: none
-
-    # virsh dumpxml guest1 > /etc/pacemaker/guest1.xml
-
-Now just register the resource with Pacemaker, and you're set!
-
-.. code-block:: none
-
-    # pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" \
-        config="/etc/pacemaker/guest1.xml" meta remote-node=guest1
-
-.. NOTE::
-
-    This example puts the guest XML under ``/etc/pacemaker`` because the
-    permissions and SELinux labeling should not need any changes.
-    If you run into trouble with this or any step, try disabling SELinux
-    with ``setenforce 0``. If it works after that, see SELinux documentation
-    for how to troubleshoot, if you wish to reenable SELinux.
-
-.. NOTE::
-
-    Pacemaker will automatically monitor pacemaker_remote connections for failure,
-    so it is not necessary to create a recurring monitor on the **VirtualDomain**
-    resource.
+    # pcs cluster node add-guest guest1
 
 Once the **vm-guest1** resource is started you will see **guest1** appear in the
 ``pcs status`` output as a node.  The final ``pcs status`` output should look
-something like this.
+something like this, and you can see that it created the VirtualDomain resource:
 
 .. code-block:: none
 
     # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 18:00:45 2018
-    Last change: Fri Jan 12 17:53:44 2018 by root via crm_resource on example-host
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:37:37 2021
+      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * 3 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+      * GuestOnline: [ guest1@pcmk-1 ]
 
-    2 nodes configured
-    2 resources configured
-
-    Online: [ example-host ]
-    GuestOnline: [ guest1@example-host ]
-
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
 
+How pcs Configures the Guest
+____________________________
+
+To see that it created the key and copied it to all cluster nodes and the
+guest, run:
+
+.. code-block:: none
+
+    # ls -l /etc/pacemaker
+
+To see that it enables pacemaker_remote, run:
+
+.. code-block:: none
+
+    # systemctl status pacemaker_remote
+    
+    ● pacemaker_remote.service - Pacemaker Remote executor daemon
+       Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled; vendor preset: disabled)
+       Active: active (running) since Wed 2021-03-17 08:31:01 EDT; 1min 5s ago
+         Docs: man:pacemaker-remoted
+               https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/    Pacemaker_Remote/index.html
+     Main PID: 90160 (pacemaker-remot)
+        Tasks: 1
+       Memory: 1.4M
+       CGroup: /system.slice/pacemaker_remote.service
+               └─90160 /usr/sbin/pacemaker-remoted
+    
+    Mar 17 08:31:01 guest1 systemd[1]: Started Pacemaker Remote executor daemon.
+    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Additional logging available in /var/log/pacemaker/pacemaker.log
+    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Starting Pacemaker remote executor
+    Mar 17 08:31:01 guest1 pacemaker-remoted[90160]:  notice: Pacemaker remote executor successfully started and accepting connections
+.. NOTE::
+
+    Pacemaker will automatically monitor pacemaker_remote connections for failure,
+    so it is not necessary to create a recurring monitor on the **VirtualDomain**
+    resource.
+
 Starting Resources on KVM Guest
-_______________________________
+###############################
 
 The commands below demonstrate how resources can be executed on both the
 guest node and the cluster node.
@@ -467,14 +226,13 @@ cluster node, and some started on the guest node.
 
 .. code-block:: none
 
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-     FAKE1	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE2	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE3	(ocf::pacemaker:Dummy):	Started example-host
-     FAKE4	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
+      * FAKE1	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE2	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE3	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
 
 The guest node, **guest1**, reacts just like any other node in the cluster. For
 example, pick out a resource that is running on your cluster node. For my
@@ -490,17 +248,16 @@ Now, looking at the bottom of the `pcs status` output you'll see FAKE3 is on
 
 .. code-block:: none
 
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-     FAKE1	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE2	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE3	(ocf::pacemaker:Dummy):	Started guest1 
-     FAKE4	(ocf::pacemaker:Dummy):	Started example-host
-     FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
+      * FAKE1	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE2	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE3	(ocf::pacemaker:Dummy):	 Started guest1
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
 
 Testing Recovery and Fencing
-____________________________
+############################
 
 Pacemaker's scheduler is smart enough to know fencing guest nodes
 associated with a virtual machine means shutting off/rebooting the virtual
@@ -522,33 +279,36 @@ and the **guest1** node will not be shown while it is being recovered.
 
     # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 18:08:35 2018
-    Last change: Fri Jan 12 18:07:00 2018 by root via cibadmin on example-host
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:37:37 2021
+      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * 3 nodes configured
+      * 7 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+      * GuestOnline: [ guest1@pcmk-1 ]
 
-    2 nodes configured
-    7 resources configured
-
-    Online: [ example-host ]
-
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-     FAKE1	(ocf::pacemaker:Dummy):	Stopped
-     FAKE2	(ocf::pacemaker:Dummy):	Stopped
-     FAKE3	(ocf::pacemaker:Dummy):	Stopped
-     FAKE4	(ocf::pacemaker:Dummy):	Started example-host
-     FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
+      * FAKE1	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE2	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE3	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
 
     Failed Actions:
-    * guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',
-        last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
+    * guest1_monitor_30000 on pcmk-1 'unknown error' (1): call=8, status=Error, exitreason='none',
+        last-rc-change='Wed Mar 17 08:32:01 2021', queued=0ms, exec=0ms
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
+
 
 .. NOTE::
 
@@ -564,29 +324,31 @@ something like this.
 
 .. code-block:: none
 
+    # pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-    Last updated: Fri Jan 12 18:18:30 2018
-    Last change: Fri Jan 12 18:07:00 2018 by root via cibadmin on example-host
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:37:37 2021
+      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * 3 nodes configured
+      * 7 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+      * GuestOnline: [ guest1@pcmk-1 ]
 
-    2 nodes configured
-    7 resources configured
-
-    Online: [ example-host ]
-    GuestOnline: [ guest1@example-host ]
-
-    Full list of resources:
-
-     vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-     FAKE1	(ocf::pacemaker:Dummy):	Started guest1
-     FAKE2	(ocf::pacemaker:Dummy):	Started guest1
-     FAKE3	(ocf::pacemaker:Dummy):	Started guest1
-     FAKE4	(ocf::pacemaker:Dummy):	Started example-host
-     FAKE5	(ocf::pacemaker:Dummy):	Started example-host
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 pcmk-1
+      * FAKE1	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE2	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE3	(ocf::pacemaker:Dummy):	 Stopped
+      * FAKE4	(ocf::pacemaker:Dummy):	 Started pcmk-1
+      * FAKE5	(ocf::pacemaker:Dummy):	 Started pcmk-1
 
     Failed Actions:
-    * guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',
+    * guest1_monitor_30000 on pcmk-1 'unknown error' (1): call=8, status=Error, exitreason='none',
         last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
 
     Daemon Status:
@@ -607,7 +369,7 @@ clearing it. For example:
     # pcs resource enable vm-guest1
 
 Accessing Cluster Tools from Guest Node
-_______________________________________
+#######################################
 
 Besides allowing the cluster to manage resources on a guest node,
 pacemaker_remote has one other trick. The pacemaker_remote daemon allows
@@ -621,3 +383,216 @@ like ``crm_master``) work seamlessly on the guest nodes.
 
 Higher-level command shells such as ``pcs`` may have partial support
 on guest nodes, but it is recommended to run them from a cluster node.
+
+Guest nodes will show up in ``crm_mon`` output as normal.  For example, this is the
+``crm_mon`` output after **guest1** is integrated into the cluster:
+
+.. code-block:: none
+
+    Cluster name: mycluster
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:37:37 2021
+      * Last change:  Wed Mar 17 08:31:01 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 2 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 ]
+      * GuestOnline: [ guest1@pcmk-1 ]
+
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain):	 Started pcmk-1
+
+Now, you could place a resource, such as a webserver, on **guest1**:
+
+.. code-block:: none
+
+    # pcs resource create webserver apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=30s
+    # pcs constraint location webserver prefers guest1
+
+Now, the crm_mon output would show:
+
+.. code-block:: none
+
+    Cluster name: mycluster
+    
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-8.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Mar 17 08:38:37 2021
+      * Last change:  Wed Mar 17 08:35:01 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 3 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 ]
+      * GuestOnline: [ guest1@pcmk-1 ]
+
+    Full List of Resources:
+      * vm-guest1	(ocf::heartbeat:VirtualDomain): Started pcmk-1
+      * webserver	(ocf::heartbeat::apache):       Started guest1
+
+It is worth noting that after **guest1** is integrated into the cluster, nearly all the
+Pacemaker command-line tools immediately become available to the guest node.
+This means things like ``crm_mon``, ``crm_resource``, and ``crm_attribute`` will work
+natively on the guest node, as long as the connection between the guest node
+and a cluster node exists. This is particularly important for any promotable
+clone resources executing on the guest node that need access to ``crm_master`` to
+set transient attributes.
+
+Mile-High View of Configuration Steps
+#####################################
+
+The command used in `Integrate Guest Node into Cluster`_ does multiple things.
+If you'd like to each part manually, you can do so as follows. You'll see that the
+end result is the same:
+
+* Later, we are going to put the same authentication key with the path
+  ``/etc/pacemaker/authkey`` on every cluster node and on every virtual machine.
+  This secures remote communication.
+
+  Run this command on your cluster node if you want to make a somewhat random key:
+
+  .. code-block:: none
+
+     # dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1
+
+
+* To create the VirtualDomain resource agent for the management of the virtual
+  machine, Pacemaker requires the virtual machine's xml config file to be dumped
+  to a file -- which we can name as we'd like -- on disk. We named our virtual
+  machine guest1; for this example, we'll dump to the file /etc/pacemaker/guest1.xml
+
+  .. code-block:: none
+
+    # virsh dumpxml guest1 > /etc/pacemaker/guest1.xml
+
+* Install pacemaker_remote on the virtual machine, and if a local firewall is used,
+  allow the node to accept connections on TCP port 3121.
+
+  .. code-block:: none
+
+    # yum install pacemaker-remote resource-agents
+    # firewall-cmd --add-port 3121/tcp --permanent
+
+  .. NOTE::
+
+      If you just want to see this work, you may want to simply disable the local
+      firewall and put SELinux in permissive mode while testing. This creates
+      security risks and should not be done on a production machine exposed to the
+      Internet, but can be appropriate for a protected test machine.
+
+* On a cluster node, create a Pacemaker VirtualDomain resource to launch the virtual machine.
+
+  .. code-block:: none
+
+    [root@pcmk-1 ~]# pcs resource create vm-guest1 VirtualDomain hypervisor="qemu:///system" config="vm-guest1.xml" meta
+    Assumed agent name 'ocf:heartbeat:VirtualDomain' (deduced from 'VirtualDomain')
+
+* Now use the following command to convert the VirtualDomain resource into a guest node
+  which we'll name guest1. By doing so, the /etc/pacemaker/authkey will get copied to
+  the guest node and the pacemaker_remote daemon will get started and enabled on the
+  guest node as well.
+
+  .. code-block:: none
+
+    [root@pcmk-1 ~]# pcs cluster node add-guest guest1 vm-guest1
+    No addresses specified for host 'guest1', using 'guest1'
+    Sending 'pacemaker authkey' to 'guest1'
+    guest1: successful distribution of the file 'pacemaker authkey'
+    Requesting 'pacemaker_remote enable', 'pacemaker_remote start' on 'guest1'
+    guest1: successful run of 'pacemaker_remote enable'
+    guest1: successful run of 'pacemaker_remote start'
+
+*  This will create CIB XML similar to the following:
+
+  .. code-block:: xml
+
+     <primitive class="ocf" id="vm-guest1" provider="heartbeat" type="VirtualDomain">
+       <meta_attributes id="vm-guest1-meta_attributes">
+         <nvpair id="vm-guest1-meta_attributes-remote-addr" name="remote-addr" value="guest1"/>
+         <nvpair id="vm-guest1-meta_attributes-remote-node" name="remote-node" value="guest1"/>
+       </meta_attributes>
+       <instance_attributes id="vm-guest1-instance_attributes">
+         <nvpair id="vm-guest1-instance_attributes-config" name="config" value="vm-guest1.xml"/>
+         <nvpair id="vm-guest1-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+       </instance_attributes>
+       <operations>
+         <op id="vm-guest1-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="60s"/>
+         <op id="vm-guest1-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="120s"/>
+         <op id="vm-guest1-monitor-interval-10s" interval="10s" name="monitor" timeout="30s"/>
+         <op id="vm-guest1-start-interval-0s" interval="0s" name="start" timeout="90s"/>
+         <op id="vm-guest1-stop-interval-0s" interval="0s" name="stop" timeout="90s"/>
+       </operations>
+     </primitive>
+
+  .. code-block:: xml
+
+    [root@pcmk-1 ~]# pcs resource status
+      * vm-guest1 (ocf::heartbeat:VirtualDomain): Stopped
+
+    [root@pcmk-1 ~]# pcs resource config
+     Resource: vm-guest1 (class=ocf provider=heartbeat type=VirtualDomain)
+      Attributes: config=vm-guest1.xml hypervisor=qemu:///system
+      Meta Attrs: remote-addr=guest1 remote-node=guest1
+      Operations: migrate_from interval=0s timeout=60s (vm-guest1-migrate_from-interval-0s)
+                  migrate_to interval=0s timeout=120s (vm-guest1-migrate_to-interval-0s)
+                  monitor interval=10s timeout=30s (vm-guest1-monitor-interval-10s)
+                  start interval=0s timeout=90s (vm-guest1-start-interval-0s)
+                  stop interval=0s timeout=90s (vm-guest1-stop-interval-0s)
+
+The cluster will attempt to contact the virtual machine's pacemaker_remote service at the
+hostname **guest1** after it launches.
+
+.. NOTE::
+
+    The ID of the resource creating the virtual machine (**vm-guest1** in the above
+    example) 'must' be different from the virtual machine's uname (**guest1** in the
+    above example). Pacemaker will create an implicit internal resource for the
+    pacemaker_remote connection to the guest, named with the value of **remote-node**,
+    so that value cannot be used as the name of any other resource.
+
+Troubleshooting a Remote Connection
+###################################
+
+Note: This section should not be done when the guest is connected to the cluster.
+
+Should connectivity issues occur, it can be worth verifying that the cluster nodes
+can contact the remote node on port 3121. Here's a trick you can use.
+Connect using ssh from each of the cluster nodes. The connection will get
+destroyed, but how it is destroyed tells you whether it worked or not.
+
+If running the ssh command on one of the cluster nodes results in this
+output before disconnecting, the connection works:
+
+.. code-block:: none
+
+    # ssh -p 3121 guest1
+    ssh_exchange_identification: read: Connection reset by peer
+
+If you see one of these, the connection is not working:
+
+.. code-block:: none
+
+    # ssh -p 3121 guest1
+    ssh: connect to host guest1 port 3121: No route to host
+
+.. code-block:: none
+
+    # ssh -p 3121 guest1
+    ssh: connect to host guest1 port 3121: Connection refused
+
+If you see this, then the connection is working, but port 3121 is attached
+to SSH, which it should not be.
+
+.. code-block:: none
+
+    # ssh -p 3121 guest1
+    kex_exchange_identification: banner line contains invalid characters
+
+Once you can successfully connect to the guest from the host, you may
+shutdown the guest. Pacemaker will be managing the virtual machine from
+this point forward.
