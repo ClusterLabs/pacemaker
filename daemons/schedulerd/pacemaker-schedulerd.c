@@ -59,6 +59,28 @@ series_t series[] = {
 
 void pengine_shutdown(int nsig);
 
+static void
+init_working_set(void)
+{
+    pcmk__config_error = false;
+    pcmk__config_warning = false;
+
+    was_processing_error = FALSE;
+    was_processing_warning = FALSE;
+
+    if (sched_data_set == NULL) {
+        sched_data_set = pe_new_working_set();
+        CRM_ASSERT(sched_data_set != NULL);
+        pe__set_working_set_flags(sched_data_set,
+                                  pe_flag_no_counts|pe_flag_no_compat);
+        pe__set_working_set_flags(sched_data_set,
+                                  pe_flag_show_utilization);
+        sched_data_set->priv = out;
+    } else {
+        pe_reset_working_set(sched_data_set);
+    }
+}
+
 static gboolean
 process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 {
@@ -96,21 +118,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         gboolean is_repoke = FALSE;
         gboolean process = TRUE;
 
-        pcmk__config_error = false;
-        pcmk__config_warning = false;
-
-        was_processing_error = FALSE;
-        was_processing_warning = FALSE;
-
-        if (sched_data_set == NULL) {
-            sched_data_set = pe_new_working_set();
-            CRM_ASSERT(sched_data_set != NULL);
-            pe__set_working_set_flags(sched_data_set,
-                                      pe_flag_no_counts|pe_flag_no_compat);
-            pe__set_working_set_flags(sched_data_set,
-                                      pe_flag_show_utilization);
-            sched_data_set->priv = out;
-        }
+        init_working_set();
 
         digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
         converted = copy_xml(xml_data);
@@ -197,7 +205,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         }
 
         free_xml(reply);
-        pe_reset_working_set(sched_data_set);
         pcmk__log_transition_summary(filename);
 
         if (is_repoke == FALSE && series_wrap != 0) {
