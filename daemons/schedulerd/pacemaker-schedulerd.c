@@ -369,21 +369,24 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker scheduler successfully started and accepting connections");
     g_main_loop_run(mainloop);
-
-    pe_free_working_set(sched_data_set);
-    crm_info("Exiting %s", crm_system_name);
-
-    pcmk__unregister_formats();
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-
-    crm_exit(CRM_EX_OK);
+    pengine_shutdown(0);
 }
 
 void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
+    ipcs = NULL;
+
     pe_free_working_set(sched_data_set);
+    sched_data_set = NULL;
+
+    pcmk__unregister_formats();
+    if (out != NULL) {
+        out->finish(out, CRM_EX_OK, true, NULL);
+        pcmk__output_free(out);
+        out = NULL;
+    }
+
     crm_exit(CRM_EX_OK);
 }
