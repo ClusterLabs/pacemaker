@@ -14,11 +14,6 @@
 #include <crm/pengine/pe_types.h>
 #include <crm/stonith-ng.h>
 
-/* Never display node attributes whose name starts with one of these prefixes */
-#define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,   \
-                     "shutdown", "terminate", "standby", "probe_complete", \
-                     "#", NULL }
-
 typedef enum mon_output_format_e {
     mon_output_unset,
     mon_output_none,
@@ -83,7 +78,6 @@ int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                       unsigned int show, char *prefix, char *only_node,
                       char *only_rsc);
 
-GList *append_attr_list(GList *attr_list, char *name);
 void blank_screen(void);
 unsigned int get_resource_display_options(unsigned int mon_ops);
 

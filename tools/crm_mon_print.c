@@ -39,10 +39,6 @@ static int print_node_history(pe_working_set_t *data_set, pe_node_t *node,
                               xmlNode *node_state, gboolean operations,
                               unsigned int mon_ops, GList *only_node,
                               GList *only_rsc);
-static gboolean add_extra_info(pe_node_t *node, GList *rsc_list,
-                               pe_working_set_t *data_set, const char *attrname,
-                               int *expected_score);
-static void print_node_attribute(gpointer name, gpointer user_data);
 static int print_node_summary(pe_working_set_t * data_set, gboolean operations,
                               unsigned int mon_ops, GList *only_node,
                               GList *only_rsc, gboolean print_spacer);
@@ -50,9 +46,6 @@ static int print_cluster_tickets(pe_working_set_t * data_set, gboolean print_spa
 static int print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
                                const char *prefix, GList *only_rsc,
                                gboolean print_spacer);
-static int print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
-                                 GList *only_node, GList *only_rsc,
-                                 gboolean print_spacer);
 
 static GList *
 build_uname_list(pe_working_set_t *data_set, const char *s) {
@@ -314,97 +307,6 @@ print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_st
 
 /*!
  * \internal
- * \brief Determine whether extended information about an attribute should be added.
- *
- * \param[in]  node           Node that ran this resource.
- * \param[in]  rsc_list       The list of resources for this node.
- * \param[in]  attrname       The attribute to find.
- * \param[out] expected_score The expected value for this attribute.
- *
- * \return TRUE if extended information should be printed, FALSE otherwise
- * \note Currently, extended information is only supported for ping/pingd
- *       resources, for which a message will be printed if connectivity is lost
- *       or degraded.
- */
-static gboolean
-add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
-               const char *attrname, int *expected_score)
-{
-    GList *gIter = NULL;
-
-    for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-        const char *type = g_hash_table_lookup(rsc->meta, "type");
-        const char *name = NULL;
-        GHashTable *params = NULL;
-
-        if (rsc->children != NULL) {
-            if (add_extra_info(node, rsc->children, data_set, attrname,
-                               expected_score)) {
-                return TRUE;
-            }
-        }
-
-        if (!pcmk__strcase_any_of(type, "ping", "pingd", NULL)) {
-            continue;
-        }
-
-        params = pe_rsc_params(rsc, node, data_set);
-        name = g_hash_table_lookup(params, "name");
-
-        if (name == NULL) {
-            name = "pingd";
-        }
-
-        /* To identify the resource with the attribute name. */
-        if (pcmk__str_eq(name, attrname, pcmk__str_casei)) {
-            int host_list_num = 0;
-            /* int value = crm_parse_int(attrvalue, "0"); */
-            const char *hosts = g_hash_table_lookup(params, "host_list");
-            const char *multiplier = g_hash_table_lookup(params, "multiplier");
-
-            if (hosts) {
-                char **host_list = g_strsplit(hosts, " ", 0);
-                host_list_num = g_strv_length(host_list);
-                g_strfreev(host_list);
-            }
-
-            /* pingd multiplier is the same as the default value. */
-            *expected_score = host_list_num * crm_parse_int(multiplier, "1");
-
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/* structure for passing multiple user data to g_list_foreach() */
-struct mon_attr_data {
-    pe_node_t *node;
-    pe_working_set_t *data_set;
-};
-
-static void
-print_node_attribute(gpointer name, gpointer user_data)
-{
-    const char *value = NULL;
-    int expected_score = 0;
-    gboolean add_extra = FALSE;
-    struct mon_attr_data *data = (struct mon_attr_data *) user_data;
-    pcmk__output_t *out = data->data_set->priv;
-
-    value = pe_node_attribute_raw(data->node, name);
-
-    add_extra = add_extra_info(data->node, data->node->details->running_rsc,
-                               data->data_set, name, &expected_score);
-
-    /* Print attribute name and value */
-    out->message(out, "node-attribute", name, value, add_extra,
-                 expected_score);
-}
-
-/*!
- * \internal
  * \brief Print history for all nodes.
  *
  * \param[in] data_set   Cluster state to display.
@@ -532,64 +434,6 @@ print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
     return rc;
 }
 
-/*!
- * \internal
- * \brief Print node attributes section
- *
- * \param[in] data_set Cluster state to display.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- */
-static int
-print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
-                      GList *only_node, GList *only_rsc, gboolean print_spacer)
-{
-    pcmk__output_t *out = data_set->priv;
-    GList *gIter = NULL;
-    int rc = pcmk_rc_no_output;
-
-    /* Display each node's attributes */
-    for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
-        struct mon_attr_data data;
-
-        data.node = (pe_node_t *) gIter->data;
-        data.data_set = data_set;
-
-        if (data.node && data.node->details && data.node->details->online) {
-            GList *attr_list = NULL;
-            GHashTableIter iter;
-            gpointer key, value;
-
-            g_hash_table_iter_init(&iter, data.node->details->attrs);
-            while (g_hash_table_iter_next (&iter, &key, &value)) {
-                attr_list = append_attr_list(attr_list, key);
-            }
-
-            if (attr_list == NULL) {
-                continue;
-            }
-
-            if (!pcmk__str_in_list(only_node, data.node->details->uname)) {
-                continue;
-            }
-
-            PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node Attributes");
-
-            out->message(out, "node", data.node, get_resource_display_options(mon_ops),
-                         FALSE, NULL,
-                         pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                         pcmk_is_set(mon_ops, mon_op_print_brief),
-                         pcmk_is_set(mon_ops, mon_op_group_by_node),
-                         only_node, only_rsc);
-            g_list_foreach(attr_list, print_node_attribute, &data);
-            g_list_free(attr_list);
-            out->end_list(out);
-        }
-    }
-
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
-    return rc;
-}
-
 #define CHECK_RC(retcode, retval)   \
     if (retval == pcmk_rc_ok) {     \
         retcode = pcmk_rc_ok;       \
@@ -650,8 +494,13 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
-        CHECK_RC(rc, print_node_attributes(data_set, mon_ops, unames, resources,
-                                           rc == pcmk_rc_ok));
+        CHECK_RC(rc, out->message(out, "node-attribute-list", data_set,
+                                  get_resource_display_options(mon_ops),
+                                  rc == pcmk_rc_ok,
+                                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                                  pcmk_is_set(mon_ops, mon_op_print_brief),
+                                  pcmk_is_set(mon_ops, mon_op_group_by_node),
+                                  unames, resources));
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -794,7 +643,12 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
-        print_node_attributes(data_set, mon_ops, unames, resources, FALSE);
+        out->message(out, "node-attribute-list", data_set,
+                     get_resource_display_options(mon_ops), FALSE,
+                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                     pcmk_is_set(mon_ops, mon_op_print_brief),
+                     pcmk_is_set(mon_ops, mon_op_group_by_node),
+                     unames, resources);
     }
 
     /* If requested, print resource operations (which includes failcounts)
@@ -893,7 +747,12 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
-        print_node_attributes(data_set, mon_ops, unames, resources, FALSE);
+        out->message(out, "node-attribute-list", data_set,
+                     get_resource_display_options(mon_ops), FALSE,
+                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                     pcmk_is_set(mon_ops, mon_op_print_brief),
+                     pcmk_is_set(mon_ops, mon_op_group_by_node),
+                     unames, resources);
     }
 
     /* If requested, print resource operations (which includes failcounts)

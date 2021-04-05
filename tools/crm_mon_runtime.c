@@ -38,34 +38,6 @@ blank_screen(void)
 #endif
 }
 
-static int
-compare_attribute(gconstpointer a, gconstpointer b)
-{
-    int rc;
-
-    rc = strcmp((const char *)a, (const char *)b);
-
-    return rc;
-}
-
-GList *
-append_attr_list(GList *attr_list, char *name)
-{
-    int i;
-    const char *filt_str[] = FILTER_STR;
-
-    CRM_CHECK(name != NULL, return attr_list);
-
-    /* filtering automatic attributes */
-    for (i = 0; filt_str[i] != NULL; i++) {
-        if (g_str_has_prefix(name, filt_str[i])) {
-            return attr_list;
-        }
-    }
-
-    return g_list_insert_sorted(attr_list, name, compare_attribute);
-}
-
 /*!
  * \internal
  * \brief Return resource display options corresponding to command-line choices
