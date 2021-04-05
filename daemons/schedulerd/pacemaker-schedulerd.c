@@ -42,19 +42,14 @@ pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-#define get_series() 	was_processing_error?1:was_processing_warning?2:3
-
-typedef struct series_s {
+static struct series_s {
     const char *name;
     const char *param;
     int wrap;
-} series_t;
-
-series_t series[] = {
-    {"pe-unknown", "_do_not_match_anything_", -1},
-    {"pe-error", "pe-error-series-max", -1},
-    {"pe-warn", "pe-warn-series-max", 200},
-    {"pe-input", "pe-input-series-max", 400},
+} series[] = {
+    { "pe-error", "pe-error-series-max", -1 },
+    { "pe-warn",  "pe-warn-series-max",  5000 },
+    { "pe-input", "pe-input-series-max", 4000 },
 };
 
 void pengine_shutdown(int nsig);
@@ -143,7 +138,15 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             pcmk__schedule_actions(sched_data_set, converted, NULL);
         }
 
-        series_id = get_series();
+        // Get appropriate index into series[] array
+        if (was_processing_error) {
+            series_id = 0;
+        } else if (was_processing_warning) {
+            series_id = 1;
+        } else {
+            series_id = 2;
+        }
+
         series_wrap = series[series_id].wrap;
         value = pe_pref(sched_data_set->config_hash, series[series_id].param);
 
