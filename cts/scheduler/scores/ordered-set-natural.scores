@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: dummy1-1 allocation score on node1: 0
 pcmk__group_allocate: dummy1-1 allocation score on node2: 0
 pcmk__group_allocate: dummy1-2 allocation score on node1: 0

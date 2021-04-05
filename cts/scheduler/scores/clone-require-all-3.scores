@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: A-clone allocation score on rhel7-auto1: 0
 pcmk__clone_allocate: A-clone allocation score on rhel7-auto2: 0
 pcmk__clone_allocate: A-clone allocation score on rhel7-auto3: -INFINITY

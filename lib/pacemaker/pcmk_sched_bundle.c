@@ -115,7 +115,7 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     containers = get_container_list(rsc);
 
     pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes);
+                          rsc, __func__, rsc->allowed_nodes, data_set);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
@@ -1066,8 +1066,7 @@ pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
 }
 
 void
-pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
-                         gboolean terminal)
+pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -1080,16 +1079,16 @@ pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
 
         CRM_ASSERT(replica);
         if (replica->ip) {
-            LogActions(replica->ip, data_set, terminal);
+            LogActions(replica->ip, data_set);
         }
         if (replica->container) {
-            LogActions(replica->container, data_set, terminal);
+            LogActions(replica->container, data_set);
         }
         if (replica->remote) {
-            LogActions(replica->remote, data_set, terminal);
+            LogActions(replica->remote, data_set);
         }
         if (replica->child) {
-            LogActions(replica->child, data_set, terminal);
+            LogActions(replica->child, data_set);
         }
     }
 }

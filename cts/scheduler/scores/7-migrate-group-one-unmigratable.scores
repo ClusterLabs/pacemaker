@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: A allocation score on 18node1: 0
 pcmk__group_allocate: A allocation score on 18node2: INFINITY
 pcmk__group_allocate: A allocation score on 18node3: 0

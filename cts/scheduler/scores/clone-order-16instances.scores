@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clvmd-clone allocation score on virt-009.cluster-qe.lab.eng.brq.redhat.com: 0
 pcmk__clone_allocate: clvmd-clone allocation score on virt-010.cluster-qe.lab.eng.brq.redhat.com: 0
 pcmk__clone_allocate: clvmd-clone allocation score on virt-012.cluster-qe.lab.eng.brq.redhat.com: 0

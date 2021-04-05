@@ -1,4 +1,4 @@
-Allocation scores:
+
 conntrackd-stateful:0 promotion score on box1: -INFINITY
 conntrackd-stateful:1 promotion score on box2: INFINITY
 pcmk__clone_allocate: conntrackd-stateful:0 allocation score on box1: 105

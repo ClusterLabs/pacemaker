@@ -21,6 +21,8 @@
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
+extern bool pcmk__is_daemon;
+
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -229,8 +231,9 @@ sort_node_uname(gconstpointer a, gconstpointer b)
  */
 static void
 pe__output_node_weights(pe_resource_t *rsc, const char *comment,
-                        GHashTable *nodes)
+                        GHashTable *nodes, pe_working_set_t *data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     char score[128]; // Stack-allocated since this is called frequently
 
     // Sort the nodes so the output is consistent for regression tests
@@ -240,12 +243,7 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
         pe_node_t *node = (pe_node_t *) gIter->data;
 
         score2char_stack(node->weight, score, sizeof(score));
-        if (rsc) {
-            printf("%s: %s allocation score on %s: %s\n",
-                   comment, rsc->id, node->details->uname, score);
-        } else {
-            printf("%s: %s = %s\n", comment, node->details->uname, score);
-        }
+        out->message(out, "node-weight", rsc, comment, node->details->uname, score);
     }
     g_list_free(list);
 }
@@ -305,7 +303,7 @@ pe__log_node_weights(const char *file, const char *function, int line,
 void
 pe__show_node_weights_as(const char *file, const char *function, int line,
                          bool to_log, pe_resource_t *rsc, const char *comment,
-                         GHashTable *nodes)
+                         GHashTable *nodes, pe_working_set_t *data_set)
 {
     if (rsc != NULL && pcmk_is_set(rsc->flags, pe_rsc_orphan)) {
         // Don't show allocation scores for orphans
@@ -319,7 +317,7 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
     if (to_log) {
         pe__log_node_weights(file, function, line, rsc, comment, nodes);
     } else {
-        pe__output_node_weights(rsc, comment, nodes);
+        pe__output_node_weights(rsc, comment, nodes, data_set);
     }
 
     // If this resource has children, repeat recursively for each
@@ -328,56 +326,9 @@ pe__show_node_weights_as(const char *file, const char *function, int line,
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
             pe__show_node_weights_as(file, function, line, to_log, child,
-                                     comment, child->allowed_nodes);
+                                     comment, child->allowed_nodes, data_set);
         }
     }
-}
-
-static void
-append_dump_text(gpointer key, gpointer value, gpointer user_data)
-{
-    char **dump_text = user_data;
-    char *new_text = crm_strdup_printf("%s %s=%s",
-                                       *dump_text, (char *)key, (char *)value);
-
-    free(*dump_text);
-    *dump_text = new_text;
-}
-
-void
-dump_node_capacity(int level, const char *comment, pe_node_t * node)
-{
-    char *dump_text = crm_strdup_printf("%s: %s capacity:",
-                                        comment, node->details->uname);
-
-    g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
-
-    if (level == LOG_STDOUT) {
-        fprintf(stdout, "%s\n", dump_text);
-    } else {
-        crm_trace("%s", dump_text);
-    }
-
-    free(dump_text);
-}
-
-void
-dump_rsc_utilization(int level, const char *comment, pe_resource_t * rsc, pe_node_t * node)
-{
-    char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
-                                        comment, rsc->id, node->details->uname);
-
-    g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
-    switch (level) {
-        case LOG_STDOUT:
-            fprintf(stdout, "%s\n", dump_text);
-            break;
-        case LOG_NEVER:
-            break;
-        default:
-            crm_trace("%s", dump_text);
-    }
-    free(dump_text);
 }
 
 gint
@@ -2124,8 +2075,10 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
                     crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
-                    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-                        fprintf(stdout, "  notice: Unfencing %s (remote): because the definition of %s changed\n", node->details->uname, match->id);
+                    if (!pcmk__is_daemon && data_set->priv != NULL) {
+                        pcmk__output_t *out = data_set->priv;
+                        out->info(out, "notice: Unfencing %s (remote): because the definition of %s changed",
+                                  node->details->uname, match->id);
                     }
                 }
 

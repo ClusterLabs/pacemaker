@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clone-node-app-rsc allocation score on node-0: 0
 pcmk__clone_allocate: clone-node-app-rsc allocation score on node-2: 0
 pcmk__clone_allocate: node-app-rsc:0 allocation score on node-0: 1

@@ -324,20 +324,18 @@ Deleted crm_config option: id=(null) name=cluster-delay
 =#=#=#= End test: Delete cluster option with -i - OK (0) =#=#=#=
 * Passed: crm_attribute  - Delete cluster option with -i
 =#=#=#= Begin test: Create node1 and bring it online =#=#=#=
-
 Current cluster status:
 
-
-Performing requested modifications
- + Bringing node node1 online
+Performing Requested Modifications:
+  * Bringing node node1 online
 
 Transition Summary:
 
-Executing cluster transition:
+Executing Cluster Transition:
 
-Revised cluster status:
-Online: [ node1 ]
-
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 ]
 
 =#=#=#= Current cib after: Create node1 and bring it online =#=#=#=
 <cib epoch="10" num_updates="2" admin_epoch="1">
@@ -1102,29 +1100,31 @@ crm_resource: Error performing operation: Node not found
 =#=#=#= End test: Create a fencing resource - OK (0) =#=#=#=
 * Passed: cibadmin       - Create a fencing resource
 =#=#=#= Begin test: Bring resources online =#=#=#=
-
 Current cluster status:
-Online: [ node1 ]
+  * Node List:
+    * Online: [ node1 ]
 
- dummy	(ocf:pacemaker:Dummy):	 Stopped
- Fence	(stonith:fence_true):	 Stopped
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Stopped
+    * Fence	(stonith:fence_true):	 Stopped
 
 Transition Summary:
- * Start      dummy   ( node1 )  
- * Start      Fence   ( node1 )  
+  * Start      dummy   ( node1 )
+  * Start      Fence   ( node1 )
 
-Executing cluster transition:
- * Resource action: dummy           monitor on node1
- * Resource action: Fence           monitor on node1
- * Resource action: dummy           start on node1
- * Resource action: Fence           start on node1
+Executing Cluster Transition:
+  * Resource action: dummy           monitor on node1
+  * Resource action: Fence           monitor on node1
+  * Resource action: dummy           start on node1
+  * Resource action: Fence           start on node1
 
-Revised cluster status:
-Online: [ node1 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 ]
 
- dummy	(ocf:pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node1
-
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node1
 =#=#=#= Current cib after: Bring resources online =#=#=#=
 <cib epoch="20" num_updates="4" admin_epoch="1">
   <configuration>
@@ -1810,34 +1810,36 @@ crm_resource: Error performing operation: Node not found
 =#=#=#= End test: Ban a resource on unknown node - No such object (105) =#=#=#=
 * Passed: crm_resource   - Ban a resource on unknown node
 =#=#=#= Begin test: Create two more nodes and bring them online =#=#=#=
-
 Current cluster status:
-Online: [ node1 ]
+  * Node List:
+    * Online: [ node1 ]
 
- dummy	(ocf:pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node1
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node1
 
-Performing requested modifications
- + Bringing node node2 online
- + Bringing node node3 online
+Performing Requested Modifications:
+  * Bringing node node2 online
+  * Bringing node node3 online
 
 Transition Summary:
- * Move       Fence   ( node1 -> node2 )  
+  * Move       Fence   ( node1 -> node2 )
 
-Executing cluster transition:
- * Resource action: dummy           monitor on node3
- * Resource action: dummy           monitor on node2
- * Resource action: Fence           stop on node1
- * Resource action: Fence           monitor on node3
- * Resource action: Fence           monitor on node2
- * Resource action: Fence           start on node2
+Executing Cluster Transition:
+  * Resource action: dummy           monitor on node3
+  * Resource action: dummy           monitor on node2
+  * Resource action: Fence           stop on node1
+  * Resource action: Fence           monitor on node3
+  * Resource action: Fence           monitor on node2
+  * Resource action: Fence           start on node2
 
-Revised cluster status:
-Online: [ node1 node2 node3 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
 
- dummy	(ocf:pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node2
-
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
 <cib epoch="24" num_updates="8" admin_epoch="1">
   <configuration>
@@ -2095,26 +2097,28 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
 =#=#=#= End test: Ban dummy from node2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Ban dummy from node2
 =#=#=#= Begin test: Relocate resources due to ban =#=#=#=
-
 Current cluster status:
-Online: [ node1 node2 node3 ]
+  * Node List:
+    * Online: [ node1 node2 node3 ]
 
- dummy	(ocf:pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node2
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node2
 
 Transition Summary:
- * Move       dummy   ( node1 -> node3 )  
+  * Move       dummy   ( node1 -> node3 )
 
-Executing cluster transition:
- * Resource action: dummy           stop on node1
- * Resource action: dummy           start on node3
+Executing Cluster Transition:
+  * Resource action: dummy           stop on node1
+  * Resource action: dummy           start on node3
 
-Revised cluster status:
-Online: [ node1 node2 node3 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
 
- dummy	(ocf:pacemaker:Dummy):	 Started node3
- Fence	(stonith:fence_true):	 Started node2
-
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node3
+    * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
 <cib epoch="26" num_updates="2" admin_epoch="1">
   <configuration>

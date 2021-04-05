@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clnDummy1 allocation score on srv01: -INFINITY
 pcmk__clone_allocate: clnDummy1 allocation score on srv02: INFINITY
 pcmk__clone_allocate: clnDummy1 allocation score on srv03: 200

@@ -1,4 +1,4 @@
-Allocation scores:
+
 lxc-ms:0 promotion score on lxc1: INFINITY
 lxc-ms:1 promotion score on lxc2: INFINITY
 pcmk__clone_allocate: lxc-ms-master allocation score on lxc1: INFINITY

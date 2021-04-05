@@ -17,6 +17,8 @@
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
+extern bool pcmk__is_daemon;
+
 static void
 child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
                             pe_resource_t * rsc, pe_resource_t * child, pe_resource_t * last,
@@ -294,7 +296,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
     }
-    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes, data_set);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -315,7 +317,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         node->weight = pe__add_scores(child->sort_index, node->weight);
     }
 
-    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -371,7 +373,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
-    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
 
     /* write them back and sort */
 
@@ -743,7 +745,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
-    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes, data_set);
     promotion_order(rsc, data_set);
 
     /* mark the first N as masters */
@@ -753,11 +755,10 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         score2char_stack(child_rsc->sort_index, score, len);
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-        if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-            if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-                printf("%s promotion score on %s: %s\n",
-                       child_rsc->id,
-                       (chosen? chosen->details->uname : "none"), score);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_scores) && !pcmk__is_daemon) {
+            if (data_set->priv != NULL) {
+                pcmk__output_t *out = data_set->priv;
+                out->message(out, "promotion-score", child_rsc, chosen, score);
             }
 
         } else {

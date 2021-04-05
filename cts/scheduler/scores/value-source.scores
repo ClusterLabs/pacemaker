@@ -1,5 +1,4 @@
-Allocation scores:
-Using the original execution date of: 2020-11-12 21:28:08Z
+
 pcmk__native_allocate: Fencing allocation score on rhel7-1: 0
 pcmk__native_allocate: Fencing allocation score on rhel7-2: 0
 pcmk__native_allocate: Fencing allocation score on rhel7-3: 0

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: base-clone allocation score on hex-0: 0
 pcmk__clone_allocate: base-clone allocation score on hex-7: 0
 pcmk__clone_allocate: base-clone allocation score on hex-8: 0

@@ -1,9 +1,4 @@
-Allocation scores:
-Only 'private' parameters to stonith-fence_ipmilan-525400b4f6bd_monitor_60000 on controller-0 changed: 0:0;132:18:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
-Only 'private' parameters to stonith-fence_ipmilan-525400b4f6bd_start_0 on controller-0 changed: 0:0;126:17:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
-Only 'private' parameters to stonith-fence_ipmilan-525400bbf613_monitor_60000 on controller-0 changed: 0:0;129:18:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
-Only 'private' parameters to stonith-fence_ipmilan-525400bbf613_start_0 on controller-0 changed: 0:0;124:17:0:e47e0f5b-bac4-432e-9993-f38bc43128ea
-Using the original execution date of: 2017-05-03 13:33:24Z
+
 galera:0 promotion score on galera-1: 100
 galera:1 promotion score on none: 0
 galera:2 promotion score on galera-0: 100

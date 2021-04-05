@@ -1,4 +1,4 @@
-Allocation scores:
+
 group:0 promotion score on node-b: 49
 group:1 promotion score on node-a: 99
 pcmk__clone_allocate: group:0 allocation score on node-a: 0

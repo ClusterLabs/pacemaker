@@ -1,29 +1,31 @@
 Using the original execution date of: 2017-10-12 07:31:57Z
-
 Current cluster status:
-GuestNode galera-bundle-0:galera-bundle-docker-0: maintenance
-Online: [ centos1 centos2 centos3 ]
+  * Node List:
+    * GuestNode galera-bundle-0@centos2: maintenance
+    * Online: [ centos1 centos2 centos3 ]
 
- Container bundle set: galera-bundle [docker.io/tripleoupstream/centos-binary-mariadb:latest] (unmanaged)
-   galera-bundle-0	(ocf:heartbeat:galera):	 Stopped centos2 (unmanaged)
-   galera-bundle-1	(ocf:heartbeat:galera):	 Stopped (unmanaged)
-   galera-bundle-2	(ocf:heartbeat:galera):	 Stopped (unmanaged)
+  * Full List of Resources:
+    * Container bundle set: galera-bundle [docker.io/tripleoupstream/centos-binary-mariadb:latest] (unmanaged):
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped centos2 (unmanaged)
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Stopped (unmanaged)
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Stopped (unmanaged)
 
 Transition Summary:
 
-Executing cluster transition:
- * Resource action: galera-bundle-docker-1 monitor on centos2
- * Resource action: galera-bundle-docker-2 monitor on centos3
- * Resource action: galera-bundle-docker-2 monitor on centos2
- * Resource action: galera-bundle-docker-2 monitor on centos1
+Executing Cluster Transition:
+  * Resource action: galera-bundle-docker-1 monitor on centos2
+  * Resource action: galera-bundle-docker-2 monitor on centos3
+  * Resource action: galera-bundle-docker-2 monitor on centos2
+  * Resource action: galera-bundle-docker-2 monitor on centos1
 Using the original execution date of: 2017-10-12 07:31:57Z
 
-Revised cluster status:
-GuestNode galera-bundle-0:galera-bundle-docker-0: maintenance
-Online: [ centos1 centos2 centos3 ]
+Revised Cluster Status:
+  * Node List:
+    * GuestNode galera-bundle-0@centos2: maintenance
+    * Online: [ centos1 centos2 centos3 ]
 
- Container bundle set: galera-bundle [docker.io/tripleoupstream/centos-binary-mariadb:latest] (unmanaged)
-   galera-bundle-0	(ocf:heartbeat:galera):	 Stopped centos2 (unmanaged)
-   galera-bundle-1	(ocf:heartbeat:galera):	 Stopped (unmanaged)
-   galera-bundle-2	(ocf:heartbeat:galera):	 Stopped (unmanaged)
-
+  * Full List of Resources:
+    * Container bundle set: galera-bundle [docker.io/tripleoupstream/centos-binary-mariadb:latest] (unmanaged):
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped centos2 (unmanaged)
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Stopped (unmanaged)
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Stopped (unmanaged)

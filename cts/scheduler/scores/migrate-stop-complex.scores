@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: bottom:0 allocation score on dom0-01: 5000
 pcmk__clone_allocate: bottom:0 allocation score on dom0-02: 0
 pcmk__clone_allocate: bottom:1 allocation score on dom0-01: 0

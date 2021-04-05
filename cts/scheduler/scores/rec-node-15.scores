@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__group_allocate: Filesystem_13 allocation score on sapcl01: 0
 pcmk__group_allocate: Filesystem_13 allocation score on sapcl02: 0
 pcmk__group_allocate: Filesystem_13 allocation score on sapcl03: 0

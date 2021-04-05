@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: myclone-clone allocation score on f20node1: 0
 pcmk__clone_allocate: myclone-clone allocation score on f20node2: 0
 pcmk__clone_allocate: myclone:0 allocation score on f20node1: 1

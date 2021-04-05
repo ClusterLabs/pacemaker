@@ -53,6 +53,7 @@ version_pairs_last = $(wordlist \
 API_request_base	= command-output	\
 			  crm_mon		\
 			  crm_resource		\
+			  crm_simulate		\
 			  crmadmin		\
 			  digests		\
 			  stonith_admin		\

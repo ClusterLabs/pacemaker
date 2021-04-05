@@ -1,31 +1,4 @@
-Allocation scores:
-Only 'private' parameters to nova-evacuate_monitor_10000 on database-2 changed: 0:0;280:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to nova-evacuate_start_0 on database-2 changed: 0:0;279:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_compute-fence-nova_monitor_60000 on database-1 changed: 0:0;275:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_compute-fence-nova_start_0 on database-1 changed: 0:0;273:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400066e50_monitor_60000 on database-2 changed: 0:0;305:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400066e50_start_0 on database-2 changed: 0:0;304:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-52540040bb56_monitor_60000 on messaging-2 changed: 0:0;295:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-52540040bb56_start_0 on messaging-2 changed: 0:0;293:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-52540060dbba_monitor_60000 on database-2 changed: 0:0;307:51:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-52540060dbba_start_0 on database-2 changed: 0:0;306:51:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-52540078fb07_monitor_60000 on database-0 changed: 0:0;296:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-52540078fb07_start_0 on database-0 changed: 0:0;294:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400aa1373_monitor_60000 on messaging-0 changed: 0:0;284:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400aa1373_start_0 on messaging-0 changed: 0:0;282:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400addd38_monitor_60000 on messaging-0 changed: 0:0;297:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400addd38_start_0 on messaging-0 changed: 0:0;295:48:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400c87cdb_monitor_60000 on messaging-0 changed: 0:0;311:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400c87cdb_start_0 on messaging-0 changed: 0:0;310:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400dc23e0_monitor_60000 on messaging-2 changed: 0:0;288:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400dc23e0_start_0 on messaging-2 changed: 0:0;286:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400e018b6_monitor_60000 on database-0 changed: 0:0;312:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400e018b6_start_0 on database-0 changed: 0:0;311:56:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400e1534e_monitor_60000 on database-1 changed: 0:0;302:39:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400e1534e_start_0 on database-1 changed: 0:0;301:39:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400ea59b0_monitor_60000 on database-1 changed: 0:0;299:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Only 'private' parameters to stonith-fence_ipmilan-525400ea59b0_start_0 on database-1 changed: 0:0;298:58:0:ef0c178d-d0fc-4118-9005-2571eab8a55d
-Using the original execution date of: 2021-02-15 01:40:51Z
+
 galera:0 promotion score on galera-bundle-0: 100
 galera:1 promotion score on galera-bundle-1: 100
 galera:2 promotion score on galera-bundle-2: 100

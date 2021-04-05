@@ -22,11 +22,12 @@
 #include <pacemaker-internal.h>
 #include <crm/common/ipc_internal.h>
 
+extern bool pcmk__is_daemon;
+
 static void
 log_resource_details(pe_working_set_t *data_set)
 {
-    pcmk__output_t *prev_out = NULL;
-    pcmk__output_t *out = NULL;
+    pcmk__output_t *out = data_set->priv;
     GList *all = NULL;
 
     /* We need a list of nodes that we are allowed to output information for.
@@ -35,14 +36,6 @@ log_resource_details(pe_working_set_t *data_set)
      * we just make it a list of all the nodes.
      */
     all = g_list_prepend(all, strdup("*"));
-
-    out = pcmk__new_logger();
-    if (out == NULL) {
-        return;
-    }
-
-    prev_out = data_set->priv;
-    data_set->priv = out;
 
     for (GList *item = data_set->resources; item != NULL; item = item->next) {
         pe_resource_t *rsc = (pe_resource_t *) item->data;
@@ -54,9 +47,6 @@ log_resource_details(pe_working_set_t *data_set)
         }
     }
 
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-    data_set->priv = prev_out;
     g_list_free_full(all, free);
 }
 
@@ -91,7 +81,8 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("Calculate cluster status");
     stage0(data_set);
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
+         pcmk__is_daemon) {
         log_resource_details(data_set);
     }
 

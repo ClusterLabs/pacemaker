@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: export_home_ocfs2:0 allocation score on power720-1: 0
 pcmk__clone_allocate: export_home_ocfs2:0 allocation score on power720-2: 0
 pcmk__clone_allocate: export_home_ocfs2:0 allocation score on power720-4: 0

@@ -1,5 +1,4 @@
-Allocation scores:
-Using the original execution date of: 2018-10-31 11:51:32Z
+
 pcmk__bundle_allocate: haproxy-bundle allocation score on controller-0: 0
 pcmk__bundle_allocate: haproxy-bundle allocation score on controller-0: 0
 pcmk__bundle_allocate: haproxy-bundle allocation score on controller-0: 0

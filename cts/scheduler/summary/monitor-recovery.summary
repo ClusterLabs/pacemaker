@@ -1,30 +1,32 @@
-
 Current cluster status:
-Online: [ CSE-1 ]
-OFFLINE: [ CSE-2 ]
+  * Node List:
+    * Online: [ CSE-1 ]
+    * OFFLINE: [ CSE-2 ]
 
- Resource Group: svc-cse
-     ip_19	(ocf:heartbeat:IPaddr2):	 Stopped
-     ip_11	(ocf:heartbeat:IPaddr2):	 Stopped
- Clone Set: cl_tomcat [d_tomcat]
-     Started: [ CSE-1 ]
-     Stopped: [ CSE-2 ]
+  * Full List of Resources:
+    * Resource Group: svc-cse:
+      * ip_19	(ocf:heartbeat:IPaddr2):	 Stopped
+      * ip_11	(ocf:heartbeat:IPaddr2):	 Stopped
+    * Clone Set: cl_tomcat [d_tomcat]:
+      * Started: [ CSE-1 ]
+      * Stopped: [ CSE-2 ]
 
 Transition Summary:
- * Stop       d_tomcat:0     ( CSE-1 )   due to node availability
+  * Stop       d_tomcat:0     ( CSE-1 )  due to node availability
 
-Executing cluster transition:
- * Pseudo action:   cl_tomcat_stop_0
- * Resource action: d_tomcat        stop on CSE-1
- * Pseudo action:   cl_tomcat_stopped_0
+Executing Cluster Transition:
+  * Pseudo action:   cl_tomcat_stop_0
+  * Resource action: d_tomcat        stop on CSE-1
+  * Pseudo action:   cl_tomcat_stopped_0
 
-Revised cluster status:
-Online: [ CSE-1 ]
-OFFLINE: [ CSE-2 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ CSE-1 ]
+    * OFFLINE: [ CSE-2 ]
 
- Resource Group: svc-cse
-     ip_19	(ocf:heartbeat:IPaddr2):	 Stopped
-     ip_11	(ocf:heartbeat:IPaddr2):	 Stopped
- Clone Set: cl_tomcat [d_tomcat]
-     Stopped: [ CSE-1 CSE-2 ]
-
+  * Full List of Resources:
+    * Resource Group: svc-cse:
+      * ip_19	(ocf:heartbeat:IPaddr2):	 Stopped
+      * ip_11	(ocf:heartbeat:IPaddr2):	 Stopped
+    * Clone Set: cl_tomcat [d_tomcat]:
+      * Stopped: [ CSE-1 CSE-2 ]

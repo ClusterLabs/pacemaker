@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl-clvmd allocation score on mgmt01: 0
 pcmk__clone_allocate: cl-clvmd allocation score on v03-a: 0
 pcmk__clone_allocate: cl-clvmd allocation score on v03-b: 0

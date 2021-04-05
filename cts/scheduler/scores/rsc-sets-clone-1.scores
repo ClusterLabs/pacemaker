@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: baseclone allocation score on sys2: INFINITY
 pcmk__clone_allocate: baseclone allocation score on sys3: 10000
 pcmk__clone_allocate: basegrp:0 allocation score on sys2: 0

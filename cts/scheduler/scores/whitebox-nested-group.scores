@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: fake:0 allocation score on c7auto1: 0
 pcmk__clone_allocate: fake:0 allocation score on c7auto2: 0
 pcmk__clone_allocate: fake:0 allocation score on c7auto3: 0

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: child1 allocation score on ha1.test.anchor.net.au: 0
 pcmk__clone_allocate: child1 allocation score on ha2.test.anchor.net.au: 0
 pcmk__clone_allocate: child2 allocation score on ha1.test.anchor.net.au: 0

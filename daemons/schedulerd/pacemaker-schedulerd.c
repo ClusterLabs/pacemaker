@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,6 +33,14 @@
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static pe_working_set_t *sched_data_set = NULL;
+static pcmk__output_t *out = NULL;
+
+pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_LOG,
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    { NULL, NULL, NULL }
+};
 
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3
 
@@ -99,6 +107,9 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
             CRM_ASSERT(sched_data_set != NULL);
             pe__set_working_set_flags(sched_data_set,
                                       pe_flag_no_counts|pe_flag_no_compat);
+            pe__set_working_set_flags(sched_data_set,
+                                      pe_flag_show_utilization);
+            sched_data_set->priv = out;
         }
 
         digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
@@ -284,6 +295,7 @@ main(int argc, char **argv)
     int flag;
     int index = 0;
     int argerr = 0;
+    int rc = pcmk_rc_ok;
 
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
@@ -340,14 +352,31 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_FATAL);
     }
 
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(&out, "log", NULL, argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        crm_err("Can't log resource details due to internal error: %s\n",
+                pcmk_rc_str(rc));
+        crm_exit(CRM_EX_FATAL);
+    }
+
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
+
+    pcmk__output_set_log_level(out, LOG_TRACE);
+
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker scheduler successfully started and accepting connections");
     g_main_loop_run(mainloop);
 
     pe_free_working_set(sched_data_set);
-    pcmk__unregister_formats();
     crm_info("Exiting %s", crm_system_name);
+
+    pcmk__unregister_formats();
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
+
     crm_exit(CRM_EX_OK);
 }
 

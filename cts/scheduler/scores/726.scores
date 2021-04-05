@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: DoFencing allocation score on ibm1: 0
 pcmk__clone_allocate: DoFencing allocation score on sgi2: 0
 pcmk__clone_allocate: DoFencing allocation score on test02: 0

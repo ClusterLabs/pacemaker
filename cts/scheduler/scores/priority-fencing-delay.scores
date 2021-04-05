@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clvmd-clone allocation score on kiff-01: 0
 pcmk__clone_allocate: clvmd-clone allocation score on kiff-02: 0
 pcmk__clone_allocate: clvmd-clone allocation score on lxc-01_kiff-01: 0

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: DoFencing allocation score on xen-1: 0
 pcmk__clone_allocate: DoFencing allocation score on xen-2: 0
 pcmk__clone_allocate: DoFencing allocation score on xen-3: 0

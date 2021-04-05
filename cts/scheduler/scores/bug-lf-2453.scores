@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: CloneResource1 allocation score on domu1: INFINITY
 pcmk__clone_allocate: CloneResource1 allocation score on domu2: INFINITY
 pcmk__clone_allocate: CloneResource2 allocation score on domu1: INFINITY

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl_tgtd allocation score on alice: 1500
 pcmk__clone_allocate: cl_tgtd allocation score on bob: 0
 pcmk__clone_allocate: ms_drbd_iscsivg01 allocation score on alice: 1500

@@ -1,4 +1,4 @@
-Allocation scores:
+
 p_stateful1:0 promotion score on hpn07: 10
 p_stateful1:1 promotion score on hpn08: 5
 pcmk__clone_allocate: ms_stateful1 allocation score on hpn07: 0

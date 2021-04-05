@@ -407,7 +407,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
                 }
             }
         }
-        pe__show_node_weights(true, rsc, "Post-utilization", rsc->allowed_nodes);
+        pe__show_node_weights(true, rsc, "Post-utilization", rsc->allowed_nodes, data_set);
     }
 }
 

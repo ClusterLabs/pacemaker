@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: DoFencing allocation score on c001n02: 0
 pcmk__clone_allocate: DoFencing allocation score on c001n03: 0
 pcmk__clone_allocate: child_DoFencing:0 allocation score on c001n02: 0

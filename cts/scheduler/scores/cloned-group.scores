@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: apache2:0 allocation score on webcluster01: 1
 pcmk__clone_allocate: apache2:0 allocation score on webcluster02: 0
 pcmk__clone_allocate: apache2:1 allocation score on webcluster01: 0

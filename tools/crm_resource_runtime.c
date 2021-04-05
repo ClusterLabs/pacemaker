@@ -1130,6 +1130,8 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
     }
 
     if(simulate) {
+        bool prev_quiet = false;
+
         pid = pcmk__getpid_s();
         shadow_cib = cib_shadow_new(pid);
         shadow_file = get_shadow_file(pid);
@@ -1156,7 +1158,12 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
         }
 
         pcmk__schedule_actions(data_set, data_set->input, NULL);
-        run_simulation(data_set, shadow_cib, NULL, TRUE);
+
+        prev_quiet = out->is_quiet(out);
+        out->quiet = true;
+        run_simulation(data_set, shadow_cib, NULL);
+        out->quiet = prev_quiet;
+
         rc = update_dataset(out, shadow_cib, data_set, FALSE);
 
     } else {

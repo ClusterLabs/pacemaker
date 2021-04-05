@@ -1,5 +1,4 @@
-Allocation scores:
-Using the original execution date of: 2017-07-14 08:50:25Z
+
 pcmk__bundle_allocate: galera-bundle allocation score on overcloud-controller-0: -INFINITY
 pcmk__bundle_allocate: galera-bundle allocation score on overcloud-controller-1: -INFINITY
 pcmk__bundle_allocate: galera-bundle allocation score on overcloud-controller-2: -INFINITY

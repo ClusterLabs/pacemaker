@@ -25,6 +25,15 @@
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/strings_internal.h>
 
+/* This says whether the current application is a Pacemaker daemon or not,
+ * and is used to change default logging settings such as whether to log to
+ * stderr, etc., as well as a few other details such as whether blackbox signal
+ * handling is enabled.
+ *
+ * It is set when logging is initialized, and does not need to be set directly.
+ */
+extern bool pcmk__is_daemon;
+
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 

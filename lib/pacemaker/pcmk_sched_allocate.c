@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,6 +23,8 @@
 #include <pacemaker-internal.h>
 
 CRM_TRACE_INIT_DATA(pacemaker);
+
+extern bool pcmk__is_daemon;
 
 void set_alloc_actions(pe_working_set_t * data_set);
 extern void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
@@ -280,11 +282,12 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
        && digest_secure
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
-        if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-            printf("Only 'private' parameters to " PCMK__OP_FMT
-                   " on %s changed: %s\n",
-                   rsc->id, task, interval_ms, active_node->details->uname,
-                   crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        if (!pcmk__is_daemon && data_set->priv != NULL) {
+            pcmk__output_t *out = data_set->priv;
+            out->info(out, "Only 'private' parameters to "
+                      PCMK__OP_FMT " on %s changed: %s", rsc->id, task,
+                      interval_ms, active_node->details->uname,
+                      crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
 
     } else if (digest_data->rc == RSC_DIGEST_RESTART) {
@@ -1193,12 +1196,14 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
                                           resource1->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
-    pe__show_node_weights(true, NULL, resource1->id, r1_nodes);
+    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
+                          resource1->cluster);
 
     r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
                                           resource2->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
-    pe__show_node_weights(true, NULL, resource2->id, r2_nodes);
+    pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
+                          resource2->cluster);
 
     /* Current location score */
     reason = "current location";
@@ -1375,8 +1380,8 @@ cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
 gboolean
 stage5(pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     GList *gIter = NULL;
-    int log_prio = pcmk_is_set(data_set->flags, pe_flag_show_utilization)? LOG_STDOUT : LOG_TRACE;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GList *nodes = g_list_copy(data_set->nodes);
@@ -1392,7 +1397,9 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(log_prio, "Original", node);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            out->message(out, "node-capacity", node, "Original");
+        }
     }
 
     crm_trace("Allocating services");
@@ -1404,7 +1411,9 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(log_prio, "Remaining", node);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            out->message(out, "node-capacity", node, "Remaining");
+        }
     }
 
     // Process deferred action checks
@@ -2798,6 +2807,8 @@ order_probes(pe_working_set_t * data_set)
 gboolean
 stage7(pe_working_set_t * data_set)
 {
+    pcmk__output_t *prev_out = data_set->priv;
+    pcmk__output_t *out = NULL;
     GList *gIter = NULL;
 
     crm_trace("Applying ordering constraints");
@@ -2864,12 +2875,31 @@ stage7(pe_working_set_t * data_set)
         }
     }
 
-    LogNodeActions(data_set, FALSE);
+    /* stage7 only ever outputs to the log, so ignore whatever output object was
+     * previously set and just log instead.
+     */
+    out = pcmk__new_logger();
+    if (out == NULL) {
+        return FALSE;
+    }
+
+    pcmk__output_set_log_level(out, LOG_NOTICE);
+    data_set->priv = out;
+
+    out->begin_list(out, NULL, NULL, "Actions");
+    LogNodeActions(data_set);
+
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-        LogActions(rsc, data_set, FALSE);
+        LogActions(rsc, data_set);
     }
+
+    out->end_list(out);
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
+
+    data_set->priv = prev_out;
     return TRUE;
 }
 
@@ -3015,8 +3045,9 @@ stage8(pe_working_set_t * data_set)
 }
 
 void
-LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
+LogNodeActions(pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     GList *gIter = NULL;
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
@@ -3044,17 +3075,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
             task = crm_strdup_printf("Fence (%s)", op);
         }
 
-        if(task == NULL) {
-            /* Nothing to report */
-        } else if(terminal && action->reason) {
-            printf(" * %s %s '%s'\n", task, node_name, action->reason);
-        } else if(terminal) {
-            printf(" * %s %s\n", task, node_name);
-        } else if(action->reason) {
-            crm_notice(" * %s %s '%s'\n", task, node_name, action->reason);
-        } else {
-            crm_notice(" * %s %s\n", task, node_name);
-        }
+        out->message(out, "node-action", task, node_name, action->reason);
 
         free(node_name);
         free(task);

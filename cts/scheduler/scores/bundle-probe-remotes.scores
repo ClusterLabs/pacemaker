@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__bundle_allocate: dummy1:0 allocation score on scale1-bundle-0: 500
 pcmk__bundle_allocate: dummy1:1 allocation score on scale1-bundle-1: 500
 pcmk__bundle_allocate: dummy1:2 allocation score on scale1-bundle-2: 500

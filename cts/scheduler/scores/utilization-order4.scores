@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clone-nfs allocation score on deglxen001: 110000
 pcmk__clone_allocate: clone-nfs allocation score on deglxen002: 0
 pcmk__clone_allocate: clone-ping allocation score on deglxen001: 0

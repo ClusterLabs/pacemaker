@@ -1,4 +1,4 @@
-Allocation scores:
+
 ms-sf_group:0 promotion score on process2b: -INFINITY
 ms-sf_group:1 promotion score on none: 0
 pcmk__clone_allocate: master_slave_Stateful:0 allocation score on process1a: 0

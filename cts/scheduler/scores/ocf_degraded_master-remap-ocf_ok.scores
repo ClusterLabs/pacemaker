@@ -1,5 +1,4 @@
-Allocation scores:
-Using the original execution date of: 2020-09-30 14:23:26Z
+
 pcmk__clone_allocate: state-clone allocation score on rhel8-1: 0
 pcmk__clone_allocate: state-clone allocation score on rhel8-2: 0
 pcmk__clone_allocate: state:0 allocation score on rhel8-1: INFINITY

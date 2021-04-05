@@ -25,6 +25,8 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
+extern bool pcmk__is_daemon;
+
 static void Recurring(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
                       pe_working_set_t *data_set);
 static void RecurringOp(pe_resource_t *rsc, pe_action_t *start, pe_node_t *node,
@@ -453,7 +455,7 @@ pcmk__native_merge_weights(pe_resource_t *rsc, const char *rhs,
                                               constraint->node_attribute,
                                               multiplier * constraint->score / (float) INFINITY,
                                               flags|pe_weights_rollback);
-            pe__show_node_weights(true, NULL, rhs, work);
+            pe__show_node_weights(true, NULL, rhs, work, rsc->cluster);
         }
 
     } else if (pcmk_is_set(flags, pe_weights_rollback)) {
@@ -523,7 +525,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
-    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Pre-alloc", rsc->allowed_nodes, data_set);
 
     for (gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -553,7 +555,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         }
     }
 
-    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Post-coloc", rsc->allowed_nodes, data_set);
 
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
@@ -585,7 +587,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
-                          rsc, __func__, rsc->allowed_nodes);
+                          rsc, __func__, rsc->allowed_nodes, data_set);
     if (pcmk_is_set(data_set->flags, pe_flag_stonith_enabled)
         && !pcmk_is_set(data_set->flags, pe_flag_have_stonith_resource)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
@@ -1473,9 +1475,10 @@ allowed_nodes_as_list(pe_resource_t *rsc, pe_working_set_t *data_set)
         allowed_nodes = g_hash_table_get_values(rsc->allowed_nodes);
     }
 
-    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
+    if (!pcmk__is_daemon) {
         allowed_nodes = g_list_sort(allowed_nodes, sort_node_uname);
     }
+
     return allowed_nodes;
 }
 
@@ -2371,131 +2374,18 @@ native_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
         }                                                               \
     } while(0)
 
-static void
-LogAction(const char *change, pe_resource_t *rsc, pe_node_t *origin, pe_node_t *destination, pe_action_t *action, pe_action_t *source, gboolean terminal)
-{
-    int len = 0;
-    char *reason = NULL;
-    char *details = NULL;
-    bool same_host = FALSE;
-    bool same_role = FALSE;
-    bool need_role = FALSE;
-
-    static int rsc_width = 5;
-    static int detail_width = 5;
-
-    CRM_ASSERT(action);
-    CRM_ASSERT(destination != NULL || origin != NULL);
-
-    if(source == NULL) {
-        source = action;
-    }
-
-    len = strlen(rsc->id);
-    if(len > rsc_width) {
-        rsc_width = len + 2;
-    }
-
-    if(rsc->role > RSC_ROLE_STARTED || rsc->next_role > RSC_ROLE_SLAVE) {
-        need_role = TRUE;
-    }
-
-    if(origin != NULL && destination != NULL && origin->details == destination->details) {
-        same_host = TRUE;
-    }
-
-    if(rsc->role == rsc->next_role) {
-        same_role = TRUE;
-    }
-
-    if (need_role && (origin == NULL)) {
-        /* Starting and promoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), destination->details->uname);
-
-    } else if (origin == NULL) {
-        /* Starting a resource */
-        details = crm_strdup_printf("%s", destination->details->uname);
-
-    } else if (need_role && (destination == NULL)) {
-        /* Stopping a promotable clone instance */
-        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
-
-    } else if (destination == NULL) {
-        /* Stopping a resource */
-        details = crm_strdup_printf("%s", origin->details->uname);
-
-    } else if (need_role && same_role && same_host) {
-        /* Recovering, restarting or re-promoting a promotable clone instance */
-        details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
-
-    } else if (same_role && same_host) {
-        /* Recovering or Restarting a normal resource */
-        details = crm_strdup_printf("%s", origin->details->uname);
-
-    } else if (need_role && same_role) {
-        /* Moving a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
-
-    } else if (same_role) {
-        /* Moving a normal resource */
-        details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
-
-    } else if (same_host) {
-        /* Promoting or demoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
-
-    } else {
-        /* Moving and promoting/demoting */
-        details = crm_strdup_printf("%s %s -> %s %s", role2text(rsc->role), origin->details->uname, role2text(rsc->next_role), destination->details->uname);
-    }
-
-    len = strlen(details);
-    if(len > detail_width) {
-        detail_width = len;
-    }
-
-    if(source->reason && !pcmk_is_set(action->flags, pe_action_runnable)) {
-        reason = crm_strdup_printf(" due to %s (blocked)", source->reason);
-
-    } else if(source->reason) {
-        reason = crm_strdup_printf(" due to %s", source->reason);
-
-    } else if (!pcmk_is_set(action->flags, pe_action_runnable)) {
-        reason = strdup(" blocked");
-
-    } else {
-        reason = strdup("");
-    }
-
-    if(terminal) {
-        printf(" * %-8s   %-*s   ( %*s )  %s\n", change, rsc_width, rsc->id, detail_width, details, reason);
-    } else {
-        crm_notice(" * %-8s   %-*s   ( %*s )  %s", change, rsc_width, rsc->id, detail_width, details, reason);
-    }
-
-    free(details);
-    free(reason);
-}
-
-
 void
-LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
+LogActions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
+
     pe_node_t *next = NULL;
     pe_node_t *current = NULL;
-    pe_node_t *start_node = NULL;
 
-    pe_action_t *stop = NULL;
-    pe_action_t *start = NULL;
-    pe_action_t *demote = NULL;
-    pe_action_t *promote = NULL;
-
-    char *key = NULL;
     gboolean moving = FALSE;
-    GList *possible_matches = NULL;
 
     if(rsc->variant == pe_container) {
-        pcmk__bundle_log_actions(rsc, data_set, terminal);
+        pcmk__bundle_log_actions(rsc, data_set);
         return;
     }
 
@@ -2505,7 +2395,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            LogActions(child_rsc, data_set, terminal);
+            LogActions(child_rsc, data_set);
         }
         return;
     }
@@ -2527,153 +2417,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
         return;
     }
 
-    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
-        || (current == NULL && next == NULL)) {
-        pe_rsc_info(rsc, "Leave   %s\t(%s%s)",
-                    rsc->id, role2text(rsc->role),
-                    !pcmk_is_set(rsc->flags, pe_rsc_managed)? " unmanaged" : "");
-        return;
-    }
-
-    if (current != NULL && next != NULL && !pcmk__str_eq(current->details->id, next->details->id, pcmk__str_casei)) {
-        moving = TRUE;
-    }
-
-    possible_matches = pe__resource_actions(rsc, next, RSC_START, FALSE);
-    if (possible_matches) {
-        start = possible_matches->data;
-        g_list_free(possible_matches);
-    }
-
-    if ((start == NULL) || !pcmk_is_set(start->flags, pe_action_runnable)) {
-        start_node = NULL;
-    } else {
-        start_node = current;
-    }
-    possible_matches = pe__resource_actions(rsc, start_node, RSC_STOP, FALSE);
-    if (possible_matches) {
-        stop = possible_matches->data;
-        g_list_free(possible_matches);
-    }
-
-    possible_matches = pe__resource_actions(rsc, next, RSC_PROMOTE, FALSE);
-    if (possible_matches) {
-        promote = possible_matches->data;
-        g_list_free(possible_matches);
-    }
-
-    possible_matches = pe__resource_actions(rsc, next, RSC_DEMOTE, FALSE);
-    if (possible_matches) {
-        demote = possible_matches->data;
-        g_list_free(possible_matches);
-    }
-
-    if (rsc->role == rsc->next_role) {
-        pe_action_t *migrate_op = NULL;
-
-        possible_matches = pe__resource_actions(rsc, next, RSC_MIGRATED, FALSE);
-        if (possible_matches) {
-            migrate_op = possible_matches->data;
-        }
-
-        CRM_CHECK(next != NULL,);
-        if (next == NULL) {
-        } else if ((migrate_op != NULL) && (current != NULL)
-                   && pcmk_is_set(migrate_op->flags, pe_action_runnable)) {
-            LogAction("Migrate", rsc, current, next, start, NULL, terminal);
-
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
-            LogAction("Reload", rsc, current, next, start, NULL, terminal);
-
-
-        } else if (start == NULL || pcmk_is_set(start->flags, pe_action_optional)) {
-            if ((demote != NULL) && (promote != NULL)
-                && !pcmk_is_set(demote->flags, pe_action_optional)
-                && !pcmk_is_set(promote->flags, pe_action_optional)) {
-                LogAction("Re-promote", rsc, current, next, promote, demote,
-                          terminal);
-            } else {
-                pe_rsc_info(rsc, "Leave   %s\t(%s %s)", rsc->id,
-                            role2text(rsc->role), next->details->uname);
-            }
-
-        } else if (!pcmk_is_set(start->flags, pe_action_runnable)) {
-            LogAction("Stop", rsc, current, NULL, stop,
-                      (stop && stop->reason)? stop : start, terminal);
-            STOP_SANITY_ASSERT(__LINE__);
-
-        } else if (moving && current) {
-            LogAction(pcmk_is_set(rsc->flags, pe_rsc_failed)? "Recover" : "Move",
-                      rsc, current, next, stop, NULL, terminal);
-
-        } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
-            LogAction("Recover", rsc, current, NULL, stop, NULL, terminal);
-            STOP_SANITY_ASSERT(__LINE__);
-
-        } else {
-            LogAction("Restart", rsc, current, next, start, NULL, terminal);
-            /* STOP_SANITY_ASSERT(__LINE__); False positive for migrate-fail-7 */
-        }
-
-        g_list_free(possible_matches);
-        return;
-    }
-
-    if(stop
-       && (rsc->next_role == RSC_ROLE_STOPPED
-           || (start && !pcmk_is_set(start->flags, pe_action_runnable)))) {
-
-        GList *gIter = NULL;
-
-        key = stop_key(rsc);
-        for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-            pe_node_t *node = (pe_node_t *) gIter->data;
-            pe_action_t *stop_op = NULL;
-
-            possible_matches = find_actions(rsc->actions, key, node);
-            if (possible_matches) {
-                stop_op = possible_matches->data;
-                g_list_free(possible_matches);
-            }
-
-            if (stop_op && (stop_op->flags & pe_action_runnable)) {
-                STOP_SANITY_ASSERT(__LINE__);
-            }
-
-            LogAction("Stop", rsc, node, NULL, stop_op,
-                      (stop_op && stop_op->reason)? stop_op : start, terminal);
-        }
-
-        free(key);
-
-    } else if ((stop != NULL)
-               && pcmk_all_flags_set(rsc->flags, pe_rsc_failed|pe_rsc_stop)) {
-        /* 'stop' may be NULL if the failure was ignored */
-        LogAction("Recover", rsc, current, next, stop, start, terminal);
-        STOP_SANITY_ASSERT(__LINE__);
-
-    } else if (moving) {
-        LogAction("Move", rsc, current, next, stop, NULL, terminal);
-        STOP_SANITY_ASSERT(__LINE__);
-
-    } else if (pcmk_is_set(rsc->flags, pe_rsc_reload)) {
-        LogAction("Reload", rsc, current, next, start, NULL, terminal);
-
-    } else if (stop != NULL && !pcmk_is_set(stop->flags, pe_action_optional)) {
-        LogAction("Restart", rsc, current, next, start, NULL, terminal);
-        STOP_SANITY_ASSERT(__LINE__);
-
-    } else if (rsc->role == RSC_ROLE_MASTER) {
-        CRM_LOG_ASSERT(current != NULL);
-        LogAction("Demote", rsc, current, next, demote, NULL, terminal);
-
-    } else if(rsc->next_role == RSC_ROLE_MASTER) {
-        CRM_LOG_ASSERT(next);
-        LogAction("Promote", rsc, current, next, promote, NULL, terminal);
-
-    } else if (rsc->role == RSC_ROLE_STOPPED && rsc->next_role > RSC_ROLE_STOPPED) {
-        LogAction("Start", rsc, current, next, start, NULL, terminal);
-    }
+    out->message(out, "rsc-action", rsc, current, next, moving);
 }
 
 gboolean

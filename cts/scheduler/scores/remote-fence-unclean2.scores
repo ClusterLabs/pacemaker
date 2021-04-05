@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: fake allocation score on rhel7-alt1: 0
 pcmk__native_allocate: fake allocation score on rhel7-alt2: 0
 pcmk__native_allocate: fake allocation score on rhel7-alt3: 0

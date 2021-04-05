@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clnDiskd1 allocation score on act1: INFINITY
 pcmk__clone_allocate: clnDiskd1 allocation score on act2: INFINITY
 pcmk__clone_allocate: clnDiskd1 allocation score on act3: 0

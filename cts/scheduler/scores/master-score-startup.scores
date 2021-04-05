@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: pgsql-ha allocation score on srv1: 0
 pcmk__clone_allocate: pgsql-ha allocation score on srv2: 0
 pcmk__clone_allocate: pgsqld:0 allocation score on srv1: 1001

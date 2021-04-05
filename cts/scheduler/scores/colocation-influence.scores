@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__bundle_allocate: bundle10 allocation score on rhel7-1: 0
 pcmk__bundle_allocate: bundle10 allocation score on rhel7-1: 0
 pcmk__bundle_allocate: bundle10 allocation score on rhel7-2: 0

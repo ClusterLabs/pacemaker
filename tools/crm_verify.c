@@ -143,6 +143,8 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__register_lib_messages(out);
+
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
 
     if (options.use_live_cib) {

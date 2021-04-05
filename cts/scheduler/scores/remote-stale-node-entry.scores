@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: Connectivity allocation score on remote1: 0
 pcmk__clone_allocate: Connectivity allocation score on rhel7-node1: 0
 pcmk__clone_allocate: Connectivity allocation score on rhel7-node2: 0

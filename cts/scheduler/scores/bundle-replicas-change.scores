@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__bundle_allocate: httpd-bundle allocation score on rh74-test: 0
 pcmk__bundle_allocate: httpd-bundle-0 allocation score on rh74-test: INFINITY
 pcmk__bundle_allocate: httpd-bundle-1 allocation score on rh74-test: 0

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: msPostgresql allocation score on srv01: 0
 pcmk__clone_allocate: msPostgresql allocation score on srv02: 0
 pcmk__clone_allocate: pgsql:0 allocation score on srv01: 0

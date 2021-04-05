@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: c-clusterfs allocation score on hex-13: 0
 pcmk__clone_allocate: c-clusterfs allocation score on hex-14: 0
 pcmk__clone_allocate: dlm:0 allocation score on hex-13: 0

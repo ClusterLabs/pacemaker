@@ -1,4 +1,4 @@
-Allocation scores:
+
 MS_RSC_NATIVE:0 promotion score on node1: 10
 MS_RSC_NATIVE:1 promotion score on none: 0
 pcmk__clone_allocate: MS_RSC allocation score on node1: 0

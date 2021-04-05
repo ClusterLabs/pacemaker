@@ -1,4 +1,4 @@
-Allocation scores:
+
 drbd-mgs:0 promotion score on lustre01-left: -1
 drbd-mgs:1 promotion score on lustre02-left: -1
 drbd-testfs-mdt0000-left:0 promotion score on none: 0

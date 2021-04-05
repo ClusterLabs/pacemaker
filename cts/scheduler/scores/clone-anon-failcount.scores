@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clnDiskd1 allocation score on srv01: 302
 pcmk__clone_allocate: clnDiskd1 allocation score on srv02: 1
 pcmk__clone_allocate: clnDiskd1 allocation score on srv03: 1

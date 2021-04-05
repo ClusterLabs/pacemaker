@@ -1,22 +1,24 @@
-
 Current cluster status:
-Online: [ sles11-a sles11-b ]
+  * Node List:
+    * Online: [ sles11-a sles11-b ]
 
- Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable)
-     Masters: [ sles11-a sles11-b ]
+  * Full List of Resources:
+    * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
+      * Masters: [ sles11-a sles11-b ]
 
 Transition Summary:
- * Demote     res_Stateful_1:1     ( Master -> Slave sles11-a )  
+  * Demote     res_Stateful_1:1     ( Master -> Slave sles11-a )
 
-Executing cluster transition:
- * Pseudo action:   ms_res_Stateful_1_demote_0
- * Resource action: res_Stateful_1:0 demote on sles11-a
- * Pseudo action:   ms_res_Stateful_1_demoted_0
+Executing Cluster Transition:
+  * Pseudo action:   ms_res_Stateful_1_demote_0
+  * Resource action: res_Stateful_1:0 demote on sles11-a
+  * Pseudo action:   ms_res_Stateful_1_demoted_0
 
-Revised cluster status:
-Online: [ sles11-a sles11-b ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ sles11-a sles11-b ]
 
- Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable)
-     Masters: [ sles11-b ]
-     Slaves: [ sles11-a ]
-
+  * Full List of Resources:
+    * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
+      * Masters: [ sles11-b ]
+      * Slaves: [ sles11-a ]

@@ -96,7 +96,7 @@ void modify_configuration(
     GList *op_inject, GList *ticket_grant, GList *ticket_revoke,
     GList *ticket_standby, GList *ticket_activate);
 
-int run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list, bool quiet);
+int run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
 
 pcmk__output_t *pcmk__new_logger(void);
 

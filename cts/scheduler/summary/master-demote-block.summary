@@ -1,23 +1,26 @@
 0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
 
 Current cluster status:
-Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
-Online: [ dl380g5d ]
+  * Node List:
+    * Node dl380g5c: standby (with active resources)
+    * Online: [ dl380g5d ]
 
- Clone Set: stateful [dummy] (promotable)
-     dummy	(ocf:pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
-     Slaves: [ dl380g5d ]
+  * Full List of Resources:
+    * Clone Set: stateful [dummy] (promotable):
+      * dummy	(ocf:pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
+      * Slaves: [ dl380g5d ]
 
 Transition Summary:
 
-Executing cluster transition:
- * Resource action: dummy:1         monitor=20000 on dl380g5d
+Executing Cluster Transition:
+  * Resource action: dummy:1         monitor=20000 on dl380g5d
 
-Revised cluster status:
-Node dl380g5c (21c624bd-c426-43dc-9665-bbfb92054bcd): standby
-Online: [ dl380g5d ]
+Revised Cluster Status:
+  * Node List:
+    * Node dl380g5c: standby (with active resources)
+    * Online: [ dl380g5d ]
 
- Clone Set: stateful [dummy] (promotable)
-     dummy	(ocf:pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
-     Slaves: [ dl380g5d ]
-
+  * Full List of Resources:
+    * Clone Set: stateful [dummy] (promotable):
+      * dummy	(ocf:pacemaker:Stateful):	 FAILED Master dl380g5c (blocked)
+      * Slaves: [ dl380g5d ]

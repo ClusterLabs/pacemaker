@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: ms_res_Stateful_1 allocation score on sles11-a: 0
 pcmk__clone_allocate: ms_res_Stateful_1 allocation score on sles11-b: 0
 pcmk__clone_allocate: res_Stateful_1:0 allocation score on sles11-a: 0

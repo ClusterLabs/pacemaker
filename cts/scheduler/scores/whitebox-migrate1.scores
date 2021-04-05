@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: FAKE1 allocation score on rhel7-node1: 0
 pcmk__native_allocate: FAKE1 allocation score on rhel7-node2: 0
 pcmk__native_allocate: FAKE1 allocation score on rhel7-node3: 0

@@ -363,16 +363,14 @@ extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, 
 extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
 extern void pe__output_node(pe_node_t * node, gboolean details, pcmk__output_t *out);
 
-extern void dump_node_capacity(int level, const char *comment, pe_node_t * node);
-extern void dump_rsc_utilization(int level, const char *comment, pe_resource_t * rsc, pe_node_t * node);
-
 void pe__show_node_weights_as(const char *file, const char *function,
                               int line, bool to_log, pe_resource_t *rsc,
-                              const char *comment, GHashTable *nodes);
+                              const char *comment, GHashTable *nodes,
+                              pe_working_set_t *data_set);
 
-#define pe__show_node_weights(level, rsc, text, nodes)              \
+#define pe__show_node_weights(level, rsc, text, nodes, data_set)    \
         pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
-                                 (level), (rsc), (text), (nodes))
+                                 (level), (rsc), (text), (nodes), (data_set))
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);

@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: Email_Alerting allocation score on xen-a: 0
 pcmk__native_allocate: Email_Alerting allocation score on xen-b: 1000
 pcmk__native_allocate: base allocation score on xen-a: 6000

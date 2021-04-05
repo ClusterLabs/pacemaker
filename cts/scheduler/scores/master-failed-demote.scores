@@ -1,4 +1,4 @@
-Allocation scores:
+
 group:0 promotion score on none: 0
 group:1 promotion score on dl380g5a: 99
 pcmk__clone_allocate: group:0 allocation score on dl380g5a: 0

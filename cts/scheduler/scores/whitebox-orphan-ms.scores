@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: Connectivity allocation score on 18node1: 0
 pcmk__clone_allocate: Connectivity allocation score on 18node2: 0
 pcmk__clone_allocate: Connectivity allocation score on 18node3: 0

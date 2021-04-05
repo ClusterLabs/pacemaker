@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: ms_drbd_mysql1 allocation score on alice.demo: 0
 pcmk__clone_allocate: ms_drbd_mysql1 allocation score on bob.demo: 0
 pcmk__clone_allocate: ms_drbd_mysql2 allocation score on alice.demo: 0

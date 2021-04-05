@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: Pingd_Public allocation score on sles11-ha1: 0
 pcmk__clone_allocate: Pingd_Public allocation score on sles11-ha2: 0
 pcmk__clone_allocate: Pingd_Public allocation score on sles11-ha3: 0

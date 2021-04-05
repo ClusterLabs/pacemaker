@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: FAKE6-clone allocation score on lama2: -INFINITY
 pcmk__clone_allocate: FAKE6-clone allocation score on lama3: -INFINITY
 pcmk__clone_allocate: FAKE6-clone allocation score on lamaVM1: 0

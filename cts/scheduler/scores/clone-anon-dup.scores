@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: apache2:0 allocation score on wc01: 0
 pcmk__clone_allocate: apache2:0 allocation score on wc02: 1
 pcmk__clone_allocate: apache2:0 allocation score on wc03: 0

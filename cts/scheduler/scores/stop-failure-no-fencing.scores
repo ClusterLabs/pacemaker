@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: clvm-clone allocation score on pcmk-1: 0
 pcmk__clone_allocate: clvm-clone allocation score on pcmk-2: 0
 pcmk__clone_allocate: clvm-clone allocation score on pcmk-3: -INFINITY

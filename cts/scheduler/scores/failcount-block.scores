@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: rsc_pcmk-1 allocation score on pcmk-1: 0
 pcmk__native_allocate: rsc_pcmk-1 allocation score on pcmk-4: 0
 pcmk__native_allocate: rsc_pcmk-2 allocation score on pcmk-1: INFINITY

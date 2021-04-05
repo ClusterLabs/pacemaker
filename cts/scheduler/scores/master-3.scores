@@ -1,4 +1,4 @@
-Allocation scores:
+
 child_rsc1:0 promotion score on node1: -INFINITY
 child_rsc1:1 promotion score on node2: 198
 child_rsc1:2 promotion score on node1: -INFINITY

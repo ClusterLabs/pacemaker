@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: A:0 allocation score on elvis: 1
 pcmk__clone_allocate: A:0 allocation score on queen: 0
 pcmk__clone_allocate: A:1 allocation score on elvis: 0

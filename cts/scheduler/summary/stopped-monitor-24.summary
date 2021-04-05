@@ -1,16 +1,19 @@
 1 of 1 resource instances DISABLED and 0 BLOCKED from further action due to failure
 
 Current cluster status:
-Online: [ node1 node2 ]
+  * Node List:
+    * Online: [ node1 node2 ]
 
- rsc1	(ocf:pacemaker:Dummy):	 Stopped (disabled, unmanaged)
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 Stopped (disabled, unmanaged)
 
 Transition Summary:
 
-Executing cluster transition:
+Executing Cluster Transition:
 
-Revised cluster status:
-Online: [ node1 node2 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
 
- rsc1	(ocf:pacemaker:Dummy):	 Stopped (disabled, unmanaged)
-
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 Stopped (disabled, unmanaged)

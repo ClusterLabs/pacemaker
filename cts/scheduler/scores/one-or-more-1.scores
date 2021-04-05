@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__native_allocate: A allocation score on fc16-builder2: -INFINITY
 pcmk__native_allocate: A allocation score on fc16-builder: -INFINITY
 pcmk__native_allocate: B allocation score on fc16-builder2: 0

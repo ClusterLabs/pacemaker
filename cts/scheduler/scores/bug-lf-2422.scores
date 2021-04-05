@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: c-o2stage allocation score on qa-suse-1: 0
 pcmk__clone_allocate: c-o2stage allocation score on qa-suse-2: 0
 pcmk__clone_allocate: c-o2stage allocation score on qa-suse-3: 0

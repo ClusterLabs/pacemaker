@@ -1,4 +1,4 @@
-Allocation scores:
+
 pcmk__clone_allocate: cl_glusterd allocation score on xfc0: 0
 pcmk__clone_allocate: cl_glusterd allocation score on xfc1: 0
 pcmk__clone_allocate: cl_glusterd allocation score on xfc2: 0

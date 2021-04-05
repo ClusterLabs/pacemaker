@@ -1,4 +1,4 @@
-Allocation scores:
+
 DUMMY:0 promotion score on fc16-builder: 10
 DUMMY:1 promotion score on fc16-builder2: 5
 pcmk__clone_allocate: DUMMY:0 allocation score on fc16-builder2: 0
