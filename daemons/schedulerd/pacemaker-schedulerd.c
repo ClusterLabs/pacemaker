@@ -130,13 +130,10 @@ handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         series_id = 2;
     }
 
-    series_wrap = series[series_id].wrap;
     value = pe_pref(sched_data_set->config_hash, series[series_id].param);
-    if (value != NULL) {
-        series_wrap = (int) crm_parse_ll(value, NULL);
-        if (errno != 0) {
-            series_wrap = series[series_id].wrap;
-        }
+    if ((value == NULL)
+        || (pcmk__scan_min_int(value, &series_wrap, -1) != pcmk_rc_ok)) {
+        series_wrap = series[series_id].wrap;
     }
 
     if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
