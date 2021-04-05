@@ -63,6 +63,12 @@
         <element name="cluster_status">
             <ref name="nodes-list" />
             <ref name="resources-list" />
+            <optional>
+                <ref name="node-attributes-list" />
+            </optional>
+            <optional>
+                <ref name="failures-list" />
+            </optional>
         </element>
     </define>
 
@@ -93,6 +99,12 @@
         <element name="revised_cluster_status">
             <ref name="nodes-list" />
             <ref name="resources-list" />
+            <optional>
+                <ref name="node-attributes-list" />
+            </optional>
+            <optional>
+                <ref name="failures-list" />
+            </optional>
         </element>
     </define>
 
@@ -129,6 +141,22 @@
         <element name="transition">
             <zeroOrMore>
                 <ref name="element-injected-actions" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="node-attributes-list">
+        <element name="node_attributes">
+            <zeroOrMore>
+                <externalRef href="node-attrs-2.8.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="failures-list">
+        <element name="failures">
+            <zeroOrMore>
+                <externalRef href="failure-2.8.rng" />
             </zeroOrMore>
         </element>
     </define>
