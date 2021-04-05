@@ -1018,6 +1018,52 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("failed-action-list", "pe_working_set_t *", "GList *",
+                  "GList *", "gboolean")
+static int
+failed_action_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    xmlNode *xml_op = NULL;
+    int rc = pcmk_rc_no_output;
+
+    const char *id = NULL;
+
+    if (xmlChildElementCount(data_set->failed) == 0) {
+        return rc;
+    }
+
+    for (xml_op = pcmk__xml_first_child(data_set->failed); xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
+        char *rsc = NULL;
+
+        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME))) {
+            continue;
+        }
+
+        id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+        if (parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL) == FALSE) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_rsc, rsc)) {
+            free(rsc);
+            continue;
+        }
+
+        free(rsc);
+
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Resource Actions");
+        out->message(out, "failed-action", xml_op);
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
                   "gboolean", "gboolean", "gboolean", "GList *", "GList *")
 int
@@ -2131,6 +2177,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-times", "xml", cluster_times_xml },
     { "failed-action", "default", pe__failed_action_text },
     { "failed-action", "xml", failed_action_xml },
+    { "failed-action-list", "default", failed_action_list },
     { "group", "xml",  pe__group_xml },
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },

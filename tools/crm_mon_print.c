@@ -53,8 +53,6 @@ static int print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
 static int print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
                                  GList *only_node, GList *only_rsc,
                                  gboolean print_spacer);
-static int print_failed_actions(pe_working_set_t *data_set, GList *only_node,
-                                GList *only_rsc, gboolean print_spacer);
 
 static GList *
 build_uname_list(pe_working_set_t *data_set, const char *s) {
@@ -592,54 +590,6 @@ print_node_attributes(pe_working_set_t *data_set, unsigned int mon_ops,
     return rc;
 }
 
-/*!
- * \internal
- * \brief Print a section for failed actions
- *
- * \param[in] data_set Cluster state to display.
- */
-static int
-print_failed_actions(pe_working_set_t *data_set, GList *only_node,
-                     GList *only_rsc, gboolean print_spacer)
-{
-    pcmk__output_t *out = data_set->priv;
-    xmlNode *xml_op = NULL;
-    int rc = pcmk_rc_no_output;
-
-    const char *id = NULL;
-
-    if (xmlChildElementCount(data_set->failed) == 0) {
-        return rc;
-    }
-
-    for (xml_op = pcmk__xml_first_child(data_set->failed); xml_op != NULL;
-         xml_op = pcmk__xml_next(xml_op)) {
-        char *rsc = NULL;
-
-        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME))) {
-            continue;
-        }
-
-        id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-        if (parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL) == FALSE) {
-            continue;
-        }
-
-        if (!pcmk__str_in_list(only_rsc, rsc)) {
-            free(rsc);
-            continue;
-        }
-
-        free(rsc);
-
-        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Resource Actions");
-        out->message(out, "failed-action", xml_op);
-    }
-
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
-    return rc;
-}
-
 #define CHECK_RC(retcode, retval)   \
     if (retval == pcmk_rc_ok) {     \
         retcode = pcmk_rc_ok;       \
@@ -720,8 +670,8 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        CHECK_RC(rc, print_failed_actions(data_set, unames, resources,
-                                          rc == pcmk_rc_ok));
+        CHECK_RC(rc, out->message(out, "failed-action-list", data_set, unames,
+                                  resources, rc == pcmk_rc_ok));
     }
 
     /* Print failed stonith actions */
@@ -862,7 +812,8 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        print_failed_actions(data_set, unames, resources, FALSE);
+        out->message(out, "failed-action-list", data_set, unames, resources,
+                     FALSE);
     }
 
     /* Print stonith history */
@@ -960,7 +911,8 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(show, mon_show_failures)
         && xml_has_children(data_set->failed)) {
 
-        print_failed_actions(data_set, unames, resources, FALSE);
+        out->message(out, "failed-action-list", data_set, unames, resources,
+                     FALSE);
     }
 
     /* Print failed stonith actions */
