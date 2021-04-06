@@ -26,6 +26,22 @@ struct compare_data {
     int result;
 };
 
+static int
+utilization_value(const char *s)
+{
+    int value = 0;
+
+    /* @TODO It would make sense to restrict utilization values to nonnegative
+     * integers, but the documentation just says "integers" and we didn't
+     * restrict them initially, so for backward compatibility, allow any
+     * integer.
+     */
+    if (s != NULL) {
+        pcmk__scan_min_int(s, &value, INT_MIN);
+    }
+    return value;
+}
+
 static void
 do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
 {
@@ -33,9 +49,8 @@ do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
     int node2_capacity = 0;
     struct compare_data *data = user_data;
 
-    node1_capacity = crm_parse_int(value, "0");
-    node2_capacity =
-        crm_parse_int(g_hash_table_lookup(data->node2->details->utilization, key), "0");
+    node1_capacity = utilization_value(value);
+    node2_capacity = utilization_value(g_hash_table_lookup(data->node2->details->utilization, key));
 
     if (node1_capacity > node2_capacity) {
         data->result--;
@@ -56,7 +71,7 @@ do_compare_capacity2(gpointer key, gpointer value, gpointer user_data)
     }
 
     node1_capacity = 0;
-    node2_capacity = crm_parse_int(value, "0");
+    node2_capacity = utilization_value(value);
 
     if (node1_capacity > node2_capacity) {
         data->result--;
@@ -97,11 +112,11 @@ do_calculate_utilization(gpointer key, gpointer value, gpointer user_data)
 
     current = g_hash_table_lookup(data->current_utilization, key);
     if (data->plus) {
-        result = crm_itoa(crm_parse_int(current, "0") + crm_parse_int(value, "0"));
+        result = crm_itoa(utilization_value(current) + utilization_value(value));
         g_hash_table_replace(data->current_utilization, strdup(key), result);
 
     } else if (current) {
-        result = crm_itoa(crm_parse_int(current, "0") - crm_parse_int(value, "0"));
+        result = crm_itoa(utilization_value(current) - utilization_value(value));
         g_hash_table_replace(data->current_utilization, strdup(key), result);
     }
 }
@@ -135,8 +150,8 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     int remaining = 0;
     struct capacity_data *data = user_data;
 
-    required = crm_parse_int(value, "0");
-    remaining = crm_parse_int(g_hash_table_lookup(data->node->details->utilization, key), "0");
+    required = utilization_value(value);
+    remaining = utilization_value(g_hash_table_lookup(data->node->details->utilization, key));
 
     if (required > remaining) {
         CRM_ASSERT(data->rsc_id);

@@ -570,9 +570,13 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
     if (value) {
-        errno = 0;
-        *dest = crm_parse_int(value, NULL);
-        if (errno == 0) {
+        long long value_ll;
+
+        if ((pcmk__scan_ll(value, &value_ll, 0LL) != pcmk_rc_ok)
+            || (value_ll < INT_MIN) || (value_ll > INT_MAX)) {
+            *dest = PCMK__PARSE_INT_DEFAULT;
+        } else {
+            *dest = (int) value_ll;
             return 0;
         }
     }
@@ -597,12 +601,9 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
 
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
-    if (value) {
-        errno = 0;
-        *dest = crm_parse_ll(value, NULL);
-        if (errno == 0) {
-            return 0;
-        }
+    if ((value != NULL)
+        && (pcmk__scan_ll(value, dest, PCMK__PARSE_INT_DEFAULT) == pcmk_rc_ok)) {
+        return 0;
     }
     return -1;
 }
@@ -626,18 +627,11 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 
     CRM_CHECK(dest != NULL, return -1);
     *dest = 0;
-
     value = crm_element_value(data, name);
-    if (value == NULL) {
-        return pcmk_ok;
-    }
-
-    errno = 0;
-    value_ll = crm_parse_ll(value, NULL);
-    if ((errno != 0) || (value_ll < 0) || (value_ll > G_MAXUINT)) {
+    if ((pcmk__scan_ll(value, &value_ll, 0LL) != pcmk_rc_ok)
+        || (value_ll < 0) || (value_ll > G_MAXUINT)) {
         return -1;
     }
-
     *dest = (guint) value_ll;
     return pcmk_ok;
 }

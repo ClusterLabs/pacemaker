@@ -113,7 +113,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 gboolean
 name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = 'N';
-    options.nodeid = crm_parse_int(optarg, NULL);
+    pcmk__scan_min_int(optarg, &(options.nodeid), 0);
     return TRUE;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,14 +34,12 @@ static bool fence_reaction_panic = FALSE;
 static unsigned long int stonith_max_attempts = 10;
 static GHashTable *stonith_failures = NULL;
 
-// crmd_opts defines default for stonith-max-attempts, so value is never NULL
 void
 update_stonith_max_attempts(const char *value)
 {
-    if (pcmk__str_eq(value, CRM_INFINITY_S, pcmk__str_casei)) {
-       stonith_max_attempts = CRM_SCORE_INFINITY;
-    } else {
-       stonith_max_attempts = (unsigned long int) crm_parse_ll(value, NULL);
+    stonith_max_attempts = char2score(value);
+    if (stonith_max_attempts < 1UL) {
+        stonith_max_attempts = 10UL;
     }
 }
 
@@ -814,13 +812,14 @@ fence_with_delay(const char *target, const char *type, const char *delay)
 {
     uint32_t options = st_opt_none; // Group of enum stonith_call_options
     int timeout_sec = (int) (transition_graph->stonith_timeout / 1000);
+    int delay_i;
 
     if (crmd_join_phase_count(crm_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_suicide);
     }
+    pcmk__scan_min_int(delay, &delay_i, 0);
     return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
-                                               type, timeout_sec, 0,
-                                               crm_atoi(delay, "0"));
+                                               type, timeout_sec, 0, delay_i);
 }
 
 gboolean

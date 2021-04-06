@@ -840,7 +840,8 @@ apply_system_health(pe_working_set_t * data_set)
          * Defaults are provided by the pe_prefs table
          * Also, custom health "base score" can be used
          */
-        base_health = crm_parse_int(pe_pref(data_set->config_hash, "node-health-base"), "0");
+        base_health = char2score(pe_pref(data_set->config_hash,
+                                         "node-health-base"));
 
     } else if (pcmk__str_eq(health_strategy, "custom", pcmk__str_casei)) {
 
@@ -981,10 +982,10 @@ shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
     time_t result = 0;
 
     if (shutdown) {
-        errno = 0;
-        result = (time_t) crm_parse_ll(shutdown, NULL);
-        if (errno != 0) {
-            result = 0;
+        long long result_ll;
+
+        if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
+            result = (time_t) result_ll;
         }
     }
     return result? result : get_effective_time(data_set);
@@ -2915,16 +2916,22 @@ void
 pcmk__log_transition_summary(const char *filename)
 {
     if (was_processing_error) {
-        crm_err("Calculated transition %d (with errors), saving inputs in %s",
-                transition_id, filename);
+        crm_err("Calculated transition %d (with errors)%s%s",
+                transition_id,
+                (filename == NULL)? "" : ", saving inputs in ",
+                (filename == NULL)? "" : filename);
 
     } else if (was_processing_warning) {
-        crm_warn("Calculated transition %d (with warnings), saving inputs in %s",
-                 transition_id, filename);
+        crm_warn("Calculated transition %d (with warnings)%s%s",
+                 transition_id,
+                 (filename == NULL)? "" : ", saving inputs in ",
+                 (filename == NULL)? "" : filename);
 
     } else {
-        crm_notice("Calculated transition %d, saving inputs in %s",
-                   transition_id, filename);
+        crm_notice("Calculated transition %d%s%s",
+                   transition_id,
+                   (filename == NULL)? "" : ", saving inputs in ",
+                   (filename == NULL)? "" : filename);
     }
     if (pcmk__config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
@@ -2940,6 +2947,7 @@ stage8(pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
     const char *value = NULL;
+    long long limit = 0LL;
 
     transition_id++;
     crm_trace("Creating transition graph %d.", transition_id);
@@ -2966,7 +2974,7 @@ stage8(pe_working_set_t * data_set)
     crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 
     value = pe_pref(data_set->config_hash, "migration-limit");
-    if (crm_parse_ll(value, NULL) > 0) {
+    if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
         crm_xml_add(data_set->graph, "migration-limit", value);
     }
 

@@ -665,9 +665,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     rtype = crm_element_value(action_rsc, XML_ATTR_TYPE);
     rprovider = crm_element_value(action_rsc, XML_AGENT_ATTR_PROVIDER);
 
-    if (target_rc_s != NULL) {
-        target_outcome = crm_parse_int(target_rc_s, "0");
-    }
+    pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
     CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
                pcmk_ok);

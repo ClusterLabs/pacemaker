@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,15 +33,21 @@ pcmk__ipc_buffer_size(unsigned int max)
     static unsigned int global_max = 0;
 
     if (global_max == 0) {
-        const char *env = getenv("PCMK_ipc_buffer");
+        long long global_ll;
 
-        if (env) {
-            int env_max = crm_parse_int(env, "0");
+        if ((pcmk__scan_ll(getenv("PCMK_ipc_buffer"), &global_ll,
+                           0LL) != pcmk_rc_ok)
+            || (global_ll <= 0)) {
+            global_max = MAX_MSG_SIZE; // Default for unset or invalid
 
-            global_max = (env_max > 0)? QB_MAX(MIN_MSG_SIZE, env_max) : MAX_MSG_SIZE;
+        } else if (global_ll < MIN_MSG_SIZE) {
+            global_max = MIN_MSG_SIZE;
+
+        } else if (global_ll > UINT_MAX) {
+            global_max = UINT_MAX;
 
         } else {
-            global_max = MAX_MSG_SIZE;
+            global_max = (unsigned int) global_ll;
         }
     }
     return QB_MAX(max, global_max);

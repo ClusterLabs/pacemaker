@@ -273,29 +273,32 @@ pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
     return pcmk_rc_ok;
 }
 
-#define update_field(xml_field, time_fn)			\
-    value = crm_element_value(duration_spec, xml_field);	\
-    if(value != NULL) {						\
-	int value_i = crm_parse_int(value, "0");		\
-	time_fn(end, value_i);					\
+static void
+update_field(crm_time_t *t, xmlNode *xml, const char *attr,
+            void (*time_fn)(crm_time_t *, int))
+{
+    long long value;
+
+    if ((pcmk__scan_ll(crm_element_value(xml, attr), &value, 0LL) == pcmk_rc_ok)
+        && (value != 0LL) && (value >= INT_MIN) && (value <= INT_MAX)) {
+        time_fn(t, (int) value);
     }
+}
 
 crm_time_t *
 pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 {
-    crm_time_t *end = NULL;
-    const char *value = NULL;
+    crm_time_t *end = crm_time_new_undefined();
 
-    end = crm_time_new(NULL);
     crm_time_set(end, start);
 
-    update_field("years", crm_time_add_years);
-    update_field("months", crm_time_add_months);
-    update_field("weeks", crm_time_add_weeks);
-    update_field("days", crm_time_add_days);
-    update_field("hours", crm_time_add_hours);
-    update_field("minutes", crm_time_add_minutes);
-    update_field("seconds", crm_time_add_seconds);
+    update_field(end, duration_spec, "years", crm_time_add_years);
+    update_field(end, duration_spec, "months", crm_time_add_months);
+    update_field(end, duration_spec, "weeks", crm_time_add_weeks);
+    update_field(end, duration_spec, "days", crm_time_add_days);
+    update_field(end, duration_spec, "hours", crm_time_add_hours);
+    update_field(end, duration_spec, "minutes", crm_time_add_minutes);
+    update_field(end, duration_spec, "seconds", crm_time_add_seconds);
 
     return end;
 }
@@ -910,13 +913,13 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             cmp = strcasecmp(l_val, r_val);
 
         } else if (pcmk__str_eq(type, "integer", pcmk__str_casei)) {
-            long long l_val_num = crm_parse_ll(l_val, NULL);
-            int rc1 = errno;
+            long long l_val_num;
+            int rc1 = pcmk__scan_ll(l_val, &l_val_num, 0LL);
 
-            long long r_val_num = crm_parse_ll(r_val, NULL);
-            int rc2 = errno;
+            long long r_val_num;
+            int rc2 = pcmk__scan_ll(r_val, &r_val_num, 0LL);
 
-            if (rc1 == 0 && rc2 == 0) {
+            if ((rc1 == pcmk_rc_ok) && (rc2 == pcmk_rc_ok)) {
                 if (l_val_num < r_val_num) {
                     cmp = -1;
                 } else if (l_val_num > r_val_num) {

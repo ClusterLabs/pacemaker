@@ -479,21 +479,16 @@ authorize_version(xmlNode *message_data, const char *field,
                   const char *client_name, const char *ref, const char *uuid)
 {
     const char *version = crm_element_value(message_data, field);
+    long long version_num;
 
-    if (pcmk__str_empty(version)) {
-        crm_warn("IPC hello from %s rejected: No protocol %s",
+    if ((pcmk__scan_ll(version, &version_num, -1LL) != pcmk_rc_ok)
+        || (version_num < 0LL)) {
+
+        crm_warn("Rejected IPC hello from %s: '%s' is not a valid protocol %s "
                  CRM_XS " ref=%s uuid=%s",
-                 client_name, field, (ref? ref : "none"), uuid);
+                 client_name, ((version == NULL)? "" : version),
+                 field, (ref? ref : "none"), uuid);
         return false;
-    } else {
-        int version_num = crm_parse_int(version, NULL);
-
-        if (version_num < 0) {
-            crm_warn("IPC hello from %s rejected: Protocol %s '%s' "
-                     "not recognized", CRM_XS " ref=%s uuid=%s",
-                     client_name, field, version, (ref? ref : "none"), uuid);
-            return false;
-        }
     }
     return true;
 }

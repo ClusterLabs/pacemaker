@@ -292,6 +292,7 @@ cib_t *
 cib_new(void)
 {
     const char *value = getenv("CIB_shadow");
+    int port;
 
     if (value && value[0] != 0) {
         return cib_shadow_new(value);
@@ -305,10 +306,16 @@ cib_new(void)
     value = getenv("CIB_port");
     if (value) {
         gboolean encrypted = TRUE;
-        int port = crm_parse_int(value, NULL);
         const char *server = getenv("CIB_server");
         const char *user = getenv("CIB_user");
         const char *pass = getenv("CIB_passwd");
+
+        /* We don't ensure port is valid (>= 0) because cib_new() currently
+         * can't return NULL in practice, and introducing a NULL return here
+         * could cause core dumps that would previously just cause signon()
+         * failures.
+         */
+        pcmk__scan_port(value, &port);
 
         value = getenv("CIB_encrypted");
         if (value && crm_is_true(value) == FALSE) {

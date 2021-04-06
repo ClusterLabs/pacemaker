@@ -1042,27 +1042,20 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
+    // Use 0 for default, minimum, and invalid promoted-max
     value = crm_element_value(xml_obj, XML_RSC_ATTR_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
         value = crm_element_value(xml_obj, "masters");
     }
-    bundle_data->promoted_max = crm_parse_int(value, "0");
-    if (bundle_data->promoted_max < 0) {
-        pe_err("%s for %s must be nonnegative integer, using 0",
-               XML_RSC_ATTR_PROMOTED_MAX, rsc->id);
-        bundle_data->promoted_max = 0;
-    }
+    pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
+    // Default replicas to promoted-max if it was specified and 1 otherwise
     value = crm_element_value(xml_obj, "replicas");
-    if ((value == NULL) && bundle_data->promoted_max) {
+    if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;
     } else {
-        bundle_data->nreplicas = crm_parse_int(value, "1");
-    }
-    if (bundle_data->nreplicas < 1) {
-        pe_err("'replicas' for %s must be positive integer, using 1", rsc->id);
-        bundle_data->nreplicas = 1;
+        pcmk__scan_min_int(value, &bundle_data->nreplicas, 1);
     }
 
     /*
@@ -1071,12 +1064,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
      *   --userland-proxy=false --ip-masq=false
      */
     value = crm_element_value(xml_obj, "replicas-per-host");
-    bundle_data->nreplicas_per_host = crm_parse_int(value, "1");
-    if (bundle_data->nreplicas_per_host < 1) {
-        pe_err("'replicas-per-host' for %s must be positive integer, using 1",
-               rsc->id);
-        bundle_data->nreplicas_per_host = 1;
-    }
+    pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
         pe__clear_resource_flags(rsc, pe_rsc_unique);
     }

@@ -56,7 +56,7 @@ extern "C" {
  * The feature set also affects the processing of old saved CIBs (such as for
  * many scheduler regression tests).
  *
- * Particular feature points currently used by pacemaker:
+ * Particular feature points currently tested by Pacemaker code:
  *
  * >2.1:     Operation updates include timing data
  * >=3.0.5:  XML v2 digests are created
@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_LRM_OP_INVALID and PCMK_LRM_OP_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.7.4"
+#  define CRM_FEATURE_SET		"3.8.0"
 
 #  ifndef MAX_NAME
 #    define MAX_NAME	256

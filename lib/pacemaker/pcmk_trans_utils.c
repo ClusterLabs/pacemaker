@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,10 +22,11 @@ pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
     static int fail = -1;
 
     if (fail < 0) {
-        char *fail_s = getenv("PE_fail");
+        long long fail_ll;
 
-        if (fail_s) {
-            fail = (int) crm_parse_ll(fail_s, NULL);
+        if ((pcmk__scan_ll(getenv("PE_fail"), &fail_ll, 0LL) == pcmk_rc_ok)
+            && (fail_ll > 0LL) && (fail_ll <= INT_MAX)) {
+            fail = (int) fail_ll;
         } else {
             fail = 0;
         }

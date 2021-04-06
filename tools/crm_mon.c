@@ -386,7 +386,11 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
 static gboolean
 fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    interactive_fence_level = crm_atoi(optarg, "2");
+    if (optarg == NULL) {
+        interactive_fence_level = 2;
+    } else {
+        pcmk__scan_min_int(optarg, &interactive_fence_level, 0);
+    }
 
     switch (interactive_fence_level) {
         case 3:

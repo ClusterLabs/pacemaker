@@ -1082,9 +1082,11 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
               pcmk__plural_alt(op->replies_expected, "reply", "replies"));
 
     if (op->call_options & st_opt_cs_nodeid) {
-        int nodeid = crm_atoi(op->target, NULL);
-        crm_node_t *node = pcmk__search_known_node_cache(nodeid, NULL,
-                                                         CRM_GET_PEER_ANY);
+        int nodeid;
+        crm_node_t *node;
+
+        pcmk__scan_min_int(op->target, &nodeid, 0);
+        node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
 
         /* Ensure the conversion only happens once */
         stonith__clear_call_options(op->call_options, op->id, st_opt_cs_nodeid);

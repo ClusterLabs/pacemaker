@@ -1615,7 +1615,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
     crm_debug("Scheduler requested op %s (call=%s) be cancelled",
               op_key, (call_id? call_id : "NA"));
-    call = crm_parse_int(call_id, "0");
+    pcmk__scan_min_int(call_id, &call, 0);
     if (call == 0) {
         // Normal case when the scheduler cancels a recurring op
         in_progress = cancel_op_key(lrm_state, rsc, op_key, TRUE);
@@ -1870,9 +1870,9 @@ resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
             g_hash_table_replace(params, crm_meta_name(key), strdup(value));
 
             if (pcmk__str_eq(key, XML_ATTR_TIMEOUT, pcmk__str_casei)) {
-                op->timeout = crm_parse_int(value, "0");
+                pcmk__scan_min_int(value, &op->timeout, 0);
             } else if (pcmk__str_eq(key, XML_OP_ATTR_START_DELAY, pcmk__str_casei)) {
-                op->start_delay = crm_parse_int(value, "0");
+                pcmk__scan_min_int(value, &op->start_delay, 0);
             }
         }
         g_hash_table_destroy(hash);
@@ -1934,10 +1934,10 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     g_hash_table_remove(params, CRM_META "_op_target_rc");
 
     op_delay = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
-    op->start_delay = crm_parse_int(op_delay, "0");
+    pcmk__scan_min_int(op_delay, &op->start_delay, 0);
 
     op_timeout = crm_meta_value(params, XML_ATTR_TIMEOUT);
-    op->timeout = crm_parse_int(op_timeout, "0");
+    pcmk__scan_min_int(op_timeout, &op->timeout, 0);
 
     if (pcmk__guint_from_hash(params, CRM_META "_" XML_LRM_ATTR_INTERVAL_MS, 0,
                               &(op->interval_ms)) != pcmk_rc_ok) {

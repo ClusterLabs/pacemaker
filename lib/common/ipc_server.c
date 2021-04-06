@@ -350,22 +350,21 @@ pcmk__free_client(pcmk__client_t *c)
  * \param[in,out] client     Client to modify
  * \param[in]     qmax       New threshold (as non-NULL string)
  *
- * \return TRUE if change was allowed, FALSE otherwise
+ * \return true if change was allowed, false otherwise
  */
 bool
 pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 {
     if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
-        long long qmax_int;
+        long long qmax_ll;
 
-        errno = 0;
-        qmax_int = crm_parse_ll(qmax, NULL);
-        if ((errno == 0) && (qmax_int > 0)) {
-            client->queue_max = (unsigned int) qmax_int;
-            return TRUE;
+        if ((pcmk__scan_ll(qmax, &qmax_ll, 0LL) == pcmk_rc_ok)
+            && (qmax_ll > 0LL) && (qmax_ll <= UINT_MAX)) {
+            client->queue_max = (unsigned int) qmax_ll;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 int

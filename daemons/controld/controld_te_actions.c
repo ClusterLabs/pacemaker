@@ -76,12 +76,11 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 static int
 get_target_rc(crm_action_t * action)
 {
-    const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
+    int exit_status;
 
-    if (target_rc_s != NULL) {
-        return crm_parse_int(target_rc_s, "0");
-    }
-    return 0;
+    pcmk__scan_min_int(crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC),
+                       &exit_status, 0);
+    return exit_status;
 }
 
 static gboolean

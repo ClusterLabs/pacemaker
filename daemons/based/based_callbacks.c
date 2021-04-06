@@ -309,8 +309,17 @@ process_ping_reply(xmlNode *reply)
     const char *seq_s = crm_element_value(pong, F_CIB_PING_ID);
     const char *digest = crm_element_value(pong, XML_ATTR_DIGEST);
 
-    if (seq_s) {
-        seq = (uint64_t) crm_parse_ll(seq_s, NULL);
+    if (seq_s == NULL) {
+        crm_debug("Ignoring ping reply with no " F_CIB_PING_ID);
+        return;
+
+    } else {
+        long long seq_ll;
+
+        if (pcmk__scan_ll(seq_s, &seq_ll, 0LL) != pcmk_rc_ok) {
+            return;
+        }
+        seq = (uint64_t) seq_ll;
     }
 
     if(digest == NULL) {

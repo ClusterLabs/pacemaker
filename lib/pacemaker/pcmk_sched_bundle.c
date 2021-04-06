@@ -459,7 +459,16 @@ int copies_per_node(pe_resource_t * rsc)
         case pe_clone:
             {
                 const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
-                return crm_parse_int(max_clones_node, "1");
+
+                if (max_clones_node == NULL) {
+                    return 1;
+
+                } else {
+                    int max_i;
+
+                    pcmk__scan_min_int(max_clones_node, &max_i, 0);
+                    return max_i;
+                }
             }
         case pe_container:
             {

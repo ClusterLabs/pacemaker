@@ -1207,11 +1207,16 @@ max_delay_for_resource(pe_working_set_t * data_set, pe_resource_t *rsc)
         char *key = crm_strdup_printf("%s_%s_0", rsc->id, RSC_STOP);
         pe_action_t *stop = custom_action(rsc, key, RSC_STOP, NULL, TRUE, FALSE, data_set);
         const char *value = g_hash_table_lookup(stop->meta, XML_ATTR_TIMEOUT);
+        long long result_ll;
 
-        max_delay = value? (int) crm_parse_ll(value, NULL) : -1;
+        if ((pcmk__scan_ll(value, &result_ll, -1LL) == pcmk_rc_ok)
+            && (result_ll >= 0) && (result_ll <= INT_MAX)) {
+            max_delay = (int) result_ll;
+        } else {
+            max_delay = -1;
+        }
         pe_free_action(stop);
     }
-
 
     return max_delay;
 }

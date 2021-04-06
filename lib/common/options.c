@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -390,16 +390,16 @@ pcmk__valid_number(const char *value)
         return true;
     }
 
-    errno = 0;
-    crm_parse_ll(value, NULL);
-    return errno == 0;
+    return pcmk__scan_ll(value, NULL, 0LL) == pcmk_rc_ok;
 }
 
 bool
 pcmk__valid_positive_number(const char *value)
 {
-    return pcmk_str_is_infinity(value) ||
-           (crm_parse_ll(value, NULL) > 0);
+    long long num = 0LL;
+
+    return pcmk_str_is_infinity(value)
+           || ((pcmk__scan_ll(value, &num, 0LL) == pcmk_rc_ok) && (num > 0));
 }
 
 bool

@@ -919,7 +919,10 @@ unpack_ticket_state(xmlNode * xml_ticket, pe_working_set_t * data_set)
 
     last_granted = g_hash_table_lookup(ticket->state, "last-granted");
     if (last_granted) {
-        ticket->last_granted = crm_parse_int(last_granted, 0);
+        long long last_granted_ll;
+
+        pcmk__scan_ll(last_granted, &last_granted_ll, 0LL);
+        ticket->last_granted = (time_t) last_granted_ll;
     }
 
     standby = g_hash_table_lookup(ticket->state, "standby");
@@ -970,8 +973,8 @@ unpack_handle_remote_attrs(pe_node_t *this_node, xmlNode *state, pe_working_set_
     }
     crm_trace("Processing remote node id=%s, uname=%s", this_node->details->id, this_node->details->uname);
 
-    this_node->details->remote_maintenance =
-        crm_atoi(crm_element_value(state, XML_NODE_IS_MAINTENANCE), "0");
+    pcmk__scan_min_int(crm_element_value(state, XML_NODE_IS_MAINTENANCE),
+                       &(this_node->details->remote_maintenance), 0);
 
     rsc = this_node->details->remote_rsc;
     if (this_node->details->remote_requires_reset == FALSE) {
@@ -1096,9 +1099,8 @@ unpack_node_state(xmlNode *state, pe_working_set_t *data_set)
          * do need to mark whether the node has been fenced, as this plays a
          * role during unpacking cluster node resource state.
          */
-        const char *is_fenced = crm_element_value(state, XML_NODE_IS_FENCED);
-
-        this_node->details->remote_was_fenced = crm_atoi(is_fenced, "0");
+        pcmk__scan_min_int(crm_element_value(state, XML_NODE_IS_FENCED),
+                           &(this_node->details->remote_was_fenced), 0);
         return;
     }
 

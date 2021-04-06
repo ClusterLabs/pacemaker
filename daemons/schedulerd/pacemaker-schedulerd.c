@@ -42,29 +42,173 @@ pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-#define get_series() 	was_processing_error?1:was_processing_warning?2:3
-
-typedef struct series_s {
-    const char *name;
-    const char *param;
-    int wrap;
-} series_t;
-
-series_t series[] = {
-    {"pe-unknown", "_do_not_match_anything_", -1},
-    {"pe-error", "pe-error-series-max", -1},
-    {"pe-warn", "pe-warn-series-max", 200},
-    {"pe-input", "pe-input-series-max", 400},
-};
-
 void pengine_shutdown(int nsig);
+
+static void
+init_working_set(void)
+{
+    pcmk__config_error = false;
+    pcmk__config_warning = false;
+
+    was_processing_error = FALSE;
+    was_processing_warning = FALSE;
+
+    if (sched_data_set == NULL) {
+        sched_data_set = pe_new_working_set();
+        CRM_ASSERT(sched_data_set != NULL);
+        pe__set_working_set_flags(sched_data_set,
+                                  pe_flag_no_counts|pe_flag_no_compat);
+        pe__set_working_set_flags(sched_data_set,
+                                  pe_flag_show_utilization);
+        sched_data_set->priv = out;
+    } else {
+        pe_reset_working_set(sched_data_set);
+    }
+}
+
+static void
+handle_pecalc_op(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
+{
+    static struct series_s {
+        const char *name;
+        const char *param;
+
+        /* Maximum number of inputs of this kind to save to disk.
+         * If -1, save all; if 0, save none.
+         */
+        int wrap;
+    } series[] = {
+        { "pe-error", "pe-error-series-max", -1 },
+        { "pe-warn",  "pe-warn-series-max",  5000 },
+        { "pe-input", "pe-input-series-max", 4000 },
+    };
+    static char *last_digest = NULL;
+    static char *filename = NULL;
+
+    unsigned int seq;
+    int series_id = 0;
+    int series_wrap = 0;
+    char *digest = NULL;
+    const char *value = NULL;
+    time_t execution_date = time(NULL);
+    xmlNode *converted = NULL;
+    xmlNode *reply = NULL;
+    bool is_repoke = false;
+    bool process = true;
+
+    init_working_set();
+
+    digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE,
+                                            CRM_FEATURE_SET);
+    converted = copy_xml(xml_data);
+    if (!cli_config_update(&converted, NULL, TRUE)) {
+        sched_data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+        crm_xml_add_int(sched_data_set->graph, "transition_id", 0);
+        crm_xml_add_int(sched_data_set->graph, "cluster-delay", 0);
+        process = false;
+        free(digest);
+
+    } else if (pcmk__str_eq(digest, last_digest, pcmk__str_casei)) {
+        is_repoke = true;
+        free(digest);
+
+    } else {
+        free(last_digest);
+        last_digest = digest;
+    }
+
+    if (process) {
+        pcmk__schedule_actions(sched_data_set, converted, NULL);
+    }
+
+    // Get appropriate index into series[] array
+    if (was_processing_error) {
+        series_id = 0;
+    } else if (was_processing_warning) {
+        series_id = 1;
+    } else {
+        series_id = 2;
+    }
+
+    value = pe_pref(sched_data_set->config_hash, series[series_id].param);
+    if ((value == NULL)
+        || (pcmk__scan_min_int(value, &series_wrap, -1) != pcmk_rc_ok)) {
+        series_wrap = series[series_id].wrap;
+    }
+
+    if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
+                                   &seq) != pcmk_rc_ok) {
+        // @TODO maybe handle errors better ...
+        seq = 0;
+    }
+    crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
+              series[series_id].name, series_wrap, seq, value);
+
+    sched_data_set->input = NULL;
+    reply = create_reply(msg, sched_data_set->graph);
+    CRM_ASSERT(reply != NULL);
+
+    if (series_wrap == 0) { // Don't save any inputs of this kind
+        free(filename);
+        filename = NULL;
+
+    } else if (!is_repoke) { // Input changed, save to disk
+        free(filename);
+        filename = pcmk__series_filename(PE_STATE_DIR,
+                                         series[series_id].name, seq, true);
+    }
+
+    crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
+    crm_xml_add_int(reply, "graph-errors", was_processing_error);
+    crm_xml_add_int(reply, "graph-warnings", was_processing_warning);
+    crm_xml_add_int(reply, "config-errors", pcmk__config_error);
+    crm_xml_add_int(reply, "config-warnings", pcmk__config_warning);
+
+    if (pcmk__ipc_send_xml(sender, 0, reply,
+                           crm_ipc_server_event) != pcmk_rc_ok) {
+        int graph_file_fd = 0;
+        char *graph_file = NULL;
+        umask(S_IWGRP | S_IWOTH | S_IROTH);
+
+        graph_file = crm_strdup_printf("%s/pengine.graph.XXXXXX",
+                                       PE_STATE_DIR);
+        graph_file_fd = mkstemp(graph_file);
+
+        crm_err("Couldn't send transition graph to peer, writing to %s instead",
+                graph_file);
+
+        crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
+        write_xml_fd(sched_data_set->graph, graph_file, graph_file_fd, FALSE);
+
+        free(graph_file);
+        free_xml(first_named_child(reply, F_CRM_DATA));
+        CRM_ASSERT(pcmk__ipc_send_xml(sender, 0, reply,
+                                      crm_ipc_server_event) == pcmk_rc_ok);
+    }
+
+    free_xml(reply);
+    pcmk__log_transition_summary(filename);
+
+    if (series_wrap == 0) {
+        crm_debug("Not saving input to disk (disabled by configuration)");
+
+    } else if (is_repoke) {
+        crm_info("Input has not changed since last time, not saving to disk");
+
+    } else {
+        unlink(filename);
+        crm_xml_add_ll(xml_data, "execution-date", (long long) execution_date);
+        write_xml_file(xml_data, filename, TRUE);
+        pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
+                                    ++seq, series_wrap);
+    }
+
+    free_xml(converted);
+}
 
 static gboolean
 process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
 {
-    static char *last_digest = NULL;
-    static char *filename = NULL;
-
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *op = crm_element_value(msg, F_CRM_TASK);
     const char *ref = crm_element_value(msg, F_CRM_REFERENCE);
@@ -85,132 +229,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, pcmk__client_t *sender)
         return FALSE;
 
     } else if (strcasecmp(op, CRM_OP_PECALC) == 0) {
-        unsigned int seq;
-        int series_id = 0;
-        int series_wrap = 0;
-        char *digest = NULL;
-        const char *value = NULL;
-        time_t execution_date = time(NULL);
-        xmlNode *converted = NULL;
-        xmlNode *reply = NULL;
-        gboolean is_repoke = FALSE;
-        gboolean process = TRUE;
-
-        pcmk__config_error = false;
-        pcmk__config_warning = false;
-
-        was_processing_error = FALSE;
-        was_processing_warning = FALSE;
-
-        if (sched_data_set == NULL) {
-            sched_data_set = pe_new_working_set();
-            CRM_ASSERT(sched_data_set != NULL);
-            pe__set_working_set_flags(sched_data_set,
-                                      pe_flag_no_counts|pe_flag_no_compat);
-            pe__set_working_set_flags(sched_data_set,
-                                      pe_flag_show_utilization);
-            sched_data_set->priv = out;
-        }
-
-        digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
-        converted = copy_xml(xml_data);
-        if (cli_config_update(&converted, NULL, TRUE) == FALSE) {
-            sched_data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
-            crm_xml_add_int(sched_data_set->graph, "transition_id", 0);
-            crm_xml_add_int(sched_data_set->graph, "cluster-delay", 0);
-            process = FALSE;
-            free(digest);
-
-        } else if (pcmk__str_eq(digest, last_digest, pcmk__str_casei)) {
-            crm_info("Input has not changed since last time, not saving to disk");
-            is_repoke = TRUE;
-            free(digest);
-
-        } else {
-            free(last_digest);
-            last_digest = digest;
-        }
-
-        if (process) {
-            pcmk__schedule_actions(sched_data_set, converted, NULL);
-        }
-
-        series_id = get_series();
-        series_wrap = series[series_id].wrap;
-        value = pe_pref(sched_data_set->config_hash, series[series_id].param);
-
-        if (value != NULL) {
-            series_wrap = (int) crm_parse_ll(value, NULL);
-            if (errno != 0) {
-                series_wrap = series[series_id].wrap;
-            }
-
-        } else {
-            pcmk__config_warn("No value specified for cluster preference: %s",
-                              series[series_id].param);
-        }
-
-        if (pcmk__read_series_sequence(PE_STATE_DIR, series[series_id].name,
-                                       &seq) != pcmk_rc_ok) {
-            // @TODO maybe handle errors better ...
-            seq = 0;
-        }
-        crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
-                  series[series_id].name, series_wrap, seq, value);
-
-        sched_data_set->input = NULL;
-        reply = create_reply(msg, sched_data_set->graph);
-        CRM_ASSERT(reply != NULL);
-
-        if (is_repoke == FALSE) {
-            free(filename);
-            filename = pcmk__series_filename(PE_STATE_DIR,
-                                             series[series_id].name, seq, true);
-        }
-
-        crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
-        crm_xml_add_int(reply, "graph-errors", was_processing_error);
-        crm_xml_add_int(reply, "graph-warnings", was_processing_warning);
-        crm_xml_add_int(reply, "config-errors", pcmk__config_error);
-        crm_xml_add_int(reply, "config-warnings", pcmk__config_warning);
-
-        if (pcmk__ipc_send_xml(sender, 0, reply,
-                               crm_ipc_server_event) != pcmk_rc_ok) {
-            int graph_file_fd = 0;
-            char *graph_file = NULL;
-            umask(S_IWGRP | S_IWOTH | S_IROTH);
-
-            graph_file = crm_strdup_printf("%s/pengine.graph.XXXXXX",
-                                           PE_STATE_DIR);
-            graph_file_fd = mkstemp(graph_file);
-
-            crm_err("Couldn't send transition graph to peer, writing to %s instead",
-                    graph_file);
-
-            crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
-            write_xml_fd(sched_data_set->graph, graph_file, graph_file_fd, FALSE);
-
-            free(graph_file);
-            free_xml(first_named_child(reply, F_CRM_DATA));
-            CRM_ASSERT(pcmk__ipc_send_xml(sender, 0, reply,
-                                          crm_ipc_server_event) == pcmk_rc_ok);
-        }
-
-        free_xml(reply);
-        pe_reset_working_set(sched_data_set);
-        pcmk__log_transition_summary(filename);
-
-        if (is_repoke == FALSE && series_wrap != 0) {
-            unlink(filename);
-            crm_xml_add_ll(xml_data, "execution-date", (long long) execution_date);
-            write_xml_file(xml_data, filename, TRUE);
-            pcmk__write_series_sequence(PE_STATE_DIR, series[series_id].name,
-                                        ++seq, series_wrap);
-        } else {
-            crm_trace("Not writing out %s: %d & %d", filename, is_repoke, series_wrap);
-        }
-
-        free_xml(converted);
+        handle_pecalc_op(msg, xml_data, sender);
     }
 
     return TRUE;
@@ -369,21 +388,24 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker scheduler successfully started and accepting connections");
     g_main_loop_run(mainloop);
-
-    pe_free_working_set(sched_data_set);
-    crm_info("Exiting %s", crm_system_name);
-
-    pcmk__unregister_formats();
-    out->finish(out, CRM_EX_OK, true, NULL);
-    pcmk__output_free(out);
-
-    crm_exit(CRM_EX_OK);
+    pengine_shutdown(0);
 }
 
 void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
+    ipcs = NULL;
+
     pe_free_working_set(sched_data_set);
+    sched_data_set = NULL;
+
+    pcmk__unregister_formats();
+    if (out != NULL) {
+        out->finish(out, CRM_EX_OK, true, NULL);
+        pcmk__output_free(out);
+        out = NULL;
+    }
+
     crm_exit(CRM_EX_OK);
 }

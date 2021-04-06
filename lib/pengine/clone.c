@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -145,23 +145,39 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
                                                     XML_RSC_ATTR_MASTER_NODEMAX);
         }
 
-        clone_data->promoted_max = crm_parse_int(promoted_max, "1");
-        clone_data->promoted_node_max = crm_parse_int(promoted_node_max, "1");
+        // Use 1 as default but 0 for minimum and invalid
+        if (promoted_max == NULL) {
+            clone_data->promoted_max = 1;
+        } else {
+            pcmk__scan_min_int(promoted_max, &(clone_data->promoted_max), 0);
+        }
+
+        // Use 1 as default but 0 for minimum and invalid
+        if (promoted_node_max == NULL) {
+            clone_data->promoted_node_max = 1;
+        } else {
+            pcmk__scan_min_int(promoted_node_max,
+                               &(clone_data->promoted_node_max), 0);
+        }
     }
 
     // Implied by calloc()
     /* clone_data->xml_obj_child = NULL; */
 
-    clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
-
-    if (max_clones) {
-        clone_data->clone_max = crm_parse_int(max_clones, "1");
-
-    } else if (pcmk__list_of_multiple(data_set->nodes)) {
-        clone_data->clone_max = g_list_length(data_set->nodes);
-
+    // Use 1 as default but 0 for minimum and invalid
+    if (max_clones_node == NULL) {
+        clone_data->clone_node_max = 1;
     } else {
-        clone_data->clone_max = 1;      /* Handy during crm_verify */
+        pcmk__scan_min_int(max_clones_node, &(clone_data->clone_node_max), 0);
+    }
+
+    /* Use number of nodes (but always at least 1, which is handy for crm_verify
+     * for a CIB without nodes) as default, but 0 for minimum and invalid
+     */
+    if (max_clones == NULL) {
+        clone_data->clone_max = QB_MAX(1, g_list_length(data_set->nodes));
+    } else {
+        pcmk__scan_min_int(max_clones, &(clone_data->clone_max), 0);
     }
 
     clone_data->ordered = crm_is_true(ordered);

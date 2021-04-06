@@ -28,9 +28,11 @@
  * \internal
  * \brief Scan a long long integer from a string
  *
- * \param[in]  text      String to scan
- * \param[out] result    If not NULL, where to store scanned value
- * \param[out] end_text  If not NULL, where to store pointer to just after value
+ * \param[in]  text           String to scan
+ * \param[out] result         If not NULL, where to store scanned value
+ * \param[in]  default_value  Value to use if text is NULL or invalid
+ * \param[out] end_text       If not NULL, where to store pointer to first
+ *                            non-integer character
  *
  * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
  *         \c EINVAL on failed string conversion due to invalid input,
@@ -38,9 +40,10 @@
  * \note Sets \c errno on error
  */
 static int
-scan_ll(const char *text, long long *result, char **end_text)
+scan_ll(const char *text, long long *result, long long default_value,
+        char **end_text)
 {
-    long long local_result = PCMK__PARSE_INT_DEFAULT;
+    long long local_result = default_value;
     char *local_end_text = NULL;
     int rc = pcmk_rc_ok;
 
@@ -49,20 +52,20 @@ scan_ll(const char *text, long long *result, char **end_text)
         local_result = strtoll(text, &local_end_text, 10);
         if (errno == ERANGE) {
             rc = EOVERFLOW;
-            crm_warn("Integer parsed from %s was clipped to %lld",
+            crm_warn("Integer parsed from '%s' was clipped to %lld",
                      text, local_result);
 
         } else if (errno != 0) {
             rc = errno;
-            local_result = PCMK__PARSE_INT_DEFAULT;
-            crm_warn("Could not parse integer from %s (using %d instead): %s",
-                    text, PCMK__PARSE_INT_DEFAULT, pcmk_rc_str(rc));
+            local_result = default_value;
+            crm_warn("Could not parse integer from '%s' (using %lld instead): "
+                     "%s", text, default_value, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             rc = EINVAL;
-            local_result = PCMK__PARSE_INT_DEFAULT;
-            crm_warn("Could not parse integer from %s (using %d instead): "
-                    "No digits found", text, PCMK__PARSE_INT_DEFAULT);
+            local_result = default_value;
+            crm_warn("Could not parse integer from '%s' (using %lld instead): "
+                    "No digits found", text, default_value);
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
@@ -81,64 +84,96 @@ scan_ll(const char *text, long long *result, char **end_text)
 }
 
 /*!
- * \brief Parse a long long integer value from a string
+ * \internal
+ * \brief Scan a long long integer value from a string
  *
- * \param[in] text          The string to parse
- * \param[in] default_text  Default string to parse if text is NULL
+ * \param[in]  text           The string to scan (may be NULL)
+ * \param[out] result         Where to store result (or NULL to ignore)
+ * \param[in]  default_value  Value to use if text is NULL or invalid
  *
- * \return Parsed value on success, PCMK__PARSE_INT_DEFAULT (and set
- *         errno) on error
+ * \return Standard Pacemaker return code
  */
-long long
-crm_parse_ll(const char *text, const char *default_text)
+int
+pcmk__scan_ll(const char *text, long long *result, long long default_value)
 {
-    long long result;
+    long long local_result = default_value;
+    int rc = pcmk_rc_ok;
 
-    if (text == NULL) {
-        text = default_text;
-        if (text == NULL) {
-            crm_err("No default conversion value supplied");
-            errno = EINVAL;
-            return PCMK__PARSE_INT_DEFAULT;
+    if (text != NULL) {
+        rc = scan_ll(text, &local_result, default_value, NULL);
+        if (rc != pcmk_rc_ok) {
+            local_result = default_value;
         }
     }
-    scan_ll(text, &result, NULL);
-    return result;
+    if (result != NULL) {
+        *result = local_result;
+    }
+    return rc;
 }
 
 /*!
- * \brief Parse an integer value from a string
+ * \internal
+ * \brief Scan an integer value from a string, constrained to a minimum
  *
- * \param[in] text          The string to parse
- * \param[in] default_text  Default string to parse if text is NULL
+ * \param[in]  text           The string to scan (may be NULL)
+ * \param[out] result         Where to store result (or NULL to ignore)
+ * \param[in]  minimum        Value to use as default and minimum
  *
- * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to
- *         ERANGE) if parsed value is out of integer range, otherwise
- *         PCMK__PARSE_INT_DEFAULT (and set errno)
+ * \return Standard Pacemaker return code
+ * \note If the value is larger than the maximum integer, EOVERFLOW will be
+ *       returned and \p result will be set to the maximum integer.
  */
 int
-crm_parse_int(const char *text, const char *default_text)
+pcmk__scan_min_int(const char *text, int *result, int minimum)
 {
-    long long result = crm_parse_ll(text, default_text);
+    int rc;
+    long long result_ll;
 
-    if (result < INT_MIN) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MIN;
+    rc = pcmk__scan_ll(text, &result_ll, (long long) minimum);
 
-    } else if (result > INT_MAX) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MAX;
+    if (result_ll < (long long) minimum) {
+        crm_warn("Clipped '%s' to minimum acceptable value %d", text, minimum);
+        result_ll = (long long) minimum;
+
+    } else if (result_ll > INT_MAX) {
+        crm_warn("Clipped '%s' to maximum integer %d", text, INT_MAX);
+        result_ll = (long long) INT_MAX;
+        rc = EOVERFLOW;
     }
 
-    return (int) result;
+    if (result != NULL) {
+        *result = (int) result_ll;
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Scan a TCP port number from a string
+ *
+ * \param[in]  text  The string to scan
+ * \param[out] port  Where to store result (or NULL to ignore)
+ *
+ * \return Standard Pacemaker return code
+ * \note \p port will be -1 if \p text is NULL or invalid
+ */
+int
+pcmk__scan_port(const char *text, int *port)
+{
+    long long port_ll;
+    int rc = pcmk__scan_ll(text, &port_ll, -1LL);
+
+    if ((text != NULL) && (rc == pcmk_rc_ok) // wasn't default or invalid
+        && ((port_ll < 0LL) || (port_ll > 65535LL))) {
+        crm_warn("Ignoring port specification '%s' "
+                 "not in valid range (0-65535)", text);
+        rc = (port_ll < 0LL)? pcmk_rc_before_range : pcmk_rc_after_range;
+        port_ll = -1LL;
+    }
+    if (port != NULL) {
+        *port = (int) port_ll;
+    }
+    return rc;
 }
 
 /*!
@@ -278,22 +313,24 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 {
     const char *value;
     long long value_ll;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK((table != NULL) && (key != NULL), return EINVAL);
 
+    if (result != NULL) {
+        *result = default_val;
+    }
+
     value = g_hash_table_lookup(table, key);
     if (value == NULL) {
-        if (result != NULL) {
-            *result = default_val;
-        }
         return pcmk_rc_ok;
     }
 
-    errno = 0;
-    value_ll = crm_parse_ll(value, NULL);
-    if (errno != 0) {
-        return errno; // Message already logged
+    rc = pcmk__scan_ll(value, &value_ll, 0LL);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
+
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
         crm_warn("Could not parse non-negative integer from %s", value);
         return ERANGE;
@@ -364,7 +401,7 @@ crm_get_msec(const char *input)
         return PCMK__PARSE_INT_DEFAULT;
     }
 
-    scan_ll(num_start, &msec, &end_text);
+    scan_ll(num_start, &msec, PCMK__PARSE_INT_DEFAULT, &end_text);
     if (msec > (LLONG_MAX / multiplier)) {
         // Arithmetics overflow while multiplier/divisor mutually exclusive
         return LLONG_MAX;
@@ -782,7 +819,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
      * no beginning or garbage.
      * */
     if (*srcstring == '-') {
-        int rc = scan_ll(srcstring+1, end, &remainder);
+        int rc = scan_ll(srcstring+1, end, PCMK__PARSE_INT_DEFAULT, &remainder);
 
         if (rc != pcmk_rc_ok || *remainder != '\0') {
             return pcmk_rc_unknown_format;
@@ -791,14 +828,16 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
         }
     }
 
-    if (scan_ll(srcstring, start, &remainder) != pcmk_rc_ok) {
+    if (scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT,
+                &remainder) != pcmk_rc_ok) {
         return pcmk_rc_unknown_format;
     }
 
     if (*remainder && *remainder == '-') {
         if (*(remainder+1)) {
             char *more_remainder = NULL;
-            int rc = scan_ll(remainder+1, end, &more_remainder);
+            int rc = scan_ll(remainder+1, end, PCMK__PARSE_INT_DEFAULT,
+                             &more_remainder);
 
             if (rc != pcmk_rc_ok || *more_remainder != '\0') {
                 return pcmk_rc_unknown_format;
@@ -1181,6 +1220,48 @@ GHashTable *
 crm_str_table_dup(GHashTable *old_table)
 {
     return pcmk__str_table_dup(old_table);
+}
+
+long long
+crm_parse_ll(const char *text, const char *default_text)
+{
+    long long result;
+
+    if (text == NULL) {
+        text = default_text;
+        if (text == NULL) {
+            crm_err("No default conversion value supplied");
+            errno = EINVAL;
+            return PCMK__PARSE_INT_DEFAULT;
+        }
+    }
+    scan_ll(text, &result, PCMK__PARSE_INT_DEFAULT, NULL);
+    return result;
+}
+
+int
+crm_parse_int(const char *text, const char *default_text)
+{
+    long long result = crm_parse_ll(text, default_text);
+
+    if (result < INT_MIN) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MIN;
+
+    } else if (result > INT_MAX) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MAX;
+    }
+
+    return (int) result;
 }
 
 // End deprecated API
