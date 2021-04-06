@@ -319,6 +319,61 @@ apply_sort_indices_to_wrapper_weights(pe_resource_t *rsc)
 
 /*!
  * \internal
+ * \brief Transfers container host allocation scores to bundle nodes.
+ *
+ * Each child runs on a bundle node, which is colocated with a container
+ * that runs on a particular host.
+ *
+ * For each child, this function transfers location preferences from the
+ * child's container host to the clone wrapper's copy of the bundle node
+ * where the child is allocated. These updated weights can then be used
+ * in promotion decisions.
+ *
+ * \param[in,out] rsc   Clone wrapper.
+ * \param[in]     nodes Table with node weights for container hosts.
+ */
+static void
+apply_host_scores_to_bundle_nodes(pe_resource_t *rsc,
+                                  GHashTable* nodes)
+{
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        const pe_resource_t *child = (const pe_resource_t *) gIter->data;
+        pe_node_t *bundle_node = child->fns->location(child, NULL, 0);
+        const pe_resource_t *container = NULL;
+        const pe_node_t *host = NULL;
+
+        if ((bundle_node == NULL)
+            || (bundle_node->details->remote_rsc == NULL)
+            || (bundle_node->details->remote_rsc->container == NULL)) {
+            continue;
+        }
+
+        container = bundle_node->details->remote_rsc->container;
+        host = container->fns->location(container, NULL, 0);
+        if (host == NULL) {
+            continue;
+        }
+
+        host = g_hash_table_lookup(nodes, host->details->id);
+        if (host == NULL) {
+            continue;
+        }
+
+        /* Modify the clone wrapper's copy of the bundle node, not the
+         * child's copy.
+         */
+        bundle_node = g_hash_table_lookup(rsc->allowed_nodes,
+                                          bundle_node->details->id);
+        if (bundle_node == NULL) {
+            continue;
+        }
+
+        bundle_node->weight = pe__add_scores(host->weight, bundle_node->weight);
+    }
+}
+
+/*!
+ * \internal
  * \brief Applies location preferences of resources with which the
  *        promoted instance should be colocated.
  *
@@ -332,7 +387,26 @@ apply_sort_indices_to_wrapper_weights(pe_resource_t *rsc)
 static void
 apply_promoted_dependent_colocations(pe_resource_t *rsc)
 {
-    for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
+    bool bundled = pe_rsc_is_bundled(rsc);
+    pe_resource_t *work_rsc = NULL;
+    GHashTable *backup = NULL;
+
+    if (bundled) {
+        /* All explicit constraints are applied to the bundle, rather
+         * than to the clone wrapper as with a regular promotable clone.
+         *
+         * What we really want to update is rsc->allowed_nodes, so
+         * only work on a scratch copy of the bundle's allowed_nodes.
+         */
+        work_rsc = uber_parent(rsc)->parent;
+        backup = pcmk__copy_node_table(work_rsc->allowed_nodes);
+    } else {
+        work_rsc = rsc;
+    }
+
+    for (GList *gIter = work_rsc->rsc_cons; gIter != NULL;
+         gIter = gIter->next) {
+
         const pcmk__colocation_t *cons =
             (const pcmk__colocation_t *) gIter->data;
         const uint32_t flags = (cons->score == INFINITY) ? pe_weights_none
@@ -345,12 +419,19 @@ apply_promoted_dependent_colocations(pe_resource_t *rsc)
         pe_rsc_trace(rsc, "RHS: %s with %s: %d", cons->rsc_lh->id,
                      cons->rsc_rh->id, cons->score);
 
-        rsc->allowed_nodes =
-            cons->rsc_rh->cmds->merge_weights(cons->rsc_rh, rsc->id,
-                                              rsc->allowed_nodes,
+        work_rsc->allowed_nodes =
+            cons->rsc_rh->cmds->merge_weights(cons->rsc_rh, work_rsc->id,
+                                              work_rsc->allowed_nodes,
                                               cons->node_attribute,
                                               (cons->score / (float) INFINITY),
                                               flags);
+    }
+
+    if (bundled) {
+        /* Use scores in scratch table and restore original table */
+        apply_host_scores_to_bundle_nodes(rsc, work_rsc->allowed_nodes);
+        g_hash_table_destroy(work_rsc->allowed_nodes);
+        work_rsc->allowed_nodes = backup;
     }
 }
 
@@ -369,7 +450,26 @@ apply_promoted_dependent_colocations(pe_resource_t *rsc)
 static void
 apply_promoted_primary_colocations(pe_resource_t *rsc)
 {
-    for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+    bool bundled = pe_rsc_is_bundled(rsc);
+    pe_resource_t *work_rsc = NULL;
+    GHashTable *backup = NULL;
+
+    if (bundled) {
+        /* All explicit constraints are applied to the bundle, rather
+         * than to the clone wrapper as with a regular promotable clone.
+         *
+         * What we really want to update is rsc->allowed_nodes, so
+         * only work on a scratch copy of the bundle's allowed_nodes.
+         */
+        work_rsc = uber_parent(rsc)->parent;
+        backup = pcmk__copy_node_table(work_rsc->allowed_nodes);
+    } else {
+        work_rsc = rsc;
+    }
+
+    for (GList *gIter = work_rsc->rsc_cons_lhs; gIter != NULL;
+         gIter = gIter->next) {
+
         const pcmk__colocation_t *cons =
             (const pcmk__colocation_t *) gIter->data;
         const uint32_t flags = pe_weights_rollback | pe_weights_positive;
@@ -385,12 +485,19 @@ apply_promoted_primary_colocations(pe_resource_t *rsc)
         pe_rsc_trace(rsc, "LHS: %s with %s: %d", cons->rsc_lh->id,
                      cons->rsc_rh->id, cons->score);
 
-        rsc->allowed_nodes =
-            cons->rsc_lh->cmds->merge_weights(cons->rsc_lh, rsc->id,
-                                              rsc->allowed_nodes,
+        work_rsc->allowed_nodes =
+            cons->rsc_lh->cmds->merge_weights(cons->rsc_lh, work_rsc->id,
+                                              work_rsc->allowed_nodes,
                                               cons->node_attribute,
                                               (cons->score / (float) INFINITY),
                                               flags);
+    }
+
+    if (bundled) {
+        /* Use scores in scratch table and restore original table */
+        apply_host_scores_to_bundle_nodes(rsc, work_rsc->allowed_nodes);
+        g_hash_table_destroy(work_rsc->allowed_nodes);
+        work_rsc->allowed_nodes = backup;
     }
 }
 

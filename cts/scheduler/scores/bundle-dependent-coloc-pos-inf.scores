@@ -1,7 +1,7 @@
 
 ovndb_servers:0 promotion score on ovn-dbs-bundle-0: 5
 ovndb_servers:1 promotion score on ovn-dbs-bundle-1: 5
-ovndb_servers:2 promotion score on ovn-dbs-bundle-2: 5
+ovndb_servers:2 promotion score on ovn-dbs-bundle-2: INFINITY
 pcmk__bundle_allocate: openstack-cinder-volume allocation score on compute-0: -INFINITY
 pcmk__bundle_allocate: openstack-cinder-volume allocation score on compute-1: -INFINITY
 pcmk__bundle_allocate: openstack-cinder-volume allocation score on controller-0: 0

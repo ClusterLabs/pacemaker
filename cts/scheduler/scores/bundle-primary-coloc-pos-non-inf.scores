@@ -1,7 +1,7 @@
 
 ovndb_servers:0 promotion score on ovn-dbs-bundle-0: 5
 ovndb_servers:1 promotion score on ovn-dbs-bundle-1: 5
-ovndb_servers:2 promotion score on ovn-dbs-bundle-2: 5
+ovndb_servers:2 promotion score on ovn-dbs-bundle-2: 1005
 pcmk__bundle_allocate: openstack-cinder-volume allocation score on compute-0: -INFINITY
 pcmk__bundle_allocate: openstack-cinder-volume allocation score on compute-1: -INFINITY
 pcmk__bundle_allocate: openstack-cinder-volume allocation score on controller-0: 0
@@ -139,7 +139,7 @@ pcmk__bundle_allocate: ovn-dbs-bundle-master allocation score on ovn-dbs-bundle-
 pcmk__bundle_allocate: ovn-dbs-bundle-master allocation score on ovn-dbs-bundle-1: -INFINITY
 pcmk__bundle_allocate: ovn-dbs-bundle-master allocation score on ovn-dbs-bundle-1: 5
 pcmk__bundle_allocate: ovn-dbs-bundle-master allocation score on ovn-dbs-bundle-2: -INFINITY
-pcmk__bundle_allocate: ovn-dbs-bundle-master allocation score on ovn-dbs-bundle-2: 5
+pcmk__bundle_allocate: ovn-dbs-bundle-master allocation score on ovn-dbs-bundle-2: 1005
 pcmk__bundle_allocate: ovn-dbs-bundle-podman-0 allocation score on compute-0: -INFINITY
 pcmk__bundle_allocate: ovn-dbs-bundle-podman-0 allocation score on compute-0: -INFINITY
 pcmk__bundle_allocate: ovn-dbs-bundle-podman-0 allocation score on compute-1: -INFINITY
@@ -660,8 +660,8 @@ pcmk__native_allocate: compute-unfence-trigger:9 allocation score on ovn-dbs-bun
 pcmk__native_allocate: ip-172.17.1.87 allocation score on compute-0: -INFINITY
 pcmk__native_allocate: ip-172.17.1.87 allocation score on compute-1: -INFINITY
 pcmk__native_allocate: ip-172.17.1.87 allocation score on controller-0: -INFINITY
-pcmk__native_allocate: ip-172.17.1.87 allocation score on controller-1: -INFINITY
-pcmk__native_allocate: ip-172.17.1.87 allocation score on controller-2: 0
+pcmk__native_allocate: ip-172.17.1.87 allocation score on controller-1: 1000
+pcmk__native_allocate: ip-172.17.1.87 allocation score on controller-2: -INFINITY
 pcmk__native_allocate: ip-172.17.1.87 allocation score on database-0: -INFINITY
 pcmk__native_allocate: ip-172.17.1.87 allocation score on database-1: -INFINITY
 pcmk__native_allocate: ip-172.17.1.87 allocation score on database-2: -INFINITY
