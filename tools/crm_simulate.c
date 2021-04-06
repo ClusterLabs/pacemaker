@@ -46,6 +46,8 @@ struct {
     gboolean process;
     char *quorum;
     long long repeat;
+    gboolean show_attrs;
+    gboolean show_failcounts;
     gboolean show_scores;
     gboolean show_utilization;
     gboolean simulate;
@@ -256,6 +258,12 @@ static GOptionEntry operation_entries[] = {
     { "in-place", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, in_place_cb,
       "Simulate transition's execution and store result back to input file",
       NULL },
+    { "show-attrs", 'A', 0, G_OPTION_ARG_NONE, &options.show_attrs,
+      "Show node attributes",
+      NULL },
+    { "show-failcounts", 'c', 0, G_OPTION_ARG_NONE, &options.show_failcounts,
+      "Show resource fail counts",
+      NULL },
     { "show-scores", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_scores_cb,
       "Show allocation scores",
       NULL },
@@ -385,7 +393,7 @@ get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
 }
 
 static void
-print_cluster_status(pe_working_set_t * data_set, unsigned int options)
+print_cluster_status(pe_working_set_t * data_set, unsigned int print_opts)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_no_output;
@@ -393,11 +401,21 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int options)
 
     all = g_list_prepend(all, strdup("*"));
 
-    rc = out->message(out, "node-list", data_set->nodes, all, all, options, FALSE,
-                      FALSE, FALSE);
+    rc = out->message(out, "node-list", data_set->nodes, all, all, print_opts,
+                      FALSE, FALSE, FALSE);
     PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
-    out->message(out, "resource-list", data_set, options, FALSE, TRUE, FALSE,
-                 FALSE, all, all, FALSE);
+    rc = out->message(out, "resource-list", data_set, print_opts, FALSE, TRUE,
+                      FALSE, FALSE, all, all, FALSE);
+
+    if (options.show_attrs) {
+        out->message(out, "node-attribute-list", data_set,
+                     0, rc == pcmk_rc_ok, FALSE, FALSE, FALSE, all, all);
+    }
+
+    if (options.show_failcounts) {
+        out->message(out, "failed-action-list", data_set, all, all,
+                     rc == pcmk_rc_ok);
+    }
 
     g_list_free_full(all, free);
 }

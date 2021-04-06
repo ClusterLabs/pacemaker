@@ -13,6 +13,105 @@
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
+/* Never display node attributes whose name starts with one of these prefixes */
+#define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,   \
+                     "shutdown", "terminate", "standby", "probe_complete", \
+                     "#", NULL }
+
+static int
+compare_attribute(gconstpointer a, gconstpointer b)
+{
+    int rc;
+
+    rc = strcmp((const char *)a, (const char *)b);
+
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Determine whether extended information about an attribute should be added.
+ *
+ * \param[in]  node           Node that ran this resource.
+ * \param[in]  rsc_list       The list of resources for this node.
+ * \param[in]  attrname       The attribute to find.
+ * \param[out] expected_score The expected value for this attribute.
+ *
+ * \return TRUE if extended information should be printed, FALSE otherwise
+ * \note Currently, extended information is only supported for ping/pingd
+ *       resources, for which a message will be printed if connectivity is lost
+ *       or degraded.
+ */
+static gboolean
+add_extra_info(pe_node_t *node, GList *rsc_list, pe_working_set_t *data_set,
+               const char *attrname, int *expected_score)
+{
+    GList *gIter = NULL;
+
+    for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
+        const char *type = g_hash_table_lookup(rsc->meta, "type");
+        const char *name = NULL;
+        GHashTable *params = NULL;
+
+        if (rsc->children != NULL) {
+            if (add_extra_info(node, rsc->children, data_set, attrname,
+                               expected_score)) {
+                return TRUE;
+            }
+        }
+
+        if (!pcmk__strcase_any_of(type, "ping", "pingd", NULL)) {
+            continue;
+        }
+
+        params = pe_rsc_params(rsc, node, data_set);
+        name = g_hash_table_lookup(params, "name");
+
+        if (name == NULL) {
+            name = "pingd";
+        }
+
+        /* To identify the resource with the attribute name. */
+        if (pcmk__str_eq(name, attrname, pcmk__str_casei)) {
+            int host_list_num = 0;
+            /* int value = crm_parse_int(attrvalue, "0"); */
+            const char *hosts = g_hash_table_lookup(params, "host_list");
+            const char *multiplier = g_hash_table_lookup(params, "multiplier");
+
+            if (hosts) {
+                char **host_list = g_strsplit(hosts, " ", 0);
+                host_list_num = g_strv_length(host_list);
+                g_strfreev(host_list);
+            }
+
+            /* pingd multiplier is the same as the default value. */
+            *expected_score = host_list_num * crm_parse_int(multiplier, "1");
+
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static GList *
+filter_attr_list(GList *attr_list, char *name)
+{
+    int i;
+    const char *filt_str[] = FILTER_STR;
+
+    CRM_CHECK(name != NULL, return attr_list);
+
+    /* filtering automatic attributes */
+    for (i = 0; filt_str[i] != NULL; i++) {
+        if (g_str_has_prefix(name, filt_str[i])) {
+            return attr_list;
+        }
+    }
+
+    return g_list_insert_sorted(attr_list, name, compare_attribute);
+}
+
 static void
 add_dump_node(gpointer key, gpointer value, gpointer user_data)
 {
@@ -1018,6 +1117,52 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("failed-action-list", "pe_working_set_t *", "GList *",
+                  "GList *", "gboolean")
+static int
+failed_action_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    xmlNode *xml_op = NULL;
+    int rc = pcmk_rc_no_output;
+
+    const char *id = NULL;
+
+    if (xmlChildElementCount(data_set->failed) == 0) {
+        return rc;
+    }
+
+    for (xml_op = pcmk__xml_first_child(data_set->failed); xml_op != NULL;
+         xml_op = pcmk__xml_next(xml_op)) {
+        char *rsc = NULL;
+
+        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME))) {
+            continue;
+        }
+
+        id = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+        if (parse_op_key(id ? id : ID(xml_op), &rsc, NULL, NULL) == FALSE) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_rsc, rsc)) {
+            free(rsc);
+            continue;
+        }
+
+        free(rsc);
+
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Resource Actions");
+        out->message(out, "failed-action", xml_op);
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
                   "gboolean", "gboolean", "gboolean", "GList *", "GList *")
 int
@@ -1406,6 +1551,77 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
     }
 
     return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-attribute-list", "pe_working_set_t *", "unsigned int",
+                  "gboolean", "gboolean", "gboolean", "gboolean", "GList *",
+                  "GList *")
+static int
+node_attribute_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean print_spacer = va_arg(args, gboolean);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
+
+    int rc = pcmk_rc_no_output;
+
+    /* Display each node's attributes */
+    for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+        pe_node_t *node = gIter->data;
+
+        GList *attr_list = NULL;
+        GHashTableIter iter;
+        gpointer key;
+
+        if (!node || !node->details || !node->details->online) {
+            continue;
+        }
+
+        g_hash_table_iter_init(&iter, node->details->attrs);
+        while (g_hash_table_iter_next (&iter, &key, NULL)) {
+            attr_list = filter_attr_list(attr_list, key);
+        }
+
+        if (attr_list == NULL) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+            continue;
+        }
+
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node Attributes");
+
+        out->message(out, "node", node, print_opts, FALSE, NULL,
+                     print_clone_detail, print_brief,
+                     group_by_node, only_node, only_rsc);
+
+        for (GList *aIter = attr_list; aIter != NULL; aIter = aIter->next) {
+            const char *name = aIter->data;
+            const char *value = NULL;
+            int expected_score = 0;
+            gboolean add_extra = FALSE;
+
+            value = pe_node_attribute_raw(node, name);
+
+            add_extra = add_extra_info(node, node->details->running_rsc,
+                                       data_set, name, &expected_score);
+
+            /* Print attribute name and value */
+            out->message(out, "node-attribute", name, value, add_extra,
+                         expected_score);
+        }
+
+        g_list_free(attr_list);
+        out->end_list(out);
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("node-capacity", "pe_node_t *", "const char *")
@@ -2131,6 +2347,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-times", "xml", cluster_times_xml },
     { "failed-action", "default", pe__failed_action_text },
     { "failed-action", "xml", failed_action_xml },
+    { "failed-action-list", "default", failed_action_list },
     { "group", "xml",  pe__group_xml },
     { "group", "html",  pe__group_html },
     { "group", "text",  pe__group_text },
@@ -2154,6 +2371,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-attribute", "log", pe__node_attribute_text },
     { "node-attribute", "text", pe__node_attribute_text },
     { "node-attribute", "xml", node_attribute_xml },
+    { "node-attribute-list", "default", node_attribute_list },
     { "op-history", "default", pe__op_history_text },
     { "op-history", "xml", op_history_xml },
     { "primitive", "xml",  pe__resource_xml },

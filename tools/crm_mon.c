@@ -671,6 +671,21 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
+static void
+blank_screen(void)
+{
+#if CURSES_ENABLED
+    int lpc = 0;
+
+    for (lpc = 0; lpc < LINES; lpc++) {
+        move(lpc, 0);
+        clrtoeol();
+    }
+    move(0, 0);
+    refresh();
+#endif
+}
+
 /* Reconnect to the CIB and fencing agent after reconnect_ms has passed.  This sounds
  * like it would be more broadly useful, but only ever happens after a disconnect via
  * mon_cib_connection_destroy.

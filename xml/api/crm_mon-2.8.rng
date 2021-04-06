@@ -108,7 +108,7 @@
     <define name="node-attributes-list">
         <element name="node_attributes">
             <zeroOrMore>
-                <ref name="element-node-with-attributes" />
+                <externalRef href="node-attrs-2.8.rng" />
             </zeroOrMore>
         </element>
     </define>
@@ -124,7 +124,7 @@
     <define name="failures-list">
         <element name="failures">
             <zeroOrMore>
-                <ref name="element-failure" />
+                <externalRef href="failure-2.8.rng" />
             </zeroOrMore>
         </element>
     </define>
@@ -152,22 +152,6 @@
         <element name="bans">
             <zeroOrMore>
                 <ref name="element-ban" />
-            </zeroOrMore>
-        </element>
-    </define>
-
-
-    <define name="element-node-with-attributes">
-        <element name="node">
-            <attribute name="name"> <text /> </attribute>
-            <zeroOrMore>
-                <element name="attribute">
-                    <attribute name="name"> <text /> </attribute>
-                    <attribute name="value"> <text /> </attribute>
-                    <optional>
-                        <attribute name="expected"> <data type="integer" /> </attribute>
-                    </optional>
-                </element>
             </zeroOrMore>
         </element>
     </define>
@@ -223,30 +207,6 @@
             </optional>
             <attribute name="rc"> <data type="integer" /> </attribute>
             <attribute name="rc_text"> <text /> </attribute>
-        </element>
-    </define>
-
-    <define name="element-failure">
-        <element name="failure">
-            <choice>
-                <attribute name="op_key"> <text/> </attribute>
-                <attribute name="id"> <text/> </attribute>
-            </choice>
-            <attribute name="node"> <text /> </attribute>
-            <attribute name="exitstatus"> <text /> </attribute>
-            <attribute name="exitreason"> <text /> </attribute>
-            <attribute name="exitcode"> <data type="nonNegativeInteger" /> </attribute>
-            <attribute name="call"> <data type="integer" /> </attribute>
-            <attribute name="status"> <text /> </attribute>
-            <optional>
-                <group>
-                    <attribute name="last-rc-change"> <text /> </attribute>
-                    <attribute name="queued"> <data type="nonNegativeInteger" /> </attribute>
-                    <attribute name="exec"> <data type="nonNegativeInteger" /> </attribute>
-                    <attribute name="interval"> <data type="nonNegativeInteger" /> </attribute>
-                    <attribute name="task"> <text /> </attribute>
-                </group>
-            </optional>
         </element>
     </define>
 
