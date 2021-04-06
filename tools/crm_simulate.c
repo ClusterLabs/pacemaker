@@ -902,9 +902,11 @@ main(int argc, char **argv)
     }
 
     if (args->verbosity > 0) {
+#ifdef PCMK__COMPAT_2_0
         /* Redirect stderr to stdout so we can grep the output */
         close(STDERR_FILENO);
         dup2(STDOUT_FILENO, STDERR_FILENO);
+#endif
         action_numbers = TRUE;
     }
 
