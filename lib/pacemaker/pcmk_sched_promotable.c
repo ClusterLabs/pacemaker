@@ -276,131 +276,220 @@ sort_promotable_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     return sort_clone_instance(a, b, data_set);
 }
 
+/*!
+ * \internal
+ * \brief Applies each child's sort index to the promotable clone
+ *        wrapper's node weights.
+ *
+ * Updates the clone wrapper's node weights based on children's
+ * promotion preference (or promoted role).
+ *
+ * \param[in,out] rsc Clone wrapper.
+ *
+ * \note This function assumes that each child's sort index has already
+ *       been set based on promotion preference and role.
+ */
 static void
-promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
+apply_sort_indices_to_wrapper_weights(pe_resource_t *rsc)
 {
-    GList *gIter = NULL;
-    pe_node_t *node = NULL;
-    pe_node_t *chosen = NULL;
-    clone_variant_data_t *clone_data = NULL;
     char score[PCMK__SCORE_MAX_LEN + 1];
 
-    get_clone_variant_data(clone_data, rsc);
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        const pe_resource_t *child = (const pe_resource_t *) gIter->data;
+        const pe_node_t *chosen = child->fns->location(child, NULL, 0);
+        pe_node_t *node = NULL;
 
-    if (clone_data->added_promoted_constraints) {
-        return;
-    }
-    clone_data->added_promoted_constraints = true;
-    pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
-    pe__set_resource_flags(rsc, pe_rsc_merging);
-
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-        pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
-    }
-    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes, data_set);
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child = (pe_resource_t *) gIter->data;
-
-        chosen = child->fns->location(child, NULL, FALSE);
-        if (chosen == NULL || child->sort_index < 0) {
+        if ((chosen == NULL) || (child->sort_index < 0)) {
             pe_rsc_trace(rsc, "Skipping %s", child->id);
             continue;
         }
 
-        node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
+        node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes,
+                                                  chosen->details->id);
         CRM_ASSERT(node != NULL);
 
         // Add promotion preferences and rsc_location scores when role=Promoted
         score2char_stack(child->sort_index, score, sizeof(score));
         pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
+
         node->weight = pe__add_scores(child->sort_index, node->weight);
     }
+}
 
-    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
+/*!
+ * \internal
+ * \brief Applies location preferences of resources with which the
+ *        promoted instance should be colocated.
+ *
+ * Merges the primary resource's node weights into this resource's
+ * node table.
+ *
+ * \param[in,out] rsc Clone wrapper.
+ *
+ * \note \p rsc is the dependent resource in these colocations.
+ */
+static void
+apply_promoted_dependent_colocations(pe_resource_t *rsc)
+{
+    for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
+        const pcmk__colocation_t *cons =
+            (const pcmk__colocation_t *) gIter->data;
+        const uint32_t flags = (cons->score == INFINITY) ? pe_weights_none
+                                                         : pe_weights_rollback;
 
-    gIter = rsc->rsc_cons;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        /* (Re-)add location preferences of resources that a promoted instance
-         * should/must be colocated with.
-         */
-        if (constraint->role_lh == RSC_ROLE_PROMOTED) {
-            enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
-
-            pe_rsc_trace(rsc, "RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
-                         constraint->score);
-            rsc->allowed_nodes =
-                constraint->rsc_rh->cmds->merge_weights(constraint->rsc_rh, rsc->id,
-                                                        rsc->allowed_nodes,
-                                                        constraint->node_attribute,
-                                                        (float)constraint->score / INFINITY, flags);
-        }
-    }
-
-    gIter = rsc->rsc_cons_lhs;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-        if (!pcmk__colocation_has_influence(constraint, NULL)) {
+        if (cons->role_lh != RSC_ROLE_PROMOTED) {
             continue;
         }
 
-        /* (Re-)add location preferences of resources that wish to be colocated
-         * with a promoted instance.
-         */
-        if (constraint->role_rh == RSC_ROLE_PROMOTED) {
-            pe_rsc_trace(rsc, "LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
-                         constraint->score);
-            rsc->allowed_nodes =
-                constraint->rsc_lh->cmds->merge_weights(constraint->rsc_lh, rsc->id,
-                                                        rsc->allowed_nodes,
-                                                        constraint->node_attribute,
-                                                        (float)constraint->score / INFINITY,
-                                                        (pe_weights_rollback |
-                                                         pe_weights_positive));
-        }
-    }
+        pe_rsc_trace(rsc, "RHS: %s with %s: %d", cons->rsc_lh->id,
+                     cons->rsc_rh->id, cons->score);
 
-    gIter = rsc->rsc_tickets;
-    for (; gIter != NULL; gIter = gIter->next) {
-        rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
+        rsc->allowed_nodes =
+            cons->rsc_rh->cmds->merge_weights(cons->rsc_rh, rsc->id,
+                                              rsc->allowed_nodes,
+                                              cons->node_attribute,
+                                              (cons->score / (float) INFINITY),
+                                              flags);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Applies location preferences of resources that should be
+ *        colocated with the promoted instance.
+ *
+ * Merges the dependent resource's node weights into this resource's
+ * node table.
+ *
+ * \param[in,out] rsc Clone wrapper.
+ *
+ * \note \p rsc is the primary resource in these colocations.
+ */
+static void
+apply_promoted_primary_colocations(pe_resource_t *rsc)
+{
+    for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+        const pcmk__colocation_t *cons =
+            (const pcmk__colocation_t *) gIter->data;
+        const uint32_t flags = pe_weights_rollback | pe_weights_positive;
+
+        if (cons->role_rh != RSC_ROLE_PROMOTED) {
+            continue;
+        }
+
+        if (!pcmk__colocation_has_influence(cons, NULL)) {
+            continue;
+        }
+
+        pe_rsc_trace(rsc, "LHS: %s with %s: %d", cons->rsc_lh->id,
+                     cons->rsc_rh->id, cons->score);
+
+        rsc->allowed_nodes =
+            cons->rsc_lh->cmds->merge_weights(cons->rsc_lh, rsc->id,
+                                              rsc->allowed_nodes,
+                                              cons->node_attribute,
+                                              (cons->score / (float) INFINITY),
+                                              flags);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Applies the promoted instance's tickets to node weights.
+ *
+ * Prevents the promoted instance from running anywhere if its ticket
+ * is not granted or in standby.
+ *
+ * \param[in,out] rsc      Clone wrapper.
+ * \param[in]     data_set Cluster working set.
+ */
+static void
+apply_promoted_tickets(pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    for (GList *gIter = rsc->rsc_tickets; gIter != NULL; gIter = gIter->next) {
+        const rsc_ticket_t *rsc_ticket = (const rsc_ticket_t *) gIter->data;
 
         if ((rsc_ticket->role_lh == RSC_ROLE_PROMOTED)
-            && (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby)) {
-            resource_location(rsc, NULL, -INFINITY, "__stateful_without_ticket__", data_set);
+            && (!rsc_ticket->ticket->granted || rsc_ticket->ticket->standby)) {
+
+            resource_location(rsc, NULL, -INFINITY,
+                              "__stateful_without_ticket__", data_set);
         }
     }
+}
 
-    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
-
-    /* write them back and sort */
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
+/*!
+ * \internal
+ * \brief Applies each of the clone wrapper's node weights to the sort
+ *        index of the child allocated to that node, if applicable.
+ *
+ * Updates each child's effective promotion preference score.
+ *
+ * \param[in,out] rsc Clone wrapper.
+ *
+ * \note This function assumes that constraints, etc., have already
+ *       been processed and merged into the wrapper's node weights.
+ */
+static void
+apply_wrapper_weights_to_sort_indices(pe_resource_t *rsc)
+{
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
+        const pe_node_t *chosen = child->fns->location(child, NULL, 0);
 
-        chosen = child->fns->location(child, NULL, FALSE);
         if (!pcmk_is_set(child->flags, pe_rsc_managed)
             && (child->next_role == RSC_ROLE_PROMOTED)) {
             child->sort_index = INFINITY;
 
-        } else if (chosen == NULL || child->sort_index < 0) {
+        } else if ((chosen == NULL) || (child->sort_index < 0)) {
             pe_rsc_trace(rsc, "%s: %d", child->id, child->sort_index);
 
         } else {
-            node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
+            const pe_node_t *node =
+                (const pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes,
+                                                         chosen->details->id);
             CRM_ASSERT(node != NULL);
-
             child->sort_index = node->weight;
         }
+
         pe_rsc_trace(rsc, "Set sort index: %s = %d", child->id, child->sort_index);
     }
+}
+
+static void
+promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
+{
+    clone_variant_data_t *clone_data = NULL;
+
+    get_clone_variant_data(clone_data, rsc);
+
+    if (clone_data->added_promoted_constraints) {
+        return;
+    }
+    clone_data->added_promoted_constraints = TRUE;
+    pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
+    pe__set_resource_flags(rsc, pe_rsc_merging);
+
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t *child = (pe_resource_t *) gIter->data;
+
+        pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
+    }
+
+    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes, data_set);
+
+    apply_sort_indices_to_wrapper_weights(rsc);
+
+    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
+
+    apply_promoted_dependent_colocations(rsc);
+    apply_promoted_primary_colocations(rsc);
+    apply_promoted_tickets(rsc, data_set);
+
+    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
+
+    apply_wrapper_weights_to_sort_indices(rsc);
 
     rsc->children = g_list_sort_with_data(rsc->children,
                                           sort_promotable_instance, data_set);
