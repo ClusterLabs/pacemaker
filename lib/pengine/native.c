@@ -816,15 +816,6 @@ common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_nod
         g_free(resource_s);
     }
 
-#if CURSES_ENABLED
-    if (pcmk_is_set(options, pe_print_ncurses)
-        && !pcmk_is_set(options, pe_print_rsconly)
-        && !pcmk__list_of_multiple(rsc->running_on)) {
-        /* coverity[negative_returns] False positive */
-        move(-1, 0);
-    }
-#endif
-
     if (pcmk_is_set(options, pe_print_html)) {
         status_print(" </font> ");
     }

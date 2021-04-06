@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2018 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -29,7 +29,7 @@ libpe_status_la_LDFLAGS	= -version-info 31:0:3
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libpe_status_la_LIBADD	= @CURSESLIBS@ $(top_builddir)/lib/common/libcrmcommon.la
+libpe_status_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 # Use += rather than backlashed continuation lines for parsing by bumplibs.sh
 libpe_status_la_SOURCES	=
 libpe_status_la_SOURCES	+= bundle.c
