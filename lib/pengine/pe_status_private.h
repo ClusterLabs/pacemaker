@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the Pacemaker project contributors
+ * Copyright 2018-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,21 +14,11 @@
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
-#  if CURSES_ENABLED
-#    define status_printw(fmt, args...) printw(fmt, ##args)
-#  else
-#    define status_printw(fmt, args...) \
-   crm_err("printw support requires ncurses to be available during configure"); \
-   do_crm_log(LOG_WARNING, fmt, ##args);
-#  endif
-
 #  define status_print(fmt, args...)           \
    if(options & pe_print_html) {           \
        FILE *stream = print_data;      \
        fprintf(stream, fmt, ##args);       \
-   } else if(options & pe_print_ncurses) {     \
-       status_printw(fmt, ##args);     \
-   } else if(options & pe_print_printf) {      \
+   } else if(options & pe_print_printf || options & pe_print_ncurses) {      \
        FILE *stream = print_data;      \
        fprintf(stream, fmt, ##args);       \
    } else if(options & pe_print_xml) {     \
