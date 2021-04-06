@@ -1,0 +1,715 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0" priority="1000000">
+    <action_set>
+      <rsc_op id="169" operation="notify" operation_key="ovndb_servers:0_post_notify_promote_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:0" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="ovn-dbs-bundle-0" CRM_meta_on_node_uuid="ovn-dbs-bundle-0" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="80" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="168" operation="notify" operation_key="ovndb_servers:0_pre_notify_promote_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:0" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="ovn-dbs-bundle-0" CRM_meta_on_node_uuid="ovn-dbs-bundle-0" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="78" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2" priority="1000000">
+    <action_set>
+      <rsc_op id="159" operation="notify" operation_key="ovndb_servers:0_post_notify_start_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:0" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="ovn-dbs-bundle-0" CRM_meta_on_node_uuid="ovn-dbs-bundle-0" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="68" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="63" operation="monitor" operation_key="ovndb_servers:0_monitor_30000" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:0" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="ovn-dbs-bundle-0" CRM_meta_on_node_uuid="ovn-dbs-bundle-0" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="60000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="ovn-dbs-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="62" operation="start" operation_key="ovndb_servers:0_start_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="81" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="62" operation="start" operation_key="ovndb_servers:0_start_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:0" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="ovn-dbs-bundle-0" CRM_meta_on_node_uuid="ovn-dbs-bundle-0" CRM_meta_physical_host="controller-0" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="200000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="ovn-dbs-bundle-podman-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="ovn-dbs-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="64" operation="start" operation_key="ovn-dbs-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5" priority="1000000">
+    <action_set>
+      <rsc_op id="171" operation="notify" operation_key="ovndb_servers_post_notify_promote_0" internal_operation_key="ovndb_servers:1_post_notify_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="80" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="170" operation="notify" operation_key="ovndb_servers_pre_notify_promote_0" internal_operation_key="ovndb_servers:1_pre_notify_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="78" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7" priority="1000000">
+    <action_set>
+      <rsc_op id="161" operation="notify" operation_key="ovndb_servers_post_notify_start_0" internal_operation_key="ovndb_servers:1_post_notify_start_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="68" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="160" operation="notify" operation_key="ovndb_servers_pre_notify_start_0" internal_operation_key="ovndb_servers:1_pre_notify_start_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="66" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="59" operation="monitor" operation_key="ovndb_servers_monitor_10000" internal_operation_key="ovndb_servers:1_monitor_10000" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_op_target_rc="8" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="60000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="58" operation="promote" operation_key="ovndb_servers_promote_0" internal_operation_key="ovndb_servers:1_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="81" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="58" operation="promote" operation_key="ovndb_servers_promote_0" internal_operation_key="ovndb_servers:1_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_physical_host="controller-2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="50000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="35" operation="cancel" operation_key="ovndb_servers_monitor_30000" internal_operation_key="ovndb_servers:1_monitor_30000" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="76" operation="promote" operation_key="ovn-dbs-bundle-master_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="35" operation="cancel" operation_key="ovndb_servers_monitor_30000" internal_operation_key="ovndb_servers:1_monitor_30000" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:1" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="ovn-dbs-bundle-1" CRM_meta_on_node_uuid="ovn-dbs-bundle-1" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="60000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="12" priority="1000000">
+    <action_set>
+      <rsc_op id="173" operation="notify" operation_key="ovndb_servers_post_notify_promote_0" internal_operation_key="ovndb_servers:2_post_notify_promote_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:2" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="ovn-dbs-bundle-2" CRM_meta_on_node_uuid="ovn-dbs-bundle-2" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="80" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="172" operation="notify" operation_key="ovndb_servers_pre_notify_promote_0" internal_operation_key="ovndb_servers:2_pre_notify_promote_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:2" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="ovn-dbs-bundle-2" CRM_meta_on_node_uuid="ovn-dbs-bundle-2" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="78" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14" priority="1000000">
+    <action_set>
+      <rsc_op id="163" operation="notify" operation_key="ovndb_servers_post_notify_start_0" internal_operation_key="ovndb_servers:2_post_notify_start_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:2" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="ovn-dbs-bundle-2" CRM_meta_on_node_uuid="ovn-dbs-bundle-2" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="68" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="162" operation="notify" operation_key="ovndb_servers_pre_notify_start_0" internal_operation_key="ovndb_servers:2_pre_notify_start_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1">
+        <primitive id="ovndb_servers" long-id="ovndb_servers:2" class="ocf" provider="ovn" type="ovndb-servers"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_active_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_all_hosts="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 controller-2 controller-1" CRM_meta_notify_all_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_available_uname="compute-0 compute-1 controller-0 controller-1 controller-2 database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ovn-dbs-bundle-0 ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ovndb_servers:0" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="ovndb_servers:1" CRM_meta_notify_promote_uname="ovn-dbs-bundle-1" CRM_meta_notify_slave_resource="ovndb_servers:1 ovndb_servers:2" CRM_meta_notify_slave_uname="ovn-dbs-bundle-1 ovn-dbs-bundle-2" CRM_meta_notify_start_resource="ovndb_servers:0" CRM_meta_notify_start_uname="ovn-dbs-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="ovn-dbs-bundle-2" CRM_meta_on_node_uuid="ovn-dbs-bundle-2" CRM_meta_physical_host="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  inactive_probe_interval="180000" listen_on_master_ip_only="yes" manage_northd="yes" master_ip="172.17.1.87" nb_master_port="6641" nb_master_protocol="ssl" ovn_nb_db_cacert="/etc/ipa/ca.crt" ovn_nb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_nb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" ovn_sb_db_cacert="/etc/ipa/ca.crt" ovn_sb_db_cert="/etc/pki/tls/certs/ovn_dbs.crt" ovn_sb_db_privkey="/etc/pki/tls/private/ovn_dbs.key" sb_master_port="6642" sb_master_protocol="ssl"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="66" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="1000000">
+    <action_set>
+      <pseudo_event id="81" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="80" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="169" operation="notify" operation_key="ovndb_servers:0_post_notify_promote_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="171" operation="notify" operation_key="ovndb_servers_post_notify_promote_0" internal_operation_key="ovndb_servers:1_post_notify_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="173" operation="notify" operation_key="ovndb_servers_post_notify_promote_0" internal_operation_key="ovndb_servers:2_post_notify_promote_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17" priority="1000000">
+    <action_set>
+      <pseudo_event id="80" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="77" operation="promoted" operation_key="ovn-dbs-bundle-master_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="79" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <pseudo_event id="79" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="78" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="168" operation="notify" operation_key="ovndb_servers:0_pre_notify_promote_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="170" operation="notify" operation_key="ovndb_servers_pre_notify_promote_0" internal_operation_key="ovndb_servers:1_pre_notify_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="172" operation="notify" operation_key="ovndb_servers_pre_notify_promote_0" internal_operation_key="ovndb_servers:2_pre_notify_promote_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <pseudo_event id="78" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="69" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20" priority="1000000">
+    <action_set>
+      <pseudo_event id="77" operation="promoted" operation_key="ovn-dbs-bundle-master_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="58" operation="promote" operation_key="ovndb_servers_promote_0" internal_operation_key="ovndb_servers:1_promote_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <pseudo_event id="76" operation="promote" operation_key="ovn-dbs-bundle-master_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="65" operation="running" operation_key="ovn-dbs-bundle-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="79" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="88" operation="promote" operation_key="ovn-dbs-bundle_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22" priority="1000000">
+    <action_set>
+      <pseudo_event id="69" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="68" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="159" operation="notify" operation_key="ovndb_servers:0_post_notify_start_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="161" operation="notify" operation_key="ovndb_servers_post_notify_start_0" internal_operation_key="ovndb_servers:1_post_notify_start_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="163" operation="notify" operation_key="ovndb_servers_post_notify_start_0" internal_operation_key="ovndb_servers:2_post_notify_start_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23" priority="1000000">
+    <action_set>
+      <pseudo_event id="68" operation="notify" operation_key="ovn-dbs-bundle-master_post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="65" operation="running" operation_key="ovn-dbs-bundle-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="67" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <pseudo_event id="67" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="66" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="160" operation="notify" operation_key="ovndb_servers_pre_notify_start_0" internal_operation_key="ovndb_servers:1_pre_notify_start_0" on_node="ovn-dbs-bundle-1" on_node_uuid="ovn-dbs-bundle-1" router_node="controller-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="162" operation="notify" operation_key="ovndb_servers_pre_notify_start_0" internal_operation_key="ovndb_servers:2_pre_notify_start_0" on_node="ovn-dbs-bundle-2" on_node_uuid="ovn-dbs-bundle-2" router_node="controller-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <pseudo_event id="66" operation="notify" operation_key="ovn-dbs-bundle-master_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="26" priority="1000000">
+    <action_set>
+      <pseudo_event id="65" operation="running" operation_key="ovn-dbs-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="62" operation="start" operation_key="ovndb_servers:0_start_0" on_node="ovn-dbs-bundle-0" on_node_uuid="ovn-dbs-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="64" operation="start" operation_key="ovn-dbs-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <pseudo_event id="64" operation="start" operation_key="ovn-dbs-bundle-master_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="52" operation="start" operation_key="ovn-dbs-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="67" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="41" operation="monitor" operation_key="ovn-dbs-bundle-podman-0_monitor_60000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="ovn-dbs-bundle-podman-0" class="ocf" provider="heartbeat" type="podman"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000" allow_pull="true"  force_kill="false" image="cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/ovn-dbs-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3125 -v /var/lib/kolla/config_files/ovn_dbs.json:/var/lib/kolla/config_files/config.json:ro -v /lib/modules:/lib/modules:ro -v /var/lib/openvswitch/ovn:/run/openvswitch:rw -v /var/lib/openvswitch/ovn:/run/ovn:rw -v /var/log/containers/openvswitch:/var/log/openvswitch:rw -v /var/log/containers/openvswitch:/var/log/ovn:rw -v /var/lib/openvswitch/ovn:/etc/openvswitch:rw -v /var/lib/openvswitch/ovn:/etc/ovn:rw -v /etc/pki/tls/private/ovn_dbs.key:/etc/pki/tls/private/ovn_dbs.key:ro -v /etc/pki/tls/certs/ovn_dbs.crt:/etc/pki/tls/certs/ovn_dbs.crt:ro -v /etc/ipa/ca.crt:/etc/ipa/ca.crt:ro -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/ovn-dbs-bundle-0:/var/log --log-driver=k8s-file --log-opt path=/var/log/containers/stdouts/ovn-dbs-bundle.log -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="ovn-dbs-bundle-podman-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="40" operation="start" operation_key="ovn-dbs-bundle-podman-0_start_0" on_node="controller-0" on_node_uuid="1">
+        <primitive id="ovn-dbs-bundle-podman-0" class="ocf" provider="heartbeat" type="podman"/>
+        <attributes CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000" allow_pull="true"  force_kill="false" image="cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/ovn-dbs-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3125 -v /var/lib/kolla/config_files/ovn_dbs.json:/var/lib/kolla/config_files/config.json:ro -v /lib/modules:/lib/modules:ro -v /var/lib/openvswitch/ovn:/run/openvswitch:rw -v /var/lib/openvswitch/ovn:/run/ovn:rw -v /var/log/containers/openvswitch:/var/log/openvswitch:rw -v /var/log/containers/openvswitch:/var/log/ovn:rw -v /var/lib/openvswitch/ovn:/etc/openvswitch:rw -v /var/lib/openvswitch/ovn:/etc/ovn:rw -v /etc/pki/tls/private/ovn_dbs.key:/etc/pki/tls/private/ovn_dbs.key:ro -v /etc/pki/tls/certs/ovn_dbs.crt:/etc/pki/tls/certs/ovn_dbs.crt:ro -v /etc/ipa/ca.crt:/etc/ipa/ca.crt:ro -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/ovn-dbs-bundle-0:/var/log --log-driver=k8s-file --log-opt path=/var/log/containers/stdouts/ovn-dbs-bundle.log -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="52" operation="start" operation_key="ovn-dbs-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="43" operation="monitor" operation_key="ovn-dbs-bundle-0_monitor_30000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="ovn-dbs-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="ovn-dbs-bundle-podman-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="controller-0"  port="3125"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="start" operation_key="ovn-dbs-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="42" operation="start" operation_key="ovn-dbs-bundle-0_start_0" on_node="controller-0" on_node_uuid="1">
+        <primitive id="ovn-dbs-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="ovn-dbs-bundle-podman-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000" addr="controller-0"  port="3125"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="ovn-dbs-bundle-podman-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="93" operation="monitor" operation_key="ip-172.17.1.87_monitor_10000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="ip-172.17.1.87" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" cidr_netmask="32"  ip="172.17.1.87"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="92" operation="start" operation_key="ip-172.17.1.87_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="92" operation="start" operation_key="ip-172.17.1.87_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="ip-172.17.1.87" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" cidr_netmask="32"  ip="172.17.1.87"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="89" operation="promoted" operation_key="ovn-dbs-bundle_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <crm_event id="9" operation="clear_failcount" operation_key="stonith-fence_compute-fence-nova_clear_failcount_0" on_node="messaging-0" on_node_uuid="7">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="messaging-0" CRM_meta_on_node_uuid="7" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  domain="redhat.local" login="admin" passwd="****" project_domain="Default" record_only="1" region_name="regionOne" tenant_name="admin" user_domain="Default"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <crm_event id="10" operation="clear_failcount" operation_key="nova-evacuate_clear_failcount_0" on_node="messaging-0" on_node_uuid="7">
+        <primitive id="nova-evacuate" class="ocf" provider="openstack" type="NovaEvacuate"/>
+        <attributes CRM_meta_on_node="messaging-0" CRM_meta_on_node_uuid="7" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000" auth_url="https://overcloud.redhat.local:13000"  no_shared_storage="true" password="****" project_domain="Default" region_name="regionOne" tenant_name="admin" user_domain="Default" username="admin"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <crm_event id="4" operation="clear_failcount" operation_key="stonith-fence_ipmilan-525400aa1373_clear_failcount_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-525400aa1373" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6230" lanplus="true" login="admin" passwd="****" pcmk_host_list="compute-0"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <crm_event id="27" operation="clear_failcount" operation_key="stonith-fence_ipmilan-525400dc23e0_clear_failcount_0" on_node="database-2" on_node_uuid="6">
+        <primitive id="stonith-fence_ipmilan-525400dc23e0" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-2" CRM_meta_on_node_uuid="6" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6237" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-0"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="116" operation="monitor" operation_key="stonith-fence_ipmilan-52540040bb56_monitor_60000" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-52540040bb56" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="compute-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="114" operation="start" operation_key="stonith-fence_ipmilan-52540040bb56_start_0" on_node="database-0" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="114" operation="start" operation_key="stonith-fence_ipmilan-52540040bb56_start_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-52540040bb56" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="compute-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="113" operation="stop" operation_key="stonith-fence_ipmilan-52540040bb56_stop_0" on_node="messaging-2" on_node_uuid="9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <rsc_op id="113" operation="stop" operation_key="stonith-fence_ipmilan-52540040bb56_stop_0" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-52540040bb56" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="compute-1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <crm_event id="24" operation="clear_failcount" operation_key="stonith-fence_ipmilan-52540078fb07_clear_failcount_0" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-52540078fb07" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6238" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-1"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="42">
+    <action_set>
+      <crm_event id="6" operation="clear_failcount" operation_key="stonith-fence_ipmilan-525400ea59b0_clear_failcount_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-525400ea59b0" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-2"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <crm_event id="25" operation="clear_failcount" operation_key="stonith-fence_ipmilan-525400066e50_clear_failcount_0" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-525400066e50" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6236" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-1"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="44">
+    <action_set>
+      <rsc_op id="128" operation="monitor" operation_key="stonith-fence_ipmilan-525400e1534e_monitor_60000" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-525400e1534e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6240" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="127" operation="start" operation_key="stonith-fence_ipmilan-525400e1534e_start_0" on_node="messaging-2" on_node_uuid="9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <rsc_op id="127" operation="start" operation_key="stonith-fence_ipmilan-525400e1534e_start_0" on_node="messaging-2" on_node_uuid="9">
+        <primitive id="stonith-fence_ipmilan-525400e1534e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-2" CRM_meta_on_node_uuid="9" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6240" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="126" operation="stop" operation_key="stonith-fence_ipmilan-525400e1534e_stop_0" on_node="database-1" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46">
+    <action_set>
+      <rsc_op id="126" operation="stop" operation_key="stonith-fence_ipmilan-525400e1534e_stop_0" on_node="database-1" on_node_uuid="5">
+        <primitive id="stonith-fence_ipmilan-525400e1534e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-1" CRM_meta_on_node_uuid="5" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6240" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-0"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="47">
+    <action_set>
+      <crm_event id="29" operation="clear_failcount" operation_key="stonith-fence_ipmilan-525400e1534e_clear_failcount_0" on_node="database-2" on_node_uuid="6">
+        <primitive id="stonith-fence_ipmilan-525400e1534e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-2" CRM_meta_on_node_uuid="6" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6240" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-0"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="48">
+    <action_set>
+      <crm_event id="13" operation="clear_failcount" operation_key="stonith-fence_ipmilan-52540060dbba_clear_failcount_0" on_node="messaging-0" on_node_uuid="7">
+        <primitive id="stonith-fence_ipmilan-52540060dbba" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="messaging-0" CRM_meta_on_node_uuid="7" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6234" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <crm_event id="7" operation="clear_failcount" operation_key="stonith-fence_ipmilan-525400e018b6_clear_failcount_0" on_node="database-0" on_node_uuid="4">
+        <primitive id="stonith-fence_ipmilan-525400e018b6" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="4" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6232" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="50">
+    <action_set>
+      <crm_event id="31" operation="clear_failcount" operation_key="stonith-fence_ipmilan-525400c87cdb_clear_failcount_0" on_node="database-2" on_node_uuid="6">
+        <primitive id="stonith-fence_ipmilan-525400c87cdb" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="database-2" CRM_meta_on_node_uuid="6" CRM_meta_op_no_wait="true" CRM_meta_timeout="120000"  delay="20" ipaddr="172.16.0.44" ipport="6233" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-0"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="51" priority="1000000">
+    <action_set>
+      <pseudo_event id="89" operation="promoted" operation_key="ovn-dbs-bundle_promoted_0">
+        <attributes CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="81" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52">
+    <action_set>
+      <pseudo_event id="88" operation="promote" operation_key="ovn-dbs-bundle_promote_0">
+        <attributes CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="53" operation="running" operation_key="ovn-dbs-bundle_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="53" priority="1000000">
+    <action_set>
+      <pseudo_event id="53" operation="running" operation_key="ovn-dbs-bundle_running_0">
+        <attributes CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="ovn-dbs-bundle-podman-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="notified" operation_key="ovn-dbs-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="54">
+    <action_set>
+      <pseudo_event id="52" operation="start" operation_key="ovn-dbs-bundle_start_0">
+        <attributes CRM_meta_timeout="120000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
