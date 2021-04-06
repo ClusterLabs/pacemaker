@@ -159,14 +159,13 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         pcmk__scan_min_int(max_clones_node, &(clone_data->clone_node_max), 0);
     }
 
-    if (max_clones) {
-        clone_data->clone_max = crm_parse_int(max_clones, "1");
-
-    } else if (pcmk__list_of_multiple(data_set->nodes)) {
-        clone_data->clone_max = g_list_length(data_set->nodes);
-
+    /* Use number of nodes (but always at least 1, which is handy for crm_verify
+     * for a CIB without nodes) as default, but 0 for minimum and invalid
+     */
+    if (max_clones == NULL) {
+        clone_data->clone_max = QB_MAX(1, g_list_length(data_set->nodes));
     } else {
-        clone_data->clone_max = 1;      /* Handy during crm_verify */
+        pcmk__scan_min_int(max_clones, &(clone_data->clone_max), 0);
     }
 
     clone_data->ordered = crm_is_true(ordered);
