@@ -859,7 +859,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     }
 
     if (rsc->next_role == RSC_ROLE_PROMOTED) {
-        char *running_master = pcmk__itoa(PCMK_OCF_RUNNING_MASTER);
+        char *running_master = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
 
         add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
         free(running_master);
@@ -2652,7 +2652,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
 
     if (rc_inactive == NULL) {
         rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
-        rc_master = pcmk__itoa(PCMK_OCF_RUNNING_MASTER);
+        rc_master = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
     }
 
     CRM_CHECK(node != NULL, return FALSE);

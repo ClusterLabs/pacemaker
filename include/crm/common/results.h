@@ -157,6 +157,7 @@ enum ocf_exitcode {
     PCMK_OCF_NOT_CONFIGURED       = 6,
     PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
     PCMK_OCF_RUNNING_MASTER       = 8,
+    PCMK_OCF_RUNNING_PROMOTED     = 8,
     PCMK_OCF_FAILED_MASTER        = 9,
 
 

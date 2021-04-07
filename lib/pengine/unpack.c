@@ -3024,7 +3024,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
         if (is_probe && (rc != PCMK_OCF_OK)
             && (rc != PCMK_OCF_NOT_RUNNING)
-            && (rc != PCMK_OCF_RUNNING_MASTER)) {
+            && (rc != PCMK_OCF_RUNNING_PROMOTED)) {
 
             /* A failed (not just unexpected) probe result could mean the user
              * didn't know resources will be probed even where they can't run.
@@ -3212,7 +3212,7 @@ determine_op_status(
             }
             break;
 
-        case PCMK_OCF_RUNNING_MASTER:
+        case PCMK_OCF_RUNNING_PROMOTED:
             if (is_probe && (rc != target_rc)) {
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc,
@@ -3489,7 +3489,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
         switch(rc) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
-            case PCMK_OCF_RUNNING_MASTER:
+            case PCMK_OCF_RUNNING_PROMOTED:
             case PCMK_OCF_DEGRADED:
             case PCMK_OCF_DEGRADED_MASTER:
                 // Don't expire probes that return these values
