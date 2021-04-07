@@ -96,7 +96,10 @@ enum rsc_role_e {
     RSC_ROLE_SLAVE      = 3,
     RSC_ROLE_PROMOTED   = 4,
 
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use RSC_ROLE_PROMOTED instead
     RSC_ROLE_MASTER     = RSC_ROLE_PROMOTED,
+#endif
 };
 
 #  define RSC_ROLE_MAX  (RSC_ROLE_PROMOTED + 1)
