@@ -112,6 +112,7 @@ enum rsc_role_e {
 #  define RSC_ROLE_STARTED_S "Started"
 #  define RSC_ROLE_SLAVE_S   "Slave"
 #  define RSC_ROLE_MASTER_S  "Master"
+#  define RSC_ROLE_PROMOTED_LEGACY_S    "Master"
 
 enum pe_print_options {
     pe_print_log            = (1 << 0),  //! \deprecated

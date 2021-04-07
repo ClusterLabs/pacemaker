@@ -100,7 +100,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_PROMOTED_LEGACY_S);
     } else {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
     }
@@ -166,7 +166,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_MASTER_S);
+        crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_PROMOTED_LEGACY_S);
     } else {
         crm_xml_add(location, XML_RULE_ATTR_ROLE, RSC_ROLE_STARTED_S);
     }
@@ -360,14 +360,19 @@ build_clear_xpath_string(xmlNode *constraint_node, const char *rsc, const char *
         }
 
         if (rsc != NULL && promoted_role_only == TRUE) {
-            rsc_role_substr = crm_strdup_printf("@rsc='%s' and @role='%s'", rsc, RSC_ROLE_MASTER_S);
-            offset += snprintf(first_half + offset, XPATH_MAX - offset, "@rsc='%s' and @role='%s']", rsc, RSC_ROLE_MASTER_S);
+            rsc_role_substr = crm_strdup_printf("@rsc='%s' and @role='%s'",
+                                                rsc, RSC_ROLE_PROMOTED_LEGACY_S);
+            offset += snprintf(first_half + offset, XPATH_MAX - offset,
+                               "@rsc='%s' and @role='%s']",
+                               rsc, RSC_ROLE_PROMOTED_LEGACY_S);
         } else if (rsc != NULL) {
             rsc_role_substr = crm_strdup_printf("@rsc='%s'", rsc);
             offset += snprintf(first_half + offset, XPATH_MAX - offset, "@rsc='%s']", rsc);
         } else if (promoted_role_only == TRUE) {
-            rsc_role_substr = crm_strdup_printf("@role='%s'", RSC_ROLE_MASTER_S);
-            offset += snprintf(first_half + offset, XPATH_MAX - offset, "@role='%s']", RSC_ROLE_MASTER_S);
+            rsc_role_substr = crm_strdup_printf("@role='%s'",
+                                                RSC_ROLE_PROMOTED_LEGACY_S);
+            offset += snprintf(first_half + offset, XPATH_MAX - offset,
+                               "@role='%s']", RSC_ROLE_PROMOTED_LEGACY_S);
         } else {
             offset += snprintf(first_half + offset, XPATH_MAX - offset, "]");
         }
