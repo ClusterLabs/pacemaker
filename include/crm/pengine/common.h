@@ -111,6 +111,7 @@ enum rsc_role_e {
 #  define RSC_ROLE_STOPPED_S "Stopped"
 #  define RSC_ROLE_STARTED_S "Started"
 #  define RSC_ROLE_SLAVE_S   "Slave"
+#  define RSC_ROLE_UNPROMOTED_LEGACY_S  "Slave"
 #  define RSC_ROLE_PROMOTED_LEGACY_S    "Master"
 
 enum pe_print_options {
