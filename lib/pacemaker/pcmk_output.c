@@ -137,7 +137,8 @@ rsc_action_item(pcmk__output_t *out, va_list args)
         rsc_width = len + 2;
     }
 
-    if(rsc->role > RSC_ROLE_STARTED || rsc->next_role > RSC_ROLE_SLAVE) {
+    if ((rsc->role > RSC_ROLE_STARTED)
+        || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
         need_role = TRUE;
     }
 
@@ -241,7 +242,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         source = action;
     }
 
-    if(rsc->role > RSC_ROLE_STARTED || rsc->next_role > RSC_ROLE_SLAVE) {
+    if ((rsc->role > RSC_ROLE_STARTED)
+        || (rsc->next_role > RSC_ROLE_UNPROMOTED)) {
         need_role = TRUE;
     }
 

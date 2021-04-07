@@ -24,7 +24,7 @@ cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
         if (role == RSC_ROLE_STOPPED) {
             rc->flags |= rsc_remain_stopped;
         } else if (pcmk_is_set(parent->flags, pe_rsc_promotable) &&
-                   role == RSC_ROLE_SLAVE) {
+                   (role == RSC_ROLE_UNPROMOTED)) {
             rc->flags |= rsc_unpromotable;
         }
     }

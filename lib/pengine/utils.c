@@ -396,9 +396,9 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     } else if (data_set->no_quorum_policy == no_quorum_demote) {
         switch (rsc->role) {
             case RSC_ROLE_PROMOTED:
-            case RSC_ROLE_SLAVE:
-                if (rsc->next_role > RSC_ROLE_SLAVE) {
-                    pe__set_next_role(rsc, RSC_ROLE_SLAVE,
+            case RSC_ROLE_UNPROMOTED:
+                if (rsc->next_role > RSC_ROLE_UNPROMOTED) {
+                    pe__set_next_role(rsc, RSC_ROLE_UNPROMOTED,
                                       "no-quorum-policy=demote");
                 }
                 policy = no_quorum_ignore;
@@ -1218,7 +1218,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     /* defaults */
     if (action->fail_role == RSC_ROLE_UNKNOWN) {
         if (pcmk__str_eq(action->task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
-            action->fail_role = RSC_ROLE_SLAVE;
+            action->fail_role = RSC_ROLE_UNPROMOTED;
         } else {
             action->fail_role = RSC_ROLE_STARTED;
         }
@@ -1777,7 +1777,7 @@ get_target_role(pe_resource_t * rsc, enum rsc_role_e * role)
 
     } else if (local_role > RSC_ROLE_STARTED) {
         if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
-            if (local_role > RSC_ROLE_SLAVE) {
+            if (local_role > RSC_ROLE_UNPROMOTED) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
             }
@@ -2356,7 +2356,7 @@ pe__resource_is_disabled(pe_resource_t *rsc)
         enum rsc_role_e target_role_e = text2role(target_role);
 
         if ((target_role_e == RSC_ROLE_STOPPED)
-            || ((target_role_e == RSC_ROLE_SLAVE)
+            || ((target_role_e == RSC_ROLE_UNPROMOTED)
                 && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable))) {
             return true;
         }

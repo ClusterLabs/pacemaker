@@ -48,18 +48,18 @@ gboolean NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_wor
 
 /* This array says what the *next* role should be when transitioning from one
  * role to another. For example going from Stopped to Master, the next role is
- * RSC_ROLE_SLAVE, because the resource must be started before being promoted.
+ * RSC_ROLE_UNPROMOTED, because the resource must be started before being promoted.
  * The current state then becomes Started, which is fed into this array again,
  * giving a next role of RSC_ROLE_PROMOTED.
  */
 static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
 /* Current state  Next state*/
-/*                 Unknown           Stopped           Started           Slave                Promoted */
+/*                 Unknown           Stopped           Started           Unpromoted           Promoted */
 /* Unknown */    { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED,    RSC_ROLE_STOPPED },
-/* Stopped */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,      RSC_ROLE_SLAVE },
-/* Started */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,      RSC_ROLE_PROMOTED },
-/* Slave   */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,      RSC_ROLE_PROMOTED },
-/* Promoted  */  { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,      RSC_ROLE_PROMOTED },
+/* Stopped */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED },
+/* Started */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
+/* Unpromoted */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
+/* Promoted  */  { RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
 };
 
 typedef gboolean (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
@@ -804,7 +804,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
 
             switch (rsc->role) {
-                case RSC_ROLE_SLAVE:
+                case RSC_ROLE_UNPROMOTED:
                 case RSC_ROLE_STARTED:
                     if (rsc->next_role == RSC_ROLE_PROMOTED) {
                         after_key = promote_key(rsc);
@@ -828,7 +828,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         }
 
         do_crm_log(log_level, "%s action %s (%s vs. %s)",
-                   result, key, role ? role : role2text(RSC_ROLE_SLAVE),
+                   result, key, role ? role : role2text(RSC_ROLE_UNPROMOTED),
                    role2text(rsc->next_role));
 
         free(key);
@@ -974,7 +974,8 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
 
-            if (rsc->next_role == RSC_ROLE_STARTED || rsc->next_role == RSC_ROLE_SLAVE) {
+            if ((rsc->next_role == RSC_ROLE_STARTED)
+                || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {
                 /* rsc->role == RSC_ROLE_STOPPED: cancel the monitor before start */
                 /* rsc->role == RSC_ROLE_STARTED: for a migration, cancel the monitor on the target node before start */
                 custom_action_order(rsc, NULL, cancel_op, rsc, start_key(rsc), NULL,
@@ -1519,7 +1520,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(top->flags, pe_rsc_promotable)
-        || (rsc->role > RSC_ROLE_SLAVE)) {
+        || (rsc->role > RSC_ROLE_UNPROMOTED)) {
 
         custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
@@ -1741,7 +1742,7 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
         return influence_nothing;
     }
 
-    if ((constraint->role_lh >= RSC_ROLE_SLAVE) &&
+    if ((constraint->role_lh >= RSC_ROLE_UNPROMOTED) &&
         rsc_lh->parent && pcmk_is_set(rsc_lh->parent->flags, pe_rsc_promotable)
         && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
 
@@ -1845,7 +1846,7 @@ influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
     }
 
-    if (constraint->role_lh == RSC_ROLE_SLAVE) {
+    if (constraint->role_lh == RSC_ROLE_UNPROMOTED) {
         score_multiplier = -1;
     }
 
@@ -2578,7 +2579,7 @@ DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_s
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s", rsc->id);
 
-/* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
+    /* CRM_CHECK(rsc->next_role == RSC_ROLE_UNPROMOTED, return FALSE); */
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         pe_node_t *current = (pe_node_t *) gIter->data;
 

@@ -617,14 +617,14 @@ set_role_slave(pe_resource_t * rsc, gboolean current)
 
     if (current) {
         if (rsc->role == RSC_ROLE_STARTED) {
-            rsc->role = RSC_ROLE_SLAVE;
+            rsc->role = RSC_ROLE_UNPROMOTED;
         }
 
     } else {
         GList *allocated = NULL;
 
         rsc->fns->location(rsc, &allocated, FALSE);
-        pe__set_next_role(rsc, (allocated? RSC_ROLE_SLAVE : RSC_ROLE_STOPPED),
+        pe__set_next_role(rsc, (allocated? RSC_ROLE_UNPROMOTED : RSC_ROLE_STOPPED),
                           "unpromoted instance");
         g_list_free(allocated);
     }
@@ -714,7 +714,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                 child_rsc->priority = promotion_score(child_rsc, chosen, -1);
                 break;
 
-            case RSC_ROLE_SLAVE:
+            case RSC_ROLE_UNPROMOTED:
             case RSC_ROLE_STOPPED:
                 child_rsc->priority = -INFINITY;
                 break;

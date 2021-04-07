@@ -474,7 +474,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_SLAVE) {
+                } else if (a_role > RSC_ROLE_UNPROMOTED) {
                     master_list = g_list_append(master_list, location);
 
                 } else {
@@ -529,7 +529,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         enum rsc_role_e role = configured_role(rsc);
 
-        if(role == RSC_ROLE_SLAVE) {
+        if (role == RSC_ROLE_UNPROMOTED) {
             short_print(list_text, child_text, "Slaves (target-role)", NULL, options, print_data);
         } else {
             short_print(list_text, child_text, "Slaves", NULL, options, print_data);
@@ -749,7 +749,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_SLAVE) {
+                } else if (a_role > RSC_ROLE_UNPROMOTED) {
                     master_list = g_list_append(master_list, location);
 
                 } else {
@@ -821,7 +821,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
-            if(role == RSC_ROLE_SLAVE) {
+            if (role == RSC_ROLE_UNPROMOTED) {
                 out->list_item(out, NULL, "Slaves (target-role): [ %s ]", list_text);
             } else {
                 out->list_item(out, NULL, "Slaves: [ %s ]", list_text);
@@ -986,7 +986,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_SLAVE) {
+                } else if (a_role > RSC_ROLE_UNPROMOTED) {
                     master_list = g_list_append(master_list, location);
 
                 } else {
@@ -1058,7 +1058,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
-            if(role == RSC_ROLE_SLAVE) {
+            if (role == RSC_ROLE_UNPROMOTED) {
                 out->list_item(out, "Slaves (target-role)", "[ %s ]", list_text);
             } else {
                 out->list_item(out, "Slaves", "[ %s ]", list_text);

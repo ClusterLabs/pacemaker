@@ -1275,7 +1275,8 @@ pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
         }
 
     } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
-        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+        if ((rule_data->role > RSC_ROLE_UNKNOWN)
+            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
             accept = TRUE;
         }
 
@@ -1286,7 +1287,8 @@ pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 
     } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
         // Test "ne" only with promotable clone roles
-        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+        if ((rule_data->role > RSC_ROLE_UNKNOWN)
+            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
             accept = FALSE;
 
         } else if (text2role(value) != rule_data->role) {

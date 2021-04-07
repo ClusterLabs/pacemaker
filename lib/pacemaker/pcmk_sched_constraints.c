@@ -867,7 +867,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
             switch(r) {
                 case RSC_ROLE_UNKNOWN:
                 case RSC_ROLE_STARTED:
-                case RSC_ROLE_SLAVE:
+                case RSC_ROLE_UNPROMOTED:
                     /* Applies to all */
                     location->role_filter = RSC_ROLE_UNKNOWN;
                     break;
@@ -1125,7 +1125,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (role != NULL) {
         crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
-        if (location_rule->role_filter == RSC_ROLE_SLAVE) {
+        if (location_rule->role_filter == RSC_ROLE_UNPROMOTED) {
             /* Any promotable clone cannot be promoted without being a slave first
              * Ergo, any constraint for the slave role applies to every role
              */
@@ -1318,7 +1318,7 @@ anti_colocation_order(pe_resource_t * first_rsc, int first_role,
     } else {
         first_tasks[0] = CRMD_ACTION_STOP;
 
-        if (first_role == RSC_ROLE_SLAVE) {
+        if (first_role == RSC_ROLE_UNPROMOTED) {
             first_tasks[1] = CRMD_ACTION_PROMOTE;
         }
     }
@@ -1330,7 +1330,7 @@ anti_colocation_order(pe_resource_t * first_rsc, int first_role,
     } else {
         then_tasks[0] = CRMD_ACTION_START;
 
-        if (then_role == RSC_ROLE_SLAVE) {
+        if (then_role == RSC_ROLE_UNPROMOTED) {
             then_tasks[1] = CRMD_ACTION_DEMOTE;
         }
     }

@@ -894,7 +894,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     }
 
     if (bundle_data->child
-        && ((constraint->role_filter == RSC_ROLE_SLAVE)
+        && ((constraint->role_filter == RSC_ROLE_UNPROMOTED)
             || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
         bundle_data->child->cmds->rsc_location(bundle_data->child, constraint);
         bundle_data->child->rsc_location = g_list_prepend(bundle_data->child->rsc_location,

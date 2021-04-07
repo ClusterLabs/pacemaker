@@ -428,7 +428,7 @@ native_displayable_role(pe_resource_t *rsc)
     if ((role == RSC_ROLE_STARTED)
         && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
 
-        role = RSC_ROLE_SLAVE;
+        role = RSC_ROLE_UNPROMOTED;
     }
     return role;
 }
@@ -589,7 +589,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         enum rsc_role_e role = native_displayable_role(rsc);
 
-        if (role > RSC_ROLE_SLAVE) {
+        if (role > RSC_ROLE_UNPROMOTED) {
             g_string_append_printf(outstr, " FAILED %s", role2text(role));
         } else {
             g_string_append(outstr, " FAILED");
@@ -626,7 +626,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
             have_flags = add_output_flag(outstr, "disabled", have_flags);
 
         } else if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
-                   && target_role_e == RSC_ROLE_SLAVE) {
+                   && target_role_e == RSC_ROLE_UNPROMOTED) {
             have_flags = add_output_flag(outstr, "target-role:", have_flags);
             g_string_append(outstr, target_role);
         }

@@ -2521,7 +2521,7 @@ set_active(pe_resource_t * rsc)
     pe_resource_t *top = uber_parent(rsc);
 
     if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
-        rsc->role = RSC_ROLE_SLAVE;
+        rsc->role = RSC_ROLE_UNPROMOTED;
     } else {
         rsc->role = RSC_ROLE_STARTED;
     }
@@ -3071,7 +3071,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
              * resource will be stopped as part of recovery, and any master
              * promotion will be ordered after that stop.
              */
-            rsc->role = RSC_ROLE_SLAVE;
+            rsc->role = RSC_ROLE_UNPROMOTED;
         }
     }
 
@@ -3572,7 +3572,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
             // Demote clears an error only if on-fail=demote
             clear_past_failure = TRUE;
         }
-        rsc->role = RSC_ROLE_SLAVE;
+        rsc->role = RSC_ROLE_UNPROMOTED;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STARTED;

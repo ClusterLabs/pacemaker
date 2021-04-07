@@ -444,7 +444,7 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
             case RSC_ROLE_STARTED:
                 n_data->active = g_list_prepend(n_data->active, entry);
                 break;
-            case RSC_ROLE_SLAVE:
+            case RSC_ROLE_UNPROMOTED:
                 n_data->slave = g_list_prepend(n_data->slave, entry);
                 n_data->active = g_list_prepend(n_data->active,
                                                 dup_notify_entry(entry));
