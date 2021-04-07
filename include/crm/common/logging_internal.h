@@ -22,7 +22,7 @@ extern "C" {
  * \param[in] ...   Arguments for format string
  */
 #  define pcmk__config_err(fmt...) do {     \
-        pcmk__config_error = true;          \
+        crm_config_error = TRUE;            \
         crm_err(fmt);                       \
     } while (0)
 
@@ -34,7 +34,7 @@ extern "C" {
  * \param[in] ...   Arguments for format string
  */
 #  define pcmk__config_warn(fmt...) do {    \
-        pcmk__config_warning = true;        \
+        crm_config_warning = TRUE;          \
         crm_warn(fmt);                      \
     } while (0)
 

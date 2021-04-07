@@ -2933,7 +2933,7 @@ pcmk__log_transition_summary(const char *filename)
                    (filename == NULL)? "" : ", saving inputs in ",
                    (filename == NULL)? "" : filename);
     }
-    if (pcmk__config_error) {
+    if (crm_config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
     }

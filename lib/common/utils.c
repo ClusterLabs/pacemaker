@@ -49,8 +49,8 @@
 
 CRM_TRACE_INIT_DATA(common);
 
-bool pcmk__config_error = false;
-bool pcmk__config_warning = false;
+gboolean crm_config_error = FALSE;
+gboolean crm_config_warning = FALSE;
 char *crm_system_name = NULL;
 
 int pcmk__score_red = 0;
