@@ -484,9 +484,11 @@ text2role(const char *role)
         return RSC_ROLE_STOPPED;
     } else if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_casei)) {
         return RSC_ROLE_STARTED;
-    } else if (pcmk__str_eq(role, RSC_ROLE_UNPROMOTED_LEGACY_S, pcmk__str_casei)) {
+    } else if (pcmk__strcase_any_of(role, RSC_ROLE_UNPROMOTED_S,
+                                    RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
         return RSC_ROLE_UNPROMOTED;
-    } else if (pcmk__str_eq(role, RSC_ROLE_PROMOTED_LEGACY_S, pcmk__str_casei)) {
+    } else if (pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
+                                    RSC_ROLE_PROMOTED_LEGACY_S, NULL)) {
         return RSC_ROLE_PROMOTED;
     } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
         return RSC_ROLE_UNKNOWN;
