@@ -573,10 +573,18 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_active_uname", node_list);
 
     n_data->unpromoted = expand_list(n_data->unpromoted, &rsc_list, &node_list);
+    add_notify_env(n_data, "notify_unpromoted_resource", rsc_list);
+    add_notify_env(n_data, "notify_unpromoted_uname", node_list);
+
+    // Deprecated: kept for backward compatibility with older resource agents
     add_notify_env_free(n_data, "notify_slave_resource", rsc_list);
     add_notify_env_free(n_data, "notify_slave_uname", node_list);
 
     n_data->promoted = expand_list(n_data->promoted, &rsc_list, &node_list);
+    add_notify_env(n_data, "notify_promoted_resource", rsc_list);
+    add_notify_env(n_data, "notify_promoted_uname", node_list);
+
+    // Deprecated: kept for backward compatibility with older resource agents
     add_notify_env_free(n_data, "notify_master_resource", rsc_list);
     add_notify_env_free(n_data, "notify_master_uname", node_list);
 
