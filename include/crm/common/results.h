@@ -156,7 +156,6 @@ enum ocf_exitcode {
     PCMK_OCF_NOT_INSTALLED        = 5,
     PCMK_OCF_NOT_CONFIGURED       = 6,
     PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
-    PCMK_OCF_RUNNING_MASTER       = 8,
     PCMK_OCF_RUNNING_PROMOTED     = 8,
     PCMK_OCF_FAILED_MASTER        = 9,
 
@@ -175,6 +174,11 @@ enum ocf_exitcode {
     PCMK_OCF_CANCELLED     = 197,
     PCMK_OCF_TIMEOUT       = 198,
     PCMK_OCF_OTHER_ERROR   = 199, /* Keep the same codes as PCMK_LSB */
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
+    PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
+#endif
 };
 
 /*
