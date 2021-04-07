@@ -163,8 +163,7 @@ enum ocf_exitcode {
     /* 150-199	reserved for application use */
     PCMK_OCF_CONNECTION_DIED = 189, // Deprecated (see PCMK_LRM_OP_NOT_CONNECTED)
 
-    PCMK_OCF_DEGRADED        = 190, /* Active resource that is no longer 100% functional */
-    PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted resource that is no longer 100% functional */
+    PCMK_OCF_DEGRADED           = 190, // Resource active but more likely to fail soon
     PCMK_OCF_DEGRADED_PROMOTED  = 191, // Resource promoted but more likely to fail soon
 
     PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
@@ -179,6 +178,9 @@ enum ocf_exitcode {
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
     PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
+
+    //! \deprecated Use PCMK_OCF_DEGRADED_PROMOTED instead
+    PCMK_OCF_DEGRADED_MASTER    = PCMK_OCF_DEGRADED_PROMOTED,
 #endif
 };
 
