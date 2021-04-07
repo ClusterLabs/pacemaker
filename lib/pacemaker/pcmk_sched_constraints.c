@@ -1312,7 +1312,7 @@ anti_colocation_order(pe_resource_t * first_rsc, int first_role,
     int then_lpc = 0;
 
     /* Actions to make first_rsc lose first_role */
-    if (first_role == RSC_ROLE_MASTER) {
+    if (first_role == RSC_ROLE_PROMOTED) {
         first_tasks[0] = CRMD_ACTION_DEMOTE;
 
     } else {
@@ -1324,7 +1324,7 @@ anti_colocation_order(pe_resource_t * first_rsc, int first_role,
     }
 
     /* Actions to make then_rsc gain then_role */
-    if (then_role == RSC_ROLE_MASTER) {
+    if (then_role == RSC_ROLE_PROMOTED) {
         then_tasks[0] = CRMD_ACTION_PROMOTE;
 
     } else {
@@ -2840,7 +2840,7 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
-        if (new_rsc_ticket->role_lh == RSC_ROLE_MASTER) {
+        if (new_rsc_ticket->role_lh == RSC_ROLE_PROMOTED) {
             crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
                       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                       role2text(new_rsc_ticket->role_lh));

@@ -467,7 +467,7 @@ role2text(enum rsc_role_e role)
             return RSC_ROLE_STARTED_S;
         case RSC_ROLE_SLAVE:
             return RSC_ROLE_SLAVE_S;
-        case RSC_ROLE_MASTER:
+        case RSC_ROLE_PROMOTED:
             return RSC_ROLE_MASTER_S;
     }
     CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
@@ -487,7 +487,7 @@ text2role(const char *role)
     } else if (pcmk__str_eq(role, RSC_ROLE_SLAVE_S, pcmk__str_casei)) {
         return RSC_ROLE_SLAVE;
     } else if (pcmk__str_eq(role, RSC_ROLE_MASTER_S, pcmk__str_casei)) {
-        return RSC_ROLE_MASTER;
+        return RSC_ROLE_PROMOTED;
     } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
         return RSC_ROLE_UNKNOWN;
     }

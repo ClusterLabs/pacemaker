@@ -3054,11 +3054,11 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
         unpack_migrate_from_failure(rsc, node, xml_op, data_set);
 
     } else if (!strcmp(task, CRMD_ACTION_PROMOTE)) {
-        rsc->role = RSC_ROLE_MASTER;
+        rsc->role = RSC_ROLE_PROMOTED;
 
     } else if (!strcmp(task, CRMD_ACTION_DEMOTE)) {
         if (action->on_fail == action_fail_block) {
-            rsc->role = RSC_ROLE_MASTER;
+            rsc->role = RSC_ROLE_PROMOTED;
             pe__set_next_role(rsc, RSC_ROLE_STOPPED,
                               "demote with on-fail=block");
 
@@ -3220,12 +3220,12 @@ determine_op_status(
                             rsc->id, node->details->uname,
                             last_change_str(xml_op));
             }
-            rsc->role = RSC_ROLE_MASTER;
+            rsc->role = RSC_ROLE_PROMOTED;
             break;
 
         case PCMK_OCF_DEGRADED_MASTER:
         case PCMK_OCF_FAILED_MASTER:
-            rsc->role = RSC_ROLE_MASTER;
+            rsc->role = RSC_ROLE_PROMOTED;
             result = PCMK_LRM_OP_ERROR;
             break;
 
@@ -3563,7 +3563,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
         clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
-        rsc->role = RSC_ROLE_MASTER;
+        rsc->role = RSC_ROLE_PROMOTED;
         clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
@@ -3786,7 +3786,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 set_active(rsc);
 
             } else if (!strcmp(task, CRMD_ACTION_PROMOTE)) {
-                rsc->role = RSC_ROLE_MASTER;
+                rsc->role = RSC_ROLE_PROMOTED;
 
             } else if (!strcmp(task, CRMD_ACTION_MIGRATE) && node->details->unclean) {
                 /* If a pending migrate_to action is out on a unclean node,

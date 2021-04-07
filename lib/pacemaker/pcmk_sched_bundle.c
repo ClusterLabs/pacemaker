@@ -539,12 +539,12 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
                 continue;
             }
-            if ((constraint->role_rh >= RSC_ROLE_MASTER)
+            if ((constraint->role_rh >= RSC_ROLE_PROMOTED)
                 && (replica->child == NULL)) {
                 continue;
             }
-            if ((constraint->role_rh >= RSC_ROLE_MASTER)
-                && (replica->child->next_role < RSC_ROLE_MASTER)) {
+            if ((constraint->role_rh >= RSC_ROLE_PROMOTED)
+                && (replica->child->next_role < RSC_ROLE_PROMOTED)) {
                 continue;
             }
 
@@ -895,7 +895,7 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 
     if (bundle_data->child
         && ((constraint->role_filter == RSC_ROLE_SLAVE)
-            || (constraint->role_filter == RSC_ROLE_MASTER))) {
+            || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
         bundle_data->child->cmds->rsc_location(bundle_data->child, constraint);
         bundle_data->child->rsc_location = g_list_prepend(bundle_data->child->rsc_location,
                                                           constraint);

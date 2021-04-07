@@ -1000,12 +1000,12 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                           next, start, NULL);
         STOP_SANITY_ASSERT(__LINE__);
 
-    } else if (rsc->role == RSC_ROLE_MASTER) {
+    } else if (rsc->role == RSC_ROLE_PROMOTED) {
         CRM_LOG_ASSERT(current != NULL);
         rc = out->message(out, "rsc-action-item", "Demote", rsc, current,
                           next, demote, NULL);
 
-    } else if(rsc->next_role == RSC_ROLE_MASTER) {
+    } else if (rsc->next_role == RSC_ROLE_PROMOTED) {
         CRM_LOG_ASSERT(next);
         rc = out->message(out, "rsc-action-item", "Promote", rsc, current,
                           next, promote, NULL);

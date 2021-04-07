@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -88,15 +88,18 @@ enum rsc_start_requirement {
     rsc_req_stonith             /* Enforced by native_start_constraints() */
 };
 
+//! Possible roles that a resource can be in
 enum rsc_role_e {
-    RSC_ROLE_UNKNOWN,
-    RSC_ROLE_STOPPED,
-    RSC_ROLE_STARTED,
-    RSC_ROLE_SLAVE,
-    RSC_ROLE_MASTER,
+    RSC_ROLE_UNKNOWN    = 0,
+    RSC_ROLE_STOPPED    = 1,
+    RSC_ROLE_STARTED    = 2,
+    RSC_ROLE_SLAVE      = 3,
+    RSC_ROLE_PROMOTED   = 4,
+
+    RSC_ROLE_MASTER     = RSC_ROLE_PROMOTED,
 };
 
-#  define RSC_ROLE_MAX  RSC_ROLE_MASTER+1
+#  define RSC_ROLE_MAX  (RSC_ROLE_PROMOTED + 1)
 
 #  define RSC_ROLE_UNKNOWN_S "Unknown"
 #  define RSC_ROLE_STOPPED_S "Stopped"

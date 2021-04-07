@@ -553,7 +553,7 @@ ban_html(pcmk__output_t *out, va_list args) {
     char *node_name = pe__node_display_name(pe_node, print_clone_detail);
     char *buf = crm_strdup_printf("%s\tprevents %s from running %son %s",
                                   location->id, location->rsc_lh->id,
-                                  location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
+                                  (location->role_filter == RSC_ROLE_PROMOTED)? "as Master " : "",
                                   node_name);
 
     pcmk__output_create_html_node(out, "li", NULL, NULL, buf);
@@ -573,7 +573,7 @@ pe__ban_text(pcmk__output_t *out, va_list args) {
     char *node_name = pe__node_display_name(pe_node, print_clone_detail);
     out->list_item(out, NULL, "%s\tprevents %s from running %son %s",
                    location->id, location->rsc_lh->id,
-                   location->role_filter == RSC_ROLE_MASTER ? "as Master " : "",
+                   (location->role_filter == RSC_ROLE_PROMOTED)? "as Master " : "",
                    node_name);
 
     free(node_name);
@@ -594,7 +594,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
                                  "resource", location->rsc_lh->id,
                                  "node", pe_node->details->uname,
                                  "weight", weight_s,
-                                 "master_only", pcmk__btoa(location->role_filter == RSC_ROLE_MASTER),
+                                 "master_only", pcmk__btoa(location->role_filter == RSC_ROLE_PROMOTED),
                                  NULL);
 
     free(weight_s);

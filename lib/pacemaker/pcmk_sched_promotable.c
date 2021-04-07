@@ -136,7 +136,7 @@ static void apply_master_location(pe_resource_t *child, GList *location_constrai
         pe_node_t *cons_node = NULL;
         pe__location_t *cons = gIter->data;
 
-        if (cons->role_filter == RSC_ROLE_MASTER) {
+        if (cons->role_filter == RSC_ROLE_PROMOTED) {
             pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);
             cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
         }
@@ -194,7 +194,7 @@ can_be_master(pe_resource_t * rsc)
         return NULL;
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
+        if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED) {
             crm_notice("Forcing unmanaged master %s to remain promoted on %s",
                        rsc->id, node->details->uname);
 
@@ -326,7 +326,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         /* (re-)adds location preferences of resources that the
          * master instance should/must be colocated with
          */
-        if (constraint->role_lh == RSC_ROLE_MASTER) {
+        if (constraint->role_lh == RSC_ROLE_PROMOTED) {
             enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
 
             pe_rsc_trace(rsc, "RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
@@ -350,7 +350,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
         /* (re-)adds location preferences of resource that wish to be
          * colocated with the master instance
          */
-        if (constraint->role_rh == RSC_ROLE_MASTER) {
+        if (constraint->role_rh == RSC_ROLE_PROMOTED) {
             pe_rsc_trace(rsc, "LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
                          constraint->score);
             rsc->allowed_nodes =
@@ -367,7 +367,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
 
-        if (rsc_ticket->role_lh == RSC_ROLE_MASTER
+        if ((rsc_ticket->role_lh == RSC_ROLE_PROMOTED)
             && (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby)) {
             resource_location(rsc, NULL, -INFINITY, "__stateful_without_ticket__", data_set);
         }
@@ -383,7 +383,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         chosen = child->fns->location(child, NULL, FALSE);
         if (!pcmk_is_set(child->flags, pe_rsc_managed)
-            && (child->next_role == RSC_ROLE_MASTER)) {
+            && (child->next_role == RSC_ROLE_PROMOTED)) {
             child->sort_index = INFINITY;
 
         } else if (chosen == NULL || child->sort_index < 0) {
@@ -642,7 +642,7 @@ set_role_master(pe_resource_t * rsc)
     GList *gIter = rsc->children;
 
     if (rsc->next_role == RSC_ROLE_UNKNOWN) {
-        pe__set_next_role(rsc, RSC_ROLE_MASTER, "promoted instance");
+        pe__set_next_role(rsc, RSC_ROLE_PROMOTED, "promoted instance");
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -718,7 +718,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
             case RSC_ROLE_STOPPED:
                 child_rsc->priority = -INFINITY;
                 break;
-            case RSC_ROLE_MASTER:
+            case RSC_ROLE_PROMOTED:
                 /* We will arrive here if we're re-creating actions after a stonith
                  */
                 break;
@@ -740,7 +740,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         child_rsc->sort_index = child_rsc->priority;
         pe_rsc_trace(rsc, "Assigning priority for %s: %d", child_rsc->id, child_rsc->priority);
 
-        if (next_role == RSC_ROLE_MASTER) {
+        if (next_role == RSC_ROLE_PROMOTED) {
             child_rsc->sort_index = INFINITY;
         }
     }
@@ -784,7 +784,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
             set_role_slave(child_rsc, FALSE);
             continue;
 
-        } else if(child_rsc->role < RSC_ROLE_MASTER
+        } else if ((child_rsc->role < RSC_ROLE_PROMOTED)
               && !pcmk_is_set(data_set->flags, pe_flag_have_quorum)
               && data_set->no_quorum_policy == no_quorum_freeze) {
             crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
@@ -998,14 +998,16 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         /* Only do this if it's not a master-master colocation
          * Doing this unconditionally would prevent the slaves from being started
          */
-        if (constraint->role_lh != RSC_ROLE_MASTER || constraint->role_rh != RSC_ROLE_MASTER) {
+        if ((constraint->role_lh != RSC_ROLE_PROMOTED)
+            || (constraint->role_rh != RSC_ROLE_PROMOTED)) {
+
             if (constraint->score >= INFINITY) {
                 node_list_exclude(rsc_lh->allowed_nodes, rhs, TRUE);
             }
         }
         g_list_free(rhs);
 
-    } else if (constraint->role_lh == RSC_ROLE_MASTER) {
+    } else if (constraint->role_lh == RSC_ROLE_PROMOTED) {
         pe_resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh,
                                                         constraint->role_rh,
                                                         FALSE, data_set);

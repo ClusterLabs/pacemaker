@@ -54,7 +54,7 @@ build_node_info_list(pe_resource_t *rsc)
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
             ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
-                           child->fns->state(child, TRUE) == RSC_ROLE_MASTER;
+                           child->fns->state(child, TRUE) == RSC_ROLE_PROMOTED;
 
             retval = g_list_prepend(retval, ni);
         }
@@ -87,7 +87,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
             pe_node_t *node = (pe_node_t *) iter->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
-            ni->promoted = rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER;
+            ni->promoted = (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED);
 
             retval = g_list_prepend(retval, ni);
         }
@@ -1898,7 +1898,7 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
             pe_resource_t *child = (pe_resource_t *)iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
-            if(child_role == RSC_ROLE_MASTER) {
+            if (child_role == RSC_ROLE_PROMOTED) {
                 rsc = child;
                 master_node = pe__current_node(child);
                 master_count++;

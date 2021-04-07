@@ -395,7 +395,7 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     } else if (data_set->no_quorum_policy == no_quorum_demote) {
         switch (rsc->role) {
-            case RSC_ROLE_MASTER:
+            case RSC_ROLE_PROMOTED:
             case RSC_ROLE_SLAVE:
                 if (rsc->next_role > RSC_ROLE_SLAVE) {
                     pe__set_next_role(rsc, RSC_ROLE_SLAVE,
