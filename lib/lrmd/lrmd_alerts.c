@@ -44,7 +44,7 @@ static lrmd_key_value_t *
 alert_key2param_int(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                     int value)
 {
-    char *value_s = crm_itoa(value);
+    char *value_s = pcmk__itoa(value);
 
     head = alert_key2param(head, name, value_s);
     free(value_s);

@@ -108,6 +108,46 @@ crm_strcase_table_new(void)
 //! \deprecated Do not use Pacemaker for generic hash table manipulation
 GHashTable *crm_str_table_dup(GHashTable *old_table);
 
+//! \deprecated Use g_hash_able_size() instead
+static inline guint
+crm_hash_table_size(GHashTable *hashtable)
+{
+    if (hashtable == NULL) {
+        return 0;
+    }
+    return g_hash_table_size(hashtable);
+}
+
+//! \deprecated Don't use Pacemaker for string manipulation
+char *crm_strip_trailing_newline(char *str);
+
+//! \deprecated Don't use Pacemaker for string manipulation
+int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
+
+//! \deprecated Don't use Pacemaker for string manipulation
+static inline char *
+crm_itoa(int an_int)
+{
+    return crm_strdup_printf("%d", an_int);
+}
+
+//! \deprecated Don't use Pacemaker for string manipulation
+static inline char *
+crm_ftoa(double a_float)
+{
+    return crm_strdup_printf("%f", a_float);
+}
+
+//! \deprecated Don't use Pacemaker for string manipulation
+static inline char *
+crm_ttoa(time_t epoch_time)
+{
+    return crm_strdup_printf("%lld", (long long) epoch_time);
+}
+
+//! \deprecated Do not use Pacemaker libraries for generic I/O
+void crm_build_path(const char *path_c, mode_t mode);
+
 #ifdef __cplusplus
 }
 #endif

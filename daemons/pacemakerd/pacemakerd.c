@@ -696,6 +696,48 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
     }
 }
 
+static void
+create_pcmk_dirs(void)
+{
+    uid_t pcmk_uid = 0;
+    gid_t pcmk_gid = 0;
+
+    const char *dirs[] = {
+        CRM_PACEMAKER_DIR, // core/blackbox/scheduler/CIB files
+        CRM_CORE_DIR,      // core files
+        CRM_BLACKBOX_DIR,  // blackbox dumps
+        PE_STATE_DIR,      // scheduler inputs
+        CRM_CONFIG_DIR,    // the Cluster Information Base (CIB)
+        // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
+        NULL
+    };
+
+    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
+        crm_err("Cluster user %s does not exist, aborting Pacemaker startup",
+                CRM_DAEMON_USER);
+        crm_exit(CRM_EX_NOUSER);
+    }
+
+    // Used by some resource agents
+    if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
+        crm_warn("Could not create directory " CRM_STATE_DIR ": %s",
+                 pcmk_rc_str(errno));
+    } else {
+        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    }
+
+    for (int i = 0; dirs[i] != NULL; ++i) {
+        int rc = pcmk__build_path(dirs[i], 0750);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Could not create directory %s: %s",
+                     dirs[i], pcmk_rc_str(rc));
+        } else {
+            mcp_chown(dirs[i], pcmk_uid, pcmk_gid);
+        }
+    }
+}
+
 /*!
  * \internal
  * \brief Check the liveness of the child based on IPC name and PID if tracked
@@ -1136,8 +1178,6 @@ main(int argc, char **argv)
     bool old_instance_connected = false;
     gboolean shutdown = FALSE;
 
-    uid_t pcmk_uid = 0;
-    gid_t pcmk_gid = 0;
     crm_ipc_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
@@ -1246,41 +1286,7 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
-
-    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
-        crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
-        crm_exit(CRM_EX_NOUSER);
-    }
-
-    // Used by some resource agents
-    if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
-        crm_warn("Could not create " CRM_STATE_DIR ": %s", pcmk_strerror(errno));
-    } else {
-        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
-    }
-
-    /* Used to store core/blackbox/scheduler/cib files in */
-    crm_build_path(CRM_PACEMAKER_DIR, 0750);
-    mcp_chown(CRM_PACEMAKER_DIR, pcmk_uid, pcmk_gid);
-
-    /* Used to store core files in */
-    crm_build_path(CRM_CORE_DIR, 0750);
-    mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
-
-    /* Used to store blackbox dumps in */
-    crm_build_path(CRM_BLACKBOX_DIR, 0750);
-    mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
-
-    // Used to store scheduler inputs in
-    crm_build_path(PE_STATE_DIR, 0750);
-    mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
-
-    /* Used to store the cluster configuration */
-    crm_build_path(CRM_CONFIG_DIR, 0750);
-    mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
-
-    // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
-
+    create_pcmk_dirs();
     pcmk__serve_pacemakerd_ipc(&ipcs, &mcp_ipc_callbacks);
 
 #ifdef SUPPORT_COROSYNC

@@ -125,7 +125,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
 
         if (value == NULL) {
-            client->name = crm_itoa(pcmk__client_pid(c));
+            client->name = pcmk__itoa(pcmk__client_pid(c));
         } else {
             client->name = strdup(value);
         }
@@ -487,8 +487,15 @@ main(int argc, char **argv, char **envp)
      */
     unsetenv("NOTIFY_SOCKET");
 
-    /* Used by RAs - Leave owned by root */
-    crm_build_path(CRM_RSCTMP_DIR, 0755);
+    {
+        // Temporary directory for resource agent use (leave owned by root)
+        int rc = pcmk__build_path(CRM_RSCTMP_DIR, 0755);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Could not create resource agent temporary directory "
+                     CRM_RSCTMP_DIR ": %s", pcmk_rc_str(rc));
+        }
+    }
 
     rsc_list = pcmk__strkey_table(NULL, free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);

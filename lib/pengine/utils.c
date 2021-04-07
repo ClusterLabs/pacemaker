@@ -217,8 +217,8 @@ pe__node_list2table(GList *list)
 gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {
-    return pcmk_numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
-                                   ((const pe_node_t *) b)->details->uname);
+    return pcmk__numeric_strcasecmp(((const pe_node_t *) a)->details->uname,
+                                    ((const pe_node_t *) b)->details->uname);
 }
 
 /*!
@@ -778,7 +778,8 @@ unpack_start_delay(const char *value, GHashTable *meta)
         }
 
         if (meta) {
-            g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY), crm_itoa(start_delay));
+            g_hash_table_replace(meta, strdup(XML_OP_ATTR_START_DELAY),
+                                 pcmk__itoa(start_delay));
         }
     }
 
@@ -1067,7 +1068,7 @@ unpack_operation(pe_action_t * action, xmlNode * xml_obj, pe_resource_t * contai
     value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
     timeout_ms = unpack_timeout(value);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT),
-                         crm_itoa(timeout_ms));
+                         pcmk__itoa(timeout_ms));
 
     if (!pcmk__strcase_any_of(action->task, RSC_START, RSC_PROMOTE, NULL)) {
         action->needs = rsc_req_nothing;
@@ -2118,7 +2119,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
              * the targeting node. So that it takes precedence over any possible
              * `pcmk_delay_base/max`.
              */
-            char *delay_s = crm_itoa(node_priority_fencing_delay(node, data_set));
+            char *delay_s = pcmk__itoa(node_priority_fencing_delay(node, data_set));
 
             g_hash_table_insert(stonith_op->meta,
                                 strdup(XML_CONFIG_ATTR_PRIORITY_FENCING_DELAY),

@@ -35,6 +35,7 @@ int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 bool pcmk__starts_with(const char *str, const char *prefix);
 bool pcmk__ends_with(const char *s, const char *match);
 bool pcmk__ends_with_ext(const char *s, const char *match);
+char *pcmk__trim(char *str);
 void pcmk__add_separated_word(char **list, size_t *len, const char *word,
                               const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,
@@ -123,6 +124,7 @@ bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__char_in_any_str(int ch, ...) G_GNUC_NULL_TERMINATED;
 
 int pcmk__strcmp(const char *s1, const char *s2, uint32_t flags);
+int pcmk__numeric_strcasecmp(const char *s1, const char *s2);
 
 static inline bool
 pcmk__str_eq(const char *s1, const char *s2, uint32_t flags)
@@ -164,6 +166,24 @@ static inline int
 pcmk__str_empty(const char *s)
 {
     return (s == NULL) || (s[0] == '\0');
+}
+
+static inline char *
+pcmk__itoa(int an_int)
+{
+    return crm_strdup_printf("%d", an_int);
+}
+
+static inline char *
+pcmk__ftoa(double a_float)
+{
+    return crm_strdup_printf("%f", a_float);
+}
+
+static inline char *
+pcmk__ttoa(time_t epoch_time)
+{
+    return crm_strdup_printf("%lld", (long long) epoch_time);
 }
 
 // note this returns const not allocated

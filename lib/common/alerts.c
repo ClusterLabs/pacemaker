@@ -169,7 +169,7 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
 {
     for (const char **key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Inserting alert key %s = %d", *key, value);
-        g_hash_table_insert(table, strdup(*key), crm_itoa(value));
+        g_hash_table_insert(table, strdup(*key), pcmk__itoa(value));
     }
 }
 

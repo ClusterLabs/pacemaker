@@ -303,7 +303,7 @@ native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
 
     if (chosen == NULL) {
         GList *gIter = NULL;
-        char *rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
+        char *rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
 
         crm_debug("Could not allocate a node for %s", rsc->id);
         pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to allocate");

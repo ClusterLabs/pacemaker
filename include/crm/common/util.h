@@ -47,28 +47,6 @@ int crm_str_to_boolean(const char *s, int *ret);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
-
-static inline char *
-crm_itoa(int an_int)
-{
-    return crm_strdup_printf("%d", an_int);
-}
-
-static inline char *
-crm_ftoa(double a_float)
-{
-    return crm_strdup_printf("%f", a_float);
-}
-
-static inline char *
-crm_ttoa(time_t epoch_time)
-{
-    return crm_strdup_printf("%lld", (long long) epoch_time);
-}
-
-/* public I/O functions (from io.c) */
-void crm_build_path(const char *path_c, mode_t mode);
 
 guint crm_parse_interval_spec(const char *input);
 int char2score(const char *score);
@@ -131,15 +109,6 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
  * \brief Convenience alias for pcmk_all_flags_set(), to check single flag
  */
 #define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
-
-static inline guint
-crm_hash_table_size(GHashTable * hashtable)
-{
-    if (hashtable == NULL) {
-        return 0;
-    }
-    return g_hash_table_size(hashtable);
-}
 
 char *crm_meta_name(const char *field);
 const char *crm_meta_value(GHashTable * hash, const char *field);

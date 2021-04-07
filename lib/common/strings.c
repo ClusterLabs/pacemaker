@@ -443,8 +443,16 @@ crm_str_to_boolean(const char *s, int *ret)
     return -1;
 }
 
+/*!
+ * \internal
+ * \brief Replace any trailing newlines in a string with \0's
+ *
+ * \param[in] str  String to trim
+ *
+ * \return \p str
+ */
 char *
-crm_strip_trailing_newline(char *str)
+pcmk__trim(char *str)
 {
     int len;
 
@@ -992,6 +1000,7 @@ pcmk__char_in_any_str(int ch, ...)
 }
 
 /*!
+ * \internal
  * \brief Sort strings, with numeric portions sorted numerically
  *
  * Sort two strings case-insensitively like strcasecmp(), but with any numeric
@@ -1007,7 +1016,7 @@ pcmk__char_in_any_str(int ch, ...)
  * \retval  1 \p s1 comes after \p s2
  */
 int
-pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+pcmk__numeric_strcasecmp(const char *s1, const char *s2)
 {
     while (*s1 && *s2) {
         if (isdigit(*s1) && isdigit(*s2)) {
@@ -1262,6 +1271,18 @@ crm_parse_int(const char *text, const char *default_text)
     }
 
     return (int) result;
+}
+
+char *
+crm_strip_trailing_newline(char *str)
+{
+    return pcmk__trim(str);
+}
+
+int
+pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+{
+    return pcmk__numeric_strcasecmp(s1, s2);
 }
 
 // End deprecated API

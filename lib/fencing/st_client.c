@@ -2259,7 +2259,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
         api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)",
                 action, nodeid, uname, pcmk_strerror(rc), rc);
     } else {
-        char *name = (uname == NULL)? crm_itoa(nodeid) : strdup(uname);
+        char *name = (uname == NULL)? pcmk__itoa(nodeid) : strdup(uname);
         int opts = 0;
 
         stonith__set_call_options(opts, name,
@@ -2304,7 +2304,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         int progress = 0;
         int completed = 0;
         int opts = 0;
-        char *name = (uname == NULL)? crm_itoa(nodeid) : strdup(uname);
+        char *name = (uname == NULL)? pcmk__itoa(nodeid) : strdup(uname);
 
         stonith__set_call_options(opts, name, st_opt_sync_call);
         if ((uname == NULL) && (nodeid > 0)) {

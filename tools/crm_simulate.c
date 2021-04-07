@@ -782,7 +782,7 @@ profile_xml(pcmk__output_t *out, va_list args) {
     clock_t start = va_arg(args, clock_t);
     clock_t end = va_arg(args, clock_t);
 
-    char *duration = crm_ftoa((end - start) / (float) CLOCKS_PER_SEC);
+    char *duration = pcmk__ftoa((end - start) / (float) CLOCKS_PER_SEC);
 
     pcmk__output_create_xml_node(out, "timing",
                                  "file", xml_file,

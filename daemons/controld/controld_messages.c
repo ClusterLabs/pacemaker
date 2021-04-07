@@ -1177,7 +1177,6 @@ handle_shutdown_request(xmlNode * stored_msg)
      */
 
     char *now_s = NULL;
-    time_t now = time(NULL);
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 
     if (host_from == NULL) {
@@ -1188,7 +1187,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
     crm_log_xml_trace(stored_msg, "message");
 
-    now_s = crm_itoa(now);
+    now_s = pcmk__ttoa(time(NULL));
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 

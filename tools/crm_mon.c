@@ -1627,7 +1627,7 @@ main(int argc, char **argv)
     if ((output_format == mon_output_html || output_format == mon_output_cgi) &&
         out->dest != stdout) {
         pcmk__html_add_header("meta", "http-equiv", "refresh", "content",
-                              crm_itoa(options.reconnect_ms / 1000), NULL);
+                              pcmk__itoa(options.reconnect_ms / 1000), NULL);
     }
 
     crm_info("Starting %s", crm_system_name);
@@ -1785,9 +1785,9 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     pid_t pid;
 
     /*setenv needs chars, these are ints */
-    char *rc_s = crm_itoa(rc);
-    char *status_s = crm_itoa(status);
-    char *target_rc_s = crm_itoa(target_rc);
+    char *rc_s = pcmk__itoa(rc);
+    char *status_s = pcmk__itoa(status);
+    char *target_rc_s = pcmk__itoa(target_rc);
 
     crm_debug("Sending external notification to '%s' via '%s'", options.external_recipient, options.external_agent);
 

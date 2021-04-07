@@ -190,7 +190,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     GList *gIter = rsc->children;
-    char *count = crm_itoa(g_list_length(gIter));
+    char *count = pcmk__itoa(g_list_length(gIter));
 
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;

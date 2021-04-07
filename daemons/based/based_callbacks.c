@@ -236,7 +236,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         const char *value = crm_element_value(op_request, F_CIB_CLIENTNAME);
 
         if (value == NULL) {
-            cib_client->name = crm_itoa(cib_client->pid);
+            cib_client->name = pcmk__itoa(cib_client->pid);
         } else {
             cib_client->name = strdup(value);
             if (crm_is_daemon_name(value)) {

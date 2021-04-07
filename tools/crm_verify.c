@@ -225,7 +225,7 @@ main(int argc, char **argv)
         cib_object = NULL;
 
     } else if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
-        pcmk__config_error = true;
+        crm_config_error = TRUE;
         free_xml(cib_object);
         cib_object = NULL;
         out->err(out, "The cluster will NOT be able to use this configuration.\n"
@@ -254,7 +254,7 @@ main(int argc, char **argv)
     }
     pe_free_working_set(data_set);
 
-    if (pcmk__config_error) {
+    if (crm_config_error) {
         rc = pcmk_rc_schema_validation;
 
         if (args->verbosity > 0) {
@@ -265,7 +265,7 @@ main(int argc, char **argv)
                         "Errors found during check: config not valid\n-V may provide more details");
         }
 
-    } else if (pcmk__config_warning) {
+    } else if (crm_config_warning) {
         rc = pcmk_rc_schema_validation;
 
         if (args->verbosity > 0) {

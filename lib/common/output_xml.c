@@ -169,7 +169,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
             node = node->next;
         }
     } else {
-        char *rc_as_str = crm_itoa(exit_status);
+        char *rc_as_str = pcmk__itoa(exit_status);
 
         node = create_xml_node(priv->root, "status");
         pcmk__xe_set_props(node, "code", rc_as_str,
@@ -215,7 +215,7 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 
     CRM_ASSERT(out != NULL);
 
-    rc_as_str = crm_itoa(exit_status);
+    rc_as_str = pcmk__itoa(exit_status);
 
     node = pcmk__output_xml_create_parent(out, "command",
                                           "code", rc_as_str,

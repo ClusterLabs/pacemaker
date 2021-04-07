@@ -112,11 +112,11 @@ do_calculate_utilization(gpointer key, gpointer value, gpointer user_data)
 
     current = g_hash_table_lookup(data->current_utilization, key);
     if (data->plus) {
-        result = crm_itoa(utilization_value(current) + utilization_value(value));
+        result = pcmk__itoa(utilization_value(current) + utilization_value(value));
         g_hash_table_replace(data->current_utilization, strdup(key), result);
 
     } else if (current) {
-        result = crm_itoa(utilization_value(current) - utilization_value(value));
+        result = pcmk__itoa(utilization_value(current) - utilization_value(value));
         g_hash_table_replace(data->current_utilization, strdup(key), result);
     }
 }

@@ -722,7 +722,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         connect_name = (replica->ipaddr? replica->ipaddr : "#uname");
 
         if (data->control_port == NULL) {
-            port_s = crm_itoa(DEFAULT_REMOTE_PORT);
+            port_s = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
 
         /* This sets replica->container as replica->remote's container, which is
@@ -1157,12 +1157,12 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
 
-        value = crm_itoa(bundle_data->nreplicas);
+        value = pcmk__itoa(bundle_data->nreplicas);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_MAX, value);
         free(value);
 
-        value = crm_itoa(bundle_data->nreplicas_per_host);
+        value = pcmk__itoa(bundle_data->nreplicas_per_host);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_NODEMAX, value);
         free(value);
@@ -1174,7 +1174,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
 
-            value = crm_itoa(bundle_data->promoted_max);
+            value = pcmk__itoa(bundle_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTED_MAX, value);
             free(value);
@@ -1249,7 +1249,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
              * environment and the connection resource parameters, and the user
              * can use a different port if desired by setting control-port.
              */
-            port->source = crm_itoa(DEFAULT_REMOTE_PORT);
+            port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
         port->target = strdup(port->source);
         bundle_data->ports = g_list_append(bundle_data->ports, port);
@@ -1496,7 +1496,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
-        char *id = crm_itoa(replica->offset);
+        char *id = pcmk__itoa(replica->offset);
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);

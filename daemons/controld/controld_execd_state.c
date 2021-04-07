@@ -485,13 +485,12 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {
         char *now_s = NULL;
-        time_t now = time(NULL);
 
         crm_notice("%s requested shutdown of its remote connection",
                    lrm_state->node_name);
 
         if (!remote_ra_is_in_maintenance(lrm_state)) {
-            now_s = crm_itoa(now);
+            now_s = pcmk__ttoa(time(NULL));
             update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
             free(now_s);
 

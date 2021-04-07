@@ -1435,7 +1435,8 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
                                             NULL);
 
     if (interval_ms) {
-        char *interval_s = crm_itoa(interval_ms);
+        char *interval_s = pcmk__itoa(interval_ms);
+
         crm_xml_add(xml_node, "interval", interval_s);
         free(interval_s);
     }
