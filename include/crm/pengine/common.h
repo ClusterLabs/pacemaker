@@ -111,7 +111,6 @@ enum rsc_role_e {
 #  define RSC_ROLE_STOPPED_S "Stopped"
 #  define RSC_ROLE_STARTED_S "Started"
 #  define RSC_ROLE_SLAVE_S   "Slave"
-#  define RSC_ROLE_MASTER_S  "Master"
 #  define RSC_ROLE_PROMOTED_LEGACY_S    "Master"
 
 enum pe_print_options {
@@ -187,6 +186,10 @@ typedef struct pe_rule_eval_data {
     pe_rsc_eval_data_t *rsc_data;
     pe_op_eval_data_t *op_data;
 } pe_rule_eval_data_t;
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/common_compat.h>
+#endif
 
 #ifdef __cplusplus
 }
