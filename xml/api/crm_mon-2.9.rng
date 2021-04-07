@@ -232,6 +232,11 @@
             <attribute name="resource"> <text /> </attribute>
             <attribute name="node"> <text /> </attribute>
             <attribute name="weight"> <data type="integer" /> </attribute>
+            <attribute name="promoted-only"> <data type="boolean" /> </attribute>
+            <!-- DEPRECATED: master_only is a duplicate of promoted-only that is
+                 provided solely for API backward compatibility. It will be
+                 removed in a future release. Check promoted-only instead.
+              -->
             <attribute name="master_only"> <data type="boolean" /> </attribute>
         </element>
     </define>
