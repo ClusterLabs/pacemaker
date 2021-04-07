@@ -165,6 +165,7 @@ enum ocf_exitcode {
 
     PCMK_OCF_DEGRADED        = 190, /* Active resource that is no longer 100% functional */
     PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted resource that is no longer 100% functional */
+    PCMK_OCF_DEGRADED_PROMOTED  = 191, // Resource promoted but more likely to fail soon
 
     PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
     PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */

@@ -716,7 +716,7 @@ ocf2uniform_rc(int rc)
 {
     switch (rc) {
         case PCMK_OCF_DEGRADED:
-        case PCMK_OCF_DEGRADED_MASTER:
+        case PCMK_OCF_DEGRADED_PROMOTED:
             break;
         default:
             if (rc < 0 || rc > PCMK_OCF_FAILED_MASTER)

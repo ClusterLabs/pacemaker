@@ -3223,7 +3223,7 @@ determine_op_status(
             rsc->role = RSC_ROLE_PROMOTED;
             break;
 
-        case PCMK_OCF_DEGRADED_MASTER:
+        case PCMK_OCF_DEGRADED_PROMOTED:
         case PCMK_OCF_FAILED_MASTER:
             rsc->role = RSC_ROLE_PROMOTED;
             result = PCMK_LRM_OP_ERROR;
@@ -3491,7 +3491,7 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
             case PCMK_OCF_NOT_RUNNING:
             case PCMK_OCF_RUNNING_PROMOTED:
             case PCMK_OCF_DEGRADED:
-            case PCMK_OCF_DEGRADED_MASTER:
+            case PCMK_OCF_DEGRADED_PROMOTED:
                 // Don't expire probes that return these values
                 expired = FALSE;
                 break;

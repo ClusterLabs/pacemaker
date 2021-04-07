@@ -350,8 +350,8 @@ gboolean services_alert_async(svc_action_t *action,
                 return "OCF_OTHER_ERROR";
             case PCMK_OCF_DEGRADED:
                 return "OCF_DEGRADED";
-            case PCMK_OCF_DEGRADED_MASTER:
-                return "OCF_DEGRADED_MASTER";
+            case PCMK_OCF_DEGRADED_PROMOTED:
+                return "promoted (degraded)";
             default:
                 return "unknown";
         }

@@ -77,7 +77,7 @@ pcmk__effective_rc(int rc)
             remapped_rc = PCMK_OCF_OK;
             break;
 
-        case PCMK_OCF_DEGRADED_MASTER:
+        case PCMK_OCF_DEGRADED_PROMOTED:
             remapped_rc = PCMK_OCF_RUNNING_PROMOTED;
             break;
 
