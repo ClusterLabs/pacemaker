@@ -47,7 +47,7 @@ gboolean RoleError(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_
 gboolean NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
 
 /* This array says what the *next* role should be when transitioning from one
- * role to another. For example going from Stopped to Master, the next role is
+ * role to another. For example going from Stopped to Promoted, the next role is
  * RSC_ROLE_UNPROMOTED, because the resource must be started before being promoted.
  * The current state then becomes Started, which is fed into this array again,
  * giving a next role of RSC_ROLE_PROMOTED.
@@ -68,13 +68,13 @@ typedef gboolean (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
 
 // This array picks the function needed to transition from one role to another
 static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-    /* Current state  Next state                                        */
-    /*                Unknown  Stopped    Started    Slave      Master  */
-    /* Unknown */ { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
-    /* Stopped */ { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
-    /* Started */ { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
-    /* Slave   */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
-    /* Master  */ { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp      , },
+/* Current state   Next state                                            */
+/*                 Unknown    Stopped    Started    Unpromoted Promoted  */
+/* Unknown */    { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
+/* Stopped */    { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
+/* Started */    { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
+/* Unpromoted */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
+/* Promoted  */  { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp,       },
 };
 
 #define clear_node_weights_flags(nw_flags, nw_rsc, flags_to_clear) do {     \

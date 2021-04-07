@@ -1165,9 +1165,8 @@ remote_ra_fail(const char *node_name)
  *
  *  <pseudo_event id="103" operation="stonith" operation_key="stonith-lxc1-off"
  *                on_node="lxc1" on_node_uuid="lxc1">
- *     <attributes CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1"
- *                 CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="off"
- *                 crm_feature_set="3.0.12"/>
+ *     <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1"
+ *                 CRM_meta_stonith_action="off" crm_feature_set="3.0.12"/>
  *     <downed>
  *       <node id="lxc1"/>
  *     </downed>

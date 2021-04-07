@@ -312,7 +312,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
-        /* adds in master preferences and rsc_location.role=Master */
+        // Add promotion preferences and rsc_location scores when role=Promoted
         score2char_stack(child->sort_index, score, len);
         pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
@@ -325,8 +325,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        /* (re-)adds location preferences of resources that the
-         * master instance should/must be colocated with
+        /* (Re-)add location preferences of resources that a promoted instance
+         * should/must be colocated with.
          */
         if (constraint->role_lh == RSC_ROLE_PROMOTED) {
             enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
@@ -349,8 +349,8 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
             continue;
         }
 
-        /* (re-)adds location preferences of resource that wish to be
-         * colocated with the master instance
+        /* (Re-)add location preferences of resources that wish to be colocated
+         * with a promoted instance.
          */
         if (constraint->role_rh == RSC_ROLE_PROMOTED) {
             pe_rsc_trace(rsc, "LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
@@ -585,9 +585,8 @@ apply_master_prefs(pe_resource_t *rsc)
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
             if (can_run_resources(node) == FALSE) {
-                /* This node will never be promoted to master,
-                 *  so don't apply the promotion score as that may
-                 *  lead to clone shuffling
+                /* This node will never be promoted, so don't apply the
+                 * promotion score, as that may lead to clone shuffling.
                  */
                 continue;
             }
@@ -670,7 +669,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    /* count now tracks the number of masters allocated */
+    // Repurpose count to track the number of promoted instances allocated
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         node->count = 0;
@@ -708,7 +707,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                 /*
                  * Default to -1 if no value is set
                  *
-                 * This allows master locations to be specified
+                 * This allows instances eligible for promotion to be specified
                  * based solely on rsc_location constraints,
                  * but prevents anyone from being promoted if
                  * neither a constraint nor a promotion score is present
@@ -750,8 +749,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
     pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes, data_set);
     promotion_order(rsc, data_set);
 
-    /* mark the first N as masters */
-
+    // Choose the first N eligible instances to be promoted
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         score2char_stack(child_rsc->sort_index, score, len);
@@ -997,8 +995,9 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
             }
         }
 
-        /* Only do this if it's not a master-master colocation
-         * Doing this unconditionally would prevent the slaves from being started
+        /* Only do this if it's not a promoted-with-promoted colocation. Doing
+         * this unconditionally would prevent unpromoted instances from being
+         * started.
          */
         if ((constraint->role_lh != RSC_ROLE_PROMOTED)
             || (constraint->role_rh != RSC_ROLE_PROMOTED)) {

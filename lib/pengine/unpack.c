@@ -2656,7 +2656,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         return;
     }
 
-    // Clones are not allowed to migrate, so role can't be master
+    // Clones are not allowed to migrate, so role can't be promoted
     rsc->role = RSC_ROLE_STARTED;
 
     target_node = pe_find_node(data_set->nodes, target);
@@ -2740,7 +2740,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
 
     /* If a migration failed, we have to assume the resource is active. Clones
-     * are not allowed to migrate, so role can't be master.
+     * are not allowed to migrate, so role can't be promoted.
      */
     rsc->role = RSC_ROLE_STARTED;
 
@@ -2807,7 +2807,7 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
     CRM_CHECK(source && target && !strcmp(target, node->details->uname), return);
 
     /* If a migration failed, we have to assume the resource is active. Clones
-     * are not allowed to migrate, so role can't be master.
+     * are not allowed to migrate, so role can't be promoted.
      */
     rsc->role = RSC_ROLE_STARTED;
 
@@ -3066,10 +3066,10 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
             rsc->role = RSC_ROLE_STOPPED;
 
         } else {
-            /* Staying in master role would put the scheduler and controller
-             * into a loop. Setting slave role is not dangerous because the
-             * resource will be stopped as part of recovery, and any master
-             * promotion will be ordered after that stop.
+            /* Staying in the promoted role would put the scheduler and
+             * controller into a loop. Setting the role to unpromoted is not
+             * dangerous because the resource will be stopped as part of
+             * recovery, and any promotion will be ordered after that stop.
              */
             rsc->role = RSC_ROLE_UNPROMOTED;
         }

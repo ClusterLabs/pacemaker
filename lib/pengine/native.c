@@ -620,7 +620,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 
         /* Only show target role if it limits our abilities (i.e. ignore
          * Started, as it is the default anyways, and doesn't prevent the
-         * resource from becoming Master).
+         * resource from becoming promoted).
          */
         if (target_role_e == RSC_ROLE_STOPPED) {
             have_flags = add_output_flag(outstr, "disabled", have_flags);

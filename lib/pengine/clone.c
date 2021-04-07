@@ -510,7 +510,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
         }
     }
 
-    /* Masters */
+    /* Promoted */
     master_list = g_list_sort(master_list, sort_node_uname);
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -526,7 +526,7 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     list_text = NULL;
     list_text_len = 0;
 
-    /* Started/Slaves */
+    /* Started/Unpromoted */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -795,7 +795,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         return pcmk_rc_ok;
     }
 
-    /* Masters */
+    /* Promoted */
     master_list = g_list_sort(master_list, sort_node_uname);
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -816,7 +816,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         list_text_len = 0;
     }
 
-    /* Started/Slaves */
+    /* Started/Unpromoted */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -1035,7 +1035,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         return pcmk_rc_ok;
     }
 
-    /* Masters */
+    /* Promoted */
     master_list = g_list_sort(master_list, sort_node_uname);
     for (gIter = master_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -1056,7 +1056,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         list_text_len = 0;
     }
 
-    /* Started/Slaves */
+    /* Started/Unpromoted */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;

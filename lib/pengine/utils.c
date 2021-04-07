@@ -672,7 +672,7 @@ unpack_operation_on_fail(pe_action_t * action)
         return NULL;
 
     } else if (pcmk__str_eq(action->task, CRMD_ACTION_DEMOTE, pcmk__str_casei) && !value) {
-        /* demote on_fail defaults to master monitor value if present */
+        // demote on_fail defaults to monitor value for promoted role if present
         xmlNode *operation = NULL;
 
         CRM_CHECK(action->rsc != NULL, return NULL);

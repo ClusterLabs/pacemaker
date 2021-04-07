@@ -1343,7 +1343,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     } else {
         /* Stop the resource by setting target-role to Stopped.
          * Remember any existing target-role so we can restore it later
-         * (though it only makes any difference if it's Slave).
+         * (though it only makes any difference if it's Unpromoted).
          */
         char *lookup_id = clone_strip(rsc->id);
 
