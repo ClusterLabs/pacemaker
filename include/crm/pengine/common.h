@@ -93,11 +93,13 @@ enum rsc_role_e {
     RSC_ROLE_UNKNOWN    = 0,
     RSC_ROLE_STOPPED    = 1,
     RSC_ROLE_STARTED    = 2,
-    RSC_ROLE_SLAVE      = 3,
     RSC_ROLE_UNPROMOTED = 3,
     RSC_ROLE_PROMOTED   = 4,
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use RSC_ROLE_UNPROMOTED instead
+    RSC_ROLE_SLAVE      = RSC_ROLE_UNPROMOTED,
+
     //! \deprecated Use RSC_ROLE_PROMOTED instead
     RSC_ROLE_MASTER     = RSC_ROLE_PROMOTED,
 #endif
