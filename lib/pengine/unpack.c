@@ -3224,7 +3224,7 @@ determine_op_status(
             break;
 
         case PCMK_OCF_DEGRADED_PROMOTED:
-        case PCMK_OCF_FAILED_MASTER:
+        case PCMK_OCF_FAILED_PROMOTED:
             rsc->role = RSC_ROLE_PROMOTED;
             result = PCMK_LRM_OP_ERROR;
             break;

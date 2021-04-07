@@ -334,8 +334,8 @@ gboolean services_alert_async(svc_action_t *action,
                 return "not running";
             case PCMK_OCF_RUNNING_PROMOTED:
                 return "promoted";
-            case PCMK_OCF_FAILED_MASTER:
-                return "master (failed)";
+            case PCMK_OCF_FAILED_PROMOTED:
+                return "promoted (failed)";
             case PCMK_OCF_SIGNAL:
                 return "OCF_SIGNAL";
             case PCMK_OCF_NOT_SUPPORTED:

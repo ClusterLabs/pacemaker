@@ -719,8 +719,9 @@ ocf2uniform_rc(int rc)
         case PCMK_OCF_DEGRADED_PROMOTED:
             break;
         default:
-            if (rc < 0 || rc > PCMK_OCF_FAILED_MASTER)
+            if (rc < 0 || rc > PCMK_OCF_FAILED_PROMOTED) {
                 return PCMK_OCF_UNKNOWN_ERROR;
+            }
     }
 
     return rc;
