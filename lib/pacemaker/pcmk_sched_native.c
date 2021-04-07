@@ -1524,7 +1524,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
         custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_implies_first_master, data_set);
+                            pe_order_promoted_implies_first, data_set);
 
         custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
                             rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
@@ -2193,7 +2193,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
     }
 
-    if (type & pe_order_implies_first_master) {
+    if (type & pe_order_promoted_implies_first) {
         if ((filter & pe_action_optional) &&
             ((then->flags & pe_action_optional) == FALSE) &&
             (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {

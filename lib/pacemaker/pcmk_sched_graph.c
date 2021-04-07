@@ -262,12 +262,12 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         }
     }
 
-    if (type & pe_order_implies_first_master) {
+    if (type & pe_order_promoted_implies_first) {
         processed = TRUE;
         if (then->rsc) {
             changed |= then->rsc->cmds->update_actions(first, then, node,
                 first_flags & pe_action_optional, pe_action_optional,
-                pe_order_implies_first_master, data_set);
+                pe_order_promoted_implies_first, data_set);
         }
 
         if (changed) {
