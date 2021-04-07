@@ -37,10 +37,11 @@ extern "C" {
  * XML attributes
  */
 
-/* This has been deprecated as a CIB <clone> element attribute (an alias for
- * "promoted-max") since 2.0.0.
+/* These have been deprecated as CIB <clone> element attributes (aliases for
+ * "promoted-max" and "promoted-node-max") since 2.0.0.
  */
 #define PCMK_XE_PROMOTED_MAX_LEGACY         "master-max"
+#define PCMK_XE_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
 
 /*
  * Older constants that don't follow current naming

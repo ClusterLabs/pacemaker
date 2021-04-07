@@ -1561,7 +1561,7 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
         crm_xml_add_int(xml, name, clone_data->promoted_max);
         free(name);
 
-        name = crm_meta_name(XML_RSC_ATTR_MASTER_NODEMAX);
+        name = crm_meta_name(PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
         crm_xml_add_int(xml, name, clone_data->promoted_node_max);
         free(name);
     }
