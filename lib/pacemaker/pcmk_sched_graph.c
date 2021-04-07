@@ -272,11 +272,11 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
 
         if (changed) {
             pe_rsc_trace(then->rsc,
-                         "implies left when right rsc is Master role: %s then %s: changed",
-                         first->uuid, then->uuid);
+                         "implies left when right resource is promoted: "
+                         "%s then %s: changed", first->uuid, then->uuid);
         } else {
-            crm_trace("implies left when right rsc is Master role: %s then %s", first->uuid,
-                      then->uuid);
+            crm_trace("implies left when right resource is promoted: "
+                      "%s then %s", first->uuid, then->uuid);
         }
     }
 

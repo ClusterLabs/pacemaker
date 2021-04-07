@@ -190,12 +190,12 @@ can_be_master(pe_resource_t * rsc)
 
     node = rsc->fns->location(rsc, NULL, FALSE);
     if (node == NULL) {
-        pe_rsc_trace(rsc, "%s cannot be master: not allocated", rsc->id);
+        pe_rsc_trace(rsc, "%s cannot be promoted: not allocated", rsc->id);
         return NULL;
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED) {
-            crm_notice("Forcing unmanaged master %s to remain promoted on %s",
+            crm_notice("Forcing unmanaged instance %s to remain promoted on %s",
                        rsc->id, node->details->uname);
 
         } else {
@@ -203,7 +203,8 @@ can_be_master(pe_resource_t * rsc)
         }
 
     } else if (rsc->priority < 0) {
-        pe_rsc_trace(rsc, "%s cannot be master: preference: %d", rsc->id, rsc->priority);
+        pe_rsc_trace(rsc, "%s cannot be promoted: preference: %d",
+                     rsc->id, rsc->priority);
         return NULL;
 
     } else if (can_run_resources(node) == FALSE) {
@@ -232,7 +233,8 @@ can_be_master(pe_resource_t * rsc)
         return local_node;
 
     } else {
-        pe_rsc_trace(rsc, "%s cannot be master on %s: node full", rsc->id, node->details->uname);
+        pe_rsc_trace(rsc, "%s cannot be promoted on %s: node full",
+                     rsc->id, node->details->uname);
     }
 
     return NULL;
@@ -800,7 +802,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         promoted++;
     }
 
-    pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d to master",
+    pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
                 rsc->id, promoted, clone_data->promoted_max);
 
     return NULL;

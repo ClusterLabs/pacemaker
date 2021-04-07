@@ -89,8 +89,8 @@ static pcmk__cluster_option_t pe_opts[] = {
             "until they start again on that node after it rejoins (or for at "
             "most shutdown-lock-limit, if set). Stonith resources and "
             "Pacemaker Remote connections are never locked. Clone and bundle "
-            "instances and the master role of promotable clones are currently "
-            "never locked, though support could be added in a future release."
+            "instances and the promoted role of promotable clones are currently"
+            " never locked, though support could be added in a future release."
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,

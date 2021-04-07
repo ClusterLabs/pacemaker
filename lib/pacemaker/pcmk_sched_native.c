@@ -602,7 +602,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         if (assign_to == NULL) {
             reason = "inactive";
         } else if (rsc->role == RSC_ROLE_PROMOTED) {
-            reason = "master";
+            reason = "promoted";
         } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             reason = "failed";
         } else {
