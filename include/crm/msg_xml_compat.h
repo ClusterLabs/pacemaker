@@ -29,6 +29,9 @@ extern "C" {
 //! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
 #define XML_CIB_TAG_MASTER PCMK_XE_PROMOTED_LEGACY
 
+//! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
+#define XML_RSC_ATTR_MASTER_MAX PCMK_XE_PROMOTED_MAX_LEGACY
+
 #ifdef __cplusplus
 }
 #endif
