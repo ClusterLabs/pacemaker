@@ -598,6 +598,7 @@ ban_xml(pcmk__output_t *out, va_list args) {
     pe__location_t *location = va_arg(args, pe__location_t *);
     gboolean print_clone_detail G_GNUC_UNUSED = va_arg(args, gboolean);
 
+    const char *promoted_only = pcmk__btoa(location->role_filter == RSC_ROLE_PROMOTED);
     char *weight_s = pcmk__itoa(pe_node->weight);
 
     pcmk__output_create_xml_node(out, "ban",
@@ -605,7 +606,14 @@ ban_xml(pcmk__output_t *out, va_list args) {
                                  "resource", location->rsc_lh->id,
                                  "node", pe_node->details->uname,
                                  "weight", weight_s,
-                                 "master_only", pcmk__btoa(location->role_filter == RSC_ROLE_PROMOTED),
+                                 "promoted-only", promoted_only,
+                                 /* This is a deprecated alias for
+                                  * promoted_only. Removing it will break
+                                  * backward compatibility of the API schema,
+                                  * which will require an API schema major
+                                  * version bump.
+                                  */
+                                 "master_only", promoted_only,
                                  NULL);
 
     free(weight_s);
