@@ -459,7 +459,7 @@ static GOptionEntry location_entries[] = {
       INDENT "affected node until the implicit constraint expires or is\n"
       INDENT "removed with --clear. If --node is not specified, it defaults\n"
       INDENT "to the node currently running the resource for primitives\n"
-      INDENT "and groups, or the master for promotable clones with\n"
+      INDENT "and groups, or the promoted instance of promotable clones with\n"
       INDENT "promoted-max=1 (all other situations result in an error as\n"
       INDENT "there is no sane default).",
       NULL },
@@ -482,8 +482,9 @@ static GOptionEntry location_entries[] = {
       INDENT "-B, -M) see https://en.wikipedia.org/wiki/ISO_8601#Durations)",
       "TIMESPEC" },
     { "master", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.promoted_role_only,
-      "Limit scope of command to Master role (with -B, -M, -U). For\n"
-      INDENT "-B and -M the previous master may remain active in the Slave role.",
+      "Limit scope of command to promoted role (with -B, -M, -U). For\n"
+      INDENT "-B and -M, previously promoted instances may remain\n"
+      INDENT "active in the unpromoted role.",
       NULL },
 
     { NULL }

@@ -543,6 +543,19 @@ pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
     return pcmk_rc_ok;
 }
 
+static const char *
+role_desc(enum rsc_role_e role)
+{
+    if (role == RSC_ROLE_PROMOTED) {
+#ifdef PCMK__COMPAT_2_0
+        return "as " RSC_ROLE_PROMOTED_LEGACY_S " ";
+#else
+        return "in " RSC_ROLE_PROMOTED_S " role ";
+#endif
+    }
+    return "";
+}
+
 PCMK__OUTPUT_ARGS("ban", "pe_node_t *", "pe__location_t *", "gboolean")
 static int
 ban_html(pcmk__output_t *out, va_list args) {
@@ -553,8 +566,7 @@ ban_html(pcmk__output_t *out, va_list args) {
     char *node_name = pe__node_display_name(pe_node, print_clone_detail);
     char *buf = crm_strdup_printf("%s\tprevents %s from running %son %s",
                                   location->id, location->rsc_lh->id,
-                                  (location->role_filter == RSC_ROLE_PROMOTED)? "as Master " : "",
-                                  node_name);
+                                  role_desc(location->role_filter), node_name);
 
     pcmk__output_create_html_node(out, "li", NULL, NULL, buf);
 
@@ -573,8 +585,7 @@ pe__ban_text(pcmk__output_t *out, va_list args) {
     char *node_name = pe__node_display_name(pe_node, print_clone_detail);
     out->list_item(out, NULL, "%s\tprevents %s from running %son %s",
                    location->id, location->rsc_lh->id,
-                   (location->role_filter == RSC_ROLE_PROMOTED)? "as Master " : "",
-                   node_name);
+                   role_desc(location->role_filter), node_name);
 
     free(node_name);
     return pcmk_rc_ok;

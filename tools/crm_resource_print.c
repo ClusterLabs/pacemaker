@@ -303,8 +303,17 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
         if (out->is_quiet(out)) {
             out->list_item(out, "node", "%s", ni->node_name);
         } else {
+            const char *role_text = "";
+
+            if (ni->promoted) {
+#ifdef PCMK__COMPAT_2_0
+                role_text = " " RSC_ROLE_PROMOTED_LEGACY_S;
+#else
+                role_text = " " RSC_ROLE_PROMOTED_S;
+#endif
+            }
             out->list_item(out, "node", "resource %s is running on: %s%s",
-                           requested_name, ni->node_name, ni->promoted ? " Master" : "");
+                           requested_name, ni->node_name, role_text);
         }
     }
 

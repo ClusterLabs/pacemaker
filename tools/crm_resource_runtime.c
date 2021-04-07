@@ -1941,7 +1941,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
                              cib, cib_options, promoted_role_only);
 
     crm_trace("%s%s now prefers node %s%s",
-              rsc->id, promoted_role_only?" (master)":"", dest->details->uname, force?"(forced)":"");
+              rsc->id, (promoted_role_only? " (promoted)" : ""),
+              dest->details->uname, force?"(forced)":"");
 
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the

@@ -466,9 +466,17 @@ role2text(enum rsc_role_e role)
         case RSC_ROLE_STARTED:
             return RSC_ROLE_STARTED_S;
         case RSC_ROLE_UNPROMOTED:
+#ifdef PCMK__COMPAT_2_0
             return RSC_ROLE_UNPROMOTED_LEGACY_S;
+#else
+            return RSC_ROLE_UNPROMOTED_S;
+#endif
         case RSC_ROLE_PROMOTED:
+#ifdef PCMK__COMPAT_2_0
             return RSC_ROLE_PROMOTED_LEGACY_S;
+#else
+            return RSC_ROLE_PROMOTED_S;
+#endif
     }
     CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
     CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);

@@ -19,6 +19,14 @@
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
+#ifdef PCMK__COMPAT_2_0
+#define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_LEGACY_S "s"
+#define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_LEGACY_S "s"
+#else
+#define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_S
+#define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
+#endif
+
 void
 pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                pe_working_set_t *data_set)
@@ -511,7 +519,8 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
 	active_instances++;
     }
 
-    short_print(list_text, child_text, "Masters", NULL, options, print_data);
+    short_print(list_text, child_text, PROMOTED_INSTANCES, NULL, options,
+                print_data);
     g_list_free(master_list);
     free(list_text);
     list_text = NULL;
@@ -530,9 +539,12 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
         enum rsc_role_e role = configured_role(rsc);
 
         if (role == RSC_ROLE_UNPROMOTED) {
-            short_print(list_text, child_text, "Slaves (target-role)", NULL, options, print_data);
+            short_print(list_text, child_text,
+                        UNPROMOTED_INSTANCES " (target-role)", NULL, options,
+                        print_data);
         } else {
-            short_print(list_text, child_text, "Slaves", NULL, options, print_data);
+            short_print(list_text, child_text, UNPROMOTED_INSTANCES, NULL,
+                        options, print_data);
         }
 
     } else {
@@ -797,7 +809,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
-        out->list_item(out, NULL, "Masters: [ %s ]", list_text);
+        out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]", list_text);
         g_list_free(master_list);
         free(list_text);
         list_text = NULL;
@@ -822,9 +834,12 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if (role == RSC_ROLE_UNPROMOTED) {
-                out->list_item(out, NULL, "Slaves (target-role): [ %s ]", list_text);
+                out->list_item(out, NULL,
+                               UNPROMOTED_INSTANCES " (target-role): [ %s ]",
+                               list_text);
             } else {
-                out->list_item(out, NULL, "Slaves: [ %s ]", list_text);
+                out->list_item(out, NULL, UNPROMOTED_INSTANCES ": [ %s ]",
+                               list_text);
             }
 
         } else {
@@ -1034,7 +1049,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
-        out->list_item(out, "Masters", "[ %s ]", list_text);
+        out->list_item(out, PROMOTED_INSTANCES, "[ %s ]", list_text);
         g_list_free(master_list);
         free(list_text);
         list_text = NULL;
@@ -1059,9 +1074,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             enum rsc_role_e role = configured_role(rsc);
 
             if (role == RSC_ROLE_UNPROMOTED) {
-                out->list_item(out, "Slaves (target-role)", "[ %s ]", list_text);
+                out->list_item(out, UNPROMOTED_INSTANCES " (target-role)",
+                               "[ %s ]", list_text);
             } else {
-                out->list_item(out, "Slaves", "[ %s ]", list_text);
+                out->list_item(out, UNPROMOTED_INSTANCES, "[ %s ]", list_text);
             }
         } else {
             out->list_item(out, "Started", "[ %s ]", list_text);
