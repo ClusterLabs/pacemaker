@@ -32,6 +32,9 @@ extern "C" {
 //! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
 #define XML_RSC_ATTR_MASTER_MAX PCMK_XE_PROMOTED_MAX_LEGACY
 
+//! \deprecated Use PCMK_XE_PROMOTED_LEGACY instead
+#define XML_RSC_ATTR_MASTER_NODEMAX PCMK_XE_PROMOTED_NODE_MAX_LEGACY
+
 #ifdef __cplusplus
 }
 #endif

@@ -229,7 +229,6 @@ extern "C" {
 #  define XML_RSC_ATTR_PROMOTABLE       "promotable"
 #  define XML_RSC_ATTR_PROMOTED_MAX     "promoted-max"
 #  define XML_RSC_ATTR_PROMOTED_NODEMAX "promoted-node-max"
-#  define XML_RSC_ATTR_MASTER_NODEMAX   "master-node-max" // deprecated since 2.0.0
 #  define XML_RSC_ATTR_MANAGED		"is-managed"
 #  define XML_RSC_ATTR_TARGET_ROLE	"target-role"
 #  define XML_RSC_ATTR_UNIQUE		"globally-unique"
