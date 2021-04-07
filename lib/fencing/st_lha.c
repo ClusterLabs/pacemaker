@@ -148,7 +148,7 @@ strdup_null(const char *val)
 }
 
 static void
-stonith_plugin(int priority, const char *fmt, ...) __attribute__((__format__ (__printf__, 2, 3)));
+stonith_plugin(int priority, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 
 static void
 stonith_plugin(int priority, const char *format, ...)

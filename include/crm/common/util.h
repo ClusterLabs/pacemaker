@@ -46,7 +46,7 @@ gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
-char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
 guint crm_parse_interval_spec(const char *input);
 int char2score(const char *score);
