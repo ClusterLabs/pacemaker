@@ -276,7 +276,8 @@ static GOptionEntry operation_entries[] = {
     { "repeat", 'N', 0, G_OPTION_ARG_INT, &options.repeat,
       "With --profile, repeat each test N times and print timings",
       "N" },
-    { "pending", 'j', 0, G_OPTION_ARG_NONE, &options.print_pending,
+    /* Deprecated */
+    { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
