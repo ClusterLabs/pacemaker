@@ -32,8 +32,6 @@ extern "C" {
 //!@{
 //! \deprecated This macro will be removed in a future release
 
-#define DIMOF(a) ((int) (sizeof(a)/sizeof(a[0])))
-
 #  ifndef __GNUC__
 #    define __builtin_expect(expr, result) (expr)
 #  endif
