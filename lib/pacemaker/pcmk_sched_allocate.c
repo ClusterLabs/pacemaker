@@ -1888,7 +1888,8 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                          lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
 
-        } else if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_SLAVE && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
+        } else if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
+                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
             free(key);
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                          lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);

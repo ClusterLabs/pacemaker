@@ -692,7 +692,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        apply_master_prefs(rsc);
+        pcmk__add_promotion_scores(rsc);
     }
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
@@ -1557,11 +1557,11 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
         /* @COMPAT Maintain backward compatibility with resource agents that
          * expect the old names (deprecated since 2.0.0).
          */
-        name = crm_meta_name(XML_RSC_ATTR_MASTER_MAX);
+        name = crm_meta_name(PCMK_XE_PROMOTED_MAX_LEGACY);
         crm_xml_add_int(xml, name, clone_data->promoted_max);
         free(name);
 
-        name = crm_meta_name(XML_RSC_ATTR_MASTER_NODEMAX);
+        name = crm_meta_name(PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
         crm_xml_add_int(xml, name, clone_data->promoted_node_max);
         free(name);
     }

@@ -114,25 +114,24 @@ agents that will be used for advanced concepts such as clone resources.
    +--------------+-------------+------------------------------------------------+
    | Action       | Description | Instructions                                   |
    +==============+=============+================================================+
-   | promote      | Promote the | .. index::                                     |
+   | promote      | Bring the   | .. index::                                     |
    |              | local       |    single: OCF resource agent; promote         |
    |              | instance of |    single: promote action                      |
    |              | a promotable|                                                |
    |              | clone       | Return 0 on success                            |
    |              | resource to |                                                |
-   |              | the master  |                                                |
-   |              | (primary)   |                                                |
-   |              | state.      |                                                |
+   |              | the promoted|                                                |
+   |              | role.       |                                                |
    +--------------+-------------+------------------------------------------------+
-   | demote       | Demote the  | .. index::                                     |
+   | demote       | Bring the   | .. index::                                     |
    |              | local       |    single: OCF resource agent; demote          |
    |              | instance of |    single: demote action                       |
    |              | a promotable|                                                |
    |              | clone       | Return 0 on success                            |
    |              | resource to |                                                |
-   |              | the slave   |                                                |
-   |              | (secondary) |                                                |
-   |              | state.      |                                                |
+   |              | the         |                                                |
+   |              | unpromoted  |                                                |
+   |              | role.       |                                                |
    +--------------+-------------+------------------------------------------------+
    | notify       | Used by the | .. index::                                     |
    |              | cluster to  |    single: OCF resource agent; notify          |
@@ -279,21 +278,21 @@ considered to have failed, if 0 was not the expected return value.
    |       |                       | will not attempt to stop a resource that          |          |
    |       |                       | returns this for any action.                      |          |
    +-------+-----------------------+---------------------------------------------------+----------+
-   | 8     | OCF_RUNNING_MASTER    | .. index::                                        | soft     |
-   |       |                       |    single: OCF_RUNNING_MASTER                     |          |
-   |       |                       |    single: OCF return code; OCF_RUNNING_MASTER    |          |
+   | 8     | OCF_RUNNING_PROMOTED  | .. index::                                        | soft     |
+   |       |                       |    single: OCF_RUNNING_PROMOTED                   |          |
+   |       |                       |    single: OCF return code; OCF_RUNNING_PROMOTED  |          |
    |       |                       |    pair: OCF return code; 8                       |          |
    |       |                       |                                                   |          |
-   |       |                       | The resource is running in the master role.       |          |
+   |       |                       | The resource is running in the promoted role.     |          |
    +-------+-----------------------+---------------------------------------------------+----------+
-   | 9     | OCF_FAILED_MASTER     | .. index::                                        | soft     |
-   |       |                       |    single: OCF_FAILED_MASTER                      |          |
-   |       |                       |    single: OCF return code; OCF_FAILED_MASTER     |          |
+   | 9     | OCF_FAILED_PROMOTED   | .. index::                                        | soft     |
+   |       |                       |    single: OCF_FAILED_PROMOTED                    |          |
+   |       |                       |    single: OCF return code; OCF_FAILED_PROMOTED   |          |
    |       |                       |    pair: OCF return code; 9                       |          |
    |       |                       |                                                   |          |
-   |       |                       | The resource is in the master role but has        |          |
-   |       |                       | failed. The resource will be demoted,             |          |
-   |       |                       | stopped and then started (and possibly            |          |
+   |       |                       | The resource is (or might be) in the promoted     |          |
+   |       |                       | role but has failed. The resource will be         |          |
+   |       |                       | demoted, stopped and then started (and possibly   |          |
    |       |                       | promoted) again.                                  |          |
    +-------+-----------------------+---------------------------------------------------+----------+
    | other | *none*                | Custom error code.                                | soft     |
@@ -302,7 +301,7 @@ considered to have failed, if 0 was not the expected return value.
 Exceptions to the recovery handling described above:
 
 * Probes (non-recurring monitor actions) that find a resource active
-  (or in master mode) will not result in recovery action unless it is
+  (or in the promoted role) will not result in recovery action unless it is
   also found active elsewhere.
 * The recovery action taken when a resource is found active more than
   once is determined by the resource's ``multiple-active`` property.

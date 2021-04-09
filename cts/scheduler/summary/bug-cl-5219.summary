@@ -9,14 +9,14 @@ Current cluster status:
     * child2-service	(ocf:pacemaker:Dummy):	 Started ha2.test.anchor.net.au
     * parent-service	(ocf:pacemaker:Dummy):	 Started ha2.test.anchor.net.au
     * Clone Set: child1 [stateful-child1] (promotable):
-      * Masters: [ ha2.test.anchor.net.au ]
-      * Slaves: [ ha1.test.anchor.net.au ]
+      * Promoted: [ ha2.test.anchor.net.au ]
+      * Unpromoted: [ ha1.test.anchor.net.au ]
     * Clone Set: child2 [stateful-child2] (promotable):
-      * Masters: [ ha2.test.anchor.net.au ]
-      * Slaves: [ ha1.test.anchor.net.au ]
+      * Promoted: [ ha2.test.anchor.net.au ]
+      * Unpromoted: [ ha1.test.anchor.net.au ]
     * Clone Set: parent [stateful-parent] (promotable):
-      * Masters: [ ha2.test.anchor.net.au ]
-      * Slaves: [ ha1.test.anchor.net.au ]
+      * Promoted: [ ha2.test.anchor.net.au ]
+      * Unpromoted: [ ha1.test.anchor.net.au ]
 
 Transition Summary:
   * Stop       child1-service     ( ha2.test.anchor.net.au )  due to node availability
@@ -33,11 +33,11 @@ Revised Cluster Status:
     * child2-service	(ocf:pacemaker:Dummy):	 Started ha2.test.anchor.net.au
     * parent-service	(ocf:pacemaker:Dummy):	 Started ha2.test.anchor.net.au
     * Clone Set: child1 [stateful-child1] (promotable):
-      * Masters: [ ha2.test.anchor.net.au ]
-      * Slaves: [ ha1.test.anchor.net.au ]
+      * Promoted: [ ha2.test.anchor.net.au ]
+      * Unpromoted: [ ha1.test.anchor.net.au ]
     * Clone Set: child2 [stateful-child2] (promotable):
-      * Masters: [ ha2.test.anchor.net.au ]
-      * Slaves: [ ha1.test.anchor.net.au ]
+      * Promoted: [ ha2.test.anchor.net.au ]
+      * Unpromoted: [ ha1.test.anchor.net.au ]
     * Clone Set: parent [stateful-parent] (promotable):
-      * Masters: [ ha2.test.anchor.net.au ]
-      * Slaves: [ ha1.test.anchor.net.au ]
+      * Promoted: [ ha2.test.anchor.net.au ]
+      * Unpromoted: [ ha1.test.anchor.net.au ]

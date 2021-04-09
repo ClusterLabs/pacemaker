@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,15 +65,43 @@ static pcmk__cli_option_t long_options[] = {
         "quiet", no_argument, NULL, 'q',
         "\tPrint only the value on stdout\n", pcmk__option_default
     },
+
+    {
+        "-spacer-", no_argument, NULL, '-',
+        "\nOptions for selecting attribute:", pcmk__option_default
+    },
     {
         "name", required_argument, NULL, 'n',
-        "Name of the attribute/option to operate on", pcmk__option_default
+        "Operate on attribute or option with this name",
+        pcmk__option_default
     },
     {
         "pattern", required_argument, NULL, 'P',
-        "Pattern matching names of attributes (only with -v/-D and -l reboot)",
+        "Operate on all attributes matching this pattern "
+            "(with -v/-D and -l reboot)",
         pcmk__option_default
     },
+    {
+        "promotion", optional_argument, NULL, 'p',
+        "Operate on node attribute used as promotion score for specified "
+            "resource, or resource given in OCF_RESOURCE_INSTANCE environment "
+            "variable if none is specified; this also defaults -l/--lifetime "
+            "to reboot (normally invoked from an OCF resource agent)",
+        pcmk__option_default
+    },
+    {
+        "set-name", required_argument, NULL, 's',
+        "(Advanced) Operate on instance of specified attribute that is "
+            "within set with this XML ID",
+        pcmk__option_default
+    },
+    {
+        "id", required_argument, NULL, 'i',
+        "\t(Advanced) Operate on instance of specified attribute with this "
+            "XML ID",
+        pcmk__option_default
+    },
+
     {
         "-spacer-", no_argument, NULL, '-',
         "\nCommands:", pcmk__option_default
@@ -122,16 +150,6 @@ static pcmk__cli_option_t long_options[] = {
     {
         "utilization", no_argument, NULL, 'z',
         "Set an utilization attribute for the node.", pcmk__option_default
-    },
-    {
-        "set-name", required_argument, NULL, 's',
-        "(Advanced) The attribute set in which to place the value",
-        pcmk__option_default
-    },
-    {
-        "id", required_argument, NULL, 'i',
-        "\t(Advanced) The ID used to identify the attribute",
-        pcmk__option_default
     },
     {
         "default", required_argument, NULL, 'd',
@@ -256,6 +274,7 @@ main(int argc, char **argv)
     int is_remote_node = 0;
 
     bool try_attrd = true;
+    bool promotion_score = false;
     int attrd_opts = pcmk__node_attr_none;
 
     pcmk__cli_init_logging("crm_attribute", 0);
@@ -313,6 +332,16 @@ main(int argc, char **argv)
             case 'n':
                 attr_name = strdup(optarg);
                 break;
+            case 'p':
+                promotion_score = true;
+                attr_name = pcmk_promotion_score_name(optarg);
+                if (attr_name == NULL) {
+                    fprintf(stderr, "-p/--promotion must be called from an "
+                                    " OCF resource agent or with a resource ID "
+                                    " specified\n\n");
+                    ++argerr;
+                }
+                break;
             case 'P':
                 attr_pattern = strdup(optarg);
                 break;
@@ -361,8 +390,20 @@ main(int argc, char **argv)
         crm_exit(crm_errno2exit(rc));
     }
 
-    if (type == NULL && dest_uname != NULL) {
-	    type = "forever";
+    // Use default CIB location if not given
+    if (type == NULL) {
+        if (promotion_score) {
+            // Updating a promotion score node attribute
+            type = "reboot";
+
+        } else if (dest_uname != NULL) {
+            // Updating some other node attribute
+            type = "forever";
+
+        } else {
+            // Updating cluster options
+            type = XML_CIB_TAG_CRMCONFIG;
+        }
     }
 
     if (pcmk__str_eq(type, "reboot", pcmk__str_casei)) {
@@ -372,12 +413,9 @@ main(int argc, char **argv)
         type = XML_CIB_TAG_NODES;
     }
 
-    if (type == NULL && dest_uname == NULL) {
-        /* we're updating cluster options - don't populate dest_node */
-        type = XML_CIB_TAG_CRMCONFIG;
-
-    } else if (pcmk__str_eq(type, XML_CIB_TAG_CRMCONFIG, pcmk__str_casei)) {
-    } else if (!pcmk__str_eq(type, XML_CIB_TAG_TICKETS, pcmk__str_casei)) {
+    // Use default node if not given (except for cluster options and tickets)
+    if (!pcmk__strcase_any_of(type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
+                              NULL)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.

@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="118" num_updates="79" admin_epoch="0" cib-last-written="Tue Apr 12 16:16:51 2016" update-origin="overcloud-controller-0" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.7" epoch="118" num_updates="79" admin_epoch="0" cib-last-written="Tue Apr 12 16:16:51 2016" update-origin="overcloud-controller-0" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -63,8 +63,8 @@
             <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
             <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
             <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
-            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
-            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Promoted" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Unpromoted" timeout="30"/>
             <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
             <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
           </operations>
@@ -127,8 +127,8 @@
             <op id="redis-start-interval-0s" interval="0s" name="start" timeout="120"/>
             <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
             <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>
-            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Master" timeout="60"/>
-            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Slave" timeout="60"/>
+            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Promoted" timeout="60"/>
+            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Unpromoted" timeout="60"/>
             <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
             <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
           </operations>
@@ -546,9 +546,9 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="colocation-ip-192.0.2.12-haproxy-clone-INFINITY" rsc="ip-192.0.2.12" rsc-role="Started" score="INFINITY" with-rsc="haproxy-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-ip-192.0.2.12-haproxy-clone-INFINITY" rsc="ip-192.0.2.12" rsc-role="Started" score="INFINITY" with-rsc="haproxy-clone" with-rsc-role="Promoted"/>
       <rsc_order first="ip-192.0.2.11" first-action="start" id="order-ip-192.0.2.11-haproxy-clone-Optional" kind="Optional" then="haproxy-clone" then-action="start"/>
-      <rsc_colocation id="colocation-ip-192.0.2.11-haproxy-clone-INFINITY" rsc="ip-192.0.2.11" rsc-role="Started" score="INFINITY" with-rsc="haproxy-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-ip-192.0.2.11-haproxy-clone-INFINITY" rsc="ip-192.0.2.11" rsc-role="Started" score="INFINITY" with-rsc="haproxy-clone" with-rsc-role="Promoted"/>
       <rsc_order first="ip-192.0.2.12" first-action="start" id="order-ip-192.0.2.12-haproxy-clone-Optional" kind="Optional" then="haproxy-clone" then-action="start"/>
       <rsc_order first="memcached-clone" first-action="start" id="order-memcached-clone-openstack-core-clone-mandatory" then="openstack-core-clone" then-action="start"/>
       <rsc_order first="rabbitmq-clone" first-action="start" id="order-rabbitmq-clone-openstack-core-clone-mandatory" then="openstack-core-clone" then-action="start"/>
@@ -556,35 +556,35 @@
       <rsc_order first="neutron-l3-agent-clone" first-action="start" id="order-neutron-l3-agent-clone-neutron-metadata-agent-clone-mandatory" then="neutron-metadata-agent-clone" then-action="start"/>
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-nova-consoleauth-clone-mandatory" then="openstack-nova-consoleauth-clone" then-action="start"/>
       <rsc_order first="haproxy-clone" first-action="start" id="order-haproxy-clone-openstack-core-clone-mandatory" then="openstack-core-clone" then-action="start"/>
-      <rsc_colocation id="colocation-neutron-netns-cleanup-clone-neutron-ovs-cleanup-clone-INFINITY" rsc="neutron-netns-cleanup-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-ovs-cleanup-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-neutron-netns-cleanup-clone-neutron-ovs-cleanup-clone-INFINITY" rsc="neutron-netns-cleanup-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-ovs-cleanup-clone" with-rsc-role="Promoted"/>
       <rsc_order first="neutron-ovs-cleanup-clone" first-action="start" id="order-neutron-ovs-cleanup-clone-neutron-netns-cleanup-clone-mandatory" then="neutron-netns-cleanup-clone" then-action="start"/>
       <rsc_order first="openstack-ceilometer-notification-clone" first-action="start" id="order-openstack-ceilometer-notification-clone-openstack-heat-api-clone-mandatory" then="openstack-heat-api-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-aodh-listener-clone-openstack-aodh-evaluator-clone-INFINITY" rsc="openstack-aodh-listener-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-aodh-evaluator-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-aodh-listener-clone-openstack-aodh-evaluator-clone-INFINITY" rsc="openstack-aodh-listener-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-aodh-evaluator-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-sahara-api-clone-mandatory" then="openstack-sahara-api-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-ceilometer-api-clone-openstack-ceilometer-collector-clone-INFINITY" rsc="openstack-ceilometer-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-ceilometer-collector-clone" with-rsc-role="Master"/>
-      <rsc_colocation id="colocation-openstack-heat-engine-clone-openstack-heat-api-cloudwatch-clone-INFINITY" rsc="openstack-heat-engine-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-cloudwatch-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-ceilometer-api-clone-openstack-ceilometer-collector-clone-INFINITY" rsc="openstack-ceilometer-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-ceilometer-collector-clone" with-rsc-role="Promoted"/>
+      <rsc_colocation id="colocation-openstack-heat-engine-clone-openstack-heat-api-cloudwatch-clone-INFINITY" rsc="openstack-heat-engine-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-cloudwatch-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-heat-api-cloudwatch-clone" first-action="start" id="order-openstack-heat-api-cloudwatch-clone-openstack-heat-engine-clone-mandatory" then="openstack-heat-engine-clone" then-action="start"/>
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-glance-registry-clone-mandatory" then="openstack-glance-registry-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-glance-api-clone-openstack-glance-registry-clone-INFINITY" rsc="openstack-glance-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-glance-registry-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-glance-api-clone-openstack-glance-registry-clone-INFINITY" rsc="openstack-glance-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-glance-registry-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-glance-registry-clone" first-action="start" id="order-openstack-glance-registry-clone-openstack-glance-api-clone-mandatory" then="openstack-glance-api-clone" then-action="start"/>
       <rsc_order first="openstack-ceilometer-collector-clone" first-action="start" id="order-openstack-ceilometer-collector-clone-openstack-ceilometer-api-clone-mandatory" then="openstack-ceilometer-api-clone" then-action="start"/>
       <rsc_order first="openstack-cinder-scheduler-clone" first-action="start" id="order-openstack-cinder-scheduler-clone-openstack-cinder-volume-mandatory" then="openstack-cinder-volume" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-cinder-scheduler-clone-openstack-cinder-api-clone-INFINITY" rsc="openstack-cinder-scheduler-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-cinder-api-clone" with-rsc-role="Master"/>
-      <rsc_colocation id="colocation-openstack-cinder-volume-openstack-cinder-scheduler-clone-INFINITY" rsc="openstack-cinder-volume" rsc-role="Started" score="INFINITY" with-rsc="openstack-cinder-scheduler-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-cinder-scheduler-clone-openstack-cinder-api-clone-INFINITY" rsc="openstack-cinder-scheduler-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-cinder-api-clone" with-rsc-role="Promoted"/>
+      <rsc_colocation id="colocation-openstack-cinder-volume-openstack-cinder-scheduler-clone-INFINITY" rsc="openstack-cinder-volume" rsc-role="Started" score="INFINITY" with-rsc="openstack-cinder-scheduler-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-cinder-api-clone" first-action="start" id="order-openstack-cinder-api-clone-openstack-cinder-scheduler-clone-mandatory" then="openstack-cinder-scheduler-clone" then-action="start"/>
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-cinder-api-clone-mandatory" then="openstack-cinder-api-clone" then-action="start"/>
       <rsc_order first="openstack-nova-novncproxy-clone" first-action="start" id="order-openstack-nova-novncproxy-clone-openstack-nova-api-clone-mandatory" then="openstack-nova-api-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-nova-api-clone-openstack-nova-novncproxy-clone-INFINITY" rsc="openstack-nova-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-novncproxy-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-nova-api-clone-openstack-nova-novncproxy-clone-INFINITY" rsc="openstack-nova-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-novncproxy-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-nova-consoleauth-clone" first-action="start" id="order-openstack-nova-consoleauth-clone-openstack-nova-novncproxy-clone-mandatory" then="openstack-nova-novncproxy-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-nova-novncproxy-clone-openstack-nova-consoleauth-clone-INFINITY" rsc="openstack-nova-novncproxy-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-consoleauth-clone" with-rsc-role="Master"/>
-      <rsc_colocation id="colocation-neutron-metadata-agent-clone-neutron-l3-agent-clone-INFINITY" rsc="neutron-metadata-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-l3-agent-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-nova-novncproxy-clone-openstack-nova-consoleauth-clone-INFINITY" rsc="openstack-nova-novncproxy-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-consoleauth-clone" with-rsc-role="Promoted"/>
+      <rsc_colocation id="colocation-neutron-metadata-agent-clone-neutron-l3-agent-clone-INFINITY" rsc="neutron-metadata-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-l3-agent-clone" with-rsc-role="Promoted"/>
       <rsc_order first="redis-master" first-action="promote" id="order-redis-master-openstack-aodh-evaluator-clone-mandatory" require-all="false" then="openstack-aodh-evaluator-clone" then-action="start"/>
       <rsc_order first="openstack-nova-api-clone" first-action="start" id="order-openstack-nova-api-clone-openstack-nova-scheduler-clone-mandatory" then="openstack-nova-scheduler-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-nova-scheduler-clone-openstack-nova-api-clone-INFINITY" rsc="openstack-nova-scheduler-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-api-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-nova-scheduler-clone-openstack-nova-api-clone-INFINITY" rsc="openstack-nova-scheduler-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-api-clone" with-rsc-role="Promoted"/>
       <rsc_order first="delay-clone" first-action="start" id="order-delay-clone-openstack-aodh-evaluator-clone-mandatory" then="openstack-aodh-evaluator-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-aodh-evaluator-clone-delay-clone-INFINITY" rsc="openstack-aodh-evaluator-clone" rsc-role="Started" score="INFINITY" with-rsc="delay-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-aodh-evaluator-clone-delay-clone-INFINITY" rsc="openstack-aodh-evaluator-clone" rsc-role="Started" score="INFINITY" with-rsc="delay-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-ceilometer-api-clone" first-action="start" id="order-openstack-ceilometer-api-clone-delay-clone-mandatory" then="delay-clone" then-action="start"/>
-      <rsc_colocation id="colocation-delay-clone-openstack-ceilometer-api-clone-INFINITY" rsc="delay-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-ceilometer-api-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-delay-clone-openstack-ceilometer-api-clone-INFINITY" rsc="delay-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-ceilometer-api-clone" with-rsc-role="Promoted"/>
       <rsc_order first="redis-master" first-action="promote" id="order-redis-master-openstack-ceilometer-central-clone-mandatory" require-all="false" then="openstack-ceilometer-central-clone" then-action="start"/>
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-ceilometer-central-clone-mandatory" then="openstack-ceilometer-central-clone" then-action="start"/>
       <rsc_order first="mongod-clone" first-action="start" id="order-mongod-clone-openstack-ceilometer-central-clone-mandatory" then="openstack-ceilometer-central-clone" then-action="start"/>
@@ -592,21 +592,21 @@
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-heat-api-clone-mandatory" then="openstack-heat-api-clone" then-action="start"/>
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-httpd-clone-mandatory" then="httpd-clone" then-action="start"/>
       <rsc_order first="neutron-netns-cleanup-clone" first-action="start" id="order-neutron-netns-cleanup-clone-neutron-openvswitch-agent-clone-mandatory" then="neutron-openvswitch-agent-clone" then-action="start"/>
-      <rsc_colocation id="colocation-neutron-openvswitch-agent-clone-neutron-netns-cleanup-clone-INFINITY" rsc="neutron-openvswitch-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-netns-cleanup-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-neutron-openvswitch-agent-clone-neutron-netns-cleanup-clone-INFINITY" rsc="neutron-openvswitch-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-netns-cleanup-clone" with-rsc-role="Promoted"/>
       <rsc_order first="neutron-server-clone" first-action="start" id="order-neutron-server-clone-neutron-openvswitch-agent-clone-mandatory" then="neutron-openvswitch-agent-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-heat-api-cloudwatch-clone-openstack-heat-api-cfn-clone-INFINITY" rsc="openstack-heat-api-cloudwatch-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-cfn-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-heat-api-cloudwatch-clone-openstack-heat-api-cfn-clone-INFINITY" rsc="openstack-heat-api-cloudwatch-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-cfn-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-heat-api-clone" first-action="start" id="order-openstack-heat-api-clone-openstack-heat-api-cfn-clone-mandatory" then="openstack-heat-api-cfn-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-heat-api-cfn-clone-openstack-heat-api-clone-INFINITY" rsc="openstack-heat-api-cfn-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-heat-api-cfn-clone-openstack-heat-api-clone-INFINITY" rsc="openstack-heat-api-cfn-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-clone" with-rsc-role="Promoted"/>
       <rsc_order first="openstack-heat-api-cfn-clone" first-action="start" id="order-openstack-heat-api-cfn-clone-openstack-heat-api-cloudwatch-clone-mandatory" then="openstack-heat-api-cloudwatch-clone" then-action="start"/>
       <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-neutron-server-clone-mandatory" then="neutron-server-clone" then-action="start"/>
       <rsc_order first="openstack-aodh-evaluator-clone" first-action="start" id="order-openstack-aodh-evaluator-clone-openstack-aodh-notifier-clone-mandatory" then="openstack-aodh-notifier-clone" then-action="start"/>
       <rsc_order first="openstack-nova-scheduler-clone" first-action="start" id="order-openstack-nova-scheduler-clone-openstack-nova-conductor-clone-mandatory" then="openstack-nova-conductor-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-nova-conductor-clone-openstack-nova-scheduler-clone-INFINITY" rsc="openstack-nova-conductor-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-scheduler-clone" with-rsc-role="Master"/>
-      <rsc_colocation id="colocation-neutron-l3-agent-clone-neutron-dhcp-agent-clone-INFINITY" rsc="neutron-l3-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-dhcp-agent-clone" with-rsc-role="Master"/>
-      <rsc_colocation id="colocation-neutron-dhcp-agent-clone-neutron-openvswitch-agent-clone-INFINITY" rsc="neutron-dhcp-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-openvswitch-agent-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-nova-conductor-clone-openstack-nova-scheduler-clone-INFINITY" rsc="openstack-nova-conductor-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-scheduler-clone" with-rsc-role="Promoted"/>
+      <rsc_colocation id="colocation-neutron-l3-agent-clone-neutron-dhcp-agent-clone-INFINITY" rsc="neutron-l3-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-dhcp-agent-clone" with-rsc-role="Promoted"/>
+      <rsc_colocation id="colocation-neutron-dhcp-agent-clone-neutron-openvswitch-agent-clone-INFINITY" rsc="neutron-dhcp-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-openvswitch-agent-clone" with-rsc-role="Promoted"/>
       <rsc_order first="neutron-dhcp-agent-clone" first-action="start" id="order-neutron-dhcp-agent-clone-neutron-l3-agent-clone-mandatory" then="neutron-l3-agent-clone" then-action="start"/>
       <rsc_order first="neutron-openvswitch-agent-clone" first-action="start" id="order-neutron-openvswitch-agent-clone-neutron-dhcp-agent-clone-mandatory" then="neutron-dhcp-agent-clone" then-action="start"/>
-      <rsc_colocation id="colocation-openstack-aodh-notifier-clone-openstack-aodh-evaluator-clone-INFINITY" rsc="openstack-aodh-notifier-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-aodh-evaluator-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-aodh-notifier-clone-openstack-aodh-evaluator-clone-INFINITY" rsc="openstack-aodh-notifier-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-aodh-evaluator-clone" with-rsc-role="Promoted"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc_defaults-options">

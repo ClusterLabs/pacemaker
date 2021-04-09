@@ -21,10 +21,10 @@ Current cluster status:
     * Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique):
       * ocf_msdummy:0	(ocf:heartbeat:Stateful):	 Stopped
       * ocf_msdummy:1	(ocf:heartbeat:Stateful):	 Stopped
-      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Slave sles-3 (UNCLEAN)
+      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Unpromoted sles-3 (UNCLEAN)
       * ocf_msdummy:3	(ocf:heartbeat:Stateful):	 Stopped
       * ocf_msdummy:4	(ocf:heartbeat:Stateful):	 Stopped
-      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Slave sles-3 (UNCLEAN)
+      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Unpromoted sles-3 (UNCLEAN)
       * ocf_msdummy:6	(ocf:heartbeat:Stateful):	 Stopped
       * ocf_msdummy:7	(ocf:heartbeat:Stateful):	 Stopped
 
@@ -36,10 +36,10 @@ Transition Summary:
   * Move       child_DoFencing:2    (       sles-3 -> sles-4 )
   * Start      ocf_msdummy:0        (                 sles-4 )
   * Start      ocf_msdummy:1        (                 sles-1 )
-  * Move       ocf_msdummy:2        ( sles-3 -> sles-2 Slave )
+  * Move       ocf_msdummy:2        ( sles-3 -> sles-2 Unpromoted )
   * Start      ocf_msdummy:3        (                 sles-4 )
   * Start      ocf_msdummy:4        (                 sles-1 )
-  * Move       ocf_msdummy:5        ( sles-3 -> sles-2 Slave )
+  * Move       ocf_msdummy:5        ( sles-3 -> sles-2 Unpromoted )
 
 Executing Cluster Transition:
   * Pseudo action:   group-1_start_0
@@ -103,11 +103,11 @@ Revised Cluster Status:
       * Started: [ sles-1 sles-2 sles-4 ]
       * Stopped: [ sles-3 ]
     * Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique):
-      * ocf_msdummy:0	(ocf:heartbeat:Stateful):	 Slave sles-4
-      * ocf_msdummy:1	(ocf:heartbeat:Stateful):	 Slave sles-1
-      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Slave sles-2
-      * ocf_msdummy:3	(ocf:heartbeat:Stateful):	 Slave sles-4
-      * ocf_msdummy:4	(ocf:heartbeat:Stateful):	 Slave sles-1
-      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Slave sles-2
+      * ocf_msdummy:0	(ocf:heartbeat:Stateful):	 Unpromoted sles-4
+      * ocf_msdummy:1	(ocf:heartbeat:Stateful):	 Unpromoted sles-1
+      * ocf_msdummy:2	(ocf:heartbeat:Stateful):	 Unpromoted sles-2
+      * ocf_msdummy:3	(ocf:heartbeat:Stateful):	 Unpromoted sles-4
+      * ocf_msdummy:4	(ocf:heartbeat:Stateful):	 Unpromoted sles-1
+      * ocf_msdummy:5	(ocf:heartbeat:Stateful):	 Unpromoted sles-2
       * ocf_msdummy:6	(ocf:heartbeat:Stateful):	 Stopped
       * ocf_msdummy:7	(ocf:heartbeat:Stateful):	 Stopped

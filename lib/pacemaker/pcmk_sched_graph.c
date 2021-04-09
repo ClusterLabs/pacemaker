@@ -262,21 +262,21 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         }
     }
 
-    if (type & pe_order_implies_first_master) {
+    if (type & pe_order_promoted_implies_first) {
         processed = TRUE;
         if (then->rsc) {
             changed |= then->rsc->cmds->update_actions(first, then, node,
                 first_flags & pe_action_optional, pe_action_optional,
-                pe_order_implies_first_master, data_set);
+                pe_order_promoted_implies_first, data_set);
         }
 
         if (changed) {
             pe_rsc_trace(then->rsc,
-                         "implies left when right rsc is Master role: %s then %s: changed",
-                         first->uuid, then->uuid);
+                         "implies left when right resource is promoted: "
+                         "%s then %s: changed", first->uuid, then->uuid);
         } else {
-            crm_trace("implies left when right rsc is Master role: %s then %s", first->uuid,
-                      then->uuid);
+            crm_trace("implies left when right resource is promoted: "
+                      "%s then %s", first->uuid, then->uuid);
         }
     }
 
@@ -486,8 +486,8 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 
         rsc = uber_parent(action->rsc);
         if (rsc->parent) {
-            /* For bundles, uber_parent() returns the clone/master, not the
-             * bundle, so the existence of rsc->parent implies this is a bundle.
+            /* For bundles, uber_parent() returns the clone, not the bundle, so
+             * the existence of rsc->parent implies this is a bundle.
              * In this case, we need the bundle resource, so that we can check
              * if all containers are stopped/stopping.
              */

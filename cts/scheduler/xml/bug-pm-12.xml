@@ -1,4 +1,4 @@
-<cib crm_feature_set="2.1" admin_epoch="0" epoch="2" num_updates="1" dc-uuid="9b262633-815c-4e5e-8f63-76486cab9ad2" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:03 2012">
+<cib crm_feature_set="2.1" admin_epoch="0" epoch="2" num_updates="1" dc-uuid="9b262633-815c-4e5e-8f63-76486cab9ad2" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:03 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -44,10 +44,10 @@
     </resources>
     <constraints>
       <rsc_location id="rsc_location" rsc="ms-sf">
-        <rule id="location-0" role="Master" score="100">
+        <rule id="location-0" role="Promoted" score="100">
           <expression id="expression.id22037" attribute="#uname" operation="eq" value="node-a"/>
         </rule>
-        <rule id="location-1" role="Master" score="50">
+        <rule id="location-1" role="Promoted" score="50">
           <expression id="expression.id22056" attribute="#uname" operation="eq" value="node-b"/>
         </rule>
       </rsc_location>

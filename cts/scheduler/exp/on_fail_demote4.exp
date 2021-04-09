@@ -76,7 +76,7 @@
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="rsc1_monitor_10000" internal_operation_key="rsc1:1_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -120,7 +120,7 @@
     <action_set>
       <rsc_op id="2" operation="cancel" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -144,7 +144,7 @@
     <action_set>
       <rsc_op id="46" operation="monitor" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:5_monitor_11000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
         <primitive id="rsc1" long-id="rsc1:5" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -352,7 +352,7 @@
     <action_set>
       <rsc_op id="61" operation="monitor" operation_key="rsc2_monitor_10000" internal_operation_key="rsc2:1_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="rsc2" long-id="rsc2:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -396,7 +396,7 @@
     <action_set>
       <rsc_op id="3" operation="cancel" operation_key="rsc2_monitor_11000" internal_operation_key="rsc2:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3">
         <primitive id="rsc2" long-id="rsc2:1" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs/>
@@ -438,7 +438,7 @@
     <action_set>
       <rsc_op id="70" operation="monitor" operation_key="rsc2_monitor_11000" internal_operation_key="rsc2:5_monitor_11000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
         <primitive id="rsc2" long-id="rsc2:5" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -736,7 +736,7 @@
     <action_set>
       <rsc_op id="88" operation="monitor" operation_key="lxc-ms_monitor_10000" internal_operation_key="lxc-ms:0_monitor_10000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
         <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_op_target_rc="8" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_op_target_rc="8" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -978,7 +978,7 @@
     <action_set>
       <rsc_op id="126" operation="monitor" operation_key="bundled_monitor_10000" internal_operation_key="bundled:0_monitor_10000" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5">
         <primitive id="bundled" long-id="bundled:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="rhel7-5" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="20000"  pcmk_external_ip="192.168.122.131"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="rhel7-5" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000"  pcmk_external_ip="192.168.122.131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1107,7 +1107,7 @@
     <action_set>
       <rsc_op id="131" operation="monitor" operation_key="bundled_monitor_11000" internal_operation_key="bundled:2_monitor_11000" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2" router_node="rhel7-3">
         <primitive id="bundled" long-id="bundled:2" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="stateful-bundle-2" CRM_meta_on_node_uuid="stateful-bundle-2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="20000"  pcmk_external_ip="192.168.122.133"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="stateful-bundle-2" CRM_meta_on_node_uuid="stateful-bundle-2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000"  pcmk_external_ip="192.168.122.133"/>
       </rsc_op>
     </action_set>
     <inputs>

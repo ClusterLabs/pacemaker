@@ -79,7 +79,7 @@ get_resource_type(const char *name)
     } else if (pcmk__str_eq(name, XML_CIB_TAG_INCARNATION, pcmk__str_casei)) {
         return pe_clone;
 
-    } else if (pcmk__str_eq(name, XML_CIB_TAG_MASTER, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(name, PCMK_XE_PROMOTABLE_LEGACY, pcmk__str_casei)) {
         // @COMPAT deprecated since 2.0.0
         return pe_clone;
 
@@ -254,8 +254,9 @@ template_op_key(xmlNode * op)
     const char *role = crm_element_value(op, "role");
     char *key = NULL;
 
-    if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_null_matches)
-        || pcmk__str_eq(role, RSC_ROLE_SLAVE_S, pcmk__str_none)) {
+    if ((role == NULL)
+        || pcmk__strcase_any_of(role, RSC_ROLE_STARTED_S, RSC_ROLE_UNPROMOTED_S,
+                                RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
         role = RSC_ROLE_UNKNOWN_S;
     }
 
@@ -422,7 +423,8 @@ detect_promotable(pe_resource_t *rsc)
     }
 
     // @COMPAT deprecated since 2.0.0
-    if (pcmk__str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER, pcmk__str_casei)) {
+    if (pcmk__str_eq(crm_element_name(rsc->xml), PCMK_XE_PROMOTABLE_LEGACY,
+                     pcmk__str_casei)) {
         /* @TODO in some future version, pe_warn_once() here,
          *       then drop support in even later version
          */

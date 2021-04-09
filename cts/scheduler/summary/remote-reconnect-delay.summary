@@ -17,8 +17,8 @@ Current cluster status:
       * Started: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
       * Stopped: [ remote-rhel7-3 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ rhel7-2 ]
-      * Slaves: [ rhel7-1 rhel7-4 rhel7-5 ]
+      * Promoted: [ rhel7-2 ]
+      * Unpromoted: [ rhel7-1 rhel7-4 rhel7-5 ]
       * Stopped: [ remote-rhel7-3 ]
     * Resource Group: group-1:
       * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-2
@@ -55,8 +55,8 @@ Revised Cluster Status:
       * Started: [ rhel7-1 rhel7-2 rhel7-4 rhel7-5 ]
       * Stopped: [ remote-rhel7-3 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ rhel7-2 ]
-      * Slaves: [ rhel7-1 rhel7-4 rhel7-5 ]
+      * Promoted: [ rhel7-2 ]
+      * Unpromoted: [ rhel7-1 rhel7-4 rhel7-5 ]
       * Stopped: [ remote-rhel7-3 ]
     * Resource Group: group-1:
       * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-2

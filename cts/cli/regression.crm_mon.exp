@@ -26,8 +26,8 @@ Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Masters: [ cluster02 ]
-    * Slaves: [ cluster01 ]
+    * Promoted: [ cluster02 ]
+    * Unpromoted: [ cluster01 ]
 =#=#=#= End test: Basic text output - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output
 =#=#=#= Begin test: XML output =#=#=#=
@@ -137,10 +137,10 @@ Active Resources:
       </group>
     </clone>
     <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -181,7 +181,7 @@ Active Resources:
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
@@ -241,7 +241,7 @@ Active Resources:
     </node>
   </node_history>
   <bans>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -271,8 +271,8 @@ Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Masters: [ cluster02 ]
-    * Slaves: [ cluster01 ]
+    * Promoted: [ cluster02 ]
+    * Unpromoted: [ cluster01 ]
 =#=#=#= End test: Basic text output without node section - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output without node section
 =#=#=#= Begin test: XML output without the node section =#=#=#=
@@ -375,10 +375,10 @@ Active Resources:
       </group>
     </clone>
     <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -419,7 +419,7 @@ Active Resources:
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
@@ -479,7 +479,7 @@ Active Resources:
     </node>
   </node_history>
   <bans>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -519,8 +519,8 @@ Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Masters: [ cluster02 ]
-    * Slaves: [ cluster01 ]
+    * Promoted: [ cluster02 ]
+    * Unpromoted: [ cluster01 ]
 
 Node Attributes:
   * Node: cluster01:
@@ -643,8 +643,8 @@ Active Resources:
     * Resource Group: mysql-group:4:
       * mysql-proxy	(lsb:mysql-proxy):	 Stopped
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Master cluster02
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave cluster01
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped
@@ -748,8 +748,8 @@ Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Masters: [ cluster02 ]
-    * Slaves: [ cluster01 ]
+    * Promoted: [ cluster02 ]
+    * Unpromoted: [ cluster01 ]
 
 Node Attributes:
   * Node: cluster01:
@@ -837,7 +837,7 @@ Node List:
       * ping	(ocf:pacemaker:ping):	 Started
       * Fencing	(stonith:fence_xvm):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
-      * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave
+      * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted
       * httpd-bundle-ip-192.168.122.131	(ocf:heartbeat:IPaddr2):	 Started
       * httpd-bundle-docker-0	(ocf:heartbeat:docker):	 Started
   * Node cluster02: online:
@@ -847,7 +847,7 @@ Node List:
       * Public-IP	(ocf:heartbeat:IPaddr):	 Started
       * Email	(lsb:exim):	 Started
       * mysql-proxy	(lsb:mysql-proxy):	 Started
-      * promotable-rsc	(ocf:pacemaker:Stateful):	 Master
+      * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted
       * httpd-bundle-ip-192.168.122.132	(ocf:heartbeat:IPaddr2):	 Started
       * httpd-bundle-docker-1	(ocf:heartbeat:docker):	 Started
   * GuestNode httpd-bundle-0@cluster01: online:
@@ -1060,7 +1060,7 @@ Negative Location Constraints:
       <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
       <resource id="httpd-bundle-ip-192.168.122.131" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -1089,7 +1089,7 @@ Negative Location Constraints:
       <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
       <resource id="httpd-bundle-ip-192.168.122.132" resource_agent="ocf:heartbeat:IPaddr2" role="Started" target_role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -1181,10 +1181,10 @@ Negative Location Constraints:
       </group>
     </clone>
     <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -1225,7 +1225,7 @@ Negative Location Constraints:
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
@@ -1285,7 +1285,7 @@ Negative Location Constraints:
     </node>
   </node_history>
   <bans>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1313,7 +1313,7 @@ Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Slaves: [ cluster01 ]
+    * Unpromoted: [ cluster01 ]
 
 Node Attributes:
   * Node: cluster01:
@@ -1420,7 +1420,7 @@ Negative Location Constraints:
       </group>
     </clone>
     <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Slave" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Unpromoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster01" id="1" cached="true"/>
       </resource>
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -1470,7 +1470,7 @@ Negative Location Constraints:
     </node>
   </node_history>
   <bans>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1501,7 +1501,7 @@ Active Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster02 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Masters: [ cluster02 ]
+    * Promoted: [ cluster02 ]
 
 Node Attributes:
   * Node: cluster02:
@@ -1619,7 +1619,7 @@ Negative Location Constraints:
       </group>
     </clone>
     <clone id="promotable-clone" multi_state="true" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
-      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Master" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+      <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Promoted" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
         <node name="cluster02" id="2" cached="true"/>
       </resource>
       <resource id="promotable-rsc" resource_agent="ocf:pacemaker:Stateful" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
@@ -1656,7 +1656,7 @@ Negative Location Constraints:
         <operation_history call="4" task="monitor" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="5" task="cancel" rc="0" rc_text="ok" interval="10000ms" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="6" task="promote" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="7" task="monitor" rc="8" rc_text="master" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="7" task="monitor" rc="8" rc_text="promoted" interval="5000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="httpd-bundle-ip-192.168.122.132" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
@@ -1673,7 +1673,7 @@ Negative Location Constraints:
     </node>
   </node_history>
   <bans>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1789,7 +1789,7 @@ Active Resources:
     </group>
   </resources>
   <bans>
-    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" master_only="false"/>
+    <ban id="not-on-cluster1" resource="dummy" node="cluster01" weight="-1000000" promoted-only="false" master_only="false"/>
   </bans>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1828,8 +1828,8 @@ Full List of Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster01 cluster02 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Masters: [ cluster02 ]
-    * Slaves: [ cluster01 ]
+    * Promoted: [ cluster02 ]
+    * Unpromoted: [ cluster01 ]
 =#=#=#= End test: Basic text output with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources
 =#=#=#= Begin test: Basic text output with inactive resources, filtered by node =#=#=#=
@@ -1862,7 +1862,7 @@ Full List of Resources:
   * Clone Set: mysql-clone-group [mysql-group]:
     * Started: [ cluster02 ]
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
-    * Masters: [ cluster02 ]
+    * Promoted: [ cluster02 ]
 =#=#=#= End test: Basic text output with inactive resources, filtered by node - OK (0) =#=#=#=
 * Passed: crm_mon        - Basic text output with inactive resources, filtered by node
 =#=#=#= Begin test: Complete text output filtered by primitive resource =#=#=#=
@@ -3912,7 +3912,7 @@ Full List of Resources:
     * Resource Group: mysql-group:1 (unmanaged):
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01 (unmanaged)
   * Clone Set: promotable-clone [promotable-rsc] (promotable) (unmanaged):
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Master cluster02 (unmanaged)
-    * promotable-rsc	(ocf:pacemaker:Stateful):	 Slave cluster01 (unmanaged)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02 (unmanaged)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01 (unmanaged)
 =#=#=#= End test: Text output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of all resources with maintenance-mode enabled

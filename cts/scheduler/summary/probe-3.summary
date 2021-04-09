@@ -18,8 +18,8 @@ Current cluster status:
       * Started: [ pcmk-1 pcmk-2 pcmk-3 ]
       * Stopped: [ pcmk-4 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ pcmk-1 ]
-      * Slaves: [ pcmk-2 pcmk-3 ]
+      * Promoted: [ pcmk-1 ]
+      * Unpromoted: [ pcmk-2 pcmk-3 ]
       * Stopped: [ pcmk-4 ]
     * Clone Set: Fencing [FencingChild]:
       * Started: [ pcmk-1 pcmk-2 pcmk-3 ]
@@ -49,8 +49,8 @@ Revised Cluster Status:
       * Started: [ pcmk-1 pcmk-2 pcmk-3 ]
       * Stopped: [ pcmk-4 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ pcmk-1 ]
-      * Slaves: [ pcmk-2 pcmk-3 ]
+      * Promoted: [ pcmk-1 ]
+      * Unpromoted: [ pcmk-2 pcmk-3 ]
       * Stopped: [ pcmk-4 ]
     * Clone Set: Fencing [FencingChild]:
       * Started: [ pcmk-1 pcmk-2 pcmk-3 ]

@@ -4,16 +4,16 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms_drbd_7788 [rsc_drbd_7788] (promotable):
-      * Masters: [ arc-tkincaidlx.wsicorp.com ]
-      * Slaves: [ arc-dknightlx ]
+      * Promoted: [ arc-tkincaidlx.wsicorp.com ]
+      * Unpromoted: [ arc-dknightlx ]
     * Resource Group: grp_pgsql_mirror:
       * fs_mirror	(ocf:heartbeat:Filesystem):	 Started arc-tkincaidlx.wsicorp.com
       * pgsql_5555	(ocf:heartbeat:pgsql):	 Started arc-tkincaidlx.wsicorp.com
       * IPaddr_147_81_84_133	(ocf:heartbeat:IPaddr):	 Started arc-tkincaidlx.wsicorp.com
 
 Transition Summary:
-  * Stop       rsc_drbd_7788:0          (               Slave arc-dknightlx )  due to node availability
-  * Restart    rsc_drbd_7788:1          ( Master arc-tkincaidlx.wsicorp.com )  due to resource definition change
+  * Stop       rsc_drbd_7788:0          (            Unpromoted arc-dknightlx )  due to node availability
+  * Restart    rsc_drbd_7788:1          ( Promoted arc-tkincaidlx.wsicorp.com )  due to resource definition change
   * Restart    fs_mirror                (        arc-tkincaidlx.wsicorp.com )  due to required ms_drbd_7788 notified
   * Restart    pgsql_5555               (        arc-tkincaidlx.wsicorp.com )  due to required fs_mirror start
   * Restart    IPaddr_147_81_84_133     (        arc-tkincaidlx.wsicorp.com )  due to required pgsql_5555 start
@@ -77,7 +77,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms_drbd_7788 [rsc_drbd_7788] (promotable):
-      * Masters: [ arc-tkincaidlx.wsicorp.com ]
+      * Promoted: [ arc-tkincaidlx.wsicorp.com ]
       * Stopped: [ arc-dknightlx ]
     * Resource Group: grp_pgsql_mirror:
       * fs_mirror	(ocf:heartbeat:Filesystem):	 Started arc-tkincaidlx.wsicorp.com

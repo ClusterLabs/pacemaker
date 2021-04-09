@@ -11,7 +11,7 @@ Current cluster status:
     * Clone Set: clone4 [rsc4]:
       * Stopped: [ node1 node2 ]
     * Clone Set: ms5 [rsc5] (promotable):
-      * Slaves: [ node1 node2 ]
+      * Unpromoted: [ node1 node2 ]
 
 Transition Summary:
   * Start      rsc1       (                 node2 )
@@ -19,7 +19,7 @@ Transition Summary:
   * Start      rsc3       (                 node1 )
   * Start      rsc4:0     (                 node2 )
   * Start      rsc4:1     (                 node1 )
-  * Promote    rsc5:0     ( Slave -> Master node1 )
+  * Promote    rsc5:0     ( Unpromoted -> Promoted node1 )
 
 Executing Cluster Transition:
   * Resource action: rsc1            start on node2
@@ -53,5 +53,5 @@ Revised Cluster Status:
     * Clone Set: clone4 [rsc4]:
       * Started: [ node1 node2 ]
     * Clone Set: ms5 [rsc5] (promotable):
-      * Masters: [ node1 ]
-      * Slaves: [ node2 ]
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 ]

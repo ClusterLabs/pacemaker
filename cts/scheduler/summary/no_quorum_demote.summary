@@ -7,14 +7,14 @@ Current cluster status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Started rhel7-1
     * Clone Set: rsc1-clone [rsc1] (promotable):
-      * Masters: [ rhel7-1 ]
-      * Slaves: [ rhel7-2 ]
+      * Promoted: [ rhel7-1 ]
+      * Unpromoted: [ rhel7-2 ]
       * Stopped: [ rhel7-3 rhel7-4 rhel7-5 ]
     * rsc2	(ocf:pacemaker:Dummy):	 Started rhel7-2
 
 Transition Summary:
   * Stop       Fencing     (                 rhel7-1 )  due to no quorum
-  * Demote     rsc1:0      ( Master -> Slave rhel7-1 )
+  * Demote     rsc1:0      ( Promoted -> Unpromoted rhel7-1 )
   * Stop       rsc2        (                 rhel7-2 )  due to no quorum
 
 Executing Cluster Transition:
@@ -35,6 +35,6 @@ Revised Cluster Status:
   * Full List of Resources:
     * Fencing	(stonith:fence_xvm):	 Stopped
     * Clone Set: rsc1-clone [rsc1] (promotable):
-      * Slaves: [ rhel7-1 rhel7-2 ]
+      * Unpromoted: [ rhel7-1 rhel7-2 ]
       * Stopped: [ rhel7-3 rhel7-4 rhel7-5 ]
     * rsc2	(ocf:pacemaker:Dummy):	 Stopped

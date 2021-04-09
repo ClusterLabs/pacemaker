@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="5" num_updates="1" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.0" crm_feature_set="3.0" dc-uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" cib-last-written="Fri Jul 13 13:51:12 2012">
+<cib admin_epoch="0" epoch="5" num_updates="1" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.7" crm_feature_set="3.0" dc-uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" cib-last-written="Fri Jul 13 13:51:12 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="default">
@@ -70,8 +70,8 @@
         <primitive id="drbd_mysql" class="ocf" provider="heartbeat" type="drbd">
           <operations>
             <op name="monitor" id="drbd_mysql_mon_normal" interval="15s" timeout="10s" role="Started"/>
-            <op name="monitor" id="drbd_mysql_mon_slave" interval="10s" timeout="10s" role="Slave"/>
-            <op name="monitor" id="drbd_mysql_mon_master" interval="5s" timeout="10s" role="Master"/>
+            <op name="monitor" id="drbd_mysql_mon_slave" interval="10s" timeout="10s" role="Unpromoted"/>
+            <op name="monitor" id="drbd_mysql_mon_master" interval="5s" timeout="10s" role="Promoted"/>
           </operations>
           <instance_attributes id="drbd_mysql_ia">
             <nvpair id="drbd_mysql_attr_0" name="drbd_resource" value="mysql"/>
@@ -133,8 +133,8 @@
         <primitive class="ocf" id="drbd_www" provider="heartbeat" type="drbd">
           <operations>
             <op name="monitor" id="drbd_www_mon_normal" interval="15s" timeout="10s" role="Started"/>
-            <op name="monitor" id="drbd_www_mon_slave" interval="10s" timeout="10s" role="Slave"/>
-            <op name="monitor" id="drbd_www_mon_master" interval="5s" timeout="10s" role="Master"/>
+            <op name="monitor" id="drbd_www_mon_slave" interval="10s" timeout="10s" role="Unpromoted"/>
+            <op name="monitor" id="drbd_www_mon_master" interval="5s" timeout="10s" role="Promoted"/>
           </operations>
           <instance_attributes id="drbd_www_ia">
             <nvpair id="drbd_www_attr_0" name="drbd_resource" value="www"/>
@@ -265,12 +265,12 @@
     </resources>
     <constraints>
       <rsc_location id="loc-drbd_www_likes_wc01" rsc="ms_drbd_www">
-        <rule id="rule-drbd_www_likes_wc01" role="Master" score="100">
+        <rule id="rule-drbd_www_likes_wc01" role="Promoted" score="100">
           <expression attribute="#uname" operation="eq" value="wc01" id="exp_drbd_www"/>
         </rule>
       </rsc_location>
       <rsc_location id="loc-drbd_mysql_likes_wc02" rsc="ms_drbd_mysql">
-        <rule id="rule-drbd_mysql_likes_wc02" role="Master" score="100">
+        <rule id="rule-drbd_mysql_likes_wc02" role="Promoted" score="100">
           <expression attribute="#uname" operation="eq" value="wc02" id="exp_drbd_msyql"/>
         </rule>
       </rsc_location>
@@ -280,8 +280,8 @@
       <rsc_order id="nfs-common_before_group_www_data" first="clone_nfs-common" then="group_www_data" then-action="start" first-action="start"/>
       <rsc_order id="webservices_before_group_ftpd" first="clone_webservice" then="group_ftpd" then-action="start" first-action="start"/>
       <rsc_order id="group_www_data_before_webservices" first="group_www_data" then="clone_webservice" then-action="start" first-action="start"/>
-      <rsc_colocation id="colo_drbd_group_mysql" rsc="group_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Master" score="INFINITY"/>
-      <rsc_colocation id="colo_drbd_group_www_data" rsc="group_www_data" with-rsc="ms_drbd_www" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="colo_drbd_group_mysql" rsc="group_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Promoted" score="INFINITY"/>
+      <rsc_colocation id="colo_drbd_group_www_data" rsc="group_www_data" with-rsc="ms_drbd_www" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_colocation id="colo_nfs-common_webservice" rsc="clone_webservice" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="colo_nfs-common_www_data" rsc="group_www_data" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="colo_webservices_group_ftpd" rsc="group_ftpd" with-rsc="clone_webservice" with-rsc-role="Started" score="INFINITY"/>

@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.1.0" validate-with="pacemaker-3.0" epoch="114" num_updates="62" admin_epoch="0" cib-last-written="Wed Nov 28 12:34:34 2018" update-origin="rhel7-1" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1543430236">
+<cib crm_feature_set="3.1.0" validate-with="pacemaker-3.7" epoch="114" num_updates="62" admin_epoch="0" cib-last-written="Wed Nov 28 12:34:34 2018" update-origin="rhel7-1" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1543430236">
   <!-- All nodes are either already stopped or shutting down, the DC (rhel7-1)
        needs to be fenced because a stop failed, and stateful-1 clone is
        running on all active nodes. Make sure no graph loop is introduced by
@@ -145,7 +145,7 @@
         <primitive id="stateful-1" class="ocf" type="Stateful" provider="pacemaker">
           <operations>
             <op id="stateful-1-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
-            <op id="stateful-1-monitor-16s" interval="16s" role="Master" name="monitor" timeout="60s"/>
+            <op id="stateful-1-monitor-16s" interval="16s" role="Promoted" name="monitor" timeout="60s"/>
           </operations>
         </primitive>
       </clone>
@@ -213,7 +213,7 @@
         </rule>
       </rsc_location>
       <rsc_order id="group-1-after-promotable-1" first="promotable-1" then="group-1" kind="Mandatory" first-action="promote" then-action="start"/>
-      <rsc_colocation id="group-1-with-promotable-1" rsc="group-1" with-rsc="promotable-1" score="INFINITY" with-rsc-role="Master"/>
+      <rsc_colocation id="group-1-with-promotable-1" rsc="group-1" with-rsc="promotable-1" score="INFINITY" with-rsc-role="Promoted"/>
       <rsc_order id="lsb-dummy-after-group-1" first="group-1" then="lsb-dummy" kind="Mandatory" first-action="start" then-action="start"/>
       <rsc_colocation id="lsb-dummy-with-group-1" rsc="lsb-dummy" with-rsc="group-1" score="INFINITY"/>
     </constraints>

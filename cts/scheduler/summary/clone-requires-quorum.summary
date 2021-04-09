@@ -12,8 +12,8 @@ Current cluster status:
       * dummy-crowd	(ocf:pacemaker:Dummy):	 ORPHANED Started rhel7-5 (UNCLEAN)
       * Started: [ rhel7-1 rhel7-2 rhel7-4 ]
     * Clone Set: dummy-boss-clone [dummy-boss] (promotable):
-      * Masters: [ rhel7-3 ]
-      * Slaves: [ rhel7-2 rhel7-4 ]
+      * Promoted: [ rhel7-3 ]
+      * Unpromoted: [ rhel7-2 rhel7-4 ]
 
 Transition Summary:
   * Fence (reboot) rhel7-5 'peer is no longer part of the cluster'
@@ -38,5 +38,5 @@ Revised Cluster Status:
     * Clone Set: dummy-crowd-clone [dummy-crowd]:
       * Started: [ rhel7-1 rhel7-2 rhel7-4 ]
     * Clone Set: dummy-boss-clone [dummy-boss] (promotable):
-      * Masters: [ rhel7-3 ]
-      * Slaves: [ rhel7-2 rhel7-4 ]
+      * Promoted: [ rhel7-3 ]
+      * Unpromoted: [ rhel7-2 rhel7-4 ]

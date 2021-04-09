@@ -9,15 +9,15 @@ Current cluster status:
       * nfs-kernel-server	(lsb:nfs-kernel-server):	 Started wc01
       * intip_nfs	(ocf:heartbeat:IPaddr2):	 Started wc01
     * Clone Set: ms_drbd_mysql [drbd_mysql] (promotable):
-      * Masters: [ wc02 ]
-      * Slaves: [ wc01 ]
+      * Promoted: [ wc02 ]
+      * Unpromoted: [ wc01 ]
     * Resource Group: group_mysql:
       * fs_mysql	(ocf:heartbeat:Filesystem):	 Started wc02
       * intip_sql	(ocf:heartbeat:IPaddr2):	 Started wc02
       * mysql-server	(ocf:heartbeat:mysql):	 Started wc02
     * Clone Set: ms_drbd_www [drbd_www] (promotable):
-      * Masters: [ wc01 ]
-      * Slaves: [ wc02 ]
+      * Promoted: [ wc01 ]
+      * Unpromoted: [ wc02 ]
     * Clone Set: clone_nfs-common [group_nfs-common]:
       * Started: [ wc01 wc02 ]
     * Clone Set: clone_mysql-proxy [group_mysql-proxy]:
@@ -32,12 +32,12 @@ Current cluster status:
       * stonith_rackpdu:1	(stonith:external/rackpdu):	 Started wc02
 
 Transition Summary:
-  * Promote    drbd_mysql:0          ( Slave -> Master wc01 )
-  * Stop       drbd_mysql:1          (          Master wc02 )  due to node availability
+  * Promote    drbd_mysql:0          ( Unpromoted -> Promoted wc01 )
+  * Stop       drbd_mysql:1          (               Promoted wc02 )  due to node availability
   * Move       fs_mysql              (         wc02 -> wc01 )
   * Move       intip_sql             (         wc02 -> wc01 )
   * Move       mysql-server          (         wc02 -> wc01 )
-  * Stop       drbd_www:1            (           Slave wc02 )  due to node availability
+  * Stop       drbd_www:1            (             Unpromoted wc02 )  due to node availability
   * Stop       nfs-common:1          (                 wc02 )  due to node availability
   * Stop       mysql-proxy:1         (                 wc02 )  due to node availability
   * Stop       fs_www:1              (                 wc02 )  due to node availability
@@ -137,14 +137,14 @@ Revised Cluster Status:
       * nfs-kernel-server	(lsb:nfs-kernel-server):	 Started wc01
       * intip_nfs	(ocf:heartbeat:IPaddr2):	 Started wc01
     * Clone Set: ms_drbd_mysql [drbd_mysql] (promotable):
-      * Masters: [ wc01 ]
+      * Promoted: [ wc01 ]
       * Stopped: [ wc02 ]
     * Resource Group: group_mysql:
       * fs_mysql	(ocf:heartbeat:Filesystem):	 Started wc01
       * intip_sql	(ocf:heartbeat:IPaddr2):	 Started wc01
       * mysql-server	(ocf:heartbeat:mysql):	 Started wc01
     * Clone Set: ms_drbd_www [drbd_www] (promotable):
-      * Masters: [ wc01 ]
+      * Promoted: [ wc01 ]
       * Stopped: [ wc02 ]
     * Clone Set: clone_nfs-common [group_nfs-common]:
       * Started: [ wc01 ]

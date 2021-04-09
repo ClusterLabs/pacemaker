@@ -1,4 +1,4 @@
-<cib crm_feature_set="2.1" admin_epoch="0" epoch="9698" num_updates="3" dc-uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+<cib crm_feature_set="2.1" admin_epoch="0" epoch="9698" num_updates="3" dc-uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:00 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -54,8 +54,8 @@
             <nvpair name="drbdconf" value="/etc/drbd.poolA" id="nvpair.id22204"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="20s" id="ed238e4a-f523-49f9-889a-d8e81a74ff81" timeout="10s" role="Master"/>
-            <op name="monitor" interval="19s" id="op.auto-2" timeout="10s" role="Slave"/>
+            <op name="monitor" interval="20s" id="ed238e4a-f523-49f9-889a-d8e81a74ff81" timeout="10s" role="Promoted"/>
+            <op name="monitor" interval="19s" id="op.auto-2" timeout="10s" role="Unpromoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-ms_drbd_poolA.meta"/>
@@ -98,7 +98,7 @@
         </rule>
       </rsc_location>
       <rsc_order id="e83470b8-5d7d-4507-bc8e-24842af2135a" first="ms_drbd_poolA" then="vpool_ip_poolA" then-action="start" first-action="promote"/>
-      <rsc_colocation id="rsc_colocation.auto-1" rsc="vpool_ip_poolA" with-rsc="ms_drbd_poolA" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="rsc_colocation.auto-1" rsc="vpool_ip_poolA" with-rsc="ms_drbd_poolA" with-rsc-role="Promoted" score="INFINITY"/>
       <rsc_order id="rsc_order.auto-2" first="vpool_ip_poolA" then="drbd_target_poolA" then-action="start" first-action="start"/>
       <rsc_colocation id="rsc_colocation.auto-2" rsc="drbd_target_poolA" with-rsc="vpool_ip_poolA" score="INFINITY"/>
     </constraints>

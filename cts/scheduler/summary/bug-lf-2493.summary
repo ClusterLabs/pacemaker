@@ -8,8 +8,8 @@ Current cluster status:
     * p_dummy4	(ocf:pacemaker:Dummy):	 Stopped
     * p_dummy3	(ocf:pacemaker:Dummy):	 Stopped
     * Clone Set: ms_stateful1 [p_stateful1] (promotable):
-      * Masters: [ hpn07 ]
-      * Slaves: [ hpn08 ]
+      * Promoted: [ hpn07 ]
+      * Unpromoted: [ hpn08 ]
 
 Transition Summary:
   * Start      p_dummy2     ( hpn08 )
@@ -62,5 +62,5 @@ Revised Cluster Status:
     * p_dummy4	(ocf:pacemaker:Dummy):	 Started hpn07
     * p_dummy3	(ocf:pacemaker:Dummy):	 Started hpn08
     * Clone Set: ms_stateful1 [p_stateful1] (promotable):
-      * Masters: [ hpn07 ]
-      * Slaves: [ hpn08 ]
+      * Promoted: [ hpn07 ]
+      * Unpromoted: [ hpn08 ]

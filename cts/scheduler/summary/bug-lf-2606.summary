@@ -10,14 +10,14 @@ Current cluster status:
     * rsc1	(ocf:pacemaker:Dummy):	 FAILED node2 (disabled)
     * rsc2	(ocf:pacemaker:Dummy):	 Started node2
     * Clone Set: ms3 [rsc3] (promotable):
-      * Masters: [ node2 ]
-      * Slaves: [ node1 ]
+      * Promoted: [ node2 ]
+      * Unpromoted: [ node1 ]
 
 Transition Summary:
   * Fence (reboot) node2 'rsc1 failed there'
   * Stop       rsc1       (          node2 )  due to node availability
   * Move       rsc2       ( node2 -> node1 )
-  * Stop       rsc3:1     (   Master node2 )  due to node availability
+  * Stop       rsc3:1     ( Promoted node2 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   ms3_demote_0
@@ -42,5 +42,5 @@ Revised Cluster Status:
     * rsc1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
     * rsc2	(ocf:pacemaker:Dummy):	 Started node1
     * Clone Set: ms3 [rsc3] (promotable):
-      * Slaves: [ node1 ]
+      * Unpromoted: [ node1 ]
       * Stopped: [ node2 ]

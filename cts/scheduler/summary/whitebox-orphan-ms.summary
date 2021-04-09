@@ -14,8 +14,8 @@ Current cluster status:
     * Clone Set: Connectivity [ping-1]:
       * Started: [ 18node1 18node2 18node3 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ 18node1 ]
-      * Slaves: [ 18node2 18node3 ]
+      * Promoted: [ 18node1 ]
+      * Unpromoted: [ 18node2 18node3 ]
     * Resource Group: group-1:
       * r192.168.122.87	(ocf:heartbeat:IPaddr2):	 Started 18node1
       * r192.168.122.88	(ocf:heartbeat:IPaddr2):	 Started 18node1
@@ -23,7 +23,7 @@ Current cluster status:
     * lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started 18node1
     * container2	(ocf:heartbeat:VirtualDomain):	 ORPHANED Started 18node1
     * lxc1	(ocf:pacemaker:remote):	 ORPHANED Started 18node1
-    * lxc-ms	(ocf:pacemaker:Stateful):	 ORPHANED Master [ lxc1 lxc2 ]
+    * lxc-ms	(ocf:pacemaker:Stateful):	 ORPHANED Promoted [ lxc1 lxc2 ]
     * lxc2	(ocf:pacemaker:remote):	 ORPHANED Started 18node1
     * container1	(ocf:heartbeat:VirtualDomain):	 ORPHANED Started 18node1
 
@@ -31,8 +31,8 @@ Transition Summary:
   * Move       FencingFail     ( 18node3 -> 18node1 )
   * Stop       container2      (            18node1 )  due to node availability
   * Stop       lxc1            (            18node1 )  due to node availability
-  * Stop       lxc-ms          (        Master lxc1 )  due to node availability
-  * Stop       lxc-ms          (        Master lxc2 )  due to node availability
+  * Stop       lxc-ms          (      Promoted lxc1 )  due to node availability
+  * Stop       lxc-ms          (      Promoted lxc2 )  due to node availability
   * Stop       lxc2            (            18node1 )  due to node availability
   * Stop       container1      (            18node1 )  due to node availability
 
@@ -78,8 +78,8 @@ Revised Cluster Status:
     * Clone Set: Connectivity [ping-1]:
       * Started: [ 18node1 18node2 18node3 ]
     * Clone Set: master-1 [stateful-1] (promotable):
-      * Masters: [ 18node1 ]
-      * Slaves: [ 18node2 18node3 ]
+      * Promoted: [ 18node1 ]
+      * Unpromoted: [ 18node2 18node3 ]
     * Resource Group: group-1:
       * r192.168.122.87	(ocf:heartbeat:IPaddr2):	 Started 18node1
       * r192.168.122.88	(ocf:heartbeat:IPaddr2):	 Started 18node1

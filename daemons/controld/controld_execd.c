@@ -2631,9 +2631,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     if (op->op_status == PCMK_LRM_OP_ERROR) {
         switch(op->rc) {
             case PCMK_OCF_NOT_RUNNING:
-            case PCMK_OCF_RUNNING_MASTER:
+            case PCMK_OCF_RUNNING_PROMOTED:
             case PCMK_OCF_DEGRADED:
-            case PCMK_OCF_DEGRADED_MASTER:
+            case PCMK_OCF_DEGRADED_PROMOTED:
                 // Leave it to the TE/scheduler to decide if this is an error
                 op->op_status = PCMK_LRM_OP_DONE;
                 break;

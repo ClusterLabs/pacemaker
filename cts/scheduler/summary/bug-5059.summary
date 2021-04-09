@@ -7,18 +7,18 @@ Current cluster status:
   * Full List of Resources:
     * Clone Set: ms_stateful [g_stateful] (promotable):
       * Resource Group: g_stateful:0:
-        * p_stateful1	(ocf:pacemaker:Stateful):	 Slave gluster01.h
+        * p_stateful1	(ocf:pacemaker:Stateful):	 Unpromoted gluster01.h
         * p_stateful2	(ocf:pacemaker:Stateful):	 Stopped
       * Resource Group: g_stateful:1:
-        * p_stateful1	(ocf:pacemaker:Stateful):	 Slave gluster02.h
+        * p_stateful1	(ocf:pacemaker:Stateful):	 Unpromoted gluster02.h
         * p_stateful2	(ocf:pacemaker:Stateful):	 Stopped
       * Stopped: [ gluster03.h gluster04.h ]
     * Clone Set: c_dummy [p_dummy1]:
       * Started: [ gluster01.h gluster02.h ]
 
 Transition Summary:
-  * Promote    p_stateful1:0     (   Slave -> Master gluster01.h )
-  * Promote    p_stateful2:0     ( Stopped -> Master gluster01.h )
+  * Promote    p_stateful1:0     ( Unpromoted -> Promoted gluster01.h )
+  * Promote    p_stateful2:0     (    Stopped -> Promoted gluster01.h )
   * Start      p_stateful2:1     (                   gluster02.h )
 
 Executing Cluster Transition:
@@ -71,7 +71,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms_stateful [g_stateful] (promotable):
-      * Masters: [ gluster01.h ]
-      * Slaves: [ gluster02.h ]
+      * Promoted: [ gluster01.h ]
+      * Unpromoted: [ gluster02.h ]
     * Clone Set: c_dummy [p_dummy1]:
       * Started: [ gluster01.h gluster02.h ]

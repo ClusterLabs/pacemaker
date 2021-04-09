@@ -27,8 +27,8 @@ Current cluster status:
       * Started: [ asttest1 asttest2 ]
     * fs_drbd	(ocf:heartbeat:Filesystem):	 Started asttest1
     * Clone Set: ms_drbd [drbd] (promotable):
-      * Masters: [ asttest1 ]
-      * Slaves: [ asttest2 ]
+      * Promoted: [ asttest1 ]
+      * Unpromoted: [ asttest2 ]
 
 Transition Summary:
   * Migrate    mysqld                  (     asttest1 -> asttest2 )
@@ -49,8 +49,8 @@ Transition Summary:
   * Migrate    ip_voip_vlan855         (     asttest1 -> asttest2 )
   * Migrate    ip_voip_vlan856         (     asttest1 -> asttest2 )
   * Move       fs_drbd                 (     asttest1 -> asttest2 )
-  * Demote     drbd:0                  ( Master -> Slave asttest1 )
-  * Promote    drbd:1                  ( Slave -> Master asttest2 )
+  * Demote     drbd:0                  ( Promoted -> Unpromoted asttest1 )
+  * Promote    drbd:1                  ( Unpromoted -> Promoted asttest2 )
 
 Executing Cluster Transition:
   * Pseudo action:   voip_stop_0
@@ -192,5 +192,5 @@ Revised Cluster Status:
       * Started: [ asttest1 asttest2 ]
     * fs_drbd	(ocf:heartbeat:Filesystem):	 Started asttest2
     * Clone Set: ms_drbd [drbd] (promotable):
-      * Masters: [ asttest2 ]
-      * Slaves: [ asttest1 ]
+      * Promoted: [ asttest2 ]
+      * Unpromoted: [ asttest1 ]

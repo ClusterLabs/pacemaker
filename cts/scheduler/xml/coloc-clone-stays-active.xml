@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.4" have-quorum="1" dc-uuid="s01-0" admin_epoch="0" epoch="4028" num_updates="1" cib-last-written="Fri Jul 13 13:51:04 2012">
+<cib validate-with="pacemaker-3.7" crm_feature_set="3.0.4" have-quorum="1" dc-uuid="s01-0" admin_epoch="0" epoch="4028" num_updates="1" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -170,8 +170,8 @@
           <operations>
             <op id="drbd-pool-0-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-pool-0-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-pool-0-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-pool-0-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-pool-0-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-pool-0-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -193,8 +193,8 @@
           <operations>
             <op id="drbd-pool-1-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-pool-1-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-pool-1-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-pool-1-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-pool-1-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-pool-1-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -307,8 +307,8 @@
           <operations>
             <op id="drbd-s01-service-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-s01-service-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-s01-service-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-s01-service-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-s01-service-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-s01-service-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -400,8 +400,8 @@
           <operations>
             <op id="drbd-s01-logs-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-s01-logs-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-s01-logs-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-s01-logs-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-s01-logs-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-s01-logs-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -608,8 +608,8 @@
           <operations>
             <op id="drbd-vds-dom0-stateless-0-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-vds-dom0-stateless-0-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-vds-dom0-stateless-0-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-vds-dom0-stateless-0-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-vds-dom0-stateless-0-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-vds-dom0-stateless-0-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -682,8 +682,8 @@
           <operations>
             <op id="drbd-vds-tftpboot-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-vds-tftpboot-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-vds-tftpboot-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-vds-tftpboot-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-vds-tftpboot-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-vds-tftpboot-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -741,8 +741,8 @@
           <operations>
             <op id="drbd-vds-http-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-vds-http-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-vds-http-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-vds-http-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-vds-http-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-vds-http-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -818,7 +818,7 @@
           <nvpair id="ms-drbd-s01-vm-data-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-s01-vm-data-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="ms-drbd-s01-vm-data-meta_attributes-interleave" name="interleave" value="true"/>
-          <nvpair id="ms-drbd-s01-vm-data-meta_attributes-target-role" name="target-role" value="Master"/>
+          <nvpair id="ms-drbd-s01-vm-data-meta_attributes-target-role" name="target-role" value="Promoted"/>
         </meta_attributes>
         <primitive class="ocf" id="drbd-s01-vm-data" provider="linbit" type="drbd">
           <instance_attributes id="drbd-s01-vm-data-instance_attributes">
@@ -827,8 +827,8 @@
           <operations>
             <op id="drbd-s01-vm-data-start-0" interval="0" name="start" timeout="240"/>
             <op id="drbd-s01-vm-data-stop-0" interval="0" name="stop" timeout="100"/>
-            <op id="drbd-s01-vm-data-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
-            <op id="drbd-s01-vm-data-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
+            <op id="drbd-s01-vm-data-monitor-10" interval="10" name="monitor" role="Promoted" timeout="20"/>
+            <op id="drbd-s01-vm-data-monitor-30" interval="30" name="monitor" role="Unpromoted" timeout="20"/>
           </operations>
         </primitive>
       </clone>
@@ -940,10 +940,10 @@
           <expression attribute="#uname" id="prefer-iscsi-pool-1-target-all-on-s01-1-expression" operation="eq" value="s01-1"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="iscsi-pool-0-target-with-drbd-master" rsc="iscsi-pool-0-target-all" score="INFINITY" with-rsc="ms-drbd-pool-0" with-rsc-role="Master"/>
-      <rsc_colocation id="iscsi-pool-0-vips-fw-with-vips" rsc="ms-iscsi-pool-0-vips-fw" rsc-role="Master" score="INFINITY" with-rsc="iscsi-pool-0-vips"/>
-      <rsc_colocation id="iscsi-pool-1-target-with-drbd-master" rsc="iscsi-pool-1-target-all" score="INFINITY" with-rsc="ms-drbd-pool-1" with-rsc-role="Master"/>
-      <rsc_colocation id="iscsi-pool-1-vips-fw-with-vips" rsc="ms-iscsi-pool-1-vips-fw" rsc-role="Master" score="INFINITY" with-rsc="iscsi-pool-1-vips"/>
+      <rsc_colocation id="iscsi-pool-0-target-with-drbd-master" rsc="iscsi-pool-0-target-all" score="INFINITY" with-rsc="ms-drbd-pool-0" with-rsc-role="Promoted"/>
+      <rsc_colocation id="iscsi-pool-0-vips-fw-with-vips" rsc="ms-iscsi-pool-0-vips-fw" rsc-role="Promoted" score="INFINITY" with-rsc="iscsi-pool-0-vips"/>
+      <rsc_colocation id="iscsi-pool-1-target-with-drbd-master" rsc="iscsi-pool-1-target-all" score="INFINITY" with-rsc="ms-drbd-pool-1" with-rsc-role="Promoted"/>
+      <rsc_colocation id="iscsi-pool-1-vips-fw-with-vips" rsc="ms-iscsi-pool-1-vips-fw" rsc-role="Promoted" score="INFINITY" with-rsc="iscsi-pool-1-vips"/>
       <rsc_order first="ms-drbd-pool-0" first-action="promote" id="iscsi-pool-0-target-after-drbd" then="iscsi-pool-0-target-all" then-action="start"/>
       <rsc_order first="iscsi-pool-0-target-all" first-action="start" id="iscsi-pool-0-vips-fw-after-target" then="ms-iscsi-pool-0-vips-fw" then-action="promote"/>
       <rsc_order first="iscsi-pool-0-vips" first-action="start" id="iscsi-pool-0-vips-fw-after-vips" then="ms-iscsi-pool-0-vips-fw" then-action="promote"/>
@@ -952,7 +952,7 @@
       <rsc_order first="iscsi-pool-1-vips" first-action="start" id="iscsi-pool-1-vips-fw-after-vips" then="ms-iscsi-pool-1-vips-fw" then-action="promote"/>
       <rsc_colocation id="iscsi-pool-1-vips-with-target" rsc="iscsi-pool-1-vips" score="INFINITY" with-rsc="iscsi-pool-1-target-all"/>
       <rsc_colocation id="iscsi-pool-0-vips-with-target" rsc="iscsi-pool-0-vips" score="INFINITY" with-rsc="iscsi-pool-0-target-all"/>
-      <rsc_colocation id="s01-service-fs-with-drbd-master" rsc="cl-s01-service-fs" score="INFINITY" with-rsc="ms-drbd-s01-service" with-rsc-role="Master"/>
+      <rsc_colocation id="s01-service-fs-with-drbd-master" rsc="cl-s01-service-fs" score="INFINITY" with-rsc="ms-drbd-s01-service" with-rsc-role="Promoted"/>
       <rsc_order first="cl-ietd" first-action="start" id="iscsi-pool-0-target-after-ietd" then="iscsi-pool-0-target-all" then-action="start"/>
       <rsc_order first="cl-ietd" first-action="start" id="iscsi-pool-1-target-after-ietd" then="iscsi-pool-1-target-all" then-action="start"/>
       <rsc_colocation id="iscsi-pool-1-target-with-ietd" rsc="iscsi-pool-1-target-all" score="INFINITY" with-rsc="cl-ietd"/>
@@ -962,7 +962,7 @@
       <rsc_order first="ms-drbd-s01-service" first-action="promote" id="s01-service-fs-after-drbd" then="cl-s01-service-fs" then-action="start"/>
       <rsc_order first="cl-s01-service-fs" first-action="start" id="dhcpd-after-service-fs" then="cl-dhcpd" then-action="start"/>
       <rsc_order first="cl-s01-service-fs" first-action="start" id="http-server-after-service-fs" then="http-server" then-action="start"/>
-      <rsc_colocation id="s01-logs-fs-with-drbd-master" rsc="cl-s01-logs-fs" score="INFINITY" with-rsc="ms-drbd-s01-logs" with-rsc-role="Master"/>
+      <rsc_colocation id="s01-logs-fs-with-drbd-master" rsc="cl-s01-logs-fs" score="INFINITY" with-rsc="ms-drbd-s01-logs" with-rsc-role="Promoted"/>
       <rsc_order first="ms-drbd-s01-logs" first-action="promote" id="s01-logs-fs-after-drbd" then="cl-s01-logs-fs" then-action="start"/>
       <rsc_colocation id="syslog-server-with-logs-fs" rsc="syslog-server" score="INFINITY" with-rsc="cl-s01-logs-fs"/>
       <rsc_colocation id="syslog-server-with-service-fs" rsc="syslog-server" score="INFINITY" with-rsc="cl-s01-service-fs"/>
@@ -971,8 +971,8 @@
       <rsc_colocation id="tftp-server-with-xinetd" rsc="tftp-server" score="INFINITY" with-rsc="cl-xinetd"/>
       <rsc_order first="cl-xinetd" first-action="start" id="tftp-server-after-xinetd" then="tftp-server" then-action="start"/>
       <rsc_colocation id="iscsi-vds-dom0-stateless-0-target-with-ietd" rsc="iscsi-vds-dom0-stateless-0-target-all" score="INFINITY" with-rsc="cl-ietd"/>
-      <rsc_colocation id="iscsi-vds-dom0-stateless-0-target-with-drbd-master" rsc="iscsi-vds-dom0-stateless-0-target-all" score="INFINITY" with-rsc="ms-drbd-vds-dom0-stateless-0" with-rsc-role="Master"/>
-      <rsc_colocation id="iscsi-vds-dom0-stateless-0-vips-fw-with-vips" rsc="ms-iscsi-vds-dom0-stateless-0-vips-fw" rsc-role="Master" score="INFINITY" with-rsc="iscsi-vds-dom0-stateless-0-vips"/>
+      <rsc_colocation id="iscsi-vds-dom0-stateless-0-target-with-drbd-master" rsc="iscsi-vds-dom0-stateless-0-target-all" score="INFINITY" with-rsc="ms-drbd-vds-dom0-stateless-0" with-rsc-role="Promoted"/>
+      <rsc_colocation id="iscsi-vds-dom0-stateless-0-vips-fw-with-vips" rsc="ms-iscsi-vds-dom0-stateless-0-vips-fw" rsc-role="Promoted" score="INFINITY" with-rsc="iscsi-vds-dom0-stateless-0-vips"/>
       <rsc_colocation id="iscsi-vds-dom0-stateless-0-vips-with-target" rsc="iscsi-vds-dom0-stateless-0-vips" score="INFINITY" with-rsc="iscsi-vds-dom0-stateless-0-target-all"/>
       <rsc_order first="iscsi-vds-dom0-stateless-0-vips" first-action="start" id="iscsi-vds-dom0-stateless-0-vips-fw-after-vips" then="ms-iscsi-vds-dom0-stateless-0-vips-fw" then-action="promote"/>
       <rsc_order first="iscsi-vds-dom0-stateless-0-target-all" first-action="start" id="iscsi-vds-dom0-stateless-0-vips-fw-after-target" then="ms-iscsi-vds-dom0-stateless-0-vips-fw" then-action="promote"/>
@@ -980,7 +980,7 @@
       <rsc_order first="ms-drbd-vds-dom0-stateless-0" first-action="promote" id="iscsi-vds-dom0-stateless-0-target-after-drbd" then="iscsi-vds-dom0-stateless-0-target-all" then-action="start"/>
       <rsc_colocation id="o2cb-with-dlm" rsc="cl-o2cb" score="INFINITY" with-rsc="cl-dlm"/>
       <rsc_order first="cl-dlm" first-action="start" id="o2cb-after-dlm" then="cl-o2cb" then-action="start"/>
-      <rsc_colocation id="vds-tftpboot-fs-with-drbd-master" rsc="cl-vds-tftpboot-fs" score="INFINITY" with-rsc="ms-drbd-vds-tftpboot" with-rsc-role="Master"/>
+      <rsc_colocation id="vds-tftpboot-fs-with-drbd-master" rsc="cl-vds-tftpboot-fs" score="INFINITY" with-rsc="ms-drbd-vds-tftpboot" with-rsc-role="Promoted"/>
       <rsc_colocation id="vds-tftpboot-fs-with-o2cb" rsc="cl-vds-tftpboot-fs" score="INFINITY" with-rsc="cl-o2cb"/>
       <rsc_order first="cl-o2cb" first-action="start" id="vds-tftpboot-fs-after-o2cb" then="cl-vds-tftpboot-fs" then-action="start"/>
       <rsc_order first="ms-drbd-vds-tftpboot" first-action="promote" id="vds-tftpboot-fs-after-drbd" then="cl-vds-tftpboot-fs" then-action="start"/>
@@ -988,7 +988,7 @@
       <rsc_order first="cl-vds-tftpboot-fs" first-action="start" id="tftp-server-after-tftpboot-fs" then="tftp-server" then-action="start"/>
       <rsc_colocation id="gfs2-with-dlm" rsc="cl-gfs2" score="INFINITY" with-rsc="cl-dlm"/>
       <rsc_order first="cl-dlm" first-action="start" id="gfs2-after-dlm" then="cl-gfs2" then-action="start"/>
-      <rsc_colocation id="vds-http-fs-with-drbd-master" rsc="cl-vds-http-fs" score="INFINITY" with-rsc="ms-drbd-vds-http" with-rsc-role="Master"/>
+      <rsc_colocation id="vds-http-fs-with-drbd-master" rsc="cl-vds-http-fs" score="INFINITY" with-rsc="ms-drbd-vds-http" with-rsc-role="Promoted"/>
       <rsc_colocation id="vds-http-fs-with-gfs2" rsc="cl-vds-http-fs" score="INFINITY" with-rsc="cl-gfs2"/>
       <rsc_order first="ms-drbd-vds-http" first-action="promote" id="vds-http-fs-after-drbd" then="cl-vds-http-fs" then-action="start"/>
       <rsc_order first="cl-gfs2" first-action="start" id="vds-http-fs-after-gfs2" then="cl-vds-http-fs" then-action="start"/>
@@ -1040,7 +1040,7 @@
       <rsc_order first="cl-dlm" first-action="start" id="clvmd-after-dlm" then="cl-clvmd" then-action="start"/>
       <rsc_colocation id="s01-vm-data-metadata-fs-with-vg" rsc="cl-s01-vm-data-metadata-fs" score="INFINITY" with-rsc="cl-vg-s01-vm-data"/>
       <rsc_colocation id="vg-s01-vm-data-with-clvmd" rsc="cl-vg-s01-vm-data" score="INFINITY" with-rsc="cl-clvmd"/>
-      <rsc_colocation id="vg-s01-vm-data-with-drbd-master" rsc="cl-vg-s01-vm-data" score="INFINITY" with-rsc="ms-drbd-s01-vm-data" with-rsc-role="Master"/>
+      <rsc_colocation id="vg-s01-vm-data-with-drbd-master" rsc="cl-vg-s01-vm-data" score="INFINITY" with-rsc="ms-drbd-s01-vm-data" with-rsc-role="Promoted"/>
       <rsc_order first="cl-vg-s01-vm-data" first-action="start" id="s01-vm-data-metadata-fs-after-vg" then="cl-s01-vm-data-metadata-fs" then-action="start"/>
       <rsc_order first="cl-clvmd" first-action="start" id="vg-s01-vm-data-after-clvmd" then="cl-vg-s01-vm-data" then-action="start"/>
       <rsc_order first="ms-drbd-s01-vm-data" first-action="promote" id="vg-s01-vm-data-after-drbd" then="cl-vg-s01-vm-data" then-action="start"/>

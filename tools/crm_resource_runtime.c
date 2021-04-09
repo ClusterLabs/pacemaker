@@ -24,7 +24,7 @@ cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
         if (role == RSC_ROLE_STOPPED) {
             rc->flags |= rsc_remain_stopped;
         } else if (pcmk_is_set(parent->flags, pe_rsc_promotable) &&
-                   role == RSC_ROLE_SLAVE) {
+                   (role == RSC_ROLE_UNPROMOTED)) {
             rc->flags |= rsc_unpromotable;
         }
     }
@@ -54,7 +54,7 @@ build_node_info_list(pe_resource_t *rsc)
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
             ni->promoted = pcmk_is_set(rsc->flags, pe_rsc_promotable) &&
-                           child->fns->state(child, TRUE) == RSC_ROLE_MASTER;
+                           child->fns->state(child, TRUE) == RSC_ROLE_PROMOTED;
 
             retval = g_list_prepend(retval, ni);
         }
@@ -87,7 +87,7 @@ cli_resource_search(pe_resource_t *rsc, const char *requested_name,
             pe_node_t *node = (pe_node_t *) iter->data;
             node_info_t *ni = calloc(1, sizeof(node_info_t));
             ni->node_name = node->details->uname;
-            ni->promoted = rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER;
+            ni->promoted = (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED);
 
             retval = g_list_prepend(retval, ni);
         }
@@ -1343,7 +1343,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
     } else {
         /* Stop the resource by setting target-role to Stopped.
          * Remember any existing target-role so we can restore it later
-         * (though it only makes any difference if it's Slave).
+         * (though it only makes any difference if it's Unpromoted).
          */
         char *lookup_id = clone_strip(rsc->id);
 
@@ -1891,22 +1891,22 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         GList *iter = NULL;
-        unsigned int master_count = 0;
-        pe_node_t *master_node = NULL;
+        unsigned int promoted_count = 0;
+        pe_node_t *promoted_node = NULL;
 
         for(iter = rsc->children; iter; iter = iter->next) {
             pe_resource_t *child = (pe_resource_t *)iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
-            if(child_role == RSC_ROLE_MASTER) {
+            if (child_role == RSC_ROLE_PROMOTED) {
                 rsc = child;
-                master_node = pe__current_node(child);
-                master_count++;
+                promoted_node = pe__current_node(child);
+                promoted_count++;
             }
         }
-        if (promoted_role_only || master_count) {
-            count = master_count;
-            current = master_node;
+        if (promoted_role_only || (promoted_count != 0)) {
+            count = promoted_count;
+            current = promoted_node;
         }
 
     }
@@ -1941,7 +1941,8 @@ cli_resource_move(pe_resource_t *rsc, const char *rsc_id, const char *host_name,
                              cib, cib_options, promoted_role_only);
 
     crm_trace("%s%s now prefers node %s%s",
-              rsc->id, promoted_role_only?" (master)":"", dest->details->uname, force?"(forced)":"");
+              rsc->id, (promoted_role_only? " (promoted)" : ""),
+              dest->details->uname, force?"(forced)":"");
 
     /* only ban the previous location if current location != destination location.
      * it is possible to use -M to enforce a location without regard of where the

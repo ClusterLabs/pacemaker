@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.6.3" validate-with="pacemaker-3.6" epoch="45" num_updates="44" admin_epoch="1" cib-last-written="Tue Dec 22 14:11:12 2020" update-origin="rhel7-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4">
+<cib crm_feature_set="3.6.3" validate-with="pacemaker-3.7" epoch="45" num_updates="44" admin_epoch="1" cib-last-written="Tue Dec 22 14:11:12 2020" update-origin="rhel7-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="4">
   <configuration>
       <!-- This is a large combination test for colocation influence. The default migration-threshold
 	   is 2, and default stickiness is 10 (so nothing should move unless due to colocations).
@@ -388,8 +388,8 @@
           <operations>
             <op id="rsc13b-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20s"/>
             <op id="rsc13b-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20s"/>
-            <op id="rsc13b-monitor-interval-10s" interval="10s" name="monitor" timeout="20s" role="Slave"/>
-            <op id="rsc13b-monitor-interval-11s" interval="11s" name="monitor" timeout="20s" role="Master"/>
+            <op id="rsc13b-monitor-interval-10s" interval="10s" name="monitor" timeout="20s" role="Unpromoted"/>
+            <op id="rsc13b-monitor-interval-11s" interval="11s" name="monitor" timeout="20s" role="Promoted"/>
             <op id="rsc13b-reload-interval-0s" interval="0s" name="reload" timeout="20s"/>
             <op id="rsc13b-start-interval-0s" interval="0s" name="start" timeout="20s"/>
             <op id="rsc13b-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -417,8 +417,8 @@
           <operations>
             <op id="rsc14a-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20s"/>
             <op id="rsc14a-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20s"/>
-            <op id="rsc14a-monitor-interval-10s" interval="10s" name="monitor" timeout="20s" role="Slave"/>
-            <op id="rsc14a-monitor-interval-11s" interval="11s" name="monitor" timeout="20s" role="Master"/>
+            <op id="rsc14a-monitor-interval-10s" interval="10s" name="monitor" timeout="20s" role="Unpromoted"/>
+            <op id="rsc14a-monitor-interval-11s" interval="11s" name="monitor" timeout="20s" role="Promoted"/>
             <op id="rsc14a-reload-interval-0s" interval="0s" name="reload" timeout="20s"/>
             <op id="rsc14a-start-interval-0s" interval="0s" name="start" timeout="20s"/>
             <op id="rsc14a-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -447,8 +447,8 @@
       <rsc_colocation id="colocation-rsc10a-bundle10-INFINITY" rsc="rsc10a" score="INFINITY" with-rsc="bundle10" influence="false"/>
       <rsc_colocation id="colocation-bundle11-rsc11a-INFINITY" rsc="bundle11" score="INFINITY" with-rsc="rsc11a" influence="false"/>
       <rsc_colocation id="colocation-rsc12a-rsc12c-INFINITY" rsc="tag12" score="INFINITY" with-rsc="rsc12c" influence="false"/>
-      <rsc_colocation id="colocation-rsc13a-rsc13b-clone-INFINITY" rsc="rsc13a" rsc-role="Started" score="INFINITY" with-rsc="rsc13b-clone" with-rsc-role="Master" influence="false"/>
-      <rsc_colocation id="colocation-rsc14a-clone-rsc14b-INFINITY" rsc="rsc14a-clone" rsc-role="Master" score="INFINITY" with-rsc="rsc14b" with-rsc-role="Started" influence="false"/>
+      <rsc_colocation id="colocation-rsc13a-rsc13b-clone-INFINITY" rsc="rsc13a" rsc-role="Started" score="INFINITY" with-rsc="rsc13b-clone" with-rsc-role="Promoted" influence="false"/>
+      <rsc_colocation id="colocation-rsc14a-clone-rsc14b-INFINITY" rsc="rsc14a-clone" rsc-role="Promoted" score="INFINITY" with-rsc="rsc14b" with-rsc-role="Started" influence="false"/>
       <rsc_location id="location-rsc3b-rhel7-5-INFINITY" node="rhel7-5" rsc="rsc3b" score="INFINITY"/>
       <rsc_location id="location-ban" node="rhel7-5" rsc-pattern="!rsc3.*" score="-INFINITY"/>
     </constraints>

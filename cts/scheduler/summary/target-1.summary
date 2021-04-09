@@ -9,7 +9,7 @@ Current cluster status:
     * rsc_c001n08	(ocf:heartbeat:IPaddr):	 Started c001n08 (disabled)
     * rsc_c001n02	(ocf:heartbeat:IPaddr):	 Started c001n02
     * Clone Set: promoteme [rsc_c001n03] (promotable):
-      * Slaves: [ c001n03 ]
+      * Unpromoted: [ c001n03 ]
     * rsc_c001n01	(ocf:heartbeat:IPaddr):	 Started c001n01
 
 Transition Summary:
@@ -39,5 +39,5 @@ Revised Cluster Status:
     * rsc_c001n08	(ocf:heartbeat:IPaddr):	 Stopped (disabled)
     * rsc_c001n02	(ocf:heartbeat:IPaddr):	 Started c001n02
     * Clone Set: promoteme [rsc_c001n03] (promotable):
-      * Slaves: [ c001n03 ]
+      * Unpromoted: [ c001n03 ]
     * rsc_c001n01	(ocf:heartbeat:IPaddr):	 Started c001n01

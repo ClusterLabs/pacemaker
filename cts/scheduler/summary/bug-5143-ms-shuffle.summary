@@ -12,10 +12,10 @@ Current cluster status:
     * Clone Set: fs2 [fs-ocfs-2]:
       * Started: [ hex-1 hex-2 hex-3 ]
     * Clone Set: ms-r0 [drbd-r0] (promotable):
-      * Masters: [ hex-1 ]
-      * Slaves: [ hex-2 ]
+      * Promoted: [ hex-1 ]
+      * Unpromoted: [ hex-2 ]
     * Clone Set: ms-r1 [drbd-r1] (promotable):
-      * Slaves: [ hex-2 hex-3 ]
+      * Unpromoted: [ hex-2 hex-3 ]
     * Resource Group: md0-group:
       * md0	(ocf:heartbeat:Raid1):	 Started hex-3
       * vg-md0	(ocf:heartbeat:LVM):	 Started hex-3
@@ -30,7 +30,7 @@ Current cluster status:
       * dummy2	(ocf:heartbeat:Delay):	 Stopped
 
 Transition Summary:
-  * Promote    drbd-r1:1     ( Slave -> Master hex-3 )
+  * Promote    drbd-r1:1     ( Unpromoted -> Promoted hex-3 )
 
 Executing Cluster Transition:
   * Pseudo action:   ms-r1_pre_notify_promote_0
@@ -59,11 +59,11 @@ Revised Cluster Status:
     * Clone Set: fs2 [fs-ocfs-2]:
       * Started: [ hex-1 hex-2 hex-3 ]
     * Clone Set: ms-r0 [drbd-r0] (promotable):
-      * Masters: [ hex-1 ]
-      * Slaves: [ hex-2 ]
+      * Promoted: [ hex-1 ]
+      * Unpromoted: [ hex-2 ]
     * Clone Set: ms-r1 [drbd-r1] (promotable):
-      * Masters: [ hex-3 ]
-      * Slaves: [ hex-2 ]
+      * Promoted: [ hex-3 ]
+      * Unpromoted: [ hex-2 ]
     * Resource Group: md0-group:
       * md0	(ocf:heartbeat:Raid1):	 Started hex-3
       * vg-md0	(ocf:heartbeat:LVM):	 Started hex-3

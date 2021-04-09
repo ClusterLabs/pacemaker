@@ -42,4 +42,4 @@ Revised Cluster Status:
       * d0	(ocf:heartbeat:Dummy):	 Stopped (disabled)
       * d1	(ocf:heartbeat:Dummy):	 Stopped (disabled)
     * Clone Set: ms0 [s0] (promotable):
-      * Slaves: [ hex-13 hex-14 ]
+      * Unpromoted: [ hex-13 hex-14 ]

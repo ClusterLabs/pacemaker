@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="61" num_updates="26" dc-uuid="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:00 2012">
+<cib admin_epoch="0" epoch="61" num_updates="26" dc-uuid="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:00 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -40,7 +40,7 @@
           </instance_attributes>
           <operations>
             <op name="monitor" interval="12s" id="drbd0_mon_0" timeout="5s" start-delay="0" enabled="true" role="Started"/>
-            <op name="monitor" interval="10s" id="drbd0_mon_1" timeout="5s" role="Master" start-delay="0" enabled="true"/>
+            <op name="monitor" interval="10s" id="drbd0_mon_1" timeout="5s" role="Promoted" start-delay="0" enabled="true"/>
           </operations>
           <meta_attributes id="meta_attributes.id22075">
             <nvpair id="nvpair.id22082" name="target-role" value="started"/>
@@ -66,7 +66,7 @@
           </instance_attributes>
           <operations>
             <op name="monitor" interval="12s" id="drbd1_mon_0" timeout="5s"/>
-            <op name="monitor" interval="10s" id="drbd1_mon_1" timeout="5s" role="Master"/>
+            <op name="monitor" interval="10s" id="drbd1_mon_1" timeout="5s" role="Promoted"/>
           </operations>
           <meta_attributes id="meta_attributes.id22228">
             <nvpair id="nvpair.id22234" name="target-role" value="started"/>
@@ -76,7 +76,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_colocation id="drbd0_drbd1_master" rsc="ms-drbd0" with-rsc="ms-drbd1" rsc-role="Master" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="drbd0_drbd1_master" rsc="ms-drbd0" with-rsc="ms-drbd1" rsc-role="Promoted" with-rsc-role="Promoted" score="INFINITY"/>
     </constraints>
   </configuration>
   <status>

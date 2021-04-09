@@ -6,21 +6,21 @@ Current cluster status:
 
   * Full List of Resources:
     * Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Master controller-0
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master controller-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 Master controller-2
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted controller-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted controller-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted controller-2
     * Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]:
       * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
     * Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master controller-0
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-1
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-2
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-0
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-1
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-2
     * Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]:
-      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Slave controller-0
-      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Slave controller-1
-      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Slave controller-2
+      * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Unpromoted controller-0
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Unpromoted controller-1
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
     * stonith-fence_ipmilan-5254005e097a	(stonith:fence_ipmilan):	 Started controller-0
     * stonith-fence_ipmilan-525400afe30e	(stonith:fence_ipmilan):	 Started controller-2
     * stonith-fence_ipmilan-525400985679	(stonith:fence_ipmilan):	 Started controller-1
@@ -30,8 +30,8 @@ Current cluster status:
 Transition Summary:
   * Stop       ovn-dbs-bundle-podman-0     (                     controller-0 )  due to node availability
   * Stop       ovn-dbs-bundle-0            (                     controller-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
-  * Stop       ovndb_servers:0             (           Slave ovn-dbs-bundle-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
-  * Promote    ovndb_servers:1             ( Slave -> Master ovn-dbs-bundle-1 )
+  * Stop       ovndb_servers:0             (             Unpromoted ovn-dbs-bundle-0 )  due to unrunnable ovn-dbs-bundle-podman-0 start
+  * Promote    ovndb_servers:1             ( Unpromoted -> Promoted ovn-dbs-bundle-1 )
 
 Executing Cluster Transition:
   * Resource action: ovndb_servers   cancel=30000 on ovn-dbs-bundle-1
@@ -81,21 +81,21 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Container bundle set: galera-bundle [cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Master controller-0
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master controller-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 Master controller-2
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted controller-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted controller-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted controller-2
     * Container bundle set: rabbitmq-bundle [cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest]:
       * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
     * Container bundle set: redis-bundle [cluster.common.tag/rhosp16-openstack-redis:pcmklatest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master controller-0
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-1
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-2
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-0
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-1
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-2
     * Container bundle set: ovn-dbs-bundle [cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest]:
       * ovn-dbs-bundle-0	(ocf:ovn:ovndb-servers):	 Stopped
-      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Master controller-1
-      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Slave controller-2
+      * ovn-dbs-bundle-1	(ocf:ovn:ovndb-servers):	 Promoted controller-1
+      * ovn-dbs-bundle-2	(ocf:ovn:ovndb-servers):	 Unpromoted controller-2
     * stonith-fence_ipmilan-5254005e097a	(stonith:fence_ipmilan):	 Started controller-0
     * stonith-fence_ipmilan-525400afe30e	(stonith:fence_ipmilan):	 Started controller-2
     * stonith-fence_ipmilan-525400985679	(stonith:fence_ipmilan):	 Started controller-1

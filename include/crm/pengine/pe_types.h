@@ -485,7 +485,7 @@ enum pe_ordering {
 
     pe_order_implies_first         = 0x10,      /* If 'then' is required, ensure 'first' is too */
     pe_order_implies_then          = 0x20,      /* If 'first' is required, ensure 'then' is too */
-    pe_order_implies_first_master  = 0x40,      /* Imply 'first' is required when 'then' is required and then's rsc holds Master role. */
+    pe_order_promoted_implies_first = 0x40,     /* If 'then' is required and then's rsc is promoted, ensure 'first' becomes required too */
 
     /* first requires then to be both runnable and migrate runnable. */
     pe_order_implies_first_migratable  = 0x80,
@@ -518,6 +518,11 @@ enum pe_ordering {
     pe_order_preserve              = 0x1000000, /* Hack for breaking user ordering constraints with container resources */
     pe_order_then_cancels_first    = 0x2000000, // if 'then' becomes required, 'first' becomes optional
     pe_order_trace                 = 0x4000000, /* test marker */
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    // \deprecated Use pe_order_promoted_implies_first instead
+    pe_order_implies_first_master  = pe_order_promoted_implies_first,
+#endif
 };
 /* *INDENT-ON* */
 

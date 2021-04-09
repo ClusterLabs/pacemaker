@@ -395,8 +395,7 @@ behavior. Highlights:
 
 * The ``master`` tag has been deprecated in favor of using the ``clone`` tag
   with the new ``promotable`` meta-attribute set to ``true``. "Master/slave"
-  clone resources are now referred to as "promotable" clone resources, though
-  it will take longer for the full terminology change to be completed.
+  clone resources are now referred to as "promotable" clone resources.
 
 * The public API for Pacemaker libraries that software applications can use
   has changed significantly.

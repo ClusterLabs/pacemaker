@@ -5,15 +5,15 @@ Current cluster status:
   * Full List of Resources:
     * Clone Set: ms-sf [ms-sf_group] (promotable) (unique):
       * Resource Group: ms-sf_group:0:
-        * master_slave_Stateful:0	(ocf:heartbeat:Dummy-statful):	 Slave process2b
+        * master_slave_Stateful:0	(ocf:heartbeat:Dummy-statful):	 Unpromoted process2b
         * master_slave_procdctl:0	(ocf:heartbeat:procdctl):	 Stopped
       * Resource Group: ms-sf_group:1:
-        * master_slave_Stateful:1	(ocf:heartbeat:Dummy-statful):	 Master process1a
-        * master_slave_procdctl:1	(ocf:heartbeat:procdctl):	 Master process1a
+        * master_slave_Stateful:1	(ocf:heartbeat:Dummy-statful):	 Promoted process1a
+        * master_slave_procdctl:1	(ocf:heartbeat:procdctl):	 Promoted process1a
 
 Transition Summary:
-  * Stop       master_slave_Stateful:1     ( Master process1a )  due to node availability
-  * Stop       master_slave_procdctl:1     ( Master process1a )  due to node availability
+  * Stop       master_slave_Stateful:1     ( Promoted process1a )  due to node availability
+  * Stop       master_slave_procdctl:1     ( Promoted process1a )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   ms-sf_demote_0
@@ -37,7 +37,7 @@ Revised Cluster Status:
   * Full List of Resources:
     * Clone Set: ms-sf [ms-sf_group] (promotable) (unique):
       * Resource Group: ms-sf_group:0:
-        * master_slave_Stateful:0	(ocf:heartbeat:Dummy-statful):	 Slave process2b
+        * master_slave_Stateful:0	(ocf:heartbeat:Dummy-statful):	 Unpromoted process2b
         * master_slave_procdctl:0	(ocf:heartbeat:procdctl):	 Stopped
       * Resource Group: ms-sf_group:1:
         * master_slave_Stateful:1	(ocf:heartbeat:Dummy-statful):	 Stopped

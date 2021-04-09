@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="40" num_updates="5005" dc-uuid="169e4673-93fb-4c0a-8082-d3408bae9431" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:05 2012">
+<cib admin_epoch="0" epoch="40" num_updates="5005" dc-uuid="169e4673-93fb-4c0a-8082-d3408bae9431" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-3.7" cib-last-written="Fri Jul 13 13:51:05 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -161,7 +161,7 @@
         <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
           <operations>
             <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>
-            <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Master"/>
+            <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Promoted"/>
           </operations>
         </primitive>
         <meta_attributes id="clone-master_rsc_1.meta">

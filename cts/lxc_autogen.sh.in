@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2013-2020 the Pacemaker project contributors
+# Copyright 2013-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -71,7 +71,13 @@ while true ; do
     -k|--key-gen) key_gen=1; shift;;
     -a|--add-cib) cib=1; shift;;
     -A|--allow-anywhere) anywhere=1; shift;;
-    -C|--add-clone|-m|--add-master) add_clone=1; shift;;
+    -C|--add-clone) add_clone=1; shift;;
+    -m|--add-master)
+        echo "-m/--add-master is deprecated (use -C/--add-clone instead)"
+        echo
+        add_clone=1
+        shift
+        ;;
     -v|--verify) verify=1; shift;;
     "") break;;
     *) helptext 1;;
@@ -345,8 +351,8 @@ END
         <primitive class="ocf" id="lxc-rsc" provider="pacemaker" type="Stateful">
           <instance_attributes id="lxc-rsc-instance_attributes"/>
           <operations>
-            <op id="lxc-rsc-monitor-interval-10s" interval="10s" name="monitor" role="Master" timeout="20s"/>
-            <op id="lxc-rsc-monitor-interval-11s" interval="11s" name="monitor" role="Slave" timeout="20s"/>
+            <op id="lxc-rsc-monitor-interval-10s" interval="10s" name="monitor" role="Promoted" timeout="20s"/>
+            <op id="lxc-rsc-monitor-interval-11s" interval="11s" name="monitor" role="Unpromoted" timeout="20s"/>
           </operations>
         </primitive>
         <meta_attributes id="lxc-clone-meta_attributes">

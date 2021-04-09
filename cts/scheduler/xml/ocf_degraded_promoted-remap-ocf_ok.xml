@@ -1,0 +1,99 @@
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.7" epoch="105" num_updates="18" admin_epoch="0" cib-last-written="Wed Sep 30 16:22:55 2020" update-origin="rhel8-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1601475806">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.3-5.el8_2.2.test.2-4b1f869f0f"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="rhel8"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1601475757"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="rhel8-1">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-pgsql-data-status" name="pgsql-data-status" value="STREAMING|SYNC"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="rhel8-2">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-pgsql-data-status" name="pgsql-data-status" value="LATEST"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="xvmfence" type="fence_xvm">
+        <instance_attributes id="xvmfence-instance_attributes">
+          <nvpair id="xvmfence-instance_attributes-key_file" name="key_file" value="/etc/cluster/fence_xvm.key"/>
+        </instance_attributes>
+        <operations>
+          <op id="xvmfence-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="state-clone">
+        <primitive class="ocf" id="state" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="state-demote-interval-0s" interval="0s" name="demote" timeout="10s"/>
+            <op id="state-monitor-interval-10s" interval="10s" name="monitor" role="Promoted" timeout="20s"/>
+            <op id="state-monitor-interval-11s" interval="11s" name="monitor" role="Unpromoted" timeout="20s"/>
+            <op id="state-notify-interval-0s" interval="0s" name="notify" timeout="5s"/>
+            <op id="state-promote-interval-0s" interval="0s" name="promote" timeout="10s"/>
+            <op id="state-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+            <op id="state-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="state-clone-meta_attributes">
+          <nvpair id="state-clone-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        <nvpair id="rsc_defaults-options-migration-threshold" name="migration-threshold" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="rhel8-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="xvmfence" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="xvmfence_last_0" operation_key="xvmfence_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="5:0:0:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:0;5:0:0:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="" on_node="rhel8-1" call-id="6" rc-code="0" op-status="0" interval="0" last-rc-change="1601457666" last-run="1601457666" exec-time="34" queue-time="0" op-digest="0c44b33a671d1709cba92d10891b8444"/>
+            <lrm_rsc_op id="xvmfence_monitor_60000" operation_key="xvmfence_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="6:0:0:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:0;6:0:0:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="" on_node="rhel8-1" call-id="7" rc-code="0" op-status="0" interval="60000" last-rc-change="1601457666" exec-time="27" queue-time="0" op-digest="717ec96c547a18fd4d22fae88fdb95d7"/>
+          </lrm_resource>
+          <lrm_resource id="state" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="state_last_0" operation_key="state_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="6:38:0:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:0;6:38:0:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="" on_node="rhel8-1" call-id="39" rc-code="0" op-status="0" interval="0" last-rc-change="1601475775" last-run="1601475775" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="state_monitor_10000" operation_key="state_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="9:39:8:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:8;9:39:8:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="" on_node="rhel8-1" call-id="40" rc-code="8" op-status="0" interval="10000" last-rc-change="1601475775" exec-time="14" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="state_last_failure_0" operation_key="state_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="9:39:8:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:191;9:39:8:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="191 GB redirected to /dev/null" on_node="rhel8-1" call-id="40" rc-code="191" op-status="0" interval="10000" last-rc-change="1601475806" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-master-state" name="master-state" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="rhel8-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="xvmfence" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="xvmfence_last_0" operation_key="xvmfence_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="3:0:7:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:7;3:0:7:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="" on_node="rhel8-2" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1601457666" last-run="1601457666" exec-time="4" queue-time="0" op-digest="0c44b33a671d1709cba92d10891b8444"/>
+          </lrm_resource>
+          <lrm_resource id="state" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="state_last_0" operation_key="state_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="6:36:0:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:0;6:36:0:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="" on_node="rhel8-2" call-id="34" rc-code="0" op-status="0" interval="0" last-rc-change="1601475775" last-run="1601475775" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="state_monitor_11000" operation_key="state_monitor_11000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="10:38:0:c975655e-46ff-409b-97a2-3c6f8b505369" transition-magic="0:0;10:38:0:c975655e-46ff-409b-97a2-3c6f8b505369" exit-reason="" on_node="rhel8-2" call-id="35" rc-code="0" op-status="0" interval="11000" last-rc-change="1601475775" exec-time="16" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-master-state" name="master-state" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

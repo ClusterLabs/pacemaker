@@ -4,11 +4,11 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms-drbd0 [drbd0] (promotable):
-      * Masters: [ sles236 ]
+      * Promoted: [ sles236 ]
       * Stopped: [ sles238 ]
     * Clone Set: ms-drbd1 [drbd1] (promotable):
-      * Masters: [ sles236 ]
-      * Slaves: [ sles238 ]
+      * Promoted: [ sles236 ]
+      * Unpromoted: [ sles238 ]
 
 Transition Summary:
   * Start      drbd0:1     ( sles238 )
@@ -31,8 +31,8 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms-drbd0 [drbd0] (promotable):
-      * Masters: [ sles236 ]
-      * Slaves: [ sles238 ]
+      * Promoted: [ sles236 ]
+      * Unpromoted: [ sles238 ]
     * Clone Set: ms-drbd1 [drbd1] (promotable):
-      * Masters: [ sles236 ]
-      * Slaves: [ sles238 ]
+      * Promoted: [ sles236 ]
+      * Unpromoted: [ sles238 ]

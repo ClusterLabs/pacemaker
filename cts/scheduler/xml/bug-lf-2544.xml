@@ -1,4 +1,4 @@
-<cib epoch="289" num_updates="1" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.5" have-quorum="1" cib-last-written="Fri Jul 13 13:51:02 2012" dc-uuid="node-0">
+<cib epoch="289" num_updates="1" admin_epoch="0" validate-with="pacemaker-3.7" crm_feature_set="3.0.5" have-quorum="1" cib-last-written="Fri Jul 13 13:51:02 2012" dc-uuid="node-0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -17,13 +17,13 @@
         <primitive class="ocf" id="s0" provider="pacemaker" type="Stateful"/>
         <meta_attributes id="ms0-meta_attributes">
           <nvpair id="ms0-meta_attributes-promotable" name="promotable" value="true"/>
-          <nvpair id="ms0-meta_attributes-target-role" name="target-role" value="Master"/>
+          <nvpair id="ms0-meta_attributes-target-role" name="target-role" value="Promoted"/>
         </meta_attributes>
       </clone>
     </resources>
     <constraints>
       <rsc_location id="ms0-master-node-1" rsc="ms0">
-        <rule id="ms0-master-node-1-rule" role="Master" score="INFINITY">
+        <rule id="ms0-master-node-1-rule" role="Promoted" score="INFINITY">
           <expression attribute="#uname" id="ms0-master-node-1-expression" operation="eq" value="node-1"/>
         </rule>
       </rsc_location>

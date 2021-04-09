@@ -47,19 +47,19 @@ gboolean RoleError(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_
 gboolean NullOp(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set_t * data_set);
 
 /* This array says what the *next* role should be when transitioning from one
- * role to another. For example going from Stopped to Master, the next role is
- * RSC_ROLE_SLAVE, because the resource must be started before being promoted.
+ * role to another. For example going from Stopped to Promoted, the next role is
+ * RSC_ROLE_UNPROMOTED, because the resource must be started before being promoted.
  * The current state then becomes Started, which is fed into this array again,
- * giving a next role of RSC_ROLE_MASTER.
+ * giving a next role of RSC_ROLE_PROMOTED.
  */
 static enum rsc_role_e rsc_state_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-    /* Current state  Next state*/
-    /*                Unknown         Stopped           Started           Slave             Master */
-    /* Unknown */ { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, },
-    /* Stopped */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE, },
-    /* Started */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Slave   */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
-    /* Master  */ { RSC_ROLE_STOPPED, RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_SLAVE,   RSC_ROLE_MASTER, },
+/* Current state  Next state*/
+/*                 Unknown           Stopped           Started           Unpromoted           Promoted */
+/* Unknown */    { RSC_ROLE_UNKNOWN, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED,    RSC_ROLE_STOPPED },
+/* Stopped */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED },
+/* Started */    { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STARTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
+/* Unpromoted */ { RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
+/* Promoted  */  { RSC_ROLE_STOPPED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_UNPROMOTED, RSC_ROLE_PROMOTED },
 };
 
 typedef gboolean (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
@@ -68,13 +68,13 @@ typedef gboolean (*rsc_transition_fn)(pe_resource_t *rsc, pe_node_t *next,
 
 // This array picks the function needed to transition from one role to another
 static rsc_transition_fn rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX] = {
-    /* Current state  Next state                                        */
-    /*                Unknown  Stopped    Started    Slave      Master  */
-    /* Unknown */ { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
-    /* Stopped */ { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
-    /* Started */ { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
-    /* Slave   */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
-    /* Master  */ { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp      , },
+/* Current state   Next state                                            */
+/*                 Unknown    Stopped    Started    Unpromoted Promoted  */
+/* Unknown */    { RoleError, StopRsc,   RoleError, RoleError, RoleError,    },
+/* Stopped */    { RoleError, NullOp,    StartRsc,  StartRsc,  RoleError,    },
+/* Started */    { RoleError, StopRsc,   NullOp,    NullOp,    PromoteRsc,   },
+/* Unpromoted */ { RoleError, StopRsc,   StopRsc,   NullOp,    PromoteRsc,   },
+/* Promoted  */  { RoleError, DemoteRsc, DemoteRsc, DemoteRsc, NullOp,       },
 };
 
 #define clear_node_weights_flags(nw_flags, nw_rsc, flags_to_clear) do {     \
@@ -533,7 +533,7 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         GHashTable *archive = NULL;
         pe_resource_t *rsc_rh = constraint->rsc_rh;
 
-        if (constraint->role_lh >= RSC_ROLE_MASTER
+        if ((constraint->role_lh >= RSC_ROLE_PROMOTED)
             || (constraint->score < 0 && constraint->score > -INFINITY)) {
             archive = pcmk__copy_node_table(rsc->allowed_nodes);
         }
@@ -601,8 +601,8 @@ pcmk__native_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         assign_to = pe__current_node(rsc);
         if (assign_to == NULL) {
             reason = "inactive";
-        } else if (rsc->role == RSC_ROLE_MASTER) {
-            reason = "master";
+        } else if (rsc->role == RSC_ROLE_PROMOTED) {
+            reason = "promoted";
         } else if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
             reason = "failed";
         } else {
@@ -789,7 +789,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         g_list_free(possible_matches);
     }
 
-    if ((rsc->next_role == RSC_ROLE_MASTER && role == NULL)
+    if (((rsc->next_role == RSC_ROLE_PROMOTED) && (role == NULL))
         || (role != NULL && text2role(role) != rsc->next_role)) {
         int log_level = LOG_TRACE;
         const char *result = "Ignoring";
@@ -804,9 +804,9 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
 
             switch (rsc->role) {
-                case RSC_ROLE_SLAVE:
+                case RSC_ROLE_UNPROMOTED:
                 case RSC_ROLE_STARTED:
-                    if (rsc->next_role == RSC_ROLE_MASTER) {
+                    if (rsc->next_role == RSC_ROLE_PROMOTED) {
                         after_key = promote_key(rsc);
 
                     } else if (rsc->next_role == RSC_ROLE_STOPPED) {
@@ -814,7 +814,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                     }
 
                     break;
-                case RSC_ROLE_MASTER:
+                case RSC_ROLE_PROMOTED:
                     after_key = demote_key(rsc);
                     break;
                 default:
@@ -828,7 +828,7 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         }
 
         do_crm_log(log_level, "%s action %s (%s vs. %s)",
-                   result, key, role ? role : role2text(RSC_ROLE_SLAVE),
+                   result, key, role ? role : role2text(RSC_ROLE_UNPROMOTED),
                    role2text(rsc->next_role));
 
         free(key);
@@ -858,11 +858,11 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                     mon->task, interval_ms / 1000, rsc->id, node_uname);
     }
 
-    if (rsc->next_role == RSC_ROLE_MASTER) {
-        char *running_master = pcmk__itoa(PCMK_OCF_RUNNING_MASTER);
+    if (rsc->next_role == RSC_ROLE_PROMOTED) {
+        char *running_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
 
-        add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
-        free(running_master);
+        add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_promoted);
+        free(running_promoted);
     }
 
     if ((node == NULL) || pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -874,12 +874,12 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
                             NULL, strdup(key), mon,
                             pe_order_implies_then | pe_order_runnable_left, data_set);
 
-        if (rsc->next_role == RSC_ROLE_MASTER) {
+        if (rsc->next_role == RSC_ROLE_PROMOTED) {
             custom_action_order(rsc, promote_key(rsc), NULL,
                                 rsc, NULL, mon,
                                 pe_order_optional | pe_order_runnable_left, data_set);
 
-        } else if (rsc->role == RSC_ROLE_MASTER) {
+        } else if (rsc->role == RSC_ROLE_PROMOTED) {
             custom_action_order(rsc, demote_key(rsc), NULL,
                                 rsc, NULL, mon,
                                 pe_order_optional | pe_order_runnable_left, data_set);
@@ -974,7 +974,8 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
 
             cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
 
-            if (rsc->next_role == RSC_ROLE_STARTED || rsc->next_role == RSC_ROLE_SLAVE) {
+            if ((rsc->next_role == RSC_ROLE_STARTED)
+                || (rsc->next_role == RSC_ROLE_UNPROMOTED)) {
                 /* rsc->role == RSC_ROLE_STOPPED: cancel the monitor before start */
                 /* rsc->role == RSC_ROLE_STARTED: for a migration, cancel the monitor on the target node before start */
                 custom_action_order(rsc, NULL, cancel_op, rsc, start_key(rsc), NULL,
@@ -1331,7 +1332,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
             pe_rsc_trace(rsc, "Recovering %s", rsc->id);
         } else {
             pe_rsc_trace(rsc, "Recovering %s by demotion", rsc->id);
-            if (rsc->next_role == RSC_ROLE_MASTER) {
+            if (rsc->next_role == RSC_ROLE_PROMOTED) {
                 need_promote = TRUE;
             }
         }
@@ -1372,7 +1373,7 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         bool required = need_stop;
 
         next_role = rsc_state_matrix[role][rsc->role];
-        if ((next_role == RSC_ROLE_MASTER) && need_promote) {
+        if ((next_role == RSC_ROLE_PROMOTED) && need_promote) {
             required = true;
         }
         pe_rsc_trace(rsc, "Creating %s action to take %s up from %s to %s",
@@ -1519,11 +1520,11 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     // Promotable ordering: demote before stop, start before promote
     if (pcmk_is_set(top->flags, pe_rsc_promotable)
-        || (rsc->role > RSC_ROLE_SLAVE)) {
+        || (rsc->role > RSC_ROLE_UNPROMOTED)) {
 
         custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, pcmk__op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_implies_first_master, data_set);
+                            pe_order_promoted_implies_first, data_set);
 
         custom_action_order(rsc, pcmk__op_key(rsc->id, RSC_START, 0), NULL,
                             rsc, pcmk__op_key(rsc->id, RSC_PROMOTE, 0), NULL,
@@ -1741,7 +1742,7 @@ filter_colocation_constraint(pe_resource_t * rsc_lh, pe_resource_t * rsc_rh,
         return influence_nothing;
     }
 
-    if ((constraint->role_lh >= RSC_ROLE_SLAVE) &&
+    if ((constraint->role_lh >= RSC_ROLE_UNPROMOTED) &&
         rsc_lh->parent && pcmk_is_set(rsc_lh->parent->flags, pe_rsc_promotable)
         && !pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
 
@@ -1834,7 +1835,8 @@ influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
     rh_value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
 
     if (!pcmk__str_eq(lh_value, rh_value, pcmk__str_casei)) {
-        if(constraint->score == INFINITY && constraint->role_lh == RSC_ROLE_MASTER) {
+        if ((constraint->score == INFINITY)
+            && (constraint->role_lh == RSC_ROLE_PROMOTED)) {
             rsc_lh->priority = -INFINITY;
         }
         return;
@@ -1844,7 +1846,7 @@ influence_priority(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
     }
 
-    if (constraint->role_lh == RSC_ROLE_SLAVE) {
+    if (constraint->role_lh == RSC_ROLE_UNPROMOTED) {
         score_multiplier = -1;
     }
 
@@ -2002,7 +2004,7 @@ rsc_ticket_constraint(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_work
 
             case loss_ticket_demote:
                 // Promotion score will be set to -INFINITY in promotion_order()
-                if (rsc_ticket->role_lh != RSC_ROLE_MASTER) {
+                if (rsc_ticket->role_lh != RSC_ROLE_PROMOTED) {
                     resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
                 }
                 break;
@@ -2034,13 +2036,15 @@ rsc_ticket_constraint(pe_resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_work
 
     } else if (rsc_ticket->ticket->granted == FALSE) {
 
-        if (rsc_ticket->role_lh != RSC_ROLE_MASTER || rsc_ticket->loss_policy == loss_ticket_stop) {
+        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
+            || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc_lh, NULL, -INFINITY, "__no_ticket__", data_set);
         }
 
     } else if (rsc_ticket->ticket->standby) {
 
-        if (rsc_ticket->role_lh != RSC_ROLE_MASTER || rsc_ticket->loss_policy == loss_ticket_stop) {
+        if ((rsc_ticket->role_lh != RSC_ROLE_PROMOTED)
+            || (rsc_ticket->loss_policy == loss_ticket_stop)) {
             resource_location(rsc_lh, NULL, -INFINITY, "__ticket_standby__", data_set);
         }
     }
@@ -2189,10 +2193,10 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
     }
 
-    if (type & pe_order_implies_first_master) {
+    if (type & pe_order_promoted_implies_first) {
         if ((filter & pe_action_optional) &&
             ((then->flags & pe_action_optional) == FALSE) &&
-            then->rsc && (then->rsc->role == RSC_ROLE_MASTER)) {
+            (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
             pe_action_implies(first, then, pe_action_optional);
 
             if (pcmk_is_set(first->flags, pe_action_migrate_runnable) &&
@@ -2575,7 +2579,7 @@ DemoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_s
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "%s", rsc->id);
 
-/* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
+    /* CRM_CHECK(rsc->next_role == RSC_ROLE_UNPROMOTED, return FALSE); */
     for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
         pe_node_t *current = (pe_node_t *) gIter->data;
 
@@ -2643,12 +2647,12 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     pe_node_t *allowed = NULL;
     pe_resource_t *top = uber_parent(rsc);
 
-    static const char *rc_master = NULL;
+    static const char *rc_promoted = NULL;
     static const char *rc_inactive = NULL;
 
     if (rc_inactive == NULL) {
         rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
-        rc_master = pcmk__itoa(PCMK_OCF_RUNNING_MASTER);
+        rc_promoted = pcmk__itoa(PCMK_OCF_RUNNING_PROMOTED);
     }
 
     CRM_CHECK(node != NULL, return FALSE);
@@ -2817,8 +2821,8 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
     if (running == NULL) {
         add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
 
-    } else if (rsc->role == RSC_ROLE_MASTER) {
-        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_master);
+    } else if (rsc->role == RSC_ROLE_PROMOTED) {
+        add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_promoted);
     }
 
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),

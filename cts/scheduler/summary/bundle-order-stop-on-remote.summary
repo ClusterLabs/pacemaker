@@ -18,13 +18,13 @@ Current cluster status:
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-1
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-2
     * Container bundle set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 FAILED Master database-0 (UNCLEAN)
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master database-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Master database-2 (UNCLEAN)
+      * galera-bundle-0	(ocf:heartbeat:galera):	 FAILED Promoted database-0 (UNCLEAN)
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted database-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 FAILED Promoted database-2 (UNCLEAN)
     * Container bundle set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Slave controller-0
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Unpromoted controller-0
       * redis-bundle-1	(ocf:heartbeat:redis):	 Stopped
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-2
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-2
     * ip-192.168.24.11	(ocf:heartbeat:IPaddr2):	 Stopped
     * ip-10.0.0.104	(ocf:heartbeat:IPaddr2):	 Stopped
     * ip-172.17.1.19	(ocf:heartbeat:IPaddr2):	 Started controller-2
@@ -53,11 +53,11 @@ Transition Summary:
   * Start      database-2                             (                   controller-1 )
   * Recover    galera-bundle-docker-0                 (                     database-0 )
   * Start      galera-bundle-0                        (                   controller-0 )
-  * Recover    galera:0                               (         Master galera-bundle-0 )
+  * Recover    galera:0                               (              Promoted galera-bundle-0 )
   * Recover    galera-bundle-docker-2                 (                     database-2 )
   * Start      galera-bundle-2                        (                   controller-1 )
-  * Recover    galera:2                               (         Master galera-bundle-2 )
-  * Promote    redis:0                                ( Slave -> Master redis-bundle-0 )
+  * Recover    galera:2                               (              Promoted galera-bundle-2 )
+  * Promote    redis:0                                ( Unpromoted -> Promoted redis-bundle-0 )
   * Start      redis-bundle-docker-1                  (                   controller-1 )
   * Start      redis-bundle-1                         (                   controller-1 )
   * Start      redis:1                                (                 redis-bundle-1 )
@@ -195,13 +195,13 @@ Revised Cluster Status:
       * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-1
       * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started messaging-2
     * Container bundle set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]:
-      * galera-bundle-0	(ocf:heartbeat:galera):	 Master database-0
-      * galera-bundle-1	(ocf:heartbeat:galera):	 Master database-1
-      * galera-bundle-2	(ocf:heartbeat:galera):	 Master database-2
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted database-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted database-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted database-2
     * Container bundle set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]:
-      * redis-bundle-0	(ocf:heartbeat:redis):	 Master controller-0
-      * redis-bundle-1	(ocf:heartbeat:redis):	 Slave controller-1
-      * redis-bundle-2	(ocf:heartbeat:redis):	 Slave controller-2
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-0
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-1
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-2
     * ip-192.168.24.11	(ocf:heartbeat:IPaddr2):	 Started controller-0
     * ip-10.0.0.104	(ocf:heartbeat:IPaddr2):	 Started controller-1
     * ip-172.17.1.19	(ocf:heartbeat:IPaddr2):	 Started controller-2

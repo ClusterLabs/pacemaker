@@ -867,7 +867,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
             switch(r) {
                 case RSC_ROLE_UNKNOWN:
                 case RSC_ROLE_STARTED:
-                case RSC_ROLE_SLAVE:
+                case RSC_ROLE_UNPROMOTED:
                     /* Applies to all */
                     location->role_filter = RSC_ROLE_UNKNOWN;
                     break;
@@ -1125,9 +1125,10 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (role != NULL) {
         crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
-        if (location_rule->role_filter == RSC_ROLE_SLAVE) {
-            /* Any promotable clone cannot be promoted without being a slave first
-             * Ergo, any constraint for the slave role applies to every role
+        if (location_rule->role_filter == RSC_ROLE_UNPROMOTED) {
+            /* Any promotable clone cannot be promoted without being in the
+             * unpromoted role first. Ergo, any constraint for the unpromoted
+             * role applies to every role.
              */
             location_rule->role_filter = RSC_ROLE_UNKNOWN;
         }
@@ -1312,25 +1313,25 @@ anti_colocation_order(pe_resource_t * first_rsc, int first_role,
     int then_lpc = 0;
 
     /* Actions to make first_rsc lose first_role */
-    if (first_role == RSC_ROLE_MASTER) {
+    if (first_role == RSC_ROLE_PROMOTED) {
         first_tasks[0] = CRMD_ACTION_DEMOTE;
 
     } else {
         first_tasks[0] = CRMD_ACTION_STOP;
 
-        if (first_role == RSC_ROLE_SLAVE) {
+        if (first_role == RSC_ROLE_UNPROMOTED) {
             first_tasks[1] = CRMD_ACTION_PROMOTE;
         }
     }
 
     /* Actions to make then_rsc gain then_role */
-    if (then_role == RSC_ROLE_MASTER) {
+    if (then_role == RSC_ROLE_PROMOTED) {
         then_tasks[0] = CRMD_ACTION_PROMOTE;
 
     } else {
         then_tasks[0] = CRMD_ACTION_START;
 
-        if (then_role == RSC_ROLE_SLAVE) {
+        if (then_role == RSC_ROLE_UNPROMOTED) {
             then_tasks[1] = CRMD_ACTION_DEMOTE;
         }
     }
@@ -2840,7 +2841,7 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
-        if (new_rsc_ticket->role_lh == RSC_ROLE_MASTER) {
+        if (new_rsc_ticket->role_lh == RSC_ROLE_PROMOTED) {
             crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
                       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                       role2text(new_rsc_ticket->role_lh));

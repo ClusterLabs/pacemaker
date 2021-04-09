@@ -364,7 +364,7 @@ class CIB12(ConfigBase):
         # promotable clone resource
         s = Resource(self.Factory, "stateful-1", "Stateful", "ocf", "pacemaker")
         s.add_op("monitor", "15s", timeout="60s")
-        s.add_op("monitor", "16s", timeout="60s", role="Master")
+        s.add_op("monitor", "16s", timeout="60s", role="Promoted")
         ms = Clone(self.Factory, "promotable-1", s)
         ms["promotable"] = "true"
         ms["clone-max"] = self.num_nodes
@@ -396,7 +396,7 @@ class CIB12(ConfigBase):
 
         # Make group depend on the promotable clone
         g.after("promotable-1", first="promote", then="start")
-        g.colocate("promotable-1", "INFINITY", withrole="Master")
+        g.colocate("promotable-1", "INFINITY", withrole="Promoted")
 
         g.commit()
 
@@ -415,7 +415,7 @@ class CIB20(CIB12):
     version = "pacemaker-2.5"
 
 class CIB30(CIB12):
-    version = "pacemaker-3.0"
+    version = "pacemaker-3.7"
 
 #class HASI(CIB10):
 #    def add_resources(self):
@@ -465,7 +465,7 @@ class ConfigFactory(object):
             name = "pacemaker12";
         elif name == "pacemaker-2.0":
             name = "pacemaker20";
-        elif name == "pacemaker-3.0":
+        elif name.startswith("pacemaker-3."):
             name = "pacemaker30";
         elif name == "hasi":
             name = "hae";
@@ -514,5 +514,5 @@ if __name__ == '__main__':
     env = CTS.CtsLab(args)
     cm = CM_corosync.crm_corosync(env)
     CibFactory = ConfigFactory(cm)
-    cib = CibFactory.createConfig("pacemaker-2.0")
+    cib = CibFactory.createConfig("pacemaker-3.0")
     print(cib.contents())

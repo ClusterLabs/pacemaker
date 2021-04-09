@@ -15,7 +15,7 @@ Current cluster status:
       * vip-master	(ocf:heartbeat:Dummy):	 FAILED pgsr02
       * vip-rep	(ocf:heartbeat:Dummy):	 FAILED pgsr02
     * Clone Set: msPostgresql [pgsql] (promotable):
-      * Masters: [ pgsr01 ]
+      * Promoted: [ pgsr01 ]
       * Stopped: [ bl460g8n3 bl460g8n4 ]
 
 Transition Summary:
@@ -23,7 +23,7 @@ Transition Summary:
   * Stop       prmDB2         (        bl460g8n4 )  due to node availability
   * Recover    vip-master     ( pgsr02 -> pgsr01 )
   * Recover    vip-rep        ( pgsr02 -> pgsr01 )
-  * Stop       pgsql:0        (    Master pgsr02 )  due to node availability
+  * Stop       pgsql:0        (  Promoted pgsr02 )  due to node availability
   * Stop       pgsr02         (        bl460g8n4 )  due to node availability
 
 Executing Cluster Transition:
@@ -83,5 +83,5 @@ Revised Cluster Status:
       * vip-master	(ocf:heartbeat:Dummy):	 FAILED [ pgsr01 pgsr02 ]
       * vip-rep	(ocf:heartbeat:Dummy):	 FAILED [ pgsr01 pgsr02 ]
     * Clone Set: msPostgresql [pgsql] (promotable):
-      * Masters: [ pgsr01 ]
+      * Promoted: [ pgsr01 ]
       * Stopped: [ bl460g8n3 bl460g8n4 ]

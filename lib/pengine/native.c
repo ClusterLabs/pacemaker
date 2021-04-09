@@ -49,7 +49,7 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
         return;
     }
 
-    if (rsc->role == RSC_ROLE_MASTER) {
+    if (rsc->role == RSC_ROLE_PROMOTED) {
         // Promoted instance takes base priority + 1
         priority = rsc->priority + 1;
 
@@ -60,9 +60,9 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
     node->details->priority += priority;
     pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s)",
                  node->details->uname, node->details->priority,
-                 rsc->role == RSC_ROLE_MASTER ? "promoted " : "",
+                 (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
                  rsc->id, rsc->priority,
-                 rsc->role == RSC_ROLE_MASTER ? " + 1" : "");
+                 (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "");
 
     /* Priority of a resource running on a guest node is added to the cluster
      * node as well. */
@@ -77,9 +77,9 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
             pe_rsc_trace(rsc, "Node '%s' now has priority %d with %s'%s' (priority: %d%s) "
                          "from guest node '%s'",
                          a_node->details->uname, a_node->details->priority,
-                         rsc->role == RSC_ROLE_MASTER ? "promoted " : "",
+                         (rsc->role == RSC_ROLE_PROMOTED)? "promoted " : "",
                          rsc->id, rsc->priority,
-                         rsc->role == RSC_ROLE_MASTER ? " + 1" : "",
+                         (rsc->role == RSC_ROLE_PROMOTED)? " + 1" : "",
                          node->details->uname);
         }
     }
@@ -428,7 +428,7 @@ native_displayable_role(pe_resource_t *rsc)
     if ((role == RSC_ROLE_STARTED)
         && pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
 
-        role = RSC_ROLE_SLAVE;
+        role = RSC_ROLE_UNPROMOTED;
     }
     return role;
 }
@@ -589,7 +589,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         enum rsc_role_e role = native_displayable_role(rsc);
 
-        if (role > RSC_ROLE_SLAVE) {
+        if (role > RSC_ROLE_UNPROMOTED) {
             g_string_append_printf(outstr, " FAILED %s", role2text(role));
         } else {
             g_string_append(outstr, " FAILED");
@@ -620,13 +620,13 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 
         /* Only show target role if it limits our abilities (i.e. ignore
          * Started, as it is the default anyways, and doesn't prevent the
-         * resource from becoming Master).
+         * resource from becoming promoted).
          */
         if (target_role_e == RSC_ROLE_STOPPED) {
             have_flags = add_output_flag(outstr, "disabled", have_flags);
 
         } else if (pcmk_is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
-                   && target_role_e == RSC_ROLE_SLAVE) {
+                   && target_role_e == RSC_ROLE_UNPROMOTED) {
             have_flags = add_output_flag(outstr, "target-role:", have_flags);
             g_string_append(outstr, target_role);
         }

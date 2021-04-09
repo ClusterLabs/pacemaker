@@ -310,3 +310,25 @@ pcmk__node_attr_target(const char *name)
     // (currently would require linkage against libcrmcluster)
     return name;
 }
+
+/*!
+ * \brief Return the name of the node attribute used as a promotion score
+ *
+ * \param[in] rsc_id  Resource ID that promotion score is for (or NULL to
+ *                    check the OCF_RESOURCE_INSTANCE environment variable)
+ *
+ * \return Newly allocated string with the node attribute name (or NULL on
+ *         error, including no ID or environment variable specified)
+ * \note It is the caller's responsibility to free() the result.
+ */
+char *
+pcmk_promotion_score_name(const char *rsc_id)
+{
+    if (rsc_id == NULL) {
+        rsc_id = getenv("OCF_RESOURCE_INSTANCE");
+        if (rsc_id == NULL) {
+            return NULL;
+        }
+    }
+    return crm_strdup_printf("master-%s", rsc_id);
+}

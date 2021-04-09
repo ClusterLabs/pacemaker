@@ -2521,7 +2521,7 @@ set_active(pe_resource_t * rsc)
     pe_resource_t *top = uber_parent(rsc);
 
     if (top && pcmk_is_set(top->flags, pe_rsc_promotable)) {
-        rsc->role = RSC_ROLE_SLAVE;
+        rsc->role = RSC_ROLE_UNPROMOTED;
     } else {
         rsc->role = RSC_ROLE_STARTED;
     }
@@ -2656,7 +2656,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         return;
     }
 
-    // Clones are not allowed to migrate, so role can't be master
+    // Clones are not allowed to migrate, so role can't be promoted
     rsc->role = RSC_ROLE_STARTED;
 
     target_node = pe_find_node(data_set->nodes, target);
@@ -2740,7 +2740,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     CRM_CHECK(source && target && !strcmp(source, node->details->uname), return);
 
     /* If a migration failed, we have to assume the resource is active. Clones
-     * are not allowed to migrate, so role can't be master.
+     * are not allowed to migrate, so role can't be promoted.
      */
     rsc->role = RSC_ROLE_STARTED;
 
@@ -2807,7 +2807,7 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
     CRM_CHECK(source && target && !strcmp(target, node->details->uname), return);
 
     /* If a migration failed, we have to assume the resource is active. Clones
-     * are not allowed to migrate, so role can't be master.
+     * are not allowed to migrate, so role can't be promoted.
      */
     rsc->role = RSC_ROLE_STARTED;
 
@@ -3024,7 +3024,7 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
 
         if (is_probe && (rc != PCMK_OCF_OK)
             && (rc != PCMK_OCF_NOT_RUNNING)
-            && (rc != PCMK_OCF_RUNNING_MASTER)) {
+            && (rc != PCMK_OCF_RUNNING_PROMOTED)) {
 
             /* A failed (not just unexpected) probe result could mean the user
              * didn't know resources will be probed even where they can't run.
@@ -3054,11 +3054,11 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
         unpack_migrate_from_failure(rsc, node, xml_op, data_set);
 
     } else if (!strcmp(task, CRMD_ACTION_PROMOTE)) {
-        rsc->role = RSC_ROLE_MASTER;
+        rsc->role = RSC_ROLE_PROMOTED;
 
     } else if (!strcmp(task, CRMD_ACTION_DEMOTE)) {
         if (action->on_fail == action_fail_block) {
-            rsc->role = RSC_ROLE_MASTER;
+            rsc->role = RSC_ROLE_PROMOTED;
             pe__set_next_role(rsc, RSC_ROLE_STOPPED,
                               "demote with on-fail=block");
 
@@ -3066,12 +3066,12 @@ unpack_rsc_op_failure(pe_resource_t * rsc, pe_node_t * node, int rc, xmlNode * x
             rsc->role = RSC_ROLE_STOPPED;
 
         } else {
-            /* Staying in master role would put the scheduler and controller
-             * into a loop. Setting slave role is not dangerous because the
-             * resource will be stopped as part of recovery, and any master
-             * promotion will be ordered after that stop.
+            /* Staying in the promoted role would put the scheduler and
+             * controller into a loop. Setting the role to unpromoted is not
+             * dangerous because the resource will be stopped as part of
+             * recovery, and any promotion will be ordered after that stop.
              */
-            rsc->role = RSC_ROLE_SLAVE;
+            rsc->role = RSC_ROLE_UNPROMOTED;
         }
     }
 
@@ -3212,7 +3212,7 @@ determine_op_status(
             }
             break;
 
-        case PCMK_OCF_RUNNING_MASTER:
+        case PCMK_OCF_RUNNING_PROMOTED:
             if (is_probe && (rc != target_rc)) {
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc,
@@ -3220,12 +3220,12 @@ determine_op_status(
                             rsc->id, node->details->uname,
                             last_change_str(xml_op));
             }
-            rsc->role = RSC_ROLE_MASTER;
+            rsc->role = RSC_ROLE_PROMOTED;
             break;
 
-        case PCMK_OCF_DEGRADED_MASTER:
-        case PCMK_OCF_FAILED_MASTER:
-            rsc->role = RSC_ROLE_MASTER;
+        case PCMK_OCF_DEGRADED_PROMOTED:
+        case PCMK_OCF_FAILED_PROMOTED:
+            rsc->role = RSC_ROLE_PROMOTED;
             result = PCMK_LRM_OP_ERROR;
             break;
 
@@ -3489,9 +3489,9 @@ check_operation_expiry(pe_resource_t *rsc, pe_node_t *node, int rc,
         switch(rc) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
-            case PCMK_OCF_RUNNING_MASTER:
+            case PCMK_OCF_RUNNING_PROMOTED:
             case PCMK_OCF_DEGRADED:
-            case PCMK_OCF_DEGRADED_MASTER:
+            case PCMK_OCF_DEGRADED_PROMOTED:
                 // Don't expire probes that return these values
                 expired = FALSE;
                 break;
@@ -3563,7 +3563,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
         clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_PROMOTE, pcmk__str_casei)) {
-        rsc->role = RSC_ROLE_MASTER;
+        rsc->role = RSC_ROLE_PROMOTED;
         clear_past_failure = TRUE;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_DEMOTE, pcmk__str_casei)) {
@@ -3572,7 +3572,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
             // Demote clears an error only if on-fail=demote
             clear_past_failure = TRUE;
         }
-        rsc->role = RSC_ROLE_SLAVE;
+        rsc->role = RSC_ROLE_UNPROMOTED;
 
     } else if (pcmk__str_eq(task, CRMD_ACTION_MIGRATED, pcmk__str_casei)) {
         rsc->role = RSC_ROLE_STARTED;
@@ -3786,7 +3786,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                 set_active(rsc);
 
             } else if (!strcmp(task, CRMD_ACTION_PROMOTE)) {
-                rsc->role = RSC_ROLE_MASTER;
+                rsc->role = RSC_ROLE_PROMOTED;
 
             } else if (!strcmp(task, CRMD_ACTION_MIGRATE) && node->details->unclean) {
                 /* If a pending migrate_to action is out on a unclean node,

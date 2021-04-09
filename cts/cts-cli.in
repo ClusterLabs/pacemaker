@@ -1720,6 +1720,10 @@ for t in $tests; do
         -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
         -e 's/^lt-//' \
         -e 's/ocf::/ocf:/' \
+        -e 's/Masters:/Promoted:/' \
+        -e 's/Slaves:/Unpromoted:/' \
+        -e 's/Master/Promoted/' \
+        -e 's/Slave/Unpromoted/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
