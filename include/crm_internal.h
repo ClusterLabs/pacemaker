@@ -17,6 +17,13 @@
 
 #  include <portability.h>
 
+/* Our minimum glib dependency is 2.42. Define that as both the minimum and
+ * maximum glib APIs that are allowed (i.e. APIs that were already deprecated
+ * in 2.42, and APIs introduced after 2.42, cannot be used by Pacemaker code).
+ */
+#define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_42
+#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_42
+
 #  include <glib.h>
 #  include <stdbool.h>
 #  include <libxml/tree.h>
