@@ -7,6 +7,8 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -7,12 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <glib.h>
 #include <termios.h>
-
-#include <crm_internal.h>
 
 static gboolean fancy = FALSE;
 

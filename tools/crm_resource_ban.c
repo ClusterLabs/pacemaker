@@ -7,6 +7,8 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <crm_resource.h>
 
 #define XPATH_MAX 1024

@@ -7,10 +7,10 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <crm_resource.h>
 #include <crm/common/lists_internal.h>
-#include <crm/common/xml_internal.h>
-#include <crm/common/output_internal.h>
 
 #define cons_string(x) x?x:"NA"
 void
