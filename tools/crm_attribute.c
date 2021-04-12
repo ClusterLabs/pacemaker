@@ -34,20 +34,24 @@
 
 crm_exit_t exit_code = CRM_EX_OK;
 
-gboolean BE_QUIET = FALSE;
-char command = 'G';
+struct {
+    char command;
+    char *attr_id;
+    char *attr_name;
+    char *attr_pattern;
+    char *dest_node;
+    char *set_name;
+    const char *attr_default;
+    const char *attr_value;
+    const char *dest_uname;
+    const char *rsc_id;
+    const char *set_type;
+    const char *type;
+} options = {
+    .command = 'G'
+};
 
-const char *dest_uname = NULL;
-char *dest_node = NULL;
-char *set_name = NULL;
-char *attr_id = NULL;
-char *attr_name = NULL;
-char *attr_pattern = NULL;
-const char *type = NULL;
-const char *rsc_id = NULL;
-const char *attr_value = NULL;
-const char *attr_default = NULL;
-const char *set_type = NULL;
+gboolean BE_QUIET = FALSE;
 
 static pcmk__cli_option_t long_options[] = {
     // long option, argument type, storage, short option, description, flags
@@ -303,13 +307,13 @@ main(int argc, char **argv)
                 pcmk__cli_help(flag, CRM_EX_OK);
                 break;
             case 'G':
-                command = flag;
-                attr_value = optarg;
+                options.command = flag;
+                options.attr_value = optarg;
                 break;
             case 'D':
             case 'v':
-                command = flag;
-                attr_value = optarg;
+                options.command = flag;
+                options.attr_value = optarg;
                 crm_log_args(argc, argv);
                 break;
             case 'q':
@@ -318,26 +322,26 @@ main(int argc, char **argv)
                 break;
             case 'U':
             case 'N':
-                dest_uname = strdup(optarg);
+                options.dest_uname = strdup(optarg);
                 break;
             case 's':
-                set_name = strdup(optarg);
+                options.set_name = strdup(optarg);
                 break;
             case 'l':
             case 't':
-                type = optarg;
+                options.type = optarg;
                 break;
             case 'z':
-                type = XML_CIB_TAG_NODES;
-                set_type = XML_TAG_UTILIZATION;
+                options.type = XML_CIB_TAG_NODES;
+                options.set_type = XML_TAG_UTILIZATION;
                 break;
             case 'n':
-                attr_name = strdup(optarg);
+                options.attr_name = strdup(optarg);
                 break;
             case 'p':
                 promotion_score = true;
-                attr_name = pcmk_promotion_score_name(optarg);
-                if (attr_name == NULL) {
+                options.attr_name = pcmk_promotion_score_name(optarg);
+                if (options.attr_name == NULL) {
                     fprintf(stderr, "-p/--promotion must be called from an "
                                     " OCF resource agent or with a resource ID "
                                     " specified\n\n");
@@ -345,16 +349,16 @@ main(int argc, char **argv)
                 }
                 break;
             case 'P':
-                attr_pattern = strdup(optarg);
+                options.attr_pattern = strdup(optarg);
                 break;
             case 'i':
-                attr_id = strdup(optarg);
+                options.attr_id = strdup(optarg);
                 break;
             case 'r':
-                rsc_id = optarg;
+                options.rsc_id = optarg;
                 break;
             case 'd':
-                attr_default = optarg;
+                options.attr_default = optarg;
                 break;
             case '!':
                 crm_warn("Inhibiting notifications for this update");
@@ -394,69 +398,69 @@ main(int argc, char **argv)
     }
 
     // Use default CIB location if not given
-    if (type == NULL) {
+    if (options.type == NULL) {
         if (promotion_score) {
             // Updating a promotion score node attribute
-            type = "reboot";
+            options.type = "reboot";
 
-        } else if (dest_uname != NULL) {
+        } else if (options.dest_uname != NULL) {
             // Updating some other node attribute
-            type = "forever";
+            options.type = "forever";
 
         } else {
             // Updating cluster options
-            type = XML_CIB_TAG_CRMCONFIG;
+            options.type = XML_CIB_TAG_CRMCONFIG;
         }
     }
 
-    if (pcmk__str_eq(type, "reboot", pcmk__str_casei)) {
-        type = XML_CIB_TAG_STATUS;
+    if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
+        options.type = XML_CIB_TAG_STATUS;
 
-    } else if (pcmk__str_eq(type, "forever", pcmk__str_casei)) {
-        type = XML_CIB_TAG_NODES;
+    } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
+        options.type = XML_CIB_TAG_NODES;
     }
 
     // Use default node if not given (except for cluster options and tickets)
-    if (!pcmk__strcase_any_of(type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
+    if (!pcmk__strcase_any_of(options.type, XML_CIB_TAG_CRMCONFIG, XML_CIB_TAG_TICKETS,
                               NULL)) {
         /* If we are being called from a resource agent via the cluster,
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
          */
-        dest_uname = pcmk__node_attr_target(dest_uname);
-        if (dest_uname == NULL) {
-            dest_uname = get_local_node_name();
+        options.dest_uname = pcmk__node_attr_target(options.dest_uname);
+        if (options.dest_uname == NULL) {
+            options.dest_uname = get_local_node_name();
         }
 
-        rc = query_node_uuid(the_cib, dest_uname, &dest_node, &is_remote_node);
+        rc = query_node_uuid(the_cib, options.dest_uname, &options.dest_node, &is_remote_node);
         if (pcmk_ok != rc) {
-            fprintf(stderr, "Could not map name=%s to a UUID\n", dest_uname);
+            fprintf(stderr, "Could not map name=%s to a UUID\n", options.dest_uname);
             exit_code = crm_errno2exit(rc);
             goto done;
         }
     }
 
-    if ((command == 'D') && (attr_name == NULL) && (attr_pattern == NULL)) {
+    if ((options.command == 'D') && (options.attr_name == NULL) && (options.attr_pattern == NULL)) {
         fprintf(stderr, "Error: must specify attribute name or pattern to delete\n");
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
-    if (attr_pattern) {
-        if (((command != 'v') && (command != 'D'))
-            || !pcmk__str_eq(type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
+    if (options.attr_pattern) {
+        if (((options.command != 'v') && (options.command != 'D'))
+            || !pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei)) {
 
             fprintf(stderr, "Error: pattern can only be used with till-reboot update or delete\n");
             exit_code = CRM_EX_USAGE;
             goto done;
         }
-        command = 'u';
-        free(attr_name);
-        attr_name = attr_pattern;
+        options.command = 'u';
+        free(options.attr_name);
+        options.attr_name = options.attr_pattern;
     }
 
     // Only go through attribute manager for transient attributes
-    try_attrd = pcmk__str_eq(type, XML_CIB_TAG_STATUS, pcmk__str_casei);
+    try_attrd = pcmk__str_eq(options.type, XML_CIB_TAG_STATUS, pcmk__str_casei);
 
     // Don't try to contact attribute manager if we're using a file as CIB
     if (getenv("CIB_file") || getenv("CIB_shadow")) {
@@ -466,16 +470,16 @@ main(int argc, char **argv)
     if (is_remote_node) {
         attrd_opts = pcmk__node_attr_remote;
     }
-    if (((command == 'v') || (command == 'D') || (command == 'u')) && try_attrd
-        && (pcmk__node_attr_request(NULL, command, dest_uname, attr_name,
-                                    attr_value, type, set_name, NULL, NULL,
+    if (((options.command == 'v') || (options.command == 'D') || (options.command == 'u')) && try_attrd
+        && (pcmk__node_attr_request(NULL, options.command, options.dest_uname, options.attr_name,
+                                    options.attr_value, options.type, options.set_name, NULL, NULL,
                                     attrd_opts) == pcmk_rc_ok)) {
         crm_info("Update %s=%s sent via pacemaker-attrd",
-                 attr_name, ((command == 'D')? "<none>" : attr_value));
+                 options.attr_name, ((options.command == 'D')? "<none>" : options.attr_value));
 
-    } else if (command == 'D') {
-        rc = delete_attr_delegate(the_cib, cib_opts, type, dest_node, set_type, set_name,
-                                  attr_id, attr_name, attr_value, TRUE, NULL);
+    } else if (options.command == 'D') {
+        rc = delete_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
+                                  options.attr_id, options.attr_name, options.attr_value, TRUE, NULL);
 
         if (rc == -ENXIO) {
             /* Nothing to delete...
@@ -485,28 +489,28 @@ main(int argc, char **argv)
             rc = pcmk_ok;
         }
 
-    } else if (command == 'v') {
-        CRM_LOG_ASSERT(type != NULL);
-        CRM_LOG_ASSERT(attr_name != NULL);
-        CRM_LOG_ASSERT(attr_value != NULL);
+    } else if (options.command == 'v') {
+        CRM_LOG_ASSERT(options.type != NULL);
+        CRM_LOG_ASSERT(options.attr_name != NULL);
+        CRM_LOG_ASSERT(options.attr_value != NULL);
 
-        rc = update_attr_delegate(the_cib, cib_opts, type, dest_node, set_type, set_name,
-                                  attr_id, attr_name, attr_value, TRUE, NULL, is_remote_node ? "remote" : NULL);
+        rc = update_attr_delegate(the_cib, cib_opts, options.type, options.dest_node, options.set_type, options.set_name,
+                                  options.attr_id, options.attr_name, options.attr_value, TRUE, NULL, is_remote_node ? "remote" : NULL);
 
     } else {                    /* query */
 
         char *read_value = NULL;
 
-        rc = read_attr_delegate(the_cib, type, dest_node, set_type, set_name,
-                                attr_id, attr_name, &read_value, TRUE, NULL);
+        rc = read_attr_delegate(the_cib, options.type, options.dest_node, options.set_type, options.set_name,
+                                options.attr_id, options.attr_name, &read_value, TRUE, NULL);
 
-        if (rc == -ENXIO && attr_default) {
-            read_value = strdup(attr_default);
+        if (rc == -ENXIO && options.attr_default) {
+            read_value = strdup(options.attr_default);
             rc = pcmk_ok;
         }
 
         crm_info("Read %s=%s %s%s",
-                 attr_name, crm_str(read_value), set_name ? "in " : "", set_name ? set_name : "");
+                 options.attr_name, crm_str(read_value), options.set_name ? "in " : "", options.set_name ? options.set_name : "");
 
         if (rc == -ENOTUNIQ) {
             // Multiple matches (already displayed) are not error for queries
@@ -514,9 +518,9 @@ main(int argc, char **argv)
 
         } else if (BE_QUIET == FALSE) {
             fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
-                    type ? "scope=" : "", type ? type : "",
-                    attr_id ? "id=" : "", attr_id ? attr_id : "",
-                    attr_name ? "name=" : "", attr_name ? attr_name : "",
+                    options.type ? "scope=" : "", options.type ? options.type : "",
+                    options.attr_id ? "id=" : "", options.attr_id ? options.attr_id : "",
+                    options.attr_name ? "name=" : "", options.attr_name ? options.attr_name : "",
                     read_value ? read_value : "(null)");
 
         } else if (read_value != NULL) {
@@ -535,6 +539,12 @@ main(int argc, char **argv)
     }
 
 done:
+    free(options.attr_id);
+    free(options.attr_name);
+    free(options.attr_value);
+    free(options.dest_node);
+    free(options.set_name);
+
     if (the_cib) {
         the_cib->cmds->signoff(the_cib);
         cib_delete(the_cib);
