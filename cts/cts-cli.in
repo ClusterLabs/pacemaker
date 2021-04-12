@@ -67,6 +67,19 @@ CRM_EX_MULTIPLE=109
 CRM_EX_EXPIRED=110
 CRM_EX_NOT_YET_IN_EFFECT=111
 
+reset_shadow_cib_version() {
+    local SHADOWPATH
+
+    SHADOWPATH="$(crm_shadow --file)"
+    # sed -i isn't portable :-(
+    cp -p "$SHADOWPATH" "${SHADOWPATH}.$$" # preserve permissions
+    sed -e 's/epoch="[0-9]*"/epoch="1"/g' \
+        -e 's/num_updates="[0-9]*"/num_updates="0"/g' \
+        -e 's/admin_epoch="[0-9]*"/admin_epoch="0"/g' \
+        "$SHADOWPATH" > "${SHADOWPATH}.$$"
+    mv -- "${SHADOWPATH}.$$" "$SHADOWPATH"
+}
+
 create_shadow_cib() {
     local VALIDATE_WITH
     local SHADOW_CMD
@@ -1339,12 +1352,7 @@ EOF
     cmd="cibadmin --upgrade --force -V"
     test_assert $CRM_EX_OK
 
-    SHADOWPATH="$(crm_shadow --file)"
-    # sed -i isn't portable :-(
-    cp -p "$SHADOWPATH" "${SHADOWPATH}.$$" # to keep permissions
-    sed -e 's/epoch=.2/epoch=\"6/g' -e 's/admin_epoch=.1/admin_epoch=\"0/g' \
-        "$SHADOWPATH" > "${SHADOWPATH}.$$"
-    mv -- "${SHADOWPATH}.$$" "$SHADOWPATH"
+    reset_shadow_cib_version
 
     test_acl_loop "$TMPXML"
 
