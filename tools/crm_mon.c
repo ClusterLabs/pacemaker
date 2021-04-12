@@ -1014,6 +1014,8 @@ pacemakerd_status(void)
                                 break;
                             case pcmk_pacemakerd_state_shutting_down:
                                 out->info(out,"Pacemaker daemons shutting down ...");
+                                /* try our luck maybe CIB is still accessible */
+                                rc = pcmk_rc_ok;
                                 break;
                             case pcmk_pacemakerd_state_shutdown_complete:
                                 /* assuming pacemakerd doesn't dispatch any pings after entering
