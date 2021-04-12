@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -30,357 +31,319 @@
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/common/attrd_internal.h>
+#include <crm/common/cmdline_internal.h>
 #include <sys/utsname.h>
 
+#define SUMMARY "crm_attribute - query and update Pacemaker cluster options and node attributes"
+
 crm_exit_t exit_code = CRM_EX_OK;
+uint64_t cib_opts = cib_sync_call;
 
 struct {
     char command;
-    char *attr_id;
-    char *attr_name;
-    char *attr_pattern;
+    gchar *attr_default;
+    gchar *attr_id;
+    gchar *attr_name;
+    gchar *attr_pattern;
+    char *attr_value;
     char *dest_node;
-    char *set_name;
-    const char *attr_default;
-    const char *attr_value;
-    const char *dest_uname;
-    const char *set_type;
-    const char *type;
+    gchar *dest_uname;
+    gboolean inhibit;
+    gchar *set_name;
+    char *set_type;
+    gchar *type;
+    gboolean promotion_score;
 } options = {
-    .command = 'G'
+    .command = 'G',
+    .promotion_score = FALSE
 };
 
 gboolean BE_QUIET = FALSE;
 
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "quiet", no_argument, NULL, 'q',
-        "\tPrint only the value on stdout\n", pcmk__option_default
+#define INDENT "                              "
+
+static gboolean
+delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.command = 'D';
+
+    if (options.attr_value) {
+        free(options.attr_value);
+    }
+
+    options.attr_value = NULL;
+    return TRUE;
+}
+
+static gboolean
+promotion_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    char *score_name = NULL;
+
+    options.promotion_score = TRUE;
+
+    if (options.attr_name) {
+        g_free(options.attr_name);
+    }
+
+    score_name = pcmk_promotion_score_name(optarg);
+    if (score_name != NULL) {
+        options.attr_name = g_strdup(score_name);
+        free(score_name);
+    } else {
+        options.attr_name = NULL;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+update_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.command = 'v';
+
+    if (options.attr_value) {
+        free(options.attr_value);
+    }
+
+    options.attr_value = strdup(optarg);
+    return TRUE;
+}
+
+static gboolean
+utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    if (options.type) {
+        g_free(options.type);
+    }
+
+    options.type = g_strdup(XML_CIB_TAG_NODES);
+
+    if (options.set_type) {
+        free(options.set_type);
+    }
+
+    options.set_type = strdup(XML_TAG_UTILIZATION);
+    return TRUE;
+}
+
+static gboolean
+value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.command = 'G';
+
+    if (options.attr_value) {
+        free(options.attr_value);
+    }
+
+    options.attr_value = NULL;
+    return TRUE;
+}
+
+static GOptionEntry selecting_entries[] = {
+    { "id", 'i', 0, G_OPTION_ARG_STRING, &options.attr_id,
+      "(Advanced) Operate on instance of specified attribute with this\n"
+      INDENT "XML ID",
+      "XML_ID"
     },
 
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nOptions for selecting attribute:", pcmk__option_default
-    },
-    {
-        "name", required_argument, NULL, 'n',
-        "Operate on attribute or option with this name",
-        pcmk__option_default
-    },
-    {
-        "pattern", required_argument, NULL, 'P',
-        "Operate on all attributes matching this pattern "
-            "(with -v/-D and -l reboot)",
-        pcmk__option_default
-    },
-    {
-        "promotion", optional_argument, NULL, 'p',
-        "Operate on node attribute used as promotion score for specified "
-            "resource, or resource given in OCF_RESOURCE_INSTANCE environment "
-            "variable if none is specified; this also defaults -l/--lifetime "
-            "to reboot (normally invoked from an OCF resource agent)",
-        pcmk__option_default
-    },
-    {
-        "set-name", required_argument, NULL, 's',
-        "(Advanced) Operate on instance of specified attribute that is "
-            "within set with this XML ID",
-        pcmk__option_default
-    },
-    {
-        "id", required_argument, NULL, 'i',
-        "\t(Advanced) Operate on instance of specified attribute with this "
-            "XML ID",
-        pcmk__option_default
+    { "name", 'n', 0, G_OPTION_ARG_STRING, &options.attr_name,
+      "Operate on attribute or option with this name",
+      "NAME"
     },
 
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nCommands:", pcmk__option_default
-    },
-    {
-        "query", no_argument, NULL, 'G',
-        "\tQuery the current value of the attribute/option",
-        pcmk__option_default
-    },
-    {
-        "update", required_argument, NULL, 'v',
-        "Update the value of the attribute/option", pcmk__option_default
-    },
-    {
-        "delete", no_argument, NULL, 'D',
-        "\tDelete the attribute/option", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdditional Options:", pcmk__option_default
-    },
-    {
-        "node", required_argument, NULL, 'N',
-        "Set a node attribute for named node (instead of a cluster option). "
-            "See also: -l",
-        pcmk__option_default
-    },
-    {
-        "type", required_argument, NULL, 't',
-        "Which part of the configuration to update/delete/query the option in",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\t\tValid values: crm_config, rsc_defaults, op_defaults, tickets",
-        pcmk__option_default
-    },
-    {
-        "lifetime", required_argument, NULL, 'l',
-        "Lifetime of the node attribute", pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\t\t\tValid values: reboot, forever", pcmk__option_default
-    },
-    {
-        "utilization", no_argument, NULL, 'z',
-        "Set an utilization attribute for the node.", pcmk__option_default
-    },
-    {
-        "default", required_argument, NULL, 'd',
-        "(Advanced) Default value to display if none is found in configuration",
-        pcmk__option_default
-    },
-    {
-        "inhibit-policy-engine", no_argument, NULL, '!',
-        NULL, pcmk__option_hidden
+    { "pattern", 'P', 0, G_OPTION_ARG_STRING, &options.attr_pattern,
+      "Operate on all attributes matching this pattern\n"
+      INDENT "(with -v/-D and -l reboot)",
+      "PATTERN"
     },
 
-    /* legacy */
-    {
-        "quiet", no_argument, NULL, 'Q',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "node-uname", required_argument, NULL, 'U',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "get-value", no_argument, NULL, 'G',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "delete-attr", no_argument, NULL, 'D',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "attr-value", required_argument, NULL, 'v',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "attr-name", required_argument, NULL, 'n',
-        NULL, pcmk__option_hidden
-    },
-    {
-        "attr-id", required_argument, NULL, 'i',
-        NULL, pcmk__option_hidden
+    { "promotion", 'p', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK, promotion_cb,
+      "Operate on node attribute used as promotion score for specified\n"
+      INDENT "resource, or resource given in OCF_RESOURCE_INSTANCE environment\n"
+      INDENT "variable if none is specified; this also defaults -l/--lifetime\n"
+      INDENT "to reboot (normally invoked from an OCF resource agent)",
+      "RESOURCE"
     },
 
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nExamples:", pcmk__option_paragraph
+    { "set-name", 's', 0, G_OPTION_ARG_STRING, &options.set_name,
+      "(Advanced) Operate on instance of specified attribute that is\n"
+      INDENT "within set with this XML ID",
+      "NAME"
     },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Add new node attribute called 'location' with the value of 'office' "
-            "for host 'myhost':",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_attribute --node myhost --name location --update office",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Query the value of the 'location' node attribute for host 'myhost':",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_attribute --node myhost --name location --query",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Change the value of the 'location' node attribute for host 'myhost':",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_attribute --node myhost --name location --update backoffice",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Delete the 'location' node attribute for host 'myhost':",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_attribute --node myhost --name location --delete",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Query the value of the cluster-delay cluster option:",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_attribute --type crm_config --name cluster-delay --query",
-        pcmk__option_example
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "Query value of the \"cluster-delay\" cluster option and print only "
-            "the value:",
-        pcmk__option_paragraph
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        " crm_attribute --type crm_config --name cluster-delay --query --quiet",
-        pcmk__option_example
-    },
-    { 0, 0, 0, 0 }
+
+    { NULL }
 };
+
+static GOptionEntry command_entries[] = {
+    { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, delete_cb,
+      "Delete the attribute/option",
+      NULL
+    },
+
+    { "query", 'G', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, value_cb,
+      "Query the current value of the attribute/option",
+      NULL
+    },
+
+    { "update", 'v', 0, G_OPTION_ARG_CALLBACK, update_cb,
+      "Update the value of the attribute/option",
+      "VALUE"
+    },
+
+    { NULL }
+};
+
+static GOptionEntry addl_entries[] = {
+    { "default", 'd', 0, G_OPTION_ARG_STRING, &options.attr_default,
+      "(Advanced) Default value to display if none is found in configuration",
+      "VALUE"
+    },
+
+    { "lifetime", 'l', 0, G_OPTION_ARG_STRING, &options.type,
+      "Lifetime of the node attribute.\n"
+      INDENT "Valid values: reboot, forever",
+      "LIFETIME"
+    },
+
+    { "node", 'N', 0, G_OPTION_ARG_STRING, &options.dest_uname,
+      "Set a node attribute for named node (instead of a cluster option).\n"
+      INDENT "See also: -l",
+      "NODE"
+    },
+
+    { "type", 't', 0, G_OPTION_ARG_STRING, &options.type,
+      "Which part of the configuration to update/delete/query the option in.\n"
+      INDENT "Valid values: crm_config, rsc_defaults, op_defaults, tickets",
+      "SECTION"
+    },
+
+    { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, utilization_cb,
+      "Set an utilization attribute for the node.",
+      NULL
+    },
+
+    { "inhibit-policy-engine", '!', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.inhibit,
+      NULL, NULL
+    },
+
+    { NULL }
+};
+
+static GOptionEntry deprecated_entries[] = {
+    { "attr-id", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_id,
+      NULL, NULL
+    },
+
+    { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_name,
+      NULL, NULL
+    },
+
+    { "attr-value", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, update_cb,
+      NULL, NULL
+    },
+
+    { "delete-attr", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, delete_cb,
+      NULL, NULL
+    },
+
+    { "get-value", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, value_cb,
+      NULL, NULL
+    },
+
+    { "node-uname", 'U', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.dest_uname,
+      NULL, NULL
+    },
+
+    { NULL }
+};
+
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
+    GOptionContext *context = NULL;
+
+    GOptionEntry extra_prog_entries[] = {
+        { "quiet", 'q', 0, G_OPTION_ARG_NONE, &(args->quiet),
+          "Print only the value on stdout",
+          NULL },
+
+        { "quiet", 'Q', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &(args->quiet),
+          NULL, NULL
+        },
+
+        { NULL }
+    };
+
+    const char *description = "Examples:\n\n"
+                              "Add new node attribute called 'location' with the value of 'office' for host 'myhost':\n\n"
+                              "\tcrm_attribute --node myhost --name location --update office\n\n"
+                              "Query the value of the 'location' node attribute for host 'myhost':\n\n"
+                              "\tcrm_attribute --node myhost --name location --query\n\n"
+                              "Change the value of the 'location' node attribute for host 'myhost':\n\n"
+                              "\tcrm_attribute --node myhost --name location --update backoffice\n\n"
+                              "Delete the 'location' node attribute for host 'myhost':\n\n"
+                              "\tcrm_attribute --node myhost --name location --delete\n\n"
+                              "Query the value of the 'cluster-delay' cluster option:\n\n"
+                              "\tcrm_attribute --type crm_config --name cluster-delay --query\n\n"
+                              "Query value of the 'cluster-delay' cluster option and print only the value:\n\n"
+                              "\tcrm_attribute --type crm_config --name cluster-delay --query --quiet\n\n";
+
+    context = pcmk__build_arg_context(args, NULL, group, NULL);
+    pcmk__add_main_args(context, extra_prog_entries);
+    g_option_context_set_description(context, description);
+
+    pcmk__add_arg_group(context, "selections", "Selecting attributes:",
+                        "Show selecting options", selecting_entries);
+    pcmk__add_arg_group(context, "command", "Commands:",
+                        "Show command options", command_entries);
+    pcmk__add_arg_group(context, "additional", "Additional options:",
+                        "Show additional options", addl_entries);
+    pcmk__add_arg_group(context, "deprecated", "Deprecated Options:",
+                        "Show deprecated options", deprecated_entries);
+
+    return context;
+}
 
 int
 main(int argc, char **argv)
 {
     cib_t *the_cib = NULL;
-    int rc = pcmk_ok;
-
-    int cib_opts = cib_sync_call;
-    int argerr = 0;
-    int flag;
-
-    int option_index = 0;
     int is_remote_node = 0;
-
     bool try_attrd = true;
-    bool promotion_score = false;
     int attrd_opts = pcmk__node_attr_none;
 
+    int rc = pcmk_ok;
+    GError *error = NULL;
+
+    GOptionGroup *output_group = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "DGNPdilnpstv");
+    GOptionContext *context = build_arg_context(args, &output_group);
+
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
+    }
+
     pcmk__cli_init_logging("crm_attribute", 0);
-    pcmk__set_cli_options(NULL, "-n <attribute> <command> [options]",
-                          long_options,
-                          "query and update Pacemaker cluster options "
-                          "and node attributes");
 
-    if (argc < 2) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
+        /* FIXME:  When crm_attribute is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_USAGE);
     }
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        if (flag == -1)
-            break;
-
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'G':
-                options.command = flag;
-                options.attr_value = optarg;
-                break;
-            case 'D':
-            case 'v':
-                options.command = flag;
-                options.attr_value = optarg;
-                crm_log_args(argc, argv);
-                break;
-            case 'q':
-            case 'Q':
-                BE_QUIET = TRUE;
-                break;
-            case 'U':
-            case 'N':
-                options.dest_uname = strdup(optarg);
-                break;
-            case 's':
-                options.set_name = strdup(optarg);
-                break;
-            case 'l':
-            case 't':
-                options.type = optarg;
-                break;
-            case 'z':
-                options.type = XML_CIB_TAG_NODES;
-                options.set_type = XML_TAG_UTILIZATION;
-                break;
-            case 'n':
-                options.attr_name = strdup(optarg);
-                break;
-            case 'p':
-                promotion_score = true;
-                options.attr_name = pcmk_promotion_score_name(optarg);
-                if (options.attr_name == NULL) {
-                    fprintf(stderr, "-p/--promotion must be called from an "
-                                    " OCF resource agent or with a resource ID "
-                                    " specified\n\n");
-                    ++argerr;
-                }
-                break;
-            case 'P':
-                options.attr_pattern = strdup(optarg);
-                break;
-            case 'i':
-                options.attr_id = strdup(optarg);
-                break;
-            case 'd':
-                options.attr_default = optarg;
-                break;
-            case '!':
-                crm_warn("Inhibiting notifications for this update");
-                cib__set_call_options(cib_opts, crm_system_name,
-                                      cib_inhibit_notify);
-                break;
-            default:
-                printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
-                ++argerr;
-                break;
-        }
+    if (options.promotion_score && options.attr_name == NULL) {
+        fprintf(stderr, "-p/--promotion must be called from an "
+                        " OCF resource agent or with a resource ID "
+                        " specified\n\n");
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
-    if (optind < argc) {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        printf("\n");
+    if (options.inhibit) {
+        crm_warn("Inhibiting notifications for this update");
+        cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
-    if (optind > argc) {
-        ++argerr;
-    }
-
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (args->quiet) {
+        BE_QUIET = TRUE;
     }
 
     the_cib = cib_new();
@@ -395,25 +358,23 @@ main(int argc, char **argv)
 
     // Use default CIB location if not given
     if (options.type == NULL) {
-        if (promotion_score) {
+        if (options.promotion_score) {
             // Updating a promotion score node attribute
-            options.type = "reboot";
+            options.type = g_strdup(XML_CIB_TAG_STATUS);
 
         } else if (options.dest_uname != NULL) {
             // Updating some other node attribute
-            options.type = "forever";
+            options.type = g_strdup(XML_CIB_TAG_NODES);
 
         } else {
             // Updating cluster options
-            options.type = XML_CIB_TAG_CRMCONFIG;
+            options.type = g_strdup(XML_CIB_TAG_CRMCONFIG);
         }
-    }
-
-    if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
-        options.type = XML_CIB_TAG_STATUS;
+    } else if (pcmk__str_eq(options.type, "reboot", pcmk__str_casei)) {
+        options.type = g_strdup(XML_CIB_TAG_STATUS);
 
     } else if (pcmk__str_eq(options.type, "forever", pcmk__str_casei)) {
-        options.type = XML_CIB_TAG_NODES;
+        options.type = g_strdup(XML_CIB_TAG_NODES);
     }
 
     // Use default node if not given (except for cluster options and tickets)
@@ -423,9 +384,15 @@ main(int argc, char **argv)
          * the correct local node name will be passed as an environment
          * variable. Otherwise, we have to ask the cluster.
          */
-        options.dest_uname = pcmk__node_attr_target(options.dest_uname);
+        const char *target = pcmk__node_attr_target(options.dest_uname);
+
+        if (target != NULL) {
+            g_free(options.dest_uname);
+            options.dest_uname = g_strdup(target);
+        }
+
         if (options.dest_uname == NULL) {
-            options.dest_uname = get_local_node_name();
+            options.dest_uname = g_strdup(get_local_node_name());
         }
 
         rc = query_node_uuid(the_cib, options.dest_uname, &options.dest_node, &is_remote_node);
@@ -451,7 +418,7 @@ main(int argc, char **argv)
             goto done;
         }
         options.command = 'u';
-        free(options.attr_name);
+        g_free(options.attr_name);
         options.attr_name = options.attr_pattern;
     }
 
@@ -535,16 +502,24 @@ main(int argc, char **argv)
     }
 
 done:
-    free(options.attr_id);
-    free(options.attr_name);
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    free(options.attr_default);
+    g_free(options.attr_id);
+    g_free(options.attr_name);
     free(options.attr_value);
     free(options.dest_node);
-    free(options.set_name);
+    g_free(options.dest_uname);
+    g_free(options.set_name);
+    free(options.set_type);
+    g_free(options.type);
 
     if (the_cib) {
         the_cib->cmds->signoff(the_cib);
         cib_delete(the_cib);
     }
 
+    pcmk__output_and_clear_error(error, NULL);
     return crm_exit(exit_code);
 }
