@@ -162,6 +162,11 @@
 %global concurrent_fencing --with-concurrent-fencing-default=true
 %endif
 
+### Default resource-stickiness to 1 when distro prefers that
+%if 0%{?fedora} >= 35 || 0%{?rhel} >= 9
+%global resource_stickiness --with-resource-stickiness-default=1
+%endif
+
 
 # Python-related definitions
 
@@ -471,6 +476,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_cibsecrets:    --with-cibsecrets}                               \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         %{?concurrent_fencing}                                                  \
+        %{?resource_stickiness}                                                 \
         %{?compat20}                                                            \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \

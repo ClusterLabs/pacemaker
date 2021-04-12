@@ -328,6 +328,20 @@ AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
                    ["$with_concurrent_fencing_default"],
                    [Default value for concurrent-fencing cluster option])
 
+AC_ARG_WITH([resource-stickiness-default],
+    [AS_HELP_STRING([--with-resource-stickiness-default],
+        [If positive, value to add to new CIBs as explicit resource default for resource-stickiness @<:@0@:>@])],
+)
+errmsg="Invalid value \"$with_resource_stickiness_default\" for --with-resource-stickiness-default"
+AS_CASE([$with_resource_stickiness_default],
+        [0|""], [with_resource_stickiness_default="0"],
+        [*[[!0-9]]*], [AC_MSG_ERROR([$errmsg])],
+        [PCMK_FEATURES="$PCMK_FEATURES default-resource-stickiness"]
+)
+AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
+                   [$with_resource_stickiness_default],
+                   [Default value for resource-stickiness resource meta-attribute])
+
 AC_ARG_WITH([corosync],
     [AS_HELP_STRING([--with-corosync],
         [support the Corosync messaging and membership layer @<:@try@:>@])]
