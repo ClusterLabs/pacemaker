@@ -96,6 +96,7 @@ panic_local(void)
     if (pcmk__str_eq("crash", getenv("PCMK_panic_action"), pcmk__str_casei)) {
         sysrq_trigger('c');
     } else {
+        sync();
         sysrq_trigger('b');
     }
     /* reboot(RB_HALT_SYSTEM); rc = errno; */
