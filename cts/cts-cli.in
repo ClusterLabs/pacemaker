@@ -67,6 +67,24 @@ CRM_EX_MULTIPLE=109
 CRM_EX_EXPIRED=110
 CRM_EX_NOT_YET_IN_EFFECT=111
 
+create_shadow_cib() {
+    local VALIDATE_WITH
+    local SHADOW_CMD
+
+    VALIDATE_WITH="$1"
+
+    export CIB_shadow_dir="${shadow_dir}"
+
+    SHADOW_CMD="$VALGRIND_CMD crm_shadow --batch --force --create-empty"
+    if [ -z "$VALIDATE_WITH" ]; then
+        $SHADOW_CMD "$shadow" 2>&1
+    else
+        $SHADOW_CMD "$shadow" --validate-with="${VALIDATE_WITH}" 2>&1
+    fi
+
+    export CIB_shadow="$shadow"
+}
+
 function test_assert() {
     target=$1; shift
     cib=$1; shift
@@ -392,10 +410,8 @@ function test_tools() {
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
     TMPORIG=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.existing.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib
 
     desc="Validate CIB"
     cmd="cibadmin -Q"
@@ -1243,10 +1259,8 @@ function test_acls() {
     local TMPXML
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib pacemaker-1.3
 
     cat <<EOF > "$TMPXML"
     <acls>
@@ -1344,10 +1358,8 @@ function test_validity() {
 
     TMPGOOD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.good.xml.XXXXXXXXXX)
     TMPBAD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.bad.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib pacemaker-1.2
     export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
     export PCMK_stderr=1
 
@@ -1418,10 +1430,8 @@ test_upgrade() {
     local TMPXML
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-2.10 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib pacemaker-2.10
 
     desc="Set stonith-enabled=false"
     cmd="crm_attribute -n stonith-enabled -v false"
@@ -1471,9 +1481,7 @@ EOF
 test_rules() {
     local TMPXML
 
-    export CIB_shadow_dir="${shadow_dir}"
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib
 
     cibadmin -C -o resources   --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
 
