@@ -154,12 +154,16 @@ get_object_root(const char *object_type, xmlNode * the_root)
     return get_xpath_object(xpath, the_root, LOG_TRACE);
 }
 
-/*
- * It is the callers responsibility to free both the new CIB (output)
- *     and the new CIB (input)
+/*!
+ * \brief Create XML for a new (empty) CIB
+ *
+ * \param[in] cib_epoch   What to use as "epoch" CIB property
+ *
+ * \return Newly created XML for empty CIB
+ * \note It is the caller's responsibility to free the result with free_xml().
  */
 xmlNode *
-createEmptyCib(int admin_epoch)
+createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
@@ -167,7 +171,7 @@ createEmptyCib(int admin_epoch)
     crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
     crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
 
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, admin_epoch);
+    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
     crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
     crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
 
