@@ -3,7 +3,7 @@ Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=cts-cli ; export CIB_shadow
 =#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
-   1 <cib epoch="4" num_updates="0" admin_epoch="0">
+   1 <cib epoch="5" num_updates="0" admin_epoch="0">
    2   <configuration>
    3     <crm_config/>
    4     <nodes/>
@@ -20,7 +20,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   15 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (enum violation) =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0">
+<cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -125,7 +125,7 @@ Cannot upgrade configuration (claiming schema pacemaker-1.2) to at least pacemak
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
-   1 <cib epoch="3" num_updates="1" admin_epoch="0">
+   1 <cib epoch="4" num_updates="1" admin_epoch="0">
    2   <configuration>
    3     <crm_config/>
    4     <nodes/>
@@ -142,7 +142,7 @@ Cannot upgrade configuration (claiming schema pacemaker-1.2) to at least pacemak
   15 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0">
+<cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -230,7 +230,7 @@ Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pace
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
-   1 <cib epoch="3" num_updates="0" admin_epoch="0">
+   1 <cib epoch="4" num_updates="0" admin_epoch="0">
    2   <configuration>
    3     <crm_config/>
    4     <nodes/>
@@ -248,7 +248,7 @@ Cannot upgrade configuration (claiming schema pacemaker-9999.0) to at least pace
   16 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0">
+<cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -351,7 +351,7 @@ Revised Cluster Status:
 * Passed: crm_simulate   - Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)
 =#=#=#= Begin test: Make resulting CIB valid, although without validate-with attribute =#=#=#=
 =#=#=#= Current cib after: Make resulting CIB valid, although without validate-with attribute =#=#=#=
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="none">
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="none">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -438,7 +438,7 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 =#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
-<cib epoch="31" num_updates="0" admin_epoch="0" validate-with="none">
+<cib epoch="41" num_updates="0" admin_epoch="0" validate-with="none">
   <configuration>
     <crm_config/>
     <nodes/>

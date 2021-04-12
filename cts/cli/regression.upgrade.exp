@@ -4,7 +4,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   CIB_shadow=cts-cli ; export CIB_shadow
 =#=#=#= Begin test: Set stonith-enabled=false =#=#=#=
 =#=#=#= Current cib after: Set stonith-enabled=false =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -21,7 +21,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: crm_attribute  - Set stonith-enabled=false
 =#=#=#= Begin test: Configure the initial resource =#=#=#=
 =#=#=#= Current cib after: Configure the initial resource =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

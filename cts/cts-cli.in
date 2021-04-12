@@ -80,6 +80,18 @@ reset_shadow_cib_version() {
     mv -- "${SHADOWPATH}.$$" "$SHADOWPATH"
 }
 
+# A newly created empty CIB might or might not have a rsc_defaults section
+# depending on whether the --with-resource-stickiness-default configure
+# option was used. To ensure regression tests behave the same either way,
+# delete any rsc_defaults after creating or erasing a CIB.
+delete_shadow_resource_defaults() {
+    cibadmin --delete --xml-text '<rsc_defaults/>'
+
+    # The above command might or might not bump the CIB version, so reset it
+    # to ensure future changes result in the same version for comparison.
+    reset_shadow_cib_version
+}
+
 create_shadow_cib() {
     local VALIDATE_WITH
     local SHADOW_CMD
@@ -96,6 +108,7 @@ create_shadow_cib() {
     fi
 
     export CIB_shadow="$shadow"
+    delete_shadow_resource_defaults
 }
 
 function test_assert() {
@@ -440,11 +453,19 @@ function test_tools() {
 
     desc="Allow CIB erasure with --force"
     cmd="cibadmin -E --force"
+    test_assert $CRM_EX_OK 0
+
+    # Skip outputting the resulting CIB in the previous command, and delete
+    # rsc_defaults now, so tests behave the same regardless of build options.
+    delete_shadow_resource_defaults
+
+    # Verify the output after erasure
+    desc="Query CIB"
+    cmd="cibadmin -Q"
     test_assert $CRM_EX_OK
 
-    desc="Query CIB"
-    cmd="cibadmin -Q > $TMPORIG"
-    test_assert $CRM_EX_OK
+    # Save a copy of the CIB for a later test
+    cibadmin -Q > "$TMPORIG"
 
     desc="Set cluster option"
     cmd="crm_attribute -n cluster-delay -v 60s"
