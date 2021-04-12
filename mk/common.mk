@@ -76,6 +76,7 @@ HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource ma
 			| sed -f $(top_srcdir)/tools/fix-manpages > $@ ; \
 	else									\
 		PATH=$(abs_builddir):$$PATH $(HELP2MAN) $(HELP2MAN_ARGS)	\
+			--no-discard-stderr 					\
 			$(abs_builddir)/$< --output $@ ;			\
 	fi
 endif
