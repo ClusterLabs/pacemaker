@@ -44,7 +44,6 @@ struct {
     const char *attr_default;
     const char *attr_value;
     const char *dest_uname;
-    const char *rsc_id;
     const char *set_type;
     const char *type;
 } options = {
@@ -353,9 +352,6 @@ main(int argc, char **argv)
                 break;
             case 'i':
                 options.attr_id = strdup(optarg);
-                break;
-            case 'r':
-                options.rsc_id = optarg;
                 break;
             case 'd':
                 options.attr_default = optarg;
