@@ -1115,13 +1115,14 @@ update_working_set_from_cib(pcmk__output_t *out, pe_working_set_t * data_set,
 
 // \return Standard Pacemaker return code
 static int
-update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
-               bool simulate)
+update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
 {
     char *pid = NULL;
     char *shadow_file = NULL;
     cib_t *shadow_cib = NULL;
     int rc = pcmk_rc_ok;
+
+    pcmk__output_t *out = data_set->priv;
 
     pe_reset_working_set(data_set);
     rc = update_working_set_from_cib(out, data_set, cib);
@@ -1164,7 +1165,7 @@ update_dataset(pcmk__output_t *out, cib_t *cib, pe_working_set_t * data_set,
         run_simulation(data_set, shadow_cib, NULL);
         out->quiet = prev_quiet;
 
-        rc = update_dataset(out, shadow_cib, data_set, FALSE);
+        rc = update_dataset(shadow_cib, data_set, FALSE);
 
     } else {
         cluster_status(data_set);
@@ -1322,8 +1323,11 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         rc = ENOMEM;
         goto done;
     }
+
+    data_set->priv = out;
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
-    rc = update_dataset(out, cib, data_set, FALSE);
+    rc = update_dataset(cib, data_set, FALSE);
+
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not get new resource list: %s (%d)", pcmk_strerror(rc), rc);
         goto done;
@@ -1366,7 +1370,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
         goto done;
     }
 
-    rc = update_dataset(out, cib, data_set, TRUE);
+    rc = update_dataset(cib, data_set, TRUE);
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not determine which resources would be stopped");
         goto failure;
@@ -1393,7 +1397,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                 timeout -= sleep_interval;
                 crm_trace("%ds remaining", timeout);
             }
-            rc = update_dataset(out, cib, data_set, FALSE);
+            rc = update_dataset(cib, data_set, FALSE);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were stopped");
                 goto failure;
@@ -1465,7 +1469,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
                 crm_trace("%ds remaining", timeout);
             }
 
-            rc = update_dataset(out, cib, data_set, FALSE);
+            rc = update_dataset(cib, data_set, FALSE);
             if(rc != pcmk_rc_ok) {
                 out->err(out, "Could not determine which resources were started");
                 goto failure;
