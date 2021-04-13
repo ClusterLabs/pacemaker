@@ -571,33 +571,35 @@ attributes, their purpose and default values.
 
       <?xml version="1.0"?>
       <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-      <resource-agent name="Dummy" version="1.0">
-      <version>1.0</version>
+      <resource-agent name="Dummy" version="2.0">
+      <version>1.1</version>
 
       <longdesc lang="en">
-      This is a Dummy Resource Agent. It does absolutely nothing except 
-      keep track of whether its running or not.
-      Its purpose in life is for testing and to serve as a template for RA writers.
-
-      NB: Please pay attention to the timeouts specified in the actions
-      section below. They should be meaningful for the kind of resource
-      the agent manages. They should be the minimum advised timeouts,
-      but they shouldn't/cannot cover _all_ possible resource
-      instances. So, try to be neither overly generous nor too stingy,
-      but moderate. The minimum timeouts should never be below 10 seconds.
+      This is a dummy OCF resource agent. It does absolutely nothing except keep track
+      of whether it is running or not, and can be configured so that actions fail or
+      take a long time. Its purpose is primarily for testing, and to serve as a
+      template for resource agent writers.
       </longdesc>
       <shortdesc lang="en">Example stateless resource agent</shortdesc>
 
       <parameters>
-      <parameter name="state" unique="1">
+      <parameter name="state" unique-group="state">
       <longdesc lang="en">
       Location to store the resource state in.
       </longdesc>
       <shortdesc lang="en">State file</shortdesc>
-      <content type="string" default="/var/run/Dummy-default.state" />
+      <content type="string" default="/var/run/Dummy-RESOURCE_ID.state" />
       </parameter>
 
-      <parameter name="fake" unique="0">
+      <parameter name="passwd" reloadable="1">
+      <longdesc lang="en">
+      Fake password field
+      </longdesc>
+      <shortdesc lang="en">Password</shortdesc>
+      <content type="string" default="" />
+      </parameter>
+
+      <parameter name="fake" reloadable="1">
       <longdesc lang="en">
       Fake attribute that can be changed to cause a reload
       </longdesc>
@@ -605,7 +607,7 @@ attributes, their purpose and default values.
       <content type="string" default="dummy" />
       </parameter>
 
-      <parameter name="op_sleep" unique="1">
+      <parameter name="op_sleep" reloadable="1">
       <longdesc lang="en">
       Number of seconds to sleep during operations.  This can be used to test how
       the cluster reacts to operation timeouts.
@@ -614,17 +616,35 @@ attributes, their purpose and default values.
       <content type="string" default="0" />
       </parameter>
 
+      <parameter name="fail_start_on" reloadable="1">
+      <longdesc lang="en">
+      Start, migrate_from, and reload-agent actions will return failure if running on
+      the host specified here, but the resource will run successfully anyway (future
+      monitor calls will find it running). This can be used to test on-fail=ignore.
+      </longdesc>
+      <shortdesc lang="en">Report bogus start failure on specified host</shortdesc>
+      <content type="string" default="" />
+      </parameter>
+      <parameter name="envfile" reloadable="1">
+      <longdesc lang="en">
+      If this is set, the environment will be dumped to this file for every call.
+      </longdesc>
+      <shortdesc lang="en">Environment dump file</shortdesc>
+      <content type="string" default="" />
+      </parameter>
+
       </parameters>
 
       <actions>
-      <action name="start"        timeout="20" />
-      <action name="stop"         timeout="20" />
-      <action name="monitor"      timeout="20" interval="10" depth="0"/>
-      <action name="reload"       timeout="20" />
-      <action name="migrate_to"   timeout="20" />
-      <action name="migrate_from" timeout="20" />
-      <action name="validate-all" timeout="20" />
-      <action name="meta-data"    timeout="5" />
+      <action name="start"        timeout="20s" />
+      <action name="stop"         timeout="20s" />
+      <action name="monitor"      timeout="20s" interval="10s" depth="0"/>
+      <action name="reload"       timeout="20s" />
+      <action name="reload-agent" timeout="20s" />
+      <action name="migrate_to"   timeout="20s" />
+      <action name="migrate_from" timeout="20s" />
+      <action name="validate-all" timeout="20s" />
+      <action name="meta-data"    timeout="5s" />
       </actions>
       </resource-agent>
 
