@@ -1,7 +1,7 @@
 [Unit]
 Description=Pacemaker Remote executor daemon
 Documentation=man:pacemaker-remoted
-Documentation=https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Remote/index.html
+Documentation=https://clusterlabs.org/pacemaker/doc/
 
 # See main pacemaker unit file for descriptions of why these are needed
 After=network.target

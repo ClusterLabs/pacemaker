@@ -25,6 +25,7 @@ Table of Contents
    troubleshooting
    upgrading
    agents
+   pcs-crmsh
 
 
 Index

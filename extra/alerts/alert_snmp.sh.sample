@@ -1,6 +1,7 @@
 #!/bin/sh
 #
-# Copyright 2016-2018 NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+# Copyright 2013 Florian CROUZAT <gentoo@floriancrouzat.net>
+# Later changes copyright 2013-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #

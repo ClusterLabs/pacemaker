@@ -68,9 +68,12 @@ extern "C" {
  */
 #  define CRM_FEATURE_SET		"3.9.0"
 
-#  ifndef MAX_NAME
-#    define MAX_NAME	256
-#  endif
+/* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
+ * recipient of a CPG message. This imposes an arbitrary limit on cluster node
+ * names.
+ */
+//! \brief Maximum length of a Corosync cluster node name (in bytes)
+#define MAX_NAME	256
 
 #  define CRM_META			"CRM_meta"
 
