@@ -168,6 +168,7 @@ gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static crm_exit_t exit_code = CRM_EX_OK;
 static pcmk__output_t *out = NULL;
+static pcmk__common_args_t *args = NULL;
 
 // Things that should be cleaned up on exit
 static GError *error = NULL;
@@ -655,7 +656,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
-        if (!out->is_quiet(out)) {
+        if (!args->quiet) {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
                         "Standard %s does not support parameters\n", optarg);
         }
@@ -1517,14 +1518,17 @@ main(int argc, char **argv)
     pe_node_t *node = NULL;
     int rc = pcmk_rc_ok;
 
+    GOptionGroup *output_group = NULL;
+    gchar **processed_args = NULL;
+    GOptionContext *context = NULL;
+
     /*
      * Parse command line arguments
      */
 
-    GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
-    GOptionContext *context = build_arg_context(args, &output_group);
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
+    context = build_arg_context(args, &output_group);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
