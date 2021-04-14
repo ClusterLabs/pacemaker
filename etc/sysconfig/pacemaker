@@ -79,8 +79,11 @@
 
 # Pacemaker will panic its host under certain conditions. If this is set to
 # "crash", Pacemaker will trigger a kernel crash (which is useful if you want a
-# kernel dump to investigate). For any other value, Pacemaker will trigger a
-# host reboot. The default is unset.
+# kernel dump to investigate). If "sync-reboot" is set, execute sync() before
+# host reboot (this leaves information about the crashed daemon in the log
+# file, but note that there is a possibility that the sync() call may not
+# return). For any other value, Pacemaker will trigger a host reboot. The
+# default is unset.
 # PCMK_panic_action=crash
 
 #==#==# Pacemaker Remote
