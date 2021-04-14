@@ -24,7 +24,7 @@ const char *get_object_parent(const char *object_type);
 xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const char *source);
 
-xmlNode *createEmptyCib(int admin_epoch);
+xmlNode *createEmptyCib(int cib_epoch);
 gboolean verifyCibXml(xmlNode * cib);
 
 gboolean cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates);
@@ -65,9 +65,8 @@ xmlNode *cib_get_generation(cib_t * cib);
 void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/util_compat.h>
-#endif
+int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
+                          int level);
 
 #ifdef __cplusplus
 }

@@ -62,8 +62,6 @@ char *strndup(const char *str, size_t len);
 #    	define USE_GNU
 #  endif
 
-#  include <glib.h>
-
 #  if SUPPORT_DBUS
 #    ifndef HAVE_DBUSBASICVALUE
 #      include <stdint.h>

@@ -154,12 +154,16 @@ get_object_root(const char *object_type, xmlNode * the_root)
     return get_xpath_object(xpath, the_root, LOG_TRACE);
 }
 
-/*
- * It is the callers responsibility to free both the new CIB (output)
- *     and the new CIB (input)
+/*!
+ * \brief Create XML for a new (empty) CIB
+ *
+ * \param[in] cib_epoch   What to use as "epoch" CIB property
+ *
+ * \return Newly created XML for empty CIB
+ * \note It is the caller's responsibility to free the result with free_xml().
  */
 xmlNode *
-createEmptyCib(int admin_epoch)
+createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
@@ -167,7 +171,7 @@ createEmptyCib(int admin_epoch)
     crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
     crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
 
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, admin_epoch);
+    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
     crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
     crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
 
@@ -179,6 +183,19 @@ createEmptyCib(int admin_epoch)
     create_xml_node(config, XML_CIB_TAG_RESOURCES);
     create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
 
+#if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
+    {
+        xmlNode *rsc_defaults = create_xml_node(config, XML_CIB_TAG_RSCCONFIG);
+        xmlNode *meta = create_xml_node(rsc_defaults, XML_TAG_META_SETS);
+        xmlNode *nvpair = create_xml_node(meta, XML_CIB_TAG_NVPAIR);
+
+        crm_xml_add(meta, XML_ATTR_ID, "build-resource-defaults");
+        crm_xml_add(nvpair, XML_ATTR_ID, "build-" XML_RSC_ATTR_STICKINESS);
+        crm_xml_add(nvpair, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_STICKINESS);
+        crm_xml_add_int(nvpair, XML_NVPAIR_ATTR_VALUE,
+                        PCMK__RESOURCE_STICKINESS_DEFAULT);
+    }
+#endif
     return cib_root;
 }
 
@@ -715,10 +732,17 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }
 
-// Deprecated functions kept only for backward API compatibility
-
-#include <crm/cib/util_compat.h>
-
+/*!
+ * \brief Apply a CIB update patch to a given CIB
+ *
+ * \param[in]  event   CIB update patch
+ * \param[in]  input   CIB to patch
+ * \param[out] output  Resulting CIB after patch
+ * \param[in]  level   Log the patch at this log level (unless LOG_CRIT)
+ *
+ * \return Legacy Pacemaker return code
+ * \note sbd calls this function
+ */
 int
 cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                       int level)
@@ -761,5 +785,3 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
     return rc;
 }
-
-// End deprecated API

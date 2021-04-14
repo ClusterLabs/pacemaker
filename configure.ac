@@ -241,10 +241,10 @@ AS_IF([test $enable_compat_2_0 -ne $DISABLED],
 
 # Add an option to create symlinks at the pre-2.0.0 daemon name locations, so
 # that users and tools can continue to invoke those names directly (e.g., for
-# meta-data). This option will be deprecated in a future release.
+# meta-data). This option will be removed in a future release.
 AC_ARG_ENABLE([legacy-links],
     [AS_HELP_STRING([--enable-legacy-links],
-        [add symlinks for old daemon names @<:@no@:>@])]
+        [add symlinks for old daemon names (deprecated) @<:@no@:>@])]
 )
 yes_no_try "$enable_legacy_links" "no"
 enable_legacy_links=$?
@@ -327,6 +327,20 @@ AS_CASE([$with_concurrent_fencing_default],
 AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
                    ["$with_concurrent_fencing_default"],
                    [Default value for concurrent-fencing cluster option])
+
+AC_ARG_WITH([resource-stickiness-default],
+    [AS_HELP_STRING([--with-resource-stickiness-default],
+        [If positive, value to add to new CIBs as explicit resource default for resource-stickiness @<:@0@:>@])],
+)
+errmsg="Invalid value \"$with_resource_stickiness_default\" for --with-resource-stickiness-default"
+AS_CASE([$with_resource_stickiness_default],
+        [0|""], [with_resource_stickiness_default="0"],
+        [*[[!0-9]]*], [AC_MSG_ERROR([$errmsg])],
+        [PCMK_FEATURES="$PCMK_FEATURES default-resource-stickiness"]
+)
+AC_DEFINE_UNQUOTED([PCMK__RESOURCE_STICKINESS_DEFAULT],
+                   [$with_resource_stickiness_default],
+                   [Default value for resource-stickiness resource meta-attribute])
 
 AC_ARG_WITH([corosync],
     [AS_HELP_STRING([--with-corosync],

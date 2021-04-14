@@ -7,10 +7,11 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <crm_resource.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/lists_internal.h>
-#include <crm/common/xml_internal.h>
 
 resource_checks_t *
 cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)

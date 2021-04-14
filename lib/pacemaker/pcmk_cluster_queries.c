@@ -7,6 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <glib.h>               // gboolean, GMainLoop, etc.
 #include <libxml/tree.h>        // xmlNode
 

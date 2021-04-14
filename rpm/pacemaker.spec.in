@@ -64,6 +64,7 @@
 ## Add option to enable links for legacy daemon names
 %bcond_with legacy_links
 
+
 # Define globals for convenient use later
 
 ## Workaround to use parentheses in other globals
@@ -148,6 +149,24 @@
 %global pkgname_pcmk_libs %{name}-libs
 %global hacluster_id 189
 %endif
+
+## Distro-specific configuration choices
+
+### Use 2.0-style output when other distro packages don't support current output
+%if ( 0%{?fedora} && 0%{?fedora} <= 34 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
+%global compat20 --enable-compat-2.0
+%endif
+
+### Default concurrent-fencing to true when distro prefers that
+%if 0%{?rhel} >= 7
+%global concurrent_fencing --with-concurrent-fencing-default=true
+%endif
+
+### Default resource-stickiness to 1 when distro prefers that
+%if 0%{?fedora} >= 35 || 0%{?rhel} >= 9
+%global resource_stickiness --with-resource-stickiness-default=1
+%endif
+
 
 # Python-related definitions
 
@@ -448,14 +467,6 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 
 ./autogen.sh
 
-%if 0%{?rhel} >= 7
-%global concurrent_fencing --with-concurrent-fencing-default=true
-%endif
-
-%if 0%{?fedora} <= 34 || 0%{?rhel} <= 8
-%global compat20 --enable-compat-2.0
-%endif
-
 %{configure}                                                                    \
         PYTHON=%{python_path}                                                   \
         %{!?with_hardening:    --disable-hardening}                             \
@@ -465,6 +476,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_cibsecrets:    --with-cibsecrets}                               \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         %{?concurrent_fencing}                                                  \
+        %{?resource_stickiness}                                                 \
         %{?compat20}                                                            \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \

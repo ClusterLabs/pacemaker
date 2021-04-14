@@ -1,9 +1,17 @@
-#include <float.h>  // DBL_MAX, etc.
-#include <math.h>   // fabs()
-
-#include <glib.h>
+/*
+ * Copyright 2004-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
 
 #include <crm_internal.h>
+
+#include <float.h>  // DBL_MAX, etc.
+#include <math.h>   // fabs()
+#include <glib.h>
 
 // Ensure plenty of characters for %f display
 #define LOCAL_BUF_SIZE 2 * DBL_MAX_10_EXP

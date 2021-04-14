@@ -7,10 +7,11 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <crm_resource.h>
 #include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/lists_internal.h>
 #include <pacemaker-internal.h>
 

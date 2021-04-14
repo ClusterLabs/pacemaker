@@ -9,7 +9,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 No rule found with ID=blahblah
 Error checking rule: No such device or address
 =#=#=#= Current cib after: Try to check a rule that doesn't exist =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -72,7 +72,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 Can't check rule cli-rule-too-many-date-expressions because it does not have exactly one date_expression
 Error checking rule: Operation not supported
 =#=#=#= Current cib after: Try to check a rule that has too many date_expressions =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -134,7 +134,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-expired is expired
 =#=#=#= Current cib after: Verify basic rule is expired =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -196,7 +196,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-expired is still in effect
 =#=#=#= Current cib after: Verify basic rule worked in the past =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -258,7 +258,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-not-yet has not yet taken effect
 =#=#=#= Current cib after: Verify basic rule is not yet in effect =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -320,7 +320,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-date_spec-only-years is expired
 =#=#=#= Current cib after: Verify date_spec rule with years has expired =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -382,7 +382,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Rule cli-prefer-rule-dummy-date_spec-only-years satisfies conditions
 =#=#=#= Current cib after: Verify date_spec rule with years is in effect =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -445,7 +445,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 Rule either must not use date_spec, or use date_spec with years= but not moon=
 Error checking rule: No such device or address
 =#=#=#= Current cib after: Try to check a rule whose date_spec does not contain years= =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -508,7 +508,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 Rule either must not use date_spec, or use date_spec with years= but not moon=
 Error checking rule: No such device or address
 =#=#=#= Current cib after: Try to check a rule whose date_spec contains years= and moon= =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -571,7 +571,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 Can't check rule cli-no-date_expression-rule because it does not have exactly one date_expression
 Error checking rule: Operation not supported
 =#=#=#= Current cib after: Try to check a rule with no date_expression =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib epoch="9" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>

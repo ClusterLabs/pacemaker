@@ -261,7 +261,7 @@ databases, this period can be quite long.
 To address this, Pacemaker has the concept of resource *stickiness*,
 which controls how strongly a service prefers to stay running where it
 is. You may like to think of it as the "cost" of any downtime. By
-default, Pacemaker assumes there is zero cost associated with moving
+default, [#]_ Pacemaker assumes there is zero cost associated with moving
 resources and will do so to achieve "optimal" [#]_ resource placement.
 We can specify a different stickiness for every resource, but it is
 often sufficient to change the default.
@@ -273,6 +273,11 @@ often sufficient to change the default.
     [root@pcmk-1 ~]# pcs resource defaults
     Meta Attrs: rsc_defaults-meta_attributes
     resource-stickiness=100
+
+
+.. [#] Pacemaker may be built such that a positive resource-stickiness is
+       automatically added to resource defaults. You can check your
+       configuration to see if this is present.
 
 .. [#] Pacemaker's definition of optimal may not always agree with that of a
        human's. The order in which Pacemaker processes lists of resources and
