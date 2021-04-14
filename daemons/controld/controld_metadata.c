@@ -173,6 +173,32 @@ ra_param_from_xml(xmlNode *param_xml)
     return p;
 }
 
+// Check what version of the OCF standard a resource agent supports
+static void
+check_ra_ocf_version(struct ra_metadata_s *md, const char *key,
+                     xmlNode *version_element)
+{
+    xmlChar *content = NULL;
+
+    if (version_element != NULL) {
+        content = xmlNodeGetContent(version_element);
+    }
+    if (content == NULL) {
+        crm_warn("%s does not advertise OCF version supported", key);
+        return;
+    }
+
+    if (compare_version((const char *) content, "2") >= 0) {
+        crm_warn("%s supports OCF version %s and we don't (agent may not work "
+                 "properly with this version of Pacemaker)",
+                 key, (const char *) content);
+    } else {
+        crm_debug("%s advertises support for OCF version %s", key,
+                  (const char *) content);
+    }
+    xmlFree(content);
+}
+
 struct ra_metadata_s *
 metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
                       const char *metadata_str)
@@ -207,6 +233,10 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 #if ENABLE_VERSIONED_ATTRS
     md->ra_version = ra_version_from_xml(metadata, rsc);
 #endif
+
+    if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
+        check_ra_ocf_version(md, key, first_named_child(metadata, "version"));
+    }
 
     // Check supported actions
     match = first_named_child(metadata, "actions");
