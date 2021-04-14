@@ -1031,6 +1031,10 @@ pacemakerd_status(void)
                             case pcmk_pacemakerd_state_running:
                                 rc = pcmk_rc_ok;
                                 break;
+                            case pcmk_pacemakerd_state_shutting_down:
+                                /* try our luck maybe CIB is still accessible */
+                                rc = pcmk_rc_ok;
+                                break;
                             default:
                                 break;
                         }
