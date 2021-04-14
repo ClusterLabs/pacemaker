@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -421,7 +421,13 @@ add_action_env_vars(const svc_action_t *op)
     }
 
     set_ocf_env("OCF_RA_VERSION_MAJOR", "1", NULL);
-    set_ocf_env("OCF_RA_VERSION_MINOR", "0", NULL);
+    set_ocf_env("OCF_RA_VERSION_MINOR",
+#ifdef PCMK__COMPAT_2_0
+                "0",
+#else
+                "1",
+#endif
+                NULL);
     set_ocf_env("OCF_ROOT", OCF_ROOT_DIR, NULL);
     set_ocf_env("OCF_EXIT_REASON_PREFIX", PCMK_OCF_REASON_PREFIX, NULL);
 
