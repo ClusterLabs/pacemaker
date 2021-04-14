@@ -732,10 +732,17 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }
 
-// Deprecated functions kept only for backward API compatibility
-
-#include <crm/cib/util_compat.h>
-
+/*!
+ * \brief Apply a CIB update patch to a given CIB
+ *
+ * \param[in]  event   CIB update patch
+ * \param[in]  input   CIB to patch
+ * \param[out] output  Resulting CIB after patch
+ * \param[in]  level   Log the patch at this log level (unless LOG_CRIT)
+ *
+ * \return Legacy Pacemaker return code
+ * \note sbd calls this function
+ */
 int
 cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                       int level)
@@ -778,5 +785,3 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
     return rc;
 }
-
-// End deprecated API
