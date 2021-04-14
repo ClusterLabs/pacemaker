@@ -490,14 +490,34 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Build XML and string of parameters meeting some criteria, for digest
+ *
+ * \param[in]  op              Executor event with parameter table to use
+ * \param[in]  metadata        Parsed meta-data for executed resource agent
+ * \param[in]  param_type      Flag used for selection criteria
+ * \param[out] result          Will be set to newly created XML with selected
+ *                             parameters as attributes
+ *
+ * \return Newly allocated space-separate string of parameter names
+ * \note Selection criteria varies by param_type: for the restart digest, we
+ *       want parameters that *are* marked unique, for both string and XML
+ *       results; for the secure digest, we want parameters that *are* marked
+ *       private for the string, but parameters that are *not* marked private
+ *       for the XML.
+ * \note It is the caller's responsibility to free the string return value with
+ *       free() and the XML result with free_xml().
+ */
 static char *
 build_parameter_list(const lrmd_event_data_t *op,
                      const struct ra_metadata_s *metadata,
-                     xmlNode *result, enum ra_param_flags_e param_type,
-                     bool invert_for_xml)
+                     enum ra_param_flags_e param_type, xmlNode **result)
 {
     char *list = NULL;
     size_t len = 0;
+
+    *result = create_xml_node(NULL, XML_TAG_PARAMS);
 
     for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
@@ -516,12 +536,18 @@ build_parameter_list(const lrmd_event_data_t *op,
             crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
         }
 
-        if (result && (invert_for_xml? !accept : accept)) {
+        if (param_type == ra_param_private) {
+            /* For the secure digest, we want to select parameters that are not
+             * private, for XML only.
+             */
+            accept = !accept;
+        }
+        if (accept) {
             const char *v = g_hash_table_lookup(op->params, param->rap_name);
 
             if (v != NULL) {
                 crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
-                crm_xml_add(result, param->rap_name, v);
+                crm_xml_add(*result, param->rap_name, v);
             }
         }
     }
@@ -549,15 +575,13 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     }
 
     if (pcmk_is_set(metadata->ra_flags, ra_supports_reload)) {
-        restart = create_xml_node(NULL, XML_TAG_PARAMS);
         /* Add any parameters with unique="1" to the "op-force-restart" list.
          *
          * (Currently, we abuse "unique=0" to indicate reloadability. This is
          * nonstandard and should eventually be replaced once the OCF standard
          * is updated with something better.)
          */
-        list = build_parameter_list(op, metadata, restart, ra_param_unique,
-                                    FALSE);
+        list = build_parameter_list(op, metadata, ra_param_unique, &restart);
 
     } else {
         /* Resource does not support reloads */
@@ -593,8 +617,7 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
      * secure parameters but XML_LRM_ATTR_SECURE_DIGEST to be based on
      * the insecure ones
      */
-    secure = create_xml_node(NULL, XML_TAG_PARAMS);
-    list = build_parameter_list(op, metadata, secure, ra_param_private, TRUE);
+    list = build_parameter_list(op, metadata, ra_param_private, &secure);
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
