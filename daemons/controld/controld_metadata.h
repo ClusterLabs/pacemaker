@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 the Pacemaker project contributors
+ * Copyright 2017-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,13 +14,30 @@
 #include <glib.h>               // GList, GHashTable
 #include "controld_lrm.h"       // lrm_state_t, lrm_rsc_info_t
 
+/*
+ * @COMPAT pre-OCF-1.1 resource agents
+ *
+ * Pacemaker previously used the "reload" action to reload agent parameters,
+ * but most agents used it to reload the service configuration. Pacemaker also
+ * misused the OCF 1.0 "unique" parameter attribute to indicate reloadability.
+ *
+ * OCF 1.1 created the "reload-agent" action and "reloadable" parameter
+ * attribute for the Pacemaker usage.
+ *
+ * Pacemaker now supports the OCF 1.1 usage. The old usage is now deprecated,
+ * but will be supported if the agent does not claim OCF 1.1 or later
+ * compliance and does not advertise the reload-agent action.
+ */
 enum ra_flags_e {
-    ra_supports_reload  = 0x01,
+    ra_supports_reload          = (1 << 0),
+    ra_supports_reload_agent    = (1 << 1),
+    ra_supports_ocf_1_1         = (1 << 2),
 };
 
 enum ra_param_flags_e {
-    ra_param_unique     = 0x01,
-    ra_param_private    = 0x02,
+    ra_param_unique             = (1 << 0),
+    ra_param_private            = (1 << 1),
+    ra_param_reloadable         = (1 << 2),
 };
 
 struct ra_param_s {
@@ -62,6 +79,8 @@ static inline const char *
 ra_param_flag2text(enum ra_param_flags_e flag)
 {
     switch (flag) {
+        case ra_param_reloadable:
+            return "reloadable";
         case ra_param_unique:
             return "unique";
         case ra_param_private:

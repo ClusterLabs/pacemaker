@@ -161,6 +161,11 @@ ra_param_from_xml(xmlNode *param_xml)
         return NULL;
     }
 
+    value = crm_element_value(param_xml, "reloadable");
+    if (crm_is_true(value)) {
+        controld_set_ra_param_flags(p, ra_param_reloadable);
+    }
+
     value = crm_element_value(param_xml, "unique");
     if (crm_is_true(value)) {
         controld_set_ra_param_flags(p, ra_param_unique);
@@ -186,6 +191,10 @@ check_ra_ocf_version(struct ra_metadata_s *md, const char *key,
     if (content == NULL) {
         crm_warn("%s does not advertise OCF version supported", key);
         return;
+    }
+
+    if (compare_version((const char *) content, "1.1") >= 0) {
+        controld_set_ra_flags(md, key, ra_supports_ocf_1_1);
     }
 
     if (compare_version((const char *) content, "2") >= 0) {
@@ -245,9 +254,14 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
         const char *action_name = crm_element_value(match, "name");
 
-        if (pcmk__str_eq(action_name, "reload", pcmk__str_casei)) {
+        if (pcmk__str_eq(action_name, CRMD_ACTION_RELOAD_AGENT,
+                         pcmk__str_casei)) {
+            controld_set_ra_flags(md, key, ra_supports_reload_agent);
+
+        // @COMPAT pre-OCF-1.1 resource agents
+        } else if (pcmk__str_eq(action_name, CRMD_ACTION_RELOAD,
+                                pcmk__str_casei)) {
             controld_set_ra_flags(md, key, ra_supports_reload);
-            break; // since this is the only action we currently care about
         }
     }
 

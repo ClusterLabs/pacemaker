@@ -498,9 +498,9 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
 bool
 crm_op_needs_metadata(const char *rsc_class, const char *op)
 {
-    /* Agent meta-data is used to determine whether a reload is possible, and to
-     * evaluate versioned parameters -- so if this op is not relevant to those
-     * features, we don't need the meta-data.
+    /* Agent meta-data is used to determine whether an agent reload is possible,
+     * and to evaluate versioned parameters -- so if this op is not relevant to
+     * those features, we don't need the meta-data.
      */
 
     CRM_CHECK((rsc_class != NULL) || (op != NULL), return false);
@@ -517,6 +517,7 @@ crm_op_needs_metadata(const char *rsc_class, const char *op)
     /* Meta-data is only needed for these actions */
     return pcmk__str_any_of(op, CRMD_ACTION_START, CRMD_ACTION_STATUS,
                             CRMD_ACTION_PROMOTE, CRMD_ACTION_DEMOTE,
-                            CRMD_ACTION_RELOAD, CRMD_ACTION_MIGRATE,
-                            CRMD_ACTION_MIGRATED, CRMD_ACTION_NOTIFY, NULL);
+                            CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
+                            CRMD_ACTION_MIGRATE, CRMD_ACTION_MIGRATED,
+                            CRMD_ACTION_NOTIFY, NULL);
 }

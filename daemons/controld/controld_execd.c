@@ -226,7 +226,9 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         entry->last = lrmd_copy_event(op);
 
         if (op->params && pcmk__strcase_any_of(op->op_type, CRMD_ACTION_START,
-                                               "reload", CRMD_ACTION_STATUS, NULL)) {
+                                               CRMD_ACTION_RELOAD,
+                                               CRMD_ACTION_RELOAD_AGENT,
+                                               CRMD_ACTION_STATUS, NULL)) {
             if (entry->stop_params) {
                 g_hash_table_destroy(entry->stop_params);
             }
@@ -502,10 +504,10 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
  *
  * \return Newly allocated space-separate string of parameter names
  * \note Selection criteria varies by param_type: for the restart digest, we
- *       want parameters that *are* marked unique, for both string and XML
- *       results; for the secure digest, we want parameters that *are* marked
- *       private for the string, but parameters that are *not* marked private
- *       for the XML.
+ *       want parameters that are *not* marked reloadable (OCF 1.1) or that
+ *       *are* marked unique (pre-1.1), for both string and XML results; for the
+ *       secure digest, we want parameters that *are* marked private for the
+ *       string, but parameters that are *not* marked private for the XML.
  * \note It is the caller's responsibility to free the string return value with
  *       free() and the XML result with free_xml().
  */
@@ -522,6 +524,13 @@ build_parameter_list(const lrmd_event_data_t *op,
     for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
         bool accept = pcmk_is_set(param->rap_flags, param_type);
+
+        if (param_type == ra_param_reloadable) {
+            /* For the restart digest, we want to select parameters that are not
+             * reloadable, for both the string and XML.
+             */
+            accept = !accept;
+        }
 
         if (accept) {
             crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
@@ -574,17 +583,24 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    if (pcmk_is_set(metadata->ra_flags, ra_supports_reload)) {
-        /* Add any parameters with unique="1" to the "op-force-restart" list.
+    if (pcmk_all_flags_set(metadata->ra_flags,
+                           ra_supports_ocf_1_1|ra_supports_reload_agent)) {
+        // Add parameters not marked reloadable to the "op-force-restart" list
+        list = build_parameter_list(op, metadata, ra_param_reloadable,
+                                    &restart);
+
+    } else if (!pcmk_is_set(metadata->ra_flags, ra_supports_ocf_1_1)
+               && pcmk_is_set(metadata->ra_flags, ra_supports_reload)) {
+        /* @COMPAT pre-OCF-1.1 resource agents
          *
-         * (Currently, we abuse "unique=0" to indicate reloadability. This is
-         * nonstandard and should eventually be replaced once the OCF standard
-         * is updated with something better.)
+         * Before OCF 1.1, Pacemaker abused "unique=0" to indicate
+         * reloadability. Add any parameters with unique="1" to the
+         * "op-force-restart" list.
          */
         list = build_parameter_list(op, metadata, ra_param_unique, &restart);
 
     } else {
-        /* Resource does not support reloads */
+        // Resource does not support agent reloads
         return;
     }
 
@@ -1815,6 +1831,24 @@ do_lrm_invoke(long long action,
         } else if (pcmk__str_eq(operation, CRMD_ACTION_DELETE, pcmk__str_casei)) {
             do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
                           crm_rsc_delete, user_name);
+
+        } else if (pcmk__str_any_of(operation, CRMD_ACTION_RELOAD,
+                                    CRMD_ACTION_RELOAD_AGENT, NULL)) {
+            /* Pre-2.1.0 DCs will schedule reload actions only, and 2.1.0+ DCs
+             * will schedule reload-agent actions only. In either case, we need
+             * to map that to whatever the resource agent actually supports.
+             * Default to the OCF 1.1 name.
+             */
+            struct ra_metadata_s *md = NULL;
+            const char *reload_name = CRMD_ACTION_RELOAD_AGENT;
+
+            md = controld_get_rsc_metadata(lrm_state, rsc, true);
+            if ((md != NULL)
+                && !pcmk_is_set(md->ra_flags, ra_supports_ocf_1_1)
+                && pcmk_is_set(md->ra_flags, ra_supports_reload)) {
+                reload_name = CRMD_ACTION_RELOAD;
+            }
+            do_lrm_rsc_op(lrm_state, rsc, reload_name, input->xml);
 
         } else {
             do_lrm_rsc_op(lrm_state, rsc, operation, input->xml);
