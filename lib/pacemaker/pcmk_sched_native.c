@@ -2846,7 +2846,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
                         top, pcmk__op_key(top->id, RSC_START, 0), NULL,
                         flags, data_set);
 
-    /* Before any reloads, if they exist */
+    // Order the probe before any agent reload
     custom_action_order(rsc, NULL, probe,
                         top, reload_key(rsc), NULL,
                         pe_order_optional, data_set);
@@ -3159,14 +3159,16 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
         /* We don't need to specify any particular actions here, normal failure
          * recovery will apply.
          */
-        pe_rsc_trace(rsc, "%s: preventing reload because failed", rsc->id);
+        pe_rsc_trace(rsc, "%s: preventing agent reload because failed",
+                     rsc->id);
         return;
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_start_pending)) {
         /* If a resource's configuration changed while a start was pending,
          * force a full restart.
          */
-        pe_rsc_trace(rsc, "%s: preventing reload because start pending", rsc->id);
+        pe_rsc_trace(rsc, "%s: preventing agent reload because start pending",
+                     rsc->id);
         stop_action(rsc, node, FALSE);
         return;
 
@@ -3178,8 +3180,8 @@ ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Processing %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_reload);
 
-    reload = custom_action(
-        rsc, reload_key(rsc), CRMD_ACTION_RELOAD, node, FALSE, TRUE, data_set);
+    reload = custom_action(rsc, reload_key(rsc), CRMD_ACTION_RELOAD_AGENT, node,
+                           FALSE, TRUE, data_set);
     pe_action_set_reason(reload, "resource definition change", FALSE);
 
     custom_action_order(NULL, NULL, reload, rsc, stop_key(rsc), NULL,

@@ -304,7 +304,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
         trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
 
     } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
-        /* Changes that can potentially be handled by a reload */
+        // Changes that can potentially be handled by an agent reload
         const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
         did_change = TRUE;
@@ -333,7 +333,8 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 
         } else {
             pe_action_t *required = NULL;
-            pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
+            pe_rsc_trace(rsc, "Resource %s doesn't support agent reloads",
+                         rsc->id);
 
             /* Re-send the start/demote/promote op
              * Recurring ops will be detected independently

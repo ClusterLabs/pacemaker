@@ -396,7 +396,7 @@ extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *ta
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
 		optional, TRUE, data_set);
 
-#  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD, 0)
+#  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD_AGENT, 0)
 #  define start_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\
