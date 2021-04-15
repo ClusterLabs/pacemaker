@@ -620,6 +620,46 @@ ban_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ban-list", "pe_working_set_t *", "const char *", "GList *",
+                  "gboolean", "gboolean")
+static int
+ban_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    const char *prefix = va_arg(args, const char *);
+    GList *only_rsc = va_arg(args, GList *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    GList *gIter, *gIter2;
+    int rc = pcmk_rc_no_output;
+
+    /* Print each ban */
+    for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
+        pe__location_t *location = gIter->data;
+
+        if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh)) &&
+            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)))) {
+            continue;
+        }
+
+        for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
+            pe_node_t *node = (pe_node_t *) gIter2->data;
+
+            if (node->weight < 0) {
+                PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Negative Location Constraints");
+                out->message(out, "ban", node, location, print_clone_detail);
+            }
+        }
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
 static int
 cluster_counts_html(pcmk__output_t *out, va_list args) {
@@ -2398,6 +2438,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "ban", "log", pe__ban_text },
     { "ban", "text", pe__ban_text },
     { "ban", "xml", ban_xml },
+    { "ban-list", "default", ban_list },
     { "bundle", "xml",  pe__bundle_xml },
     { "bundle", "html",  pe__bundle_html },
     { "bundle", "text",  pe__bundle_text },

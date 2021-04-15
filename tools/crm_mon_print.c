@@ -44,9 +44,6 @@ static int print_node_history(pe_working_set_t *data_set, pe_node_t *node,
 static int print_node_summary(pe_working_set_t * data_set, gboolean operations,
                               unsigned int mon_ops, GList *only_node,
                               GList *only_rsc, gboolean print_spacer);
-static int print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
-                               const char *prefix, GList *only_rsc,
-                               gboolean print_spacer);
 
 /*!
  * \internal
@@ -387,50 +384,6 @@ print_node_summary(pe_working_set_t * data_set, gboolean operations,
     return rc;
 }
 
-/*!
- * \internal
- * \brief Print section for negative location constraints
- *
- * \param[in] data_set Cluster state to display.
- * \param[in] mon_ops  Bitmask of mon_op_*.
- * \param[in] prefix   ID prefix to filter results by.
- */
-static int
-print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
-                    const char *prefix, GList *only_rsc,
-                    gboolean print_spacer)
-{
-    pcmk__output_t *out = data_set->priv;
-    GList *gIter, *gIter2;
-    int rc = pcmk_rc_no_output;
-
-    /* Print each ban */
-    for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
-        pe__location_t *location = gIter->data;
-
-        if (prefix != NULL && !g_str_has_prefix(location->id, prefix))
-            continue;
-
-        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh)) &&
-            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)))) {
-            continue;
-        }
-
-        for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
-            pe_node_t *node = (pe_node_t *) gIter2->data;
-
-            if (node->weight < 0) {
-                PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Negative Location Constraints");
-                out->message(out, "ban", node, location,
-                             pcmk_is_set(mon_ops, mon_op_print_clone_detail));
-            }
-        }
-    }
-
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
-    return rc;
-}
-
 #define CHECK_RC(retcode, retval)   \
     if (retval == pcmk_rc_ok) {     \
         retcode = pcmk_rc_ok;       \
@@ -450,7 +403,7 @@ print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
 void
 print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
              stonith_history_t *stonith_history, unsigned int mon_ops,
-             unsigned int show, char *prefix, char *only_node, char *only_rsc)
+             unsigned int show, const char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
     GList *unames = NULL;
@@ -551,8 +504,9 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(show, mon_show_bans)) {
-        CHECK_RC(rc, print_neg_locations(data_set, mon_ops, prefix, resources,
-                                         rc == pcmk_rc_ok));
+        CHECK_RC(rc, out->message(out, "ban-list", data_set, prefix, resources,
+                                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                                  rc == pcmk_rc_ok));
     }
 
     /* Print stonith history */
@@ -603,7 +557,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 void
 print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  stonith_history_t *stonith_history, unsigned int mon_ops,
-                 unsigned int show, char *prefix, char *only_node, char *only_rsc)
+                 unsigned int show, const char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
     GList *unames = NULL;
@@ -683,7 +637,8 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(show, mon_show_bans)) {
-        print_neg_locations(data_set, mon_ops, prefix, resources, FALSE);
+        out->message(out, "ban-list", data_set, prefix, resources,
+                     pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
     }
 
     g_list_free_full(unames, free);
@@ -704,7 +659,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 int
 print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int show, char *prefix, char *only_node, char *only_rsc)
+                  unsigned int show, const char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
     GList *unames = NULL;
@@ -827,7 +782,8 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(show, mon_show_bans)) {
-        print_neg_locations(data_set, mon_ops, prefix, resources, FALSE);
+        out->message(out, "ban-list", data_set, prefix, resources,
+                     pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
     }
 
     g_list_free_full(unames, free);
