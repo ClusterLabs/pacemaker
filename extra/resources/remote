@@ -25,25 +25,25 @@ meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="remote" version="0.2">
-  <version>1.0</version>
+<resource-agent name="remote" version="1.0">
+  <version>1.1</version>
   <shortdesc lang="en">Pacemaker Remote connection</shortdesc>
   <parameters>
-    <parameter name="server" unique="1">
+    <parameter name="server" unique-group="address">
       <longdesc lang="en">
        Server location to connect to (IP address or resolvable host name)
       </longdesc>
       <shortdesc lang="en">Remote hostname</shortdesc>
       <content type="string"/>
     </parameter>
-    <parameter name="port">
+    <parameter name="port" unique-group="address">
       <longdesc lang="en">
        TCP port at which to contact Pacemaker Remote executor
       </longdesc>
       <shortdesc lang="en">Remote port</shortdesc>
       <content type="integer" default="3121"/>
     </parameter>
-    <parameter name="reconnect_interval" unique="0">
+    <parameter name="reconnect_interval" reloadable="1">
       <longdesc lang="en">
        If this is a positive time interval, the cluster will attempt to
        reconnect to a remote node after an active connection has been
@@ -61,6 +61,7 @@ meta_data() {
     <action name="migrate_to"    timeout="60s" />
     <action name="migrate_from"  timeout="60s" />
     <action name="reload"        timeout="60s" />
+    <action name="reload-agent"  timeout="60s" />
     <action name="meta-data"     timeout="5s" />
   </actions>
 </resource-agent>
@@ -93,6 +94,7 @@ case $__OCF_ACTION in
     migrate_to)     remote_unsupported ;;
     migrate_from)   remote_unsupported ;;
     reload)         remote_unsupported ;;
+    reload-agent)   remote_unsupported ;;
     validate-all)   remote_unsupported ;;
     usage|help)     remote_usage $OCF_SUCCESS ;;
     *)              remote_usage $OCF_ERR_UNIMPLEMENTED ;;

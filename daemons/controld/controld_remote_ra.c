@@ -835,8 +835,17 @@ handle_remote_ra_exec(gpointer user_data)
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
-        } else if (!strcmp(cmd->action, "reload")) {
-            /* reloads are a no-op right now, add logic here when they become important */
+        } else if (pcmk__str_any_of(cmd->action, CRMD_ACTION_RELOAD,
+                                    CRMD_ACTION_RELOAD_AGENT, NULL))  {
+            /* Currently the only reloadable parameter is reconnect_interval,
+             * which is only used by the scheduler via the CIB, so reloads are a
+             * no-op.
+             *
+             * @COMPAT DC <2.1.0: We only need to check for "reload" in case
+             * we're in a rolling upgrade with a DC scheduling "reload" instead
+             * of "reload-agent". An OCF 1.1 "reload" would be a no-op anyway,
+             * so this would work for that purpose as well.
+             */
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
@@ -916,17 +925,15 @@ remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
 static gboolean
 is_remote_ra_supported_action(const char *action)
 {
-    if (!action) {
-        return FALSE;
-    } else if (strcmp(action, "start") &&
-               strcmp(action, "stop") &&
-               strcmp(action, "reload") &&
-               strcmp(action, "migrate_to") &&
-               strcmp(action, "migrate_from") && strcmp(action, "monitor")) {
-        return FALSE;
-    }
-
-    return TRUE;
+    return pcmk__str_any_of(action,
+                            CRMD_ACTION_START,
+                            CRMD_ACTION_STOP,
+                            CRMD_ACTION_STATUS,
+                            CRMD_ACTION_MIGRATE,
+                            CRMD_ACTION_MIGRATED,
+                            CRMD_ACTION_RELOAD_AGENT,
+                            CRMD_ACTION_RELOAD,
+                            NULL);
 }
 
 static GList *
