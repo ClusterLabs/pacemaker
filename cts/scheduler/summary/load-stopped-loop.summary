@@ -158,17 +158,17 @@ Transition Summary:
   * Start      vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm     (          v03-a )
 
 Executing Cluster Transition:
-  * Resource action: vds-ok-pool-0-iscsi:1 reload on mgmt01
+  * Resource action: vds-ok-pool-0-iscsi:1 reload-agent on mgmt01
   * Resource action: vds-ok-pool-0-iscsi:1 monitor=30000 on mgmt01
-  * Resource action: vds-ok-pool-0-iscsi:0 reload on v03-b
+  * Resource action: vds-ok-pool-0-iscsi:0 reload-agent on v03-b
   * Resource action: vds-ok-pool-0-iscsi:0 monitor=30000 on v03-b
-  * Resource action: vds-ok-pool-0-iscsi:2 reload on v03-a
+  * Resource action: vds-ok-pool-0-iscsi:2 reload-agent on v03-a
   * Resource action: vds-ok-pool-0-iscsi:2 monitor=30000 on v03-a
-  * Resource action: vds-ok-pool-1-iscsi:1 reload on mgmt01
+  * Resource action: vds-ok-pool-1-iscsi:1 reload-agent on mgmt01
   * Resource action: vds-ok-pool-1-iscsi:1 monitor=30000 on mgmt01
-  * Resource action: vds-ok-pool-1-iscsi:0 reload on v03-b
+  * Resource action: vds-ok-pool-1-iscsi:0 reload-agent on v03-b
   * Resource action: vds-ok-pool-1-iscsi:0 monitor=30000 on v03-b
-  * Resource action: vds-ok-pool-1-iscsi:2 reload on v03-a
+  * Resource action: vds-ok-pool-1-iscsi:2 reload-agent on v03-a
   * Resource action: vds-ok-pool-1-iscsi:2 monitor=30000 on v03-a
   * Resource action: stonith-v03-b   stop on v03-a
   * Resource action: stonith-v03-b   start on v03-a
