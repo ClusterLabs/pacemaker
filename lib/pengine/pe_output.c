@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/xml_internal.h>
+#include <crm/cib/util.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
@@ -2080,6 +2081,60 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-summary", "pe_working_set_t *", "GList *", "GList *",
+                  "gboolean", "unsigned int", "gboolean", "gboolean", "gboolean",
+                  "gboolean", "gboolean")
+static int
+node_summary(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
+    gboolean operations = va_arg(args, gboolean);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+    gboolean print_timing = va_arg(args, gboolean);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    xmlNode *node_state = NULL;
+    xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+    int rc = pcmk_rc_no_output;
+
+    if (xmlChildElementCount(cib_status) == 0) {
+        return rc;
+    }
+
+    /* Print each node in the CIB status */
+    for (node_state = pcmk__xe_first_child(cib_status); node_state != NULL;
+         node_state = pcmk__xe_next(node_state)) {
+        pe_node_t *node;
+
+        if (!pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
+            continue;
+        }
+
+        node = pe_find_node_id(data_set->nodes, ID(node_state));
+
+        if (!node || !node->details || !node->details->online) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+            continue;
+        }
+
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
+
+        out->message(out, "node-history-list", data_set, node, node_state,
+                     only_node, only_rsc, operations, print_opts,
+                     print_clone_detail, print_brief, group_by_node, print_timing);
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
 static int
 node_weight(pcmk__output_t *out, va_list args)
@@ -2683,6 +2738,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-attribute", "text", pe__node_attribute_text },
     { "node-attribute", "xml", node_attribute_xml },
     { "node-attribute-list", "default", node_attribute_list },
+    { "node-summary", "default", node_summary },
     { "op-history", "default", pe__op_history_text },
     { "op-history", "xml", op_history_xml },
     { "primitive", "xml",  pe__resource_xml },

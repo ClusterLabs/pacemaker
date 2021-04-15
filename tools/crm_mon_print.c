@@ -34,10 +34,6 @@
 
 #include "crm_mon.h"
 
-static int print_node_summary(pe_working_set_t * data_set, gboolean operations,
-                              unsigned int mon_ops, GList *only_node,
-                              GList *only_rsc, gboolean print_spacer);
-
 /*!
  * \internal
  * \brief Return resource display options corresponding to command-line choices
@@ -129,62 +125,6 @@ build_rsc_list(pe_working_set_t *data_set, const char *s) {
     return resources;
 }
 
-/*!
- * \internal
- * \brief Print history for all nodes.
- *
- * \param[in] data_set   Cluster state to display.
- * \param[in] operations Whether to print operations or just failcounts.
- * \param[in] mon_ops    Bitmask of mon_op_*.
- */
-static int
-print_node_summary(pe_working_set_t * data_set, gboolean operations,
-                   unsigned int mon_ops, GList *only_node,
-                   GList *only_rsc, gboolean print_spacer)
-{
-    pcmk__output_t *out = data_set->priv;
-    xmlNode *node_state = NULL;
-    xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
-    int rc = pcmk_rc_no_output;
-
-    if (xmlChildElementCount(cib_status) == 0) {
-        return rc;
-    }
-
-    /* Print each node in the CIB status */
-    for (node_state = pcmk__xe_first_child(cib_status); node_state != NULL;
-         node_state = pcmk__xe_next(node_state)) {
-        pe_node_t *node;
-
-        if (!pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
-            continue;
-        }
-
-        node = pe_find_node_id(data_set->nodes, ID(node_state));
-
-        if (!node || !node->details || !node->details->online) {
-            continue;
-        }
-
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
-            continue;
-        }
-
-        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
-
-        out->message(out, "node-history-list", data_set, node, node_state,
-                     only_node, only_rsc, operations,
-                     get_resource_display_options(mon_ops),
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                     pcmk_is_set(mon_ops, mon_op_print_brief),
-                     pcmk_is_set(mon_ops, mon_op_group_by_node),
-                     pcmk_is_set(mon_ops, mon_op_print_timing));
-    }
-
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
-    return rc;
-}
-
 #define CHECK_RC(retcode, retval)   \
     if (retval == pcmk_rc_ok) {     \
         retcode = pcmk_rc_ok;       \
@@ -260,10 +200,14 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(show, mon_show_operations)
         || pcmk_is_set(show, mon_show_failcounts)) {
 
-        CHECK_RC(rc, print_node_summary(data_set,
-                                        pcmk_is_set(show, mon_show_operations),
-                                        mon_ops, unames, resources,
-                                        (rc == pcmk_rc_ok)));
+        CHECK_RC(rc, out->message(out, "node-summary", data_set, unames,
+                                  resources, pcmk_is_set(show, mon_show_operations),
+                                  get_resource_display_options(mon_ops),
+                                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                                  pcmk_is_set(mon_ops, mon_op_print_brief),
+                                  pcmk_is_set(mon_ops, mon_op_group_by_node),
+                                  pcmk_is_set(mon_ops, mon_op_print_timing),
+                                  rc == pcmk_rc_ok));
     }
 
     /* If there were any failed actions, print them */
@@ -409,9 +353,14 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(show, mon_show_operations)
         || pcmk_is_set(show, mon_show_failcounts)) {
 
-        print_node_summary(data_set,
-                           pcmk_is_set(show, mon_show_operations),
-                           mon_ops, unames, resources, FALSE);
+        out->message(out, "node-summary", data_set, unames,
+                     resources, pcmk_is_set(show, mon_show_operations),
+                     get_resource_display_options(mon_ops),
+                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                     pcmk_is_set(mon_ops, mon_op_print_brief),
+                     pcmk_is_set(mon_ops, mon_op_group_by_node),
+                     pcmk_is_set(mon_ops, mon_op_print_timing),
+                     FALSE);
     }
 
     /* If there were any failed actions, print them */
@@ -514,9 +463,14 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(show, mon_show_operations)
         || pcmk_is_set(show, mon_show_failcounts)) {
 
-        print_node_summary(data_set,
-                           pcmk_is_set(show, mon_show_operations),
-                           mon_ops, unames, resources, FALSE);
+        out->message(out, "node-summary", data_set, unames,
+                     resources, pcmk_is_set(show, mon_show_operations),
+                     get_resource_display_options(mon_ops),
+                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                     pcmk_is_set(mon_ops, mon_op_print_brief),
+                     pcmk_is_set(mon_ops, mon_op_group_by_node),
+                     pcmk_is_set(mon_ops, mon_op_print_timing),
+                     FALSE);
     }
 
     /* If there were any failed actions, print them */
