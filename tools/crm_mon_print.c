@@ -34,9 +34,6 @@
 
 #include "crm_mon.h"
 
-static int print_rsc_history(pe_working_set_t *data_set, pe_node_t *node,
-                             xmlNode *rsc_entry, unsigned int mon_ops,
-                             GList *op_list);
 static int print_node_history(pe_working_set_t *data_set, pe_node_t *node,
                               xmlNode *node_state, gboolean operations,
                               unsigned int mon_ops, GList *only_node,
@@ -180,64 +177,6 @@ get_operation_list(xmlNode *rsc_entry) {
 
 /*!
  * \internal
- * \brief Print resource operation/failure history
- *
- * \param[in] data_set  Cluster state to display.
- * \param[in] node      Node that ran this resource.
- * \param[in] rsc_entry Root of XML tree describing resource status.
- * \param[in] mon_ops   Bitmask of mon_op_*.
- * \param[in] op_list   A list of operations to print.
- */
-static int
-print_rsc_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *rsc_entry,
-                  unsigned int mon_ops, GList *op_list)
-{
-    pcmk__output_t *out = data_set->priv;
-    GList *gIter = NULL;
-    int rc = pcmk_rc_no_output;
-    const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-    pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
-    /* Print each operation */
-    for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
-        xmlNode *xml_op = (xmlNode *) gIter->data;
-        const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-        const char *interval_ms_s = crm_element_value(xml_op,
-                                                      XML_LRM_ATTR_INTERVAL_MS);
-        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-        int op_rc_i;
-
-        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
-
-        /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
-            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
-            task = "probe";
-        }
-
-        /* If this is the first printed operation, print heading for resource */
-        if (rc == pcmk_rc_no_output) {
-            time_t last_failure = 0;
-            int failcount = failure_count(data_set, node, rsc, &last_failure);
-
-            out->message(out, "resource-history", rsc, rsc_id, TRUE, failcount, last_failure, TRUE);
-            rc = pcmk_rc_ok;
-        }
-
-        /* Print the operation */
-        out->message(out, "op-history", xml_op, task, interval_ms_s,
-                     op_rc_i, pcmk_is_set(mon_ops, mon_op_print_timing));
-    }
-
-    /* Free the list we created (no need to free the individual items) */
-    g_list_free(op_list);
-
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
-    return rc;
-}
-
-/*!
- * \internal
  * \brief Print node operation/failure history
  *
  * \param[in] data_set   Cluster state to display.
@@ -310,6 +249,8 @@ print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_st
                          failcount, last_failure, FALSE);
         } else {
             GList *op_list = get_operation_list(rsc_entry);
+            pe_resource_t *rsc = pe_find_resource(data_set->resources,
+                                                  crm_element_value(rsc_entry, XML_ATTR_ID));
 
             if (op_list == NULL) {
                 continue;
@@ -325,7 +266,8 @@ print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_st
                              only_node, only_rsc);
             }
 
-            print_rsc_history(data_set, node, rsc_entry, mon_ops, op_list);
+            out->message(out, "resource-operation-list", data_set, rsc, node,
+                         op_list, pcmk_is_set(mon_ops, mon_op_print_timing));
         }
     }
 

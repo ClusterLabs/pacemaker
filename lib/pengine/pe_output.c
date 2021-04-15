@@ -2301,6 +2301,60 @@ resource_list(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("resource-operation-list", "pe_working_set_t *", "pe_resource_t *",
+                  "pe_node_t *", "GList *", "gboolean")
+static int
+resource_operation_list(pcmk__output_t *out, va_list args)
+{
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    GList *op_list = va_arg(args, GList *);
+    gboolean print_timing = va_arg(args, gboolean);
+
+    GList *gIter = NULL;
+    int rc = pcmk_rc_no_output;
+
+    /* Print each operation */
+    for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
+        xmlNode *xml_op = (xmlNode *) gIter->data;
+        const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+        const char *interval_ms_s = crm_element_value(xml_op,
+                                                      XML_LRM_ATTR_INTERVAL_MS);
+        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+        int op_rc_i;
+
+        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
+
+        /* Display 0-interval monitors as "probe" */
+        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
+            task = "probe";
+        }
+
+        /* If this is the first printed operation, print heading for resource */
+        if (rc == pcmk_rc_no_output) {
+            time_t last_failure = 0;
+            int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
+                                             NULL, data_set);
+
+            out->message(out, "resource-history", rsc, rsc_printable_id(rsc), TRUE,
+                         failcount, last_failure, TRUE);
+            rc = pcmk_rc_ok;
+        }
+
+        /* Print the operation */
+        out->message(out, "op-history", xml_op, task, interval_ms_s,
+                     op_rc_i, print_timing);
+    }
+
+    /* Free the list we created (no need to free the individual items) */
+    g_list_free(op_list);
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("resource-util", "pe_resource_t *", "pe_node_t *", "const char *")
 static int
 resource_util(pcmk__output_t *out, va_list args)
@@ -2508,6 +2562,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "resource-history", "default", pe__resource_history_text },
     { "resource-history", "xml", resource_history_xml },
     { "resource-list", "default", resource_list },
+    { "resource-operation-list", "default", resource_operation_list },
     { "resource-util", "default", resource_util },
     { "resource-util", "xml", resource_util_xml },
     { "ticket", "html", ticket_html },
