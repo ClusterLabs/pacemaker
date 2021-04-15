@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,6 @@
 #  define CONTROLD_LRM__H
 
 #include <controld_messages.h>
-#include <controld_metadata.h>
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 void lrm_clear_last_failure(const char *rsc_id, const char *node_name,

@@ -687,40 +687,9 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
+    metadata = controld_get_rsc_metadata(lrm_state, rsc, true);
     if (metadata == NULL) {
-        /* For now, we always collect resource agent meta-data via a local,
-         * synchronous, direct execution of the agent. This has multiple issues:
-         * the executor should execute agents, not the controller; meta-data for
-         * Pacemaker Remote nodes should be collected on those nodes, not
-         * locally; and the meta-data call shouldn't eat into the timeout of the
-         * real action being performed.
-         *
-         * These issues are planned to be addressed by having the scheduler
-         * schedule a meta-data cache check at the beginning of each transition.
-         * Once that is working, this block will only be a fallback in case the
-         * initial collection fails.
-         */
-        char *metadata_str = NULL;
-
-        int rc = lrm_state_get_metadata(lrm_state, rsc->standard,
-                                        rsc->provider, rsc->type,
-                                        &metadata_str, 0);
-
-        if (rc != pcmk_ok) {
-            crm_warn("Failed to get metadata for %s (%s:%s:%s)",
-                     rsc->id, rsc->standard, rsc->provider, rsc->type);
-            return TRUE;
-        }
-
-        metadata = metadata_cache_update(lrm_state->metadata_cache, rsc,
-                                         metadata_str);
-        free(metadata_str);
-        if (metadata == NULL) {
-            crm_warn("Failed to update metadata for %s (%s:%s:%s)",
-                     rsc->id, rsc->standard, rsc->provider, rsc->type);
-            return TRUE;
-        }
+        return TRUE;
     }
 
 #if ENABLE_VERSIONED_ATTRS
@@ -1869,7 +1838,7 @@ resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
     lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
     struct ra_metadata_s *metadata;
 
-    metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
+    metadata = controld_get_rsc_metadata(lrm_state, rsc, false);
     if (metadata) {
         xmlNode *versioned_attrs = NULL;
         GHashTable *hash = NULL;

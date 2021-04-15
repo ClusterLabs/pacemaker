@@ -10,6 +10,10 @@
 #ifndef CRMD_METADATA_H
 #define CRMD_METADATA_H
 
+#include <stdint.h>             // uint32_t
+#include <glib.h>               // GList, GHashTable
+#include "controld_lrm.h"       // lrm_state_t, lrm_rsc_info_t
+
 enum ra_flags_e {
     ra_supports_reload  = 0x01,
 };
@@ -50,7 +54,9 @@ void metadata_cache_fini(void);
 struct ra_metadata_s *metadata_cache_update(GHashTable *mdc,
                                             lrmd_rsc_info_t *rsc,
                                             const char *metadata_str);
-struct ra_metadata_s *metadata_cache_get(GHashTable *mdc, lrmd_rsc_info_t *rsc);
+struct ra_metadata_s *controld_get_rsc_metadata(lrm_state_t *lrm_state,
+                                                lrmd_rsc_info_t *rsc,
+                                                bool from_agent);
 
 static inline const char *
 ra_param_flag2text(enum ra_param_flags_e flag)

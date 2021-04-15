@@ -301,17 +301,63 @@ err:
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Get meta-data for a resource
+ *
+ * \param[in] lrm_state  Use meta-data cache from this executor connection
+ * \param[in] rsc        Resource to get meta-data for
+ * \param[in] from_agent Execute agent if this is true and meta-data not cached
+ *
+ * \return Meta-data cache entry for given resource, or NULL if not available
+ */
 struct ra_metadata_s *
-metadata_cache_get(GHashTable *mdc, lrmd_rsc_info_t *rsc)
+controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+                          bool from_agent)
 {
-    char *key = NULL;
     struct ra_metadata_s *metadata = NULL;
+    char *metadata_str = NULL;
+    char *key = NULL;
+    int rc = pcmk_ok;
 
-    CRM_CHECK(mdc && rsc, return NULL);
+    CRM_CHECK((lrm_state != NULL) && (rsc != NULL), return NULL);
+
     key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
-    if (key) {
-        metadata = g_hash_table_lookup(mdc, key);
+    if (key != NULL) {
+        metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
         free(key);
+    }
+    if ((metadata != NULL) || !from_agent) {
+        return metadata;
+    }
+
+    /* For now, we always collect resource agent meta-data via a local,
+     * synchronous, direct execution of the agent. This has multiple issues:
+     * the executor should execute agents, not the controller; meta-data for
+     * Pacemaker Remote nodes should be collected on those nodes, not
+     * locally; and the meta-data call shouldn't eat into the timeout of the
+     * real action being performed.
+     *
+     * These issues are planned to be addressed by having the scheduler
+     * schedule a meta-data cache check at the beginning of each transition.
+     * Once that is working, this block will only be a fallback in case the
+     * initial collection fails.
+     */
+    rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
+                                rsc->type, &metadata_str, 0);
+    if (rc != pcmk_ok) {
+        crm_warn("Failed to get metadata for %s (%s:%s:%s): %s",
+                 rsc->id, rsc->standard, rsc->provider, rsc->type,
+                 pcmk_strerror(rc));
+        return NULL;
+    }
+
+    metadata = metadata_cache_update(lrm_state->metadata_cache, rsc,
+                                     metadata_str);
+    free(metadata_str);
+    if (metadata == NULL) {
+        crm_warn("Failed to update metadata for %s (%s:%s:%s)",
+                 rsc->id, rsc->standard, rsc->provider, rsc->type);
     }
     return metadata;
 }
