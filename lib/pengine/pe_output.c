@@ -2363,6 +2363,36 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket-list", "pe_working_set_t *", "gboolean")
+static int
+ticket_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    GHashTableIter iter;
+    gpointer key, value;
+
+    if (g_hash_table_size(data_set->tickets) == 0) {
+        return pcmk_rc_no_output;
+    }
+
+    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+
+    /* Print section heading */
+    out->begin_list(out, NULL, NULL, "Tickets");
+
+    /* Print each ticket */
+    g_hash_table_iter_init(&iter, data_set->tickets);
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        pe_ticket_t *ticket = (pe_ticket_t *) value;
+        out->message(out, "ticket", ticket);
+    }
+
+    /* Close section */
+    out->end_list(out);
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "ban", "html", ban_html },
     { "ban", "log", pe__ban_text },
@@ -2443,6 +2473,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "ticket", "log", pe__ticket_text },
     { "ticket", "text", pe__ticket_text },
     { "ticket", "xml", ticket_xml },
+    { "ticket-list", "default", ticket_list },
 
     { NULL, NULL, NULL }
 };

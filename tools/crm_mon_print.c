@@ -44,7 +44,6 @@ static int print_node_history(pe_working_set_t *data_set, pe_node_t *node,
 static int print_node_summary(pe_working_set_t * data_set, gboolean operations,
                               unsigned int mon_ops, GList *only_node,
                               GList *only_rsc, gboolean print_spacer);
-static int print_cluster_tickets(pe_working_set_t * data_set, gboolean print_spacer);
 static int print_neg_locations(pe_working_set_t *data_set, unsigned int mon_ops,
                                const char *prefix, GList *only_rsc,
                                gboolean print_spacer);
@@ -390,40 +389,6 @@ print_node_summary(pe_working_set_t * data_set, gboolean operations,
 
 /*!
  * \internal
- * \brief Print all tickets.
- *
- * \param[in] data_set Cluster state to display.
- */
-static int
-print_cluster_tickets(pe_working_set_t * data_set, gboolean print_spacer)
-{
-    pcmk__output_t *out = data_set->priv;
-    GHashTableIter iter;
-    gpointer key, value;
-
-    if (g_hash_table_size(data_set->tickets) == 0) {
-        return pcmk_rc_no_output;
-    }
-
-    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-
-    /* Print section heading */
-    out->begin_list(out, NULL, NULL, "Tickets");
-
-    /* Print each ticket */
-    g_hash_table_iter_init(&iter, data_set->tickets);
-    while (g_hash_table_iter_next(&iter, &key, &value)) {
-        pe_ticket_t *ticket = (pe_ticket_t *) value;
-        out->message(out, "ticket", ticket);
-    }
-
-    /* Close section */
-    out->end_list(out);
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
  * \brief Print section for negative location constraints
  *
  * \param[in] data_set Cluster state to display.
@@ -581,7 +546,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print tickets if requested */
     if (pcmk_is_set(show, mon_show_tickets)) {
-        CHECK_RC(rc, print_cluster_tickets(data_set, rc == pcmk_rc_ok));
+        CHECK_RC(rc, out->message(out, "ticket-list", data_set, rc == pcmk_rc_ok));
     }
 
     /* Print negative location constraints if requested */
@@ -713,7 +678,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print tickets if requested */
     if (pcmk_is_set(show, mon_show_tickets)) {
-        print_cluster_tickets(data_set, FALSE);
+        out->message(out, "ticket-list", data_set, FALSE);
     }
 
     /* Print negative location constraints if requested */
@@ -857,7 +822,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print tickets if requested */
     if (pcmk_is_set(show, mon_show_tickets)) {
-        print_cluster_tickets(data_set, FALSE);
+        out->message(out, "ticket-list", data_set, FALSE);
     }
 
     /* Print negative location constraints if requested */
