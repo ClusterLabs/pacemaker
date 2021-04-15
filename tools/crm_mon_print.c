@@ -34,10 +34,6 @@
 
 #include "crm_mon.h"
 
-static int print_node_history(pe_working_set_t *data_set, pe_node_t *node,
-                              xmlNode *node_state, gboolean operations,
-                              unsigned int mon_ops, GList *only_node,
-                              GList *only_rsc);
 static int print_node_summary(pe_working_set_t * data_set, gboolean operations,
                               unsigned int mon_ops, GList *only_node,
                               GList *only_rsc, gboolean print_spacer);
@@ -133,148 +129,6 @@ build_rsc_list(pe_working_set_t *data_set, const char *s) {
     return resources;
 }
 
-static int
-failure_count(pe_working_set_t *data_set, pe_node_t *node, pe_resource_t *rsc, time_t *last_failure) {
-    return rsc ? pe_get_failcount(node, rsc, last_failure, pe_fc_default,
-                                  NULL, data_set)
-               : 0;
-}
-
-static GList *
-get_operation_list(xmlNode *rsc_entry) {
-    GList *op_list = NULL;
-    xmlNode *rsc_op = NULL;
-
-    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
-         rsc_op = pcmk__xe_next(rsc_op)) {
-        const char *task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-        const char *interval_ms_s = crm_element_value(rsc_op,
-                                                      XML_LRM_ATTR_INTERVAL_MS);
-        const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
-        int op_rc_i;
-
-        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
-
-        /* Display 0-interval monitors as "probe" */
-        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
-            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
-            task = "probe";
-        }
-
-        /* Ignore notifies and some probes */
-        if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei) || (pcmk__str_eq(task, "probe", pcmk__str_casei) && (op_rc_i == 7))) {
-            continue;
-        }
-
-        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
-            op_list = g_list_append(op_list, rsc_op);
-        }
-    }
-
-    op_list = g_list_sort(op_list, sort_op_by_callid);
-    return op_list;
-}
-
-/*!
- * \internal
- * \brief Print node operation/failure history
- *
- * \param[in] data_set   Cluster state to display.
- * \param[in] node_state Root of XML tree describing node status.
- * \param[in] operations Whether to print operations or just failcounts.
- * \param[in] mon_ops    Bitmask of mon_op_*.
- */
-static int
-print_node_history(pe_working_set_t *data_set, pe_node_t *node, xmlNode *node_state,
-                   gboolean operations, unsigned int mon_ops,
-                   GList *only_node, GList *only_rsc)
-{
-    pcmk__output_t *out = data_set->priv;
-    xmlNode *lrm_rsc = NULL;
-    xmlNode *rsc_entry = NULL;
-    int rc = pcmk_rc_no_output;
-
-    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-
-    /* Print history of each of the node's resources */
-    for (rsc_entry = pcmk__xe_first_child(lrm_rsc); rsc_entry != NULL;
-         rsc_entry = pcmk__xe_next(rsc_entry)) {
-
-        const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-        pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
-        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
-            continue;
-        }
-
-        /* We can't use is_filtered here to filter group resources.  For is_filtered,
-         * we have to decide whether to check the parent or not.  If we check the
-         * parent, all elements of a group will always be printed because that's how
-         * is_filtered works for groups.  If we do not check the parent, sometimes
-         * this will filter everything out.
-         *
-         * For other resource types, is_filtered is okay.
-         */
-        if (uber_parent(rsc)->variant == pe_group) {
-            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) &&
-                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
-                continue;
-            }
-        } else {
-            if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
-                continue;
-            }
-        }
-
-        if (operations == FALSE) {
-            time_t last_failure = 0;
-            int failcount = failure_count(data_set, node, rsc, &last_failure);
-
-            if (failcount <= 0) {
-                continue;
-            }
-
-            if (rc == pcmk_rc_no_output) {
-                rc = pcmk_rc_ok;
-                out->message(out, "node", node, get_resource_display_options(mon_ops),
-                             FALSE, NULL,
-                             pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                             pcmk_is_set(mon_ops, mon_op_print_brief),
-                             pcmk_is_set(mon_ops, mon_op_group_by_node),
-                             only_node, only_rsc);
-            }
-
-            out->message(out, "resource-history", rsc, rsc_id, FALSE,
-                         failcount, last_failure, FALSE);
-        } else {
-            GList *op_list = get_operation_list(rsc_entry);
-            pe_resource_t *rsc = pe_find_resource(data_set->resources,
-                                                  crm_element_value(rsc_entry, XML_ATTR_ID));
-
-            if (op_list == NULL) {
-                continue;
-            }
-
-            if (rc == pcmk_rc_no_output) {
-                rc = pcmk_rc_ok;
-                out->message(out, "node", node, get_resource_display_options(mon_ops),
-                             FALSE, NULL,
-                             pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                             pcmk_is_set(mon_ops, mon_op_print_brief),
-                             pcmk_is_set(mon_ops, mon_op_group_by_node),
-                             only_node, only_rsc);
-            }
-
-            out->message(out, "resource-operation-list", data_set, rsc, node,
-                         op_list, pcmk_is_set(mon_ops, mon_op_print_timing));
-        }
-    }
-
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
-    return rc;
-}
-
 /*!
  * \internal
  * \brief Print history for all nodes.
@@ -318,8 +172,13 @@ print_node_summary(pe_working_set_t * data_set, gboolean operations,
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
 
-        print_node_history(data_set, node, node_state, operations, mon_ops,
-                           only_node, only_rsc);
+        out->message(out, "node-history-list", data_set, node, node_state,
+                     only_node, only_rsc, operations,
+                     get_resource_display_options(mon_ops),
+                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
+                     pcmk_is_set(mon_ops, mon_op_print_brief),
+                     pcmk_is_set(mon_ops, mon_op_group_by_node),
+                     pcmk_is_set(mon_ops, mon_op_print_timing));
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
