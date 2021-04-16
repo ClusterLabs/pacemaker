@@ -54,11 +54,9 @@ void
 print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
              stonith_history_t *stonith_history, unsigned int mon_ops,
              unsigned int print_opts,
-             unsigned int show, const char *prefix, char *only_node, char *only_rsc)
+             unsigned int show, const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
-    GList *unames = NULL;
-    GList *resources = NULL;
 
     int rc = pcmk_rc_no_output;
     bool already_printed_failure = false;
@@ -70,9 +68,6 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                               pcmk_is_set(show, mon_show_times),
                               pcmk_is_set(show, mon_show_counts),
                               pcmk_is_set(show, mon_show_options)));
-
-    unames = pe__build_node_name_list(data_set, only_node);
-    resources = pe__build_rsc_list(data_set, only_rsc);
 
     if (pcmk_is_set(show, mon_show_nodes) && unames) {
         PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -191,9 +186,6 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
             }
         }
     }
-
-    g_list_free_full(unames, free);
-    g_list_free_full(resources, free);
 }
 
 /*!
@@ -211,11 +203,9 @@ void
 print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  stonith_history_t *stonith_history, unsigned int mon_ops,
                  unsigned int print_opts,
-                 unsigned int show, const char *prefix, char *only_node, char *only_rsc)
+                 unsigned int show, const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
-    GList *unames = NULL;
-    GList *resources = NULL;
 
     out->message(out, "cluster-summary", data_set,
                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -224,9 +214,6 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  pcmk_is_set(show, mon_show_times),
                  pcmk_is_set(show, mon_show_counts),
                  pcmk_is_set(show, mon_show_options));
-
-    unames = pe__build_node_name_list(data_set, only_node);
-    resources = pe__build_rsc_list(data_set, only_rsc);
 
     /*** NODES ***/
     if (pcmk_is_set(show, mon_show_nodes)) {
@@ -298,9 +285,6 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
         out->message(out, "ban-list", data_set, prefix, resources,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
     }
-
-    g_list_free_full(unames, free);
-    g_list_free_full(resources, free);
 }
 
 /*!
@@ -318,11 +302,9 @@ int
 print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
                   unsigned int print_opts,
-                  unsigned int show, const char *prefix, char *only_node, char *only_rsc)
+                  unsigned int show, const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
-    GList *unames = NULL;
-    GList *resources = NULL;
 
     bool already_printed_failure = false;
 
@@ -333,9 +315,6 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  pcmk_is_set(show, mon_show_times),
                  pcmk_is_set(show, mon_show_counts),
                  pcmk_is_set(show, mon_show_options));
-
-    unames = pe__build_node_name_list(data_set, only_node);
-    resources = pe__build_rsc_list(data_set, only_rsc);
 
     /*** NODE LIST ***/
     if (pcmk_is_set(show, mon_show_nodes) && unames) {
@@ -449,7 +428,5 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
     }
 
-    g_list_free_full(unames, free);
-    g_list_free_full(resources, free);
     return 0;
 }
