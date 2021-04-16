@@ -60,71 +60,6 @@ get_resource_display_options(unsigned int mon_ops)
     return print_opts;
 }
 
-static GList *
-build_uname_list(pe_working_set_t *data_set, const char *s) {
-    GList *unames = NULL;
-
-    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
-        /* Nothing was given so return a list of all node names.  Or, '*' was
-         * given.  This would normally fall into the pe__unames_with_tag branch
-         * where it will return an empty list.  Catch it here instead.
-         */
-        unames = g_list_prepend(unames, strdup("*"));
-    } else {
-        pe_node_t *node = pe_find_node(data_set->nodes, s);
-
-        if (node) {
-            /* The given string was a valid uname for a node.  Return a
-             * singleton list containing just that uname.
-             */
-            unames = g_list_prepend(unames, strdup(s));
-        } else {
-            /* The given string was not a valid uname.  It's either a tag or
-             * it's a typo or something.  In the first case, we'll return a
-             * list of all the unames of the nodes with the given tag.  In the
-             * second case, we'll return a NULL pointer and nothing will
-             * get displayed.
-             */
-            unames = pe__unames_with_tag(data_set, s);
-        }
-    }
-
-    return unames;
-}
-
-static GList *
-build_rsc_list(pe_working_set_t *data_set, const char *s) {
-    GList *resources = NULL;
-
-    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
-        resources = g_list_prepend(resources, strdup("*"));
-    } else {
-        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
-                                                         pe_find_renamed|pe_find_any);
-
-        if (rsc) {
-            /* A colon in the name we were given means we're being asked to filter
-             * on a specific instance of a cloned resource.  Put that exact string
-             * into the filter list.  Otherwise, use the printable ID of whatever
-             * resource was found that matches what was asked for.
-             */
-            if (strstr(s, ":") != NULL) {
-                resources = g_list_prepend(resources, strdup(rsc->id));
-            } else {
-                resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
-            }
-        } else {
-            /* The given string was not a valid resource name.  It's either
-             * a tag or it's a typo or something.  See build_uname_list for
-             * more detail.
-             */
-            resources = pe__rscs_with_tag(data_set, s);
-        }
-    }
-
-    return resources;
-}
-
 #define CHECK_RC(retcode, retval)   \
     if (retval == pcmk_rc_ok) {     \
         retcode = pcmk_rc_ok;       \
@@ -162,8 +97,8 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                               pcmk_is_set(show, mon_show_counts),
                               pcmk_is_set(show, mon_show_options)));
 
-    unames = build_uname_list(data_set, only_node);
-    resources = build_rsc_list(data_set, only_rsc);
+    unames = pe__build_uname_list(data_set, only_node);
+    resources = pe__build_rsc_list(data_set, only_rsc);
 
     if (pcmk_is_set(show, mon_show_nodes) && unames) {
         PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -317,8 +252,8 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  pcmk_is_set(show, mon_show_counts),
                  pcmk_is_set(show, mon_show_options));
 
-    unames = build_uname_list(data_set, only_node);
-    resources = build_rsc_list(data_set, only_rsc);
+    unames = pe__build_uname_list(data_set, only_node);
+    resources = pe__build_rsc_list(data_set, only_rsc);
 
     /*** NODES ***/
     if (pcmk_is_set(show, mon_show_nodes)) {
@@ -426,8 +361,8 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  pcmk_is_set(show, mon_show_counts),
                  pcmk_is_set(show, mon_show_options));
 
-    unames = build_uname_list(data_set, only_node);
-    resources = build_rsc_list(data_set, only_rsc);
+    unames = pe__build_uname_list(data_set, only_node);
+    resources = pe__build_rsc_list(data_set, only_rsc);
 
     /*** NODE LIST ***/
     if (pcmk_is_set(show, mon_show_nodes) && unames) {
