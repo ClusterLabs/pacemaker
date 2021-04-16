@@ -34,32 +34,6 @@
 
 #include "crm_mon.h"
 
-/*!
- * \internal
- * \brief Return resource display options corresponding to command-line choices
- *
- * \return Bitmask of pe_print_options suitable for resource print functions
- */
-static unsigned int
-get_resource_display_options(unsigned int mon_ops)
-{
-    int print_opts = 0;
-
-    if (pcmk_is_set(mon_ops, mon_op_print_pending)) {
-        print_opts |= pe_print_pending;
-    }
-    if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
-        print_opts |= pe_print_clone_details|pe_print_implicit;
-    }
-    if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-        print_opts |= pe_print_clone_active;
-    }
-    if (pcmk_is_set(mon_ops, mon_op_print_brief)) {
-        print_opts |= pe_print_brief;
-    }
-    return print_opts;
-}
-
 #define CHECK_RC(retcode, retval)   \
     if (retval == pcmk_rc_ok) {     \
         retcode = pcmk_rc_ok;       \
@@ -79,13 +53,13 @@ get_resource_display_options(unsigned int mon_ops)
 void
 print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
              stonith_history_t *stonith_history, unsigned int mon_ops,
+             unsigned int print_opts,
              unsigned int show, const char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
     GList *unames = NULL;
     GList *resources = NULL;
 
-    unsigned int print_opts = get_resource_display_options(mon_ops);
     int rc = pcmk_rc_no_output;
     bool already_printed_failure = false;
 
@@ -121,8 +95,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
         CHECK_RC(rc, out->message(out, "node-attribute-list", data_set,
-                                  get_resource_display_options(mon_ops),
-                                  rc == pcmk_rc_ok,
+                                  print_opts, rc == pcmk_rc_ok,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                                   pcmk_is_set(mon_ops, mon_op_print_brief),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
@@ -137,7 +110,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
         CHECK_RC(rc, out->message(out, "node-summary", data_set, unames,
                                   resources, pcmk_is_set(show, mon_show_operations),
-                                  get_resource_display_options(mon_ops),
+                                  print_opts,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                                   pcmk_is_set(mon_ops, mon_op_print_brief),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
@@ -237,12 +210,12 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 void
 print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  stonith_history_t *stonith_history, unsigned int mon_ops,
+                 unsigned int print_opts,
                  unsigned int show, const char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
     GList *unames = NULL;
     GList *resources = NULL;
-    unsigned int print_opts = get_resource_display_options(mon_ops);
 
     out->message(out, "cluster-summary", data_set,
                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -275,7 +248,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
         out->message(out, "node-attribute-list", data_set,
-                     get_resource_display_options(mon_ops), FALSE,
+                     print_opts, FALSE,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
@@ -290,7 +263,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
         out->message(out, "node-summary", data_set, unames,
                      resources, pcmk_is_set(show, mon_show_operations),
-                     get_resource_display_options(mon_ops),
+                     print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
@@ -344,13 +317,13 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 int
 print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
+                  unsigned int print_opts,
                   unsigned int show, const char *prefix, char *only_node, char *only_rsc)
 {
     pcmk__output_t *out = data_set->priv;
     GList *unames = NULL;
     GList *resources = NULL;
 
-    unsigned int print_opts = get_resource_display_options(mon_ops);
     bool already_printed_failure = false;
 
     out->message(out, "cluster-summary", data_set,
@@ -385,7 +358,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* print Node Attributes section if requested */
     if (pcmk_is_set(show, mon_show_attributes)) {
         out->message(out, "node-attribute-list", data_set,
-                     get_resource_display_options(mon_ops), FALSE,
+                     print_opts, FALSE,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
@@ -400,7 +373,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
         out->message(out, "node-summary", data_set, unames,
                      resources, pcmk_is_set(show, mon_show_operations),
-                     get_resource_display_options(mon_ops),
+                     print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),

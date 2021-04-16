@@ -68,13 +68,16 @@ typedef enum mon_output_format_e {
 
 void print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
+                  unsigned int print_opts,
                   unsigned int show, const char *prefix, char *only_node, char *only_rsc);
 void print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                       stonith_history_t *stonith_history, unsigned int mon_ops,
+                      unsigned int print_opts,
                       unsigned int show, const char *prefix, char *only_node,
                       char *only_rsc);
 int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                       stonith_history_t *stonith_history, unsigned int mon_ops,
+                      unsigned int print_opts,
                       unsigned int show, const char *prefix, char *only_node,
                       char *only_rsc);
 

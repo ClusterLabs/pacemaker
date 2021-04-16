@@ -675,6 +675,32 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
+/*!
+ * \internal
+ * \brief Return resource display options corresponding to command-line choices
+ *
+ * \return Bitmask of pe_print_options suitable for resource print functions
+ */
+static unsigned int
+get_resource_display_options(unsigned int mon_ops)
+{
+    int print_opts = 0;
+
+    if (pcmk_is_set(mon_ops, mon_op_print_pending)) {
+        print_opts |= pe_print_pending;
+    }
+    if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
+        print_opts |= pe_print_clone_details|pe_print_implicit;
+    }
+    if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
+        print_opts |= pe_print_clone_active;
+    }
+    if (pcmk_is_set(mon_ops, mon_op_print_brief)) {
+        print_opts |= pe_print_brief;
+    }
+    return print_opts;
+}
+
 static void
 blank_screen(void)
 {
@@ -2195,6 +2221,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_cgi:
             if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
                                   stonith_history, options.mon_ops,
+                                  get_resource_display_options(options.mon_ops),
                                   show, options.neg_location_prefix,
                                   options.only_node, options.only_rsc) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
@@ -2206,7 +2233,8 @@ mon_refresh_display(gpointer user_data)
         case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, options.mon_ops, show,
+                             stonith_history, options.mon_ops,
+                             get_resource_display_options(options.mon_ops), show,
                              options.neg_location_prefix, options.only_node,
                              options.only_rsc);
             break;
@@ -2226,7 +2254,8 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, show, options.neg_location_prefix,
+                         options.mon_ops, get_resource_display_options(options.mon_ops),
+                         show, options.neg_location_prefix,
                          options.only_node, options.only_rsc);
             refresh();
             break;
@@ -2234,7 +2263,8 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_plain:
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, show, options.neg_location_prefix,
+                         options.mon_ops, get_resource_display_options(options.mon_ops),
+                         show, options.neg_location_prefix,
                          options.only_node, options.only_rsc);
             break;
 
