@@ -268,8 +268,10 @@ main(int argc, char **argv)
          * However, it's not a big problem, because pacemaker-attrd will learn
          * and remember a node's "remoteness".
          */
+        const char *target = pcmk__node_attr_target(attr_node);
+
         exit_code = pcmk_rc2exitc(do_update(command,
-                                            pcmk__node_attr_target(attr_node),
+                                            target == NULL ? attr_node : target,
                                             attr_name, attr_value,
                                             attr_section, attr_set,
                                             attr_dampen, attr_options));
@@ -424,7 +426,10 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
     if (query_all == TRUE) {
         attr_node = NULL;
     } else {
-        attr_node = pcmk__node_attr_target(attr_node);
+        const char *target = pcmk__node_attr_target(attr_node);
+        if (target != NULL) {
+            attr_node = target;
+        }
     }
 
     /* Build and send pacemaker-attrd request, and get XML reply */
