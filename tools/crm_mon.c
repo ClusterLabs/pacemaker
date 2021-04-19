@@ -85,6 +85,7 @@ static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
 static gboolean on_remote_node = FALSE;
+static gboolean use_cib_native = FALSE;
 
 int interactive_fence_level = 0;
 
@@ -982,7 +983,7 @@ pacemakerd_status(void)
     pcmk_ipc_api_t *pacemakerd_api = NULL;
     enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
 
-    if (!pcmk_is_set(options.mon_ops, mon_op_cib_native)) {
+    if (!use_cib_native) {
         /* we don't need fully functional pacemakerd otherwise */
         return rc;
     }
@@ -1486,7 +1487,7 @@ main(int argc, char **argv)
 
                 case cib_native:
                     /* cib & fencing - everything available */
-                    options.mon_ops |= mon_op_cib_native;
+                    use_cib_native = TRUE;
                     break;
 
                 case cib_file:
