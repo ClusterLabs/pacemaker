@@ -423,6 +423,7 @@ add_action_env_vars(const svc_action_t *op)
     set_ocf_env("OCF_RA_VERSION_MAJOR", PCMK_OCF_MAJOR_VERSION, NULL);
     set_ocf_env("OCF_RA_VERSION_MINOR", PCMK_OCF_MINOR_VERSION, NULL);
     set_ocf_env("OCF_ROOT", OCF_ROOT_DIR, NULL);
+    set_ocf_env("OCF_RA_PATH", OCF_RA_PATH, NULL);
     set_ocf_env("OCF_EXIT_REASON_PREFIX", PCMK_OCF_REASON_PREFIX, NULL);
 
     if (op->rsc) {
@@ -1080,6 +1081,56 @@ services_os_action_execute(svc_action_t * op)
 GList *
 services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
 {
+    GList *result = NULL;
+    char *dirs = strdup(root);
+    char *dir = NULL;
+
+    for (dir = strtok(dirs, ","); dir != NULL; dir = strtok(NULL, ",")) {
+        GList *tmp1 = result;
+        GList *tmp2 = services_os_get_single_directory_list(dir, files, executable);
+
+        if (tmp2) {
+            result = g_list_concat(tmp1, tmp2);
+        }
+    }
+
+    if (dirs) {
+        free(dirs);
+    }
+
+    return result;
+}
+
+GList *
+services_os_get_directory_list_provider(const char *root, const char *provider, gboolean files, gboolean executable)
+{
+    GList *result = NULL;
+    char *dirs = strdup(root);
+    char *dir = NULL;
+    char buffer[PATH_MAX];
+
+    for (dir = strtok(dirs, ","); dir != NULL; dir = strtok(NULL, ",")) {
+        GList *tmp1 = result;
+        GList *tmp2 = NULL;
+
+        sprintf(buffer, "%s/%s", dir, provider);
+        tmp2 = services_os_get_single_directory_list(buffer, files, executable);
+
+        if (tmp2) {
+            result = g_list_concat(tmp1, tmp2);
+        }
+    }
+
+    if (dirs) {
+        free(dirs);
+    }
+
+    return result;
+}
+
+GList *
+services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
+{
     GList *list = NULL;
     struct dirent **namelist;
     int entries = 0, lpc = 0;
@@ -1135,7 +1186,7 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
 GList *
 resources_os_list_ocf_providers(void)
 {
-    return get_directory_list(OCF_ROOT_DIR "/resource.d", FALSE, TRUE);
+    return get_directory_list(OCF_RA_PATH, FALSE, TRUE);
 }
 
 GList *
@@ -1146,10 +1197,7 @@ resources_os_list_ocf_agents(const char *provider)
     GList *providers = NULL;
 
     if (provider) {
-        char buffer[500];
-
-        snprintf(buffer, sizeof(buffer), "%s/resource.d/%s", OCF_ROOT_DIR, provider);
-        return get_directory_list(buffer, TRUE, TRUE);
+        return services_os_get_directory_list_provider(OCF_RA_PATH, provider, TRUE, TRUE);
     }
 
     providers = resources_os_list_ocf_providers();
@@ -1168,19 +1216,31 @@ resources_os_list_ocf_agents(const char *provider)
 gboolean
 services__ocf_agent_exists(const char *provider, const char *agent)
 {
-    char *buf = NULL;
     gboolean rc = FALSE;
     struct stat st;
+    char *dirs = strdup(OCF_RA_PATH);
+    char *dir = NULL;
+    char *buf = NULL;
 
     if (provider == NULL || agent == NULL) {
         return rc;
     }
 
-    buf = crm_strdup_printf(OCF_ROOT_DIR "/resource.d/%s/%s", provider, agent);
-    if (stat(buf, &st) == 0) {
-        rc = TRUE;
+    for (dir = strtok(dirs, ","); dir != NULL; dir = strtok(NULL, ",")) {
+        buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
+        if (stat(buf, &st) == 0) {
+            rc = TRUE;
+            break;
+        }
+
     }
 
-    free(buf);
+    if (dirs) {
+        free(dirs);
+    }
+    if (buf) {
+        free(buf);
+    }
+
     return rc;
 }

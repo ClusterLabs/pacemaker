@@ -14,6 +14,7 @@
 #endif
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -236,8 +237,26 @@ resources_action_create(const char *name, const char *standard,
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        op->opaque->exec = crm_strdup_printf("%s/resource.d/%s/%s",
-                                             OCF_ROOT_DIR, provider, agent);
+        char *dirs = strdup(OCF_RA_PATH);
+        char *dir = NULL;
+        char *buf = NULL;
+        struct stat st;
+        for (dir = strtok(strdup(OCF_RA_PATH), ","); dir != NULL; dir = strtok(NULL, ",")) {
+            buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
+            if (stat(buf, &st) == 0) {
+                break;
+            }
+
+        }
+        op->opaque->exec = crm_strdup_printf("%s/%s/%s",
+                                             dir, provider, agent);
+        if (dirs) {
+            free(dirs);
+        }
+        if (buf) {
+            free(buf);
+        }
+
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
 

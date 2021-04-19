@@ -47,6 +47,12 @@ G_GNUC_INTERNAL
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
 G_GNUC_INTERNAL
+GList * services_os_get_directory_list_provider(const char *root, const char *provider, gboolean files, gboolean executable);
+
+G_GNUC_INTERNAL
+GList *services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable);
+
+G_GNUC_INTERNAL
 gboolean services_os_action_execute(svc_action_t * op);
 
 G_GNUC_INTERNAL

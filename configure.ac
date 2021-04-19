@@ -432,6 +432,19 @@ AC_SUBST(OCF_ROOT_DIR)
 AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
                    [OCF root directory for resource agents and libraries])
 
+PKG_CHECK_VAR([OCF_RA_PATH], [resource-agents], [ocfrapath], [],
+	      [OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
+AC_ARG_WITH([ocfrapath],
+    [AS_HELP_STRING([--with-ocfrapath=DIR], m4_normalize([
+        OCF resource agent directories to search
+        @<:@value from resource-agents package if available otherwise
+	OCF_ROOT_DIR/resource.d@:>@]))],
+    [ OCF_RA_PATH="$withval" ]
+)
+AC_SUBST(OCF_RA_PATH)
+AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
+                   [OCF directories to search for resource agents ])
+
 dnl Get default from fence-agents if available
 PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
               [PCMK__FENCE_BINDIR="${FA_PREFIX}/sbin"],
@@ -1278,9 +1291,9 @@ PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
 AC_SUBST(PACEMAKER_CONFIG_DIR)
 
-OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
-AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
-AC_SUBST(OCF_RA_DIR)
+OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
+AC_DEFINE_UNQUOTED(OCF_RA_INSTALL_DIR,"$OCF_RA_INSTALL_DIR", Where to install OCF RAs)
+AC_SUBST(OCF_RA_INSTALL_DIR)
 
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 

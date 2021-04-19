@@ -9,7 +9,7 @@
 
 include $(top_srcdir)/mk/common.mk
 
-ocfdir			= @OCF_RA_DIR@/pacemaker
+ocfdir			= @OCF_RA_INSTALL_DIR@/pacemaker
 dist_ocf_SCRIPTS	= attribute	\
 			  controld	\
 			  Dummy		\
