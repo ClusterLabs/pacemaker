@@ -14,6 +14,7 @@
 #endif
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -23,6 +24,7 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/msg_xml.h>
 #include "services_private.h"
@@ -163,7 +165,7 @@ dup_file_path(const char *filename, const char *dirname)
 #endif
 
 svc_action_t *
-resources_action_create(const char *name, const char *standard,
+services__create_resource_action(const char *name, const char *standard,
                         const char *provider, const char *agent,
                         const char *action, guint interval_ms, int timeout,
                         GHashTable *params, enum svc_action_flags flags)
@@ -236,8 +238,35 @@ resources_action_create(const char *name, const char *standard,
     }
 
     if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        op->opaque->exec = crm_strdup_printf("%s/resource.d/%s/%s",
-                                             OCF_ROOT_DIR, provider, agent);
+        char *dirs = strdup(OCF_RA_PATH);
+        char *dir = NULL;
+        char *buf = NULL;
+        struct stat st;
+
+        if (pcmk__str_empty(dirs)) {
+            free(dirs);
+            services__handle_exec_error(op, ENOMEM);
+            return op;
+        }
+
+        for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+            buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
+            if (stat(buf, &st) == 0) {
+                break;
+            }
+            free(buf);
+            buf = NULL;
+        }
+
+        free(dirs);
+
+        if (buf) {
+            op->opaque->exec = buf;
+        } else {
+            services__handle_exec_error(op, ENOENT);
+            return op;
+        }
+
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
 
@@ -291,21 +320,32 @@ resources_action_create(const char *name, const char *standard,
 #endif
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
-        goto return_error;
+        services__handle_exec_error(op, ENOENT);
     }
-
-    if(params) {
-        g_hash_table_destroy(params);
-    }
-    return op;
 
   return_error:
     if(params) {
         g_hash_table_destroy(params);
     }
-    services_action_free(op);
 
-    return NULL;
+    return op;
+}
+
+svc_action_t *
+resources_action_create(const char *name, const char *standard,
+                        const char *provider, const char *agent,
+                        const char *action, guint interval_ms, int timeout,
+                        GHashTable *params, enum svc_action_flags flags)
+{
+    svc_action_t *op = services__create_resource_action(name, standard,
+                            provider, agent, action, interval_ms, timeout,
+                            params, flags);
+    if (op == NULL || op->rc != 0) {
+        services_action_free(op);
+        return NULL;
+    } else {
+        return op;
+    }
 }
 
 svc_action_t *

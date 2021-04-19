@@ -516,13 +516,13 @@ class Tests(object):
         # If we're in build directory, install agents if not already installed
         if os.path.exists("%s/cts/cts-exec.in" % BUILD_DIR):
 
-            if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
+            if not os.path.exists("@OCF_RA_INSTALL_DIR@/pacemaker"):
                 # @TODO remember which components were created and remove them
-                os.makedirs("@OCF_RA_DIR@/pacemaker", 0o755)
+                os.makedirs("@OCF_RA_INSTALL_DIR@/pacemaker", 0o755)
 
             for agent in ["Dummy", "Stateful", "ping"]:
                 agent_source = "%s/extra/resources/%s" % (BUILD_DIR, agent)
-                agent_dest = "@OCF_RA_DIR@/pacemaker/%s" % (agent)
+                agent_dest = "@OCF_RA_INSTALL_DIR@/pacemaker/%s" % (agent)
                 if not os.path.exists(agent_dest):
                     print("Installing %s ..." % (agent_dest))
                     shutil.copyfile(agent_source, agent_dest)

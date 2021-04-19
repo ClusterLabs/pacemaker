@@ -631,8 +631,8 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
  *
  * \return void
  */
-static void
-services_handle_exec_error(svc_action_t * op, int error)
+void
+services__handle_exec_error(svc_action_t * op, int error)
 {
     int rc_not_installed, rc_insufficient_priv, rc_exec_error;
 
@@ -755,7 +755,7 @@ action_launch_child(svc_action_t *op)
     execvp(op->opaque->exec, op->opaque->args);
 
     /* Most cases should have been already handled by stat() */
-    services_handle_exec_error(op, errno);
+    services__handle_exec_error(op, errno);
 
     _exit(op->rc);
 }
@@ -891,7 +891,7 @@ services_os_action_execute(svc_action_t * op)
         rc = errno;
         crm_warn("Cannot execute '%s': %s " CRM_XS " stat rc=%d",
                  op->opaque->exec, pcmk_strerror(rc), rc);
-        services_handle_exec_error(op, rc);
+        services__handle_exec_error(op, rc);
         if (!op->synchronous) {
             return operation_finalize(op);
         }
@@ -902,7 +902,7 @@ services_os_action_execute(svc_action_t * op)
         rc = errno;
         crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stdout) rc=%d",
                 op->opaque->exec, pcmk_strerror(rc), rc);
-        services_handle_exec_error(op, rc);
+        services__handle_exec_error(op, rc);
         if (!op->synchronous) {
             return operation_finalize(op);
         }
@@ -916,7 +916,7 @@ services_os_action_execute(svc_action_t * op)
 
         crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stderr) rc=%d",
                 op->opaque->exec, pcmk_strerror(rc), rc);
-        services_handle_exec_error(op, rc);
+        services__handle_exec_error(op, rc);
         if (!op->synchronous) {
             return operation_finalize(op);
         }
@@ -932,7 +932,7 @@ services_os_action_execute(svc_action_t * op)
 
             crm_err("Cannot execute '%s': %s " CRM_XS " pipe(stdin) rc=%d",
                     op->opaque->exec, pcmk_strerror(rc), rc);
-            services_handle_exec_error(op, rc);
+            services__handle_exec_error(op, rc);
             if (!op->synchronous) {
                 return operation_finalize(op);
             }
@@ -958,7 +958,7 @@ services_os_action_execute(svc_action_t * op)
 
             crm_err("Cannot execute '%s': %s " CRM_XS " fork rc=%d",
                     op->opaque->exec, pcmk_strerror(rc), rc);
-            services_handle_exec_error(op, rc);
+            services__handle_exec_error(op, rc);
             if (!op->synchronous) {
                 return operation_finalize(op);
             }
@@ -1077,8 +1077,8 @@ services_os_action_execute(svc_action_t * op)
     return TRUE;
 }
 
-GList *
-services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
+static GList *
+services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
 {
     GList *list = NULL;
     struct dirent **namelist;
@@ -1133,9 +1133,63 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
 }
 
 GList *
+services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
+{
+    GList *result = NULL;
+    char *dirs = strdup(root);
+    char *dir = NULL;
+
+    if (pcmk__str_empty(dirs)) {
+        free(dirs);
+        return result;
+    }
+
+    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+        GList *tmp = services_os_get_single_directory_list(dir, files, executable);
+
+        if (tmp) {
+            result = g_list_concat(result, tmp);
+        }
+    }
+
+    free(dirs);
+
+    return result;
+}
+
+static GList *
+services_os_get_directory_list_provider(const char *root, const char *provider, gboolean files, gboolean executable)
+{
+    GList *result = NULL;
+    char *dirs = strdup(root);
+    char *dir = NULL;
+    char buffer[PATH_MAX];
+
+    if (pcmk__str_empty(dirs)) {
+        free(dirs);
+        return result;
+    }
+
+    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+        GList *tmp = NULL;
+
+        sprintf(buffer, "%s/%s", dir, provider);
+        tmp = services_os_get_single_directory_list(buffer, files, executable);
+
+        if (tmp) {
+            result = g_list_concat(result, tmp);
+        }
+    }
+
+    free(dirs);
+
+    return result;
+}
+
+GList *
 resources_os_list_ocf_providers(void)
 {
-    return get_directory_list(OCF_ROOT_DIR "/resource.d", FALSE, TRUE);
+    return get_directory_list(OCF_RA_PATH, FALSE, TRUE);
 }
 
 GList *
@@ -1146,10 +1200,7 @@ resources_os_list_ocf_agents(const char *provider)
     GList *providers = NULL;
 
     if (provider) {
-        char buffer[500];
-
-        snprintf(buffer, sizeof(buffer), "%s/resource.d/%s", OCF_ROOT_DIR, provider);
-        return get_directory_list(buffer, TRUE, TRUE);
+        return services_os_get_directory_list_provider(OCF_RA_PATH, provider, TRUE, TRUE);
     }
 
     providers = resources_os_list_ocf_providers();
@@ -1168,19 +1219,29 @@ resources_os_list_ocf_agents(const char *provider)
 gboolean
 services__ocf_agent_exists(const char *provider, const char *agent)
 {
-    char *buf = NULL;
     gboolean rc = FALSE;
     struct stat st;
+    char *dirs = strdup(OCF_RA_PATH);
+    char *dir = NULL;
+    char *buf = NULL;
 
-    if (provider == NULL || agent == NULL) {
+    if (provider == NULL || agent == NULL || pcmk__str_empty(dirs)) {
+        free(dirs);
         return rc;
     }
 
-    buf = crm_strdup_printf(OCF_ROOT_DIR "/resource.d/%s/%s", provider, agent);
-    if (stat(buf, &st) == 0) {
-        rc = TRUE;
+    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+        buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
+        if (stat(buf, &st) == 0) {
+            free(buf);
+            rc = TRUE;
+            break;
+        }
+
+        free(buf);
     }
 
-    free(buf);
+    free(dirs);
+
     return rc;
 }

@@ -16,6 +16,6 @@ header_HEADERS		= cib.h cluster.h compatibility.h crm.h \
 			  crm_compat.h		\
 			  msg_xml_compat.h
 
-noinst_HEADERS		= lrmd_internal.h
+noinst_HEADERS		= lrmd_internal.h services_internal.h
 
 SUBDIRS                 = common pengine cib fencing cluster
