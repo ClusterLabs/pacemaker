@@ -84,6 +84,7 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
+static gboolean has_warnings = FALSE;
 static gboolean on_remote_node = FALSE;
 static gboolean use_cib_native = FALSE;
 
@@ -1741,7 +1742,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
     gboolean offline = FALSE;
 
     if (data_set->dc_node == NULL) {
-        mon_ops |= mon_op_has_warnings;
+        has_warnings = TRUE;
         no_dc = TRUE;
     }
 
@@ -1759,12 +1760,12 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
             /* coverity[leaked_storage] False positive */
             pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
             free(s);
-            mon_ops |= mon_op_has_warnings;
+            has_warnings = TRUE;
             offline = TRUE;
         }
     }
 
-    if (pcmk_is_set(mon_ops, mon_op_has_warnings)) {
+    if (has_warnings) {
         out->info(out, "CLUSTER WARN: %s%s%s",
                   no_dc ? "No DC" : "",
                   no_dc && offline ? ", " : "",
@@ -2233,7 +2234,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_monitor:
             print_simple_status(out, mon_data_set, options.mon_ops);
-            if (pcmk_is_set(options.mon_ops, mon_op_has_warnings)) {
+            if (has_warnings) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
             }
