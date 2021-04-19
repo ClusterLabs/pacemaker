@@ -112,6 +112,7 @@ static pcmk__supported_format_t formats[] = {
 struct {
     guint reconnect_ms;
     gboolean daemonize;
+    gboolean one_shot;
     gboolean show_bans;
     char *pid_file;
     char *external_agent;
@@ -337,7 +338,7 @@ as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
     args->output_ty = strdup("html");
     output_format = mon_output_cgi;
-    options.mon_ops |= mon_op_one_shot;
+    options.one_shot = TRUE;
     return TRUE;
 }
 
@@ -370,7 +371,7 @@ as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
     args->output_ty = strdup("text");
     output_format = mon_output_monitor;
-    options.mon_ops |= mon_op_one_shot;
+    options.one_shot = TRUE;
     return TRUE;
 }
 
@@ -436,12 +437,6 @@ inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer da
 static gboolean
 no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     output_format = mon_output_plain;
-    return TRUE;
-}
-
-static gboolean
-one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_one_shot;
     return TRUE;
 }
 
@@ -518,7 +513,7 @@ show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 static gboolean
 use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     setenv("CIB_file", optarg, 1);
-    options.mon_ops |= mon_op_one_shot;
+    options.one_shot = TRUE;
     return TRUE;
 }
 
@@ -536,7 +531,7 @@ static GOptionEntry addl_entries[] = {
       "Update frequency (default is 5 seconds)",
       "TIMESPEC" },
 
-    { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, one_shot_cb,
+    { "one-shot", '1', 0, G_OPTION_ARG_NONE, &options.one_shot,
       "Display the cluster status once on the console and exit",
       NULL },
 
@@ -1360,7 +1355,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
 
         args->output_ty = strdup("xml");
         output_format = mon_output_xml;
-    } else if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+    } else if (options.one_shot) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
         }
@@ -1448,7 +1443,7 @@ main(int argc, char **argv)
 
     if (pcmk__ends_with_ext(argv[0], ".cgi")) {
         output_format = mon_output_cgi;
-        options.mon_ops |= mon_op_one_shot;
+        options.one_shot = TRUE;
     }
 
     processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
@@ -1507,7 +1502,7 @@ main(int argc, char **argv)
                      * As we don't expect cib-updates coming
                      * in enforce one-shot. */
                     fence_history_cb("--fence-history", "0", NULL, NULL);
-                    options.mon_ops |= mon_op_one_shot;
+                    options.one_shot = TRUE;
                     break;
 
                 case cib_remote:
@@ -1524,7 +1519,7 @@ main(int argc, char **argv)
             }
         }
 
-        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+        if (options.one_shot) {
             if (output_format == mon_output_console) {
                 output_format = mon_output_plain;
             }
@@ -1561,7 +1556,7 @@ main(int argc, char **argv)
 #if CURSES_ENABLED
             crm_enable_stderr(FALSE);
 #else
-            options.mon_ops |= mon_op_one_shot;
+            options.one_shot = TRUE;
             output_format = mon_output_plain;
             printf("Defaulting to one-shot mode\n");
             printf("You need to have curses available at compile time to enable console mode\n");
@@ -1649,7 +1644,7 @@ main(int argc, char **argv)
         options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
 
         if (!options.daemonize) {
-            options.mon_ops |= mon_op_one_shot;
+            options.one_shot = TRUE;
         }
     }
 
@@ -1663,7 +1658,7 @@ main(int argc, char **argv)
 
     cib__set_output(cib, out);
 
-    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+    if (options.one_shot) {
         one_shot();
     }
 
