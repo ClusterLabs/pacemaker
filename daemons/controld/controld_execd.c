@@ -523,6 +523,10 @@ build_parameter_list(const lrmd_event_data_t *op,
                 crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
                 crm_xml_add(result, param->rap_name, v);
             }
+
+        } else if (result && (invert_for_xml? accept : !accept)) {
+                crm_trace("Removing attr %s from the xml result", param->rap_name);
+                xml_remove_prop(result, param->rap_name);
         }
     }
 
@@ -594,9 +598,11 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
      * the insecure ones
      */
     secure = create_xml_node(NULL, XML_TAG_PARAMS);
+    g_hash_table_foreach(op->params, hash2field, secure);
     list = build_parameter_list(op, metadata, secure, ra_param_private, TRUE);
 
     if (list != NULL) {
+        pcmk__filter_op_for_digest(secure);
         digest = calculate_operation_digest(secure, version);
         crm_xml_add(update, XML_LRM_ATTR_OP_SECURE, list);
         crm_xml_add(update, XML_LRM_ATTR_SECURE_DIGEST, digest);

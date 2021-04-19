@@ -48,9 +48,9 @@ pe__free_digests(gpointer ptr)
     }
 }
 
-// Return true if XML attribute name is substring of a given string
+// Return true if XML attribute name is not substring of a given string
 static bool
-attr_in_string(xmlAttrPtr a, void *user_data)
+attr_not_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
     char *name = crm_strdup_printf(" %s ", (const char *) a->name);
@@ -64,9 +64,9 @@ attr_in_string(xmlAttrPtr a, void *user_data)
     return filter;
 }
 
-// Return true if XML attribute name is not substring of a given string
+// Return true if XML attribute name is substring of a given string
 static bool
-attr_not_in_string(xmlAttrPtr a, void *user_data)
+attr_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
     char *name = crm_strdup_printf(" %s ", (const char *) a->name);
@@ -206,12 +206,11 @@ is_fence_param(xmlAttrPtr attr, void *user_data)
  * \param[in]  params      Resource parameters evaluated for node
  * \param[in]  xml_op      XML of operation in CIB status (if available)
  * \param[in]  op_version  CRM feature set to use for digest calculation
- * \param[in]  overrides   Key/value hash table to override resource parameters
  */
 static void
 calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
                         GHashTable *params, xmlNode *xml_op,
-                        const char *op_version, GHashTable *overrides)
+                        const char *op_version)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *secure_list = NULL;
@@ -222,14 +221,11 @@ calculate_secure_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         secure_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_SECURE);
     }
 
-    data->params_secure = create_xml_node(NULL, XML_TAG_PARAMS);
-    if (overrides != NULL) {
-        g_hash_table_foreach(overrides, hash2field, data->params_secure);
-    }
+    // Start with a copy of all parameters
+    data->params_secure = copy_xml(data->params_all);
 
-    g_hash_table_foreach(params, hash2field, data->params_secure);
     if (secure_list != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_secure, attr_not_in_string,
+        pcmk__xe_remove_matching_attrs(data->params_secure, attr_in_string,
                                        (void *) secure_list);
     }
     if (pcmk_is_set(pcmk_get_ra_caps(class),
@@ -291,7 +287,7 @@ calculate_restart_digest(op_digest_cache_t *data, xmlNode *xml_op,
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
     if (value != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_restart, attr_in_string,
+        pcmk__xe_remove_matching_attrs(data->params_restart, attr_not_in_string,
                                        (void *) value);
     }
 
@@ -337,8 +333,7 @@ pe__calculate_digests(pe_resource_t *rsc, const char *task, guint *interval_ms,
     calculate_main_digest(data, rsc, node, params, task, interval_ms, xml_op,
                           op_version, overrides, data_set);
     if (calc_secure) {
-        calculate_secure_digest(data, rsc, params, xml_op, op_version,
-                                overrides);
+        calculate_secure_digest(data, rsc, params, xml_op, op_version);
     }
     calculate_restart_digest(data, xml_op, op_version);
     return data;

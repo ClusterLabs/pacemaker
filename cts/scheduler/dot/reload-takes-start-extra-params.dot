@@ -1,0 +1,5 @@
+ digraph "g" {
+"dummy1_monitor_10000 node2" [ style=bold color="green" fontcolor="black"]
+"dummy1_reload_0 node2" -> "dummy1_monitor_10000 node2" [ style = bold]
+"dummy1_reload_0 node2" [ style=bold color="green" fontcolor="black"]
+}

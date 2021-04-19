@@ -519,13 +519,41 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
         enum action_tasks a_task = text2task(action->task);
         enum pe_quorum_policy quorum_policy = effective_quorum_policy(rsc, data_set);
         int warn_level = LOG_TRACE;
+        xmlNode *op_entry = action->op_entry;
 
         if (save_action) {
             warn_level = LOG_WARNING;
         }
 
+        /* For a reload action, if no reload op is configured or the reload op
+         * doesn't have its own extra parameters, take start op's if there's
+         * any.
+         *
+         * A fact is, changes of start op's extra parameters result into a
+         * reload, and a successful reload gets updated as a start lrm_rsc_op
+         * based on pcmk__create_history_xml(). So this also ensures the digests
+         * calculated for the resulting start lrm_rsc_op will be correct.
+         *
+         * So far, not sure how to handle digests well if there's reload op
+         * configured with extra parameters, although it's not an usual case.
+         */
+        if (pcmk__str_eq(task, CRMD_ACTION_RELOAD, pcmk__str_casei)
+            && (action->op_entry == NULL
+                || first_named_child(action->op_entry, XML_TAG_ATTR_SETS) == NULL)) {
+
+            char *start_op_key = start_key(rsc);
+            xmlNode *start_op_entry = find_rsc_op_entry(rsc, start_op_key);
+
+            free(start_op_key);
+
+            if (start_op_entry
+                && first_named_child(start_op_entry, XML_TAG_ATTR_SETS)) {
+                op_entry = start_op_entry;
+            }
+        }
+
         if (!pcmk_is_set(action->flags, pe_action_have_node_attrs)
-            && action->node != NULL && action->op_entry != NULL) {
+            && action->node != NULL && op_entry != NULL) {
             pe_rule_eval_data_t rule_data = {
                 .node_hash = action->node->details->attrs,
                 .role = RSC_ROLE_UNKNOWN,
@@ -536,7 +564,7 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             };
 
             pe__set_action_flags(action, pe_action_have_node_attrs);
-            pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
+            pe__unpack_dataset_nvpairs(op_entry, XML_TAG_ATTR_SETS,
                                        &rule_data, action->extra, NULL,
                                        FALSE, data_set);
         }

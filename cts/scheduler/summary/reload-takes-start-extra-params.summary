@@ -1,0 +1,22 @@
+Using the original execution date of: 2021-03-31 14:58:18Z
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ Fencing	(stonith:fence_dummy):	 Started node1
+ dummy1	(ocf:pacemaker:Dummy):	 Started node2
+
+Transition Summary:
+ * Reload     dummy1     ( node2 )  
+
+Executing cluster transition:
+ * Resource action: dummy1          reload on node2
+ * Resource action: dummy1          monitor=10000 on node2
+Using the original execution date of: 2021-03-31 14:58:18Z
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ Fencing	(stonith:fence_dummy):	 Started node1
+ dummy1	(ocf:pacemaker:Dummy):	 Started node2
+

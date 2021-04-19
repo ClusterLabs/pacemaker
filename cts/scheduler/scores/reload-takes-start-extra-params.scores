@@ -1,0 +1,6 @@
+Allocation scores:
+Using the original execution date of: 2021-03-31 14:58:18Z
+pcmk__native_allocate: Fencing allocation score on node1: 0
+pcmk__native_allocate: Fencing allocation score on node2: 0
+pcmk__native_allocate: dummy1 allocation score on node1: 0
+pcmk__native_allocate: dummy1 allocation score on node2: 0
