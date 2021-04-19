@@ -114,6 +114,7 @@ struct {
     gboolean daemonize;
     gboolean one_shot;
     gboolean show_bans;
+    gboolean watch_fencing;
     char *pid_file;
     char *external_agent;
     char *external_recipient;
@@ -517,12 +518,6 @@ use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
     return TRUE;
 }
 
-static gboolean
-watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_watch_fencing;
-    return TRUE;
-}
-
 #define INDENT "                                    "
 
 /* *INDENT-OFF* */
@@ -552,7 +547,7 @@ static GOptionEntry addl_entries[] = {
       "A recipient for your program (assuming you want the program to send something to someone).",
       "RCPT" },
 
-    { "watch-fencing", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, watch_fencing_cb,
+    { "watch-fencing", 'W', 0, G_OPTION_ARG_NONE, &options.watch_fencing,
       "Listen for fencing events. For use with --external-agent.",
       NULL },
 
@@ -828,7 +823,7 @@ fencing_connect(void)
     rc = st->cmds->connect(st, crm_system_name, NULL);
     if (rc == pcmk_ok) {
         crm_trace("Setting up stonith callbacks");
-        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
+        if (options.watch_fencing) {
             st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
                                             mon_st_callback_event);
             st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
@@ -1474,7 +1469,7 @@ main(int argc, char **argv)
             include_exclude_cb("--exclude", "times", NULL, NULL);
         }
 
-        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
+        if (options.watch_fencing) {
             fence_history_cb("--fence-history", "0", NULL, NULL);
             options.mon_ops |= mon_op_fence_connect;
         }
