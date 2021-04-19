@@ -502,7 +502,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
  * \param[out] result          Will be set to newly created XML with selected
  *                             parameters as attributes
  *
- * \return Newly allocated space-separate string of parameter names
+ * \return Newly allocated space-separated string of parameter names
  * \note Selection criteria varies by param_type: for the restart digest, we
  *       want parameters that are *not* marked reloadable (OCF 1.1) or that
  *       *are* marked unique (pre-1.1), for both string and XML results; for the
@@ -523,16 +523,28 @@ build_parameter_list(const lrmd_event_data_t *op,
 
     for (GList *iter = metadata->ra_params; iter != NULL; iter = iter->next) {
         struct ra_param_s *param = (struct ra_param_s *) iter->data;
-        bool accept = pcmk_is_set(param->rap_flags, param_type);
 
-        if (param_type == ra_param_reloadable) {
-            /* For the restart digest, we want to select parameters that are not
-             * reloadable, for both the string and XML.
-             */
-            accept = !accept;
+        bool accept_for_list = false;
+        bool accept_for_xml = false;
+
+        switch (param_type) {
+            case ra_param_reloadable:
+                accept_for_list = !pcmk_is_set(param->rap_flags, param_type);
+                accept_for_xml = accept_for_list;
+                break;
+
+            case ra_param_unique:
+                accept_for_list = pcmk_is_set(param->rap_flags, param_type);
+                accept_for_xml = accept_for_list;
+                break;
+
+            case ra_param_private:
+                accept_for_list = pcmk_is_set(param->rap_flags, param_type);
+                accept_for_xml = !accept_for_list;
+                break;
         }
 
-        if (accept) {
+        if (accept_for_list) {
             crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
 
             if (list == NULL) {
@@ -545,13 +557,7 @@ build_parameter_list(const lrmd_event_data_t *op,
             crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
         }
 
-        if (param_type == ra_param_private) {
-            /* For the secure digest, we want to select parameters that are not
-             * private, for XML only.
-             */
-            accept = !accept;
-        }
-        if (accept) {
+        if (accept_for_xml) {
             const char *v = g_hash_table_lookup(op->params, param->rap_name);
 
             if (v != NULL) {
