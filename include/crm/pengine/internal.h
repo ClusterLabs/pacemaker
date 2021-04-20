@@ -548,6 +548,14 @@ bool pe__bundle_needs_remote_name(pe_resource_t *rsc,
 const char *pe__add_bundle_remote_name(pe_resource_t *rsc,
                                        pe_working_set_t *data_set,
                                        xmlNode *xml, const char *field);
+
+/* Type of resource "on-node" location lookup to perform */
+enum pcmk__rsc_node_e {
+    pcmk__rsc_node_allocated = (1 << 0),
+    pcmk__rsc_node_current = (1 << 1),
+    pcmk__rsc_node_pending = (1 << 2),
+};
+
 const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
                                          const pe_resource_t *rsc);
