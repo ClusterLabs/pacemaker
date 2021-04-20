@@ -223,7 +223,7 @@ void pe_metadata(void);
 void verify_pe_options(GHashTable * options);
 
 void common_update_score(pe_resource_t * rsc, const char *id, int score);
-void native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set);
+void native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set, enum action_fail_response on_fail);
 
 gboolean native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);

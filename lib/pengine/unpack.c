@@ -1952,6 +1952,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
 {
     pe_node_t *tmpnode = NULL;
     char *reason = NULL;
+    enum action_fail_response save_on_fail = action_fail_ignore;
 
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Resource %s is %s on %s: on_fail=%s",
@@ -2024,6 +2025,8 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
     }
 
     if (node->details->unclean) {
+        /* In order to calculate priority_fencing_delay correctly, save the failure information and pass it to native_add_running(). */
+        save_on_fail = on_fail;
         /* No extra processing needed
          * Also allows resources to be started again after a node is shot
          */
@@ -2153,7 +2156,7 @@ process_rsc_state(pe_resource_t * rsc, pe_node_t * node,
             }
         }
 
-        native_add_running(rsc, node, data_set);
+        native_add_running(rsc, node, data_set, save_on_fail);
         switch (on_fail) {
             case action_fail_ignore:
                 break;
@@ -2687,7 +2690,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         if (target_node && target_node->details->online) {
             pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
                          target_node->details->online);
-            native_add_running(rsc, target_node, data_set);
+            native_add_running(rsc, target_node, data_set, action_fail_ignore);
         }
 
     } else { // Pending, or complete but erased
@@ -2695,7 +2698,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
                          target_node->details->online);
 
-            native_add_running(rsc, target_node, data_set);
+            native_add_running(rsc, target_node, data_set, action_fail_ignore);
             if (source_node && source_node->details->online) {
                 /* This is a partial migration: the migrate_to completed
                  * successfully on the source, but the migrate_from has not
@@ -2764,7 +2767,7 @@ unpack_migrate_to_failure(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         pe_rsc_trace(rsc, "stop (%d) + migrate_from (%d)",
                      target_stop_id, target_migrate_from_id);
         if (target_node && target_node->details->online) {
-            native_add_running(rsc, target_node, data_set);
+            native_add_running(rsc, target_node, data_set, action_fail_ignore);
         }
 
     } else if (target_migrate_from == NULL) {
@@ -2828,7 +2831,7 @@ unpack_migrate_from_failure(pe_resource_t *rsc, pe_node_t *node,
         pe_node_t *source_node = pe_find_node(data_set->nodes, source);
 
         if (source_node && source_node->details->online) {
-            native_add_running(rsc, source_node, data_set);
+            native_add_running(rsc, source_node, data_set, action_fail_ignore);
         }
     }
 }

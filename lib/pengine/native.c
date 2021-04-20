@@ -41,11 +41,11 @@ is_multiply_active(pe_resource_t *rsc)
 }
 
 static void
-native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
+native_priority_to_node(pe_resource_t * rsc, pe_node_t * node, enum action_fail_response on_fail)
 {
     int priority = 0;
 
-    if (rsc->priority == 0) {
+    if ((rsc->priority == 0) || (on_fail != action_fail_ignore)) {
         return;
     }
 
@@ -86,7 +86,7 @@ native_priority_to_node(pe_resource_t * rsc, pe_node_t * node)
 }
 
 void
-native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
+native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set, enum action_fail_response on_fail)
 {
     GList *gIter = rsc->running_on;
 
@@ -107,7 +107,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
     if (rsc->variant == pe_native) {
         node->details->running_rsc = g_list_append(node->details->running_rsc, rsc);
 
-        native_priority_to_node(rsc, node);
+        native_priority_to_node(rsc, node, on_fail);
     }
 
     if (rsc->variant == pe_native && node->details->maintenance) {
@@ -178,7 +178,7 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
     }
 
     if (rsc->parent != NULL) {
-        native_add_running(rsc->parent, node, data_set);
+        native_add_running(rsc->parent, node, data_set, action_fail_ignore);
     }
 }
 
