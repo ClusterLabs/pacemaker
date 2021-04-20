@@ -278,14 +278,7 @@ pcmk__node_attr_request_clear(crm_ipc_t *ipc, const char *host,
 const char *
 pcmk__node_attr_target(const char *name)
 {
-    if (pcmk__strcase_any_of(name, "auto", "localhost", NULL)) {
-        name = NULL;
-    }
-
-    if(name != NULL) {
-        return name;
-
-    } else {
+    if (name == NULL || pcmk__strcase_any_of(name, "auto", "localhost", NULL)) {
         char *target_var = crm_meta_name(XML_RSC_ATTR_TARGET);
         char *phys_var = crm_meta_name(PCMK__ENV_PHYSICAL_HOST);
         const char *target = getenv(target_var);
@@ -304,11 +297,13 @@ pcmk__node_attr_target(const char *name)
         }
         free(target_var);
         free(phys_var);
-    }
 
-    // TODO? Call get_local_node_name() if name == NULL
-    // (currently would require linkage against libcrmcluster)
-    return name;
+        // TODO? Call get_local_node_name() if name == NULL
+        // (currently would require linkage against libcrmcluster)
+        return name;
+    } else {
+        return NULL;
+    }
 }
 
 /*!
