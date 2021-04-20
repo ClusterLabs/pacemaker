@@ -198,12 +198,15 @@ check_ra_ocf_version(struct ra_metadata_s *md, const char *key,
     }
 
     if (compare_version((const char *) content, "2") >= 0) {
-        crm_warn("%s supports OCF version %s and we don't (agent may not work "
-                 "properly with this version of Pacemaker)",
+        crm_warn("%s supports OCF version %s (this Pacemaker version supports "
+                 PCMK_OCF_VERSION " and might not work properly with agent)",
+                 key, (const char *) content);
+    } else if (compare_version((const char *) content, PCMK_OCF_VERSION) > 0) {
+        crm_info("%s supports OCF version %s (this Pacemaker version supports "
+                 PCMK_OCF_VERSION " and might not use all agent features)",
                  key, (const char *) content);
     } else {
-        crm_debug("%s advertises support for OCF version %s", key,
-                  (const char *) content);
+        crm_debug("%s supports OCF version %s", key, (const char *) content);
     }
     xmlFree(content);
 }
