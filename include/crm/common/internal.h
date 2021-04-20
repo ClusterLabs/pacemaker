@@ -37,6 +37,9 @@ extern bool pcmk__is_daemon;
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 
+/* Maximum length of a stringified score value */
+#define PCMK__SCORE_MAX_LEN (PCMK__NELEM(CRM_MINUS_INFINITY_S) - 1)
+
 // Internal ACL-related utilities (from acl.c)
 
 char *pcmk__uid2username(uid_t uid);
