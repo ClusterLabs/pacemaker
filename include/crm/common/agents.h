@@ -43,6 +43,7 @@ extern "C" {
 #else
 #define PCMK_OCF_MINOR_VERSION "1"
 #endif
+#define PCMK_OCF_VERSION       PCMK_OCF_MAJOR_VERSION "." PCMK_OCF_MINOR_VERSION
 
 // Capabilities supported by a resource agent standard
 enum pcmk_ra_caps {
