@@ -36,6 +36,9 @@ extern "C" {
 #define PCMK_STONITH_PROVIDES           "provides"
 #define PCMK_STONITH_STONITH_TIMEOUT    "stonith-timeout"
 
+// OCF Resource Agent API standard version that this Pacemaker supports
+#define PCMK_OCF_MAJOR_VERSION "1"
+
 // Capabilities supported by a resource agent standard
 enum pcmk_ra_caps {
     pcmk_ra_cap_none         = 0,

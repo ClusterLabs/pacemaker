@@ -420,7 +420,7 @@ add_action_env_vars(const svc_action_t *op)
         return;
     }
 
-    set_ocf_env("OCF_RA_VERSION_MAJOR", "1", NULL);
+    set_ocf_env("OCF_RA_VERSION_MAJOR", PCMK_OCF_MAJOR_VERSION, NULL);
     set_ocf_env("OCF_RA_VERSION_MINOR",
 #ifdef PCMK__COMPAT_2_0
                 "0",
