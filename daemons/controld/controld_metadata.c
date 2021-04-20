@@ -178,37 +178,25 @@ ra_param_from_xml(xmlNode *param_xml)
     return p;
 }
 
-// Check what version of the OCF standard a resource agent supports
 static void
-check_ra_ocf_version(struct ra_metadata_s *md, const char *key,
-                     xmlNode *version_element)
+log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
 {
-    xmlChar *content = NULL;
+    if (ra_ocf_version == NULL) {
+        crm_warn("%s does not advertise OCF version supported", ra_key);
 
-    if (version_element != NULL) {
-        content = xmlNodeGetContent(version_element);
-    }
-    if (content == NULL) {
-        crm_warn("%s does not advertise OCF version supported", key);
-        return;
-    }
-
-    if (compare_version((const char *) content, "1.1") >= 0) {
-        controld_set_ra_flags(md, key, ra_supports_ocf_1_1);
-    }
-
-    if (compare_version((const char *) content, "2") >= 0) {
+    } else if (compare_version(ra_ocf_version, "2") >= 0) {
         crm_warn("%s supports OCF version %s (this Pacemaker version supports "
                  PCMK_OCF_VERSION " and might not work properly with agent)",
-                 key, (const char *) content);
-    } else if (compare_version((const char *) content, PCMK_OCF_VERSION) > 0) {
+                 ra_key, ra_ocf_version);
+
+    } else if (compare_version(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
         crm_info("%s supports OCF version %s (this Pacemaker version supports "
                  PCMK_OCF_VERSION " and might not use all agent features)",
-                 key, (const char *) content);
+                 ra_key, ra_ocf_version);
+
     } else {
-        crm_debug("%s supports OCF version %s", key, (const char *) content);
+        crm_debug("%s supports OCF version %s", ra_key, ra_ocf_version);
     }
-    xmlFree(content);
 }
 
 struct ra_metadata_s *
@@ -220,6 +208,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
     xmlNode *match = NULL;
     struct ra_metadata_s *md = NULL;
     bool any_private_params = false;
+    bool ocf1_1 = false;
 
     CRM_CHECK(mdc && rsc && metadata_str, return NULL);
 
@@ -247,7 +236,17 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 #endif
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        check_ra_ocf_version(md, key, first_named_child(metadata, "version"));
+        xmlChar *content = NULL;
+        xmlNode *version_element = first_named_child(metadata, "version");
+
+        if (version_element != NULL) {
+            content = xmlNodeGetContent(version_element);
+        }
+        log_ra_ocf_version(key, (const char *) content);
+        if (content != NULL) {
+            ocf1_1 = (compare_version((const char *) content, "1.1") >= 0);
+            xmlFree(content);
+        }
     }
 
     // Check supported actions
@@ -258,12 +257,16 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
         const char *action_name = crm_element_value(match, "name");
 
         if (pcmk__str_eq(action_name, CRMD_ACTION_RELOAD_AGENT,
-                         pcmk__str_casei)) {
-            controld_set_ra_flags(md, key, ra_supports_reload_agent);
+                         pcmk__str_none)) {
+            if (ocf1_1) {
+                controld_set_ra_flags(md, key, ra_supports_reload_agent);
+            } else {
+                crm_notice("reload-agent action will not be used with %s "
+                           "because it does not support OCF 1.1 or later", key);
+            }
 
-        // @COMPAT pre-OCF-1.1 resource agents
-        } else if (pcmk__str_eq(action_name, CRMD_ACTION_RELOAD,
-                                pcmk__str_casei)) {
+        } else if (!ocf1_1 && pcmk__str_eq(action_name, CRMD_ACTION_RELOAD,
+                                           pcmk__str_casei)) {
             controld_set_ra_flags(md, key, ra_supports_reload);
         }
     }

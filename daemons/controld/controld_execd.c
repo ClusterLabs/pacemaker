@@ -589,14 +589,12 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    if (pcmk_all_flags_set(metadata->ra_flags,
-                           ra_supports_ocf_1_1|ra_supports_reload_agent)) {
+    if (pcmk_is_set(metadata->ra_flags, ra_supports_reload_agent)) {
         // Add parameters not marked reloadable to the "op-force-restart" list
         list = build_parameter_list(op, metadata, ra_param_reloadable,
                                     &restart);
 
-    } else if (!pcmk_is_set(metadata->ra_flags, ra_supports_ocf_1_1)
-               && pcmk_is_set(metadata->ra_flags, ra_supports_reload)) {
+    } else if (pcmk_is_set(metadata->ra_flags, ra_supports_reload)) {
         /* @COMPAT pre-OCF-1.1 resource agents
          *
          * Before OCF 1.1, Pacemaker abused "unique=0" to indicate
@@ -1849,9 +1847,7 @@ do_lrm_invoke(long long action,
             const char *reload_name = CRMD_ACTION_RELOAD_AGENT;
 
             md = controld_get_rsc_metadata(lrm_state, rsc, true);
-            if ((md != NULL)
-                && !pcmk_is_set(md->ra_flags, ra_supports_ocf_1_1)
-                && pcmk_is_set(md->ra_flags, ra_supports_reload)) {
+            if ((md != NULL) && pcmk_is_set(md->ra_flags, ra_supports_reload)) {
                 reload_name = CRMD_ACTION_RELOAD;
             }
             do_lrm_rsc_op(lrm_state, rsc, reload_name, input->xml);

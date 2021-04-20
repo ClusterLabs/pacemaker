@@ -31,7 +31,6 @@
 enum ra_flags_e {
     ra_supports_reload          = (1 << 0),
     ra_supports_reload_agent    = (1 << 1),
-    ra_supports_ocf_1_1         = (1 << 2),
 };
 
 enum ra_param_flags_e {
