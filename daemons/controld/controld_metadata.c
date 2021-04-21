@@ -181,7 +181,7 @@ ra_param_from_xml(xmlNode *param_xml)
 static void
 log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
 {
-    if (ra_ocf_version == NULL) {
+    if (pcmk__str_empty(ra_ocf_version)) {
         crm_warn("%s does not advertise OCF version supported", ra_key);
 
     } else if (compare_version(ra_ocf_version, "2") >= 0) {
