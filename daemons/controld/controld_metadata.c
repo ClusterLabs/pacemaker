@@ -267,7 +267,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
         } else if (!ocf1_1 && pcmk__str_eq(action_name, CRMD_ACTION_RELOAD,
                                            pcmk__str_casei)) {
-            controld_set_ra_flags(md, key, ra_supports_reload);
+            controld_set_ra_flags(md, key, ra_supports_legacy_reload);
         }
     }
 

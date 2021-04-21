@@ -29,7 +29,7 @@
  * compliance and does not advertise the reload-agent action.
  */
 enum ra_flags_e {
-    ra_supports_reload          = (1 << 0),
+    ra_supports_legacy_reload   = (1 << 0),
     ra_supports_reload_agent    = (1 << 1),
 };
 
