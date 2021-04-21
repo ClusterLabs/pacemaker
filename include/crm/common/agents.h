@@ -38,11 +38,7 @@ extern "C" {
 
 // OCF Resource Agent API standard version that this Pacemaker supports
 #define PCMK_OCF_MAJOR_VERSION "1"
-#ifdef PCMK__COMPAT_2_0
-#define PCMK_OCF_MINOR_VERSION "0"
-#else
 #define PCMK_OCF_MINOR_VERSION "1"
-#endif
 #define PCMK_OCF_VERSION       PCMK_OCF_MAJOR_VERSION "." PCMK_OCF_MINOR_VERSION
 
 // Capabilities supported by a resource agent standard
