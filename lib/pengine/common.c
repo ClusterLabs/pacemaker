@@ -594,9 +594,12 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
 
 const char *
 pe_node_attribute_calculated(const pe_node_t *node, const char *name,
-                             const pe_resource_t *rsc)
+                             const pe_resource_t *rsc, uint32_t flags)
 {
     const char *source;
+    const pe_resource_t *container = NULL;
+    const pe_node_t *host = NULL;
+    const char *lookup_type = NULL;
 
     if(node == NULL) {
         return NULL;
@@ -620,14 +623,26 @@ pe_node_attribute_calculated(const pe_node_t *node, const char *name,
     CRM_ASSERT(node->details->remote_rsc);
     CRM_ASSERT(node->details->remote_rsc->container);
 
-    if(node->details->remote_rsc->container->running_on) {
-        pe_node_t *host = node->details->remote_rsc->container->running_on->data;
-        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s", rsc->id, name, host->details->uname);
+    container = node->details->remote_rsc->container;
+
+    if (pcmk_is_set(flags, pcmk__rsc_node_allocated)) {
+        host = container->allocated_to;
+        lookup_type = "allocated";
+
+    } else if (pcmk_is_set(flags, pcmk__rsc_node_current)
+               && container->running_on != NULL) {
+        host = container->running_on->data;
+        lookup_type = "current";
+    }
+
+    if (host != NULL) {
+        pe_rsc_trace(rsc, "%s: Looking for %s on the %s container host %s",
+                     rsc->id, name, lookup_type, host->details->uname);
         return g_hash_table_lookup(host->details->attrs, name);
     }
 
-    pe_rsc_trace(rsc, "%s: Not looking for %s on the container host: %s is inactive",
-                 rsc->id, name, node->details->remote_rsc->container->id);
+    pe_rsc_trace(rsc, "%s: Not looking for %s on the %s container host: "
+                 "%s is inactive", rsc->id, name, lookup_type, container->id);
     return NULL;
 }
 

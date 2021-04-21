@@ -466,8 +466,9 @@ lookup_promotion_score(pe_resource_t *rsc, const pe_node_t *node, const char *na
 
     if (node && name) {
         char *attr_name = pcmk_promotion_score_name(name);
+        const uint32_t flags = pcmk__rsc_node_current;
 
-        attr_value = pe_node_attribute_calculated(node, attr_name, rsc);
+        attr_value = pe_node_attribute_calculated(node, attr_name, rsc, flags);
         free(attr_name);
     }
     return attr_value;
