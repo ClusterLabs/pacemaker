@@ -39,6 +39,12 @@ enum ra_param_flags_e {
     ra_param_reloadable         = (1 << 2),
 };
 
+// Allowed sources of resource agent meta-data when requesting it
+enum controld_metadata_source_e {
+    controld_metadata_from_cache    = (1 << 0),
+    controld_metadata_from_agent    = (1 << 1),
+};
+
 struct ra_param_s {
     char *rap_name;
     uint32_t rap_flags; // bitmask of ra_param_flags_s
@@ -72,7 +78,7 @@ struct ra_metadata_s *metadata_cache_update(GHashTable *mdc,
                                             const char *metadata_str);
 struct ra_metadata_s *controld_get_rsc_metadata(lrm_state_t *lrm_state,
                                                 lrmd_rsc_info_t *rsc,
-                                                bool from_agent);
+                                                uint32_t source);
 
 static inline const char *
 ra_param_flag2text(enum ra_param_flags_e flag)

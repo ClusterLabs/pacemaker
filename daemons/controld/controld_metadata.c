@@ -327,13 +327,14 @@ err:
  *
  * \param[in] lrm_state  Use meta-data cache from this executor connection
  * \param[in] rsc        Resource to get meta-data for
- * \param[in] from_agent Execute agent if this is true and meta-data not cached
+ * \param[in] source     Allowed meta-data sources (bitmask of enum
+ *                       controld_metadata_source_e values)
  *
  * \return Meta-data cache entry for given resource, or NULL if not available
  */
 struct ra_metadata_s *
 controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
-                          bool from_agent)
+                          uint32_t source)
 {
     struct ra_metadata_s *metadata = NULL;
     char *metadata_str = NULL;
@@ -342,13 +343,19 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
     CRM_CHECK((lrm_state != NULL) && (rsc != NULL), return NULL);
 
-    key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
-    if (key != NULL) {
-        metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
-        free(key);
+    if (pcmk_is_set(source, controld_metadata_from_cache)) {
+        key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
+        if (key != NULL) {
+            metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
+            free(key);
+        }
+        if (metadata != NULL) {
+            return metadata;
+        }
     }
-    if ((metadata != NULL) || !from_agent) {
-        return metadata;
+
+    if (!pcmk_is_set(source, controld_metadata_from_agent)) {
+        return NULL;
     }
 
     /* For now, we always collect resource agent meta-data via a local,

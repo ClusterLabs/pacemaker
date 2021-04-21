@@ -664,6 +664,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     struct ra_metadata_s *metadata = NULL;
     const char *caller_version = NULL;
     lrm_state_t *lrm_state = NULL;
+    uint32_t metadata_source = controld_metadata_from_agent;
 
     if (op == NULL) {
         return FALSE;
@@ -707,7 +708,19 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    metadata = controld_get_rsc_metadata(lrm_state, rsc, true);
+    /* Getting meta-data from cache is OK unless this is a successful start
+     * action -- always refresh from the agent for those, in case the
+     * resource agent was updated.
+     *
+     * @TODO Only refresh the meta-data after starts if the agent actually
+     * changed (using something like inotify, or a hash or modification time of
+     * the agent executable).
+     */
+    if ((op->op_status != PCMK_LRM_OP_DONE) || (op->rc != target_rc)
+        || !pcmk__str_eq(op->op_type, CRMD_ACTION_START, pcmk__str_none)) {
+        metadata_source |= controld_metadata_from_cache;
+    }
+    metadata = controld_get_rsc_metadata(lrm_state, rsc, metadata_source);
     if (metadata == NULL) {
         return TRUE;
     }
@@ -1846,7 +1859,8 @@ do_lrm_invoke(long long action,
             struct ra_metadata_s *md = NULL;
             const char *reload_name = CRMD_ACTION_RELOAD_AGENT;
 
-            md = controld_get_rsc_metadata(lrm_state, rsc, true);
+            md = controld_get_rsc_metadata(lrm_state, rsc,
+                                           controld_metadata_from_cache);
             if ((md != NULL) && pcmk_is_set(md->ra_flags, ra_supports_reload)) {
                 reload_name = CRMD_ACTION_RELOAD;
             }
@@ -1874,7 +1888,8 @@ resolve_versioned_parameters(lrm_state_t *lrm_state, const char *rsc_id,
     lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
     struct ra_metadata_s *metadata;
 
-    metadata = controld_get_rsc_metadata(lrm_state, rsc, false);
+    metadata = controld_get_rsc_metadata(lrm_state, rsc,
+                                         controld_metadata_from_cache);
     if (metadata) {
         xmlNode *versioned_attrs = NULL;
         GHashTable *hash = NULL;
