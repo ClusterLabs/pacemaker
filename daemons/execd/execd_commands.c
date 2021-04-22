@@ -90,7 +90,7 @@ typedef struct lrmd_cmd_s {
     time_t epoch_last_run;          // Epoch timestamp of when op last ran
     time_t epoch_rcchange;          // Epoch timestamp of when rc last changed
 
-    int first_notify_sent;
+    bool first_notify_sent;
     int last_notify_rc;
     int last_notify_op_status;
     int last_pid;
@@ -392,43 +392,51 @@ start_delay_helper(gpointer data)
     return FALSE;
 }
 
-static gboolean
+/*!
+ * \internal
+ * \brief Check whether a list already contains the equivalent of a given action
+ */
+static lrmd_cmd_t *
+find_duplicate_action(GList *action_list, lrmd_cmd_t *cmd)
+{
+    for (GList *item = action_list; item != NULL; item = item->next) {
+        lrmd_cmd_t *dup = item->data;
+
+        if (action_matches(cmd, dup->action, dup->interval_ms)) {
+            return dup;
+        }
+    }
+    return NULL;
+}
+
+static bool
 merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
-    GList *gIter = NULL;
     lrmd_cmd_t * dup = NULL;
-    gboolean dup_pending = FALSE;
+    bool dup_pending = true;
 
     if (cmd->interval_ms == 0) {
-        return 0;
+        return false;
     }
 
-    for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
-        dup = gIter->data;
-        if (action_matches(cmd, dup->action, dup->interval_ms)) {
-            dup_pending = TRUE;
-            goto merge_dup;
+    // Search for a duplicate of this action (in-flight or not)
+    dup = find_duplicate_action(rsc->pending_ops, cmd);
+    if (dup == NULL) {
+        dup_pending = false;
+        dup = find_duplicate_action(rsc->recurring_ops, cmd);
+        if (dup == NULL) {
+            return false;
         }
     }
 
-    /* if dup is in recurring_ops list, that means it has already executed
-     * and is in the interval loop. we can't just remove it in this case. */
-    for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
-        dup = gIter->data;
-        if (action_matches(cmd, dup->action, dup->interval_ms)) {
-            if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-                if (dup->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
-                    /* Fencing monitors marked for cancellation will not be merged to respond to cancellation. */
-                    return FALSE;
-                }
-            }
-            goto merge_dup;
-        }
+    /* Do not merge fencing monitors marked for cancellation, so we can reply to
+     * the cancellation separately.
+     */
+    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                     pcmk__str_casei)
+        && (dup->lrmd_op_status == PCMK_LRM_OP_CANCELLED)) {
+        return false;
     }
-
-    return FALSE;
-merge_dup:
-
 
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
@@ -438,8 +446,8 @@ merge_dup:
              rsc->rsc_id, normalize_action_name(rsc, dup->action),
              dup->interval_ms);
 
-    /* merge */
-    dup->first_notify_sent = 0;
+    // Merge new action's call ID and user data into existing action
+    dup->first_notify_sent = false;
     free(dup->userdata_str);
     dup->userdata_str = cmd->userdata_str;
     cmd->userdata_str = NULL;
@@ -447,34 +455,33 @@ merge_dup:
 
     if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         /* if we are waiting for the next interval, kick it off now */
-        if (dup_pending == TRUE) {
+        if (dup_pending) {
             stop_recurring_timer(cmd);
             stonith_recurring_op_helper(cmd);
         }
 
-    } else if (dup_pending == FALSE) {
-        /* if we've already handed this to the service lib, kick off an early execution */
+    } else if (!dup_pending) {
+        /* If dup is in recurring_ops list, that means it has already executed
+         * and is in the interval loop. We can't just remove it in this case.
+         */
         services_action_kick(rsc->rsc_id,
                              normalize_action_name(rsc, dup->action),
                              dup->interval_ms);
     }
     free_lrmd_cmd(cmd);
-
-    return TRUE;
+    return true;
 }
 
 static void
 schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
-    gboolean dup_processed = FALSE;
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(rsc != NULL, return);
 
     crm_trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
 
-    dup_processed = merge_recurring_duplicate(rsc, cmd);
-    if (dup_processed) {
-        /* duplicate recurring cmd found, cmds merged */
+    if (merge_recurring_duplicate(rsc, cmd)) {
+        // Equivalent of cmd has already been scheduled
         return;
     }
 
@@ -578,7 +585,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     }
 
-    cmd->first_notify_sent = 1;
+    cmd->first_notify_sent = true;
     cmd->last_notify_rc = cmd->exec_rc;
     cmd->last_notify_op_status = cmd->lrmd_op_status;
 
