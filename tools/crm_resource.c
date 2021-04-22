@@ -359,7 +359,7 @@ static GOptionEntry query_entries[] = {
     { "list-agents", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
       list_agents_cb,
       "List all agents available for the named standard and/or provider",
-      "STD/PROV" },
+      "STD:PROV" },
     { "list-ocf-alternatives", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK,
       list_alternatives_cb,
       "List all available providers for the named OCF agent",
