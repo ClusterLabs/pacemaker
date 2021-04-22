@@ -16,6 +16,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -1660,7 +1661,8 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
         return rc;
     }
     for (xmlNode *rsc_xml = first_named_child(output_xml, F_LRMD_RSC);
-         rsc_xml != NULL; rsc_xml = crm_next_same_xml(rsc_xml)) {
+         (rsc_xml != NULL) && (rc == pcmk_ok);
+         rsc_xml = crm_next_same_xml(rsc_xml)) {
 
         rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
         if (rsc_id == NULL) {
@@ -1672,7 +1674,10 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
 
             lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
 
-            CRM_CHECK(op_info != NULL, break);
+            if (op_info == NULL) {
+                rc = -ENOMEM;
+                break;
+            }
             op_info->rsc_id = strdup(rsc_id);
             op_info->action = crm_element_value_copy(op_xml, F_LRMD_RSC_ACTION);
             op_info->interval_ms_s = crm_element_value_copy(op_xml,
