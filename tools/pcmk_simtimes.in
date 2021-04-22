@@ -2,7 +2,7 @@
 """ Timing comparisons for crm_simulate profiling output
 """
 
-__copyright__ = "Copyright 2019-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2019-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -19,7 +19,7 @@ class CrmExit(object):
 
 BEFORE_HELP = """Output of "crm_simulate --profile cts/scheduler --repeat <N>" from earlier Pacemaker build"""
 
-# line like: * Testing cts/scheduler/1360.xml ... 0.07 secs
+# line like: * Testing cts/scheduler/xml/1360.xml ... 0.07 secs
 PATTERN = r"""^\s*\*\s+Testing\s+.*/([^/]+)\.xml\s+\.+\s+([.0-9]+)\s+secs\s*$"""
 
 def parse_args(argv=sys.argv):
