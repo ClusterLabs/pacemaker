@@ -193,6 +193,13 @@ cmd_original_times(lrmd_cmd_t * cmd)
 }
 #endif
 
+static inline bool
+action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
+{
+    return (cmd->interval_ms == interval_ms)
+           && pcmk__str_eq(cmd->action, action, pcmk__str_casei);
+}
+
 static void
 log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
 {
@@ -398,8 +405,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
         dup = gIter->data;
-        if (pcmk__str_eq(cmd->action, dup->action, pcmk__str_casei)
-            && (cmd->interval_ms == dup->interval_ms)) {
+        if (action_matches(cmd, dup->action, dup->interval_ms)) {
             dup_pending = TRUE;
             goto merge_dup;
         }
@@ -409,8 +415,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
      * and is in the interval loop. we can't just remove it in this case. */
     for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
         dup = gIter->data;
-        if (pcmk__str_eq(cmd->action, dup->action, pcmk__str_casei)
-            && (cmd->interval_ms == dup->interval_ms)) {
+        if (action_matches(cmd, dup->action, dup->interval_ms)) {
             if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
                 if (dup->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
                     /* Fencing monitors marked for cancellation will not be merged to respond to cancellation. */
@@ -984,8 +989,8 @@ action_complete(svc_action_t * action)
 
 #if SUPPORT_NAGIOS
     if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei) &&
-            (cmd->interval_ms == 0) && cmd->exec_rc == PCMK_OCF_OK) {
+        if (action_matches(cmd, "monitor", 0)
+            && (cmd->exec_rc == PCMK_OCF_OK)) {
             /* Successfully executed --version for the nagios plugin */
             cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
@@ -1686,9 +1691,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
         lrmd_cmd_t *cmd = gIter->data;
 
-        if (pcmk__str_eq(cmd->action, action, pcmk__str_casei)
-            && (cmd->interval_ms == interval_ms)) {
-
+        if (action_matches(cmd, action, interval_ms)) {
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
             cmd_finalize(cmd, rsc);
             return pcmk_ok;
@@ -1701,9 +1704,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
             lrmd_cmd_t *cmd = gIter->data;
 
-            if (pcmk__str_eq(cmd->action, action, pcmk__str_casei)
-                && (cmd->interval_ms == interval_ms)) {
-
+            if (action_matches(cmd, action, interval_ms)) {
                 cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
