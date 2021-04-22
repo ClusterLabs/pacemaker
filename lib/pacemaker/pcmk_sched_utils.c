@@ -629,10 +629,17 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     task = op->op_type;
 
-    /* Record a successful reload as a start, and a failed reload as a monitor,
-     * to make life easier for the scheduler when determining the current state.
+    /* Record a successful agent reload as a start, and a failed one as a
+     * monitor, to make life easier for the scheduler when determining the
+     * current state.
+     *
+     * @COMPAT We should check "reload" here only if the operation was for a
+     * pre-OCF-1.1 resource agent, but we don't know that here, and we should
+     * only ever get results for actions scheduled by us, so we can reasonably
+     * assume any "reload" is actually a pre-1.1 agent reload.
      */
-    if (pcmk__str_eq(task, "reload", pcmk__str_none)) {
+    if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
+                         NULL)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_START;
         } else {

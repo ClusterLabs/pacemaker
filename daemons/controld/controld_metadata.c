@@ -161,6 +161,11 @@ ra_param_from_xml(xmlNode *param_xml)
         return NULL;
     }
 
+    value = crm_element_value(param_xml, "reloadable");
+    if (crm_is_true(value)) {
+        controld_set_ra_param_flags(p, ra_param_reloadable);
+    }
+
     value = crm_element_value(param_xml, "unique");
     if (crm_is_true(value)) {
         controld_set_ra_param_flags(p, ra_param_unique);
@@ -173,6 +178,27 @@ ra_param_from_xml(xmlNode *param_xml)
     return p;
 }
 
+static void
+log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
+{
+    if (pcmk__str_empty(ra_ocf_version)) {
+        crm_warn("%s does not advertise OCF version supported", ra_key);
+
+    } else if (compare_version(ra_ocf_version, "2") >= 0) {
+        crm_warn("%s supports OCF version %s (this Pacemaker version supports "
+                 PCMK_OCF_VERSION " and might not work properly with agent)",
+                 ra_key, ra_ocf_version);
+
+    } else if (compare_version(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
+        crm_info("%s supports OCF version %s (this Pacemaker version supports "
+                 PCMK_OCF_VERSION " and might not use all agent features)",
+                 ra_key, ra_ocf_version);
+
+    } else {
+        crm_debug("%s supports OCF version %s", ra_key, ra_ocf_version);
+    }
+}
+
 struct ra_metadata_s *
 metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
                       const char *metadata_str)
@@ -182,6 +208,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
     xmlNode *match = NULL;
     struct ra_metadata_s *md = NULL;
     bool any_private_params = false;
+    bool ocf1_1 = false;
 
     CRM_CHECK(mdc && rsc && metadata_str, return NULL);
 
@@ -208,6 +235,20 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
     md->ra_version = ra_version_from_xml(metadata, rsc);
 #endif
 
+    if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
+        xmlChar *content = NULL;
+        xmlNode *version_element = first_named_child(metadata, "version");
+
+        if (version_element != NULL) {
+            content = xmlNodeGetContent(version_element);
+        }
+        log_ra_ocf_version(key, (const char *) content);
+        if (content != NULL) {
+            ocf1_1 = (compare_version((const char *) content, "1.1") >= 0);
+            xmlFree(content);
+        }
+    }
+
     // Check supported actions
     match = first_named_child(metadata, "actions");
     for (match = first_named_child(match, "action"); match != NULL;
@@ -215,9 +256,18 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
         const char *action_name = crm_element_value(match, "name");
 
-        if (pcmk__str_eq(action_name, "reload", pcmk__str_casei)) {
-            controld_set_ra_flags(md, key, ra_supports_reload);
-            break; // since this is the only action we currently care about
+        if (pcmk__str_eq(action_name, CRMD_ACTION_RELOAD_AGENT,
+                         pcmk__str_none)) {
+            if (ocf1_1) {
+                controld_set_ra_flags(md, key, ra_supports_reload_agent);
+            } else {
+                crm_notice("reload-agent action will not be used with %s "
+                           "because it does not support OCF 1.1 or later", key);
+            }
+
+        } else if (!ocf1_1 && pcmk__str_eq(action_name, CRMD_ACTION_RELOAD,
+                                           pcmk__str_casei)) {
+            controld_set_ra_flags(md, key, ra_supports_legacy_reload);
         }
     }
 
@@ -271,17 +321,70 @@ err:
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Get meta-data for a resource
+ *
+ * \param[in] lrm_state  Use meta-data cache from this executor connection
+ * \param[in] rsc        Resource to get meta-data for
+ * \param[in] source     Allowed meta-data sources (bitmask of enum
+ *                       controld_metadata_source_e values)
+ *
+ * \return Meta-data cache entry for given resource, or NULL if not available
+ */
 struct ra_metadata_s *
-metadata_cache_get(GHashTable *mdc, lrmd_rsc_info_t *rsc)
+controld_get_rsc_metadata(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+                          uint32_t source)
 {
-    char *key = NULL;
     struct ra_metadata_s *metadata = NULL;
+    char *metadata_str = NULL;
+    char *key = NULL;
+    int rc = pcmk_ok;
 
-    CRM_CHECK(mdc && rsc, return NULL);
-    key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
-    if (key) {
-        metadata = g_hash_table_lookup(mdc, key);
-        free(key);
+    CRM_CHECK((lrm_state != NULL) && (rsc != NULL), return NULL);
+
+    if (pcmk_is_set(source, controld_metadata_from_cache)) {
+        key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
+        if (key != NULL) {
+            metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
+            free(key);
+        }
+        if (metadata != NULL) {
+            return metadata;
+        }
+    }
+
+    if (!pcmk_is_set(source, controld_metadata_from_agent)) {
+        return NULL;
+    }
+
+    /* For now, we always collect resource agent meta-data via a local,
+     * synchronous, direct execution of the agent. This has multiple issues:
+     * the executor should execute agents, not the controller; meta-data for
+     * Pacemaker Remote nodes should be collected on those nodes, not
+     * locally; and the meta-data call shouldn't eat into the timeout of the
+     * real action being performed.
+     *
+     * These issues are planned to be addressed by having the scheduler
+     * schedule a meta-data cache check at the beginning of each transition.
+     * Once that is working, this block will only be a fallback in case the
+     * initial collection fails.
+     */
+    rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
+                                rsc->type, &metadata_str, 0);
+    if (rc != pcmk_ok) {
+        crm_warn("Failed to get metadata for %s (%s:%s:%s): %s",
+                 rsc->id, rsc->standard, rsc->provider, rsc->type,
+                 pcmk_strerror(rc));
+        return NULL;
+    }
+
+    metadata = metadata_cache_update(lrm_state->metadata_cache, rsc,
+                                     metadata_str);
+    free(metadata_str);
+    if (metadata == NULL) {
+        crm_warn("Failed to update metadata for %s (%s:%s:%s)",
+                 rsc->id, rsc->standard, rsc->provider, rsc->type);
     }
     return metadata;
 }

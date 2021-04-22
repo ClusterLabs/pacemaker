@@ -66,7 +66,7 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_LRM_OP_INVALID and PCMK_LRM_OP_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.9.0"
+#  define CRM_FEATURE_SET		"3.10.0"
 
 /* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
  * recipient of a CPG message. This imposes an arbitrary limit on cluster node
@@ -169,6 +169,7 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_CANCEL		"cancel"
 
 #  define CRMD_ACTION_RELOAD		"reload"
+#  define CRMD_ACTION_RELOAD_AGENT	"reload-agent"
 #  define CRMD_ACTION_MIGRATE		"migrate_to"
 #  define CRMD_ACTION_MIGRATED		"migrate_from"
 

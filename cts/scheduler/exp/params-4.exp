@@ -28,7 +28,7 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="6" operation="reload" operation_key="DcIPaddr_reload_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+      <rsc_op id="6" operation="reload-agent" operation_key="DcIPaddr_reload-agent_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
         <primitive id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" CRM_meta_timeout="20000"  ip="127.0.0.20"/>
       </rsc_op>
@@ -54,7 +54,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="reload" operation_key="DcIPaddr_reload_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <rsc_op id="6" operation="reload-agent" operation_key="DcIPaddr_reload-agent_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>

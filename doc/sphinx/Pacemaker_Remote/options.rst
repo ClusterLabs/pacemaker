@@ -73,14 +73,12 @@ Descriptions of these instance attributes can be retrieved using the following
     ocf:pacemaker:remote - remote resource agent
 
     Resource options:
-      server: Server location to connect to. This can be an ip address or hostname.
-      port: tcp port to connect to.
-      reconnect_interval: Interval in seconds at which Pacemaker will attempt to reconnect to a
-                          remote node after an active connection to the remote node has been
-                          severed. When this value is nonzero, Pacemaker will retry the connection
-                          indefinitely, at the specified interval. As with any time-based actions,
-                          this is not guaranteed to be checked more frequently than the value of the
-                          cluster-recheck-interval cluster option.
+      server: Server location to connect to (IP address or resolvable host name)
+      port: TCP port at which to contact Pacemaker Remote executor
+      reconnect_interval: If this is a positive time interval, the cluster will attempt to
+                          reconnect to a remote node after an active connection has been
+                          lost at this interval. Otherwise, the cluster will attempt to
+                          reconnect immediately (after any fencing needed).
 
 
 When defining a remote node's connection resource, it is common and recommended
