@@ -387,13 +387,14 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
         sane = FALSE;
     }
 
-    if (sane && !msg->is_compressed && (msg->size > 0)) {
-        size_t str_size = strlen(msg->data) + 1;
-
-        if (msg->size != str_size) {
-            crm_warn("Message payload is corrupted: expected %llu bytes, got %llu",
-                     (unsigned long long) msg->size,
-                     (unsigned long long) str_size);
+    if (sane && !msg->is_compressed) {
+        /* msg->size == strlen(msg->data) + 1 would be a stronger check,
+         * but checking the last byte or two should be quick
+         */
+        if (((msg->size > 1) && (msg->data[msg->size - 2] == '\0'))
+            || (msg->data[msg->size - 1] != '\0')) {
+            crm_warn("Message payload is corrupted: does not end at %llu bytes",
+                     (unsigned long long) msg->size);
             sane = FALSE;
         }
     }
