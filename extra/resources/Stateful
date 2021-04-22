@@ -34,16 +34,16 @@ meta_data() {
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="Stateful" version="1.1">
-<version>1.0</version>
+<version>1.1</version>
 
 <longdesc lang="en">
-This is an example resource agent that implements two states
+This is an example resource agent that implements Promoted and Unpromoted roles
 </longdesc>
 <shortdesc lang="en">Example stateful resource agent</shortdesc>
 
 <parameters>
 
-<parameter name="state" unique="1">
+<parameter name="state" unique-group="state">
 <longdesc lang="en">
 Location to store the resource state in
 </longdesc>
@@ -51,7 +51,7 @@ Location to store the resource state in
 <content type="string" default="${HA_VARRUN%%/}/Stateful-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="envfile" unique="1">
+<parameter name="envfile" reloadable="true">
 <longdesc lang="en">
 If this is set, the environment will be dumped to this file for every call.
 </longdesc>
@@ -59,7 +59,7 @@ If this is set, the environment will be dumped to this file for every call.
 <content type="string" default="" />
 </parameter>
 
-<parameter name="notify_delay" unique="0">
+<parameter name="notify_delay" reloadable="true">
 <longdesc lang="en">
 The notify action will sleep for this many seconds before returning,
 to simulate a long-running notify.
@@ -79,6 +79,7 @@ to simulate a long-running notify.
 <action name="demote"  timeout="10s" />
 <action name="notify"  timeout="5s" />
 <action name="meta-data"  timeout="5s" />
+<action name="reload-agent"  timeout="10s" />
 <action name="validate-all"  timeout="30s" />
 </actions>
 </resource-agent>
@@ -90,9 +91,13 @@ END
 
 stateful_usage() {
     cat <<END
-usage: $0 {start|stop|promote|demote|monitor|validate-all|meta-data}
+Usage: $0 <action>
 
-Expects to have a fully populated OCF RA-compliant environment set.
+where <action> is one of: meta-data validate-all start stop monitor
+                          promote demote notify reload-agent
+
+This conforms to the OCF Resource Agent API version 1.1, and expects
+to have OCF-compliant environment variables provided.
 END
     exit $1
 }
@@ -220,6 +225,10 @@ stateful_validate() {
     exit $OCF_SUCCESS
 }
 
+stateful_reload_agent() {
+    return $OCF_SUCCESS
+}
+
 : ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_notify_delay:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
@@ -246,6 +255,7 @@ notify)         stateful_notify ;;
 stop)           stateful_stop;;
 monitor)        stateful_monitor;;
 validate-all)   stateful_validate;;
+reload-agent)   stateful_reload_agent;;
 usage|help)     stateful_usage $OCF_SUCCESS;;
 *)              stateful_usage $OCF_ERR_UNIMPLEMENTED;;
 esac
