@@ -124,6 +124,9 @@ if __name__ == "__main__":
 
     try:
         args = parse_args()
+        if args.verbose is None:
+            args.verbose = 0
+
         before = extract_times(args.before_file)
         after = extract_times(args.after_file)
         sort_field = args.sort
