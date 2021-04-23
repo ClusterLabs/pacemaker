@@ -94,7 +94,6 @@ typedef struct async_command_s {
     uint32_t victim_nodeid;
     char *action;
     char *device;
-    char *mode;
 
     GList *device_list;
     GList *device_next;
@@ -225,7 +224,6 @@ free_async_command(async_command_t * cmd)
     free(cmd->client);
     free(cmd->client_name);
     free(cmd->origin);
-    free(cmd->mode);
     free(cmd->op);
     free(cmd);
 }
@@ -255,7 +253,6 @@ create_async_command(xmlNode * msg)
     cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
     cmd->action = strdup(action);
     cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
-    cmd->mode = crm_element_value_copy(op, F_STONITH_MODE);
     cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);

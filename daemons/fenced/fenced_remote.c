@@ -1578,7 +1578,6 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
                        peer->host, op->action, op->target, device,
                        op->client_name, timeout_one);
             crm_xml_add(remote_op, F_STONITH_DEVICE, device);
-            crm_xml_add(remote_op, F_STONITH_MODE, "slave");
 
         } else {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
@@ -1586,7 +1585,6 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer, int rc)
                        CRM_XS " for client %s (%ds, %lds)",
                        peer->host, op->action, op->target, op->client_name,
                        timeout_one, stonith_watchdog_timeout_ms);
-            crm_xml_add(remote_op, F_STONITH_MODE, "smart");
         }
 
         op->state = st_exec;
