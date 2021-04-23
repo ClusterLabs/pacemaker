@@ -71,9 +71,9 @@
 # (This is of use only to developers.)
 # PCMK_schema_directory=/some/path
 
-# Pacemaker consists of a master process with multiple subsidiary daemons. If
-# one of the daemons crashes, the master process will normally attempt to
-# restart it. If this is set to "true", the master process will instead panic
+# Pacemaker consists of a main process with multiple subsidiary daemons. If
+# one of the daemons crashes, the main process will normally attempt to
+# restart it. If this is set to "true", the main process will instead panic
 # the host (see PCMK_panic_action). The default is unset.
 # PCMK_fail_fast=no
 
