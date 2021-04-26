@@ -97,7 +97,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                               pcmk_is_set(show, mon_show_counts),
                               pcmk_is_set(show, mon_show_options)));
 
-    unames = pe__build_uname_list(data_set, only_node);
+    unames = pe__build_node_name_list(data_set, only_node);
     resources = pe__build_rsc_list(data_set, only_rsc);
 
     if (pcmk_is_set(show, mon_show_nodes) && unames) {
@@ -252,7 +252,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  pcmk_is_set(show, mon_show_counts),
                  pcmk_is_set(show, mon_show_options));
 
-    unames = pe__build_uname_list(data_set, only_node);
+    unames = pe__build_node_name_list(data_set, only_node);
     resources = pe__build_rsc_list(data_set, only_rsc);
 
     /*** NODES ***/
@@ -361,7 +361,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  pcmk_is_set(show, mon_show_counts),
                  pcmk_is_set(show, mon_show_options));
 
-    unames = pe__build_uname_list(data_set, only_node);
+    unames = pe__build_node_name_list(data_set, only_node);
     resources = pe__build_rsc_list(data_set, only_rsc);
 
     /*** NODE LIST ***/

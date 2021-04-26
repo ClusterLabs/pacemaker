@@ -2429,15 +2429,15 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
 }
 
 GList *
-pe__build_uname_list(pe_working_set_t *data_set, const char *s) {
-    GList *unames = NULL;
+pe__build_node_name_list(pe_working_set_t *data_set, const char *s) {
+    GList *nodes = NULL;
 
     if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
         /* Nothing was given so return a list of all node names.  Or, '*' was
          * given.  This would normally fall into the pe__unames_with_tag branch
          * where it will return an empty list.  Catch it here instead.
          */
-        unames = g_list_prepend(unames, strdup("*"));
+        nodes = g_list_prepend(nodes, strdup("*"));
     } else {
         pe_node_t *node = pe_find_node(data_set->nodes, s);
 
@@ -2445,7 +2445,7 @@ pe__build_uname_list(pe_working_set_t *data_set, const char *s) {
             /* The given string was a valid uname for a node.  Return a
              * singleton list containing just that uname.
              */
-            unames = g_list_prepend(unames, strdup(s));
+            nodes = g_list_prepend(nodes, strdup(s));
         } else {
             /* The given string was not a valid uname.  It's either a tag or
              * it's a typo or something.  In the first case, we'll return a
@@ -2453,11 +2453,11 @@ pe__build_uname_list(pe_working_set_t *data_set, const char *s) {
              * second case, we'll return a NULL pointer and nothing will
              * get displayed.
              */
-            unames = pe__unames_with_tag(data_set, s);
+            nodes = pe__unames_with_tag(data_set, s);
         }
     }
 
-    return unames;
+    return nodes;
 }
 
 GList *
