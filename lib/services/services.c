@@ -241,21 +241,30 @@ resources_action_create(const char *name, const char *standard,
         char *dir = NULL;
         char *buf = NULL;
         struct stat st;
-        for (dir = strtok(strdup(OCF_RA_PATH), ","); dir != NULL; dir = strtok(NULL, ",")) {
+
+        if (dirs == NULL) {
+            services_handle_exec_error(op, ENOENT);
+            return NULL;
+        }
+
+        for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
             buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
             if (stat(buf, &st) == 0) {
                 break;
             }
 
         }
-        op->opaque->exec = crm_strdup_printf("%s/%s/%s",
-                                             dir, provider, agent);
-        if (dirs) {
-            free(dirs);
+
+        if (dir) {
+            op->opaque->exec = crm_strdup_printf("%s/%s/%s",
+                                                 dir, provider, agent);
+        } else {
+            services_handle_exec_error(op, ENOENT);
+            return NULL;
         }
-        if (buf) {
-            free(buf);
-        }
+
+        free(dirs);
+        free(buf);
 
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);

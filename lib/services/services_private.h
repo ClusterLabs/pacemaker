@@ -47,12 +47,6 @@ G_GNUC_INTERNAL
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
 
 G_GNUC_INTERNAL
-GList * services_os_get_directory_list_provider(const char *root, const char *provider, gboolean files, gboolean executable);
-
-G_GNUC_INTERNAL
-GList *services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable);
-
-G_GNUC_INTERNAL
 gboolean services_os_action_execute(svc_action_t * op);
 
 G_GNUC_INTERNAL
@@ -72,6 +66,9 @@ gboolean recurring_action_timer(gpointer data);
 
 G_GNUC_INTERNAL
 gboolean operation_finalize(svc_action_t * op);
+
+G_GNUC_INTERNAL
+void services_handle_exec_error(svc_action_t * op, int error);
 
 G_GNUC_INTERNAL
 void services_add_inflight_op(svc_action_t *op);

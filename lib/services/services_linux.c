@@ -423,7 +423,6 @@ add_action_env_vars(const svc_action_t *op)
     set_ocf_env("OCF_RA_VERSION_MAJOR", PCMK_OCF_MAJOR_VERSION, NULL);
     set_ocf_env("OCF_RA_VERSION_MINOR", PCMK_OCF_MINOR_VERSION, NULL);
     set_ocf_env("OCF_ROOT", OCF_ROOT_DIR, NULL);
-    set_ocf_env("OCF_RA_PATH", OCF_RA_PATH, NULL);
     set_ocf_env("OCF_EXIT_REASON_PREFIX", PCMK_OCF_REASON_PREFIX, NULL);
 
     if (op->rsc) {
@@ -632,7 +631,7 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
  *
  * \return void
  */
-static void
+void
 services_handle_exec_error(svc_action_t * op, int error)
 {
     int rc_not_installed, rc_insufficient_priv, rc_exec_error;
@@ -1078,57 +1077,7 @@ services_os_action_execute(svc_action_t * op)
     return TRUE;
 }
 
-GList *
-services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
-{
-    GList *result = NULL;
-    char *dirs = strdup(root);
-    char *dir = NULL;
-
-    for (dir = strtok(dirs, ","); dir != NULL; dir = strtok(NULL, ",")) {
-        GList *tmp1 = result;
-        GList *tmp2 = services_os_get_single_directory_list(dir, files, executable);
-
-        if (tmp2) {
-            result = g_list_concat(tmp1, tmp2);
-        }
-    }
-
-    if (dirs) {
-        free(dirs);
-    }
-
-    return result;
-}
-
-GList *
-services_os_get_directory_list_provider(const char *root, const char *provider, gboolean files, gboolean executable)
-{
-    GList *result = NULL;
-    char *dirs = strdup(root);
-    char *dir = NULL;
-    char buffer[PATH_MAX];
-
-    for (dir = strtok(dirs, ","); dir != NULL; dir = strtok(NULL, ",")) {
-        GList *tmp1 = result;
-        GList *tmp2 = NULL;
-
-        sprintf(buffer, "%s/%s", dir, provider);
-        tmp2 = services_os_get_single_directory_list(buffer, files, executable);
-
-        if (tmp2) {
-            result = g_list_concat(tmp1, tmp2);
-        }
-    }
-
-    if (dirs) {
-        free(dirs);
-    }
-
-    return result;
-}
-
-GList *
+static GList *
 services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
 {
     GList *list = NULL;
@@ -1184,6 +1133,58 @@ services_os_get_single_directory_list(const char *root, gboolean files, gboolean
 }
 
 GList *
+services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
+{
+    GList *result = NULL;
+    char *dirs = strdup(root);
+    char *dir = NULL;
+
+    if (dirs == NULL) {
+        return result;
+    }
+
+    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+        GList *tmp = services_os_get_single_directory_list(dir, files, executable);
+
+        if (tmp) {
+            result = g_list_concat(result, tmp);
+        }
+    }
+
+    free(dirs);
+
+    return result;
+}
+
+static GList *
+services_os_get_directory_list_provider(const char *root, const char *provider, gboolean files, gboolean executable)
+{
+    GList *result = NULL;
+    char *dirs = strdup(root);
+    char *dir = NULL;
+    char buffer[PATH_MAX];
+
+    if (dirs == NULL) {
+        return result;
+    }
+
+    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+        GList *tmp = NULL;
+
+        sprintf(buffer, "%s/%s", dir, provider);
+        tmp = services_os_get_single_directory_list(buffer, files, executable);
+
+        if (tmp) {
+            result = g_list_concat(result, tmp);
+        }
+    }
+
+    free(dirs);
+
+    return result;
+}
+
+GList *
 resources_os_list_ocf_providers(void)
 {
     return get_directory_list(OCF_RA_PATH, FALSE, TRUE);
@@ -1226,7 +1227,11 @@ services__ocf_agent_exists(const char *provider, const char *agent)
         return rc;
     }
 
-    for (dir = strtok(dirs, ","); dir != NULL; dir = strtok(NULL, ",")) {
+    if (dirs == NULL) {
+        return rc;
+    }
+
+    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
         buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
         if (stat(buf, &st) == 0) {
             rc = TRUE;
@@ -1235,12 +1240,8 @@ services__ocf_agent_exists(const char *provider, const char *agent)
 
     }
 
-    if (dirs) {
-        free(dirs);
-    }
-    if (buf) {
-        free(buf);
-    }
+    free(dirs);
+    free(buf);
 
     return rc;
 }
