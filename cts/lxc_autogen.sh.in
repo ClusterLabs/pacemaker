@@ -364,13 +364,17 @@ END
 END
 }
 
+container_names() {
+    find . -maxdepth 1 -name "lxc*.xml" -exec basename -s .xml "{}" ";"
+}
+
 apply_cib_clone()
 {
     cibadmin -Q > cur.cib
     export CIB_file=cur.cib
 
     cibadmin -o resources -Mc -x lxc-clone.cib
-    for tmp in $(find . -maxdepth 1 -name "lxc*.xml" | sed -e 's/\.xml//g'); do
+    for tmp in $(container_names); do
         echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
         cibadmin -o constraints -Mc -x tmp_constraint
     done
@@ -420,7 +424,7 @@ restore_cib()
     cibadmin -Q > cur.cib
     export CIB_file=cur.cib
 
-    for tmp in $(find . -maxdepth 1 -name "lxc*.xml" | sed -e 's/\.xml//g'); do
+    for tmp in $(container_names); do
         echo "<rsc_location id=\"lxc-clone-location-${tmp}\" node=\"${tmp}\" rsc=\"lxc-clone\" score=\"INFINITY\"/>" > tmp_constraint
         cibadmin -o constraints -D -x tmp_constraint
         echo "<rsc_location id=\"lxc-ping-location-${tmp}\" node=\"${tmp}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
@@ -450,7 +454,7 @@ restore_cib()
     crm_resource --wait
 
     # Purge nodes from caches and CIB status section
-    for tmp in $(find . -maxdepth 1 -name "lxc*.xml" | sed -e 's/\.xml//g'); do
+    for tmp in $(container_names); do
         crm_node --force --remove "$tmp"
     done
 }
