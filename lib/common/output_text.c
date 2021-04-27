@@ -428,6 +428,6 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
 
     if (orig_c_lflag != 0) {
         settings.c_lflag = orig_c_lflag;
-        rc = tcsetattr(0, TCSANOW, &settings);
+        /* rc = */ tcsetattr(0, TCSANOW, &settings);
     }
 }

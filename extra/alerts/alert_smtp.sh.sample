@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2016-2017 the Pacemaker project contributors
+# Copyright 2016-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -23,6 +23,18 @@
 #     </alert>
 #   </alerts>
 # </configuration>
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${CRM_alert_version:=""}
+: ${CRM_alert_recipient:=""}
+: ${CRM_alert_timestamp:=""}
+: ${CRM_alert_kind:=""}
+: ${CRM_alert_node:=""}
+: ${CRM_alert_desc:=""}
+: ${CRM_alert_task:=""}
+: ${CRM_alert_rsc:=""}
+: ${CRM_alert_attribute_name:=""}
+: ${CRM_alert_attribute_value:=""}
 
 email_client_default="sendmail"
 email_sender_default="hacluster"

@@ -24,6 +24,19 @@
 #   </alerts>
 # </configuration>
 
+# Explicitly list all environment variables used, to make static analysis happy
+: ${CRM_alert_version:=""}
+: ${CRM_alert_recipient:=""}
+: ${CRM_alert_node_sequence:=""}
+: ${CRM_alert_timestamp:=""}
+: ${CRM_alert_kind:=""}
+: ${CRM_alert_node:=""}
+: ${CRM_alert_desc:=""}
+: ${CRM_alert_task:=""}
+: ${CRM_alert_rsc:=""}
+: ${CRM_alert_attribute_name:=""}
+: ${CRM_alert_attribute_value:=""}
+
 # No one will probably ever see this echo, unless they run the script manually.
 # An alternative would be to log to the system log, or similar. (We can't send
 # this to the configured recipient, because that variable won't be defined in

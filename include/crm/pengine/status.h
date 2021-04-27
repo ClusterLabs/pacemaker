@@ -22,6 +22,7 @@ extern "C" {
 
 #  include <glib.h>                 // gboolean
 #  include <stdbool.h>              // bool
+#  include <crm/common/util.h>      // pcmk_is_set()
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 #  include <crm/pengine/pe_types.h> // pe_node_t, pe_resource_t, etc.

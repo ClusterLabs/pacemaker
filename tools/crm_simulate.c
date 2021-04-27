@@ -1117,7 +1117,6 @@ main(int argc, char **argv)
 
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Revised Cluster Status");
-            printed = pcmk_rc_ok;
 
             if (options.show_scores) {
                 pe__set_working_set_flags(data_set, pe_flag_show_scores);

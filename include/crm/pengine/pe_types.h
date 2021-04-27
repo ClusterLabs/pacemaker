@@ -22,6 +22,7 @@ extern "C" {
 
 #  include <stdbool.h>              // bool
 #  include <sys/types.h>            // time_t
+#  include <libxml/tree.h>          // xmlNode
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>

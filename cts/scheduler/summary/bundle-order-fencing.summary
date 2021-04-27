@@ -43,10 +43,10 @@ Transition Summary:
   * Stop       rabbitmq:0                             (              rabbitmq-bundle-0 )  due to unrunnable rabbitmq-bundle-docker-0 start
   * Stop       galera-bundle-docker-0                 (                   controller-0 )  due to node availability
   * Stop       galera-bundle-0                        (                   controller-0 )  due to unrunnable galera-bundle-docker-0 start
-  * Stop       galera:0                               (              Promoted galera-bundle-0 )  due to unrunnable galera-bundle-docker-0 start
+  * Stop       galera:0                               (         Promoted galera-bundle-0 )  due to unrunnable galera-bundle-docker-0 start
   * Stop       redis-bundle-docker-0                  (                   controller-0 )  due to node availability
   * Stop       redis-bundle-0                         (                   controller-0 )  due to unrunnable redis-bundle-docker-0 start
-  * Stop       redis:0                                (               Promoted redis-bundle-0 )  due to unrunnable redis-bundle-docker-0 start
+  * Stop       redis:0                                (          Promoted redis-bundle-0 )  due to unrunnable redis-bundle-docker-0 start
   * Promote    redis:1                                ( Unpromoted -> Promoted redis-bundle-1 )
   * Move       ip-192.168.24.7                        (   controller-0 -> controller-2 )
   * Move       ip-10.0.0.109                          (   controller-0 -> controller-1 )
