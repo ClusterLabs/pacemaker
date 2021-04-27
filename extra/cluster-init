@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2011-2018 the Pacemaker project contributors
+# Copyright 2011-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -84,7 +84,7 @@ function helptext() {
     echo ""
     echo "-d, --debug         Enable debug logging for the cluster"
     echo "-10                 install stable-1.0 packages, implies: -p 0 -R rpm-test -I"
-    echo "--hosts             Copy /etc/hosts from the test master to the nodes"
+    echo "--hosts             Copy the local /etc/hosts file to all nodes"
     echo "-e, --extra list    Whitespace separated list of extra packages to install"
     echo "-l, --limit N       Use the first N hosts from the named group" 
     echo "                    Extra packages to install"

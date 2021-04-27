@@ -994,8 +994,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             return handle_shutdown_self_ack(stored_msg);
 
         } else if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-            /* a slave wants to shut down */
-            /* create cib fragment and add to message */
+            // Another controller wants to shut down its node
             return handle_shutdown_request(stored_msg);
 
         } else if (strcmp(op, CRM_OP_REMOTE_STATE) == 0) {
