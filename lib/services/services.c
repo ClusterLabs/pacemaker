@@ -243,6 +243,7 @@ resources_action_create(const char *name, const char *standard,
         struct stat st;
 
         if (pcmk__str_empty(dirs)) {
+            free(dirs);
             services_handle_exec_error(op, ENOMEM);
             goto return_error;
         }

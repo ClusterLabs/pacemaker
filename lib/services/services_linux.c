@@ -1165,6 +1165,7 @@ services_os_get_directory_list_provider(const char *root, const char *provider, 
     char buffer[PATH_MAX];
 
     if (pcmk__str_empty(dirs)) {
+        free(dirs);
         return result;
     }
 
