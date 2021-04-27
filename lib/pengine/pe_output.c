@@ -1788,15 +1788,10 @@ node_history_list(pcmk__output_t *out, va_list args) {
     lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 
     /* Print history of each of the node's resources */
-    for (rsc_entry = pcmk__xe_first_child(lrm_rsc); rsc_entry != NULL;
-         rsc_entry = pcmk__xe_next(rsc_entry)) {
-
+    for (rsc_entry = first_named_child(lrm_rsc, XML_LRM_TAG_RESOURCE);
+         rsc_entry != NULL; rsc_entry = crm_next_same_xml(rsc_entry)) {
         const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
         pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
-        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
-            continue;
-        }
 
         /* We can't use is_filtered here to filter group resources.  For is_filtered,
          * we have to decide whether to check the parent or not.  If we check the
@@ -2059,16 +2054,9 @@ node_summary(pcmk__output_t *out, va_list args) {
         return rc;
     }
 
-    /* Print each node in the CIB status */
-    for (node_state = pcmk__xe_first_child(cib_status); node_state != NULL;
-         node_state = pcmk__xe_next(node_state)) {
-        pe_node_t *node;
-
-        if (!pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
-            continue;
-        }
-
-        node = pe_find_node_id(data_set->nodes, ID(node_state));
+    for (node_state = first_named_child(cib_status, XML_CIB_TAG_STATE);
+         node_state != NULL; node_state = crm_next_same_xml(node_state)) {
+        pe_node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
 
         if (!node || !node->details || !node->details->online) {
             continue;
