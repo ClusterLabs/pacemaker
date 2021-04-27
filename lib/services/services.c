@@ -242,9 +242,9 @@ resources_action_create(const char *name, const char *standard,
         char *buf = NULL;
         struct stat st;
 
-        if (dirs == NULL) {
-            services_handle_exec_error(op, ENOENT);
-            return NULL;
+        if (pcmk__str_empty(dirs)) {
+            services_handle_exec_error(op, ENOMEM);
+            goto return_error;
         }
 
         for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
@@ -255,16 +255,16 @@ resources_action_create(const char *name, const char *standard,
 
         }
 
+        free(dirs);
+        free(buf);
+
         if (dir) {
             op->opaque->exec = crm_strdup_printf("%s/%s/%s",
                                                  dir, provider, agent);
         } else {
             services_handle_exec_error(op, ENOENT);
-            return NULL;
+            goto return_error;
         }
-
-        free(dirs);
-        free(buf);
 
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);

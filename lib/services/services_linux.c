@@ -1164,7 +1164,7 @@ services_os_get_directory_list_provider(const char *root, const char *provider, 
     char *dir = NULL;
     char buffer[PATH_MAX];
 
-    if (dirs == NULL) {
+    if (pcmk__str_empty(dirs)) {
         return result;
     }
 
@@ -1223,11 +1223,8 @@ services__ocf_agent_exists(const char *provider, const char *agent)
     char *dir = NULL;
     char *buf = NULL;
 
-    if (provider == NULL || agent == NULL) {
-        return rc;
-    }
-
-    if (dirs == NULL) {
+    if (provider == NULL || agent == NULL || pcmk__str_empty(dirs)) {
+        free(dirs);
         return rc;
     }
 
