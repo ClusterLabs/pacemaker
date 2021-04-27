@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/xml_internal.h>
+#include <crm/cib/util.h>
 #include <crm/msg_xml.h>
 #include <crm/pengine/internal.h>
 
@@ -118,6 +119,41 @@ filter_attr_list(GList *attr_list, char *name)
     }
 
     return g_list_insert_sorted(attr_list, name, compare_attribute);
+}
+
+static GList *
+get_operation_list(xmlNode *rsc_entry) {
+    GList *op_list = NULL;
+    xmlNode *rsc_op = NULL;
+
+    for (rsc_op = pcmk__xe_first_child(rsc_entry); rsc_op != NULL;
+         rsc_op = pcmk__xe_next(rsc_op)) {
+        const char *task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+        const char *interval_ms_s = crm_element_value(rsc_op,
+                                                      XML_LRM_ATTR_INTERVAL_MS);
+        const char *op_rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+        int op_rc_i;
+
+        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
+
+        /* Display 0-interval monitors as "probe" */
+        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
+            task = "probe";
+        }
+
+        /* Ignore notifies and some probes */
+        if (pcmk__str_eq(task, CRMD_ACTION_NOTIFY, pcmk__str_casei) || (pcmk__str_eq(task, "probe", pcmk__str_casei) && (op_rc_i == 7))) {
+            continue;
+        }
+
+        if (pcmk__str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, pcmk__str_none)) {
+            op_list = g_list_append(op_list, rsc_op);
+        }
+    }
+
+    op_list = g_list_sort(op_list, sort_op_by_callid);
+    return op_list;
 }
 
 static void
@@ -618,6 +654,46 @@ ban_xml(pcmk__output_t *out, va_list args) {
 
     free(weight_s);
     return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("ban-list", "pe_working_set_t *", "const char *", "GList *",
+                  "gboolean", "gboolean")
+static int
+ban_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    const char *prefix = va_arg(args, const char *);
+    GList *only_rsc = va_arg(args, GList *);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    GList *gIter, *gIter2;
+    int rc = pcmk_rc_no_output;
+
+    /* Print each ban */
+    for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
+        pe__location_t *location = gIter->data;
+
+        if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh)) &&
+            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)))) {
+            continue;
+        }
+
+        for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {
+            pe_node_t *node = (pe_node_t *) gIter2->data;
+
+            if (node->weight < 0) {
+                PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Negative Location Constraints");
+                out->message(out, "ban", node, location, print_clone_detail);
+            }
+        }
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
@@ -1712,6 +1788,103 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("node-history-list", "pe_working_set_t *", "pe_node_t *", "xmlNodePtr",
+                  "GList *", "GList *", "gboolean", "unsigned int", "gboolean",
+                  "gboolean", "gboolean", "gboolean")
+static int
+node_history_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    xmlNode *node_state = va_arg(args, xmlNode *);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
+    gboolean operations = va_arg(args, gboolean);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+    gboolean print_timing = va_arg(args, gboolean);
+
+    xmlNode *lrm_rsc = NULL;
+    xmlNode *rsc_entry = NULL;
+    int rc = pcmk_rc_no_output;
+
+    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+
+    /* Print history of each of the node's resources */
+    for (rsc_entry = pcmk__xe_first_child(lrm_rsc); rsc_entry != NULL;
+         rsc_entry = pcmk__xe_next(rsc_entry)) {
+
+        const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+        pe_resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+
+        if (!pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
+            continue;
+        }
+
+        /* We can't use is_filtered here to filter group resources.  For is_filtered,
+         * we have to decide whether to check the parent or not.  If we check the
+         * parent, all elements of a group will always be printed because that's how
+         * is_filtered works for groups.  If we do not check the parent, sometimes
+         * this will filter everything out.
+         *
+         * For other resource types, is_filtered is okay.
+         */
+        if (uber_parent(rsc)->variant == pe_group) {
+            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) &&
+                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
+                continue;
+            }
+        } else {
+            if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
+                continue;
+            }
+        }
+
+        if (operations == FALSE) {
+            time_t last_failure = 0;
+            int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
+                                             NULL, data_set);
+
+            if (failcount <= 0) {
+                continue;
+            }
+
+            if (rc == pcmk_rc_no_output) {
+                rc = pcmk_rc_ok;
+                out->message(out, "node", node, print_opts, FALSE, NULL,
+                             print_clone_detail, print_brief,
+                             group_by_node, only_node, only_rsc);
+            }
+
+            out->message(out, "resource-history", rsc, rsc_id, FALSE,
+                         failcount, last_failure, FALSE);
+        } else {
+            GList *op_list = get_operation_list(rsc_entry);
+            pe_resource_t *rsc = pe_find_resource(data_set->resources,
+                                                  crm_element_value(rsc_entry, XML_ATTR_ID));
+
+            if (op_list == NULL) {
+                continue;
+            }
+
+            if (rc == pcmk_rc_no_output) {
+                rc = pcmk_rc_ok;
+                out->message(out, "node", node, print_opts, FALSE, NULL,
+                             print_clone_detail, print_brief,
+                             group_by_node, only_node, only_rsc);
+            }
+
+            out->message(out, "resource-operation-list", data_set, rsc, node,
+                         op_list, print_timing);
+        }
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean", "gboolean", "gboolean")
 static int
 node_list_html(pcmk__output_t *out, va_list args) {
@@ -1906,6 +2079,60 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     out->end_list(out);
 
     return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("node-summary", "pe_working_set_t *", "GList *", "GList *",
+                  "gboolean", "unsigned int", "gboolean", "gboolean", "gboolean",
+                  "gboolean", "gboolean")
+static int
+node_summary(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    GList *only_node = va_arg(args, GList *);
+    GList *only_rsc = va_arg(args, GList *);
+    gboolean operations = va_arg(args, gboolean);
+    unsigned int print_opts = va_arg(args, unsigned int);
+    gboolean print_clone_detail = va_arg(args, gboolean);
+    gboolean print_brief = va_arg(args, gboolean);
+    gboolean group_by_node = va_arg(args, gboolean);
+    gboolean print_timing = va_arg(args, gboolean);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    xmlNode *node_state = NULL;
+    xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+    int rc = pcmk_rc_no_output;
+
+    if (xmlChildElementCount(cib_status) == 0) {
+        return rc;
+    }
+
+    /* Print each node in the CIB status */
+    for (node_state = pcmk__xe_first_child(cib_status); node_state != NULL;
+         node_state = pcmk__xe_next(node_state)) {
+        pe_node_t *node;
+
+        if (!pcmk__str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, pcmk__str_none)) {
+            continue;
+        }
+
+        node = pe_find_node_id(data_set->nodes, ID(node_state));
+
+        if (!node || !node->details || !node->details->online) {
+            continue;
+        }
+
+        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+            continue;
+        }
+
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
+
+        out->message(out, "node-history-list", data_set, node, node_state,
+                     only_node, only_rsc, operations, print_opts,
+                     print_clone_detail, print_brief, group_by_node, print_timing);
+    }
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
 }
 
 PCMK__OUTPUT_ARGS("node-weight", "pe_resource_t *", "const char *", "const char *", "char *")
@@ -2261,6 +2488,60 @@ resource_list(pcmk__output_t *out, va_list args)
     return rc;
 }
 
+PCMK__OUTPUT_ARGS("resource-operation-list", "pe_working_set_t *", "pe_resource_t *",
+                  "pe_node_t *", "GList *", "gboolean")
+static int
+resource_operation_list(pcmk__output_t *out, va_list args)
+{
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
+    pe_node_t *node = va_arg(args, pe_node_t *);
+    GList *op_list = va_arg(args, GList *);
+    gboolean print_timing = va_arg(args, gboolean);
+
+    GList *gIter = NULL;
+    int rc = pcmk_rc_no_output;
+
+    /* Print each operation */
+    for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
+        xmlNode *xml_op = (xmlNode *) gIter->data;
+        const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+        const char *interval_ms_s = crm_element_value(xml_op,
+                                                      XML_LRM_ATTR_INTERVAL_MS);
+        const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+        int op_rc_i;
+
+        pcmk__scan_min_int(op_rc, &op_rc_i, 0);
+
+        /* Display 0-interval monitors as "probe" */
+        if (pcmk__str_eq(task, CRMD_ACTION_STATUS, pcmk__str_casei)
+            && pcmk__str_eq(interval_ms_s, "0", pcmk__str_null_matches | pcmk__str_casei)) {
+            task = "probe";
+        }
+
+        /* If this is the first printed operation, print heading for resource */
+        if (rc == pcmk_rc_no_output) {
+            time_t last_failure = 0;
+            int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
+                                             NULL, data_set);
+
+            out->message(out, "resource-history", rsc, rsc_printable_id(rsc), TRUE,
+                         failcount, last_failure, TRUE);
+            rc = pcmk_rc_ok;
+        }
+
+        /* Print the operation */
+        out->message(out, "op-history", xml_op, task, interval_ms_s,
+                     op_rc_i, print_timing);
+    }
+
+    /* Free the list we created (no need to free the individual items) */
+    g_list_free(op_list);
+
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    return rc;
+}
+
 PCMK__OUTPUT_ARGS("resource-util", "pe_resource_t *", "pe_node_t *", "const char *")
 static int
 resource_util(pcmk__output_t *out, va_list args)
@@ -2363,11 +2644,42 @@ ticket_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("ticket-list", "pe_working_set_t *", "gboolean")
+static int
+ticket_list(pcmk__output_t *out, va_list args) {
+    pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
+    gboolean print_spacer = va_arg(args, gboolean);
+
+    GHashTableIter iter;
+    gpointer key, value;
+
+    if (g_hash_table_size(data_set->tickets) == 0) {
+        return pcmk_rc_no_output;
+    }
+
+    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+
+    /* Print section heading */
+    out->begin_list(out, NULL, NULL, "Tickets");
+
+    /* Print each ticket */
+    g_hash_table_iter_init(&iter, data_set->tickets);
+    while (g_hash_table_iter_next(&iter, &key, &value)) {
+        pe_ticket_t *ticket = (pe_ticket_t *) value;
+        out->message(out, "ticket", ticket);
+    }
+
+    /* Close section */
+    out->end_list(out);
+    return pcmk_rc_ok;
+}
+
 static pcmk__message_entry_t fmt_functions[] = {
     { "ban", "html", ban_html },
     { "ban", "log", pe__ban_text },
     { "ban", "text", pe__ban_text },
     { "ban", "xml", ban_xml },
+    { "ban-list", "default", ban_list },
     { "bundle", "xml",  pe__bundle_xml },
     { "bundle", "html",  pe__bundle_html },
     { "bundle", "text",  pe__bundle_text },
@@ -2414,6 +2726,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-and-op", "xml", node_and_op_xml },
     { "node-capacity", "default", node_capacity },
     { "node-capacity", "xml", node_capacity_xml },
+    { "node-history-list", "default", node_history_list },
     { "node-list", "html", node_list_html },
     { "node-list", "log", pe__node_list_text },
     { "node-list", "text", pe__node_list_text },
@@ -2425,6 +2738,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-attribute", "text", pe__node_attribute_text },
     { "node-attribute", "xml", node_attribute_xml },
     { "node-attribute-list", "default", node_attribute_list },
+    { "node-summary", "default", node_summary },
     { "op-history", "default", pe__op_history_text },
     { "op-history", "xml", op_history_xml },
     { "primitive", "xml",  pe__resource_xml },
@@ -2437,12 +2751,14 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "resource-history", "default", pe__resource_history_text },
     { "resource-history", "xml", resource_history_xml },
     { "resource-list", "default", resource_list },
+    { "resource-operation-list", "default", resource_operation_list },
     { "resource-util", "default", resource_util },
     { "resource-util", "xml", resource_util_xml },
     { "ticket", "html", ticket_html },
     { "ticket", "log", pe__ticket_text },
     { "ticket", "text", pe__ticket_text },
     { "ticket", "xml", ticket_xml },
+    { "ticket-list", "default", ticket_list },
 
     { NULL, NULL, NULL }
 };

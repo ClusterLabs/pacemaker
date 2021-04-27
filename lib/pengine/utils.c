@@ -2427,3 +2427,68 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
 
     return retval;
 }
+
+GList *
+pe__build_node_name_list(pe_working_set_t *data_set, const char *s) {
+    GList *nodes = NULL;
+
+    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
+        /* Nothing was given so return a list of all node names.  Or, '*' was
+         * given.  This would normally fall into the pe__unames_with_tag branch
+         * where it will return an empty list.  Catch it here instead.
+         */
+        nodes = g_list_prepend(nodes, strdup("*"));
+    } else {
+        pe_node_t *node = pe_find_node(data_set->nodes, s);
+
+        if (node) {
+            /* The given string was a valid uname for a node.  Return a
+             * singleton list containing just that uname.
+             */
+            nodes = g_list_prepend(nodes, strdup(s));
+        } else {
+            /* The given string was not a valid uname.  It's either a tag or
+             * it's a typo or something.  In the first case, we'll return a
+             * list of all the unames of the nodes with the given tag.  In the
+             * second case, we'll return a NULL pointer and nothing will
+             * get displayed.
+             */
+            nodes = pe__unames_with_tag(data_set, s);
+        }
+    }
+
+    return nodes;
+}
+
+GList *
+pe__build_rsc_list(pe_working_set_t *data_set, const char *s) {
+    GList *resources = NULL;
+
+    if (pcmk__str_eq(s, "*", pcmk__str_null_matches)) {
+        resources = g_list_prepend(resources, strdup("*"));
+    } else {
+        pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, s,
+                                                         pe_find_renamed|pe_find_any);
+
+        if (rsc) {
+            /* A colon in the name we were given means we're being asked to filter
+             * on a specific instance of a cloned resource.  Put that exact string
+             * into the filter list.  Otherwise, use the printable ID of whatever
+             * resource was found that matches what was asked for.
+             */
+            if (strstr(s, ":") != NULL) {
+                resources = g_list_prepend(resources, strdup(rsc->id));
+            } else {
+                resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
+            }
+        } else {
+            /* The given string was not a valid resource name.  It's either
+             * a tag or it's a typo or something.  See build_uname_list for
+             * more detail.
+             */
+            resources = pe__rscs_with_tag(data_set, s);
+        }
+    }
+
+    return resources;
+}

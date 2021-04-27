@@ -587,6 +587,8 @@ bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char 
 
 bool pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list);
 GList *pe__filter_rsc_list(GList *rscs, GList *filter);
+GList * pe__build_node_name_list(pe_working_set_t *data_set, const char *s);
+GList * pe__build_rsc_list(pe_working_set_t *data_set, const char *s);
 
 bool pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GList *only_node);
 

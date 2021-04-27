@@ -675,6 +675,32 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
+/*!
+ * \internal
+ * \brief Return resource display options corresponding to command-line choices
+ *
+ * \return Bitmask of pe_print_options suitable for resource print functions
+ */
+static unsigned int
+get_resource_display_options(unsigned int mon_ops)
+{
+    int print_opts = 0;
+
+    if (pcmk_is_set(mon_ops, mon_op_print_pending)) {
+        print_opts |= pe_print_pending;
+    }
+    if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
+        print_opts |= pe_print_clone_details|pe_print_implicit;
+    }
+    if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
+        print_opts |= pe_print_clone_active;
+    }
+    if (pcmk_is_set(mon_ops, mon_op_print_brief)) {
+        print_opts |= pe_print_brief;
+    }
+    return print_opts;
+}
+
 static void
 blank_screen(void)
 {
@@ -2154,6 +2180,8 @@ mon_refresh_display(gpointer user_data)
     xmlNode *cib_copy = copy_xml(current_cib);
     stonith_history_t *stonith_history = NULL;
     int history_rc = 0;
+    GList *unames = NULL;
+    GList *resources = NULL;
 
     last_refresh = time(NULL);
 
@@ -2190,13 +2218,17 @@ mon_refresh_display(gpointer user_data)
         out->reset(out);
     }
 
+    unames = pe__build_node_name_list(mon_data_set, options.only_node);
+    resources = pe__build_rsc_list(mon_data_set, options.only_rsc);
+
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
             if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
                                   stonith_history, options.mon_ops,
+                                  get_resource_display_options(options.mon_ops),
                                   show, options.neg_location_prefix,
-                                  options.only_node, options.only_rsc) != 0) {
+                                  unames, resources) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return 0;
@@ -2206,9 +2238,9 @@ mon_refresh_display(gpointer user_data)
         case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, options.mon_ops, show,
-                             options.neg_location_prefix, options.only_node,
-                             options.only_rsc);
+                             stonith_history, options.mon_ops,
+                             get_resource_display_options(options.mon_ops), show,
+                             options.neg_location_prefix, unames, resources);
             break;
 
         case mon_output_monitor:
@@ -2226,16 +2258,16 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, show, options.neg_location_prefix,
-                         options.only_node, options.only_rsc);
+                         options.mon_ops, get_resource_display_options(options.mon_ops),
+                         show, options.neg_location_prefix, unames, resources);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, show, options.neg_location_prefix,
-                         options.only_node, options.only_rsc);
+                         options.mon_ops, get_resource_display_options(options.mon_ops),
+                         show, options.neg_location_prefix, unames, resources);
             break;
 
         case mon_output_unset:
@@ -2246,6 +2278,9 @@ mon_refresh_display(gpointer user_data)
     if (options.daemonize) {
         out->finish(out, CRM_EX_OK, true, NULL);
     }
+
+    g_list_free_full(unames, free);
+    g_list_free_full(resources, free);
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
