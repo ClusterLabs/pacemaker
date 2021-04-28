@@ -115,6 +115,7 @@ static pcmk__supported_format_t formats[] = {
 struct {
     guint reconnect_ms;
     gboolean daemonize;
+    gboolean fence_connect;
     gboolean one_shot;
     gboolean print_pending;
     gboolean show_bans;
@@ -129,9 +130,10 @@ struct {
     GSList *user_includes_excludes;
     GSList *includes_excludes;
 } options = {
-    .reconnect_ms = RECONNECT_MSECS,
+    .fence_connect = TRUE,
     .mon_ops = mon_op_default,
-    .print_pending = TRUE
+    .print_pending = TRUE,
+    .reconnect_ms = RECONNECT_MSECS
 };
 
 static void clean_up_cib_connection(void);
@@ -402,19 +404,23 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
     switch (interactive_fence_level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
+            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history;
+            options.fence_connect = TRUE;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 2:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            options.mon_ops |= mon_op_fence_history;
+            options.fence_connect = TRUE;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 1:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            options.mon_ops |= mon_op_fence_history;
+            options.fence_connect = TRUE;
             return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
 
         case 0:
-            options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
+            options.mon_ops &= ~mon_op_fence_history;
+            options.fence_connect = FALSE;
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
@@ -807,12 +813,11 @@ fencing_connect(void)
 {
     int rc = pcmk_ok;
 
-    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
+    if (options.fence_connect && st == NULL) {
         st = stonith_api_new();
     }
 
-    if (!pcmk_is_set(options.mon_ops, mon_op_fence_connect) ||
-        st == NULL || st->state != stonith_disconnected) {
+    if (!options.fence_connect || st == NULL || st->state != stonith_disconnected) {
         return rc;
     }
 
@@ -905,23 +910,27 @@ set_fencing_options(int level)
 {
     switch (level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
+            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history;
+            options.fence_connect = TRUE;
             show |= pcmk_section_fencing_all;
             break;
 
         case 2:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            options.mon_ops |= mon_op_fence_history;
+            options.fence_connect = TRUE;
             show |= pcmk_section_fencing_all;
             break;
 
         case 1:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            options.mon_ops |= mon_op_fence_history;
+            options.fence_connect = TRUE;
             show |= pcmk_section_fence_failed | pcmk_section_fence_pending;
             break;
 
         default:
             interactive_fence_level = 0;
-            options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
+            options.mon_ops &= ~mon_op_fence_history;
+            options.fence_connect = FALSE;
             show &= ~pcmk_section_fencing_all;
             break;
     }
@@ -1467,7 +1476,7 @@ main(int argc, char **argv)
 
         if (options.watch_fencing) {
             fence_history_cb("--fence-history", "0", NULL, NULL);
-            options.mon_ops |= mon_op_fence_connect;
+            options.fence_connect = TRUE;
         }
 
         /* create the cib-object early to be able to do further
