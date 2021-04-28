@@ -1,0 +1,27 @@
+0 of 4 resource instances DISABLED and 3 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ node2 node3 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started node2
+    * Resource Group: dgroup:
+      * dummy	(ocf:heartbeat:DummyTimeout):	 FAILED (blocked) [ node2 node3 ]
+      * dummy2	(ocf:heartbeat:Dummy):	 Started node2 (blocked)
+      * dummy3	(ocf:heartbeat:Dummy):	 Started node2 (blocked)
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node2 node3 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started node2
+    * Resource Group: dgroup:
+      * dummy	(ocf:heartbeat:DummyTimeout):	 FAILED (blocked) [ node2 node3 ]
+      * dummy2	(ocf:heartbeat:Dummy):	 Started node2 (blocked)
+      * dummy3	(ocf:heartbeat:Dummy):	 Started node2 (blocked)

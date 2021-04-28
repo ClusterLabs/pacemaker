@@ -63,15 +63,16 @@ a specific OCF provider (the **IPaddr2** part of **ocf:heartbeat:IPaddr2**), run
     [root@pcmk-1 ~]# pcs resource agents ocf:heartbeat
     apache
     aws-vpc-move-ip
+    aws-vpc-route53
     awseip
     awsvip
-    azure-lb
-    clvm
+    azure-events
     .
     . (skipping lots of resources to save space)
     .
     symlink
     tomcat
+    vdo-vol
     VirtualDomain
     Xinetd
 
@@ -82,19 +83,19 @@ status to see that it is now active:
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 16:55:26 2018
-    Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:22:10 2021
+      * Last change:  Tue Jan 26 19:20:28 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 1 resource instance configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
 
-    2 nodes configured
-    1 resource configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -113,19 +114,19 @@ First, find the node on which the IP address is running.
 
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 16:55:26 2018
-    Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:22:10 2021
+      * Last change:  Tue Jan 26 19:20:28 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 1 resource instance configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
 
-    2 nodes configured
-    1 resource configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
 
 You can see that the status of the **ClusterIP** resource
 is **Started** on a particular node (in this example, **pcmk-1**).
@@ -134,8 +135,8 @@ Shut down Pacemaker and Corosync on that machine to trigger a failover.
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs cluster stop pcmk-1
-    Stopping Cluster (pacemaker)...
-    Stopping Cluster (corosync)...
+    pcmk-1: Stopping Cluster (pacemaker)...
+    pcmk-1: Stopping Cluster (corosync)...
 
 .. NOTE::
 
@@ -147,28 +148,30 @@ Verify that pacemaker and corosync are no longer running:
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs status
-    Error: cluster is not currently running on this node
+    Error: error running crm_mon, is pacemaker running?
+      Could not connect to the CIB: Transport endpoint is not connected
+      crm_mon: Error: cluster is not available on this node
 
 Go to the other node, and check the cluster status.
 
 .. code-block:: none
 
-    [root@pcmk-2 ~]# pcs status
+    [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 16:57:22 2018
-    Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:25:26 2021
+      * Last change:  Tue Jan 26 19:20:28 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 1 resource instance configured
+    
+    Node List:
+      * Online: [ pcmk-2 ]
+      * OFFLINE: [ pcmk-1 ]
 
-    2 nodes configured
-    1 resource configured
-
-    Online: [ pcmk-2 ]
-    OFFLINE: [ pcmk-1 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
@@ -185,7 +188,7 @@ automatically, and no errors are reported.
 .. topic:: Quorum
 
     If a cluster splits into two (or more) groups of nodes that can no longer
-    communicate with each other (aka. _partitions_), _quorum_ is used to prevent
+    communicate with each other (aka. *partitions*), *quorum* is used to prevent
     resources from starting on more nodes than desired, which would risk
     data corruption.
 
@@ -225,19 +228,19 @@ gets going on the node, but it eventually will look like the below.)
     pcmk-1: Starting Cluster...
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Mon Sep 10 17:00:04 2018
-    Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-2 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Tue Jan 26 19:28:30 2021
+      * Last change:  Tue Jan 26 19:28:27 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 1 resource instance configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
 
-    2 nodes configured
-    1 resource configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
@@ -258,17 +261,23 @@ databases, this period can be quite long.
 To address this, Pacemaker has the concept of resource *stickiness*,
 which controls how strongly a service prefers to stay running where it
 is. You may like to think of it as the "cost" of any downtime. By
-default, Pacemaker assumes there is zero cost associated with moving
+default, [#]_ Pacemaker assumes there is zero cost associated with moving
 resources and will do so to achieve "optimal" [#]_ resource placement.
 We can specify a different stickiness for every resource, but it is
 often sufficient to change the default.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs resource defaults resource-stickiness=100
+    [root@pcmk-1 ~]# pcs resource defaults update resource-stickiness=100
     Warning: Defaults do not apply to resources which override them with their own defined values
     [root@pcmk-1 ~]# pcs resource defaults
-    resource-stickiness: 100
+    Meta Attrs: rsc_defaults-meta_attributes
+    resource-stickiness=100
+
+
+.. [#] Pacemaker may be built such that a positive resource-stickiness is
+       automatically added to resource defaults. You can check your
+       configuration to see if this is present.
 
 .. [#] Pacemaker's definition of optimal may not always agree with that of a
        human's. The order in which Pacemaker processes lists of resources and

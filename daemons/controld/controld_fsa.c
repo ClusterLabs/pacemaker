@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/cluster/election.h>
+#include <crm/cluster/election_internal.h>
 #include <crm/cluster.h>
 
 #include <pacemaker-controld.h>

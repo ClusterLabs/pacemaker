@@ -136,50 +136,63 @@ Step 4: Obtain the agent's possible parameters:
 
     [root@pcmk-1 ~]# pcs stonith describe fence_ipmilan
     fence_ipmilan - Fence agent for IPMI
-
+    
     fence_ipmilan is an I/O Fencing agentwhich can be used with machines controlled by IPMI.This agent calls support software ipmitool (http://ipmitool.sf.net/). WARNING! This fence agent might report success before the node is powered off. You should use -m/method onoff if your fence device works correctly with that option.
 
     Stonith options:
-      ipport: TCP/UDP port to use for connection with device
-      hexadecimal_kg: Hexadecimal-encoded Kg key for IPMIv2 authentication
-      port: IP address or hostname of fencing device (together with --port-as-ip)
-      inet6_only: Forces agent to use IPv6 addresses only
-      ipaddr: IP Address or Hostname
-      passwd_script: Script to retrieve password
-      method: Method to fence (onoff|cycle)
-      inet4_only: Forces agent to use IPv4 addresses only
-      passwd: Login password or passphrase
-      lanplus: Use Lanplus to improve security of connection
       auth: IPMI Lan Auth type.
       cipher: Ciphersuite to use (same as ipmitool -C parameter)
-      target: Bridge IPMI requests to the remote target address
+      hexadecimal_kg: Hexadecimal-encoded Kg key for IPMIv2 authentication
+      ip: IP address or hostname of fencing device
+      ipport: TCP/UDP port to use for connection with device
+      lanplus: Use Lanplus to improve security of connection
+      method: Method to fence
+      password: Login password or passphrase
+      password_script: Script to run to retrieve password
+      plug: IP address or hostname of fencing device (together with --port-as-ip)
       privlvl: Privilege level on IPMI device
-      timeout: Timeout (sec) for IPMI operation
-      login: Login Name
-      verbose: Verbose mode
-      debug: Write debug information to given file
-      power_wait: Wait X seconds after issuing ON/OFF
-      login_timeout: Wait X seconds for cmd prompt after login
+      target: Bridge IPMI requests to the remote target address
+      username: Login name
+      quiet: Disable logging to stderr. Does not affect --verbose or --debug-file or logging to syslog.
+      verbose: Verbose mode. Multiple -v flags can be stacked on the command line (e.g., -vvv) to increase
+               verbosity.
+      verbose_level: Level of debugging detail in output. Defaults to the number of --verbose flags specified
+                     on the command line, or to 1 if verbose=1 in a stonith device configuration (i.e., on
+                     stdin).
+      debug_file: Write debug information to given file
       delay: Wait X seconds before fencing is started
-      power_timeout: Test X seconds for status change after ON/OFF
+      disable_timeout: Disable timeout (true/false) (default: true when run from Pacemaker 2.0+)
       ipmitool_path: Path to ipmitool binary
-      shell_timeout: Wait X seconds for cmd prompt after issuing command
+      login_timeout: Wait X seconds for cmd prompt after login
       port_as_ip: Make "port/plug" to be an alias to IP address
+      power_timeout: Test X seconds for status change after ON/OFF
+      power_wait: Wait X seconds after issuing ON/OFF
+      shell_timeout: Wait X seconds for cmd prompt after issuing command
       retry_on: Count of attempts to retry power on
-      sudo: Use sudo (without password) when calling 3rd party sotfware.
-      priority: The priority of the stonith resource. Devices are tried in order of highest priority to lowest.
-      pcmk_host_map: A mapping of host names to ports numbers for devices that do not support host names. Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and
-                     3 for node2
-      pcmk_host_list: A list of machines controlled by this device (Optional unless pcmk_host_check=static-list).
-      pcmk_host_check: How to determine which machines are controlled by the device. Allowed values: dynamic-list (query the device), static-list (check the pcmk_host_list attribute), none
-                       (assume every device can fence every machine)
-      pcmk_delay_max: Enable a random delay for stonith actions and specify the maximum of random delay. This prevents double fencing when using slow devices such as sbd. Use this to enable a
-                      random delay for stonith actions. The overall delay is derived from this random delay value adding a static delay so that the sum is kept below the maximum delay.
-      pcmk_delay_base: Enable a base delay for stonith actions and specify base delay value. This prevents double fencing when different delays are configured on the nodes. Use this to enable
-                       a static delay for stonith actions. The overall delay is derived from a random delay value adding this static delay so that the sum is kept below the maximum delay.
-      pcmk_action_limit: The maximum number of actions can be performed in parallel on this device Pengine property concurrent-fencing=true needs to be configured first. Then use this to
-                         specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.
-
+      use_sudo: Use sudo (without password) when calling 3rd party software
+      sudo_path: Path to sudo binary
+      pcmk_host_map: A mapping of host names to ports numbers for devices that do not support host names. Eg.
+                     node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for
+                     node2
+      pcmk_host_list: A list of machines controlled by this device (Optional unless pcmk_host_check=static-
+                      list).
+      pcmk_host_check: How to determine which machines are controlled by the device. Allowed values: dynamic-
+                       list (query the device via the 'list' command), static-list (check the pcmk_host_list
+                       attribute), status (query the device via the 'status' command), none (assume every
+                       device can fence every machine)
+      pcmk_delay_max: Enable a random delay for stonith actions and specify the maximum of random delay. This
+                      prevents double fencing when using slow devices such as sbd. Use this to enable a
+                      random delay for stonith actions. The overall delay is derived from this random delay
+                      value adding a static delay so that the sum is kept below the maximum delay.
+      pcmk_delay_base: Enable a base delay for stonith actions and specify base delay value. This prevents
+                       double fencing when different delays are configured on the nodes. Use this to enable a
+                       static delay for stonith actions. The overall delay is derived from a random delay
+                       value adding this static delay so that the sum is kept below the maximum delay.
+      pcmk_action_limit: The maximum number of actions can be performed in parallel on this device Cluster
+                         property concurrent-fencing=true needs to be configured first. Then use this to
+                         specify the maximum number of actions can be performed in parallel on this device.
+                         -1 is unlimited.
+    
     Default operations:
       monitor: interval=60s
 
@@ -193,7 +206,7 @@ Step 6: Here are example parameters for creating our fence device resource:
           pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
           passwd=acd123 op monitor interval=60s
     [root@pcmk-1 ~]# pcs -f stonith_cfg stonith
-     ipmi-fencing	(stonith:fence_ipmilan):	Stopped 
+      * ipmi-fencing	(stonith:fence_ipmilan):	Stopped
 
 Steps 7-10: Enable fencing in the cluster:
 
@@ -204,7 +217,7 @@ Steps 7-10: Enable fencing in the cluster:
     Cluster Properties:
      cluster-infrastructure: corosync
      cluster-name: mycluster
-     dc-version: 1.1.18-11.el7_5.3-2b07d5c5a9
+     dc-version: 2.0.5-4.el8-ba59be7122
      have-watchdog: false
      stonith-enabled: true
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
+
+extern bool pcmk__is_daemon;
 
 typedef struct notify_entry_s {
     pe_resource_t *rsc;
@@ -72,9 +74,9 @@ static notify_entry_t *dup_notify_entry(notify_entry_t *entry)
 }
 
 static void
-expand_node_list(GListPtr list, char **uname, char **metal)
+expand_node_list(GList *list, char **uname, char **metal)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     char *node_list = NULL;
     char *metal_list = NULL;
     size_t node_list_len = 0;
@@ -264,7 +266,7 @@ pe_post_notify(pe_resource_t * rsc, pe_node_t * node, notify_data_t * n_data, pe
     }
 
     if (n_data->post_done) {
-        GListPtr gIter = rsc->actions;
+        GList *gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *mon = (pe_action_t *) gIter->data;
@@ -413,7 +415,7 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
     }
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -442,13 +444,13 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
             case RSC_ROLE_STARTED:
                 n_data->active = g_list_prepend(n_data->active, entry);
                 break;
-            case RSC_ROLE_SLAVE:
-                n_data->slave = g_list_prepend(n_data->slave, entry);
+            case RSC_ROLE_UNPROMOTED:
+                n_data->unpromoted = g_list_prepend(n_data->unpromoted, entry);
                 n_data->active = g_list_prepend(n_data->active,
                                                 dup_notify_entry(entry));
                 break;
-            case RSC_ROLE_MASTER:
-                n_data->master = g_list_prepend(n_data->master, entry);
+            case RSC_ROLE_PROMOTED:
+                n_data->promoted = g_list_prepend(n_data->promoted, entry);
                 n_data->active = g_list_prepend(n_data->active,
                                                 dup_notify_entry(entry));
                 break;
@@ -463,7 +465,7 @@ collect_notification_data(pe_resource_t * rsc, gboolean state, gboolean activity
         notify_entry_t *entry = NULL;
         enum action_tasks task;
 
-        GListPtr gIter = rsc->actions;
+        GList *gIter = rsc->actions;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;
@@ -532,7 +534,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     char *node_list = NULL;
     char *metal_list = NULL;
     const char *source = NULL;
-    GListPtr nodes = NULL;
+    GList *nodes = NULL;
 
     n_data->stop = expand_list(n_data->stop, &rsc_list, &node_list);
     if (!pcmk__str_eq(" ", rsc_list, pcmk__str_null_matches)
@@ -570,11 +572,19 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_active_resource", rsc_list);
     add_notify_env_free(n_data, "notify_active_uname", node_list);
 
-    n_data->slave = expand_list(n_data->slave, &rsc_list, &node_list);
+    n_data->unpromoted = expand_list(n_data->unpromoted, &rsc_list, &node_list);
+    add_notify_env(n_data, "notify_unpromoted_resource", rsc_list);
+    add_notify_env(n_data, "notify_unpromoted_uname", node_list);
+
+    // Deprecated: kept for backward compatibility with older resource agents
     add_notify_env_free(n_data, "notify_slave_resource", rsc_list);
     add_notify_env_free(n_data, "notify_slave_uname", node_list);
 
-    n_data->master = expand_list(n_data->master, &rsc_list, &node_list);
+    n_data->promoted = expand_list(n_data->promoted, &rsc_list, &node_list);
+    add_notify_env(n_data, "notify_promoted_resource", rsc_list);
+    add_notify_env(n_data, "notify_promoted_uname", node_list);
+
+    // Deprecated: kept for backward compatibility with older resource agents
     add_notify_env_free(n_data, "notify_master_resource", rsc_list);
     add_notify_env_free(n_data, "notify_master_uname", node_list);
 
@@ -582,7 +592,7 @@ pcmk__create_notification_keys(pe_resource_t *rsc,
     add_notify_env_free(n_data, "notify_inactive_resource", rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
-    if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
+    if (!pcmk__is_daemon) {
         /* If printing to stdout, sort the node list, for consistent
          * regression test output (while avoiding the performance hit
          * for the live cluster).
@@ -642,7 +652,7 @@ find_remote_start(pe_action_t *action)
 void
 create_notifications(pe_resource_t * rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     pe_action_t *stop = NULL;
     pe_action_t *start = NULL;
     enum action_tasks task = text2task(n_data->action);
@@ -782,8 +792,8 @@ free_notification_data(notify_data_t * n_data)
     g_list_free_full(n_data->start, free);
     g_list_free_full(n_data->demote, free);
     g_list_free_full(n_data->promote, free);
-    g_list_free_full(n_data->master, free);
-    g_list_free_full(n_data->slave, free);
+    g_list_free_full(n_data->promoted, free);
+    g_list_free_full(n_data->unpromoted, free);
     g_list_free_full(n_data->active, free);
     g_list_free_full(n_data->inactive, free);
     pcmk_free_nvpairs(n_data->keys);

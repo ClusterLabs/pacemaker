@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:controld resource agent
 #
-# Copyright 2008-2019 the Pacemaker project contributors
+# Copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,6 +19,27 @@
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_allow_stonith_disabled:="false"}
+: ${OCF_RESKEY_sctp:="false"}
+: ${OCF_RESOURCE_INSTANCE:=""}
+
+case "$OCF_RESOURCE_INSTANCE" in
+    *[gG][fF][sS]*)
+        : ${OCF_RESKEY_args=-g 0}
+        : ${OCF_RESKEY_daemon:=gfs_controld}
+        ;;
+    *[dD][lL][mM]*)
+        : ${OCF_RESKEY_args=-s 0}
+        : ${OCF_RESKEY_daemon:=dlm_controld}
+        ;;
+    *)
+        : ${OCF_RESKEY_args=-s 0}
+        : ${OCF_RESKEY_daemon:=dlm_controld}
+esac
+
 
 #######################################################################
 
@@ -119,8 +140,8 @@ controld_start() {
     controld_monitor; rc=$?
 
     case $rc in
-      $OCF_SUCCESS)     return $OCF_SUCCESS;;
-      $OCF_NOT_RUNNING) ;;
+      "$OCF_SUCCESS")     return $OCF_SUCCESS;;
+      "$OCF_NOT_RUNNING") ;;
       *) return $OCF_ERR_GENERIC;;
     esac
 
@@ -160,13 +181,13 @@ controld_start() {
 
         controld_monitor; rc=$?
         case $rc in
-          $OCF_SUCCESS)
+          "$OCF_SUCCESS")
             CS_ADDR_LIST="$(cat "${DLM_CONFIGFS_DIR}"/cluster/comms/*/addr_list 2>/dev/null)"
             if [ $? -eq 0 ] && [ -n "$CS_ADDR_LIST" ]; then
                 return $OCF_SUCCESS
             fi
             ;;
-          $OCF_NOT_RUNNING)
+          "$OCF_NOT_RUNNING")
             return $OCF_NOT_RUNNING
             ;;
           *)
@@ -248,23 +269,6 @@ controld_validate() {
 
     return $OCF_SUCCESS
 }
-
-: ${OCF_RESKEY_sctp:="false"}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
-
-case "$OCF_RESOURCE_INSTANCE" in
-    *[gG][fF][sS]*)
-        : ${OCF_RESKEY_args=-g 0}
-        : ${OCF_RESKEY_daemon:=gfs_controld}
-        ;;
-    *[dD][lL][mM]*)
-        : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon:=dlm_controld}
-        ;;
-    *)
-        : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon:=dlm_controld}
-esac
 
 case "$__OCF_ACTION" in
 meta-data)      meta_data

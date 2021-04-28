@@ -1,0 +1,36 @@
+2 of 5 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ hex-13 hex-14 ]
+
+  * Full List of Resources:
+    * fencing-sbd	(stonith:external/sbd):	 Started hex-13
+    * Resource Group: g0 (disabled):
+      * d0	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * d1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Clone Set: ms0 [s0] (promotable):
+      * Promoted: [ hex-14 ]
+      * Unpromoted: [ hex-13 ]
+
+Transition Summary:
+  * Demote     s0:0    ( Promoted -> Unpromoted hex-14 )
+
+Executing Cluster Transition:
+  * Resource action: s0:1            cancel=20000 on hex-14
+  * Pseudo action:   ms0_demote_0
+  * Resource action: s0:1            demote on hex-14
+  * Pseudo action:   ms0_demoted_0
+  * Resource action: s0:1            monitor=21000 on hex-14
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ hex-13 hex-14 ]
+
+  * Full List of Resources:
+    * fencing-sbd	(stonith:external/sbd):	 Started hex-13
+    * Resource Group: g0 (disabled):
+      * d0	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+      * d1	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+    * Clone Set: ms0 [s0] (promotable):
+      * Unpromoted: [ hex-13 hex-14 ]

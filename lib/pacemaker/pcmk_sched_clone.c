@@ -58,7 +58,7 @@ parent_node_instance(const pe_resource_t * rsc, pe_node_t * node)
 static gboolean
 did_fail(const pe_resource_t * rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (pcmk_is_set(rsc->flags, pe_rsc_failed)) {
         return TRUE;
@@ -72,6 +72,179 @@ did_fail(const pe_resource_t * rsc)
         }
     }
     return FALSE;
+}
+
+/*!
+ * \internal
+ * \brief Compare instances based on colocation scores.
+ *
+ * Determines the relative order in which \c rsc1 and \c rsc2 should be
+ * allocated. If one resource compares less than the other, then it
+ * should be allocated first.
+ *
+ * \param[in] rsc1  The first instance to compare.
+ * \param[in] rsc2  The second instance to compare.
+ * \param[in] data_set  Cluster working set.
+ *
+ * \return -1 if `rsc1 < rsc2`,
+ *          0 if `rsc1 == rsc2`, or
+ *          1 if `rsc1 > rsc2`
+ */
+static int
+order_instance_by_colocation(const pe_resource_t *rsc1,
+                             const pe_resource_t *rsc2,
+                             pe_working_set_t *data_set)
+{
+    int rc = 0;
+    pe_node_t *n = NULL;
+    pe_node_t *node1 = NULL;
+    pe_node_t *node2 = NULL;
+    pe_node_t *current_node1 = pe__current_node(rsc1);
+    pe_node_t *current_node2 = pe__current_node(rsc2);
+    GList *list1 = NULL;
+    GList *list2 = NULL;
+    GHashTable *hash1 = pcmk__strkey_table(NULL, free);
+    GHashTable *hash2 = pcmk__strkey_table(NULL, free);
+
+    /* Clone instances must have parents */
+    CRM_ASSERT(rsc1->parent != NULL);
+    CRM_ASSERT(rsc2->parent != NULL);
+
+    n = pe__copy_node(current_node1);
+    g_hash_table_insert(hash1, (gpointer) n->details->id, n);
+
+    n = pe__copy_node(current_node2);
+    g_hash_table_insert(hash2, (gpointer) n->details->id, n);
+
+    /* Apply rsc1's parental colocations */
+    for (GList *gIter = rsc1->parent->rsc_cons; gIter != NULL;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        crm_trace("Applying %s to %s", constraint->id, rsc1->id);
+
+        hash1 = pcmk__native_merge_weights(constraint->rsc_rh, rsc1->id, hash1,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           0);
+    }
+
+    for (GList *gIter = rsc1->parent->rsc_cons_lhs; gIter != NULL;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        if (!pcmk__colocation_has_influence(constraint, rsc1)) {
+            continue;
+        }
+        crm_trace("Applying %s to %s", constraint->id, rsc1->id);
+
+        hash1 = pcmk__native_merge_weights(constraint->rsc_lh, rsc1->id, hash1,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           pe_weights_positive);
+    }
+
+    /* Apply rsc2's parental colocations */
+    for (GList *gIter = rsc2->parent->rsc_cons; gIter != NULL;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        crm_trace("Applying %s to %s", constraint->id, rsc2->id);
+
+        hash2 = pcmk__native_merge_weights(constraint->rsc_rh, rsc2->id, hash2,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           0);
+    }
+
+    for (GList *gIter = rsc2->parent->rsc_cons_lhs; gIter;
+         gIter = gIter->next) {
+
+        pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
+
+        if (!pcmk__colocation_has_influence(constraint, rsc2)) {
+            continue;
+        }
+        crm_trace("Applying %s to %s", constraint->id, rsc2->id);
+
+        hash2 = pcmk__native_merge_weights(constraint->rsc_lh, rsc2->id, hash2,
+                                           constraint->node_attribute,
+                                           constraint->score / (float) INFINITY,
+                                           pe_weights_positive);
+    }
+
+    /* Current location score */
+    node1 = g_hash_table_lookup(hash1, current_node1->details->id);
+    node2 = g_hash_table_lookup(hash2, current_node2->details->id);
+
+    if (node1->weight < node2->weight) {
+        if (node1->weight < 0) {
+            crm_trace("%s > %s: current score: %d %d",
+                      rsc1->id, rsc2->id, node1->weight, node2->weight);
+            rc = -1;
+            goto out;
+
+        } else {
+            crm_trace("%s < %s: current score: %d %d",
+                      rsc1->id, rsc2->id, node1->weight, node2->weight);
+            rc = 1;
+            goto out;
+        }
+
+    } else if (node1->weight > node2->weight) {
+        crm_trace("%s > %s: current score: %d %d",
+                  rsc1->id, rsc2->id, node1->weight, node2->weight);
+        rc = -1;
+        goto out;
+    }
+
+    /* All location scores */
+    list1 = g_hash_table_get_values(hash1);
+    list2 = g_hash_table_get_values(hash2);
+
+    list1 = sort_nodes_by_weight(list1, current_node1, data_set);
+    list2 = sort_nodes_by_weight(list2, current_node2, data_set);
+
+    for (GList *gIter1 = list1, *gIter2 = list2;
+         (gIter1 != NULL) && (gIter2 != NULL);
+         gIter1 = gIter1->next, gIter2 = gIter2->next) {
+
+        node1 = (pe_node_t *) gIter1->data;
+        node2 = (pe_node_t *) gIter2->data;
+
+        if (node1 == NULL) {
+            crm_trace("%s < %s: colocated score NULL", rsc1->id, rsc2->id);
+            rc = 1;
+            break;
+
+        } else if (node2 == NULL) {
+            crm_trace("%s > %s: colocated score NULL", rsc1->id, rsc2->id);
+            rc = -1;
+            break;
+        }
+
+        if (node1->weight < node2->weight) {
+            crm_trace("%s < %s: colocated score", rsc1->id, rsc2->id);
+            rc = 1;
+            break;
+
+        } else if (node1->weight > node2->weight) {
+            crm_trace("%s > %s: colocated score", rsc1->id, rsc2->id);
+            rc = -1;
+            break;
+        }
+    }
+
+out:
+    g_hash_table_destroy(hash1);
+    g_hash_table_destroy(hash2);
+    g_list_free(list1);
+    g_list_free(list2);
+
+    return rc;
 }
 
 gint
@@ -105,7 +278,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     current_node1 = pe__find_active_on(resource1, &nnodes1, NULL);
     current_node2 = pe__find_active_on(resource2, &nnodes2, NULL);
 
-    if (nnodes1 && nnodes2) {
+    /* If both instances are running and at least one is multiply
+     * active, give precedence to the one that's running on fewer nodes.
+     */
+    if ((nnodes1 > 0) && (nnodes2 > 0)) {
         if (nnodes1 < nnodes2) {
             crm_trace("%s < %s: running_on", resource1->id, resource2->id);
             return -1;
@@ -116,9 +292,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         }
     }
 
+    /* Instance whose current location is available sorts first */
     node1 = current_node1;
     node2 = current_node2;
-    if (node1) {
+    if (node1 != NULL) {
         pe_node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
 
         if (match == NULL || match->weight < 0) {
@@ -128,7 +305,7 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         }
     }
 
-    if (node2) {
+    if (node2 != NULL) {
         pe_node_t *match = pe_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
 
         if (match == NULL || match->weight < 0) {
@@ -138,65 +315,74 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         }
     }
 
-    if (can1 != can2) {
-        if (can1) {
-            crm_trace("%s < %s: availability of current location", resource1->id, resource2->id);
-            return -1;
-        }
-        crm_trace("%s > %s: availability of current location", resource1->id, resource2->id);
-        return 1;
-    }
-
-    if (resource1->priority < resource2->priority) {
-        crm_trace("%s < %s: priority", resource1->id, resource2->id);
-        return 1;
-
-    } else if (resource1->priority > resource2->priority) {
-        crm_trace("%s > %s: priority", resource1->id, resource2->id);
+    if (can1 && !can2) {
+        crm_trace("%s < %s: availability of current location", resource1->id,
+                  resource2->id);
         return -1;
+
+    } else if (!can1 && can2) {
+        crm_trace("%s > %s: availability of current location", resource1->id,
+                  resource2->id);
+        return 1;
     }
 
+    /* Higher-priority instance sorts first */
+    if (resource1->priority > resource2->priority) {
+        crm_trace("%s < %s: priority", resource1->id, resource2->id);
+        return -1;
+
+    } else if (resource1->priority < resource2->priority) {
+        crm_trace("%s > %s: priority", resource1->id, resource2->id);
+        return 1;
+    }
+
+    /* Active instance sorts first */
     if (node1 == NULL && node2 == NULL) {
         crm_trace("%s == %s: not active", resource1->id, resource2->id);
         return 0;
+
+    } else if (node1 == NULL) {
+        crm_trace("%s > %s: active", resource1->id, resource2->id);
+        return 1;
+
+    } else if (node2 == NULL) {
+        crm_trace("%s < %s: active", resource1->id, resource2->id);
+        return -1;
     }
 
-    if (node1 != node2) {
-        if (node1 == NULL) {
-            crm_trace("%s > %s: active", resource1->id, resource2->id);
-            return 1;
-        } else if (node2 == NULL) {
-            crm_trace("%s < %s: active", resource1->id, resource2->id);
-            return -1;
-        }
-    }
-
+    /* Instance whose current node can run resources sorts first */
     can1 = can_run_resources(node1);
     can2 = can_run_resources(node2);
-    if (can1 != can2) {
-        if (can1) {
-            crm_trace("%s < %s: can", resource1->id, resource2->id);
-            return -1;
-        }
+    if (can1 && !can2) {
+        crm_trace("%s < %s: can", resource1->id, resource2->id);
+        return -1;
+
+    } else if (!can1 && can2) {
         crm_trace("%s > %s: can", resource1->id, resource2->id);
         return 1;
     }
 
+    /* Is the parent allowed to run on the instance's current node?
+     * Instance with parent allowed sorts first.
+     */
     node1 = parent_node_instance(resource1, node1);
     node2 = parent_node_instance(resource2, node2);
-    if (node1 != NULL && node2 == NULL) {
-        crm_trace("%s < %s: not allowed", resource1->id, resource2->id);
-        return -1;
-    } else if (node1 == NULL && node2 != NULL) {
-        crm_trace("%s > %s: not allowed", resource1->id, resource2->id);
-        return 1;
-    }
-
-    if (node1 == NULL || node2 == NULL) {
+    if (node1 == NULL && node2 == NULL) {
         crm_trace("%s == %s: not allowed", resource1->id, resource2->id);
         return 0;
+
+    } else if (node1 == NULL) {
+        crm_trace("%s > %s: not allowed", resource1->id, resource2->id);
+        return 1;
+
+    } else if (node2 == NULL) {
+        crm_trace("%s < %s: not allowed", resource1->id, resource2->id);
+        return -1;
     }
 
+    /* Does one node have more instances allocated?
+     * Instance whose current node has fewer instances sorts first.
+     */
     if (node1->count < node2->count) {
         crm_trace("%s < %s: count", resource1->id, resource2->id);
         return -1;
@@ -206,164 +392,23 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         return 1;
     }
 
+    /* Failed instance sorts first */
     can1 = did_fail(resource1);
     can2 = did_fail(resource2);
-    if (can1 != can2) {
-        if (can1) {
-            crm_trace("%s > %s: failed", resource1->id, resource2->id);
-            return 1;
-        }
+    if (can1 && !can2) {
+        crm_trace("%s > %s: failed", resource1->id, resource2->id);
+        return 1;
+    } else if (!can1 && can2) {
         crm_trace("%s < %s: failed", resource1->id, resource2->id);
         return -1;
     }
 
-    if (node1 && node2) {
-        int lpc = 0;
-        int max = 0;
-        pe_node_t *n = NULL;
-        GListPtr gIter = NULL;
-        GListPtr list1 = NULL;
-        GListPtr list2 = NULL;
-        GHashTable *hash1 =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
-        GHashTable *hash2 =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
-
-        n = pe__copy_node(current_node1);
-        g_hash_table_insert(hash1, (gpointer) n->details->id, n);
-
-        n = pe__copy_node(current_node2);
-        g_hash_table_insert(hash2, (gpointer) n->details->id, n);
-
-        if(resource1->parent) {
-            for (gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                crm_trace("Applying %s to %s", constraint->id, resource1->id);
-
-                hash1 = pcmk__native_merge_weights(constraint->rsc_rh,
-                                                   resource1->id, hash1,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   0);
-            }
-
-            for (gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                if (!pcmk__colocation_has_influence(constraint, resource1)) {
-                    continue;
-                }
-                crm_trace("Applying %s to %s", constraint->id, resource1->id);
-
-                hash1 = pcmk__native_merge_weights(constraint->rsc_lh,
-                                                   resource1->id, hash1,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   pe_weights_positive);
-            }
-        }
-
-        if(resource2->parent) {
-            for (gIter = resource2->parent->rsc_cons; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                crm_trace("Applying %s to %s", constraint->id, resource2->id);
-
-                hash2 = pcmk__native_merge_weights(constraint->rsc_rh,
-                                                   resource2->id, hash2,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   0);
-            }
-
-            for (gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
-                pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
-
-                if (!pcmk__colocation_has_influence(constraint, resource2)) {
-                    continue;
-                }
-                crm_trace("Applying %s to %s", constraint->id, resource2->id);
-
-                hash2 = pcmk__native_merge_weights(constraint->rsc_lh,
-                                                   resource2->id, hash2,
-                                                   constraint->node_attribute,
-                                                   constraint->score / (float) INFINITY,
-                                                   pe_weights_positive);
-            }
-        }
-
-        /* Current location score */
-        node1 = g_hash_table_lookup(hash1, current_node1->details->id);
-        node2 = g_hash_table_lookup(hash2, current_node2->details->id);
-
-        if (node1->weight < node2->weight) {
-            if (node1->weight < 0) {
-                crm_trace("%s > %s: current score: %d %d", resource1->id, resource2->id, node1->weight, node2->weight);
-                rc = -1;
-                goto out;
-
-            } else {
-                crm_trace("%s < %s: current score: %d %d", resource1->id, resource2->id, node1->weight, node2->weight);
-                rc = 1;
-                goto out;
-            }
-
-        } else if (node1->weight > node2->weight) {
-            crm_trace("%s > %s: current score: %d %d", resource1->id, resource2->id, node1->weight, node2->weight);
-            rc = -1;
-            goto out;
-        }
-
-        /* All location scores */
-        list1 = g_hash_table_get_values(hash1);
-        list2 = g_hash_table_get_values(hash2);
-
-        list1 = sort_nodes_by_weight(list1, current_node1, data_set);
-        list2 = sort_nodes_by_weight(list2, current_node2, data_set);
-        max = g_list_length(list1);
-        if (max < g_list_length(list2)) {
-            max = g_list_length(list2);
-        }
-
-        for (; lpc < max; lpc++) {
-            node1 = g_list_nth_data(list1, lpc);
-            node2 = g_list_nth_data(list2, lpc);
-            if (node1 == NULL) {
-                crm_trace("%s < %s: colocated score NULL", resource1->id, resource2->id);
-                rc = 1;
-                break;
-
-            } else if (node2 == NULL) {
-                crm_trace("%s > %s: colocated score NULL", resource1->id, resource2->id);
-                rc = -1;
-                break;
-            }
-
-            if (node1->weight < node2->weight) {
-                crm_trace("%s < %s: colocated score", resource1->id, resource2->id);
-                rc = 1;
-                break;
-
-            } else if (node1->weight > node2->weight) {
-                crm_trace("%s > %s: colocated score", resource1->id, resource2->id);
-                rc = -1;
-                break;
-            }
-        }
-
-        /* Order by reverse uname - same as sort_node_weight() does? */
-  out:
-        g_hash_table_destroy(hash1);    /* Free mem */
-        g_hash_table_destroy(hash2);    /* Free mem */
-        g_list_free(list1);
-        g_list_free(list2);
-
-        if (rc != 0) {
-            return rc;
-        }
+    rc = order_instance_by_colocation(resource1, resource2, data_set);
+    if (rc != 0) {
+        return rc;
     }
 
+    /* Default to lexicographic order by ID */
     rc = strcmp(resource1->id, resource2->id);
     crm_trace("%s %c %s: default", resource1->id, rc < 0 ? '<' : '>', resource2->id);
     return rc;
@@ -495,7 +540,7 @@ static void
 append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean all)
 {
 
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -521,19 +566,20 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
 
 
 void
-distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
+distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                     int max, int per_host_max, pe_working_set_t * data_set);
 
 void
-distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
+distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                     int max, int per_host_max, pe_working_set_t * data_set) 
 {
     int loop_max = 0;
     int allocated = 0;
     int available_nodes = 0;
+    bool all_coloc = false;
 
     /* count now tracks the number of clones currently allocated */
-    for(GListPtr nIter = nodes; nIter != NULL; nIter = nIter->next) {
+    for(GList *nIter = nodes; nIter != NULL; nIter = nIter->next) {
         pe_node_t *node = nIter->data;
 
         node->count = 0;
@@ -541,6 +587,8 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
             available_nodes++;
         }
     }
+
+    all_coloc = (max < available_nodes) ? true : false;
 
     if(available_nodes) {
         loop_max = max / available_nodes;
@@ -553,39 +601,50 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
                  max, rsc->id, available_nodes, per_host_max, loop_max);
 
     /* Pre-allocate as many instances as we can to their current location */
-    for (GListPtr gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
+    for (GList *gIter = children; gIter != NULL && allocated < max; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
+        pe_node_t *child_node = NULL;
+        pe_node_t *local_node = NULL;
 
-        if (child->running_on && pcmk_is_set(child->flags, pe_rsc_provisional)
-            && !pcmk_is_set(child->flags, pe_rsc_failed)) {
-            pe_node_t *child_node = pe__current_node(child);
-            pe_node_t *local_node = parent_node_instance(child, child_node);
+        if ((child->running_on == NULL)
+            || !pcmk_is_set(child->flags, pe_rsc_provisional)
+            || pcmk_is_set(child->flags, pe_rsc_failed)) {
 
-            pe_rsc_trace(rsc, "Checking pre-allocation of %s to %s (%d remaining of %d)",
-                         child->id, child_node->details->uname, max - allocated, max);
+            continue;
+        }
 
-            if (can_run_resources(child_node) == FALSE || child_node->weight < 0) {
-                pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
-                             child_node->details->uname, child->id);
+        child_node = pe__current_node(child);
+        local_node = parent_node_instance(child, child_node);
 
-            } else if(local_node && local_node->count >= loop_max) {
-                pe_rsc_trace(rsc,
-                             "Not pre-allocating because %s already allocated optimal instances",
-                             child_node->details->uname);
+        pe_rsc_trace(rsc,
+                     "Checking pre-allocation of %s to %s (%d remaining of %d)",
+                     child->id, child_node->details->uname, max - allocated,
+                     max);
 
-            } else if (allocate_instance(child, child_node,
-                                         max < available_nodes, per_host_max,
-                                         data_set)) {
-                pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
-                             child_node->details->uname);
-                allocated++;
-            }
+        if (!can_run_resources(child_node) || (child_node->weight < 0)) {
+            pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
+                         child_node->details->uname, child->id);
+            continue;
+        }
+
+        if ((local_node != NULL) && (local_node->count >= loop_max)) {
+            pe_rsc_trace(rsc,
+                         "Not pre-allocating because %s already allocated "
+                         "optimal instances", child_node->details->uname);
+            continue;
+        }
+
+        if (allocate_instance(child, child_node, all_coloc, per_host_max,
+                              data_set)) {
+            pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
+                         child_node->details->uname);
+            allocated++;
         }
     }
 
     pe_rsc_trace(rsc, "Done pre-allocating (%d of %d)", allocated, max);
 
-    for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
         if (child->running_on != NULL) {
@@ -603,8 +662,8 @@ distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
             pe_rsc_debug(rsc, "Child %s not allocated - limit reached %d %d", child->id, allocated, max);
             resource_location(child, NULL, -INFINITY, "clone:limit_reached", data_set);
         } else {
-            if (allocate_instance(child, NULL, max < available_nodes,
-                                  per_host_max, data_set)) {
+            if (allocate_instance(child, NULL, all_coloc, per_host_max,
+                                  data_set)) {
                 allocated++;
             }
         }
@@ -619,7 +678,7 @@ pe_node_t *
 pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      pe_working_set_t *data_set)
 {
-    GListPtr nodes = NULL;
+    GList *nodes = NULL;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -633,7 +692,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     }
 
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
-        apply_master_prefs(rsc);
+        pcmk__add_promotion_scores(rsc);
     }
 
     pe__set_resource_flags(rsc, pe_rsc_allocating);
@@ -641,7 +700,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     /* this information is used by sort_clone_instance() when deciding in which 
      * order to allocate clone instances
      */
-    for (GListPtr gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->rsc_cons; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         pe_rsc_trace(rsc, "%s: Allocating %s first",
@@ -649,7 +708,7 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
         constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
     }
 
-    for (GListPtr gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
         if (!pcmk__colocation_has_influence(constraint, NULL)) {
@@ -662,7 +721,8 @@ pcmk__clone_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                                                     (pe_weights_rollback | pe_weights_positive));
     }
 
-    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
+    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, data_set);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
@@ -683,7 +743,7 @@ static void
 clone_update_pseudo_status(pe_resource_t * rsc, gboolean * stopping, gboolean * starting,
                            gboolean * active)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (rsc->children) {
 
@@ -748,13 +808,13 @@ find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
                 GList **list)
 {
     pe_action_t *match = NULL;
-    GListPtr possible = NULL;
-    GListPtr active = NULL;
+    GList *possible = NULL;
+    GList *active = NULL;
 
     possible = pe__resource_actions(rsc, NULL, task, FALSE);
 
     if (active_only) {
-        GListPtr gIter = possible;
+        GList *gIter = possible;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;
@@ -799,7 +859,7 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_action_t *start = NULL;
     pe_action_t *last_stop = NULL;
     pe_action_t *last_start = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean active_only = TRUE;        /* change to false to get the old behavior */
     clone_variant_data_t *clone_data = NULL;
 
@@ -849,7 +909,7 @@ clone_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 
 void
 clone_create_pseudo_actions(
-    pe_resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
+    pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set)
 {
     gboolean child_active = FALSE;
     gboolean child_starting = FALSE;
@@ -864,7 +924,7 @@ clone_create_pseudo_actions(
 
     pe_rsc_trace(rsc, "Creating actions for %s", rsc->id);
 
-    for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         gboolean starting = FALSE;
         gboolean stopping = FALSE;
@@ -914,7 +974,7 @@ void
 clone_internal_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe_resource_t *last_rsc = NULL;
-    GListPtr gIter;
+    GList *gIter;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -966,7 +1026,7 @@ assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force)
 
     if (rsc->children) {
 
-        for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             changed |= assign_node(child_rsc, node, force);
@@ -979,7 +1039,7 @@ assign_node(pe_resource_t * rsc, pe_node_t * node, gboolean force)
         changed = true;
     }
 
-    native_assign_node(rsc, NULL, node, force);
+    native_assign_node(rsc, node, force);
     return changed;
 }
 
@@ -1019,8 +1079,8 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
                       pe_working_set_t *data_set)
 {
     pe_resource_t *pair = NULL;
-    GListPtr gIter = NULL;
-    GListPtr scratch = NULL;
+    GList *gIter = NULL;
+    GList *scratch = NULL;
     pe_node_t *local_node = NULL;
 
     local_node = local_child->fns->location(local_child, NULL, current);
@@ -1064,7 +1124,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                         pcmk__colocation_t *constraint,
                         pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean do_interleave = FALSE;
     const char *interleave_s = NULL;
 
@@ -1128,7 +1188,7 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
         return;
 
     } else if (constraint->score >= INFINITY) {
-        GListPtr rhs = NULL;
+        GList *rhs = NULL;
 
         gIter = rsc_rh->children;
         for (; gIter != NULL; gIter = gIter->next) {
@@ -1200,9 +1260,9 @@ clone_child_action(pe_action_t * action)
     } while (0)
 
 enum pe_action_flags
-summary_action_flags(pe_action_t * action, GListPtr children, pe_node_t * node)
+summary_action_flags(pe_action_t * action, GList *children, pe_node_t * node)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean any_runnable = FALSE;
     gboolean check_runnable = TRUE;
     enum action_tasks task = clone_child_action(action);
@@ -1252,7 +1312,7 @@ clone_action_flags(pe_action_t * action, pe_node_t * node)
 void
 clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     pe_rsc_trace(rsc, "Processing location constraint %s for %s", constraint->id, rsc->id);
 
@@ -1268,7 +1328,7 @@ clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 void
 clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -1497,11 +1557,11 @@ clone_append_meta(pe_resource_t * rsc, xmlNode * xml)
         /* @COMPAT Maintain backward compatibility with resource agents that
          * expect the old names (deprecated since 2.0.0).
          */
-        name = crm_meta_name(XML_RSC_ATTR_MASTER_MAX);
+        name = crm_meta_name(PCMK_XE_PROMOTED_MAX_LEGACY);
         crm_xml_add_int(xml, name, clone_data->promoted_max);
         free(name);
 
-        name = crm_meta_name(XML_RSC_ATTR_MASTER_NODEMAX);
+        name = crm_meta_name(PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
         crm_xml_add_int(xml, name, clone_data->promoted_node_max);
         free(name);
     }

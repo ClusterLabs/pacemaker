@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2020 the Pacemaker project contributors
+ * Copyright 2008-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -165,41 +165,32 @@ pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_ms)
 static void
 set_minimum_dh_bits(gnutls_session_t *session)
 {
-    const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
+    int dh_min_bits;
 
-    if (dh_min_bits_s) {
-        int dh_min_bits = crm_parse_int(dh_min_bits_s, "0");
+    pcmk__scan_min_int(getenv("PCMK_dh_min_bits"), &dh_min_bits, 0);
 
-        /* This function is deprecated since GnuTLS 3.1.7, in favor of letting
-         * the priority string imply the DH requirements, but this is the only
-         * way to give the user control over compatibility with older servers.
-         */
-        if (dh_min_bits > 0) {
-            crm_info("Requiring server use a Diffie-Hellman prime of at least %d bits",
-                     dh_min_bits);
-            gnutls_dh_set_prime_bits(*session, dh_min_bits);
-        }
+    /* This function is deprecated since GnuTLS 3.1.7, in favor of letting
+     * the priority string imply the DH requirements, but this is the only
+     * way to give the user control over compatibility with older servers.
+     */
+    if (dh_min_bits > 0) {
+        crm_info("Requiring server use a Diffie-Hellman prime of at least %d bits",
+                 dh_min_bits);
+        gnutls_dh_set_prime_bits(*session, dh_min_bits);
     }
 }
 
 static unsigned int
 get_bound_dh_bits(unsigned int dh_bits)
 {
-    const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
-    const char *dh_max_bits_s = getenv("PCMK_dh_max_bits");
-    int dh_min_bits = 0;
-    int dh_max_bits = 0;
+    int dh_min_bits;
+    int dh_max_bits;
 
-    if (dh_min_bits_s) {
-        dh_min_bits = crm_parse_int(dh_min_bits_s, "0");
-    }
-    if (dh_max_bits_s) {
-        dh_max_bits = crm_parse_int(dh_max_bits_s, "0");
-        if ((dh_min_bits > 0) && (dh_max_bits > 0)
-            && (dh_max_bits < dh_min_bits)) {
-            crm_warn("Ignoring PCMK_dh_max_bits because it is less than PCMK_dh_min_bits");
-            dh_max_bits = 0;
-        }
+    pcmk__scan_min_int(getenv("PCMK_dh_min_bits"), &dh_min_bits, 0);
+    pcmk__scan_min_int(getenv("PCMK_dh_max_bits"), &dh_max_bits, 0);
+    if ((dh_max_bits > 0) && (dh_max_bits < dh_min_bits)) {
+        crm_warn("Ignoring PCMK_dh_max_bits less than PCMK_dh_min_bits");
+        dh_max_bits = 0;
     }
     if ((dh_min_bits > 0) && (dh_bits < dh_min_bits)) {
         return dh_min_bits;
@@ -1130,7 +1121,7 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
             ((struct sockaddr_in *)(void*)addr)->sin_port = htons(port);
         }
 
-        memset(buffer, 0, DIMOF(buffer));
+        memset(buffer, 0, PCMK__NELEM(buffer));
         pcmk__sockaddr2str(addr, buffer);
         crm_info("Attempting remote connection to %s:%d", buffer, port);
 

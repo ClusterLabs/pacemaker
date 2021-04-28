@@ -4,6 +4,12 @@ Configuration Recap
 Final Cluster Configuration
 ###########################
 
+.. NOTE::
+
+    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`_,
+    installing dlm is not trivial. This chapter will be updated once the bug
+    is resolved.
+
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource
@@ -24,7 +30,7 @@ Final Cluster Configuration
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs stonith
-     impi-fencing	(stonith:fence_ipmilan): Started pcmk-1
+      * my_stonith	(stonith:fence_virt): 	Started pcmk-1
 
 .. code-block:: none
 
@@ -58,7 +64,7 @@ Final Cluster Configuration
 
     Full list of resources:
 
-     ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1
+     my_stonith   (stonith:fence_virt):        Started pcmk-1
      Master/Slave Set: WebDataClone [WebData]
          Masters: [ pcmk-1 pcmk-2 ]
      Clone Set: dlm-clone [dlm]
@@ -106,7 +112,7 @@ Final Cluster Configuration
             <op id="impi-fencing-interval-60s" interval="60s" name="monitor"/>
           </operations>
         </primitive>
-        <master id="WebDataClone">
+        <clone id="WebDataClone">
           <primitive class="ocf" id="WebData" provider="linbit" type="drbd">
             <instance_attributes id="WebData-instance_attributes">
               <nvpair id="WebData-instance_attributes-drbd_resource" name="drbd_resource" value="wwwdata"/>
@@ -122,13 +128,14 @@ Final Cluster Configuration
             </operations>
           </primitive>
           <meta_attributes id="WebDataClone-meta_attributes">
-            <nvpair id="WebDataClone-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+            <nvpair id="WebDataClone-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
             <nvpair id="WebDataClone-meta_attributes-clone-max" name="clone-max" value="2"/>
             <nvpair id="WebDataClone-meta_attributes-notify" name="notify" value="true"/>
-            <nvpair id="WebDataClone-meta_attributes-master-max" name="master-max" value="2"/>
+            <nvpair id="WebDataClone-meta_attributes-promoted-max" name="promoted-max" value="2"/>
             <nvpair id="WebDataClone-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+            <nvpair id="WebDataClone-meta_attributes-promoted" name="promotable" value="true"/>
           </meta_attributes>
-        </master>
+        </clone>
         <clone id="dlm-clone">
           <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
             <operations>
@@ -271,9 +278,9 @@ _______
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs stonith show
-     ipmi-fencing	(stonith:fence_ipmilan):	Started pcmk-1
-    [root@pcmk-1 ~]# pcs stonith show ipmi-fencing
-     Resource: ipmi-fencing (class=stonith type=fence_ipmilan)
+      * my_stonith	(stonith:fence_virt): 	Started pcmk-1
+    [root@pcmk-1 ~]# pcs stonith show my_stonith
+     Resource: my_stonith (class=stonith type=fence_virt)
       Attributes: ipaddr="10.0.0.1" login="testuser" passwd="acd123" pcmk_host_list="pcmk-1 pcmk-2" 
       Operations: monitor interval=60s (fence-monitor-interval-60s)
 
@@ -297,16 +304,16 @@ DRBD - Shared Storage
 _____________________
 
 Here, we define the DRBD service and specify which DRBD resource (from
-/etc/drbd.d/\*.res) it should manage. We make it a master clone resource and, in
-order to have an active/active setup, allow both instances to be promoted to master
-at the same time. We also set the notify option so that the
-cluster will tell DRBD agent when its peer changes state.
+/etc/drbd.d/\*.res) it should manage. We make it a promotable clone resource
+and, in order to have an active/active setup, allow both instances to be
+promoted at the same time. We also set the notify option so that the cluster
+will tell DRBD agent when its peer changes state.
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource show WebDataClone
-     Master: WebDataClone
-      Meta Attrs: master-node-max=1 clone-max=2 notify=true master-max=2 clone-node-max=1 
+     Clone: WebDataClone (promotable)
+      Meta Attrs: promoted-node-max=1 clone-max=2 notify=true promoted-max=2 clone-node-max=1
       Resource: WebData (class=ocf provider=linbit type=drbd)
        Attributes: drbd_resource=wwwdata
        Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)

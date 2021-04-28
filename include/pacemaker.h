@@ -73,16 +73,17 @@ int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
                           pe_node_t *node, GHashTable *overrides,
                           pe_working_set_t *data_set);
 
-#ifdef BUILD_PUBLIC_LIBPACEMAKER
-
 /*!
  * \brief Get nodes list
  *
  * \param[in,out] xml                The destination for the result, as an XML tree.
+ * \param[in]     node_types         Node type(s) to return (default: all)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_list_nodes(xmlNodePtr *xml);
+int pcmk_list_nodes(xmlNodePtr *xml, char *node_types);
+
+#ifdef BUILD_PUBLIC_LIBPACEMAKER
 
 /*!
  * \brief Perform a STONITH action.

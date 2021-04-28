@@ -1,0 +1,35 @@
+Current cluster status:
+  * Node List:
+    * Online: [ 18builder ]
+
+  * Full List of Resources:
+    * FAKE	(ocf:pacemaker:Dummy):	 Started 18builder
+    * FAKE-crashed	(ocf:pacemaker:Dummy):	 FAILED 18builder
+
+Transition Summary:
+  * Fence (reboot) remote2 (resource: FAKE-crashed) 'guest is unclean'
+  * Recover    FAKE-crashed     ( 18builder )
+  * Start      remote1          ( 18builder )
+  * Start      remote2          ( 18builder )
+
+Executing Cluster Transition:
+  * Resource action: FAKE            monitor=60000 on 18builder
+  * Resource action: FAKE-crashed    stop on 18builder
+  * Resource action: remote1         monitor on 18builder
+  * Resource action: remote2         monitor on 18builder
+  * Pseudo action:   stonith-remote2-reboot on remote2
+  * Resource action: FAKE-crashed    start on 18builder
+  * Resource action: remote1         start on 18builder
+  * Resource action: remote2         start on 18builder
+  * Resource action: FAKE-crashed    monitor=60000 on 18builder
+  * Resource action: remote1         monitor=30000 on 18builder
+  * Resource action: remote2         monitor=30000 on 18builder
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ 18builder ]
+    * GuestOnline: [ remote1@18builder remote2@18builder ]
+
+  * Full List of Resources:
+    * FAKE	(ocf:pacemaker:Dummy):	 Started 18builder
+    * FAKE-crashed	(ocf:pacemaker:Dummy):	 Started 18builder

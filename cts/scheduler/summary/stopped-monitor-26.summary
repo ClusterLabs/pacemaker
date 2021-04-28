@@ -1,0 +1,17 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)

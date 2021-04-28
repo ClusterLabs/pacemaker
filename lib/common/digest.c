@@ -259,7 +259,7 @@ pcmk__xa_filterable(const char *name)
         XML_ATTR_UPDATE_USER,
     };
 
-    for (int i = 0; i < DIMOF(filter); i++) {
+    for (int i = 0; i < PCMK__NELEM(filter); i++) {
         if (strcmp(name, filter[i]) == 0) {
             return true;
         }

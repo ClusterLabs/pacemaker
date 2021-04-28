@@ -190,9 +190,9 @@ get_ordering_type(xmlNode * xml_obj)
 }
 
 static pe_resource_t *
-pe_find_constraint_resource(GListPtr rsc_list, const char *id)
+pe_find_constraint_resource(GList *rsc_list, const char *id)
 {
-    GListPtr rIter = NULL;
+    GList *rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pe_resource_t *parent = rIter->data;
@@ -434,7 +434,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         const char *require_all_s = crm_element_value(xml_obj, "require-all");
 
         if (min_clones_s) {
-            min_required_before = crm_parse_int(min_clones_s, "0");
+            pcmk__scan_min_int(min_clones_s, &min_required_before, 0);
 
         } else if (require_all_s) {
             pe_warn_once(pe_wo_require_all,
@@ -452,7 +452,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
      * the 'then' action is runnable, we use a pseudo action as an intermediate step
      * start min number of clones -> pseudo action is runnable -> dependency runnable. */
     if (min_required_before) {
-        GListPtr rIter = NULL;
+        GList *rIter = NULL;
         char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
         free(task);
@@ -534,8 +534,8 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
          set = pcmk__xe_next(set)) {
 
         xmlNode *xml_rsc = NULL;
-        GListPtr tag_refs = NULL;
-        GListPtr gIter = NULL;
+        GList *tag_refs = NULL;
+        GList *gIter = NULL;
 
         if (!pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_casei)) {
             continue;
@@ -670,7 +670,7 @@ tag_to_set(xmlNode * xml_obj, xmlNode ** rsc_set, const char * attr,
         return FALSE;
 
     } else if (tag) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         /* A template/tag is referenced by the "attr" attribute (first, then, rsc or with-rsc).
            Add the template/tag's corresponding "resource_set" which contains the resources derived
@@ -733,7 +733,7 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     if(value) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
         bool invert = FALSE;
-        GListPtr rIter = NULL;
+        GList *rIter = NULL;
 
         if(value[0] == '!') {
             value++;
@@ -867,7 +867,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
             switch(r) {
                 case RSC_ROLE_UNKNOWN:
                 case RSC_ROLE_STARTED:
-                case RSC_ROLE_SLAVE:
+                case RSC_ROLE_UNPROMOTED:
                     /* Applies to all */
                     location->role_filter = RSC_ROLE_UNKNOWN;
                     break;
@@ -1072,8 +1072,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     const char *boolean = NULL;
     const char *role = NULL;
 
-    GListPtr gIter = NULL;
-    GListPtr match_L = NULL;
+    GList *gIter = NULL;
+    GList *match_L = NULL;
 
     gboolean do_and = TRUE;
     gboolean accept = TRUE;
@@ -1125,15 +1125,16 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (role != NULL) {
         crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
-        if (location_rule->role_filter == RSC_ROLE_SLAVE) {
-            /* Any promotable clone cannot be promoted without being a slave first
-             * Ergo, any constraint for the slave role applies to every role
+        if (location_rule->role_filter == RSC_ROLE_UNPROMOTED) {
+            /* Any promotable clone cannot be promoted without being in the
+             * unpromoted role first. Ergo, any constraint for the unpromoted
+             * role applies to every role.
              */
             location_rule->role_filter = RSC_ROLE_UNKNOWN;
         }
     }
     if (do_and) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         match_L = pcmk__copy_node_list(data_set->nodes, true);
         for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
@@ -1312,25 +1313,25 @@ anti_colocation_order(pe_resource_t * first_rsc, int first_role,
     int then_lpc = 0;
 
     /* Actions to make first_rsc lose first_role */
-    if (first_role == RSC_ROLE_MASTER) {
+    if (first_role == RSC_ROLE_PROMOTED) {
         first_tasks[0] = CRMD_ACTION_DEMOTE;
 
     } else {
         first_tasks[0] = CRMD_ACTION_STOP;
 
-        if (first_role == RSC_ROLE_SLAVE) {
+        if (first_role == RSC_ROLE_UNPROMOTED) {
             first_tasks[1] = CRMD_ACTION_PROMOTE;
         }
     }
 
     /* Actions to make then_rsc gain then_role */
-    if (then_role == RSC_ROLE_MASTER) {
+    if (then_role == RSC_ROLE_PROMOTED) {
         then_tasks[0] = CRMD_ACTION_PROMOTE;
 
     } else {
         then_tasks[0] = CRMD_ACTION_START;
 
-        if (then_role == RSC_ROLE_SLAVE) {
+        if (then_role == RSC_ROLE_UNPROMOTED) {
             then_tasks[1] = CRMD_ACTION_DEMOTE;
         }
     }
@@ -1687,8 +1688,8 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
                  pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
-    GListPtr set_iter = NULL;
-    GListPtr resources = NULL;
+    GList *set_iter = NULL;
+    GList *resources = NULL;
 
     pe_resource_t *last = NULL;
     pe_resource_t *resource = NULL;
@@ -1783,7 +1784,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
         if (local_kind == pe_order_kind_serialize) {
             /* Serialize before everything that comes after */
 
-            GListPtr gIter = NULL;
+            GList *gIter = NULL;
 
             for (gIter = set_iter; gIter != NULL; gIter = gIter->next) {
                 pe_resource_t *then_rsc = (pe_resource_t *) gIter->data;
@@ -2840,7 +2841,7 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
-        if (new_rsc_ticket->role_lh == RSC_ROLE_MASTER) {
+        if (new_rsc_ticket->role_lh == RSC_ROLE_PROMOTED) {
             crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
                       new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                       role2text(new_rsc_ticket->role_lh));
@@ -3080,8 +3081,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (data_set->tickets == NULL) {
-        data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, free, destroy_ticket);
+        data_set->tickets = pcmk__strkey_table(free, destroy_ticket);
     }
 
     if (ticket_str == NULL) {

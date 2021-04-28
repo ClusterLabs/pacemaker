@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -152,11 +152,8 @@ void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-gboolean crm_signal(int sig, void (*dispatch) (int sig)); // deprecated
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/mainloop_compat.h>
 #endif
 
 #ifdef __cplusplus

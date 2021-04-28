@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,23 +24,15 @@
 #include <bzlib.h>
 #include <sys/types.h>
 
-char *
-crm_itoa_stack(int an_int, char *buffer, size_t len)
-{
-    if (buffer != NULL) {
-        snprintf(buffer, len, "%d", an_int);
-    }
-
-    return buffer;
-}
-
 /*!
  * \internal
  * \brief Scan a long long integer from a string
  *
- * \param[in]  text      String to scan
- * \param[out] result    If not NULL, where to store scanned value
- * \param[out] end_text  If not NULL, where to store pointer to just after value
+ * \param[in]  text           String to scan
+ * \param[out] result         If not NULL, where to store scanned value
+ * \param[in]  default_value  Value to use if text is NULL or invalid
+ * \param[out] end_text       If not NULL, where to store pointer to first
+ *                            non-integer character
  *
  * \return Standard Pacemaker return code (\c pcmk_rc_ok on success,
  *         \c EINVAL on failed string conversion due to invalid input,
@@ -48,9 +40,10 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
  * \note Sets \c errno on error
  */
 static int
-scan_ll(const char *text, long long *result, char **end_text)
+scan_ll(const char *text, long long *result, long long default_value,
+        char **end_text)
 {
-    long long local_result = PCMK__PARSE_INT_DEFAULT;
+    long long local_result = default_value;
     char *local_end_text = NULL;
     int rc = pcmk_rc_ok;
 
@@ -59,20 +52,20 @@ scan_ll(const char *text, long long *result, char **end_text)
         local_result = strtoll(text, &local_end_text, 10);
         if (errno == ERANGE) {
             rc = EOVERFLOW;
-            crm_warn("Integer parsed from %s was clipped to %lld",
+            crm_warn("Integer parsed from '%s' was clipped to %lld",
                      text, local_result);
 
         } else if (errno != 0) {
             rc = errno;
-            local_result = PCMK__PARSE_INT_DEFAULT;
-            crm_warn("Could not parse integer from %s (using %d instead): %s",
-                    text, PCMK__PARSE_INT_DEFAULT, pcmk_rc_str(rc));
+            local_result = default_value;
+            crm_warn("Could not parse integer from '%s' (using %lld instead): "
+                     "%s", text, default_value, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             rc = EINVAL;
-            local_result = PCMK__PARSE_INT_DEFAULT;
-            crm_warn("Could not parse integer from %s (using %d instead): "
-                    "No digits found", text, PCMK__PARSE_INT_DEFAULT);
+            local_result = default_value;
+            crm_warn("Could not parse integer from '%s' (using %lld instead): "
+                    "No digits found", text, default_value);
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
@@ -91,64 +84,96 @@ scan_ll(const char *text, long long *result, char **end_text)
 }
 
 /*!
- * \brief Parse a long long integer value from a string
+ * \internal
+ * \brief Scan a long long integer value from a string
  *
- * \param[in] text          The string to parse
- * \param[in] default_text  Default string to parse if text is NULL
+ * \param[in]  text           The string to scan (may be NULL)
+ * \param[out] result         Where to store result (or NULL to ignore)
+ * \param[in]  default_value  Value to use if text is NULL or invalid
  *
- * \return Parsed value on success, PCMK__PARSE_INT_DEFAULT (and set
- *         errno) on error
+ * \return Standard Pacemaker return code
  */
-long long
-crm_parse_ll(const char *text, const char *default_text)
+int
+pcmk__scan_ll(const char *text, long long *result, long long default_value)
 {
-    long long result;
+    long long local_result = default_value;
+    int rc = pcmk_rc_ok;
 
-    if (text == NULL) {
-        text = default_text;
-        if (text == NULL) {
-            crm_err("No default conversion value supplied");
-            errno = EINVAL;
-            return PCMK__PARSE_INT_DEFAULT;
+    if (text != NULL) {
+        rc = scan_ll(text, &local_result, default_value, NULL);
+        if (rc != pcmk_rc_ok) {
+            local_result = default_value;
         }
     }
-    scan_ll(text, &result, NULL);
-    return result;
+    if (result != NULL) {
+        *result = local_result;
+    }
+    return rc;
 }
 
 /*!
- * \brief Parse an integer value from a string
+ * \internal
+ * \brief Scan an integer value from a string, constrained to a minimum
  *
- * \param[in] text          The string to parse
- * \param[in] default_text  Default string to parse if text is NULL
+ * \param[in]  text           The string to scan (may be NULL)
+ * \param[out] result         Where to store result (or NULL to ignore)
+ * \param[in]  minimum        Value to use as default and minimum
  *
- * \return Parsed value on success, INT_MIN or INT_MAX (and set errno to
- *         ERANGE) if parsed value is out of integer range, otherwise
- *         PCMK__PARSE_INT_DEFAULT (and set errno)
+ * \return Standard Pacemaker return code
+ * \note If the value is larger than the maximum integer, EOVERFLOW will be
+ *       returned and \p result will be set to the maximum integer.
  */
 int
-crm_parse_int(const char *text, const char *default_text)
+pcmk__scan_min_int(const char *text, int *result, int minimum)
 {
-    long long result = crm_parse_ll(text, default_text);
+    int rc;
+    long long result_ll;
 
-    if (result < INT_MIN) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MIN;
+    rc = pcmk__scan_ll(text, &result_ll, (long long) minimum);
 
-    } else if (result > INT_MAX) {
-        // If errno is ERANGE, crm_parse_ll() has already logged a message
-        if (errno != ERANGE) {
-            crm_err("Conversion of %s was clipped: %lld", text, result);
-            errno = ERANGE;
-        }
-        return INT_MAX;
+    if (result_ll < (long long) minimum) {
+        crm_warn("Clipped '%s' to minimum acceptable value %d", text, minimum);
+        result_ll = (long long) minimum;
+
+    } else if (result_ll > INT_MAX) {
+        crm_warn("Clipped '%s' to maximum integer %d", text, INT_MAX);
+        result_ll = (long long) INT_MAX;
+        rc = EOVERFLOW;
     }
 
-    return (int) result;
+    if (result != NULL) {
+        *result = (int) result_ll;
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Scan a TCP port number from a string
+ *
+ * \param[in]  text  The string to scan
+ * \param[out] port  Where to store result (or NULL to ignore)
+ *
+ * \return Standard Pacemaker return code
+ * \note \p port will be -1 if \p text is NULL or invalid
+ */
+int
+pcmk__scan_port(const char *text, int *port)
+{
+    long long port_ll;
+    int rc = pcmk__scan_ll(text, &port_ll, -1LL);
+
+    if ((text != NULL) && (rc == pcmk_rc_ok) // wasn't default or invalid
+        && ((port_ll < 0LL) || (port_ll > 65535LL))) {
+        crm_warn("Ignoring port specification '%s' "
+                 "not in valid range (0-65535)", text);
+        rc = (port_ll < 0LL)? pcmk_rc_before_range : pcmk_rc_after_range;
+        port_ll = -1LL;
+    }
+    if (port != NULL) {
+        *port = (int) port_ll;
+    }
+    return rc;
 }
 
 /*!
@@ -288,22 +313,24 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 {
     const char *value;
     long long value_ll;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK((table != NULL) && (key != NULL), return EINVAL);
 
+    if (result != NULL) {
+        *result = default_val;
+    }
+
     value = g_hash_table_lookup(table, key);
     if (value == NULL) {
-        if (result != NULL) {
-            *result = default_val;
-        }
         return pcmk_rc_ok;
     }
 
-    errno = 0;
-    value_ll = crm_parse_ll(value, NULL);
-    if (errno != 0) {
-        return errno; // Message already logged
+    rc = pcmk__scan_ll(value, &value_ll, 0LL);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
+
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
         crm_warn("Could not parse non-negative integer from %s", value);
         return ERANGE;
@@ -370,11 +397,11 @@ crm_get_msec(const char *input)
     } else if (!strncasecmp(units, "h", 1) || !strncasecmp(units, "hr", 2)) {
         multiplier = 60 * 60 * 1000;
         divisor = 1;
-    } else if ((*units != EOS) && (*units != '\n') && (*units != '\r')) {
+    } else if ((*units != '\0') && (*units != '\n') && (*units != '\r')) {
         return PCMK__PARSE_INT_DEFAULT;
     }
 
-    scan_ll(num_start, &msec, &end_text);
+    scan_ll(num_start, &msec, PCMK__PARSE_INT_DEFAULT, &end_text);
     if (msec > (LLONG_MAX / multiplier)) {
         // Arithmetics overflow while multiplier/divisor mutually exclusive
         return LLONG_MAX;
@@ -416,8 +443,16 @@ crm_str_to_boolean(const char *s, int *ret)
     return -1;
 }
 
+/*!
+ * \internal
+ * \brief Replace any trailing newlines in a string with \0's
+ *
+ * \param[in] str  String to trim
+ *
+ * \return \p str
+ */
 char *
-crm_strip_trailing_newline(char *str)
+pcmk__trim(char *str)
 {
     int len;
 
@@ -529,8 +564,14 @@ pcmk__ends_with_ext(const char *s, const char *match)
     return ends_with(s, match, true);
 }
 
-/*
- * This re-implements g_str_hash as it was prior to glib2-2.28:
+/*!
+ * \internal
+ * \brief Create a hash of a string suitable for use with GHashTable
+ *
+ * \param[in] v  String to hash
+ *
+ * \return A hash of \p v compatible with g_str_hash() before glib 2.28
+ * \note glib changed their hash implementation:
  *
  * https://gitlab.gnome.org/GNOME/glib/commit/354d655ba8a54b754cb5a3efb42767327775696c
  *
@@ -542,8 +583,8 @@ pcmk__ends_with_ext(const char *s, const char *match)
  * also appears to have some minor impact on the ordering of a few
  * pseudo_event IDs in the transition graph.
  */
-guint
-g_str_hash_traditional(gconstpointer v)
+static guint
+pcmk__str_hash(gconstpointer v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -554,15 +595,34 @@ g_str_hash_traditional(gconstpointer v)
     return h;
 }
 
+/*!
+ * \internal
+ * \brief Create a hash table with case-sensitive strings as keys
+ *
+ * \param[in] key_destroy_func    Function to free a key
+ * \param[in] value_destroy_func  Function to free a value
+ *
+ * \return Newly allocated hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+GHashTable *
+pcmk__strkey_table(GDestroyNotify key_destroy_func,
+                   GDestroyNotify value_destroy_func)
+{
+    return g_hash_table_new_full(pcmk__str_hash, g_str_equal,
+                                 key_destroy_func, value_destroy_func);
+}
+
 /* used with hash tables where case does not matter */
-gboolean
-crm_strcase_equal(gconstpointer a, gconstpointer b)
+static gboolean
+pcmk__strcase_equal(gconstpointer a, gconstpointer b)
 {
     return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
-guint
-crm_strcase_hash(gconstpointer v)
+static guint
+pcmk__strcase_hash(gconstpointer v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -573,6 +633,25 @@ crm_strcase_hash(gconstpointer v)
     return h;
 }
 
+/*!
+ * \internal
+ * \brief Create a hash table with case-insensitive strings as keys
+ *
+ * \param[in] key_destroy_func    Function to free a key
+ * \param[in] value_destroy_func  Function to free a value
+ *
+ * \return Newly allocated hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+GHashTable *
+pcmk__strikey_table(GDestroyNotify key_destroy_func,
+                    GDestroyNotify value_destroy_func)
+{
+    return g_hash_table_new_full(pcmk__strcase_hash, pcmk__strcase_equal,
+                                 key_destroy_func, value_destroy_func);
+}
+
 static void
 copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
 {
@@ -581,13 +660,23 @@ copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Copy a hash table that uses dynamically allocated strings
+ *
+ * \param[in] old_table  Hash table to duplicate
+ *
+ * \return New hash table with copies of everything in \p old_table
+ * \note This assumes the hash table uses dynamically allocated strings -- that
+ *       is, both the key and value free functions are free().
+ */
 GHashTable *
-crm_str_table_dup(GHashTable *old_table)
+pcmk__str_table_dup(GHashTable *old_table)
 {
     GHashTable *new_table = NULL;
 
     if (old_table) {
-        new_table = crm_str_table_new();
+        new_table = pcmk__strkey_table(free, free);
         g_hash_table_foreach(old_table, copy_str_table_entry, new_table);
     }
     return new_table;
@@ -738,7 +827,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
      * no beginning or garbage.
      * */
     if (*srcstring == '-') {
-        int rc = scan_ll(srcstring+1, end, &remainder);
+        int rc = scan_ll(srcstring+1, end, PCMK__PARSE_INT_DEFAULT, &remainder);
 
         if (rc != pcmk_rc_ok || *remainder != '\0') {
             return pcmk_rc_unknown_format;
@@ -747,14 +836,16 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
         }
     }
 
-    if (scan_ll(srcstring, start, &remainder) != pcmk_rc_ok) {
+    if (scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT,
+                &remainder) != pcmk_rc_ok) {
         return pcmk_rc_unknown_format;
     }
 
     if (*remainder && *remainder == '-') {
         if (*(remainder+1)) {
             char *more_remainder = NULL;
-            int rc = scan_ll(remainder+1, end, &more_remainder);
+            int rc = scan_ll(remainder+1, end, PCMK__PARSE_INT_DEFAULT,
+                             &more_remainder);
 
             if (rc != pcmk_rc_ok || *more_remainder != '\0') {
                 return pcmk_rc_unknown_format;
@@ -909,6 +1000,7 @@ pcmk__char_in_any_str(int ch, ...)
 }
 
 /*!
+ * \internal
  * \brief Sort strings, with numeric portions sorted numerically
  *
  * Sort two strings case-insensitively like strcasecmp(), but with any numeric
@@ -924,7 +1016,7 @@ pcmk__char_in_any_str(int ch, ...)
  * \retval  1 \p s1 comes after \p s2
  */
 int
-pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+pcmk__numeric_strcasecmp(const char *s1, const char *s2)
 {
     while (*s1 && *s2) {
         if (isdigit(*s1) && isdigit(*s2)) {
@@ -1069,11 +1161,8 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 
 // Deprecated functions kept only for backward API compatibility
 
-gboolean safe_str_neq(const char *a, const char *b);
+#include <crm/common/util_compat.h>
 
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-
-//! \deprecated Use pcmk__str_eq() instead
 gboolean
 safe_str_neq(const char *a, const char *b)
 {
@@ -1089,7 +1178,6 @@ safe_str_neq(const char *a, const char *b)
     return TRUE;
 }
 
-//! \deprecated Use pcmk__str_eq() instead
 gboolean
 crm_str_eq(const char *a, const char *b, gboolean use_case)
 {
@@ -1109,3 +1197,92 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     }
     return FALSE;
 }
+
+char *
+crm_itoa_stack(int an_int, char *buffer, size_t len)
+{
+    if (buffer != NULL) {
+        snprintf(buffer, len, "%d", an_int);
+    }
+    return buffer;
+}
+
+guint
+g_str_hash_traditional(gconstpointer v)
+{
+    return pcmk__str_hash(v);
+}
+
+gboolean
+crm_strcase_equal(gconstpointer a, gconstpointer b)
+{
+    return pcmk__strcase_equal(a, b);
+}
+
+guint
+crm_strcase_hash(gconstpointer v)
+{
+    return pcmk__strcase_hash(v);
+}
+
+GHashTable *
+crm_str_table_dup(GHashTable *old_table)
+{
+    return pcmk__str_table_dup(old_table);
+}
+
+long long
+crm_parse_ll(const char *text, const char *default_text)
+{
+    long long result;
+
+    if (text == NULL) {
+        text = default_text;
+        if (text == NULL) {
+            crm_err("No default conversion value supplied");
+            errno = EINVAL;
+            return PCMK__PARSE_INT_DEFAULT;
+        }
+    }
+    scan_ll(text, &result, PCMK__PARSE_INT_DEFAULT, NULL);
+    return result;
+}
+
+int
+crm_parse_int(const char *text, const char *default_text)
+{
+    long long result = crm_parse_ll(text, default_text);
+
+    if (result < INT_MIN) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MIN;
+
+    } else if (result > INT_MAX) {
+        // If errno is ERANGE, crm_parse_ll() has already logged a message
+        if (errno != ERANGE) {
+            crm_err("Conversion of %s was clipped: %lld", text, result);
+            errno = ERANGE;
+        }
+        return INT_MAX;
+    }
+
+    return (int) result;
+}
+
+char *
+crm_strip_trailing_newline(char *str)
+{
+    return pcmk__trim(str);
+}
+
+int
+pcmk_numeric_strcasecmp(const char *s1, const char *s2)
+{
+    return pcmk__numeric_strcasecmp(s1, s2);
+}
+
+// End deprecated API

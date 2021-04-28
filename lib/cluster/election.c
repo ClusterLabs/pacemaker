@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
-#include <crm/cluster/election.h>
+#include <crm/cluster/election_internal.h>
 #include <crm/crm.h>
 
 #define STORM_INTERVAL   2      /* in seconds */
@@ -488,7 +488,7 @@ record_vote(election_t *e, struct vote *vote)
 
     CRM_ASSERT(e && vote && vote->from && vote->op);
     if (e->voted == NULL) {
-        e->voted = crm_str_table_new();
+        e->voted = pcmk__strkey_table(free, free);
     }
 
     voter_copy = strdup(vote->from);

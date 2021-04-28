@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,16 +24,12 @@
 
 #include "pacemaker-execd.h"
 
-#if defined(HAVE_GNUTLS_GNUTLS_H) && defined(SUPPORT_REMOTE)
-#  define ENABLE_PCMK_REMOTE
-#endif
-
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *stonith_api = NULL;
 int lrmd_call_id = 0;
 
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
 /* whether shutdown request has been sent */
 static sig_atomic_t shutting_down = FALSE;
 
@@ -129,7 +125,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
 
         if (value == NULL) {
-            client->name = crm_itoa(pcmk__client_pid(c));
+            client->name = pcmk__itoa(pcmk__client_pid(c));
         } else {
             client->name = strdup(value);
         }
@@ -161,7 +157,7 @@ lrmd_client_destroy(pcmk__client_t *client)
 {
     pcmk__free_client(client);
 
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     /* If we were waiting to shut down, we can now safely do so
      * if there are no more proxied IPC providers
      */
@@ -182,7 +178,7 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
 
     crm_trace("Connection %p", c);
     client_disconnect_cleanup(client->id);
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     ipc_proxy_remove_provider(client);
 #endif
     lrmd_client_destroy(client);
@@ -212,7 +208,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
             return pcmk__ipc_send_xml(client, id, reply, FALSE);
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
             return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
@@ -236,7 +232,7 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
                 return ENOTCONN;
             }
             return pcmk__ipc_send_xml(client, 0, msg, crm_ipc_server_event);
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
             if (client->remote == NULL) {
                 crm_trace("Could not notify remote client: disconnected");
@@ -275,7 +271,7 @@ lrmd_exit(gpointer data)
         mainloop_del_ipc_server(ipcs);
     }
 
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     lrmd_tls_server_destroy();
     ipc_proxy_cleanup();
 #endif
@@ -300,7 +296,7 @@ lrmd_exit(gpointer data)
 static void
 lrmd_shutdown(int nsig)
 {
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
 
     /* If there are active proxied IPC providers, then we may be running
@@ -351,7 +347,7 @@ lrmd_shutdown(int nsig)
  */
 void handle_shutdown_ack()
 {
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
         crm_info("Received shutdown ack");
         if (shutdown_ack_timer > 0) {
@@ -370,7 +366,7 @@ void handle_shutdown_ack()
  */
 void handle_shutdown_nack()
 {
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
         crm_info("Received shutdown nack");
         if (shutdown_ack_timer > 0) {
@@ -401,7 +397,7 @@ static pcmk__cli_option_t long_options[] = {
         "logfile", required_argument, NULL, 'l',
         "\tSend logs to the additional named logfile", pcmk__option_default
     },
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     {
         "port", required_argument, NULL, 'p',
         "\tPort to listen on", pcmk__option_default
@@ -410,7 +406,7 @@ static pcmk__cli_option_t long_options[] = {
     { 0, 0, 0, 0 }
 };
 
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
 #  define EXECD_TYPE "remote"
 #  define EXECD_NAME "pacemaker-remoted"
 #  define EXECD_DESC "resource agent executor daemon for Pacemaker Remote nodes"
@@ -428,7 +424,7 @@ main(int argc, char **argv, char **envp)
     int bump_log_num = 0;
     const char *option = NULL;
 
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
     remoted_spawn_pidone(argc, argv, envp);
 #endif
@@ -491,17 +487,24 @@ main(int argc, char **argv, char **envp)
      */
     unsetenv("NOTIFY_SOCKET");
 
-    /* Used by RAs - Leave owned by root */
-    crm_build_path(CRM_RSCTMP_DIR, 0755);
+    {
+        // Temporary directory for resource agent use (leave owned by root)
+        int rc = pcmk__build_path(CRM_RSCTMP_DIR, 0755);
 
-    rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Could not create resource agent temporary directory "
+                     CRM_RSCTMP_DIR ": %s", pcmk_rc_str(rc));
+        }
+    }
+
+    rsc_list = pcmk__strkey_table(NULL, free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
         crm_exit(CRM_EX_FATAL);
     }
 
-#ifdef ENABLE_PCMK_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
         crm_err("Failed to create TLS listener: shutting down and staying down");
         crm_exit(CRM_EX_FATAL);

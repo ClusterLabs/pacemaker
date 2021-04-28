@@ -1,0 +1,25 @@
+Current cluster status:
+  * Node List:
+    * Online: [ ih01 ih02 ]
+
+  * Full List of Resources:
+    * Resource Group: group_common:
+      * resource_ip_common	(ocf:heartbeat:IPaddr2):	 Started ih02
+      * resource_idvscommon	(ocf:dfs:idvs):	 FAILED ih02
+
+Transition Summary:
+  * Stop       resource_idvscommon     (  ih02 )  due to node availability
+
+Executing Cluster Transition:
+  * Pseudo action:   group_common_stop_0
+  * Resource action: resource_idvscommon stop on ih02
+  * Pseudo action:   group_common_stopped_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ ih01 ih02 ]
+
+  * Full List of Resources:
+    * Resource Group: group_common:
+      * resource_ip_common	(ocf:heartbeat:IPaddr2):	 Started ih02
+      * resource_idvscommon	(ocf:dfs:idvs):	 Stopped

@@ -1,0 +1,24 @@
+Current cluster status:
+  * Node List:
+    * Node node2: standby
+    * Online: [ node1 ]
+
+  * Full List of Resources:
+    * Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable):
+      * Promoted: [ node1 ]
+      * Stopped: [ node2 ]
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Resource action: MS_RSC_NATIVE:0 monitor=5000 on node1
+
+Revised Cluster Status:
+  * Node List:
+    * Node node2: standby
+    * Online: [ node1 ]
+
+  * Full List of Resources:
+    * Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable):
+      * Promoted: [ node1 ]
+      * Stopped: [ node2 ]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -219,4 +219,18 @@ int pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
                          const char *id, stonith_key_value_t *params,
                          unsigned int timeout);
 
+/**
+ * \brief Reduce the STONITH history
+ *
+ * STONITH history is reduced as follows:
+ *  - The last successful action of every action-type and target is kept
+ *  - For failed actions, who failed is kept
+ *  - All actions in progress are kept
+ *
+ * \param[in] history List of STONITH actions
+ *
+ * \return The reduced history
+ */
+stonith_history_t *
+pcmk__reduce_fence_history(stonith_history_t *history);
 #endif

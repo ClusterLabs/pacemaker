@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 the Pacemaker project contributors
+ * Copyright 2017-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,6 +36,11 @@ extern "C" {
 #define PCMK_STONITH_PROVIDES           "provides"
 #define PCMK_STONITH_STONITH_TIMEOUT    "stonith-timeout"
 
+// OCF Resource Agent API standard version that this Pacemaker supports
+#define PCMK_OCF_MAJOR_VERSION "1"
+#define PCMK_OCF_MINOR_VERSION "1"
+#define PCMK_OCF_VERSION       PCMK_OCF_MAJOR_VERSION "." PCMK_OCF_MINOR_VERSION
+
 // Capabilities supported by a resource agent standard
 enum pcmk_ra_caps {
     pcmk_ra_cap_none         = 0,
@@ -55,15 +60,9 @@ int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                          char **type);
 bool pcmk_stonith_param(const char *param);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated Use pcmk_get_ra_caps() instead
-bool crm_provider_required(const char *standard);
-
-#endif // PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/agents_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

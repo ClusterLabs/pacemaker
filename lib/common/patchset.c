@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -194,7 +194,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 static bool
 is_config_change(xmlNode *xml)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xml_private_t *p = NULL;
     xmlNode *config = first_named_child(xml, XML_CIB_TAG_CONFIGURATION);
 
@@ -252,7 +252,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
         cib = create_xml_node(diff_child, tag);
     }
 
-    for (lpc = 0; (last != NULL) && (lpc < DIMOF(vfields)); lpc++) {
+    for (lpc = 0; (last != NULL) && (lpc < PCMK__NELEM(vfields)); lpc++) {
         const char *value = crm_element_value(last, vfields[lpc]);
 
         crm_xml_add(diff_child, vfields[lpc], value);
@@ -273,7 +273,7 @@ xml_repair_v1_diff(xmlNode *last, xmlNode *next, xmlNode *local_diff,
         cib = create_xml_node(diff_child, tag);
     }
 
-    for (lpc = 0; next && lpc < DIMOF(vfields); lpc++) {
+    for (lpc = 0; next && lpc < PCMK__NELEM(vfields); lpc++) {
         const char *value = crm_element_value(next, vfields[lpc]);
 
         crm_xml_add(diff_child, vfields[lpc], value);
@@ -306,7 +306,7 @@ static xmlNode *
 xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xml_private_t *doc = NULL;
 
     xmlNode *v = NULL;
@@ -332,7 +332,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     version = create_xml_node(patchset, XML_DIFF_VERSION);
 
     v = create_xml_node(version, XML_DIFF_VSOURCE);
-    for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         const char *value = crm_element_value(source, vfields[lpc]);
 
         if (value == NULL) {
@@ -342,7 +342,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     }
 
     v = create_xml_node(version, XML_DIFF_VTARGET);
-    for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         const char *value = crm_element_value(target, vfields[lpc]);
 
         if (value == NULL) {
@@ -819,7 +819,7 @@ xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
         return -EINVAL;
     }
     if (tmp != NULL) {
-        for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
             crm_element_value_int(tmp, vfields[lpc], &(del[lpc]));
             crm_trace("Got %d for del[%s]", del[lpc], vfields[lpc]);
         }
@@ -830,7 +830,7 @@ xml_patch_versions(xmlNode *patchset, int add[3], int del[3])
         return -EINVAL;
     }
     if (tmp != NULL) {
-        for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+        for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
             crm_element_value_int(tmp, vfields[lpc], &(add[lpc]));
             crm_trace("Got %d for add[%s]", add[lpc], vfields[lpc]);
         }
@@ -864,7 +864,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
         XML_ATTR_NUMUPDATES,
     };
 
-    for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         crm_element_value_int(xml, vfields[lpc], &(this[lpc]));
         crm_trace("Got %d for this[%s]", this[lpc], vfields[lpc]);
         if (this[lpc] < 0) {
@@ -876,13 +876,13 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
     add[0] = this[0];
     add[1] = this[1];
     add[2] = this[2] + 1;
-    for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         del[lpc] = this[lpc];
     }
 
     xml_patch_versions(patchset, add, del);
 
-    for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         if (this[lpc] < del[lpc]) {
             crm_debug("Current %s is too low (%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
                       vfields[lpc], this[0], this[1], this[2],
@@ -898,7 +898,7 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
         }
     }
 
-    for (lpc = 0; lpc < DIMOF(vfields); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         if (add[lpc] > del[lpc]) {
             changed = TRUE;
         }
@@ -1144,8 +1144,8 @@ apply_v2_patchset(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_rc_ok;
     xmlNode *change = NULL;
-    GListPtr change_objs = NULL;
-    GListPtr gIter = NULL;
+    GList *change_objs = NULL;
+    GList *gIter = NULL;
 
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
@@ -1645,12 +1645,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 
 // Deprecated functions kept only for backward API compatibility
 
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
+#include <crm/common/xml_compat.h>
 
-/*!
- * \deprecated Use xml_apply_patchset() instead
- * \note This function will be removed in a future version of Pacemaker.
- */
 gboolean
 apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 {
@@ -1740,3 +1736,5 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
 
     return result;
 }
+
+// End deprecated API

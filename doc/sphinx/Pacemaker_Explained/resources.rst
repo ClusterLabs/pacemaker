@@ -42,8 +42,8 @@ Pacemaker supports several classes of agents:
 
 * OCF
 * LSB
-* Upstart
 * Systemd
+* Upstart (deprecated)
 * Service
 * Fencing
 * Nagios Plugins
@@ -128,9 +128,9 @@ with a Pacemaker cluster, they must conform to the LSB specification [#]_.
 Systemd
 _______
 
-Some newer distributions have replaced the old
+Most Linux distributions have replaced the old
 `SysV <http://en.wikipedia.org/wiki/Init#SysV-style>`_ style of
-initialization daemons and scripts with an alternative called
+initialization daemons and scripts with
 `Systemd <http://www.freedesktop.org/wiki/Software/systemd>`_.
 
 Pacemaker is able to manage these services `if they are present`.
@@ -151,20 +151,28 @@ are online guides for converting from init scripts [#]_.
 Upstart
 _______
 
-Some newer distributions have replaced the old
+Some distributions replaced the old
 `SysV <http://en.wikipedia.org/wiki/Init#SysV-style>`_ style of
-initialization daemons (and scripts) with an alternative called
+initialization daemons (and scripts) with
 `Upstart <http://upstart.ubuntu.com/>`_.
 
 Pacemaker is able to manage these services `if they are present`.
 
-Instead of init scripts, upstart has `jobs`.  Generally, the
+Instead of init scripts, Upstart has `jobs`.  Generally, the
 services (jobs) are provided by the OS distribution.
 
 .. important::
 
    Remember to make sure the computer is `not` configured to start any
    services at boot time -- that should be controlled by the cluster.
+
+.. warning::
+
+   Upstart support is deprecated in Pacemaker. Upstart is no longer an actively
+   maintained project, and test platforms for it are no longer readily usable.
+   Support will likely be dropped entirely at the next major release of
+   Pacemaker.
+
 
 .. index::
    single: Resource; System Services
@@ -341,12 +349,12 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  | * ``Stopped:`` Force the resource to be stopped      |
    |                            |                                  | * ``Started:`` Allow the resource to be started      |
    |                            |                                  |   (and in the case of :ref:`promotable clone         |
-   |                            |                                  |   resources <s-resource-promotable>`, promoted to    |
-   |                            |                                  |   master if appropriate)                             |
-   |                            |                                  | * ``Slave:`` Allow the resource to be started, but   |
-   |                            |                                  |   only in Slave mode if the resource is              |
+   |                            |                                  |   resources <s-resource-promotable>`, promoted       |
+   |                            |                                  |   if appropriate)                                    |
+   |                            |                                  | * ``Unpromoted:`` Allow the resource to be started,  |
+   |                            |                                  |   but only in the unpromoted role if the resource is |
    |                            |                                  |   :ref:`promotable <s-resource-promotable>`          |
-   |                            |                                  | * ``Master:`` Equivalent to ``Started``              |
+   |                            |                                  | * ``Promoted:`` Equivalent to ``Started``            |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | is-managed                 | TRUE                             | .. index::                                           |
    |                            |                                  |    single: is-managed; resource option               |
@@ -563,33 +571,35 @@ attributes, their purpose and default values.
 
       <?xml version="1.0"?>
       <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-      <resource-agent name="Dummy" version="1.0">
-      <version>1.0</version>
+      <resource-agent name="Dummy" version="2.0">
+      <version>1.1</version>
 
       <longdesc lang="en">
-      This is a Dummy Resource Agent. It does absolutely nothing except 
-      keep track of whether its running or not.
-      Its purpose in life is for testing and to serve as a template for RA writers.
-
-      NB: Please pay attention to the timeouts specified in the actions
-      section below. They should be meaningful for the kind of resource
-      the agent manages. They should be the minimum advised timeouts,
-      but they shouldn't/cannot cover _all_ possible resource
-      instances. So, try to be neither overly generous nor too stingy,
-      but moderate. The minimum timeouts should never be below 10 seconds.
+      This is a dummy OCF resource agent. It does absolutely nothing except keep track
+      of whether it is running or not, and can be configured so that actions fail or
+      take a long time. Its purpose is primarily for testing, and to serve as a
+      template for resource agent writers.
       </longdesc>
       <shortdesc lang="en">Example stateless resource agent</shortdesc>
 
       <parameters>
-      <parameter name="state" unique="1">
+      <parameter name="state" unique-group="state">
       <longdesc lang="en">
       Location to store the resource state in.
       </longdesc>
       <shortdesc lang="en">State file</shortdesc>
-      <content type="string" default="/var/run/Dummy-default.state" />
+      <content type="string" default="/var/run/Dummy-RESOURCE_ID.state" />
       </parameter>
 
-      <parameter name="fake" unique="0">
+      <parameter name="passwd" reloadable="1">
+      <longdesc lang="en">
+      Fake password field
+      </longdesc>
+      <shortdesc lang="en">Password</shortdesc>
+      <content type="string" default="" />
+      </parameter>
+
+      <parameter name="fake" reloadable="1">
       <longdesc lang="en">
       Fake attribute that can be changed to cause a reload
       </longdesc>
@@ -597,7 +607,7 @@ attributes, their purpose and default values.
       <content type="string" default="dummy" />
       </parameter>
 
-      <parameter name="op_sleep" unique="1">
+      <parameter name="op_sleep" reloadable="1">
       <longdesc lang="en">
       Number of seconds to sleep during operations.  This can be used to test how
       the cluster reacts to operation timeouts.
@@ -606,17 +616,35 @@ attributes, their purpose and default values.
       <content type="string" default="0" />
       </parameter>
 
+      <parameter name="fail_start_on" reloadable="1">
+      <longdesc lang="en">
+      Start, migrate_from, and reload-agent actions will return failure if running on
+      the host specified here, but the resource will run successfully anyway (future
+      monitor calls will find it running). This can be used to test on-fail=ignore.
+      </longdesc>
+      <shortdesc lang="en">Report bogus start failure on specified host</shortdesc>
+      <content type="string" default="" />
+      </parameter>
+      <parameter name="envfile" reloadable="1">
+      <longdesc lang="en">
+      If this is set, the environment will be dumped to this file for every call.
+      </longdesc>
+      <shortdesc lang="en">Environment dump file</shortdesc>
+      <content type="string" default="" />
+      </parameter>
+
       </parameters>
 
       <actions>
-      <action name="start"        timeout="20" />
-      <action name="stop"         timeout="20" />
-      <action name="monitor"      timeout="20" interval="10" depth="0"/>
-      <action name="reload"       timeout="20" />
-      <action name="migrate_to"   timeout="20" />
-      <action name="migrate_from" timeout="20" />
-      <action name="validate-all" timeout="20" />
-      <action name="meta-data"    timeout="5" />
+      <action name="start"        timeout="20s" />
+      <action name="stop"         timeout="20s" />
+      <action name="monitor"      timeout="20s" interval="10s" depth="0"/>
+      <action name="reload"       timeout="20s" />
+      <action name="reload-agent" timeout="20s" />
+      <action name="migrate_to"   timeout="20s" />
+      <action name="migrate_from" timeout="20s" />
+      <action name="validate-all" timeout="20s" />
+      <action name="meta-data"    timeout="5s" />
       </actions>
       </resource-agent>
 
@@ -707,8 +735,8 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |   or ``block`` otherwise          | The action to take if this action ever fails.       |
    |                | * ``demote``: ``on-fail`` of the  | Allowed values:                                     |
    |                |   ``monitor`` action with         |                                                     |
-   |                |   ``role`` set to ``Master``, if  | * ``ignore:`` Pretend the resource did not fail.    |
-   |                |   present, enabled, and           | * ``block:`` Don't perform any further operations   |
+   |                |   ``role`` set to ``Promoted``,   | * ``ignore:`` Pretend the resource did not fail.    |
+   |                |   if present, enabled, and        | * ``block:`` Don't perform any further operations   |
    |                |   configured to a value other     |   on the resource.                                  |
    |                |   than ``demote``, or ``restart`` | * ``stop:`` Stop the resource and do not start      |
    |                |   otherwise                       |   it elsewhere.                                     |
@@ -716,7 +744,7 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |                                   |   full restart. This is valid only for ``promote``  |
    |                |                                   |   actions, and for ``monitor`` actions with both    |
    |                |                                   |   a nonzero ``interval`` and ``role`` set to        |
-   |                |                                   |   ``Master``; for any other action, a               |
+   |                |                                   |   ``Promoted``; for any other action, a             |
    |                |                                   |   configuration error will be logged, and the       |
    |                |                                   |   default behavior will be used. *(since 2.0.5)*    |
    |                |                                   | * ``restart:`` Stop the resource and start it       |
@@ -761,28 +789,28 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    |                |                                   | Allowed (case-sensitive) values: ``Stopped``,       |
    |                |                                   | ``Started``, and in the case of :ref:`promotable    |
    |                |                                   | clone resources <s-resource-promotable>`,           |
-   |                |                                   | ``Slave`` and ``Master``.                           |
+   |                |                                   | ``Unpromoted`` and ``Promoted``.                    |
    +----------------+-----------------------------------+-----------------------------------------------------+
 
 .. note::
 
-   When ``on-fail`` is set to ``demote``, recovery from failure by a successful demote
-   causes the cluster to recalculate whether and where a new instance should be
-   promoted. The node with the failure is eligible, so if master scores have not
-   changed, it will be promoted again.
+   When ``on-fail`` is set to ``demote``, recovery from failure by a successful
+   demote causes the cluster to recalculate whether and where a new instance
+   should be promoted. The node with the failure is eligible, so if promotion
+   scores have not changed, it will be promoted again.
 
-   There is no direct equivalent of ``migration-threshold`` for the master role, but
-   the same effect can be achieved with a location constraint using a
+   There is no direct equivalent of ``migration-threshold`` for the promoted
+   role, but the same effect can be achieved with a location constraint using a
    :ref:`rule <rules>` with a node attribute expression for the resource's fail
    count.
 
-   For example, to immediately ban the master role from a node with any failed
-   promote or master monitor:
+   For example, to immediately ban the promoted role from a node with any
+   failed promote or promoted instance monitor:
 
    .. code-block:: xml
 
       <rsc_location id="loc1" rsc="my_primitive">
-          <rule id="rule1" score="-INFINITY" role="Master" boolean-op="or">
+          <rule id="rule1" score="-INFINITY" role="Promoted" boolean-op="or">
             <expression id="expr1" attribute="fail-count-my_primitive#promote_0"
               operation="gte" value="1"/>
             <expression id="expr2" attribute="fail-count-my_primitive#monitor_10000"
@@ -793,7 +821,8 @@ XML attributes take precedence over ``nvpair`` elements if both are specified.
    This example assumes that there is a promotable clone of the ``my_primitive``
    resource (note that the primitive name, not the clone name, is used in the
    rule), and that there is a recurring 10-second-interval monitor configured for
-   the master role (fail count attributes specify the interval in milliseconds).
+   the promoted role (fail count attributes specify the interval in
+   milliseconds).
 
 .. _s-resource-monitoring:
 

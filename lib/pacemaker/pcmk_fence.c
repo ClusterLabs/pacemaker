@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -177,14 +177,12 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
     int rc = pcmk_rc_ok;
     int opts = 0;
 
-    if (!out->is_quiet(out)) {
-        if (cleanup) {
-            out->info(out, "cleaning up fencing-history%s%s",
-                      target ? " for node " : "", target ? target : "");
-        }
-        if (broadcast) {
-            out->info(out, "gather fencing-history from all nodes");
-        }
+    if (cleanup) {
+        out->info(out, "cleaning up fencing-history%s%s",
+                  target ? " for node " : "", target ? target : "");
+    }
+    if (broadcast) {
+        out->info(out, "gather fencing-history from all nodes");
     }
 
     stonith__set_call_options(opts, target, st_opts);
@@ -222,7 +220,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, char *target,
 
     if (latest) {
         if (out->is_quiet(out)) {
-            out->info(out, "%lld", (long long) latest->completed);
+            pcmk__formatted_printf(out, "%lld\n", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
             out->message(out, "stonith-event", latest, 0, FALSE);
             out->increment_list(out);
@@ -520,3 +518,46 @@ pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
     return rc;
 }
 #endif
+
+stonith_history_t *
+pcmk__reduce_fence_history(stonith_history_t *history)
+{
+    stonith_history_t *new, *hp, *np;
+
+    if (!history) {
+        return history;
+    }
+
+    new = history;
+    hp = new->next;
+    new->next = NULL;
+
+    while (hp) {
+        stonith_history_t *hp_next = hp->next;
+
+        hp->next = NULL;
+
+        for (np = new; ; np = np->next) {
+            if ((hp->state == st_done) || (hp->state == st_failed)) {
+                /* action not in progress */
+                if (pcmk__str_eq(hp->target, np->target, pcmk__str_casei) &&
+                    pcmk__str_eq(hp->action, np->action, pcmk__str_casei) &&
+                    (hp->state == np->state) &&
+                    ((hp->state == st_done) ||
+                     pcmk__str_eq(hp->delegate, np->delegate, pcmk__str_casei))) {
+                        /* purge older hp */
+                        stonith_history_free(hp);
+                        break;
+                }
+            }
+
+            if (!np->next) {
+                np->next = hp;
+                break;
+            }
+        }
+        hp = hp_next;
+    }
+
+    return new;
+}

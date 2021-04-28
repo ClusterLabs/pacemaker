@@ -1,0 +1,21 @@
+Current cluster status:
+  * Node List:
+    * Online: [ c001n05 ]
+
+  * Full List of Resources:
+    * DcIPaddr	(ocf:heartbeat:IPaddr):	 Stopped
+
+Transition Summary:
+  * Start      DcIPaddr     ( c001n05 )
+
+Executing Cluster Transition:
+  * Resource action: DcIPaddr        monitor on c001n05
+  * Resource action: DcIPaddr        start on c001n05
+  * Resource action: DcIPaddr        monitor=5000 on c001n05
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ c001n05 ]
+
+  * Full List of Resources:
+    * DcIPaddr	(ocf:heartbeat:IPaddr):	 Started c001n05

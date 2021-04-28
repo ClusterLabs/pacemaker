@@ -1,6 +1,8 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2020 the Pacemaker project contributors
+ * Later changes copyright 2008-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -547,7 +549,7 @@ load_file_cib(const char *filename)
     xmlNode *root = NULL;
 
     /* Ensure file is readable */
-    if (stat(filename, &buf) < 0) {
+    if (strcmp(filename, "-") && (stat(filename, &buf) < 0)) {
         return -ENXIO;
     }
 
@@ -800,17 +802,12 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
     xmlNode *result_cib = NULL;
     cib_op_t *fn = NULL;
     int lpc = 0;
-    static int max_msg_types = DIMOF(cib_file_ops);
+    static int max_msg_types = PCMK__NELEM(cib_file_ops);
     cib_file_opaque_t *private = cib->variant_opaque;
 
-#if ENABLE_ACL
     crm_info("Handling %s operation for %s as %s",
              (op? op : "invalid"), (section? section : "entire CIB"),
              (user_name? user_name : "default user"));
-#else
-    crm_info("Handling %s operation for %s",
-             (op? op : "invalid"), (section? section : "entire CIB"));
-#endif
 
     cib__set_call_options(call_options, "file operation",
                           cib_no_mtime|cib_inhibit_bcast|cib_scope_local);
@@ -841,11 +838,9 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
 
     cib->call_id++;
     request = cib_create_op(cib->call_id, "dummy-token", op, host, section, data, call_options, user_name);
-#if ENABLE_ACL
     if(user_name) {
         crm_xml_add(request, XML_ACL_TAG_USER, user_name);
     }
-#endif
 
     /* Mirror the logic in cib_prepare_common() */
     if (section != NULL && data != NULL && pcmk__str_eq(crm_element_name(data), XML_TAG_CIB, pcmk__str_none)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 
 #include <pwd.h>
 #include <grp.h>
-#include <poll.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -456,7 +455,7 @@ pcmk_shutdown_worker(gpointer user_data)
         const char *delay = pcmk__env_option("shutdown_delay");
         if(delay) {
             sync();
-            sleep(crm_get_msec(delay) / 1000);
+            pcmk__sleep_ms(crm_get_msec(delay));
         }
     }
 
@@ -571,17 +570,12 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
-#if ENABLE_ACL
-        /* Only allow privileged users (i.e. root or hacluster)
-         * to shut down Pacemaker from the command line (or direct IPC).
-         *
-         * We only check when ACLs are enabled, because without them, any client
-         * with IPC access could shut down Pacemaker via the CIB anyway.
+        /* Only allow privileged users (i.e. root or hacluster) to shut down
+         * Pacemaker from the command line (or direct IPC), so that other users
+         * are forced to go through the CIB and have ACLs applied.
          */
         bool allowed = pcmk_is_set(c->flags, pcmk__client_privileged);
-#else
-        bool allowed = true;
-#endif
+
         if (allowed) {
             crm_notice("Shutting down in response to IPC request %s from %s",
                        crm_element_value(msg, F_CRM_REFERENCE),
@@ -699,6 +693,48 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
     if (rc < 0) {
         crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
                  path, CRM_DAEMON_USER, gid, pcmk_strerror(errno));
+    }
+}
+
+static void
+create_pcmk_dirs(void)
+{
+    uid_t pcmk_uid = 0;
+    gid_t pcmk_gid = 0;
+
+    const char *dirs[] = {
+        CRM_PACEMAKER_DIR, // core/blackbox/scheduler/CIB files
+        CRM_CORE_DIR,      // core files
+        CRM_BLACKBOX_DIR,  // blackbox dumps
+        PE_STATE_DIR,      // scheduler inputs
+        CRM_CONFIG_DIR,    // the Cluster Information Base (CIB)
+        // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
+        NULL
+    };
+
+    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
+        crm_err("Cluster user %s does not exist, aborting Pacemaker startup",
+                CRM_DAEMON_USER);
+        crm_exit(CRM_EX_NOUSER);
+    }
+
+    // Used by some resource agents
+    if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
+        crm_warn("Could not create directory " CRM_STATE_DIR ": %s",
+                 pcmk_rc_str(errno));
+    } else {
+        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
+    }
+
+    for (int i = 0; dirs[i] != NULL; ++i) {
+        int rc = pcmk__build_path(dirs[i], 0750);
+
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Could not create directory %s: %s",
+                     dirs[i], pcmk_rc_str(rc));
+        } else {
+            mcp_chown(dirs[i], pcmk_uid, pcmk_gid);
+        }
     }
 }
 
@@ -1007,7 +1043,7 @@ find_and_track_existing_processes(void)
         if (!wait_in_progress) {
             break;
         }
-        (void) poll(NULL, 0, 250);  /* a bit for changes to possibly happen */
+        pcmk__sleep_ms(250); // Wait a bit for changes to possibly happen
     }
     for (i = 0; i < SIZEOF(pcmk_children); i++) {
         pcmk_children[i].respawn_count = 0;  /* restore pristine state */
@@ -1142,8 +1178,6 @@ main(int argc, char **argv)
     bool old_instance_connected = false;
     gboolean shutdown = FALSE;
 
-    uid_t pcmk_uid = 0;
-    gid_t pcmk_gid = 0;
     crm_ipc_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
@@ -1252,46 +1286,8 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
-
-    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
-        crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
-        crm_exit(CRM_EX_NOUSER);
-    }
-
-    // Used by some resource agents
-    if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
-        crm_warn("Could not create " CRM_STATE_DIR ": %s", pcmk_strerror(errno));
-    } else {
-        mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
-    }
-
-    /* Used to store core/blackbox/scheduler/cib files in */
-    crm_build_path(CRM_PACEMAKER_DIR, 0750);
-    mcp_chown(CRM_PACEMAKER_DIR, pcmk_uid, pcmk_gid);
-
-    /* Used to store core files in */
-    crm_build_path(CRM_CORE_DIR, 0750);
-    mcp_chown(CRM_CORE_DIR, pcmk_uid, pcmk_gid);
-
-    /* Used to store blackbox dumps in */
-    crm_build_path(CRM_BLACKBOX_DIR, 0750);
-    mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
-
-    // Used to store scheduler inputs in
-    crm_build_path(PE_STATE_DIR, 0750);
-    mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
-
-    /* Used to store the cluster configuration */
-    crm_build_path(CRM_CONFIG_DIR, 0750);
-    mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
-
-    // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
-
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
-    if (ipcs == NULL) {
-        crm_err("Couldn't start IPC server");
-        crm_exit(CRM_EX_OSERR);
-    }
+    create_pcmk_dirs();
+    pcmk__serve_pacemakerd_ipc(&ipcs, &mcp_ipc_callbacks);
 
 #ifdef SUPPORT_COROSYNC
     /* Allows us to block shutdown */

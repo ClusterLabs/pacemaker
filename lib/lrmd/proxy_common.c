@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -248,10 +248,8 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
         crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
 
-#if ENABLE_ACL
         CRM_ASSERT(node_name);
         pcmk__update_acl_user(request, F_LRMD_IPC_USER, node_name);
-#endif
 
         if (pcmk_is_set(flags, crm_ipc_proxied)) {
             const char *type = crm_element_value(request, F_TYPE);

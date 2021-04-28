@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/cib.h>
 #include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
-#include <crm/cluster/election.h>
+#include <crm/cluster/election_internal.h>
 #include <crm/cib/internal.h>
 
 #include "pacemaker-attrd.h"
@@ -151,14 +151,12 @@ create_attribute(xmlNode *xml)
     a->id      = crm_element_value_copy(xml, PCMK__XA_ATTR_NAME);
     a->set     = crm_element_value_copy(xml, PCMK__XA_ATTR_SET);
     a->uuid    = crm_element_value_copy(xml, PCMK__XA_ATTR_UUID);
-    a->values = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, free_attribute_value);
+    a->values = pcmk__strikey_table(NULL, free_attribute_value);
 
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_PRIVATE, &a->is_private);
 
-#if ENABLE_ACL
     a->user = crm_element_value_copy(xml, PCMK__XA_ATTR_USER);
     crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
-#endif
 
     if(value) {
         dampen = crm_get_msec(value);
@@ -1241,9 +1239,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     a->force_write = FALSE;    
 
     /* Make the table for the attribute trap */
-    alert_attribute_value = g_hash_table_new_full(crm_strcase_hash,
-                                                  crm_strcase_equal, NULL,
-                                                  free_attribute_value);
+    alert_attribute_value = pcmk__strikey_table(NULL, free_attribute_value);
 
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);

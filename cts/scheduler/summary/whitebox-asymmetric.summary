@@ -1,0 +1,42 @@
+1 of 7 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ 18builder ]
+
+  * Full List of Resources:
+    * fence_false	(stonith:fence_false):	 Stopped
+    * container2	(ocf:pacemaker:Dummy):	 Started 18builder
+    * webserver	(ocf:pacemaker:Dummy):	 Stopped
+    * nfs_mount	(ocf:pacemaker:Dummy):	 Stopped
+    * Resource Group: mygroup:
+      * vg_tags	(ocf:heartbeat:LVM):	 Stopped (disabled)
+    * vg_tags_dup	(ocf:heartbeat:LVM):	 Stopped
+
+Transition Summary:
+  * Start      nfs_mount     (   18node2 )
+  * Start      18node2       ( 18builder )
+
+Executing Cluster Transition:
+  * Resource action: 18node2         start on 18builder
+  * Resource action: webserver       monitor on 18node2
+  * Resource action: nfs_mount       monitor on 18node2
+  * Resource action: vg_tags         monitor on 18node2
+  * Resource action: vg_tags_dup     monitor on 18node2
+  * Resource action: 18node2         monitor=30000 on 18builder
+  * Resource action: nfs_mount       start on 18node2
+  * Resource action: nfs_mount       monitor=10000 on 18node2
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ 18builder ]
+    * GuestOnline: [ 18node2@18builder ]
+
+  * Full List of Resources:
+    * fence_false	(stonith:fence_false):	 Stopped
+    * container2	(ocf:pacemaker:Dummy):	 Started 18builder
+    * webserver	(ocf:pacemaker:Dummy):	 Stopped
+    * nfs_mount	(ocf:pacemaker:Dummy):	 Started 18node2
+    * Resource Group: mygroup:
+      * vg_tags	(ocf:heartbeat:LVM):	 Stopped (disabled)
+    * vg_tags_dup	(ocf:heartbeat:LVM):	 Stopped

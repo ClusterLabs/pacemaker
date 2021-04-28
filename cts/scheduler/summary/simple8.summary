@@ -1,0 +1,31 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc3	(ocf:heartbeat:apache):	 Started node1
+    * rsc4	(ocf:heartbeat:apache):	 Started node1
+    * Resource Group: foo:
+      * rsc1	(ocf:heartbeat:apache):	 Started node1
+    * Resource Group: bar:
+      * rsc2	(ocf:heartbeat:apache):	 Started node1
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Resource action: rsc3            monitor on node2
+  * Resource action: rsc4            monitor on node2
+  * Resource action: rsc1            monitor on node2
+  * Resource action: rsc2            monitor on node2
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc3	(ocf:heartbeat:apache):	 Started node1
+    * rsc4	(ocf:heartbeat:apache):	 Started node1
+    * Resource Group: foo:
+      * rsc1	(ocf:heartbeat:apache):	 Started node1
+    * Resource Group: bar:
+      * rsc2	(ocf:heartbeat:apache):	 Started node1

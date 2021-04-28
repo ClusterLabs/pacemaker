@@ -3,7 +3,7 @@
 # ocf:pacemaker:Dummy resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2019 the Pacemaker project contributors
+# Later changes copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -41,14 +41,26 @@
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
 
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_fake:="dummy"}
+: ${OCF_RESKEY_op_sleep:=0}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_envfile:=""}
+: ${OCF_RESKEY_fail_start_on:=""}
+: ${OCF_RESKEY_migrate_source:=""}
+: ${OCF_RESKEY_migrate_target:=""}
+: ${OCF_RESKEY_envfile:=""}
+: ${OCF_RESKEY_state:=""}
+
 #######################################################################
 
 meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="Dummy" version="1.0">
-<version>1.0</version>
+<resource-agent name="Dummy" version="2.0">
+<version>1.1</version>
 
 <longdesc lang="en">
 This is a dummy OCF resource agent. It does absolutely nothing except keep track
@@ -59,7 +71,7 @@ template for resource agent writers.
 <shortdesc lang="en">Example stateless resource agent</shortdesc>
 
 <parameters>
-<parameter name="state" unique="1">
+<parameter name="state" unique-group="state">
 <longdesc lang="en">
 Location to store the resource state in.
 </longdesc>
@@ -67,7 +79,7 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
-<parameter name="passwd" unique="1">
+<parameter name="passwd" reloadable="1">
 <longdesc lang="en">
 Fake password field
 </longdesc>
@@ -75,15 +87,15 @@ Fake password field
 <content type="string" default="" />
 </parameter>
 
-<parameter name="fake" unique="0">
+<parameter name="fake" reloadable="1">
 <longdesc lang="en">
-Fake attribute that can be changed to cause a reload
+Fake attribute that can be changed to cause an agent reload
 </longdesc>
-<shortdesc lang="en">Fake attribute that can be changed to cause a reload</shortdesc>
+<shortdesc lang="en">Fake attribute that can be changed to cause an agent reload</shortdesc>
 <content type="string" default="dummy" />
 </parameter>
 
-<parameter name="op_sleep" unique="1">
+<parameter name="op_sleep" reloadable="1">
 <longdesc lang="en">
 Number of seconds to sleep during operations.  This can be used to test how
 the cluster reacts to operation timeouts.
@@ -92,17 +104,17 @@ the cluster reacts to operation timeouts.
 <content type="string" default="0" />
 </parameter>
 
-<parameter name="fail_start_on" unique="0">
+<parameter name="fail_start_on" reloadable="1">
 <longdesc lang="en">
-Start actions will return failure if running on the host specified here, but
-the resource will start successfully anyway (future monitor calls will find it
-running). This can be used to test on-fail=ignore.
+Start, migrate_from, and reload-agent actions will return failure if running on
+the host specified here, but the resource will run successfully anyway (future
+monitor calls will find it running). This can be used to test on-fail=ignore.
 </longdesc>
 <shortdesc lang="en">Report bogus start failure on specified host</shortdesc>
 <content type="string" default="" />
 </parameter>
 
-<parameter name="envfile" unique="1">
+<parameter name="envfile" reloadable="1">
 <longdesc lang="en">
 If this is set, the environment will be dumped to this file for every call.
 </longdesc>
@@ -117,6 +129,7 @@ If this is set, the environment will be dumped to this file for every call.
 <action name="stop"         timeout="20s" />
 <action name="monitor"      timeout="20s" interval="10s" depth="0"/>
 <action name="reload"       timeout="20s" />
+<action name="reload-agent" timeout="20s" />
 <action name="migrate_to"   timeout="20s" />
 <action name="migrate_from" timeout="20s" />
 <action name="validate-all" timeout="20s" />
@@ -236,19 +249,34 @@ dummy_monitor() {
 }
 
 dummy_validate() {
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_state")
-    [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
-    if [ $? -ne 0 ]; then
-        return $OCF_ERR_ARGS
+    # If specified, is op_sleep an integer?
+    case "$OCF_RESKEY_op_sleep" in
+        ""|*[0-9]*) ;;
+        *) return $OCF_ERR_CONFIGURED ;;
+    esac
+
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_state")
+        [ -d "$state_dir" ] && [ -w "$state_dir" ] && [ -x "$state_dir" ]
+        if [ $? -ne 0 ]; then
+            return $OCF_ERR_ARGS
+        fi
+
+        # If specified, is the environment file directory writable?
+        if [ -n "$OCF_RESKEY_envfile" ]; then
+            envfile_dir=$(dirname "$OCF_RESKEY_envfile")
+            [ -d "$envfile_dir" ] && [ -w "$envfile_dir" ] && [ -x "$envfile_dir" ]
+            if [ $? -ne 0 ]; then
+                return $OCF_ERR_ARGS
+            fi
+        fi
+
     fi
     return $OCF_SUCCESS
 }
-
-: ${OCF_RESKEY_fake:="dummy"}
-: ${OCF_RESKEY_op_sleep:=0}
-: ${OCF_RESKEY_CRM_meta_interval:=0}
-: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ -z "$OCF_RESKEY_state" ]; then
     OCF_RESKEY_state="${HA_VARRUN%%/}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
@@ -275,7 +303,10 @@ migrate_to)     ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY
 migrate_from)   ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} from ${OCF_RESKEY_CRM_meta_migrate_source}."
                 dummy_start
                 ;;
-reload)         ocf_log err "Reloading..."
+reload)         ocf_log debug "Reloading $OCF_RESOURCE_INSTANCE (service)"
+                exit $OCF_SUCCESS
+                ;;
+reload-agent)   ocf_log err "Reloading $OCF_RESOURCE_INSTANCE (agent)"
                 dummy_start
                 ;;
 validate-all)   dummy_validate;;

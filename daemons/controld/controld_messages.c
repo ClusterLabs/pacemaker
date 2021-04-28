@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,7 @@
 
 #include <pacemaker-controld.h>
 
-GListPtr fsa_message_queue = NULL;
+GList *fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);
 
 static enum crmd_fsa_input handle_message(xmlNode *msg,
@@ -174,7 +174,7 @@ void
 fsa_dump_queue(int log_level)
 {
     int offset = 0;
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     for (lpc = fsa_message_queue; lpc != NULL; lpc = lpc->next) {
         fsa_data_t *data = (fsa_data_t *) lpc->data;
@@ -479,21 +479,16 @@ authorize_version(xmlNode *message_data, const char *field,
                   const char *client_name, const char *ref, const char *uuid)
 {
     const char *version = crm_element_value(message_data, field);
+    long long version_num;
 
-    if (pcmk__str_empty(version)) {
-        crm_warn("IPC hello from %s rejected: No protocol %s",
+    if ((pcmk__scan_ll(version, &version_num, -1LL) != pcmk_rc_ok)
+        || (version_num < 0LL)) {
+
+        crm_warn("Rejected IPC hello from %s: '%s' is not a valid protocol %s "
                  CRM_XS " ref=%s uuid=%s",
-                 client_name, field, (ref? ref : "none"), uuid);
+                 client_name, ((version == NULL)? "" : version),
+                 field, (ref? ref : "none"), uuid);
         return false;
-    } else {
-        int version_num = crm_parse_int(version, NULL);
-
-        if (version_num < 0) {
-            crm_warn("IPC hello from %s rejected: Protocol %s '%s' "
-                     "not recognized", CRM_XS " ref=%s uuid=%s",
-                     client_name, field, version, (ref? ref : "none"), uuid);
-            return false;
-        }
     }
     return true;
 }
@@ -672,16 +667,12 @@ handle_lrm_delete(xmlNode *stored_msg)
         rsc_id = ID(rsc_xml);
         from_sys = crm_element_value(stored_msg, F_CRM_SYS_FROM);
         node = crm_element_value(msg_data, XML_LRM_ATTR_TARGET);
-#if ENABLE_ACL
         user_name = pcmk__update_acl_user(stored_msg, F_CRM_USER, NULL);
-#endif
         crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
                   "(clearing CIB resource history only)", rsc_id, node,
                   (user_name? " for user " : ""), (user_name? user_name : ""));
-#if ENABLE_ACL
         rc = controld_delete_resource_history(rsc_id, node, user_name,
                                               cib_dryrun|cib_sync_call);
-#endif
         if (rc == pcmk_rc_ok) {
             rc = controld_delete_resource_history(rsc_id, node, user_name,
                                                   crmd_cib_smart_opt());
@@ -708,7 +699,7 @@ handle_lrm_delete(xmlNode *stored_msg)
             op = lrmd_new_event(rsc_id, CRMD_ACTION_DELETE, 0);
             op->type = lrmd_event_exec_complete;
             op->user_data = strdup(transition? transition : FAKE_TE_ID);
-            op->params = crm_str_table_new();
+            op->params = pcmk__strkey_table(free, free);
             g_hash_table_insert(op->params, strdup(XML_ATTR_CRM_VERSION),
                                 strdup(CRM_FEATURE_SET));
             controld_rc2event(op, rc);
@@ -1003,8 +994,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             return handle_shutdown_self_ack(stored_msg);
 
         } else if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
-            /* a slave wants to shut down */
-            /* create cib fragment and add to message */
+            // Another controller wants to shut down its node
             return handle_shutdown_request(stored_msg);
 
         } else if (strcmp(op, CRM_OP_REMOTE_STATE) == 0) {
@@ -1186,7 +1176,6 @@ handle_shutdown_request(xmlNode * stored_msg)
      */
 
     char *now_s = NULL;
-    time_t now = time(NULL);
     const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 
     if (host_from == NULL) {
@@ -1197,7 +1186,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_info("Creating shutdown request for %s (state=%s)", host_from, fsa_state2string(fsa_state));
     crm_log_xml_trace(stored_msg, "message");
 
-    now_s = crm_itoa(now);
+    now_s = pcmk__ttoa(time(NULL));
     update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, FALSE);
     free(now_s);
 

@@ -25,7 +25,7 @@ noinst_SCRIPTS		= abi-check
 
 SUBDIRS		= sphinx
 
-EXTRA_DIST	= $(DEPRECATED_ORIGINAL) pcs-crmsh-quick-ref.md
+EXTRA_DIST	= $(DEPRECATED_ORIGINAL)
 
 # toplevel rsync destination for www targets (without trailing slash)
 RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html

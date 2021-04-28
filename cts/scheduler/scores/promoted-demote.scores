@@ -1,0 +1,66 @@
+
+cyrus_drbd_node:0 promotion score on cxa1: 285
+cyrus_drbd_node:1 promotion score on cxb1: 275
+named_drbd_node:0 promotion score on cxa1: 275
+named_drbd_node:1 promotion score on cxb1: 285
+named_drbd_node:2 promotion score on none: 0
+pcmk__clone_allocate: cyrus_drbd allocation score on cxa1: 210
+pcmk__clone_allocate: cyrus_drbd allocation score on cxb1: 200
+pcmk__clone_allocate: cyrus_drbd_node:0 allocation score on cxa1: 76
+pcmk__clone_allocate: cyrus_drbd_node:0 allocation score on cxb1: 0
+pcmk__clone_allocate: cyrus_drbd_node:1 allocation score on cxa1: 0
+pcmk__clone_allocate: cyrus_drbd_node:1 allocation score on cxb1: 76
+pcmk__clone_allocate: fence_clone allocation score on cxa1: 0
+pcmk__clone_allocate: fence_clone allocation score on cxb1: 0
+pcmk__clone_allocate: fence_node:0 allocation score on cxa1: 1
+pcmk__clone_allocate: fence_node:0 allocation score on cxb1: 0
+pcmk__clone_allocate: fence_node:1 allocation score on cxa1: 0
+pcmk__clone_allocate: fence_node:1 allocation score on cxb1: 1
+pcmk__clone_allocate: named_drbd allocation score on cxa1: 200
+pcmk__clone_allocate: named_drbd allocation score on cxb1: 210
+pcmk__clone_allocate: named_drbd_node:0 allocation score on cxa1: 76
+pcmk__clone_allocate: named_drbd_node:0 allocation score on cxb1: 0
+pcmk__clone_allocate: named_drbd_node:1 allocation score on cxa1: 0
+pcmk__clone_allocate: named_drbd_node:1 allocation score on cxb1: 76
+pcmk__clone_allocate: pingd_clone allocation score on cxa1: 0
+pcmk__clone_allocate: pingd_clone allocation score on cxb1: 0
+pcmk__clone_allocate: pingd_node:0 allocation score on cxa1: 1
+pcmk__clone_allocate: pingd_node:0 allocation score on cxb1: 0
+pcmk__clone_allocate: pingd_node:1 allocation score on cxa1: 0
+pcmk__clone_allocate: pingd_node:1 allocation score on cxb1: 1
+pcmk__native_allocate: cyrus_address allocation score on cxa1: 210
+pcmk__native_allocate: cyrus_address allocation score on cxb1: 200
+pcmk__native_allocate: cyrus_drbd_node:0 allocation score on cxa1: 76
+pcmk__native_allocate: cyrus_drbd_node:0 allocation score on cxb1: 0
+pcmk__native_allocate: cyrus_drbd_node:1 allocation score on cxa1: -INFINITY
+pcmk__native_allocate: cyrus_drbd_node:1 allocation score on cxb1: 76
+pcmk__native_allocate: cyrus_filesys allocation score on cxa1: -INFINITY
+pcmk__native_allocate: cyrus_filesys allocation score on cxb1: -INFINITY
+pcmk__native_allocate: cyrus_master allocation score on cxa1: -INFINITY
+pcmk__native_allocate: cyrus_master allocation score on cxb1: -INFINITY
+pcmk__native_allocate: cyrus_syslogd allocation score on cxa1: -INFINITY
+pcmk__native_allocate: cyrus_syslogd allocation score on cxb1: -INFINITY
+pcmk__native_allocate: cyrus_volgroup allocation score on cxa1: -INFINITY
+pcmk__native_allocate: cyrus_volgroup allocation score on cxb1: -INFINITY
+pcmk__native_allocate: fence_node:0 allocation score on cxa1: 1
+pcmk__native_allocate: fence_node:0 allocation score on cxb1: 0
+pcmk__native_allocate: fence_node:1 allocation score on cxa1: -INFINITY
+pcmk__native_allocate: fence_node:1 allocation score on cxb1: 1
+pcmk__native_allocate: named_address allocation score on cxa1: 200
+pcmk__native_allocate: named_address allocation score on cxb1: 210
+pcmk__native_allocate: named_daemon allocation score on cxa1: -INFINITY
+pcmk__native_allocate: named_daemon allocation score on cxb1: -INFINITY
+pcmk__native_allocate: named_drbd_node:0 allocation score on cxa1: 76
+pcmk__native_allocate: named_drbd_node:0 allocation score on cxb1: 0
+pcmk__native_allocate: named_drbd_node:1 allocation score on cxa1: -INFINITY
+pcmk__native_allocate: named_drbd_node:1 allocation score on cxb1: 76
+pcmk__native_allocate: named_filesys allocation score on cxa1: -INFINITY
+pcmk__native_allocate: named_filesys allocation score on cxb1: -INFINITY
+pcmk__native_allocate: named_syslogd allocation score on cxa1: -INFINITY
+pcmk__native_allocate: named_syslogd allocation score on cxb1: -INFINITY
+pcmk__native_allocate: named_volgroup allocation score on cxa1: -INFINITY
+pcmk__native_allocate: named_volgroup allocation score on cxb1: -INFINITY
+pcmk__native_allocate: pingd_node:0 allocation score on cxa1: 1
+pcmk__native_allocate: pingd_node:0 allocation score on cxb1: 0
+pcmk__native_allocate: pingd_node:1 allocation score on cxa1: -INFINITY
+pcmk__native_allocate: pingd_node:1 allocation score on cxb1: 1

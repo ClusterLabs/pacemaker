@@ -1,0 +1,29 @@
+Current cluster status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * fencing	(stonith:fence_xvm):	 Stopped
+    * dummy-rsc	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+    * ping-rsc-ping	(ocf:pacemaker:ping):	 Stopped (unmanaged)
+
+Transition Summary:
+  * Start      fencing     ( cluster01 )
+
+Executing Cluster Transition:
+  * Resource action: fencing         monitor on cluster02
+  * Resource action: fencing         monitor on cluster01
+  * Resource action: dummy-rsc       monitor on cluster02
+  * Resource action: dummy-rsc       monitor on cluster01
+  * Resource action: ping-rsc-ping   monitor on cluster02
+  * Resource action: ping-rsc-ping   monitor on cluster01
+  * Resource action: fencing         start on cluster01
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * fencing	(stonith:fence_xvm):	 Started cluster01
+    * dummy-rsc	(ocf:pacemaker:Dummy):	 Stopped (unmanaged)
+    * ping-rsc-ping	(ocf:pacemaker:ping):	 Stopped (unmanaged)

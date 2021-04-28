@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2020 the Pacemaker project contributors
+# Copyright 2012-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -13,14 +13,6 @@ halibdir		= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS		= pacemaker-execd cts-exec-helper
 
-initdir			= $(INITDIR)
-init_SCRIPTS		= pacemaker_remote
-sbin_PROGRAMS		= pacemaker-remoted
-
-if BUILD_SYSTEMD
-systemdsystemunit_DATA	= pacemaker_remote.service
-endif
-
 pacemaker_execd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
 pacemaker_execd_LDFLAGS		= $(LDFLAGS_HARDENED_EXE)
 
@@ -30,7 +22,16 @@ pacemaker_execd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la \
 pacemaker_execd_SOURCES		= pacemaker-execd.c execd_commands.c \
 				  execd_alerts.c
 
-pacemaker_remoted_CPPFLAGS	= -DSUPPORT_REMOTE $(AM_CPPFLAGS)
+if BUILD_REMOTE
+initdir			= $(INITDIR)
+init_SCRIPTS		= pacemaker_remote
+sbin_PROGRAMS		= pacemaker-remoted
+if BUILD_SYSTEMD
+systemdsystemunit_DATA	= pacemaker_remote.service
+endif
+
+
+pacemaker_remoted_CPPFLAGS	= -DPCMK__COMPILE_REMOTE $(AM_CPPFLAGS)
 
 pacemaker_remoted_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_remoted_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
@@ -39,6 +40,7 @@ pacemaker_remoted_LDADD		= $(pacemaker_execd_LDADD) \
 				  $(top_builddir)/lib/lrmd/liblrmd.la
 pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) \
 				  remoted_tls.c remoted_pidone.c remoted_proxy.c
+endif
 
 cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la    \
 			  $(top_builddir)/lib/lrmd/liblrmd.la		\
@@ -58,10 +60,14 @@ install-exec-hook:
 if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd && $(LN_S) pacemaker-execd lrmd
 endif
+if BUILD_REMOTE
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted && $(LN_S) pacemaker-remoted pacemaker_remoted
+endif
 
 uninstall-hook:
 if BUILD_LEGACY_LINKS
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd
 endif
+if BUILD_REMOTE
 	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted
+endif

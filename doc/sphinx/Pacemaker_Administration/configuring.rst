@@ -31,7 +31,7 @@ configuration tool.
 
 
 Configuration Using Higher-level Tools
-______________________________________
+######################################
 
 Most users will benefit from using higher-level tools provided by projects
 separate from Pacemaker. Some of the most commonly used include the crm shell,
@@ -42,7 +42,7 @@ using them.
 
 
 Configuration Using Pacemaker's Command-Line Tools
-__________________________________________________
+##################################################
 
 Pacemaker provides lower-level, command-line tools to manage the cluster. Most
 configuration tasks can be performed with these tools, without needing any XML
@@ -81,7 +81,7 @@ all at once to the live cluster.
    single: CIB property
 
 Working with CIB Properties
-###########################
+___________________________
 
 Although these fields can be written to by the user, in
 most cases the cluster will overwrite any values specified by the
@@ -110,7 +110,7 @@ A complete set of CIB properties will look something like this:
    single: configuration; cluster options
 
 Querying and Setting Cluster Options
-####################################
+____________________________________
 
 Cluster options can be queried and modified using the ``crm_attribute`` tool.
 To get the current value of ``cluster-delay``, you can run:

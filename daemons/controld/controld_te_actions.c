@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,12 +76,11 @@ te_pseudo_action(crm_graph_t * graph, crm_action_t * pseudo)
 static int
 get_target_rc(crm_action_t * action)
 {
-    const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
+    int exit_status;
 
-    if (target_rc_s != NULL) {
-        return crm_parse_int(target_rc_s, "0");
-    }
-    return 0;
+    pcmk__scan_min_int(crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC),
+                       &exit_status, 0);
+    return exit_status;
 }
 
 static gboolean
@@ -402,7 +401,7 @@ void te_reset_job_counts(void)
     struct te_peer_s *peer = NULL;
 
     if(te_targets == NULL) {
-        te_targets = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, te_peer_free);
+        te_targets = pcmk__strkey_table(NULL, te_peer_free);
     }
 
     g_hash_table_iter_init(&iter, te_targets);

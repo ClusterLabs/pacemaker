@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -90,7 +90,7 @@ typedef struct lrmd_cmd_s {
     time_t epoch_last_run;          // Epoch timestamp of when op last ran
     time_t epoch_rcchange;          // Epoch timestamp of when rc last changed
 
-    int first_notify_sent;
+    bool first_notify_sent;
     int last_notify_rc;
     int last_notify_op_status;
     int last_pid;
@@ -192,6 +192,13 @@ cmd_original_times(lrmd_cmd_t * cmd)
     cmd->t_queue = cmd->t_first_queue;
 }
 #endif
+
+static inline bool
+action_matches(lrmd_cmd_t *cmd, const char *action, guint interval_ms)
+{
+    return (cmd->interval_ms == interval_ms)
+           && pcmk__str_eq(cmd->action, action, pcmk__str_casei);
+}
 
 static void
 log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
@@ -385,39 +392,51 @@ start_delay_helper(gpointer data)
     return FALSE;
 }
 
-static gboolean
+/*!
+ * \internal
+ * \brief Check whether a list already contains the equivalent of a given action
+ */
+static lrmd_cmd_t *
+find_duplicate_action(GList *action_list, lrmd_cmd_t *cmd)
+{
+    for (GList *item = action_list; item != NULL; item = item->next) {
+        lrmd_cmd_t *dup = item->data;
+
+        if (action_matches(cmd, dup->action, dup->interval_ms)) {
+            return dup;
+        }
+    }
+    return NULL;
+}
+
+static bool
 merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
-    GListPtr gIter = NULL;
     lrmd_cmd_t * dup = NULL;
-    gboolean dup_pending = FALSE;
+    bool dup_pending = true;
 
     if (cmd->interval_ms == 0) {
-        return 0;
+        return false;
     }
 
-    for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
-        dup = gIter->data;
-        if (pcmk__str_eq(cmd->action, dup->action, pcmk__str_casei)
-            && (cmd->interval_ms == dup->interval_ms)) {
-            dup_pending = TRUE;
-            goto merge_dup;
+    // Search for a duplicate of this action (in-flight or not)
+    dup = find_duplicate_action(rsc->pending_ops, cmd);
+    if (dup == NULL) {
+        dup_pending = false;
+        dup = find_duplicate_action(rsc->recurring_ops, cmd);
+        if (dup == NULL) {
+            return false;
         }
     }
 
-    /* if dup is in recurring_ops list, that means it has already executed
-     * and is in the interval loop. we can't just remove it in this case. */
-    for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
-        dup = gIter->data;
-        if (pcmk__str_eq(cmd->action, dup->action, pcmk__str_casei)
-            && (cmd->interval_ms == dup->interval_ms)) {
-            goto merge_dup;
-        }
+    /* Do not merge fencing monitors marked for cancellation, so we can reply to
+     * the cancellation separately.
+     */
+    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                     pcmk__str_casei)
+        && (dup->lrmd_op_status == PCMK_LRM_OP_CANCELLED)) {
+        return false;
     }
-
-    return FALSE;
-merge_dup:
-
 
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
@@ -427,43 +446,43 @@ merge_dup:
              rsc->rsc_id, normalize_action_name(rsc, dup->action),
              dup->interval_ms);
 
-    /* merge */
-    dup->first_notify_sent = 0;
+    // Merge new action's call ID and user data into existing action
+    dup->first_notify_sent = false;
     free(dup->userdata_str);
     dup->userdata_str = cmd->userdata_str;
     cmd->userdata_str = NULL;
     dup->call_id = cmd->call_id;
-
-    if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        /* if we are waiting for the next interval, kick it off now */
-        if (dup_pending == TRUE) {
-            stop_recurring_timer(cmd);
-            stonith_recurring_op_helper(cmd);
-        }
-
-    } else if (dup_pending == FALSE) {
-        /* if we've already handed this to the service lib, kick off an early execution */
-        services_action_kick(rsc->rsc_id,
-                             normalize_action_name(rsc, dup->action),
-                             dup->interval_ms);
-    }
     free_lrmd_cmd(cmd);
+    cmd = NULL;
 
-    return TRUE;
+    /* If dup is not pending, that means it has already executed at least once
+     * and is waiting in the interval. In that case, stop waiting and initiate
+     * a new instance now.
+     */
+    if (!dup_pending) {
+        if (pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                         pcmk__str_casei)) {
+            stop_recurring_timer(dup);
+            stonith_recurring_op_helper(dup);
+        } else {
+            services_action_kick(rsc->rsc_id,
+                                 normalize_action_name(rsc, dup->action),
+                                 dup->interval_ms);
+        }
+    }
+    return true;
 }
 
 static void
 schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 {
-    gboolean dup_processed = FALSE;
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(rsc != NULL, return);
 
     crm_trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
 
-    dup_processed = merge_recurring_duplicate(rsc, cmd);
-    if (dup_processed) {
-        /* duplicate recurring cmd found, cmds merged */
+    if (merge_recurring_duplicate(rsc, cmd)) {
+        // Equivalent of cmd has already been scheduled
         return;
     }
 
@@ -567,7 +586,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     }
 
-    cmd->first_notify_sent = 1;
+    cmd->first_notify_sent = true;
     cmd->last_notify_rc = cmd->exec_rc;
     cmd->last_notify_op_status = cmd->lrmd_op_status;
 
@@ -710,11 +729,12 @@ ocf2uniform_rc(int rc)
 {
     switch (rc) {
         case PCMK_OCF_DEGRADED:
-        case PCMK_OCF_DEGRADED_MASTER:
+        case PCMK_OCF_DEGRADED_PROMOTED:
             break;
         default:
-            if (rc < 0 || rc > PCMK_OCF_FAILED_MASTER)
+            if (rc < 0 || rc > PCMK_OCF_FAILED_PROMOTED) {
                 return PCMK_OCF_UNKNOWN_ERROR;
+            }
     }
 
     return rc;
@@ -977,8 +997,8 @@ action_complete(svc_action_t * action)
 
 #if SUPPORT_NAGIOS
     if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS, pcmk__str_casei)) {
-        if (pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei) &&
-            (cmd->interval_ms == 0) && cmd->exec_rc == PCMK_OCF_OK) {
+        if (action_matches(cmd, "monitor", 0)
+            && (cmd->exec_rc == PCMK_OCF_OK)) {
             /* Successfully executed --version for the nagios plugin */
             cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
@@ -1352,7 +1372,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 #endif
 
-    params_copy = crm_str_table_dup(cmd->params);
+    params_copy = pcmk__str_table_dup(cmd->params);
 
     action = resources_action_create(rsc->rsc_id, rsc->class, rsc->provider,
                                      rsc->type,
@@ -1453,14 +1473,14 @@ lrmd_rsc_dispatch(gpointer user_data)
 void
 free_rsc(gpointer data)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     lrmd_rsc_t *rsc = data;
     int is_stonith = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
                                   pcmk__str_casei);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
-        GListPtr next = gIter->next;
+        GList *next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
         /* command was never executed */
@@ -1474,7 +1494,7 @@ free_rsc(gpointer data)
 
     gIter = rsc->recurring_ops;
     while (gIter != NULL) {
-        GListPtr next = gIter->next;
+        GList *next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
         if (is_stonith) {
@@ -1525,7 +1545,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     }
 
     if (crm_is_true(is_ipc_provider)) {
-#ifdef SUPPORT_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
         if ((client->remote != NULL) && client->remote->tls_handshake_complete) {
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
@@ -1658,7 +1678,7 @@ process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 static int
 cancel_op(const char *rsc_id, const char *action, guint interval_ms)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, rsc_id);
 
     /* How to cancel an action.
@@ -1679,9 +1699,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
         lrmd_cmd_t *cmd = gIter->data;
 
-        if (pcmk__str_eq(cmd->action, action, pcmk__str_casei)
-            && (cmd->interval_ms == interval_ms)) {
-
+        if (action_matches(cmd, action, interval_ms)) {
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
             cmd_finalize(cmd, rsc);
             return pcmk_ok;
@@ -1694,9 +1712,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
             lrmd_cmd_t *cmd = gIter->data;
 
-            if (pcmk__str_eq(cmd->action, action, pcmk__str_casei)
-                && (cmd->interval_ms == interval_ms)) {
-
+            if (action_matches(cmd, action, interval_ms)) {
                 cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
@@ -1846,21 +1862,17 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     int do_notify = 0;
     xmlNode *reply = NULL;
 
-#if ENABLE_ACL
     /* Certain IPC commands may be done only by privileged users (i.e. root or
-     * hacluster) when ACLs are enabled, because they would otherwise provide a
-     * means of bypassing ACLs.
+     * hacluster), because they would otherwise provide a means of bypassing
+     * ACLs.
      */
     bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
-#else
-    bool allowed = true;
-#endif
 
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, F_LRMD_CALLID, &call_id);
 
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
-#ifdef SUPPORT_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
         if (allowed) {
             ipc_proxy_forward_client(client, request);
         } else {

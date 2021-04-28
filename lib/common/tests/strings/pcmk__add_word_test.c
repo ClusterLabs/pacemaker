@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,7 @@ add_words(void)
     pcmk__add_word(&list, &list_len, "hello");
     pcmk__add_word(&list, &list_len, "world");
     g_assert_cmpint(strcmp(list, "hello world"), ==, 0);
+    free(list);
 }
 
 static void
@@ -31,6 +32,7 @@ add_with_no_len(void)
     pcmk__add_word(&list, NULL, "hello");
     pcmk__add_word(&list, NULL, "world");
     g_assert_cmpint(strcmp(list, "hello world"), ==, 0);
+    free(list);
 }
 
 static void
@@ -42,6 +44,7 @@ add_nothing(void)
     pcmk__add_word(&list, NULL, NULL);
     pcmk__add_word(&list, NULL, "");
     g_assert_cmpint(strcmp(list, "hello"), ==, 0);
+    free(list);
 }
 
 static void
@@ -54,6 +57,7 @@ add_with_null(void)
     pcmk__add_separated_word(&list, &list_len, "world", NULL);
     pcmk__add_separated_word(&list, &list_len, "I am a unit test", NULL);
     g_assert_cmpint(strcmp(list, "hello world I am a unit test"), ==, 0);
+    free(list);
 }
 
 static void
@@ -66,6 +70,7 @@ add_with_comma(void)
     pcmk__add_separated_word(&list, &list_len, "world", ",");
     pcmk__add_separated_word(&list, &list_len, "I am a unit test", ",");
     g_assert_cmpint(strcmp(list, "hello,world,I am a unit test"), ==, 0);
+    free(list);
 }
 
 static void
@@ -78,6 +83,7 @@ add_with_comma_and_space(void)
     pcmk__add_separated_word(&list, &list_len, "world", ", ");
     pcmk__add_separated_word(&list, &list_len, "I am a unit test", ", ");
     g_assert_cmpint(strcmp(list, "hello, world, I am a unit test"), ==, 0);
+    free(list);
 }
 
 int

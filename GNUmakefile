@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2019 the Pacemaker project contributors
+# Copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -54,7 +54,8 @@ SPEC_COMMIT	?= $(shell						\
 		        echo '$(TAG)' ;;				\
 		    *$(rparen)						\
 		        git log --pretty=format:%h -n 1 '$(TAG)';;	\
-		esac)
+		esac)$(shell						\
+		if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
 SPEC_ABBREV	= $(shell printf %s '$(SPEC_COMMIT)' | wc -c)
 
 LAST_RC		?= $(shell test -e /Volumes || git tag -l | grep Pacemaker | sort -Vr | grep rc | head -n 1)
@@ -88,7 +89,8 @@ distdir		= $(PACKAGE)-$(shell						\
 		  		echo '$(TAG)' | cut -c11-;;			\
 		  	*$(rparen)						\
 		  		git log --pretty=format:%h -n 1 '$(TAG)';;	\
-		  esac)
+		  esac)$(shell							\
+		  if [ x$(DIRTY) != x ]; then echo ".mod"; fi)
 TARFILE		= $(abs_builddir)/$(distdir).tar.gz
 
 .PHONY: init
@@ -102,10 +104,10 @@ build: init
 
 export:
 	if [ ! -f "$(TARFILE)" ]; then						\
-	    if [ $(TAG) = dirty ]; then 					\
+	    if [ x$(DIRTY) != x ]; then 					\
 		git commit -m "DO-NOT-PUSH" -a;					\
 		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
-		git reset --mixed HEAD^; 					\
+		git reset --mixed HEAD^;					\
 	    else								\
 		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
 	    fi;									\
@@ -273,7 +275,7 @@ mock:   mock-$(MOCK_CFG)
 
 .PHONY: dirty
 dirty:
-	$(MAKE) $(AM_MAKEFLAGS) TAG=dirty mock
+	$(MAKE) $(AM_MAKEFLAGS) DIRTY=yes mock
 
 .PHONY: mock-clean
 mock-clean:
@@ -380,17 +382,20 @@ rc-changes:
 
 changes: summary
 	@printf "\n- Features added since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
-	@printf "\n- Changes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
-		| grep -e High: -e Fix: -e Bug | sed \
-			-e 's@\(Fix\|High\|Bug\):@@' \
+	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
+		| sed -n -e 's/^ *Feature: */  + /p' | sort -uf
+	@printf "\n- Fixes since $(LAST_RELEASE)\n"
+	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
+		| sed -n -e 's/^ *\(Fix\|High\|Bug\): */  + /p' | sed			\
 			-e 's@\(cib\|pacemaker-based\|based\):@CIB:@' \
 			-e 's@\(crmd\|pacemaker-controld\|controld\):@controller:@' \
 			-e 's@\(lrmd\|pacemaker-execd\|execd\):@executor:@' \
 			-e 's@\(Fencing\|stonithd\|stonith\|pacemaker-fenced\|fenced\):@fencing:@' \
 			-e 's@\(PE\|pengine\|pacemaker-schedulerd\|schedulerd\):@scheduler:@' \
 		| sort -uf
+	@printf "\n- Public API changes since $(LAST_RELEASE)\n"
+	@git log --pretty=format:'%s' --no-merges --abbrev-commit $(LAST_RELEASE)..HEAD \
+		| sed -n -e 's/^ *API: */  + /p' | sort -uf
 
 authors:
 	git log $(LAST_RELEASE)..$(COMMIT) --format='%an' | sort -u

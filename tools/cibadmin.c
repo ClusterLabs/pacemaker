@@ -407,7 +407,7 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
-    crm_log_cli_init("cibadmin");
+    pcmk__cli_init_logging("cibadmin", 0);
     set_crm_log_level(LOG_CRIT);
     pcmk__set_cli_options(NULL, "<command> [options]", long_options,
                           "query and edit the Pacemaker configuration");

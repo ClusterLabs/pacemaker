@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -774,11 +774,8 @@ cib_op_timeout()
     if (env_timeout == -1) {
         const char *env = getenv("PCMK_cib_timeout");
 
-        if (env) {
-            env_timeout = crm_parse_int(env, "0");
-        }
-        env_timeout = QB_MAX(env_timeout, MIN_CIB_OP_TIMEOUT);
-        crm_trace("Minimum CIB op timeout: %us (environment: %s)",
+        pcmk__scan_min_int(env, &env_timeout, MIN_CIB_OP_TIMEOUT);
+        crm_trace("Minimum CIB op timeout: %ds (environment: %s)",
                   env_timeout, (env? env : "none"));
     }
 

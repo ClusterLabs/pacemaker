@@ -1,0 +1,21 @@
+Current cluster status:
+  * Node List:
+    * OFFLINE: [ router1 router2 ]
+
+  * Full List of Resources:
+    * Resource Group: test:
+      * test_ip	(ocf:heartbeat:IPaddr2_vlan):	 Stopped
+      * test_mailto	(ocf:heartbeat:MailTo):	 Stopped
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * OFFLINE: [ router1 router2 ]
+
+  * Full List of Resources:
+    * Resource Group: test:
+      * test_ip	(ocf:heartbeat:IPaddr2_vlan):	 Stopped
+      * test_mailto	(ocf:heartbeat:MailTo):	 Stopped

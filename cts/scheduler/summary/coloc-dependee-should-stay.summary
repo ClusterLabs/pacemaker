@@ -1,0 +1,41 @@
+Using the original execution date of: 2019-10-22 20:53:06Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel7-2
+    * FencingFail	(stonith:fence_dummy):	 Started rhel7-1
+    * Resource Group: dummy1:
+      * dummy1a	(ocf:pacemaker:Dummy):	 Started rhel7-3
+      * dummy1b	(ocf:heartbeat:Dummy):	 Started rhel7-3
+      * dummy1c	(ocf:heartbeat:Dummy):	 Started rhel7-3
+      * dummy1d	(ocf:heartbeat:Dummy):	 Started rhel7-3
+    * Resource Group: dummy2:
+      * dummy2a	(ocf:pacemaker:Dummy):	 Started rhel7-4
+      * dummy2b	(ocf:heartbeat:Dummy):	 Started rhel7-4
+      * dummy2c	(ocf:heartbeat:Dummy):	 Started rhel7-4
+      * dummy2d	(ocf:heartbeat:Dummy):	 Started rhel7-4
+
+Transition Summary:
+
+Executing Cluster Transition:
+Using the original execution date of: 2019-10-22 20:53:06Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Started rhel7-2
+    * FencingFail	(stonith:fence_dummy):	 Started rhel7-1
+    * Resource Group: dummy1:
+      * dummy1a	(ocf:pacemaker:Dummy):	 Started rhel7-3
+      * dummy1b	(ocf:heartbeat:Dummy):	 Started rhel7-3
+      * dummy1c	(ocf:heartbeat:Dummy):	 Started rhel7-3
+      * dummy1d	(ocf:heartbeat:Dummy):	 Started rhel7-3
+    * Resource Group: dummy2:
+      * dummy2a	(ocf:pacemaker:Dummy):	 Started rhel7-4
+      * dummy2b	(ocf:heartbeat:Dummy):	 Started rhel7-4
+      * dummy2c	(ocf:heartbeat:Dummy):	 Started rhel7-4
+      * dummy2d	(ocf:heartbeat:Dummy):	 Started rhel7-4

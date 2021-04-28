@@ -1,0 +1,71 @@
+
+pcmk__clone_allocate: rsc1-clone allocation score on rhel7-1: 0
+pcmk__clone_allocate: rsc1-clone allocation score on rhel7-2: 0
+pcmk__clone_allocate: rsc1-clone allocation score on rhel7-3: 0
+pcmk__clone_allocate: rsc1-clone allocation score on rhel7-4: 0
+pcmk__clone_allocate: rsc1-clone allocation score on rhel7-5: 0
+pcmk__clone_allocate: rsc1:0 allocation score on rhel7-1: 11
+pcmk__clone_allocate: rsc1:0 allocation score on rhel7-2: 0
+pcmk__clone_allocate: rsc1:0 allocation score on rhel7-3: 0
+pcmk__clone_allocate: rsc1:0 allocation score on rhel7-4: 0
+pcmk__clone_allocate: rsc1:0 allocation score on rhel7-5: 0
+pcmk__clone_allocate: rsc1:1 allocation score on rhel7-1: 0
+pcmk__clone_allocate: rsc1:1 allocation score on rhel7-2: 6
+pcmk__clone_allocate: rsc1:1 allocation score on rhel7-3: 0
+pcmk__clone_allocate: rsc1:1 allocation score on rhel7-4: 0
+pcmk__clone_allocate: rsc1:1 allocation score on rhel7-5: 0
+pcmk__clone_allocate: rsc1:2 allocation score on rhel7-1: 10
+pcmk__clone_allocate: rsc1:2 allocation score on rhel7-2: 5
+pcmk__clone_allocate: rsc1:2 allocation score on rhel7-3: 0
+pcmk__clone_allocate: rsc1:2 allocation score on rhel7-4: 0
+pcmk__clone_allocate: rsc1:2 allocation score on rhel7-5: 0
+pcmk__clone_allocate: rsc1:3 allocation score on rhel7-1: 10
+pcmk__clone_allocate: rsc1:3 allocation score on rhel7-2: 5
+pcmk__clone_allocate: rsc1:3 allocation score on rhel7-3: 0
+pcmk__clone_allocate: rsc1:3 allocation score on rhel7-4: 0
+pcmk__clone_allocate: rsc1:3 allocation score on rhel7-5: 0
+pcmk__clone_allocate: rsc1:4 allocation score on rhel7-1: 10
+pcmk__clone_allocate: rsc1:4 allocation score on rhel7-2: 5
+pcmk__clone_allocate: rsc1:4 allocation score on rhel7-3: 0
+pcmk__clone_allocate: rsc1:4 allocation score on rhel7-4: 0
+pcmk__clone_allocate: rsc1:4 allocation score on rhel7-5: 0
+pcmk__native_allocate: Fencing allocation score on rhel7-1: 0
+pcmk__native_allocate: Fencing allocation score on rhel7-2: 0
+pcmk__native_allocate: Fencing allocation score on rhel7-3: 0
+pcmk__native_allocate: Fencing allocation score on rhel7-4: 0
+pcmk__native_allocate: Fencing allocation score on rhel7-5: 0
+pcmk__native_allocate: rsc1:0 allocation score on rhel7-1: 11
+pcmk__native_allocate: rsc1:0 allocation score on rhel7-2: 0
+pcmk__native_allocate: rsc1:0 allocation score on rhel7-3: -INFINITY
+pcmk__native_allocate: rsc1:0 allocation score on rhel7-4: -INFINITY
+pcmk__native_allocate: rsc1:0 allocation score on rhel7-5: -INFINITY
+pcmk__native_allocate: rsc1:1 allocation score on rhel7-1: -INFINITY
+pcmk__native_allocate: rsc1:1 allocation score on rhel7-2: 6
+pcmk__native_allocate: rsc1:1 allocation score on rhel7-3: -INFINITY
+pcmk__native_allocate: rsc1:1 allocation score on rhel7-4: -INFINITY
+pcmk__native_allocate: rsc1:1 allocation score on rhel7-5: -INFINITY
+pcmk__native_allocate: rsc1:2 allocation score on rhel7-1: -INFINITY
+pcmk__native_allocate: rsc1:2 allocation score on rhel7-2: -INFINITY
+pcmk__native_allocate: rsc1:2 allocation score on rhel7-3: -INFINITY
+pcmk__native_allocate: rsc1:2 allocation score on rhel7-4: -INFINITY
+pcmk__native_allocate: rsc1:2 allocation score on rhel7-5: -INFINITY
+pcmk__native_allocate: rsc1:3 allocation score on rhel7-1: -INFINITY
+pcmk__native_allocate: rsc1:3 allocation score on rhel7-2: -INFINITY
+pcmk__native_allocate: rsc1:3 allocation score on rhel7-3: -INFINITY
+pcmk__native_allocate: rsc1:3 allocation score on rhel7-4: -INFINITY
+pcmk__native_allocate: rsc1:3 allocation score on rhel7-5: -INFINITY
+pcmk__native_allocate: rsc1:4 allocation score on rhel7-1: -INFINITY
+pcmk__native_allocate: rsc1:4 allocation score on rhel7-2: -INFINITY
+pcmk__native_allocate: rsc1:4 allocation score on rhel7-3: -INFINITY
+pcmk__native_allocate: rsc1:4 allocation score on rhel7-4: -INFINITY
+pcmk__native_allocate: rsc1:4 allocation score on rhel7-5: -INFINITY
+pcmk__native_allocate: rsc2 allocation score on rhel7-1: 0
+pcmk__native_allocate: rsc2 allocation score on rhel7-2: 0
+pcmk__native_allocate: rsc2 allocation score on rhel7-3: 0
+pcmk__native_allocate: rsc2 allocation score on rhel7-4: 0
+pcmk__native_allocate: rsc2 allocation score on rhel7-5: 0
+rsc1:0 promotion score on rhel7-1: 10
+rsc1:1 promotion score on rhel7-2: 5
+rsc1:2 promotion score on none: 0
+rsc1:3 promotion score on none: 0
+rsc1:4 promotion score on none: 0

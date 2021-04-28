@@ -1,0 +1,21 @@
+Current cluster status:
+  * Node List:
+    * Online: [ sles11-a sles11-b ]
+
+  * Full List of Resources:
+    * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
+      * Promoted: [ sles11-a ]
+      * Unpromoted: [ sles11-b ]
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ sles11-a sles11-b ]
+
+  * Full List of Resources:
+    * Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable):
+      * Promoted: [ sles11-a ]
+      * Unpromoted: [ sles11-b ]

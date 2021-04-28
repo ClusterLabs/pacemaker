@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's pacemaker-execd
 """
 
-__copyright__ = "Copyright 2012-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -20,6 +20,9 @@ BUILD_DIR = "@abs_top_builddir@"
 TEST_DIR = sys.path[0]
 
 SBIN_DIR = "@sbindir@"
+
+# Check whether Pacemaker Remote support was built
+REMOTE_ENABLED = "@PC_NAME_GNUTLS@" != ""
 
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
@@ -76,7 +79,7 @@ def update_path():
         # For pacemaker-fenced
         new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
         # For cts-support
-        new_path = "%s/cts:%s" % (BUILD_DIR, new_path)
+        new_path = "%s/cts/support:%s" % (BUILD_DIR, new_path)
 
     else:
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
@@ -500,7 +503,8 @@ class Tests(object):
     def setup_test_environment(self):
         """ Prepare the host before executing any tests """
 
-        os.system("service pacemaker_remote stop")
+        if REMOTE_ENABLED:
+            os.system("service pacemaker_remote stop")
         self.cleanup_test_environment()
 
         if self.tls and not os.path.isfile("/etc/pacemaker/authkey"):
@@ -1171,7 +1175,11 @@ class TestOptions(object):
             elif args[i] == "-w" or args[i] == "--force-wait":
                 self.options['force-wait'] = 1
             elif args[i] == "-R" or args[i] == "--pacemaker-remote":
-                self.options['pacemaker-remote'] = 1
+                if REMOTE_ENABLED:
+                    self.options['pacemaker-remote'] = 1
+                else:
+                    print("ERROR: This build does not support Pacemaker Remote")
+                    sys.exit(CrmExit.USAGE)
             elif args[i] == "-r" or args[i] == "--run-only":
                 self.options['run-only'] = args[i+1]
                 skip = 1
@@ -1194,7 +1202,8 @@ class TestOptions(object):
               "\n\t\tDefaults to 2. The value 0 means no limit.")
         print("\t [--force-wait | -w]"
               "\n\t\tEach test case waits the default/specified --timeout for the daemon without tracking the log.")
-        print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
+        if REMOTE_ENABLED:
+            print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_stop'")
         print("\t\t " + sys.argv[0] + " --run-only start_stop")

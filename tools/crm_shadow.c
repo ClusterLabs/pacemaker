@@ -257,7 +257,7 @@ main(int argc, char **argv)
     struct stat buf;
     int option_index = 0;
 
-    crm_log_cli_init("crm_shadow");
+    pcmk__cli_init_logging("crm_shadow", 0);
     pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
                           "perform Pacemaker configuration changes in a sandbox"
                           "\n\nThis command sets up an environment in which "

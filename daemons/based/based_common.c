@@ -1,5 +1,7 @@
 /*
- * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2008-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -170,9 +172,9 @@ cib_get_operation_id(const char *op, int *operation)
 
     if (operation_hash == NULL) {
         int lpc = 0;
-        int max_msg_types = DIMOF(cib_server_ops);
+        int max_msg_types = PCMK__NELEM(cib_server_ops);
 
-        operation_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+        operation_hash = pcmk__strkey_table(NULL, free);
         for (lpc = 1; lpc < max_msg_types; lpc++) {
             int *value = malloc(sizeof(int));
 
@@ -224,9 +226,7 @@ cib_msg_copy(xmlNode * msg, gboolean with_data)
         F_CIB_CALLBACK_TOKEN,
         F_CIB_GLOBAL_UPDATE,
         F_CIB_CLIENTNAME,
-#if ENABLE_ACL
         F_CIB_USER,
-#endif
         F_CIB_NOTIFY_TYPE,
         F_CIB_NOTIFY_ACTIVATE
     };
@@ -241,14 +241,14 @@ cib_msg_copy(xmlNode * msg, gboolean with_data)
 
     CRM_ASSERT(copy != NULL);
 
-    for (lpc = 0; lpc < DIMOF(field_list); lpc++) {
+    for (lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
         field = field_list[lpc];
         value = crm_element_value(msg, field);
         if (value != NULL) {
             crm_xml_add(copy, field, value);
         }
     }
-    for (lpc = 0; with_data && lpc < DIMOF(data_list); lpc++) {
+    for (lpc = 0; with_data && lpc < PCMK__NELEM(data_list); lpc++) {
         field = data_list[lpc];
         value_struct = get_message_xml(msg, field);
         if (value_struct != NULL) {

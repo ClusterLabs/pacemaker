@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,7 @@
 #include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
 static corosync_cfg_handle_t cfg_handle = 0;
+static mainloop_timer_t *reconnect_timer = NULL;
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -59,23 +60,53 @@ pcmk_cfg_dispatch(gpointer user_data)
     return 0;
 }
 
+static gboolean
+cluster_reconnect_cb(gpointer data)
+{
+    if (cluster_connect_cfg()) {
+        mainloop_timer_del(reconnect_timer);
+        reconnect_timer = NULL;
+        crm_notice("Cluster reconnect succeeded");
+    } else {
+        crm_info("Cluster reconnect failed"
+                 "(connection will be reattempted once per second)");
+    }
+    /*
+     * In theory this will continue forever. In practice the CIB connection from
+     * attrd will timeout and shut down Pacemaker when it gets bored.
+     */
+    return TRUE;
+}
+
+
 static void
 cfg_connection_destroy(gpointer user_data)
 {
-    crm_err("Lost connection to cluster layer");
+    crm_warn("Lost connection to cluster layer "
+             "(connection will be reattempted once per second)");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
-    pcmk_shutdown(SIGTERM);
+    reconnect_timer = mainloop_timer_add("corosync reconnect", 1000, TRUE, cluster_reconnect_cb, NULL);
+    mainloop_timer_start(reconnect_timer);
 }
 
 gboolean
 cluster_disconnect_cfg(void)
 {
     if (cfg_handle) {
+#ifdef HAVE_COROSYNC_CFG_TRACKSTART
+        corosync_cfg_trackstop(cfg_handle);
+#endif
         corosync_cfg_finalize(cfg_handle);
         cfg_handle = 0;
     }
-
+    if (reconnect_timer != NULL) {
+        /* The mainloop should be gone by this point, so this isn't necessary,
+         * but cleaning up memory should make valgrind happier.
+         */
+        mainloop_timer_del(reconnect_timer);
+        reconnect_timer = NULL;
+    }
     pcmk_shutdown(SIGTERM);
     return TRUE;
 }
@@ -144,6 +175,15 @@ cluster_connect_cfg(void)
     }
     crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
 
+#ifdef HAVE_COROSYNC_CFG_TRACKSTART
+    rc = corosync_cfg_trackstart(cfg_handle, 0);
+    if (rc != CS_OK) {
+        crm_crit("Could not enable Corosync CFG shutdown tracker: %s " CRM_XS " rc=%d",
+                 cs_strerror(rc), rc);
+        goto bail;
+    }
+#endif
+
     mainloop_add_fd("corosync-cfg", G_PRIORITY_DEFAULT, fd, &cfg_handle, &cfg_fd_callbacks);
     return TRUE;
 
@@ -165,6 +205,9 @@ pcmkd_shutdown_corosync(void)
     rc = corosync_cfg_try_shutdown(cfg_handle,
                                     COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
     if (rc == CS_OK) {
+#ifdef HAVE_COROSYNC_CFG_TRACKSTART
+        corosync_cfg_trackstop(cfg_handle);
+#endif
         corosync_cfg_finalize(cfg_handle);
         cfg_handle = 0;
     } else {

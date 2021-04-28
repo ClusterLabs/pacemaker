@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,14 +34,12 @@ static bool fence_reaction_panic = FALSE;
 static unsigned long int stonith_max_attempts = 10;
 static GHashTable *stonith_failures = NULL;
 
-// crmd_opts defines default for stonith-max-attempts, so value is never NULL
 void
 update_stonith_max_attempts(const char *value)
 {
-    if (pcmk__str_eq(value, CRM_INFINITY_S, pcmk__str_casei)) {
-       stonith_max_attempts = CRM_SCORE_INFINITY;
-    } else {
-       stonith_max_attempts = (unsigned long int) crm_parse_ll(value, NULL);
+    stonith_max_attempts = char2score(value);
+    if (stonith_max_attempts < 1UL) {
+        stonith_max_attempts = 10UL;
     }
 }
 
@@ -134,7 +132,7 @@ st_fail_count_increment(const char *target)
     struct st_fail_rec *rec = NULL;
 
     if (stonith_failures == NULL) {
-        stonith_failures = crm_str_table_new();
+        stonith_failures = pcmk__strkey_table(free, free);
     }
 
     rec = g_hash_table_lookup(stonith_failures, target);
@@ -212,8 +210,8 @@ send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
 
     /* we have to mark whether or not remote nodes have already been fenced */
     if (peer->flags & crm_remote_node) {
-        time_t now = time(NULL);
-        char *now_s = crm_itoa(now);
+        char *now_s = pcmk__ttoa(time(NULL));
+
         crm_xml_add(node_state, XML_NODE_IS_FENCED, now_s);
         free(now_s);
     }
@@ -267,7 +265,7 @@ abort_for_stonith_failure(enum transition_action abort_action,
  * notifications once a new DC is elected.
  */
 
-static GListPtr stonith_cleanup_list = NULL;
+static GList *stonith_cleanup_list = NULL;
 
 /*!
  * \internal
@@ -289,10 +287,10 @@ add_stonith_cleanup(const char *target) {
 void
 remove_stonith_cleanup(const char *target)
 {
-    GListPtr iter = stonith_cleanup_list;
+    GList *iter = stonith_cleanup_list;
 
     while (iter != NULL) {
-        GListPtr tmp = iter;
+        GList *tmp = iter;
         char *iter_name = tmp->data;
 
         iter = iter->next;
@@ -312,7 +310,7 @@ void
 purge_stonith_cleanup()
 {
     if (stonith_cleanup_list) {
-        GListPtr iter = NULL;
+        GList *iter = NULL;
 
         for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
             char *target = iter->data;
@@ -332,7 +330,7 @@ purge_stonith_cleanup()
 void
 execute_stonith_cleanup()
 {
-    GListPtr iter;
+    GList *iter;
 
     for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
@@ -362,7 +360,7 @@ static char *te_client_id = NULL;
 static gboolean
 fail_incompletable_stonith(crm_graph_t *graph)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     const char *task = NULL;
     xmlNode *last_action = NULL;
 
@@ -371,7 +369,7 @@ fail_incompletable_stonith(crm_graph_t *graph)
     }
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        GListPtr lpc2 = NULL;
+        GList *lpc2 = NULL;
         synapse_t *synapse = (synapse_t *) lpc->data;
 
         if (synapse->confirmed) {
@@ -758,7 +756,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
             te_action_confirmed(action, NULL);
             if (pcmk__str_eq("on", op, pcmk__str_casei)) {
                 const char *value = NULL;
-                char *now = crm_ttoa(time(NULL));
+                char *now = pcmk__ttoa(time(NULL));
 
                 update_attrd(target, CRM_ATTR_UNFENCED, now, NULL, FALSE);
                 free(now);
@@ -814,13 +812,14 @@ fence_with_delay(const char *target, const char *type, const char *delay)
 {
     uint32_t options = st_opt_none; // Group of enum stonith_call_options
     int timeout_sec = (int) (transition_graph->stonith_timeout / 1000);
+    int delay_i;
 
     if (crmd_join_phase_count(crm_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_suicide);
     }
+    pcmk__scan_min_int(delay, &delay_i, 0);
     return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
-                                               type, timeout_sec, 0,
-                                               crm_atoi(delay, "0"));
+                                               type, timeout_sec, 0, delay_i);
 }
 
 gboolean

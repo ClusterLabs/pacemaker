@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -405,14 +405,14 @@ throttle_set_load_target(float target)
 void
 throttle_update_job_max(const char *preference)
 {
-    long long max = -1;
+    long long max = 0LL;
     const char *env_limit = getenv("PCMK_node_action_limit");
 
     if (env_limit != NULL) {
         preference = env_limit; // Per-node override
     }
-    if (preference) {
-        max = crm_parse_ll(preference, NULL);
+    if (preference != NULL) {
+        pcmk__scan_ll(preference, &max, 0LL);
     }
     if (max > 0) {
         throttle_job_max = (int) max;
@@ -426,8 +426,7 @@ void
 throttle_init(void)
 {
     if(throttle_records == NULL) {
-        throttle_records = g_hash_table_new_full(
-            crm_str_hash, g_str_equal, NULL, throttle_record_free);
+        throttle_records = pcmk__strkey_table(NULL, throttle_record_free);
         throttle_timer = mainloop_timer_add("throttle", 30 * 1000, TRUE, throttle_timer_cb, NULL);
     }
 

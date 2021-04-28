@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,7 +102,7 @@ pcmk__copy_node_table(GHashTable *nodes)
     if (nodes == NULL) {
         return NULL;
     }
-    new_table = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
+    new_table = pcmk__strkey_table(NULL, free);
     g_hash_table_iter_init(&iter, nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         pe_node_t *new_node = pe__copy_node(node);
@@ -268,8 +268,10 @@ native_deallocate(pe_resource_t * rsc)
 }
 
 gboolean
-native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboolean force)
+native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
 {
+    pcmk__output_t *out = rsc->cluster->priv;
+
     CRM_ASSERT(rsc->variant == pe_native);
 
     if (force == FALSE && chosen != NULL) {
@@ -287,7 +289,7 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
             crm_debug("All nodes for resource %s are unavailable"
                       ", unclean or shutting down (%s: %d, %d)",
                       rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
-            rsc->next_role = RSC_ROLE_STOPPED;
+            pe__set_next_role(rsc, RSC_ROLE_STOPPED, "node availability");
             chosen = NULL;
         }
     }
@@ -300,11 +302,11 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
     pe__clear_resource_flags(rsc, pe_rsc_provisional);
 
     if (chosen == NULL) {
-        GListPtr gIter = NULL;
-        char *rc_inactive = crm_itoa(PCMK_OCF_NOT_RUNNING);
+        GList *gIter = NULL;
+        char *rc_inactive = pcmk__itoa(PCMK_OCF_NOT_RUNNING);
 
         crm_debug("Could not allocate a node for %s", rsc->id);
-        rsc->next_role = RSC_ROLE_STOPPED;
+        pe__set_next_role(rsc, RSC_ROLE_STOPPED, "unable to allocate");
 
         for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
             pe_action_t *op = (pe_action_t *) gIter->data;
@@ -343,8 +345,10 @@ native_assign_node(pe_resource_t * rsc, GListPtr nodes, pe_node_t * chosen, gboo
     chosen->details->num_resources++;
     chosen->count++;
     calculate_utilization(chosen->details->utilization, rsc->utilization, FALSE);
-    dump_rsc_utilization((show_utilization? LOG_STDOUT : LOG_TRACE),
-                         __func__, rsc, chosen);
+
+    if (pcmk_is_set(rsc->cluster->flags, pe_flag_show_utilization)) {
+        out->message(out, "resource-util", rsc, chosen, __func__);
+    }
 
     return TRUE;
 }
@@ -419,7 +423,7 @@ log_action(unsigned int log_level, const char *pre_text, pe_action_t * action, g
     }
 
     if (details) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         crm_trace("\t\t====== Preceding Actions");
 
@@ -625,10 +629,17 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     task = op->op_type;
 
-    /* Record a successful reload as a start, and a failed reload as a monitor,
-     * to make life easier for the scheduler when determining the current state.
+    /* Record a successful agent reload as a start, and a failed one as a
+     * monitor, to make life easier for the scheduler when determining the
+     * current state.
+     *
+     * @COMPAT We should check "reload" here only if the operation was for a
+     * pre-OCF-1.1 resource agent, but we don't know that here, and we should
+     * only ever get results for actions scheduled by us, so we can reasonably
+     * assume any "reload" is actually a pre-1.1 agent reload.
      */
-    if (pcmk__str_eq(task, "reload", pcmk__str_none)) {
+    if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
+                         NULL)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_START;
         } else {
@@ -711,21 +722,11 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
                       op->rsc_id, op->op_type, op->interval_ms,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
-            if (op->interval_ms == 0) {
-                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
-                               (long long) op->t_run);
-
-                // @COMPAT last-run is deprecated
-                crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_RUN,
-                               (long long) op->t_run);
-
-            } else if(op->t_rcchange) {
-                /* last-run is not accurate for recurring ops */
+            if ((op->interval_ms != 0) && (op->t_rcchange != 0)) {
+                // Recurring ops may have changed rc after initial run
                 crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
                                (long long) op->t_rcchange);
-
             } else {
-                /* ...but is better than nothing otherwise */
                 crm_xml_add_ll(xml_op, XML_RSC_OP_LAST_CHANGE,
                                (long long) op->t_run);
             }
@@ -764,4 +765,28 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     free(op_id);
     free(key);
     return xml_op;
+}
+
+pcmk__output_t *
+pcmk__new_logger(void)
+{
+    int rc = pcmk_rc_ok;
+    pcmk__output_t *out = NULL;
+    const char* argv[] = { "", NULL };
+    pcmk__supported_format_t formats[] = {
+        PCMK__SUPPORTED_FORMAT_LOG,
+        { NULL, NULL, NULL }
+    };
+
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        crm_err("Can't log resource details due to internal error: %s\n",
+                pcmk_rc_str(rc));
+        return NULL;
+    }
+
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
+    return out;
 }

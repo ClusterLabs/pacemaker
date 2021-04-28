@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,8 +23,8 @@ typedef struct clone_variant_data_s {
 
     // @TODO make these a bitmask
     gboolean ordered;
-    gboolean applied_master_prefs;
-    gboolean merged_master_weights;
+    bool added_promotion_scores;
+    bool added_promoted_constraints;
 
     notify_data_t *stop_notify;
     notify_data_t *start_notify;

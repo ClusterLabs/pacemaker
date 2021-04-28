@@ -116,7 +116,7 @@ ___________________
    |                    |         | the pattern are selected. If the regular expression                                          |
    |                    |         | contains submatches, and the constraint is governed by                                       |
    |                    |         | a :ref:`rule <rules>`, the submatches can be                                                 |
-   |                    |         | referenced as **%0** through **%9** in the rule's                                            |
+   |                    |         | referenced as **%1** through **%9** in the rule's                                            |
    |                    |         | ``score-attribute`` or a rule expression's ``attribute``.                                    |
    |                    |         | A location constraint must either have a ``rsc``, have a                                     |
    |                    |         | ``rsc-pattern``, or contain at least one resource set.                                       |
@@ -387,8 +387,8 @@ ___________________
    |              |                            | be symmetrical.                                                   |
    +--------------+----------------------------+-------------------------------------------------------------------+
 
-``Promote`` and ``demote`` apply to the master role of :ref:`promotable <s-resource-promotable>`
-resources.
+``Promote`` and ``demote`` apply to :ref:`promotable <s-resource-promotable>`
+clone resources.
 
 Optional and mandatory ordering
 _______________________________
@@ -509,8 +509,8 @@ _____________________
    |                |                | If ``rsc`` and ``with-rsc`` are specified, and ``rsc`` |
    |                |                | is a :ref:`promotable clone <s-resource-promotable>`,  |
    |                |                | the constraint applies only to ``rsc`` instances in    |
-   |                |                | this role. Allowed values: ``Started``, ``Master``,    |
-   |                |                | ``Slave``. For details, see                            |
+   |                |                | this role. Allowed values: ``Started``, ``Promoted``,  |
+   |                |                | ``Unpromoted``. For details, see                       |
    |                |                | :ref:`promotable-clone-constraints`.                   |
    +----------------+----------------+--------------------------------------------------------+
    | with-rsc-role  | Started        | .. index::                                             |
@@ -522,8 +522,8 @@ _____________________
    |                |                | ``with-rsc`` is a                                      |
    |                |                | :ref:`promotable clone <s-resource-promotable>`, the   |
    |                |                | constraint applies only to ``with-rsc`` instances in   |
-   |                |                | this role. Allowed values: ``Started``, ``Master``,    |
-   |                |                | ``Slave``. For details, see                            |
+   |                |                | this role. Allowed values: ``Started``, ``Promoted``,  |
+   |                |                | ``Unpromoted``. For details, see                       |
    |                |                | :ref:`promotable-clone-constraints`.                   |
    +----------------+----------------+--------------------------------------------------------+
    | influence      | value of       | .. index::                                             |
@@ -722,8 +722,9 @@ have an effect in all contexts.
    |             |                  | that are :ref:`s-resource-promotable` in this          |
    |             |                  | role.  Meaningful within ``rsc_location``,             |
    |             |                  | ``rsc_colocation`` and ``rsc_ticket``.                 |
-   |             |                  | Allowed values: ``Started``, ``Master``, ``Slave``.    |
-   |             |                  | For details, see :ref:`promotable-clone-constraints`.  |
+   |             |                  | Allowed values: ``Started``, ``Promoted``,             |
+   |             |                  | ``Unpromoted``. For details, see                       |
+   |             |                  | :ref:`promotable-clone-constraints`.                   |
    +-------------+------------------+--------------------------------------------------------+
    | action      | value of         | .. index::                                             |
    |             | ``first-action`` |    single: resource_set; attribute, action             |
@@ -1019,8 +1020,9 @@ before it must also be active.
 If desired, you can restrict the dependency to instances of promotable clone
 resources that are in a specific role, using the set's ``role`` property.
 
-.. topic:: Colocation in which the members of the middle set have no interdependencies,
-           and the last set listed applies only to instances in the master role
+.. topic:: Colocation in which the members of the middle set have no
+           interdependencies, and the last set listed applies only to promoted
+           instances
 
    .. code-block:: xml
 
@@ -1035,7 +1037,7 @@ resources that are in a specific role, using the set's ``role`` property.
               <resource_ref id="D"/>
               <resource_ref id="E"/>
             </resource_set>
-            <resource_set id="colocated-set-3" sequential="true" role="Master">
+            <resource_set id="colocated-set-3" sequential="true" role="Promoted">
               <resource_ref id="A"/>
               <resource_ref id="B"/>
             </resource_set>

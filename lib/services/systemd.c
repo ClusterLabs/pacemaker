@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -630,8 +630,12 @@ create_override_dir(const char *agent)
 {
     char *override_dir = crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
                                            "/%s.service.d", agent);
+    int rc = pcmk__build_path(override_dir, 0755);
 
-    crm_build_path(override_dir, 0755);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Could not create systemd override directory %s: %s",
+                 override_dir, pcmk_rc_str(rc));
+    }
     free(override_dir);
 }
 

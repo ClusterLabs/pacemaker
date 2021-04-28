@@ -1,3 +1,14 @@
+/*
+ * Copyright 2020-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
+
+#include <crm_internal.h>
+
 #include <glib.h>               // gboolean, GMainLoop, etc.
 #include <libxml/tree.h>        // xmlNode
 
@@ -9,6 +20,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
+#include <crm/common/xml_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>
@@ -390,12 +402,37 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, char *ipc_name, unsigned int message_tim
     return rc;
 }
 
+/* user data for looping through remote node xpath searches */
+struct node_data {
+    pcmk__output_t *out;
+    int found;
+    const char *field;  /* XML attribute to check for node name */
+    const char *type;
+    gboolean BASH_EXPORT;
+};
+
+static void
+remote_node_print_helper(xmlNode *result, void *user_data)
+{
+    struct node_data *data = user_data;
+    pcmk__output_t *out = data->out;
+    const char *name = crm_element_value(result, XML_ATTR_UNAME);
+    const char *id = crm_element_value(result, data->field);
+
+    // node name and node id are the same for remote/guest nodes
+    out->message(out, "crmadmin-node", data->type,
+                 name ? name : id,
+                 id,
+                 data->BASH_EXPORT);
+    data->found++;
+}
+
 // \return Standard Pacemaker return code
 int
-pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
+pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
 {
     cib_t *the_cib = cib_new();
-    xmlNode *output = NULL;
+    xmlNode *xml_node = NULL;
     int rc;
 
     if (the_cib == NULL) {
@@ -406,19 +443,56 @@ pcmk__list_nodes(pcmk__output_t *out, gboolean BASH_EXPORT)
         return pcmk_legacy2rc(rc);
     }
 
-    rc = the_cib->cmds->query(the_cib, NULL, &output,
+    rc = the_cib->cmds->query(the_cib, NULL, &xml_node,
                               cib_scope_local | cib_sync_call);
     if (rc == pcmk_ok) {
-        out->message(out, "crmadmin-node-list", output, BASH_EXPORT);
-        free_xml(output);
+        struct node_data data = {
+            .out = out,
+            .found = 0,
+            .BASH_EXPORT = BASH_EXPORT
+        };
+
+        out->begin_list(out, NULL, NULL, "nodes");
+
+        if (!pcmk__str_empty(node_types) && strstr(node_types, "all")) {
+            node_types = NULL;
+        }
+
+        if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
+            data.field = "id";
+            data.type = "cluster";
+            crm_foreach_xpath_result(xml_node, PCMK__XP_MEMBER_NODE_CONFIG,
+                                     remote_node_print_helper, &data);
+        }
+
+        if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
+            data.field = "value";
+            data.type = "guest";
+            crm_foreach_xpath_result(xml_node, PCMK__XP_GUEST_NODE_CONFIG,
+                                     remote_node_print_helper, &data);
+        }
+
+        if (pcmk__str_empty(node_types) || !pcmk__strcmp(node_types, ",|^remote", pcmk__str_regex)) {
+            data.field = "id";
+            data.type = "remote";
+            crm_foreach_xpath_result(xml_node, PCMK__XP_REMOTE_NODE_CONFIG,
+                                     remote_node_print_helper, &data);
+        }
+
+        out->end_list(out);
+
+        if (data.found == 0) {
+            out->info(out, "No nodes configured");
+        }
+
+        free_xml(xml_node);
     }
     the_cib->cmds->signoff(the_cib);
     return pcmk_legacy2rc(rc);
 }
 
-#ifdef BUILD_PUBLIC_LIBPACEMAKER
 int
-pcmk_list_nodes(xmlNodePtr *xml)
+pcmk_list_nodes(xmlNodePtr *xml, char *node_types)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -430,54 +504,7 @@ pcmk_list_nodes(xmlNodePtr *xml)
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__list_nodes(out, FALSE);
+    rc = pcmk__list_nodes(out, node_types, FALSE);
     pcmk__out_epilogue(out, xml, rc);
     return rc;
-}
-#endif
-
-// remove when parameters removed from tools/crmadmin.c
-int
-pcmk__shutdown_controller(pcmk__output_t *out, char *dest_node)
-{
-    data_t data = {
-        .out = out,
-        .mainloop = NULL,
-        .rc = pcmk_rc_ok,
-    };
-    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, NULL);
-
-    if (controld_api != NULL) {
-        int rc = pcmk_controld_api_shutdown(controld_api, dest_node);
-        if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
-            data.rc = rc;
-        }
-        pcmk_free_ipc_api(controld_api);
-    }
-
-    return data.rc;
-}
-
-int
-pcmk__start_election(pcmk__output_t *out)
-{
-    data_t data = {
-        .out = out,
-        .mainloop = NULL,
-        .rc = pcmk_rc_ok,
-    };
-    pcmk_ipc_api_t *controld_api = ipc_connect(&data, pcmk_ipc_controld, NULL);
-
-    if (controld_api != NULL) {
-        int rc = pcmk_controld_api_start_election(controld_api);
-        if (rc != pcmk_rc_ok) {
-            out->err(out, "error: Command failed: %s", pcmk_rc_str(rc));
-            data.rc = rc;
-        }
-
-        pcmk_free_ipc_api(controld_api);
-    }
-
-    return data.rc;
 }

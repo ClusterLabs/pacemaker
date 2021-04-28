@@ -1,5 +1,5 @@
 #
-# Copyright 2020 the Pacemaker project contributors
+# Copyright 2020-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -34,7 +34,7 @@ COCCI_FILES ?=	coccinelle/string-any-of.cocci			\
 dist_noinst_SCRIPTS	= coccinelle/test/testrunner.sh
 EXTRA_DIST		= README gdbhelpers $(COCCI_FILES)		\
 			  coccinelle/ref-passed-variables-inited.cocci	\
-			  coccinelle/string-replacements.cocci		\
+			  coccinelle/rename-fn.cocci			\
 			  coccinelle/test/ref-passed-variables-inited.input.c \
 			  coccinelle/test/ref-passed-variables-inited.output
 

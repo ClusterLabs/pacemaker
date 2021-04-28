@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,8 +37,8 @@ typedef struct synapse_s {
     gboolean executed;
     gboolean confirmed;
 
-    GListPtr actions;           /* crm_action_t* */
-    GListPtr inputs;            /* crm_action_t* */
+    GList *actions;           /* crm_action_t* */
+    GList *inputs;            /* crm_action_t* */
 } synapse_t;
 
 typedef struct crm_action_s {
@@ -56,7 +56,7 @@ typedef struct crm_action_s {
     gboolean confirmed;
 
     gboolean failed;
-    gboolean can_fail;
+    gboolean can_fail; //! \deprecated Will be removed in a future release
 
     xmlNode *xml;
 
@@ -98,7 +98,7 @@ struct crm_graph_s {
     int completed;
     int incomplete;
 
-    GListPtr synapses;          /* synapse_t* */
+    GList *synapses;          /* synapse_t* */
 
     int migration_limit;
 };

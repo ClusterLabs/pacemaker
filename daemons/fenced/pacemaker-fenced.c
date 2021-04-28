@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,6 +55,15 @@ static xmlNode *local_cib = NULL;
 static pe_working_set_t *fenced_data_set = NULL;
 
 static cib_t *cib_api = NULL;
+
+static pcmk__output_t *out = NULL;
+
+pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_LOG,
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    { NULL, NULL, NULL }
+};
 
 static void stonith_shutdown(int nsig);
 static void stonith_cleanup(void);
@@ -583,13 +592,10 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
     const char *value = NULL;
     const char *rclass = NULL;
     pe_node_t *parent = NULL;
-    gboolean remove = TRUE;
 
-    /* If this is a complex resource, check children rather than this resource itself.
-     * TODO: Mark each installed device and remove if untouched when this process finishes.
-     */
+    /* If this is a complex resource, check children rather than this resource itself. */
     if(rsc->children) {
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
         for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             cib_device_update(gIter->data, data_set);
             if(pe_rsc_is_clone(rsc)) {
@@ -606,10 +612,10 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         return;
     }
 
-    /* If this STONITH resource is disabled, just remove it. */
+    /* If this STONITH resource is disabled, remove it. */
     if (pe__resource_is_disabled(rsc)) {
         crm_info("Device %s has been disabled", rsc->id);
-        goto update_done;
+        return;
     }
 
     /* Check whether our node is allowed for this resource (and its parent if in a group) */
@@ -628,7 +634,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
             crm_trace("Available: %s = %d", node->details->uname, node->weight);
         }
 
-        goto update_done;
+        return;
 
     } else if(node->weight < 0 || (parent && parent->weight < 0)) {
         /* Our node (or its group) is disallowed by score, so remove the device */
@@ -637,7 +643,7 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
         crm_info("Device %s has been disabled on %s: score=%s", rsc->id, stonith_our_uname, score);
         free(score);
 
-        goto update_done;
+        return;
 
     } else {
         /* Our node is allowed, so update the device information */
@@ -666,19 +672,12 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
             crm_trace(" %s=%s", name, value);
         }
 
-        remove = FALSE;
         data = create_device_registration_xml(rsc_name(rsc), st_namespace_any,
                                               agent, params, rsc_provides);
         stonith_key_value_freeall(params, 1, 1);
         rc = stonith_device_register(data, NULL, TRUE);
         CRM_ASSERT(rc == pcmk_ok);
         free_xml(data);
-    }
-
-update_done:
-
-    if(remove && g_hash_table_lookup(device_list, rsc_name(rsc))) {
-        stonith_device_remove(rsc_name(rsc), TRUE);
     }
 }
 
@@ -689,7 +688,9 @@ update_done:
 static void
 cib_devices_update(void)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
+    GHashTableIter iter;
+    stonith_device_t *device = NULL;
 
     crm_info("Updating devices to version %s.%s.%s",
              crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN),
@@ -705,9 +706,24 @@ cib_devices_update(void)
     cluster_status(fenced_data_set);
     pcmk__schedule_actions(fenced_data_set, NULL, NULL);
 
+    g_hash_table_iter_init(&iter, device_list);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
+        if (device->cib_registered) {
+            device->dirty = TRUE;
+        }
+    }
+
     for (gIter = fenced_data_set->resources; gIter != NULL; gIter = gIter->next) {
         cib_device_update(gIter->data, fenced_data_set);
     }
+
+    g_hash_table_iter_init(&iter, device_list);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
+        if (device->dirty) {
+            g_hash_table_iter_remove(&iter);
+        }
+    }
+
     fenced_data_set->input = NULL; // Wasn't a copy, so don't let API free it
     pe_reset_working_set(fenced_data_set);
 }
@@ -1280,6 +1296,7 @@ main(int argc, char **argv)
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
     crm_ipc_t *old_instance = NULL;
+    int rc = pcmk_rc_ok;
 
     crm_log_preinit(NULL, argc, argv);
     pcmk__set_cli_options(NULL, "[options]", long_options,
@@ -1413,7 +1430,7 @@ main(int argc, char **argv)
         printf("  </parameter>\n");
 
 
-        for (lpc = 0; lpc < DIMOF(actions); lpc++) {
+        for (lpc = 0; lpc < PCMK__NELEM(actions); lpc++) {
             printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
             printf
                 ("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n",
@@ -1486,6 +1503,7 @@ main(int argc, char **argv)
     CRM_ASSERT(fenced_data_set != NULL);
     pe__set_working_set_flags(fenced_data_set,
                               pe_flag_no_counts|pe_flag_no_compat);
+    pe__set_working_set_flags(fenced_data_set, pe_flag_show_utilization);
 
     if (stand_alone == FALSE) {
 
@@ -1539,6 +1557,20 @@ main(int argc, char **argv)
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
+    pcmk__register_formats(NULL, formats);
+    rc = pcmk__output_new(&out, "log", NULL, argv);
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+        crm_err("Can't log resource details due to internal error: %s\n",
+                pcmk_rc_str(rc));
+        crm_exit(CRM_EX_FATAL);
+    }
+
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
+
+    pcmk__output_set_log_level(out, LOG_TRACE);
+    fenced_data_set->priv = out;
+
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
     crm_notice("Pacemaker fencer successfully started and accepting connections");
@@ -1546,5 +1578,10 @@ main(int argc, char **argv)
 
     stonith_cleanup();
     pe_free_working_set(fenced_data_set);
+
+    pcmk__unregister_formats();
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
+
     crm_exit(CRM_EX_OK);
 }

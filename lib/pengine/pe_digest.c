@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,8 @@
 #include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
+
+extern bool pcmk__is_daemon;
 
 /*!
  * \internal
@@ -160,9 +162,8 @@ calculate_main_digest(op_digest_cache_t *data, pe_resource_t *rsc,
         if (interval_s != NULL) {
             long long value_ll;
 
-            errno = 0;
-            value_ll = crm_parse_ll(interval_s, NULL);
-            if ((errno == 0) && (value_ll >= 0) && (value_ll <= G_MAXUINT)) {
+            if ((pcmk__scan_ll(interval_s, &value_ll, 0LL) == pcmk_rc_ok)
+                && (value_ll >= 0) && (value_ll <= G_MAXUINT)) {
                 *interval_ms = (guint) value_ll;
             }
         }
@@ -544,23 +545,35 @@ pe__compare_fencing_digest(pe_resource_t *rsc, const char *agent,
     if (unfencing_digest_matches(rsc->id, agent, data->digest_secure_calc,
                                  node_summary)) {
         data->rc = RSC_DIGEST_MATCH;
-        if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-            printf("Only 'private' parameters to %s for unfencing %s changed\n",
-                   rsc->id, node->details->uname);
+        if (!pcmk__is_daemon && data_set->priv != NULL) {
+            pcmk__output_t *out = data_set->priv;
+            out->info(out, "Only 'private' parameters to %s "
+                      "for unfencing %s changed", rsc->id,
+                      node->details->uname);
         }
         return data;
     }
 
     // Parameters don't match
     data->rc = RSC_DIGEST_ALL;
-    if (pcmk_is_set(data_set->flags, (pe_flag_sanitized|pe_flag_stdout))
-        && data->digest_secure_calc) {
-        char *digest = create_unfencing_summary(rsc->id, agent,
-                                                data->digest_secure_calc);
+    if (pcmk_is_set(data_set->flags, pe_flag_sanitized) && data->digest_secure_calc) {
+        if (data_set->priv != NULL) {
+            pcmk__output_t *out = data_set->priv;
+            char *digest = create_unfencing_summary(rsc->id, agent,
+                                                    data->digest_secure_calc);
 
-        printf("Parameters to %s for unfencing %s changed, try '%s'\n",
-               rsc->id, node->details->uname, digest);
-        free(digest);
+            out->info(out, "Parameters to %s for unfencing "
+                      "%s changed, try '%s'", rsc->id,
+                      node->details->uname, digest);
+            free(digest);
+        } else if (!pcmk__is_daemon) {
+            char *digest = create_unfencing_summary(rsc->id, agent,
+                                                    data->digest_secure_calc);
+
+            printf("Parameters to %s for unfencing %s changed, try '%s'\n",
+                   rsc->id, node->details->uname, digest);
+            free(digest);
+        }
     }
     return data;
 }

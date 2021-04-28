@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2020 the Pacemaker project contributors
+ * Later changes copyright 2008-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -117,7 +117,7 @@ const char *
 get_object_path(const char *object_type)
 {
     int lpc = 0;
-    int max = DIMOF(known_paths);
+    int max = PCMK__NELEM(known_paths);
 
     for (; lpc < max; lpc++) {
         if ((object_type == NULL && known_paths[lpc].name == NULL)
@@ -132,7 +132,7 @@ const char *
 get_object_parent(const char *object_type)
 {
     int lpc = 0;
-    int max = DIMOF(known_paths);
+    int max = PCMK__NELEM(known_paths);
 
     for (; lpc < max; lpc++) {
         if (pcmk__str_eq(object_type, known_paths[lpc].name, pcmk__str_casei)) {
@@ -154,12 +154,16 @@ get_object_root(const char *object_type, xmlNode * the_root)
     return get_xpath_object(xpath, the_root, LOG_TRACE);
 }
 
-/*
- * It is the callers responsibility to free both the new CIB (output)
- *     and the new CIB (input)
+/*!
+ * \brief Create XML for a new (empty) CIB
+ *
+ * \param[in] cib_epoch   What to use as "epoch" CIB property
+ *
+ * \return Newly created XML for empty CIB
+ * \note It is the caller's responsibility to free the result with free_xml().
  */
 xmlNode *
-createEmptyCib(int admin_epoch)
+createEmptyCib(int cib_epoch)
 {
     xmlNode *cib_root = NULL, *config = NULL;
 
@@ -167,7 +171,7 @@ createEmptyCib(int admin_epoch)
     crm_xml_add(cib_root, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
     crm_xml_add(cib_root, XML_ATTR_VALIDATION, xml_latest_schema());
 
-    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, admin_epoch);
+    crm_xml_add_int(cib_root, XML_ATTR_GENERATION, cib_epoch);
     crm_xml_add_int(cib_root, XML_ATTR_NUMUPDATES, 0);
     crm_xml_add_int(cib_root, XML_ATTR_GENERATION_ADMIN, 0);
 
@@ -179,6 +183,19 @@ createEmptyCib(int admin_epoch)
     create_xml_node(config, XML_CIB_TAG_RESOURCES);
     create_xml_node(config, XML_CIB_TAG_CONSTRAINTS);
 
+#if PCMK__RESOURCE_STICKINESS_DEFAULT != 0
+    {
+        xmlNode *rsc_defaults = create_xml_node(config, XML_CIB_TAG_RSCCONFIG);
+        xmlNode *meta = create_xml_node(rsc_defaults, XML_TAG_META_SETS);
+        xmlNode *nvpair = create_xml_node(meta, XML_CIB_TAG_NVPAIR);
+
+        crm_xml_add(meta, XML_ATTR_ID, "build-resource-defaults");
+        crm_xml_add(nvpair, XML_ATTR_ID, "build-" XML_RSC_ATTR_STICKINESS);
+        crm_xml_add(nvpair, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_STICKINESS);
+        crm_xml_add_int(nvpair, XML_NVPAIR_ATTR_VALUE,
+                        PCMK__RESOURCE_STICKINESS_DEFAULT);
+    }
+#endif
     return cib_root;
 }
 
@@ -187,10 +204,9 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 {
     bool rc = FALSE;
 
-#if ENABLE_ACL
     if(pcmk_acl_required(user)) {
         const char *value = NULL;
-        GHashTable *options = crm_str_table_new();
+        GHashTable *options = pcmk__strkey_table(free, free);
 
         cib_read_config(options, xml);
         value = cib_pref(options, "enable-acl");
@@ -199,7 +215,6 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     }
 
     crm_trace("CIB ACL is %s", rc ? "enabled" : "disabled");
-#endif
     return rc;
 }
 
@@ -457,9 +472,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_ORIG, origin);
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_CLIENT,
                                 crm_element_value(req, F_CIB_CLIENTNAME));
-#if ENABLE_ACL
                 crm_xml_replace(scratch, XML_ATTR_UPDATE_USER, crm_element_value(req, F_CIB_USER));
-#endif
             }
         }
     }
@@ -477,7 +490,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
   done:
 
     *result_cib = scratch;
-#if ENABLE_ACL
     if(rc != pcmk_ok && cib_acl_enabled(current_cib, user)) {
         if(xml_acl_filtered_copy(user, current_cib, scratch, result_cib)) {
             if (*result_cib == NULL) {
@@ -486,7 +498,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
             free_xml(scratch);
         }
     }
-#endif
 
     if(diff) {
         *diff = local_diff;
@@ -516,11 +527,9 @@ cib_create_op(int call_id, const char *token, const char *op, const char *host, 
     crm_xml_add(op_msg, F_CIB_HOST, host);
     crm_xml_add(op_msg, F_CIB_SECTION, section);
     crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
-#if ENABLE_ACL
     if (user_name) {
         crm_xml_add(op_msg, F_CIB_USER, user_name);
     }
-#endif
     crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
     crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
 
@@ -546,7 +555,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         output = get_message_xml(msg, F_CIB_CALLDATA);
     }
 
-    blob = g_hash_table_lookup(cib_op_callback_table, GINT_TO_POINTER(call_id));
+    blob = pcmk__intkey_table_lookup(cib_op_callback_table, call_id);
     if (blob == NULL) {
         crm_trace("No callback found for call %d", call_id);
     }
@@ -642,19 +651,20 @@ cib_metadata(void)
                                 "Cluster Information Base manager options",
                                 "Cluster options used by Pacemaker's "
                                     "Cluster Information Base manager",
-                                cib_opts, DIMOF(cib_opts));
+                                cib_opts, PCMK__NELEM(cib_opts));
 }
 
 void
 verify_cib_options(GHashTable * options)
 {
-    pcmk__validate_cluster_options(options, cib_opts, DIMOF(cib_opts));
+    pcmk__validate_cluster_options(options, cib_opts, PCMK__NELEM(cib_opts));
 }
 
 const char *
 cib_pref(GHashTable * options, const char *name)
 {
-    return pcmk__cluster_option(options, cib_opts, DIMOF(cib_opts), name);
+    return pcmk__cluster_option(options, cib_opts, PCMK__NELEM(cib_opts),
+                                name);
 }
 
 gboolean
@@ -715,21 +725,23 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                      xmlNode ** output_data, int call_options, const char *user_name) =
         cib->delegate_fn;
 
-#if ENABLE_ACL
     if(user_name == NULL) {
         user_name = getenv("CIB_user");
     }
-#endif
 
     return delegate(cib, op, host, section, data, output_data, call_options, user_name);
 }
 
-// Deprecated functions kept only for backward API compatibility
-int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
-                          int level);
-
 /*!
- * \deprecated
+ * \brief Apply a CIB update patch to a given CIB
+ *
+ * \param[in]  event   CIB update patch
+ * \param[in]  input   CIB to patch
+ * \param[out] output  Resulting CIB after patch
+ * \param[in]  level   Log the patch at this log level (unless LOG_CRIT)
+ *
+ * \return Legacy Pacemaker return code
+ * \note sbd calls this function
  */
 int
 cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -292,6 +292,7 @@ cib_t *
 cib_new(void)
 {
     const char *value = getenv("CIB_shadow");
+    int port;
 
     if (value && value[0] != 0) {
         return cib_shadow_new(value);
@@ -305,10 +306,16 @@ cib_new(void)
     value = getenv("CIB_port");
     if (value) {
         gboolean encrypted = TRUE;
-        int port = crm_parse_int(value, NULL);
         const char *server = getenv("CIB_server");
         const char *user = getenv("CIB_user");
         const char *pass = getenv("CIB_passwd");
+
+        /* We don't ensure port is valid (>= 0) because cib_new() currently
+         * can't return NULL in practice, and introducing a NULL return here
+         * could cause core dumps that would previously just cause signon()
+         * failures.
+         */
+        pcmk__scan_port(value, &port);
 
         value = getenv("CIB_encrypted");
         if (value && crm_is_true(value) == FALSE) {
@@ -641,7 +648,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
     }
 
     crm_trace("Adding callback %s for call %d", callback_name, call_id);
-    g_hash_table_insert(cib_op_callback_table, GINT_TO_POINTER(call_id), blob);
+    pcmk__intkey_table_insert(cib_op_callback_table, call_id, blob);
 
     return TRUE;
 }
@@ -651,10 +658,9 @@ remove_cib_op_callback(int call_id, gboolean all_callbacks)
 {
     if (all_callbacks) {
         destroy_op_callback_table();
-        cib_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                      NULL, cib_destroy_op_callback);
+        cib_op_callback_table = pcmk__intkey_table(cib_destroy_op_callback);
     } else {
-        g_hash_table_remove(cib_op_callback_table, GINT_TO_POINTER(call_id));
+        pcmk__intkey_table_remove(cib_op_callback_table, call_id);
     }
 }
 

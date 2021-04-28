@@ -1,0 +1,38 @@
+Current cluster status:
+  * Node List:
+    * Online: [ srv01 srv02 srv03 ]
+
+  * Full List of Resources:
+    * main_rsc	(ocf:pacemaker:Dummy):	 Started srv01
+    * main_rsc2	(ocf:pacemaker:Dummy):	 Started srv02
+    * Clone Set: clnDummy1 [prmDummy1]:
+      * Started: [ srv02 srv03 ]
+      * Stopped: [ srv01 ]
+    * Clone Set: clnPingd [prmPingd]:
+      * Started: [ srv01 srv02 srv03 ]
+
+Transition Summary:
+  * Move       main_rsc     ( srv01 -> srv03 )
+  * Stop       prmPingd:0   (          srv01 )  due to node availability
+
+Executing Cluster Transition:
+  * Resource action: main_rsc        stop on srv01
+  * Pseudo action:   clnPingd_stop_0
+  * Resource action: main_rsc        start on srv03
+  * Resource action: prmPingd:0      stop on srv01
+  * Pseudo action:   clnPingd_stopped_0
+  * Resource action: main_rsc        monitor=10000 on srv03
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ srv01 srv02 srv03 ]
+
+  * Full List of Resources:
+    * main_rsc	(ocf:pacemaker:Dummy):	 Started srv03
+    * main_rsc2	(ocf:pacemaker:Dummy):	 Started srv02
+    * Clone Set: clnDummy1 [prmDummy1]:
+      * Started: [ srv02 srv03 ]
+      * Stopped: [ srv01 ]
+    * Clone Set: clnPingd [prmPingd]:
+      * Started: [ srv02 srv03 ]
+      * Stopped: [ srv01 ]

@@ -372,6 +372,37 @@ A more cautious approach would proceed like this:
    running, and any validation errors are often more informative.
 
 
+What Changed in 2.1
+###################
+
+The Pacemaker 2.1 release is fully backward-compatible in both the CIB XML and
+the C API. Highlights:
+
+* Pacemaker now supports the **OCF Resource Agent API version 1.1**.
+  Most notably, the ``Master`` and ``Slave`` role names have been renamed to
+  ``Promoted`` and ``Unpromoted``.
+
+* Pacemaker now supports colocations where the dependent resource does not
+  affect the primary resource's placement (via a new ``influence`` colocation
+  constraint option and ``critical`` resource meta-attribute). This is intended
+  for cases where a less-important resource must be colocated with an essential
+  resource, but it is preferred to leave the less-important resource stopped if
+  it fails, rather than move both resources.
+
+* If Pacemaker is built with libqb 2.0 or later, the detail log will use
+  **millisecond-resolution timestamps**.
+
+* In addition to crm_mon and stonith_admin, the crmadmin, crm_resource,
+  crm_simulate, and crm_verify commands now support the ``--output-as`` and
+  ``--output-to`` options, including **XML output** (which scripts and
+  higher-level tools are strongly recommended to use instead of trying to parse
+  the text output, which may change from release to release).
+
+For a detailed list of changes, see the release notes and the
+`Pacemaker 2.1 Changes <https://wiki.clusterlabs.org/wiki/Pacemaker_2.1_Changes>`_
+page on the ClusterLabs wiki.
+
+
 What Changed in 2.0
 ###################
 
@@ -395,8 +426,7 @@ behavior. Highlights:
 
 * The ``master`` tag has been deprecated in favor of using the ``clone`` tag
   with the new ``promotable`` meta-attribute set to ``true``. "Master/slave"
-  clone resources are now referred to as "promotable" clone resources, though
-  it will take longer for the full terminology change to be completed.
+  clone resources are now referred to as "promotable" clone resources.
 
 * The public API for Pacemaker libraries that software applications can use
   has changed significantly.

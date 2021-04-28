@@ -150,7 +150,7 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
     }
     if (old_value != NULL) {
         int_value = atoi(old_value);
-        new_value = crm_itoa(++int_value);
+        new_value = pcmk__itoa(++int_value);
     } else {
         new_value = strdup("1");
     }

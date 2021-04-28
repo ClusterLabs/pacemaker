@@ -1,0 +1,25 @@
+
+pcmk__clone_allocate: cl_dummy2 allocation score on alice.demo: 0
+pcmk__clone_allocate: cl_dummy2 allocation score on bob.demo: 0
+pcmk__clone_allocate: dummy2:0 allocation score on alice.demo: 0
+pcmk__clone_allocate: dummy2:0 allocation score on bob.demo: 0
+pcmk__clone_allocate: dummy2:1 allocation score on alice.demo: 0
+pcmk__clone_allocate: dummy2:1 allocation score on bob.demo: 0
+pcmk__clone_allocate: ms_stateful allocation score on alice.demo: 0
+pcmk__clone_allocate: ms_stateful allocation score on bob.demo: 0
+pcmk__clone_allocate: stateful:0 allocation score on alice.demo: 0
+pcmk__clone_allocate: stateful:0 allocation score on bob.demo: 0
+pcmk__clone_allocate: stateful:1 allocation score on alice.demo: 0
+pcmk__clone_allocate: stateful:1 allocation score on bob.demo: 0
+pcmk__native_allocate: dummy1 allocation score on alice.demo: -INFINITY
+pcmk__native_allocate: dummy1 allocation score on bob.demo: -INFINITY
+pcmk__native_allocate: dummy2:0 allocation score on alice.demo: 0
+pcmk__native_allocate: dummy2:0 allocation score on bob.demo: 0
+pcmk__native_allocate: dummy2:1 allocation score on alice.demo: -INFINITY
+pcmk__native_allocate: dummy2:1 allocation score on bob.demo: 0
+pcmk__native_allocate: stateful:0 allocation score on alice.demo: 0
+pcmk__native_allocate: stateful:0 allocation score on bob.demo: 0
+pcmk__native_allocate: stateful:1 allocation score on alice.demo: -INFINITY
+pcmk__native_allocate: stateful:1 allocation score on bob.demo: 0
+stateful:0 promotion score on alice.demo: -1
+stateful:1 promotion score on bob.demo: -1

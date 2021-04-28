@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -244,7 +244,7 @@ try_connect(void)
 
     lrmd_conn->cmds->set_callback(lrmd_conn, connection_events);
     for (; num_tries < tries; num_tries++) {
-        rc = lrmd_conn->cmds->connect_async(lrmd_conn, "pacemaker-execd", 3000);
+        rc = lrmd_conn->cmds->connect_async(lrmd_conn, crm_system_name, 3000);
 
         if (!rc) {
             return;             /* we'll hear back in async callback */
@@ -443,7 +443,7 @@ generate_params(void)
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
     cib_conn = cib_new();
-    rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);
+    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_query);
     if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
         rc = -1;
@@ -483,7 +483,7 @@ generate_params(void)
     }
 
     params = pe_rsc_params(rsc, NULL, data_set);
-    meta = crm_str_table_new();
+    meta = pcmk__strkey_table(free, free);
 
     get_meta_attributes(meta, rsc, NULL, data_set);
 
@@ -527,7 +527,7 @@ main(int argc, char **argv)
     gboolean use_tls = FALSE;
     crm_trigger_t *trig;
 
-    crm_log_cli_init("cts-exec-helper");
+    pcmk__cli_init_logging("cts-exec-helper", 0);
     pcmk__set_cli_options(NULL, "<mode> [options]", long_options,
                           "inject commands into the Pacemaker executor, "
                           "and watch for events");

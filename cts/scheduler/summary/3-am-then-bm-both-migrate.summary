@@ -1,0 +1,31 @@
+Current cluster status:
+  * Node List:
+    * Online: [ 18node1 18node2 18node3 ]
+
+  * Full List of Resources:
+    * A	(ocf:heartbeat:Dummy):	 Started 18node1
+    * B	(ocf:heartbeat:Dummy):	 Started 18node2
+
+Transition Summary:
+  * Migrate    A       ( 18node1 -> 18node2 )
+  * Migrate    B       ( 18node2 -> 18node1 )
+
+Executing Cluster Transition:
+  * Resource action: A               migrate_to on 18node1
+  * Resource action: A               migrate_from on 18node2
+  * Resource action: B               migrate_to on 18node2
+  * Resource action: B               migrate_from on 18node1
+  * Resource action: B               stop on 18node2
+  * Resource action: A               stop on 18node1
+  * Pseudo action:   A_start_0
+  * Pseudo action:   B_start_0
+  * Resource action: A               monitor=60000 on 18node2
+  * Resource action: B               monitor=60000 on 18node1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ 18node1 18node2 18node3 ]
+
+  * Full List of Resources:
+    * A	(ocf:heartbeat:Dummy):	 Started 18node2
+    * B	(ocf:heartbeat:Dummy):	 Started 18node1

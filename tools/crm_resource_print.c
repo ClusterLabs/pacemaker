@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,15 +7,16 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <crm_resource.h>
 #include <crm/common/lists_internal.h>
-#include <crm/common/xml_internal.h>
-#include <crm/common/output_internal.h>
 
 #define cons_string(x) x?x:"NA"
 void
-cli_resource_print_cts_constraints(pcmk__output_t *out, pe_working_set_t * data_set)
+cli_resource_print_cts_constraints(pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     xmlNode *xml_obj = NULL;
     xmlNode *lifetime = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
@@ -52,7 +53,7 @@ cli_resource_print_cts_constraints(pcmk__output_t *out, pe_working_set_t * data_
 void
 cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     const char *host = NULL;
     bool needs_quorum = TRUE;
     const char *rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
@@ -85,12 +86,12 @@ cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
-                              const char *host_uname, bool active,
-                              pe_working_set_t * data_set)
+cli_resource_print_operations(const char *rsc_id, const char *host_uname,
+                              bool active, pe_working_set_t * data_set)
 {
+    pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_no_output;
-    GListPtr ops = find_operations(rsc_id, host_uname, active, data_set);
+    GList *ops = find_operations(rsc_id, host_uname, active, data_set);
 
     if (!ops) {
         return rc;
@@ -99,7 +100,7 @@ cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
     out->begin_list(out, NULL, NULL, "Resource Operations");
     rc = pcmk_rc_ok;
 
-    for (GListPtr lpc = ops; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = ops; lpc != NULL; lpc = lpc->next) {
         xmlNode *xml_op = (xmlNode *) lpc->data;
         out->message(out, "node-and-op", data_set, xml_op);
     }
@@ -110,11 +111,11 @@ cli_resource_print_operations(pcmk__output_t *out, const char *rsc_id,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print(pcmk__output_t *out, pe_resource_t *rsc,
-                   pe_working_set_t *data_set, bool expanded)
+cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
+    pcmk__output_t *out = data_set->priv;
     unsigned int opts = pe_print_pending;
-    GListPtr all = NULL;
+    GList *all = NULL;
 
     all = g_list_prepend(all, strdup("*"));
 
@@ -163,7 +164,7 @@ attribute_list_text(pcmk__output_t *out, va_list args) {
         value = g_hash_table_lookup(params, attr);
     }
     if (value != NULL) {
-        out->info(out, "%s", value);
+        pcmk__formatted_printf(out, "%s\n", value);
     } else {
         out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
     }
@@ -197,7 +198,7 @@ property_list_text(pcmk__output_t *out, va_list args) {
     const char *value = crm_element_value(rsc->xml, attr);
 
     if (value != NULL) {
-        out->info(out, "%s", value);
+        pcmk__formatted_printf(out, "%s\n", value);
     }
 
     return pcmk_rc_ok;
@@ -251,7 +252,6 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
     pe_resource_t *parent = uber_parent(checks->rsc);
-    int rc = pcmk_rc_no_output;
 
     xmlNodePtr node = pcmk__output_create_xml_node(out, "check",
                                                    "id", parent->id,
@@ -273,15 +273,14 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
         crm_xml_add(node, "locked-to", checks->lock_node);
     }
 
-    return rc;
+    return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "gchar *")
 static int
 resource_search_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gchar *requested_name = va_arg(args, gchar *);
 
     bool printed = false;
@@ -293,7 +292,7 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
     }
 
     for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
-        pe_node_t *node = (pe_node_t *) lpc->data;
+        node_info_t *ni = (node_info_t *) lpc->data;
 
         if (!printed) {
             out->begin_list(out, NULL, NULL, "Nodes");
@@ -302,15 +301,19 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
         }
 
         if (out->is_quiet(out)) {
-            out->list_item(out, "node", "%s", node->details->uname);
+            out->list_item(out, "node", "%s", ni->node_name);
         } else {
-            const char *state = "";
+            const char *role_text = "";
 
-            if (!pe_rsc_is_clone(rsc) && rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
-                state = " Master";
+            if (ni->promoted) {
+#ifdef PCMK__COMPAT_2_0
+                role_text = " " RSC_ROLE_PROMOTED_LEGACY_S;
+#else
+                role_text = " " RSC_ROLE_PROMOTED_S;
+#endif
             }
             out->list_item(out, "node", "resource %s is running on: %s%s",
-                           requested_name, node->details->uname, state);
+                           requested_name, ni->node_name, role_text);
         }
     }
 
@@ -321,12 +324,11 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "pe_resource_t *", "gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "gchar *")
 static int
 resource_search_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     gchar *requested_name = va_arg(args, gchar *);
 
     pcmk__output_xml_create_parent(out, "nodes",
@@ -334,10 +336,10 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
                                    NULL);
 
     for (GList *lpc = nodes; lpc != NULL; lpc = lpc->next) {
-        pe_node_t *node = (pe_node_t *) lpc->data;
-        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out, "node", node->details->uname);
+        node_info_t *ni = (node_info_t *) lpc->data;
+        xmlNodePtr sub_node = pcmk__output_create_xml_text_node(out, "node", ni->node_name);
 
-        if (!pe_rsc_is_clone(rsc) && rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
+        if (ni->promoted) {
             crm_xml_add(sub_node, "state", "promoted");
         }
     }
@@ -530,7 +532,7 @@ add_resource_name(pcmk__output_t *out, pe_resource_t *rsc) {
     if (rsc->children == NULL) {
         out->list_item(out, "resource", "%s", rsc->id);
     } else {
-        for (GListPtr lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
+        for (GList *lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
             pe_resource_t *child = (pe_resource_t *) lpc->data;
             add_resource_name(out, child);
         }

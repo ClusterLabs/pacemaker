@@ -1,0 +1,55 @@
+3 of 15 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * Resource Group: rgroup:
+      * dummy1-1	(ocf:heartbeat:Dummy):	 Stopped
+      * dummy1-2	(ocf:heartbeat:Dummy):	 Stopped
+      * dummy1-3	(ocf:heartbeat:Dummy):	 Stopped (disabled)
+      * dummy1-4	(ocf:heartbeat:Dummy):	 Stopped
+      * dummy1-5	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-1	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-2	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-3	(ocf:heartbeat:Dummy):	 Stopped (disabled)
+    * dummy3-1	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy3-2	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy3-3	(ocf:heartbeat:Dummy):	 Stopped (disabled)
+    * dummy3-4	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy3-5	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-4	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-5	(ocf:heartbeat:Dummy):	 Stopped
+
+Transition Summary:
+  * Start      dummy1-1     ( node1 )  due to no quorum (blocked)
+  * Start      dummy1-2     ( node1 )  due to no quorum (blocked)
+  * Start      dummy2-1     ( node2 )  due to no quorum (blocked)
+  * Start      dummy2-2     ( node2 )  due to no quorum (blocked)
+  * Start      dummy3-4     ( node1 )  due to no quorum (blocked)
+  * Start      dummy3-5     ( node1 )  due to no quorum (blocked)
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * Resource Group: rgroup:
+      * dummy1-1	(ocf:heartbeat:Dummy):	 Stopped
+      * dummy1-2	(ocf:heartbeat:Dummy):	 Stopped
+      * dummy1-3	(ocf:heartbeat:Dummy):	 Stopped (disabled)
+      * dummy1-4	(ocf:heartbeat:Dummy):	 Stopped
+      * dummy1-5	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-1	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-2	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-3	(ocf:heartbeat:Dummy):	 Stopped (disabled)
+    * dummy3-1	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy3-2	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy3-3	(ocf:heartbeat:Dummy):	 Stopped (disabled)
+    * dummy3-4	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy3-5	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-4	(ocf:heartbeat:Dummy):	 Stopped
+    * dummy2-5	(ocf:heartbeat:Dummy):	 Stopped

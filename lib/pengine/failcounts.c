@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2020 the Pacemaker project contributors
+ * Copyright 2008-2021 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -266,7 +266,11 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
         if (regexec(&failcount_re, key, 0, NULL, 0) == 0) {
             failcount = pe__add_scores(failcount, char2score(value));
         } else if (regexec(&lastfailure_re, key, 0, NULL, 0) == 0) {
-            last = QB_MAX(last, (time_t) crm_parse_ll(value, NULL));
+            long long last_ll;
+
+            if (pcmk__scan_ll(value, &last_ll, 0LL) == pcmk_rc_ok) {
+                last = (time_t) QB_MAX(last, last_ll);
+            }
         }
     }
 
@@ -312,7 +316,7 @@ pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
     if (pcmk_is_set(flags, pe_fc_fillers) && rsc->fillers
         && !pe_rsc_is_bundled(rsc)) {
 
-        GListPtr gIter = NULL;
+        GList *gIter = NULL;
 
         for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *filler = (pe_resource_t *) gIter->data;

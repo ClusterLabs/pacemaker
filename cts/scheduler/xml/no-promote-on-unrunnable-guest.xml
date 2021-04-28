@@ -1,0 +1,802 @@
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.7" epoch="137" num_updates="3" admin_epoch="0" cib-last-written="Thu May 14 10:49:30 2020" update-origin="controller-0" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1589453371">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.3-5.el8-4b1f869f0f"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1589453354"/>
+      </cluster_property_set>
+      <cluster_property_set id="redis_replication">
+        <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="controller-0"/>
+      </cluster_property_set>
+      <cluster_property_set id="ovn_ovsdb_master_server">
+        <nvpair id="ovn_ovsdb_master_server-OVN_REPL_INFO" name="OVN_REPL_INFO" value="controller-0"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="controller-0">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-1-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-1-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@controller-0"/>
+          <nvpair id="nodes-1-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-1-ovn-dbs-role" name="ovn-dbs-role" value="true"/>
+          <nvpair id="nodes-1-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="controller-1">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-2-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-2-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@controller-1"/>
+          <nvpair id="nodes-2-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-2-ovn-dbs-role" name="ovn-dbs-role" value="true"/>
+          <nvpair id="nodes-2-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="controller-2">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-3-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-3-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@controller-2"/>
+          <nvpair id="nodes-3-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-3-ovn-dbs-role" name="ovn-dbs-role" value="true"/>
+          <nvpair id="nodes-3-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <bundle id="galera-bundle">
+        <meta_attributes id="galera-bundle-meta_attributes"/>
+        <podman image="cluster.common.tag/rhosp16-openstack-mariadb:pcmklatest" promoted-max="3" network="host" options="--user=root --log-driver=k8s-file --log-opt path=/var/log/containers/stdouts/galera-bundle.log -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="mysql-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/mysql/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="mysql-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="mysql-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="mysql-lib" options="rw" source-dir="/var/lib/mysql" target-dir="/var/lib/mysql"/>
+          <storage-mapping id="mysql-log-mariadb" options="rw" source-dir="/var/log/mariadb" target-dir="/var/log/mariadb"/>
+          <storage-mapping id="mysql-log" options="rw" source-dir="/var/log/containers/mysql" target-dir="/var/log/mysql"/>
+          <storage-mapping id="mysql-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-additional_parameters" name="additional_parameters" value="--open-files-limit=16384"/>
+            <nvpair id="galera-instance_attributes-cluster_host_map" name="cluster_host_map" value="controller-0:controller-0.internalapi.redhat.local;controller-1:controller-1.internalapi.redhat.local;controller-2:controller-2.internalapi.redhat.local"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-log" name="log" value="/var/log/mysql/mysqld.log"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://controller-0.internalapi.redhat.local,controller-1.internalapi.redhat.local,controller-2.internalapi.redhat.local"/>
+          </instance_attributes>
+          <meta_attributes id="galera-meta_attributes">
+            <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
+            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
+            <op id="galera-monitor-interval-20s" interval="20s" name="monitor" timeout="30s"/>
+            <op id="galera-monitor-interval-10s" interval="10s" name="monitor" role="Promoted" timeout="30s"/>
+            <op id="galera-monitor-interval-30s" interval="30s" name="monitor" role="Unpromoted" timeout="30s"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120s"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="rabbitmq-bundle">
+        <meta_attributes id="rabbitmq-bundle-meta_attributes"/>
+        <podman image="cluster.common.tag/rhosp16-openstack-rabbitmq:pcmklatest" network="host" options="--user=root --log-driver=k8s-file --log-opt path=/var/log/containers/stdouts/rabbitmq-bundle.log -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS -e LANG=en_US.UTF-8 -e LC_ALL=en_US.UTF-8" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3122"/>
+        <storage>
+          <storage-mapping id="rabbitmq-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/rabbitmq.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="rabbitmq-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/rabbitmq/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="rabbitmq-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="rabbitmq-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="rabbitmq-lib" options="rw" source-dir="/var/lib/rabbitmq" target-dir="/var/lib/rabbitmq"/>
+          <storage-mapping id="rabbitmq-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="rabbitmq-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="rabbitmq-log" options="rw" source-dir="/var/log/containers/rabbitmq" target-dir="/var/log/rabbitmq"/>
+          <storage-mapping id="rabbitmq-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="rabbitmq" provider="heartbeat" type="rabbitmq-cluster">
+          <instance_attributes id="rabbitmq-instance_attributes">
+            <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;exactly&quot;,&quot;ha-params&quot;:2,&quot;ha-promote-on-shutdown&quot;:&quot;always&quot;}"/>
+          </instance_attributes>
+          <meta_attributes id="rabbitmq-meta_attributes">
+            <nvpair id="rabbitmq-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="rabbitmq-monitor-interval-10s" interval="10s" name="monitor" timeout="40s"/>
+            <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="redis-bundle">
+        <meta_attributes id="redis-bundle-meta_attributes"/>
+        <podman image="cluster.common.tag/rhosp16-openstack-redis:pcmklatest" promoted-max="1" network="host" options="--user=root --log-driver=k8s-file --log-opt path=/var/log/containers/stdouts/redis-bundle.log -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3124"/>
+        <storage>
+          <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="redis-cfg-data-redis" options="ro" source-dir="/var/lib/config-data/puppet-generated/redis/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="redis-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="redis-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="redis-lib" options="rw" source-dir="/var/lib/redis" target-dir="/var/lib/redis"/>
+          <storage-mapping id="redis-log" options="rw" source-dir="/var/log/containers/redis" target-dir="/var/log/redis"/>
+          <storage-mapping id="redis-run" options="rw,z" source-dir="/var/run/redis" target-dir="/var/run/redis"/>
+          <storage-mapping id="redis-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="redis-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="redis-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="redis-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="redis-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
+          <instance_attributes id="redis-instance_attributes">
+            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="redis-meta_attributes">
+            <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
+            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
+            <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
+            <op id="redis-monitor-interval-45s" interval="45s" name="monitor" timeout="60s"/>
+            <op id="redis-monitor-interval-20s" interval="20s" name="monitor" role="Promoted" timeout="60s"/>
+            <op id="redis-monitor-interval-60s" interval="60s" name="monitor" role="Unpromoted" timeout="60s"/>
+            <op id="redis-notify-interval-0s" interval="0s" name="notify" timeout="90s"/>
+            <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120s"/>
+            <op id="redis-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="ovn-dbs-bundle">
+        <meta_attributes id="ovn-dbs-bundle-meta_attributes"/>
+        <podman image="cluster.common.tag/rhosp16-openstack-ovn-northd:pcmklatest" promoted-max="1" network="host" options="--log-driver=k8s-file --log-opt path=/var/log/containers/stdouts/ovn-dbs-bundle.log -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3125"/>
+        <storage>
+          <storage-mapping id="ovn-dbs-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/ovn_dbs.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="ovn-dbs-mod-files" options="ro" source-dir="/lib/modules" target-dir="/lib/modules"/>
+          <storage-mapping id="ovn-dbs-run-files" options="rw" source-dir="/var/lib/openvswitch/ovn" target-dir="/run/openvswitch"/>
+          <storage-mapping id="ovn-dbs-log-files" options="rw" source-dir="/var/log/containers/openvswitch" target-dir="/var/log/openvswitch"/>
+          <storage-mapping id="ovn-dbs-db-path" options="rw" source-dir="/var/lib/openvswitch/ovn" target-dir="/etc/openvswitch"/>
+          <storage-mapping id="ovn-fuck" options="rw" source-dir="/usr/lib/ocf/resource.d/ovn" target-dir="/usr/lib/ocf/resource.d/ovn"/>
+        </storage>
+        <primitive class="ocf" id="ovndb_servers" provider="ovn" type="ovndb-servers">
+          <instance_attributes id="ovndb_servers-instance_attributes">
+            <nvpair id="ovndb_servers-instance_attributes-inactive_probe_interval" name="inactive_probe_interval" value="180000"/>
+            <nvpair id="ovndb_servers-instance_attributes-listen_on_master_ip_only" name="listen_on_master_ip_only" value="no"/>
+            <nvpair id="ovndb_servers-instance_attributes-manage_northd" name="manage_northd" value="yes"/>
+            <nvpair id="ovndb_servers-instance_attributes-master_ip" name="master_ip" value="172.17.1.247"/>
+            <nvpair id="ovndb_servers-instance_attributes-nb_master_port" name="nb_master_port" value="6641"/>
+            <nvpair id="ovndb_servers-instance_attributes-sb_master_port" name="sb_master_port" value="6642"/>
+          </instance_attributes>
+          <meta_attributes id="ovndb_servers-meta_attributes">
+            <nvpair id="ovndb_servers-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="ovndb_servers-meta_attributes-notify" name="notify" value="true"/>
+            <nvpair id="ovndb_servers-meta_attributes-interleave" name="interleave" value="true"/>
+            <nvpair id="ovndb_servers-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="ovndb_servers-demote-interval-0s" interval="0s" name="demote" timeout="50s"/>
+            <op id="ovndb_servers-monitor-interval-10s" interval="10s" name="monitor" role="Promoted" timeout="60s"/>
+            <op id="ovndb_servers-monitor-interval-30s" interval="30s" name="monitor" role="Unpromoted" timeout="60s"/>
+            <op id="ovndb_servers-notify-interval-0s" interval="0s" name="notify" timeout="20s"/>
+            <op id="ovndb_servers-promote-interval-0s" interval="0s" name="promote" timeout="50s"/>
+            <op id="ovndb_servers-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="ovndb_servers-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <primitive class="stonith" id="stonith-fence_ipmilan-5254005e097a" type="fence_ipmilan">
+        <meta_attributes id="stonith-fence_ipmilan-5254005e097a-meta_attributes"/>
+        <instance_attributes id="stonith-fence_ipmilan-5254005e097a-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-5254005e097a-instance_attributes-delay" name="delay" value="20"/>
+          <nvpair id="stonith-fence_ipmilan-5254005e097a-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.21"/>
+          <nvpair id="stonith-fence_ipmilan-5254005e097a-instance_attributes-ipport" name="ipport" value="6230"/>
+          <nvpair id="stonith-fence_ipmilan-5254005e097a-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-5254005e097a-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-5254005e097a-instance_attributes-passwd" name="passwd" value="****"/>
+          <nvpair id="stonith-fence_ipmilan-5254005e097a-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="controller-2"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-5254005e097a-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400afe30e" type="fence_ipmilan">
+        <meta_attributes id="stonith-fence_ipmilan-525400afe30e-meta_attributes"/>
+        <instance_attributes id="stonith-fence_ipmilan-525400afe30e-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400afe30e-instance_attributes-delay" name="delay" value="20"/>
+          <nvpair id="stonith-fence_ipmilan-525400afe30e-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.21"/>
+          <nvpair id="stonith-fence_ipmilan-525400afe30e-instance_attributes-ipport" name="ipport" value="6231"/>
+          <nvpair id="stonith-fence_ipmilan-525400afe30e-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400afe30e-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400afe30e-instance_attributes-passwd" name="passwd" value="****"/>
+          <nvpair id="stonith-fence_ipmilan-525400afe30e-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="controller-1"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400afe30e-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400985679" type="fence_ipmilan">
+        <meta_attributes id="stonith-fence_ipmilan-525400985679-meta_attributes"/>
+        <instance_attributes id="stonith-fence_ipmilan-525400985679-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400985679-instance_attributes-delay" name="delay" value="20"/>
+          <nvpair id="stonith-fence_ipmilan-525400985679-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.21"/>
+          <nvpair id="stonith-fence_ipmilan-525400985679-instance_attributes-ipport" name="ipport" value="6232"/>
+          <nvpair id="stonith-fence_ipmilan-525400985679-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400985679-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400985679-instance_attributes-passwd" name="passwd" value="****"/>
+          <nvpair id="stonith-fence_ipmilan-525400985679-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="controller-0"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400985679-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <bundle id="openstack-cinder-volume">
+        <meta_attributes id="openstack-cinder-volume-meta_attributes"/>
+        <podman image="cluster.common.tag/rhosp16-openstack-cinder-volume:pcmklatest" network="host" options="--ipc=host --privileged=true --user=root --log-driver=k8s-file --log-opt path=/var/log/containers/stdouts/openstack-cinder-volume.log -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="cinder-volume-etc-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="cinder-volume-etc-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="cinder-volume-etc-pki-ca-trust-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="cinder-volume-etc-pki-ca-trust-source-anchors" options="ro" source-dir="/etc/pki/ca-trust/source/anchors" target-dir="/etc/pki/ca-trust/source/anchors"/>
+          <storage-mapping id="cinder-volume-etc-pki-tls-certs-ca-bundle.crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="cinder-volume-etc-pki-tls-certs-ca-bundle.trust.crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="cinder-volume-etc-pki-tls-cert.pem" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="cinder-volume-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+          <storage-mapping id="cinder-volume-etc-puppet" options="ro" source-dir="/etc/puppet" target-dir="/etc/puppet"/>
+          <storage-mapping id="cinder-volume-var-lib-kolla-config_files-cinder_volume.json" options="ro" source-dir="/var/lib/kolla/config_files/cinder_volume.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="cinder-volume-var-lib-config-data-puppet-generated-cinder" options="ro" source-dir="/var/lib/config-data/puppet-generated/cinder" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="cinder-volume-etc-iscsi" options="ro" source-dir="/etc/iscsi" target-dir="/var/lib/kolla/config_files/src-iscsid"/>
+          <storage-mapping id="cinder-volume-etc-ceph" options="ro" source-dir="/etc/ceph" target-dir="/var/lib/kolla/config_files/src-ceph"/>
+          <storage-mapping id="cinder-volume-lib-modules" options="ro" source-dir="/lib/modules" target-dir="/lib/modules"/>
+          <storage-mapping id="cinder-volume-dev-" options="rw" source-dir="/dev/" target-dir="/dev/"/>
+          <storage-mapping id="cinder-volume-run-" options="rw" source-dir="/run/" target-dir="/run/"/>
+          <storage-mapping id="cinder-volume-sys" options="rw" source-dir="/sys" target-dir="/sys"/>
+          <storage-mapping id="cinder-volume-var-lib-cinder" options="z" source-dir="/var/lib/cinder" target-dir="/var/lib/cinder"/>
+          <storage-mapping id="cinder-volume-var-lib-iscsi" options="z" source-dir="/var/lib/iscsi" target-dir="/var/lib/iscsi"/>
+          <storage-mapping id="cinder-volume-var-log-containers-cinder" options="z" source-dir="/var/log/containers/cinder" target-dir="/var/log/cinder"/>
+        </storage>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_location id="location-galera-bundle" resource-discovery="exclusive" rsc="galera-bundle">
+        <rule id="location-galera-bundle-rule" score="0">
+          <expression attribute="galera-role" id="location-galera-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-rabbitmq-bundle" resource-discovery="exclusive" rsc="rabbitmq-bundle">
+        <rule id="location-rabbitmq-bundle-rule" score="0">
+          <expression attribute="rabbitmq-role" id="location-rabbitmq-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-redis-bundle" resource-discovery="exclusive" rsc="redis-bundle">
+        <rule id="location-redis-bundle-rule" score="0">
+          <expression attribute="redis-role" id="location-redis-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ovn-dbs-bundle" resource-discovery="exclusive" rsc="ovn-dbs-bundle">
+        <rule id="location-ovn-dbs-bundle-rule" score="0">
+          <expression attribute="ovn-dbs-role" id="location-ovn-dbs-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-stonith-fence_ipmilan-5254005e097a-controller-2--10000" node="controller-2" rsc="stonith-fence_ipmilan-5254005e097a" score="-10000"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400afe30e-controller-1--10000" node="controller-1" rsc="stonith-fence_ipmilan-525400afe30e" score="-10000"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400985679-controller-0--10000" node="controller-0" rsc="stonith-fence_ipmilan-525400985679" score="-10000"/>
+      <rsc_location id="location-openstack-cinder-volume" resource-discovery="exclusive" rsc="openstack-cinder-volume">
+        <rule id="location-openstack-cinder-volume-rule" score="0">
+          <expression attribute="cinder-volume-role" id="location-openstack-cinder-volume-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="cli-ban-ovn-dbs-bundle-on-controller-0" rsc="ovn-dbs-bundle" role="Started" node="controller-0" score="-INFINITY"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-options">
+        <nvpair id="op_defaults-options-timeout" name="timeout" value="120s"/>
+      </meta_attributes>
+    </op_defaults>
+    <fencing-topology>
+      <fencing-level devices="stonith-fence_ipmilan-525400afe30e" id="fl-controller-1-1" index="1" target="controller-1"/>
+      <fencing-level devices="stonith-fence_ipmilan-5254005e097a" id="fl-controller-2-1" index="1" target="controller-2"/>
+      <fencing-level devices="stonith-fence_ipmilan-525400985679" id="fl-controller-0-1" index="1" target="controller-0"/>
+    </fencing-topology>
+  </configuration>
+  <status>
+    <node_state id="1" uname="controller-0" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-0"/>
+          <nvpair id="status-1-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-1-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="17:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;17:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="7" rc-code="7" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="f1d68ab267df6867301fcff08041cd2f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="18:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;18:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="6" rc-code="7" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="205c791aea96714f7aa1cb111c727e1b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-1" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-1">
+            <lrm_rsc_op id="ovn-dbs-bundle-1_last_0" operation_key="ovn-dbs-bundle-1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="138:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;138:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="49" rc-code="0" op-status="0" interval="0" last-rc-change="1589452993" last-run="1589452993" exec-time="0" queue-time="0" op-digest="d00e87492de6b83a85450cd667db2a88" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-1_monitor_30000" operation_key="ovn-dbs-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="173:163:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;173:163:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="44" rc-code="0" op-status="0" interval="30000" last-rc-change="1589452454" exec-time="0" queue-time="0" op-digest="d32292f5736ec6365136aa382f396e66"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="105:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;105:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="52" rc-code="0" op-status="0" interval="0" last-rc-change="1589453023" last-run="1589453023" exec-time="0" queue-time="0" op-digest="dd323696d6c8ed14cb71914c411664c9" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-0_monitor_30000" operation_key="redis-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="113:202:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;113:202:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="53" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453025" exec-time="0" queue-time="0" op-digest="efa64b64e8e502ff9a6c0dba02a626a4"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400985679" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400985679_last_0" operation_key="stonith-fence_ipmilan-525400985679_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="41:62:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;41:62:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="99" rc-code="7" op-status="0" interval="0" last-rc-change="1589446766" last-run="1589446766" exec-time="0" queue-time="0" op-digest="12668032635f19b4a55f6c86a5635e46" op-secure-params=" password  passwd " op-secure-digest="7fb9bca9cf67b357b59395fc0e3718d4"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400afe30e" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400afe30e_last_0" operation_key="stonith-fence_ipmilan-525400afe30e_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="39:56:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;39:56:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="89" rc-code="7" op-status="0" interval="0" last-rc-change="1589446758" last-run="1589446758" exec-time="2" queue-time="0" op-digest="56d6e422b6e35b9d6cb07a9098eb1595" op-secure-params=" password  passwd " op-secure-digest="228e5b173e3349b1237889a6e7a8fcf3"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-5254005e097a" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-5254005e097a_last_0" operation_key="stonith-fence_ipmilan-5254005e097a_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="217:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;217:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="94" rc-code="0" op-status="0" interval="0" last-rc-change="1589446763" last-run="1589446763" exec-time="387" queue-time="0" op-digest="81ab658b0b0f34a426326ca18b9c8bbb" op-secure-params=" password  passwd " op-secure-digest="a712ea57511de5e70f22eb97eb7311df"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-5254005e097a_monitor_60000" operation_key="stonith-fence_ipmilan-5254005e097a_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="218:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;218:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="95" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446764" exec-time="389" queue-time="0" op-digest="9f1f1de9f2250c98891743b876ce0889" op-secure-params=" password  passwd " op-secure-digest="a712ea57511de5e70f22eb97eb7311df"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-2" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-2">
+            <lrm_rsc_op id="ovn-dbs-bundle-2_last_0" operation_key="ovn-dbs-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="38:46:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;38:46:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="17" rc-code="7" op-status="0" interval="0" last-rc-change="1589446377" last-run="1589446377" exec-time="0" queue-time="0" op-digest="bf04cc8b2becfb29770a97d109ad6c4f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-podman-0_last_0" operation_key="openstack-cinder-volume-podman-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="226:72:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;226:72:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="104" rc-code="0" op-status="0" interval="0" last-rc-change="1589446819" last-run="1589446819" exec-time="1265" queue-time="0" op-digest="5614e4a5b18ece4557c8e78b41caa5a3"/>
+            <lrm_rsc_op id="openstack-cinder-volume-podman-0_monitor_60000" operation_key="openstack-cinder-volume-podman-0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="227:72:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;227:72:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="105" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446820" exec-time="248" queue-time="0" op-digest="f147b55da3a7e7ed8a6184047734ab7b"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-0_last_0" operation_key="rabbitmq-bundle-podman-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="13:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;13:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="39" rc-code="0" op-status="0" interval="0" last-rc-change="1589446233" last-run="1589446233" exec-time="1507" queue-time="0" op-digest="feeb9bad40e564c797bb4f8fa96d4295"/>
+            <lrm_rsc_op id="rabbitmq-bundle-podman-0_monitor_60000" operation_key="rabbitmq-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="3:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;3:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="42" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446235" exec-time="339" queue-time="0" op-digest="922dfee439a2453b2c1410c9ee509b57"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-1_last_0" operation_key="rabbitmq-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="11:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;11:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="30" rc-code="7" op-status="0" interval="0" last-rc-change="1589446226" last-run="1589446226" exec-time="72" queue-time="0" op-digest="fd2944f2144c46a12dc75a27df6cb7ca"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-2_last_0" operation_key="rabbitmq-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="12:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;12:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="34" rc-code="7" op-status="0" interval="0" last-rc-change="1589446226" last-run="1589446226" exec-time="96" queue-time="0" op-digest="fd2944f2144c46a12dc75a27df6cb7ca"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="20:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;20:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1589446136" last-run="1589446136" exec-time="0" queue-time="0" op-digest="37e9ab931fa7b5d2122c4cd44c56b7d2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-0_monitor_30000" operation_key="galera-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="11:11:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;11:11:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="5" rc-code="0" op-status="0" interval="30000" last-rc-change="1589446138" exec-time="0" queue-time="0" op-digest="28b6c6af28bc390f48c7288b5bdccdb7"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="8:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;8:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="4" rc-code="7" op-status="0" interval="0" last-rc-change="1589446137" last-run="1589446137" exec-time="0" queue-time="0" op-digest="ed95b71467015049c875f75798f405fb" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="9:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;9:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="3" rc-code="7" op-status="0" interval="0" last-rc-change="1589446136" last-run="1589446136" exec-time="0" queue-time="0" op-digest="f282b02648444d9d95065cede4784d97" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="27:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;27:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="11" rc-code="7" op-status="0" interval="0" last-rc-change="1589446293" last-run="1589446293" exec-time="0" queue-time="0" op-digest="f325849fbffe2e62970eb201a50da9f3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="26:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;26:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="12" rc-code="7" op-status="0" interval="0" last-rc-change="1589446293" last-run="1589446293" exec-time="0" queue-time="0" op-digest="cd98602d6f977947327050913302f861" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-1_last_0" operation_key="ovn-dbs-bundle-podman-1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="137:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;137:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="145" rc-code="0" op-status="0" interval="0" last-rc-change="1589452993" last-run="1589452993" exec-time="767" queue-time="0" op-digest="58778de337ae96452fc829b4a7f22c8d"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-1_monitor_60000" operation_key="ovn-dbs-bundle-podman-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="168:162:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;168:162:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="137" rc-code="0" op-status="0" interval="60000" last-rc-change="1589452453" exec-time="325" queue-time="0" op-digest="5b98682c109506c46f921295192a5723"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-0_last_0" operation_key="galera-bundle-podman-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="4:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;4:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="18" rc-code="0" op-status="0" interval="0" last-rc-change="1589446135" last-run="1589446135" exec-time="1381" queue-time="0" op-digest="95caf297c558176f6dffeedd540e6f84"/>
+            <lrm_rsc_op id="galera-bundle-podman-0_monitor_60000" operation_key="galera-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="1:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;1:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446136" exec-time="323" queue-time="0" op-digest="ec261ef7b0dcb291d95068e147ad3ec9"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-1_last_0" operation_key="galera-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="2:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;2:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="9" rc-code="7" op-status="0" interval="0" last-rc-change="1589446128" last-run="1589446128" exec-time="84" queue-time="0" op-digest="79b24c94a068461a64fd8642b637cf6f"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-2_last_0" operation_key="galera-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="3:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;3:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="13" rc-code="7" op-status="0" interval="0" last-rc-change="1589446128" last-run="1589446128" exec-time="76" queue-time="0" op-digest="79b24c94a068461a64fd8642b637cf6f"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-2_last_0" operation_key="ovn-dbs-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="32:43:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;32:43:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="76" rc-code="7" op-status="0" interval="0" last-rc-change="1589446368" last-run="1589446368" exec-time="83" queue-time="0" op-digest="f572c78235795d25e72ae0801a5b32b9"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-0_last_0" operation_key="redis-bundle-podman-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="103:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;103:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="148" rc-code="0" op-status="0" interval="0" last-rc-change="1589453022" last-run="1589453022" exec-time="1773" queue-time="0" op-digest="d14ff6267c598be94bbc797573ee0f70"/>
+            <lrm_rsc_op id="redis-bundle-podman-0_monitor_60000" operation_key="redis-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="104:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;104:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="149" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453023" exec-time="328" queue-time="0" op-digest="a079bd5d2761c2d56f62e4d71d6c2ade"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-1_last_0" operation_key="redis-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="20:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;20:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="51" rc-code="7" op-status="0" interval="0" last-rc-change="1589446285" last-run="1589446285" exec-time="78" queue-time="0" op-digest="4cec38b57c8812db2c6412206f2f6f64"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-2_last_0" operation_key="redis-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="21:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;21:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="55" rc-code="7" op-status="0" interval="0" last-rc-change="1589446285" last-run="1589446285" exec-time="64" queue-time="0" op-digest="4cec38b57c8812db2c6412206f2f6f64"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-0" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-0">
+            <lrm_rsc_op id="ovn-dbs-bundle-0_last_0" operation_key="ovn-dbs-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="131:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;131:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="50" rc-code="0" op-status="0" interval="0" last-rc-change="1589453020" last-run="1589453020" exec-time="0" queue-time="0" op-digest="d00e87492de6b83a85450cd667db2a88" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-0_monitor_30000" operation_key="ovn-dbs-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="139:200:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;139:200:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="51" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453021" exec-time="0" queue-time="0" op-digest="d32292f5736ec6365136aa382f396e66"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="69:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;69:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="9" rc-code="0" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="8dc3f9844e70d4458a7edcd7091ecf50" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-0_monitor_30000" operation_key="rabbitmq-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="60:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;60:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="10" rc-code="0" op-status="0" interval="30000" last-rc-change="1589446237" exec-time="0" queue-time="0" op-digest="f3eacf73dcd1387f8598f91d67d24fe9"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-0_last_0" operation_key="ovn-dbs-bundle-podman-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="129:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;129:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="146" rc-code="0" op-status="0" interval="0" last-rc-change="1589453018" last-run="1589453018" exec-time="1900" queue-time="1" op-digest="fb796976ed0593e611680e74e3f50680"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-0_monitor_60000" operation_key="ovn-dbs-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="130:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;130:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="147" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453020" exec-time="331" queue-time="0" op-digest="6d1b8bd447411df56487161c04e4b787"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="controller-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-1"/>
+          <nvpair id="status-2-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-2-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="72:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;72:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="8" rc-code="0" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="f1d68ab267df6867301fcff08041cd2f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-1_monitor_30000" operation_key="rabbitmq-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="65:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;65:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="10" rc-code="0" op-status="0" interval="30000" last-rc-change="1589446238" exec-time="0" queue-time="0" op-digest="61c3a926b0d3bd428b481dd6e40b1745"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="21:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;21:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="6" rc-code="7" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="205c791aea96714f7aa1cb111c727e1b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-1" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-1">
+            <lrm_rsc_op id="ovn-dbs-bundle-1_last_0" operation_key="ovn-dbs-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="135:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;135:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="47" rc-code="0" op-status="0" interval="0" last-rc-change="1589453020" last-run="1589453020" exec-time="0" queue-time="0" op-digest="015c999adc4143966a5e0ba98e5d74af" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-1_monitor_30000" operation_key="ovn-dbs-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="144:200:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;144:200:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="48" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453021" exec-time="0" queue-time="0" op-digest="d80c68bbc581d1bd3b9e926370a2f8d5"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="28:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;28:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="14" rc-code="7" op-status="0" interval="0" last-rc-change="1589446294" last-run="1589446294" exec-time="0" queue-time="0" op-digest="dd323696d6c8ed14cb71914c411664c9" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400985679" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400985679_last_0" operation_key="stonith-fence_ipmilan-525400985679_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="223:64:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;223:64:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="98" rc-code="0" op-status="0" interval="0" last-rc-change="1589446770" last-run="1589446770" exec-time="329" queue-time="0" op-digest="12668032635f19b4a55f6c86a5635e46" op-secure-params=" password  passwd " op-secure-digest="7fb9bca9cf67b357b59395fc0e3718d4"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400985679_monitor_60000" operation_key="stonith-fence_ipmilan-525400985679_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="224:64:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;224:64:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="99" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446771" exec-time="321" queue-time="0" op-digest="dfdb2d6f80357af518d5317a5f90059c" op-secure-params=" password  passwd " op-secure-digest="7fb9bca9cf67b357b59395fc0e3718d4"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400afe30e" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400afe30e_last_0" operation_key="stonith-fence_ipmilan-525400afe30e_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="40:56:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;40:56:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="89" rc-code="7" op-status="0" interval="0" last-rc-change="1589446758" last-run="1589446758" exec-time="2" queue-time="0" op-digest="56d6e422b6e35b9d6cb07a9098eb1595" op-secure-params=" password  passwd " op-secure-digest="228e5b173e3349b1237889a6e7a8fcf3"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-5254005e097a" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-5254005e097a_last_0" operation_key="stonith-fence_ipmilan-5254005e097a_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="40:57:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;40:57:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="93" rc-code="7" op-status="0" interval="0" last-rc-change="1589446759" last-run="1589446759" exec-time="0" queue-time="1" op-digest="81ab658b0b0f34a426326ca18b9c8bbb" op-secure-params=" password  passwd " op-secure-digest="a712ea57511de5e70f22eb97eb7311df"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-2" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-2">
+            <lrm_rsc_op id="ovn-dbs-bundle-2_last_0" operation_key="ovn-dbs-bundle-2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="140:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;140:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="46" rc-code="0" op-status="0" interval="0" last-rc-change="1589452993" last-run="1589452993" exec-time="0" queue-time="0" op-digest="015c999adc4143966a5e0ba98e5d74af" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-2_monitor_30000" operation_key="ovn-dbs-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="147:196:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;147:196:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="45" rc-code="0" op-status="0" interval="30000" last-rc-change="1589452905" exec-time="0" queue-time="0" op-digest="d80c68bbc581d1bd3b9e926370a2f8d5"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-podman-0_last_0" operation_key="openstack-cinder-volume-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="43:70:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;43:70:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="103" rc-code="7" op-status="0" interval="0" last-rc-change="1589446815" last-run="1589446815" exec-time="89" queue-time="0" op-digest="5614e4a5b18ece4557c8e78b41caa5a3"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-0_last_0" operation_key="rabbitmq-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="13:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;13:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="26" rc-code="7" op-status="0" interval="0" last-rc-change="1589446226" last-run="1589446226" exec-time="75" queue-time="0" op-digest="fd2944f2144c46a12dc75a27df6cb7ca"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-1_last_0" operation_key="rabbitmq-bundle-podman-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="14:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;14:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="39" rc-code="0" op-status="0" interval="0" last-rc-change="1589446233" last-run="1589446233" exec-time="1482" queue-time="0" op-digest="0518b5a908865705d60c72d51446bb73"/>
+            <lrm_rsc_op id="rabbitmq-bundle-podman-1_monitor_60000" operation_key="rabbitmq-bundle-podman-1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="6:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;6:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="41" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446235" exec-time="304" queue-time="0" op-digest="26ddb64c20e02fd3dcb27e13a94b5136"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-2_last_0" operation_key="rabbitmq-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="15:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;15:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="34" rc-code="7" op-status="0" interval="0" last-rc-change="1589446226" last-run="1589446226" exec-time="104" queue-time="0" op-digest="fd2944f2144c46a12dc75a27df6cb7ca"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="10:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;10:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1589446136" last-run="1589446136" exec-time="0" queue-time="0" op-digest="37e9ab931fa7b5d2122c4cd44c56b7d2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="23:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;23:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="4" rc-code="0" op-status="0" interval="0" last-rc-change="1589446137" last-run="1589446137" exec-time="0" queue-time="0" op-digest="ed95b71467015049c875f75798f405fb" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-1_monitor_30000" operation_key="galera-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="16:11:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;16:11:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="5" rc-code="0" op-status="0" interval="30000" last-rc-change="1589446138" exec-time="0" queue-time="0" op-digest="1cb41a6c33cc25b47ebeff7bb61c3eeb"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="12:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;12:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="2" rc-code="7" op-status="0" interval="0" last-rc-change="1589446136" last-run="1589446136" exec-time="0" queue-time="0" op-digest="f282b02648444d9d95065cede4784d97" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="30:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;30:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="11" rc-code="7" op-status="0" interval="0" last-rc-change="1589446293" last-run="1589446293" exec-time="0" queue-time="0" op-digest="f325849fbffe2e62970eb201a50da9f3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="119:212:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;119:212:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="52" rc-code="0" op-status="0" interval="0" last-rc-change="1589453175" last-run="1589453175" exec-time="0" queue-time="0" op-digest="cd98602d6f977947327050913302f861" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-1_monitor_30000" operation_key="redis-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="123:213:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;123:213:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="53" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453176" exec-time="0" queue-time="0" op-digest="a076da96e60da0ec2faccf5f38186767"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-1_last_0" operation_key="ovn-dbs-bundle-podman-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="133:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;133:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="140" rc-code="0" op-status="0" interval="0" last-rc-change="1589453018" last-run="1589453018" exec-time="1872" queue-time="0" op-digest="58778de337ae96452fc829b4a7f22c8d"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-1_monitor_60000" operation_key="ovn-dbs-bundle-podman-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="134:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;134:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="141" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453020" exec-time="332" queue-time="0" op-digest="5b98682c109506c46f921295192a5723"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-0_last_0" operation_key="galera-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="4:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;4:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1589446128" last-run="1589446128" exec-time="79" queue-time="0" op-digest="79b24c94a068461a64fd8642b637cf6f"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-1_last_0" operation_key="galera-bundle-podman-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="5:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;5:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="18" rc-code="0" op-status="0" interval="0" last-rc-change="1589446135" last-run="1589446135" exec-time="1501" queue-time="0" op-digest="5ae9ebeec6b2ecf0240e593c43d5b89e"/>
+            <lrm_rsc_op id="galera-bundle-podman-1_monitor_60000" operation_key="galera-bundle-podman-1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="2:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;2:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="21" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446137" exec-time="319" queue-time="0" op-digest="f00764e4603ba7a985cdc5b0bebc0159"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-2_last_0" operation_key="galera-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="6:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;6:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="13" rc-code="7" op-status="0" interval="0" last-rc-change="1589446128" last-run="1589446128" exec-time="70" queue-time="0" op-digest="79b24c94a068461a64fd8642b637cf6f"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-2_last_0" operation_key="ovn-dbs-bundle-podman-2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="139:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;139:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="139" rc-code="0" op-status="0" interval="0" last-rc-change="1589452993" last-run="1589452993" exec-time="811" queue-time="0" op-digest="e133ab3f2709aeef1a782f2d0676e290"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-2_monitor_60000" operation_key="ovn-dbs-bundle-podman-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="144:195:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;144:195:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="137" rc-code="0" op-status="0" interval="60000" last-rc-change="1589452904" exec-time="328" queue-time="0" op-digest="d0f190c04691466af0b8d69c0cc6a17e"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-0_last_0" operation_key="redis-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="22:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;22:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="47" rc-code="7" op-status="0" interval="0" last-rc-change="1589446285" last-run="1589446285" exec-time="68" queue-time="0" op-digest="4cec38b57c8812db2c6412206f2f6f64"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-1_last_0" operation_key="redis-bundle-podman-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="117:212:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;117:212:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="146" rc-code="0" op-status="0" interval="0" last-rc-change="1589453173" last-run="1589453173" exec-time="1929" queue-time="0" op-digest="199c20c5684fcf3777f273dc84d2cc6a"/>
+            <lrm_rsc_op id="redis-bundle-podman-1_monitor_60000" operation_key="redis-bundle-podman-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="118:212:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;118:212:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="147" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453175" exec-time="306" queue-time="0" op-digest="300e33eb82e96fbbe87f7ba883583960"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-2_last_0" operation_key="redis-bundle-podman-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="24:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;24:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="55" rc-code="7" op-status="0" interval="0" last-rc-change="1589446285" last-run="1589446285" exec-time="75" queue-time="0" op-digest="4cec38b57c8812db2c6412206f2f6f64"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-0" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-0">
+            <lrm_rsc_op id="ovn-dbs-bundle-0_last_0" operation_key="ovn-dbs-bundle-0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="166:165:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;166:165:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="36" rc-code="0" op-status="0" interval="0" last-rc-change="1589452498" last-run="1589452498" exec-time="0" queue-time="0" op-digest="015c999adc4143966a5e0ba98e5d74af" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-0_monitor_30000" operation_key="ovn-dbs-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="172:155:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;172:155:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="35" rc-code="0" op-status="0" interval="30000" last-rc-change="1589452245" exec-time="0" queue-time="0" op-digest="d80c68bbc581d1bd3b9e926370a2f8d5"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="19:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;19:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="9" rc-code="7" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="8dc3f9844e70d4458a7edcd7091ecf50" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-0_last_0" operation_key="ovn-dbs-bundle-podman-0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="165:165:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;165:165:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="125" rc-code="0" op-status="0" interval="0" last-rc-change="1589452498" last-run="1589452498" exec-time="897" queue-time="0" op-digest="fb796976ed0593e611680e74e3f50680"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-0_monitor_60000" operation_key="ovn-dbs-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="167:154:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;167:154:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="123" rc-code="0" op-status="0" interval="60000" last-rc-change="1589452244" exec-time="313" queue-time="0" op-digest="6d1b8bd447411df56487161c04e4b787"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="controller-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-3-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-2"/>
+          <nvpair id="status-3-master-ovndb_servers" name="master-ovndb_servers" value="5"/>
+          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="23:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;23:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="8" rc-code="7" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="f1d68ab267df6867301fcff08041cd2f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="75:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;75:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="7" rc-code="0" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="205c791aea96714f7aa1cb111c727e1b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-2_monitor_30000" operation_key="rabbitmq-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="70:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;70:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="10" rc-code="0" op-status="0" interval="30000" last-rc-change="1589446238" exec-time="0" queue-time="0" op-digest="f765304166a359903e5aea671a7275d0"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-1" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-1">
+            <lrm_rsc_op id="ovn-dbs-bundle-1_last_0" operation_key="ovn-dbs-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="43:46:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;43:46:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="16" rc-code="7" op-status="0" interval="0" last-rc-change="1589446377" last-run="1589446377" exec-time="0" queue-time="0" op-digest="015c999adc4143966a5e0ba98e5d74af" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="31:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;31:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="14" rc-code="7" op-status="0" interval="0" last-rc-change="1589446294" last-run="1589446294" exec-time="0" queue-time="0" op-digest="dd323696d6c8ed14cb71914c411664c9" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400985679" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400985679_last_0" operation_key="stonith-fence_ipmilan-525400985679_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="43:62:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;43:62:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="99" rc-code="7" op-status="0" interval="0" last-rc-change="1589446766" last-run="1589446766" exec-time="0" queue-time="0" op-digest="12668032635f19b4a55f6c86a5635e46" op-secure-params=" password  passwd " op-secure-digest="7fb9bca9cf67b357b59395fc0e3718d4"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400afe30e" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400afe30e_last_0" operation_key="stonith-fence_ipmilan-525400afe30e_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="219:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;219:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="94" rc-code="0" op-status="0" interval="0" last-rc-change="1589446763" last-run="1589446763" exec-time="387" queue-time="0" op-digest="56d6e422b6e35b9d6cb07a9098eb1595" op-secure-params=" password  passwd " op-secure-digest="228e5b173e3349b1237889a6e7a8fcf3"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400afe30e_monitor_60000" operation_key="stonith-fence_ipmilan-525400afe30e_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="220:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;220:60:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="95" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446764" exec-time="393" queue-time="0" op-digest="feba67262a896a74d6e632cd8b76444b" op-secure-params=" password  passwd " op-secure-digest="228e5b173e3349b1237889a6e7a8fcf3"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-5254005e097a" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-5254005e097a_last_0" operation_key="stonith-fence_ipmilan-5254005e097a_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="41:57:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;41:57:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="93" rc-code="7" op-status="0" interval="0" last-rc-change="1589446759" last-run="1589446759" exec-time="0" queue-time="0" op-digest="81ab658b0b0f34a426326ca18b9c8bbb" op-secure-params=" password  passwd " op-secure-digest="a712ea57511de5e70f22eb97eb7311df"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-2" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-2">
+            <lrm_rsc_op id="ovn-dbs-bundle-2_last_0" operation_key="ovn-dbs-bundle-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="139:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;139:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="35" rc-code="0" op-status="0" interval="0" last-rc-change="1589453020" last-run="1589453020" exec-time="0" queue-time="0" op-digest="bf04cc8b2becfb29770a97d109ad6c4f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-2_monitor_30000" operation_key="ovn-dbs-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="149:200:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;149:200:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="36" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453021" exec-time="0" queue-time="0" op-digest="9f294fb368bef68138cb5f6555eacdbb"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-podman-0_last_0" operation_key="openstack-cinder-volume-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="44:70:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;44:70:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="103" rc-code="7" op-status="0" interval="0" last-rc-change="1589446815" last-run="1589446815" exec-time="80" queue-time="0" op-digest="5614e4a5b18ece4557c8e78b41caa5a3"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-0_last_0" operation_key="rabbitmq-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="16:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;16:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="26" rc-code="7" op-status="0" interval="0" last-rc-change="1589446226" last-run="1589446226" exec-time="75" queue-time="0" op-digest="fd2944f2144c46a12dc75a27df6cb7ca"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-1_last_0" operation_key="rabbitmq-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="17:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;17:21:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="30" rc-code="7" op-status="0" interval="0" last-rc-change="1589446226" last-run="1589446226" exec-time="68" queue-time="0" op-digest="fd2944f2144c46a12dc75a27df6cb7ca"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-podman-2_last_0" operation_key="rabbitmq-bundle-podman-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="15:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;15:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="39" rc-code="0" op-status="0" interval="0" last-rc-change="1589446233" last-run="1589446233" exec-time="1440" queue-time="0" op-digest="fa9ab4aeeb9815ff335e797cd07969e6"/>
+            <lrm_rsc_op id="rabbitmq-bundle-podman-2_monitor_60000" operation_key="rabbitmq-bundle-podman-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="9:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;9:24:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="40" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446235" exec-time="316" queue-time="0" op-digest="551fba7650e81f55ddd9f61fe213ee78"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="13:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;13:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1589446136" last-run="1589446136" exec-time="0" queue-time="0" op-digest="37e9ab931fa7b5d2122c4cd44c56b7d2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="14:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;14:10:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="4" rc-code="7" op-status="0" interval="0" last-rc-change="1589446137" last-run="1589446137" exec-time="0" queue-time="0" op-digest="ed95b71467015049c875f75798f405fb" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-podman-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="26:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;26:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="3" rc-code="0" op-status="0" interval="0" last-rc-change="1589446136" last-run="1589446136" exec-time="0" queue-time="0" op-digest="f282b02648444d9d95065cede4784d97" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-2_monitor_30000" operation_key="galera-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="21:11:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;21:11:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="5" rc-code="0" op-status="0" interval="30000" last-rc-change="1589446138" exec-time="0" queue-time="0" op-digest="360b985b565e1db13335e072b0bb4305"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="113:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;113:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="37" rc-code="0" op-status="0" interval="0" last-rc-change="1589453023" last-run="1589453023" exec-time="0" queue-time="0" op-digest="f325849fbffe2e62970eb201a50da9f3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-2_monitor_30000" operation_key="redis-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="123:202:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;123:202:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="38" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453025" exec-time="0" queue-time="0" op-digest="1edf361604603a3dc6ccd940ce449f27"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-podman-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="32:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;32:34:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="13" rc-code="7" op-status="0" interval="0" last-rc-change="1589446293" last-run="1589446293" exec-time="0" queue-time="0" op-digest="cd98602d6f977947327050913302f861" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-1_last_0" operation_key="ovn-dbs-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="37:43:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;37:43:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="72" rc-code="7" op-status="0" interval="0" last-rc-change="1589446368" last-run="1589446368" exec-time="73" queue-time="0" op-digest="f572c78235795d25e72ae0801a5b32b9"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-0_last_0" operation_key="galera-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="7:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;7:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1589446128" last-run="1589446128" exec-time="89" queue-time="0" op-digest="79b24c94a068461a64fd8642b637cf6f"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-1_last_0" operation_key="galera-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="8:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;8:7:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="9" rc-code="7" op-status="0" interval="0" last-rc-change="1589446128" last-run="1589446128" exec-time="91" queue-time="0" op-digest="79b24c94a068461a64fd8642b637cf6f"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-podman-2_last_0" operation_key="galera-bundle-podman-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="6:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;6:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="18" rc-code="0" op-status="0" interval="0" last-rc-change="1589446135" last-run="1589446135" exec-time="1420" queue-time="0" op-digest="0e2a3c6ab0eda2ade4e8fc19f575e901"/>
+            <lrm_rsc_op id="galera-bundle-podman-2_monitor_60000" operation_key="galera-bundle-podman-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="3:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;3:10:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="20" rc-code="0" op-status="0" interval="60000" last-rc-change="1589446136" exec-time="312" queue-time="1" op-digest="ab8f616fc91fe22cf4428feec78cdd61"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-2_last_0" operation_key="ovn-dbs-bundle-podman-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="137:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;137:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="124" rc-code="0" op-status="0" interval="0" last-rc-change="1589453018" last-run="1589453018" exec-time="1710" queue-time="0" op-digest="e133ab3f2709aeef1a782f2d0676e290"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-2_monitor_60000" operation_key="ovn-dbs-bundle-podman-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="138:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;138:199:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="125" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453020" exec-time="328" queue-time="0" op-digest="d0f190c04691466af0b8d69c0cc6a17e"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-0_last_0" operation_key="redis-bundle-podman-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="25:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;25:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="47" rc-code="7" op-status="0" interval="0" last-rc-change="1589446285" last-run="1589446285" exec-time="67" queue-time="0" op-digest="4cec38b57c8812db2c6412206f2f6f64"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-1" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-1_last_0" operation_key="redis-bundle-podman-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="26:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;26:31:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="51" rc-code="7" op-status="0" interval="0" last-rc-change="1589446285" last-run="1589446285" exec-time="79" queue-time="0" op-digest="4cec38b57c8812db2c6412206f2f6f64"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-podman-2" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-podman-2_last_0" operation_key="redis-bundle-podman-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="111:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;111:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="126" rc-code="0" op-status="0" interval="0" last-rc-change="1589453022" last-run="1589453022" exec-time="1646" queue-time="0" op-digest="3060e3c59f688989fbbcb12bd20f42c6"/>
+            <lrm_rsc_op id="redis-bundle-podman-2_monitor_60000" operation_key="redis-bundle-podman-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="112:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;112:201:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="127" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453023" exec-time="309" queue-time="0" op-digest="99c1eff0424ab42e8e9400251b938631"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-0" type="remote" class="ocf" provider="pacemaker" container="ovn-dbs-bundle-podman-0">
+            <lrm_rsc_op id="ovn-dbs-bundle-0_last_0" operation_key="ovn-dbs-bundle-0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="136:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;136:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="34" rc-code="0" op-status="0" interval="0" last-rc-change="1589452993" last-run="1589452993" exec-time="0" queue-time="0" op-digest="bf04cc8b2becfb29770a97d109ad6c4f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-0_monitor_30000" operation_key="ovn-dbs-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="137:195:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;137:195:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="33" rc-code="0" op-status="0" interval="30000" last-rc-change="1589452904" exec-time="0" queue-time="0" op-digest="9f294fb368bef68138cb5f6555eacdbb"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-podman-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.3.0" transition-key="22:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:7;22:24:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="9" rc-code="7" op-status="0" interval="0" last-rc-change="1589446235" last-run="1589446235" exec-time="0" queue-time="0" op-digest="8dc3f9844e70d4458a7edcd7091ecf50" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ovn-dbs-bundle-podman-0" type="podman" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-0_last_0" operation_key="ovn-dbs-bundle-podman-0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="135:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;135:198:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="123" rc-code="0" op-status="0" interval="0" last-rc-change="1589452993" last-run="1589452993" exec-time="736" queue-time="0" op-digest="fb796976ed0593e611680e74e3f50680"/>
+            <lrm_rsc_op id="ovn-dbs-bundle-podman-0_monitor_60000" operation_key="ovn-dbs-bundle-podman-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="133:194:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;133:194:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="121" rc-code="0" op-status="0" interval="60000" last-rc-change="1589452902" exec-time="337" queue-time="0" op-digest="6d1b8bd447411df56487161c04e4b787"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-0" uname="galera-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="34:15:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;34:15:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="242" rc-code="0" op-status="0" interval="0" last-rc-change="1589446177" last-run="1589446177" exec-time="12875" queue-time="0" op-digest="71f3cd23a7725ffda9a27f53824f3904" op-secure-params=" user " op-secure-digest="71f3cd23a7725ffda9a27f53824f3904"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="28:16:8:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:8;28:16:8:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="289" rc-code="8" op-status="0" interval="10000" last-rc-change="1589446190" exec-time="77" queue-time="0" op-digest="93f4e5c007476b01d317e51683962464" op-secure-params=" user " op-secure-digest="71f3cd23a7725ffda9a27f53824f3904"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-0">
+        <instance_attributes id="status-galera-bundle-0"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-2" uname="galera-bundle-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="29:14:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;29:14:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="94" rc-code="0" op-status="0" interval="0" last-rc-change="1589446164" last-run="1589446164" exec-time="12787" queue-time="0" op-digest="71f3cd23a7725ffda9a27f53824f3904" op-secure-params=" user " op-secure-digest="71f3cd23a7725ffda9a27f53824f3904"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="31:15:8:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:8;31:15:8:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="211" rc-code="8" op-status="0" interval="10000" last-rc-change="1589446177" exec-time="74" queue-time="0" op-digest="93f4e5c007476b01d317e51683962464" op-secure-params=" user " op-secure-digest="71f3cd23a7725ffda9a27f53824f3904"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-2">
+        <instance_attributes id="status-galera-bundle-2"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-1" uname="galera-bundle-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="35:16:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;35:16:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="201" rc-code="0" op-status="0" interval="0" last-rc-change="1589446190" last-run="1589446190" exec-time="12867" queue-time="0" op-digest="71f3cd23a7725ffda9a27f53824f3904" op-secure-params=" user " op-secure-digest="71f3cd23a7725ffda9a27f53824f3904"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="33:17:8:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:8;33:17:8:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="249" rc-code="8" op-status="0" interval="10000" last-rc-change="1589446203" exec-time="67" queue-time="0" op-digest="93f4e5c007476b01d317e51683962464" op-secure-params=" user " op-secure-digest="71f3cd23a7725ffda9a27f53824f3904"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-1">
+        <instance_attributes id="status-galera-bundle-1"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-1" uname="rabbitmq-bundle-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="75:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;75:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="13" rc-code="0" op-status="0" interval="0" last-rc-change="1589446246" last-run="1589446246" exec-time="9480" queue-time="0" op-digest="e3a5f71f4c37be2ed068e4f0dcc847a9"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="76:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;76:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1589446266" exec-time="2224" queue-time="0" op-digest="04bcb19b3c7c43f101badbd8f1e2eed2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rabbitmq-bundle-1">
+        <instance_attributes id="status-rabbitmq-bundle-1"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-0" uname="rabbitmq-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="75:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;75:25:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="13" rc-code="0" op-status="0" interval="0" last-rc-change="1589446239" last-run="1589446239" exec-time="7590" queue-time="0" op-digest="e3a5f71f4c37be2ed068e4f0dcc847a9"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="74:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;74:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="48" rc-code="0" op-status="0" interval="10000" last-rc-change="1589446266" exec-time="2248" queue-time="0" op-digest="04bcb19b3c7c43f101badbd8f1e2eed2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rabbitmq-bundle-0">
+        <instance_attributes id="status-rabbitmq-bundle-0"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-2" uname="rabbitmq-bundle-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="77:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;77:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="13" rc-code="0" op-status="0" interval="0" last-rc-change="1589446256" last-run="1589446256" exec-time="9597" queue-time="0" op-digest="e3a5f71f4c37be2ed068e4f0dcc847a9"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="78:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;78:26:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1589446266" exec-time="2191" queue-time="0" op-digest="04bcb19b3c7c43f101badbd8f1e2eed2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rabbitmq-bundle-2">
+        <instance_attributes id="status-rabbitmq-bundle-2"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-2" uname="redis-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="redis-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="137:204:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;137:204:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="8" rc-code="0" op-status="0" interval="0" last-rc-change="1589453035" last-run="1589453035" exec-time="5010" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="140:205:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;140:205:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="93" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453046" exec-time="292" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="139:205:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;139:205:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="94" rc-code="0" op-status="0" interval="45000" last-rc-change="1589453046" exec-time="328" queue-time="251" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-1" uname="redis-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="redis-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="138:213:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;138:213:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="8" rc-code="0" op-status="0" interval="0" last-rc-change="1589453176" last-run="1589453176" exec-time="4668" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="138:214:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;138:214:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="50" rc-code="0" op-status="0" interval="60000" last-rc-change="1589453181" exec-time="291" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="137:214:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;137:214:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="51" rc-code="0" op-status="0" interval="45000" last-rc-change="1589453181" exec-time="331" queue-time="250" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-0" uname="redis-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="redis-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="133:210:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;133:210:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="149" rc-code="0" op-status="0" interval="0" last-rc-change="1589453127" last-run="1589453127" exec-time="892" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_20000" operation_key="redis_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="130:211:8:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:8;130:211:8:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="167" rc-code="8" op-status="0" interval="20000" last-rc-change="1589453133" exec-time="271" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="ovn-dbs-bundle-1" uname="ovn-dbs-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="ovn-dbs-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="ovndb_servers" type="ovndb-servers" class="ocf" provider="ovn">
+            <lrm_rsc_op id="ovndb_servers_last_0" operation_key="ovndb_servers_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="42:207:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;42:207:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="58" rc-code="0" op-status="0" interval="0" last-rc-change="1589453104" last-run="1589453104" exec-time="296" queue-time="0" op-digest="df362dc0e5bb42793edd3bdc665f72ba"/>
+            <lrm_rsc_op id="ovndb_servers_last_failure_0" operation_key="ovndb_servers_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="42:207:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;42:207:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="58" rc-code="0" op-status="0" interval="0" last-rc-change="1589453104" last-run="1589453104" exec-time="296" queue-time="0" op-digest="df362dc0e5bb42793edd3bdc665f72ba"/>
+            <lrm_rsc_op id="ovndb_servers_monitor_30000" operation_key="ovndb_servers_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="190:208:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;190:208:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-1" call-id="64" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453105" exec-time="284" queue-time="0" op-digest="d60dafe7583fcd42955f8cce982ffa2c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="ovn-dbs-bundle-1">
+        <instance_attributes id="status-ovn-dbs-bundle-1"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="ovn-dbs-bundle-2" uname="ovn-dbs-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="ovn-dbs-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="ovndb_servers" type="ovndb-servers" class="ocf" provider="ovn">
+            <lrm_rsc_op id="ovndb_servers_last_0" operation_key="ovndb_servers_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="42:218:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;42:218:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="112" rc-code="0" op-status="0" interval="0" last-rc-change="1589453356" last-run="1589453356" exec-time="284" queue-time="0" op-digest="df362dc0e5bb42793edd3bdc665f72ba"/>
+            <lrm_rsc_op id="ovndb_servers_last_failure_0" operation_key="ovndb_servers_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="42:218:7:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;42:218:7:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="112" rc-code="0" op-status="0" interval="0" last-rc-change="1589453356" last-run="1589453356" exec-time="284" queue-time="0" op-digest="df362dc0e5bb42793edd3bdc665f72ba"/>
+            <lrm_rsc_op id="ovndb_servers_monitor_30000" operation_key="ovndb_servers_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="192:219:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;192:219:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-2" call-id="118" rc-code="0" op-status="0" interval="30000" last-rc-change="1589453356" exec-time="293" queue-time="0" op-digest="d60dafe7583fcd42955f8cce982ffa2c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="ovn-dbs-bundle-2">
+        <instance_attributes id="status-ovn-dbs-bundle-2"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="ovn-dbs-bundle-0" uname="ovn-dbs-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="ovn-dbs-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="ovndb_servers" type="ovndb-servers" class="ocf" provider="ovn">
+            <lrm_rsc_op id="ovndb_servers_last_0" operation_key="ovndb_servers_demote_0" operation="demote" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="185:220:0:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:0;185:220:0:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="234" rc-code="0" op-status="0" interval="0" last-rc-change="1589453370" last-run="1589453370" exec-time="714" queue-time="0" op-digest="df362dc0e5bb42793edd3bdc665f72ba"/>
+            <lrm_rsc_op id="ovndb_servers_monitor_10000" operation_key="ovndb_servers_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.3.0" transition-key="183:203:8:515fab44-df8e-4e73-a22c-ed4886e03330" transition-magic="0:8;183:203:8:515fab44-df8e-4e73-a22c-ed4886e03330" exit-reason="" on_node="controller-0" call-id="45" rc-code="8" op-status="0" interval="10000" last-rc-change="1589453031" exec-time="316" queue-time="0" op-digest="d60dafe7583fcd42955f8cce982ffa2c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="ovn-dbs-bundle-0">
+        <instance_attributes id="status-ovn-dbs-bundle-0"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

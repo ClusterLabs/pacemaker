@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,8 +28,8 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
     const char *router_uuid = NULL;
     xmlNode *last_action = NULL;
 
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    GList *gIter = NULL;
+    GList *gIter2 = NULL;
 
     if (graph == NULL || graph->complete) {
         return FALSE;
@@ -161,7 +161,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     }
 
     if (do_update) {
-        char *now = crm_ttoa(time(NULL));
+        char *now = pcmk__ttoa(time(NULL));
         char *attr_name = NULL;
         gboolean is_remote_node = FALSE;
 
@@ -216,8 +216,8 @@ controld_get_action(int id)
 crm_action_t *
 get_cancel_action(const char *id, const char *node)
 {
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    GList *gIter = NULL;
+    GList *gIter2 = NULL;
 
     gIter = transition_graph->synapses;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -291,7 +291,7 @@ match_down_event(const char *target)
 {
     crm_action_t *match = NULL;
     xmlXPathObjectPtr xpath_ret = NULL;
-    GListPtr gIter, gIter2;
+    GList *gIter, *gIter2;
 
     char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
 
@@ -347,7 +347,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     CRM_ASSERT(event != NULL);
 
 /*
-<lrm_rsc_op id="rsc_east-05_last_0" operation_key="rsc_east-05_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" transition-magic="0:7;9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1355361636" last-rc-change="1355361636" exec-time="128" queue-time="0" op-digest="c81f5f40b1c9e859c992e800b1aa6972"/>
+<lrm_rsc_op id="rsc_east-05_last_0" operation_key="rsc_east-05_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.6" transition-key="9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" transition-magic="0:7;9:2:7:be2e97d9-05e2-439d-863e-48f7aecab2aa" call-id="17" rc-code="7" op-status="0" interval="0" last-rc-change="1355361636" exec-time="128" queue-time="0" op-digest="c81f5f40b1c9e859c992e800b1aa6972"/>
 */
 
     magic = crm_element_value(event, XML_ATTR_TRANSITION_KEY);

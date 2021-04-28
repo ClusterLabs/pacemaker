@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -90,8 +90,7 @@ static inline void
 init_recurring_actions(void)
 {
     if (recurring_actions == NULL) {
-        recurring_actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
-                                                  NULL);
+        recurring_actions = pcmk__strkey_table(NULL, NULL);
     }
 }
 
@@ -146,6 +145,7 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
     return expanded_class;
 }
 
+#if SUPPORT_NAGIOS
 /*!
  * \brief Duplicate a file path, inserting a prefix if not absolute
  *
@@ -160,6 +160,7 @@ dup_file_path(const char *filename, const char *dirname)
     return (*filename == '/')? strdup(filename)
            : crm_strdup_printf("%s/%s", dirname, filename);
 }
+#endif
 
 svc_action_t *
 resources_action_create(const char *name, const char *standard,
@@ -322,7 +323,7 @@ services_action_create_generic(const char *exec, const char *args[])
     for (cur_arg = 1; args && args[cur_arg - 1]; cur_arg++) {
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
 
-        if (cur_arg == DIMOF(op->opaque->args) - 1) {
+        if (cur_arg == PCMK__NELEM(op->opaque->args) - 1) {
             crm_err("svc_action_t args list not long enough for '%s' execution request.", exec);
             break;
         }
@@ -497,7 +498,7 @@ services_action_free(svc_action_t * op)
     free(op->id);
     free(op->opaque->exec);
 
-    for (i = 0; i < DIMOF(op->opaque->args); i++) {
+    for (i = 0; i < PCMK__NELEM(op->opaque->args); i++) {
         free(op->opaque->args[i]);
     }
 
@@ -1025,7 +1026,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 {
     GList *standards = NULL;
     GList *providers = NULL;
-    GListPtr iter = NULL;
+    GList *iter = NULL;
     gboolean rc = FALSE;
     gboolean has_providers = FALSE;
 

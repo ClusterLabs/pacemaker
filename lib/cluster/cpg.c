@@ -362,57 +362,66 @@ msg_type2text(enum crm_ais_msg_types type)
 static bool
 check_message_sanity(const pcmk__cpg_msg_t *msg)
 {
-    gboolean sane = TRUE;
-    int dest = msg->host.type;
-    int tmp_size = msg->header.size - sizeof(pcmk__cpg_msg_t);
+    int32_t payload_size = msg->header.size - sizeof(pcmk__cpg_msg_t);
 
-    if (sane && msg->header.size == 0) {
-        crm_warn("Message with no size");
-        sane = FALSE;
+    if (payload_size < 1) {
+        crm_err("%sCPG message %d from %s invalid: "
+                "Claimed size of %d bytes is too small "
+                CRM_XS " from %s[%u] to %s@%s",
+                (msg->is_compressed? "Compressed " : ""),
+                msg->id, ais_dest(&(msg->sender)),
+                (int) msg->header.size,
+                msg_type2text(msg->sender.type), msg->sender.pid,
+                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        return false;
     }
 
-    if (sane && msg->header.error != CS_OK) {
-        crm_warn("Message header contains an error: %d", msg->header.error);
-        sane = FALSE;
+    if (msg->header.error != CS_OK) {
+        crm_err("%sCPG message %d from %s invalid: "
+                "Sender indicated error %d "
+                CRM_XS " from %s[%u] to %s@%s",
+                (msg->is_compressed? "Compressed " : ""),
+                msg->id, ais_dest(&(msg->sender)),
+                msg->header.error,
+                msg_type2text(msg->sender.type), msg->sender.pid,
+                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        return false;
     }
 
-    if (sane && msg_data_len(msg) != tmp_size) {
-        crm_warn("Message payload size is incorrect: expected %d, got %d", msg_data_len(msg),
-                 tmp_size);
-        sane = FALSE;
+    if (msg_data_len(msg) != payload_size) {
+        crm_err("%sCPG message %d from %s invalid: "
+                "Total size %d inconsistent with payload size %d "
+                CRM_XS " from %s[%u] to %s@%s",
+                (msg->is_compressed? "Compressed " : ""),
+                msg->id, ais_dest(&(msg->sender)),
+                (int) msg->header.size, (int) msg_data_len(msg),
+                msg_type2text(msg->sender.type), msg->sender.pid,
+                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        return false;
     }
 
-    if (sane && msg_data_len(msg) == 0) {
-        crm_warn("Message with no payload");
-        sane = FALSE;
+    if (!msg->is_compressed &&
+        /* msg->size != (strlen(msg->data) + 1) would be a stronger check,
+         * but checking the last byte or two should be quick
+         */
+        (((msg->size > 1) && (msg->data[msg->size - 2] == '\0'))
+         || (msg->data[msg->size - 1] != '\0'))) {
+        crm_err("CPG message %d from %s invalid: "
+                "Payload does not end at byte %llu "
+                CRM_XS " from %s[%u] to %s@%s",
+                msg->id, ais_dest(&(msg->sender)),
+                (unsigned long long) msg->size,
+                msg_type2text(msg->sender.type), msg->sender.pid,
+                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        return false;
     }
 
-    if (sane && !msg->is_compressed && (msg->size > 0)) {
-        size_t str_size = strlen(msg->data) + 1;
-
-        if (msg->size != str_size) {
-            crm_warn("Message payload is corrupted: expected %llu bytes, got %llu",
-                     (unsigned long long) msg->size,
-                     (unsigned long long) str_size);
-            sane = FALSE;
-        }
-    }
-
-    if (sane == FALSE) {
-        crm_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
-                msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
-                ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-                msg->sender.pid, msg->is_compressed, msg_data_len(msg), msg->header.size);
-
-    } else {
-        crm_trace
-            ("Verified message %d: (dest=%s:%s, from=%s:%s.%u, compressed=%d, size=%d, total=%d)",
-             msg->id, ais_dest(&(msg->host)), msg_type2text(dest), ais_dest(&(msg->sender)),
-             msg_type2text(msg->sender.type), msg->sender.pid, msg->is_compressed,
-             msg_data_len(msg), msg->header.size);
-    }
-
-    return sane;
+    crm_trace("Verified %d-byte %sCPG message %d from %s[%u]@%s to %s@%s",
+              (int) msg->header.size, (msg->is_compressed? "compressed " : ""),
+              msg->id, msg_type2text(msg->sender.type), msg->sender.pid,
+              ais_dest(&(msg->sender)),
+              msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+    return true;
 }
 
 /*!

@@ -1,0 +1,21 @@
+Current cluster status:
+  * Node List:
+    * Node node2: standby
+    * Online: [ node1 ]
+
+  * Full List of Resources:
+    * dummy	(ocf:heartbeat:Dummy):	 Started node1
+
+Transition Summary:
+  * Stop       dummy   ( node1 )  due to node availability
+
+Executing Cluster Transition:
+  * Resource action: dummy           stop on node1
+
+Revised Cluster Status:
+  * Node List:
+    * Node node2: standby
+    * Online: [ node1 ]
+
+  * Full List of Resources:
+    * dummy	(ocf:heartbeat:Dummy):	 Stopped

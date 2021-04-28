@@ -1,0 +1,25 @@
+Using the original execution date of: 2020-09-30 14:23:26Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 ]
+
+  * Full List of Resources:
+    * xvmfence	(stonith:fence_xvm):	 Started rhel8-1
+    * Clone Set: state-clone [state] (promotable):
+      * Promoted: [ rhel8-1 ]
+      * Unpromoted: [ rhel8-2 ]
+
+Transition Summary:
+
+Executing Cluster Transition:
+Using the original execution date of: 2020-09-30 14:23:26Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 ]
+
+  * Full List of Resources:
+    * xvmfence	(stonith:fence_xvm):	 Started rhel8-1
+    * Clone Set: state-clone [state] (promotable):
+      * Promoted: [ rhel8-1 ]
+      * Unpromoted: [ rhel8-2 ]

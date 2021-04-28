@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef CRM_OUTPUT__H
-#  define CRM_OUTPUT__H
+#ifndef PCMK__OUTPUT_INTERNAL__H
+#  define PCMK__OUTPUT_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -360,8 +360,13 @@ struct pcmk__output_s {
      * \param[in,out] out The output functions structure.
      * \param[in]     buf The message to be printed.
      * \param[in]     ... Arguments to be formatted.
+     *
+     * \return A standard Pacemaker return code.  Generally: pcmk_rc_ok
+     *         if output was produced and pcmk_rc_no_output if it was not.
+     *         As not all formatters implement this function, those that
+     *         do not will always just return pcmk_rc_no_output.
      */
-    void (*info) (pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+    int (*info) (pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 
     /*!
      * \internal
@@ -463,11 +468,41 @@ struct pcmk__output_s {
 
     /*!
      * \internal
-     * \brief Output a spacer.  Not all formatter will do this.
+     * \brief Output a spacer.  Not all formatters will do this.
      *
      * \param[in] out The output functions structure.
      */
     void (*spacer) (pcmk__output_t *out);
+
+    /*!
+     * \internal
+     * \brief Output a progress indicator.  This is likely only useful for
+     *        plain text, console based formatters.
+     *
+     * \param[in] out The output functions structure.
+     * \param[in] end If true, output a newline afterwards.  This should
+     *                only be used the last time this function is called.
+     *
+     */
+    void (*progress) (pcmk__output_t *out, bool end);
+
+    /*!
+     * \internal
+     * \brief Prompt the user for input.  Not all formatters will do this.
+     *
+     * \note This function is part of pcmk__output_t, but unlike all other
+     *       function it does not take that as an argument.  In general, a
+     *       prompt will go directly to the screen and therefore bypass any
+     *       need to use the formatted output code to decide where and how
+     *       to display.
+     *
+     * \param[in]  prompt The prompt to display.  This is required.
+     * \param[in]  echo   If true, echo the user's input to the screen.  Set
+     *                    to false for password entry.
+     * \param[out] dest   Where to store the user's response.  This is
+     *                    required.
+     */
+    void (*prompt) (const char *prompt, bool echo, char **dest);
 };
 
 /*!
@@ -617,6 +652,61 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINT
 void
 pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 
+
+/*!
+ * \internal
+ * \brief A printf-like function.
+ *
+ * This function writes to out->dest without indenting the text.  This should be
+ * used with implementing custom message functions instead of printf.
+ *
+ * \param[in,out] out The output functions structure.
+ */
+void
+pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+
+/*!
+ * \internal
+ * \brief A vprintf-like function.
+ *
+ * This function is like pcmk__formatted_printf(), except it takes a va_list instead
+ * of a list of arguments.  This should be used when implementing custom message
+ * functions instead of vprintf.
+ *
+ * \param[in,out] out    The output functions structure.
+ * \param[in]     format The format string.
+ * \param[in]     args   A list of arguments to apply to the format string.
+ */
+void
+pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
+
+/*!
+ * \internal
+ * \brief Prompt the user for input.
+ *
+ * \param[in]  prompt The prompt to display
+ * \param[in]  echo   If true, echo the user's input to the screen.  Set
+ *                    to false for password entry.
+ * \param[out] dest   Where to store the user's response.
+ */
+void
+pcmk__text_prompt(const char *prompt, bool echo, char **dest);
+
+/*!
+ * \internal
+ * \brief Set the log level used by the formatted output logger.
+ *
+ * \param[in,out] out       The output functions structure.
+ * \param[in]     log_level The log level constant (LOG_INFO, LOG_ERR, etc.)
+ *                          to use.
+ *
+ * \note By default, LOG_INFO is used.
+ * \note Almost all formatted output messages will respect this setting.
+ *       However, out->err will always log at LOG_ERR.
+ */
+void
+pcmk__output_set_log_level(pcmk__output_t *out, int log_level);
+
 /*!
  * \internal
  * \brief Create and return a new XML node with the given name, as a child of the
@@ -754,6 +844,17 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 void
 pcmk__html_add_header(const char *name, ...)
 G_GNUC_NULL_TERMINATED;
+
+/*!
+ * \internal
+ * \brief Handle end-of-program error reporting
+ *
+ * \param[in,out] error A GError object potentially containing some error.
+ *                      If NULL, do nothing.
+ * \param[in]     out   The output functions structure.  If NULL, any errors
+ *                      will simply be printed to stderr.
+ */
+void pcmk__output_and_clear_error(GError *error, pcmk__output_t *out);
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \
     if (cond) {                                 \

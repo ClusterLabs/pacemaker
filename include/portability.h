@@ -1,5 +1,5 @@
 /*
- * Copyright 2001-2020 the Pacemaker project contributors
+ * Copyright 2001-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,9 +8,6 @@
  */
 #ifndef PORTABILITY_H
 #  define PORTABILITY_H
-
-#  define	EOS			'\0'
-#  define	DIMOF(a)		((int) (sizeof(a)/sizeof(a[0])) )
 
 /* Needs to be defined before any other includes, otherwise some system
  * headers do not behave as expected! Major black magic... */
@@ -63,14 +60,6 @@ size_t strnlen(const char *s, size_t maxlen);
 char *strndup(const char *str, size_t len);
 #  else
 #    	define USE_GNU
-#  endif
-
-#  include <glib.h>
-
-#  if !GLIB_CHECK_VERSION(2,38,0)
-#    define g_assert_true(expr) g_assert_cmpint((expr), ==, TRUE)
-#    define g_assert_false(expr) g_assert_cmpint((expr), !=, TRUE)
-#    define g_assert_null(expr)  g_assert_cmpint((expr) == NULL, ==, TRUE)
 #  endif
 
 #  if SUPPORT_DBUS

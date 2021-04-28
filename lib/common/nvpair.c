@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -207,6 +207,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 // convenience function for name=value strings
 
 /*!
+ * \internal
  * \brief Extract the name and value from an input string formatted as "name=value".
  * If unable to extract them, they are returned as NULL.
  *
@@ -218,7 +219,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
  *         and error code otherwise
  */
 int
-pcmk_scan_nvpair(const char *input, char **name, char **value)
+pcmk__scan_nvpair(const char *input, char **name, char **value)
 {
 #ifdef SSCANF_HAS_M
     *name = NULL;
@@ -277,9 +278,12 @@ pcmk_scan_nvpair(const char *input, char **name, char **value)
  * \param[in]     name  The name of the nvpair.
  * \param[in]     value The value of the nvpair.
  * \param[in]     units Optional units for the value, or NULL.
+ *
+ * \return Newly allocated string with name/value pair
  */
 char *
-pcmk_format_nvpair(const char *name, const char *value, const char *units) {
+pcmk__format_nvpair(const char *name, const char *value, const char *units)
+{
     return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
 }
 
@@ -287,15 +291,18 @@ pcmk_format_nvpair(const char *name, const char *value, const char *units) {
  * \internal
  * \brief Format a name/time pair.
  *
- * See pcmk_format_nvpair() for more details.
+ * See pcmk__format_nvpair() for more details.
  *
  * \note The caller is responsible for freeing the return value after use.
  *
  * \param[in]     name       The name for the time.
  * \param[in]     epoch_time The time to format.
+ *
+ * \return Newly allocated string with name/value pair
  */
 char *
-pcmk_format_named_time(const char *name, time_t epoch_time) {
+pcmk__format_named_time(const char *name, time_t epoch_time)
+{
     const char *now_str = pcmk__epoch2str(&epoch_time);
 
     return crm_strdup_printf("%s=\"%s\"", name, now_str ? now_str : "");
@@ -424,7 +431,7 @@ crm_xml_replace(xmlNode *node, const char *name, const char *value)
 const char *
 crm_xml_add_int(xmlNode *node, const char *name, int value)
 {
-    char *number = crm_itoa(value);
+    char *number = pcmk__itoa(value);
     const char *added = crm_xml_add(node, name, number);
 
     free(number);
@@ -563,9 +570,13 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
     if (value) {
-        errno = 0;
-        *dest = crm_parse_int(value, NULL);
-        if (errno == 0) {
+        long long value_ll;
+
+        if ((pcmk__scan_ll(value, &value_ll, 0LL) != pcmk_rc_ok)
+            || (value_ll < INT_MIN) || (value_ll > INT_MAX)) {
+            *dest = PCMK__PARSE_INT_DEFAULT;
+        } else {
+            *dest = (int) value_ll;
             return 0;
         }
     }
@@ -590,12 +601,9 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
 
     CRM_CHECK(dest != NULL, return -1);
     value = crm_element_value(data, name);
-    if (value) {
-        errno = 0;
-        *dest = crm_parse_ll(value, NULL);
-        if (errno == 0) {
-            return 0;
-        }
+    if ((value != NULL)
+        && (pcmk__scan_ll(value, dest, PCMK__PARSE_INT_DEFAULT) == pcmk_rc_ok)) {
+        return 0;
     }
     return -1;
 }
@@ -619,18 +627,11 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 
     CRM_CHECK(dest != NULL, return -1);
     *dest = 0;
-
     value = crm_element_value(data, name);
-    if (value == NULL) {
-        return pcmk_ok;
-    }
-
-    errno = 0;
-    value_ll = crm_parse_ll(value, NULL);
-    if ((errno != 0) || (value_ll < 0) || (value_ll > G_MAXUINT)) {
+    if ((pcmk__scan_ll(value, &value_ll, 0LL) != pcmk_rc_ok)
+        || (value_ll < 0) || (value_ll > G_MAXUINT)) {
         return -1;
     }
-
     *dest = (guint) value_ll;
     return pcmk_ok;
 }
@@ -913,7 +914,7 @@ xml2list(xmlNode *parent)
     xmlNode *child = NULL;
     xmlAttrPtr pIter = NULL;
     xmlNode *nvpair_list = NULL;
-    GHashTable *nvpair_hash = crm_str_table_new();
+    GHashTable *nvpair_hash = pcmk__strkey_table(free, free);
 
     CRM_CHECK(parent != NULL, return nvpair_hash);
 
@@ -952,3 +953,28 @@ xml2list(xmlNode *parent)
 
     return nvpair_hash;
 }
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/common/util_compat.h>
+
+int
+pcmk_scan_nvpair(const char *input, char **name, char **value)
+{
+    return pcmk__scan_nvpair(input, name, value);
+}
+
+char *
+pcmk_format_nvpair(const char *name, const char *value,
+                   const char *units)
+{
+    return pcmk__format_nvpair(name, value, units);
+}
+
+char *
+pcmk_format_named_time(const char *name, time_t epoch_time)
+{
+    return pcmk__format_named_time(name, epoch_time);
+}
+
+// End deprecated API

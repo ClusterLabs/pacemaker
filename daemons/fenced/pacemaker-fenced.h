@@ -27,7 +27,7 @@ typedef struct stonith_device_s {
 
     /*! list of actions that must execute on the target node. Used for unfencing */
     char *on_target_actions;
-    GListPtr targets;
+    GList *targets;
     time_t targets_age;
     gboolean has_attr_map;
     /* should nodeid parameter for victim be included in agent arguments */
@@ -41,6 +41,7 @@ typedef struct stonith_device_s {
     GHashTable *params;
     GHashTable *aliases;
     GList *pending_ops;
+    mainloop_timer_t *timer;
     crm_trigger_t *work;
     xmlNode *agent_metadata;
 
@@ -50,6 +51,7 @@ typedef struct stonith_device_s {
 
     gboolean cib_registered;
     gboolean api_registered;
+    gboolean dirty;
 } stonith_device_t;
 
 /* These values are used to index certain arrays by "phase". Usually an
@@ -133,7 +135,7 @@ typedef struct remote_fencing_op_s {
     /*! The name of client that initiated the fencing request */
     char *client_name;
     /*! List of the received query results for all the nodes in the cpg group */
-    GListPtr query_results;
+    GList *query_results;
     /*! The original request that initiated the remote stonith operation */
     xmlNode *request;
 
@@ -143,15 +145,15 @@ typedef struct remote_fencing_op_s {
     enum st_remap_phase phase;
 
     /*! Devices with automatic unfencing (always run if "on" requested, never if remapped) */
-    GListPtr automatic_list;
+    GList *automatic_list;
     /*! List of all devices at the currently executing topology level */
-    GListPtr devices_list;
+    GList *devices_list;
     /*! Current entry in the topology device list */
-    GListPtr devices;
+    GList *devices;
 
     /*! List of duplicate operations attached to this operation. Once this operation
      * completes, the duplicate operations will be closed out as well. */
-    GListPtr duplicates;
+    GList *duplicates;
 
 } remote_fencing_op_t;
 
@@ -197,7 +199,7 @@ typedef struct stonith_topology_s {
     char *target_attribute;
 
     /*! Names of fencing devices at each topology level */
-    GListPtr levels[ST_LEVEL_MAX];
+    GList *levels[ST_LEVEL_MAX];
 
 } stonith_topology_t;
 
@@ -258,7 +260,7 @@ bool fencing_peer_active(crm_node_t *peer);
 
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 
-gboolean string_in_list(GListPtr list, const char *item);
+gboolean string_in_list(GList *list, const char *item);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 

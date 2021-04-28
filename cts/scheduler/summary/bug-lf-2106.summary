@@ -1,0 +1,91 @@
+Current cluster status:
+  * Node List:
+    * Online: [ cl-virt-1 cl-virt-2 ]
+
+  * Full List of Resources:
+    * apcstonith	(stonith:apcmastersnmp):	 Started cl-virt-1
+    * Clone Set: pingdclone [pingd]:
+      * Started: [ cl-virt-1 cl-virt-2 ]
+    * Resource Group: ssh:
+      * ssh-ip1	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+      * ssh-ip2	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+      * ssh-bin	(ocf:dk:opensshd):	 Started cl-virt-2
+    * itwiki	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-itwiki [drbd-itwiki] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * bugtrack	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-bugtrack [drbd-bugtrack] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * servsyslog	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-servsyslog [drbd-servsyslog] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * smsprod2	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-smsprod2 [drbd-smsprod2] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * medomus-cvs	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-medomus-cvs [drbd-medomus-cvs] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * infotos	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-infotos [drbd-infotos] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+
+Transition Summary:
+  * Restart    pingd:0     ( cl-virt-1 )  due to resource definition change
+  * Restart    pingd:1     ( cl-virt-2 )  due to resource definition change
+
+Executing Cluster Transition:
+  * Cluster action:  clear_failcount for pingd on cl-virt-1
+  * Cluster action:  clear_failcount for pingd on cl-virt-2
+  * Pseudo action:   pingdclone_stop_0
+  * Resource action: pingd:0         stop on cl-virt-1
+  * Resource action: pingd:0         stop on cl-virt-2
+  * Pseudo action:   pingdclone_stopped_0
+  * Pseudo action:   pingdclone_start_0
+  * Resource action: pingd:0         start on cl-virt-1
+  * Resource action: pingd:0         monitor=30000 on cl-virt-1
+  * Resource action: pingd:0         start on cl-virt-2
+  * Resource action: pingd:0         monitor=30000 on cl-virt-2
+  * Pseudo action:   pingdclone_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cl-virt-1 cl-virt-2 ]
+
+  * Full List of Resources:
+    * apcstonith	(stonith:apcmastersnmp):	 Started cl-virt-1
+    * Clone Set: pingdclone [pingd]:
+      * Started: [ cl-virt-1 cl-virt-2 ]
+    * Resource Group: ssh:
+      * ssh-ip1	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+      * ssh-ip2	(ocf:heartbeat:IPaddr2):	 Started cl-virt-2
+      * ssh-bin	(ocf:dk:opensshd):	 Started cl-virt-2
+    * itwiki	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-itwiki [drbd-itwiki] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * bugtrack	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-bugtrack [drbd-bugtrack] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * servsyslog	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-servsyslog [drbd-servsyslog] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * smsprod2	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-smsprod2 [drbd-smsprod2] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * medomus-cvs	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-medomus-cvs [drbd-medomus-cvs] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]
+    * infotos	(ocf:heartbeat:VirtualDomain):	 Started cl-virt-2
+    * Clone Set: ms-infotos [drbd-infotos] (promotable):
+      * Promoted: [ cl-virt-2 ]
+      * Unpromoted: [ cl-virt-1 ]

@@ -1,0 +1,112 @@
+Using the original execution date of: 2018-04-09 07:55:35Z
+Current cluster status:
+  * Node List:
+    * RemoteNode overcloud-novacompute-1: UNCLEAN (offline)
+    * Online: [ controller-0 controller-1 controller-2 ]
+    * RemoteOnline: [ overcloud-novacompute-0 ]
+    * GuestOnline: [ galera-bundle-0@controller-2 galera-bundle-1@controller-0 galera-bundle-2@controller-1 rabbitmq-bundle-0@controller-2 rabbitmq-bundle-1@controller-0 rabbitmq-bundle-2@controller-1 redis-bundle-0@controller-2 redis-bundle-1@controller-0 redis-bundle-2@controller-1 ]
+
+  * Full List of Resources:
+    * overcloud-novacompute-0	(ocf:pacemaker:remote):	 Started controller-0
+    * overcloud-novacompute-1	(ocf:pacemaker:remote):	 FAILED controller-1
+    * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]:
+      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
+      * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
+      * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
+    * Container bundle set: galera-bundle [192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted controller-2
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted controller-0
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted controller-1
+    * Container bundle set: redis-bundle [192.168.24.1:8787/rhosp13/openstack-redis:pcmklatest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-0
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-1
+    * ip-192.168.24.11	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-10.0.0.110	(ocf:heartbeat:IPaddr2):	 Stopped
+    * ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * ip-172.17.1.17	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-172.17.3.11	(ocf:heartbeat:IPaddr2):	 Started controller-0
+    * ip-172.17.4.17	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]:
+      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started controller-2
+      * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started controller-0
+      * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started controller-1
+    * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 FAILED controller-2
+    * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
+      * compute-unfence-trigger	(ocf:pacemaker:Dummy):	 Started overcloud-novacompute-1 (UNCLEAN)
+      * Started: [ overcloud-novacompute-0 ]
+      * Stopped: [ controller-0 controller-1 controller-2 ]
+    * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started controller-0
+    * stonith-fence_ipmilan-5254008be2cc	(stonith:fence_ipmilan):	 Started controller-1
+    * stonith-fence_ipmilan-525400803f9e	(stonith:fence_ipmilan):	 Started controller-0
+    * stonith-fence_ipmilan-525400fca120	(stonith:fence_ipmilan):	 Started controller-2
+    * stonith-fence_ipmilan-525400953d48	(stonith:fence_ipmilan):	 Started controller-2
+    * stonith-fence_ipmilan-525400b02b86	(stonith:fence_ipmilan):	 Started controller-1
+    * Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]:
+      * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started controller-0
+
+Transition Summary:
+  * Fence (reboot) overcloud-novacompute-1 'remote connection is unrecoverable'
+  * Stop       overcloud-novacompute-1              (            controller-1 )  due to node availability
+  * Start      ip-10.0.0.110                        (            controller-1 )
+  * Recover    stonith-fence_compute-fence-nova     (            controller-2 )
+  * Stop       compute-unfence-trigger:1            ( overcloud-novacompute-1 )  due to node availability
+
+Executing Cluster Transition:
+  * Resource action: overcloud-novacompute-1 stop on controller-1
+  * Resource action: stonith-fence_compute-fence-nova stop on controller-2
+  * Fencing overcloud-novacompute-1 (reboot)
+  * Cluster action:  clear_failcount for overcloud-novacompute-1 on controller-1
+  * Resource action: ip-10.0.0.110   start on controller-1
+  * Resource action: stonith-fence_compute-fence-nova start on controller-2
+  * Resource action: stonith-fence_compute-fence-nova monitor=60000 on controller-2
+  * Pseudo action:   compute-unfence-trigger-clone_stop_0
+  * Resource action: ip-10.0.0.110   monitor=10000 on controller-1
+  * Pseudo action:   compute-unfence-trigger_stop_0
+  * Pseudo action:   compute-unfence-trigger-clone_stopped_0
+Using the original execution date of: 2018-04-09 07:55:35Z
+
+Revised Cluster Status:
+  * Node List:
+    * RemoteNode overcloud-novacompute-1: UNCLEAN (offline)
+    * Online: [ controller-0 controller-1 controller-2 ]
+    * RemoteOnline: [ overcloud-novacompute-0 ]
+    * GuestOnline: [ galera-bundle-0@controller-2 galera-bundle-1@controller-0 galera-bundle-2@controller-1 rabbitmq-bundle-0@controller-2 rabbitmq-bundle-1@controller-0 rabbitmq-bundle-2@controller-1 redis-bundle-0@controller-2 redis-bundle-1@controller-0 redis-bundle-2@controller-1 ]
+
+  * Full List of Resources:
+    * overcloud-novacompute-0	(ocf:pacemaker:remote):	 Started controller-0
+    * overcloud-novacompute-1	(ocf:pacemaker:remote):	 FAILED
+    * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest]:
+      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-2
+      * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-0
+      * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started controller-1
+    * Container bundle set: galera-bundle [192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted controller-2
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted controller-0
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted controller-1
+    * Container bundle set: redis-bundle [192.168.24.1:8787/rhosp13/openstack-redis:pcmklatest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted controller-2
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted controller-0
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted controller-1
+    * ip-192.168.24.11	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-10.0.0.110	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * ip-172.17.1.14	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * ip-172.17.1.17	(ocf:heartbeat:IPaddr2):	 Started controller-2
+    * ip-172.17.3.11	(ocf:heartbeat:IPaddr2):	 Started controller-0
+    * ip-172.17.4.17	(ocf:heartbeat:IPaddr2):	 Started controller-1
+    * Container bundle set: haproxy-bundle [192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest]:
+      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started controller-2
+      * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started controller-0
+      * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started controller-1
+    * stonith-fence_compute-fence-nova	(stonith:fence_compute):	 Started controller-2
+    * Clone Set: compute-unfence-trigger-clone [compute-unfence-trigger]:
+      * Started: [ overcloud-novacompute-0 ]
+      * Stopped: [ controller-0 controller-1 controller-2 overcloud-novacompute-1 ]
+    * nova-evacuate	(ocf:openstack:NovaEvacuate):	 Started controller-0
+    * stonith-fence_ipmilan-5254008be2cc	(stonith:fence_ipmilan):	 Started controller-1
+    * stonith-fence_ipmilan-525400803f9e	(stonith:fence_ipmilan):	 Started controller-0
+    * stonith-fence_ipmilan-525400fca120	(stonith:fence_ipmilan):	 Started controller-2
+    * stonith-fence_ipmilan-525400953d48	(stonith:fence_ipmilan):	 Started controller-2
+    * stonith-fence_ipmilan-525400b02b86	(stonith:fence_ipmilan):	 Started controller-1
+    * Container bundle: openstack-cinder-volume [192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest]:
+      * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started controller-0

@@ -29,6 +29,12 @@ Distributed Lock Manager (DLM) required by cluster filesystems:
 
     # yum install -y gfs2-utils dlm
 
+.. NOTE::
+
+    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`_,
+    installing dlm is not trivial. This chapter will be updated once the bug
+    is resolved.
+
 Configure the Cluster for the DLM
 #################################
 
@@ -42,15 +48,40 @@ it:
     [root@pcmk-1 ~]# pcs -f dlm_cfg resource create dlm \
         ocf:pacemaker:controld op monitor interval=60s
     [root@pcmk-1 ~]# pcs -f dlm_cfg resource clone dlm clone-max=2 clone-node-max=1
-    [root@pcmk-1 ~]# pcs -f dlm_cfg resource show
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-1 ]
-         Slaves: [ pcmk-2 ]
-     WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
-     Clone Set: dlm-clone [dlm]
-         Stopped: [ pcmk-1 pcmk-2 ]
+    [root@pcmk-1 ~]# pcs resource status
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-2
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-2 ]
+        * Slaves: [ pcmk-1 ]
+      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-2
+    [root@pcmk-1 ~]# pcs resource config
+     Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
+      Attributes: cidr_netmask=24 ip=192.168.122.120
+      Operations: monitor interval=30s (ClusterIP-monitor-interval-30s)
+                  start interval=0s timeout=20s (ClusterIP-start-interval-0s)
+                  stop interval=0s timeout=20s (ClusterIP-stop-interval-0s)
+     Resource: WebSite (class=ocf provider=heartbeat type=apache)
+      Attributes: configfile=/etc/httpd/conf/httpd.conf statusurl=http://localhost/server-status
+      Operations: monitor interval=1min (WebSite-monitor-interval-1min)
+                  start interval=0s timeout=40s (WebSite-start-interval-0s)
+                  stop interval=0s timeout=60s (WebSite-stop-interval-0s)
+     Clone: WebData-clone
+      Meta Attrs: clone-max=2 clone-node-max=1 notify=true promotable=true promoted-max=1 promoted-node-max=1
+      Resource: WebData (class=ocf provider=linbit type=drbd)
+       Attributes: drbd_resource=wwwdata
+       Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)
+                   monitor interval=60s (WebData-monitor-interval-60s)
+                   notify interval=0s timeout=90 (WebData-notify-interval-0s)
+                   promote interval=0s timeout=90 (WebData-promote-interval-0s)
+                   reload interval=0s timeout=30 (WebData-reload-interval-0s)
+                   start interval=0s timeout=240 (WebData-start-interval-0s)
+                   stop interval=0s timeout=100 (WebData-stop-interval-0s)
+     Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
+      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
+      Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
+                  start interval=0s timeout=60s (WebFS-start-interval-0s)
+                  stop interval=0s timeout=60s (WebFS-stop-interval-0s)
 
 Activate our new configuration, and see how the cluster responds:
 
@@ -60,33 +91,40 @@ Activate our new configuration, and see how the cluster responds:
     CIB updated
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
-    Stack: corosync
-    Current DC: pcmk-1 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
-    Last updated: Tue Sep 11 10:18:30 2018
-    Last change: Tue Sep 11 10:16:49 2018 by hacluster via crmd on pcmk-2
-
-    2 nodes configured
-    8 resources configured
-
-    Online: [ pcmk-1 pcmk-2 ]
-
-    Full list of resources:
-
-     ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-1 ]
-         Slaves: [ pcmk-2 ]
-     WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
-     Clone Set: dlm-clone [dlm]
-         Started: [ pcmk-1 pcmk-2 ]
+    Cluster Summary:
+      * Stack: corosync
+      * Current DC: pcmk-1 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
+      * Last updated: Wed Feb  3 09:29:21 2021
+      * Last change:  Wed Feb  3 09:29:17 2021 by root via cibadmin on pcmk-1
+      * 2 nodes configured
+      * 7 resource instances configured
+    
+    Node List:
+      * Online: [ pcmk-1 pcmk-2 ]
+    
+    Full List of Resources:
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-2
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-2 ]
+        * Slaves: [ pcmk-1 ]
+      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-2
+      * Clone Set: dlm-clone [dlm]:
+        * Stopped: [ pcmk-1 pcmk-2 ]
+    
+    Failed Resource Actions:
+      * dlm_monitor_0 on pcmk-2 'not installed' (5): call=40, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=26ms
+      * dlm_monitor_0 on pcmk-1 'not installed' (5): call=43, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=30ms
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
 
+.. NOTE::
+
+    Once the aforementioned CentOS bug is resolved, there won't be any failed
+    resource actions.
 
 Create and Populate GFS2 Filesystem
 ###################################
@@ -109,8 +147,8 @@ are not only stopped, but stopped in the correct order.
      Clone Set: dlm-clone [dlm]
          Started: [ pcmk-1 pcmk-2 ]
 
-You can see that both Apache and WebFS have been stopped,
-and that **pcmk-1** is the current master for the DRBD device.
+You can see that both Apache and WebFS have been stopped, and that **pcmk-1**
+is currently running the promoted instance for the DRBD device.
 
 Now we can create a new GFS2 filesystem on the DRBD device.
 
@@ -250,11 +288,11 @@ Notice how pcs automatically updates the relevant constraints again.
     Ticket Constraints:
 
 Tell the cluster that it is now allowed to promote both instances to be DRBD
-Primary (aka. master).
+Primary.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone master-max=2
+    [root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone promoted-max=2
 
 Finally, load our configuration to the cluster, and re-enable the WebFS resource
 (which we disabled earlier).

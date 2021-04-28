@@ -139,7 +139,7 @@ The attribute **loss-policy** can have the following values:
 
 * ``freeze:`` Do nothing to the relevant resources.
 
-* ``demote:`` Demote relevant resources that are running in master mode to slave mode. 
+* ``demote:`` Demote relevant resources that are running in the promoted role.
 
 .. topic:: Constraint that fences node if ``ticketA`` is revoked
 
@@ -151,16 +151,15 @@ The example above creates a constraint with the ID ``rsc1-req-ticketA``. It
 defines that the resource ``rsc1`` depends on ``ticketA`` and that the node running
 the resource should be fenced if ``ticketA`` is revoked.
 
-If resource ``rsc1`` were a promotable resource (i.e. it could run in master or
-slave mode), you might want to configure that only master mode
-depends on ``ticketA``. With the following configuration, ``rsc1`` will be
-demoted to slave mode if ``ticketA`` is revoked:
+If resource ``rsc1`` were a promotable resource, you might want to configure
+that only being in the promoted role depends on ``ticketA``. With the following
+configuration, ``rsc1`` will be demoted if ``ticketA`` is revoked:
 
 .. topic:: Constraint that demotes ``rsc1`` if ``ticketA`` is revoked
 
    .. code-block:: xml
 
-      <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" rsc-role="Master" ticket="ticketA" loss-policy="demote"/>
+      <rsc_ticket id="rsc1-req-ticketA" rsc="rsc1" rsc-role="Promoted" ticket="ticketA" loss-policy="demote"/>
 
 You can create multiple **rsc_ticket** constraints to let multiple resources
 depend on the same ticket. However, **rsc_ticket** also supports resource sets
@@ -177,7 +176,7 @@ depend on the same ticket. However, **rsc_ticket** also supports resource sets
           <resource_ref id="group1"/>
           <resource_ref id="clone1"/>
         </resource_set>
-        <resource_set id="resources-dep-ticketA-1" role="Master">
+        <resource_set id="resources-dep-ticketA-1" role="Promoted">
           <resource_ref id="ms1"/>
         </resource_set>
       </rsc_ticket>

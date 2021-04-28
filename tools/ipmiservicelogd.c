@@ -564,7 +564,7 @@ main(int argc, char *argv[])
 #endif
 
     pcmk__daemonize("ipmiservicelogd", PCMK_RUN_DIR "/ipmiservicelogd.pid0");
-    crm_log_cli_init("ipmiservicelogd");
+    pcmk__cli_init_logging("ipmiservicelogd", 0);
     // Maybe this should log like a daemon instead?
     // crm_log_init("ipmiservicelogd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 

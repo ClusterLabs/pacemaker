@@ -1,0 +1,20 @@
+0 of 1 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:heartbeat:apache):	 FAILED node2 (blocked)
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Resource action: rsc1            monitor on node1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:heartbeat:apache):	 FAILED node2 (blocked)

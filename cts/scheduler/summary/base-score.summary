@@ -1,0 +1,23 @@
+Current cluster status:
+  * Node List:
+    * Online: [ puma1 puma2 puma3 puma4 ]
+
+  * Full List of Resources:
+    * Dummy	(ocf:heartbeat:Dummy):	 Stopped
+
+Transition Summary:
+  * Start      Dummy   ( puma1 )
+
+Executing Cluster Transition:
+  * Resource action: Dummy           monitor on puma4
+  * Resource action: Dummy           monitor on puma3
+  * Resource action: Dummy           monitor on puma2
+  * Resource action: Dummy           monitor on puma1
+  * Resource action: Dummy           start on puma1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ puma1 puma2 puma3 puma4 ]
+
+  * Full List of Resources:
+    * Dummy	(ocf:heartbeat:Dummy):	 Started puma1

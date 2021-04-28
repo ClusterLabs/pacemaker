@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,14 @@
 
 #define VARIANT_CLONE 1
 #include "./variant.h"
+
+#ifdef PCMK__COMPAT_2_0
+#define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_LEGACY_S "s"
+#define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_LEGACY_S "s"
+#else
+#define PROMOTED_INSTANCES   RSC_ROLE_PROMOTED_S
+#define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
+#endif
 
 void
 pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
@@ -76,8 +84,8 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
     }
 
     // Allocate instance numbers in numerical order (starting at 0)
-    inc_num = crm_itoa(clone_data->total_clones);
-    inc_max = crm_itoa(clone_data->clone_max);
+    inc_num = pcmk__itoa(clone_data->total_clones);
+    inc_max = pcmk__itoa(clone_data->clone_max);
 
     child_copy = copy_xml(clone_data->xml_obj_child);
 
@@ -134,7 +142,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         if (promoted_max == NULL) {
             // @COMPAT deprecated since 2.0.0
             promoted_max = g_hash_table_lookup(rsc->meta,
-                                               XML_RSC_ATTR_MASTER_MAX);
+                                               PCMK_XE_PROMOTED_MAX_LEGACY);
         }
 
         promoted_node_max = g_hash_table_lookup(rsc->meta,
@@ -142,26 +150,42 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
         if (promoted_node_max == NULL) {
             // @COMPAT deprecated since 2.0.0
             promoted_node_max = g_hash_table_lookup(rsc->meta,
-                                                    XML_RSC_ATTR_MASTER_NODEMAX);
+                                                    PCMK_XE_PROMOTED_NODE_MAX_LEGACY);
         }
 
-        clone_data->promoted_max = crm_parse_int(promoted_max, "1");
-        clone_data->promoted_node_max = crm_parse_int(promoted_node_max, "1");
+        // Use 1 as default but 0 for minimum and invalid
+        if (promoted_max == NULL) {
+            clone_data->promoted_max = 1;
+        } else {
+            pcmk__scan_min_int(promoted_max, &(clone_data->promoted_max), 0);
+        }
+
+        // Use 1 as default but 0 for minimum and invalid
+        if (promoted_node_max == NULL) {
+            clone_data->promoted_node_max = 1;
+        } else {
+            pcmk__scan_min_int(promoted_node_max,
+                               &(clone_data->promoted_node_max), 0);
+        }
     }
 
     // Implied by calloc()
     /* clone_data->xml_obj_child = NULL; */
 
-    clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
-
-    if (max_clones) {
-        clone_data->clone_max = crm_parse_int(max_clones, "1");
-
-    } else if (pcmk__list_of_multiple(data_set->nodes)) {
-        clone_data->clone_max = g_list_length(data_set->nodes);
-
+    // Use 1 as default but 0 for minimum and invalid
+    if (max_clones_node == NULL) {
+        clone_data->clone_node_max = 1;
     } else {
-        clone_data->clone_max = 1;      /* Handy during crm_verify */
+        pcmk__scan_min_int(max_clones_node, &(clone_data->clone_node_max), 0);
+    }
+
+    /* Use number of nodes (but always at least 1, which is handy for crm_verify
+     * for a CIB without nodes) as default, but 0 for minimum and invalid
+     */
+    if (max_clones == NULL) {
+        clone_data->clone_max = QB_MAX(1, g_list_length(data_set->nodes));
+    } else {
+        pcmk__scan_min_int(max_clones, &(clone_data->clone_max), 0);
     }
 
     clone_data->ordered = crm_is_true(ordered);
@@ -236,7 +260,7 @@ clone_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 gboolean
 clone_active(pe_resource_t * rsc, gboolean all)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -310,7 +334,7 @@ clone_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
 {
     char *child_text = crm_strdup_printf("%s    ", pre_text);
     const char *target_role = configured_role_str(rsc);
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
@@ -338,7 +362,7 @@ clone_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *p
 
 bool is_set_recursive(pe_resource_t * rsc, long long flag, bool any)
 {
-    GListPtr gIter;
+    GList *gIter;
     bool all = !any;
 
     if (pcmk_is_set(rsc->flags, flag)) {
@@ -375,9 +399,9 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GListPtr master_list = NULL;
-    GListPtr started_list = NULL;
-    GListPtr gIter = rsc->children;
+    GList *promoted_list = NULL;
+    GList *started_list = NULL;
+    GList *gIter = rsc->children;
 
     clone_variant_data_t *clone_data = NULL;
     int active_instances = 0;
@@ -458,8 +482,8 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_SLAVE) {
-                    master_list = g_list_append(master_list, location);
+                } else if (a_role > RSC_ROLE_UNPROMOTED) {
+                    promoted_list = g_list_append(promoted_list, location);
 
                 } else {
                     started_list = g_list_append(started_list, location);
@@ -486,22 +510,23 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
         }
     }
 
-    /* Masters */
-    master_list = g_list_sort(master_list, sort_node_uname);
-    for (gIter = master_list; gIter; gIter = gIter->next) {
+    /* Promoted */
+    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
         pcmk__add_word(&list_text, &list_text_len, host->details->uname);
 	active_instances++;
     }
 
-    short_print(list_text, child_text, "Masters", NULL, options, print_data);
-    g_list_free(master_list);
+    short_print(list_text, child_text, PROMOTED_INSTANCES, NULL, options,
+                print_data);
+    g_list_free(promoted_list);
     free(list_text);
     list_text = NULL;
     list_text_len = 0;
 
-    /* Started/Slaves */
+    /* Started/Unpromoted */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -513,10 +538,13 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
     if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         enum rsc_role_e role = configured_role(rsc);
 
-        if(role == RSC_ROLE_SLAVE) {
-            short_print(list_text, child_text, "Slaves (target-role)", NULL, options, print_data);
+        if (role == RSC_ROLE_UNPROMOTED) {
+            short_print(list_text, child_text,
+                        UNPROMOTED_INSTANCES " (target-role)", NULL, options,
+                        print_data);
         } else {
-            short_print(list_text, child_text, "Slaves", NULL, options, print_data);
+            short_print(list_text, child_text, UNPROMOTED_INSTANCES, NULL,
+                        options, print_data);
         }
 
     } else {
@@ -539,8 +567,8 @@ clone_print(pe_resource_t * rsc, const char *pre_text, long options, void *print
         if (!pcmk_is_set(rsc->flags, pe_rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
-            GListPtr nIter;
-            GListPtr list = g_hash_table_get_values(rsc->allowed_nodes);
+            GList *nIter;
+            GList *list = g_hash_table_get_values(rsc->allowed_nodes);
 
             /* Custom stopped list for non-unique clones */
             free(stopped_list);
@@ -649,7 +677,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GList *master_list = NULL;
+    GList *promoted_list = NULL;
     GList *started_list = NULL;
     GList *gIter = rsc->children;
 
@@ -733,8 +761,8 @@ pe__clone_html(pcmk__output_t *out, va_list args)
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_SLAVE) {
-                    master_list = g_list_append(master_list, location);
+                } else if (a_role > RSC_ROLE_UNPROMOTED) {
+                    promoted_list = g_list_append(promoted_list, location);
 
                 } else {
                     started_list = g_list_append(started_list, location);
@@ -767,9 +795,9 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         return pcmk_rc_ok;
     }
 
-    /* Masters */
-    master_list = g_list_sort(master_list, sort_node_uname);
-    for (gIter = master_list; gIter; gIter = gIter->next) {
+    /* Promoted */
+    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
         if (!pcmk__str_in_list(only_node, host->details->uname)) {
@@ -781,14 +809,14 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
-        out->list_item(out, NULL, "Masters: [ %s ]", list_text);
-        g_list_free(master_list);
+        out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]", list_text);
+        g_list_free(promoted_list);
         free(list_text);
         list_text = NULL;
         list_text_len = 0;
     }
 
-    /* Started/Slaves */
+    /* Started/Unpromoted */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -805,10 +833,13 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
-            if(role == RSC_ROLE_SLAVE) {
-                out->list_item(out, NULL, "Slaves (target-role): [ %s ]", list_text);
+            if (role == RSC_ROLE_UNPROMOTED) {
+                out->list_item(out, NULL,
+                               UNPROMOTED_INSTANCES " (target-role): [ %s ]",
+                               list_text);
             } else {
-                out->list_item(out, NULL, "Slaves: [ %s ]", list_text);
+                out->list_item(out, NULL, UNPROMOTED_INSTANCES ": [ %s ]",
+                               list_text);
             }
 
         } else {
@@ -886,7 +917,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     size_t list_text_len = 0;
     size_t stopped_list_len = 0;
 
-    GList *master_list = NULL;
+    GList *promoted_list = NULL;
     GList *started_list = NULL;
     GList *gIter = rsc->children;
 
@@ -970,8 +1001,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
-                } else if (a_role > RSC_ROLE_SLAVE) {
-                    master_list = g_list_append(master_list, location);
+                } else if (a_role > RSC_ROLE_UNPROMOTED) {
+                    promoted_list = g_list_append(promoted_list, location);
 
                 } else {
                     started_list = g_list_append(started_list, location);
@@ -1004,9 +1035,9 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         return pcmk_rc_ok;
     }
 
-    /* Masters */
-    master_list = g_list_sort(master_list, sort_node_uname);
-    for (gIter = master_list; gIter; gIter = gIter->next) {
+    /* Promoted */
+    promoted_list = g_list_sort(promoted_list, sort_node_uname);
+    for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
         if (!pcmk__str_in_list(only_node, host->details->uname)) {
@@ -1018,14 +1049,14 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
-        out->list_item(out, "Masters", "[ %s ]", list_text);
-        g_list_free(master_list);
+        out->list_item(out, PROMOTED_INSTANCES, "[ %s ]", list_text);
+        g_list_free(promoted_list);
         free(list_text);
         list_text = NULL;
         list_text_len = 0;
     }
 
-    /* Started/Slaves */
+    /* Started/Unpromoted */
     started_list = g_list_sort(started_list, sort_node_uname);
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
@@ -1042,10 +1073,11 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
-            if(role == RSC_ROLE_SLAVE) {
-                out->list_item(out, "Slaves (target-role)", "[ %s ]", list_text);
+            if (role == RSC_ROLE_UNPROMOTED) {
+                out->list_item(out, UNPROMOTED_INSTANCES " (target-role)",
+                               "[ %s ]", list_text);
             } else {
-                out->list_item(out, "Slaves", "[ %s ]", list_text);
+                out->list_item(out, UNPROMOTED_INSTANCES, "[ %s ]", list_text);
             }
         } else {
             out->list_item(out, "Started", "[ %s ]", list_text);
@@ -1115,7 +1147,7 @@ clone_free(pe_resource_t * rsc)
 
     pe_rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
@@ -1144,7 +1176,7 @@ enum rsc_role_e
 clone_resource_state(const pe_resource_t * rsc, gboolean current)
 {
     enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -1182,7 +1214,7 @@ pe__is_universal_clone(pe_resource_t *rsc,
 }
 
 gboolean
-pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
     gboolean passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
@@ -1194,7 +1226,7 @@ pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_pare
         passes = pcmk__str_in_list(only_rsc, ID(clone_data->xml_obj_child));
 
         if (!passes) {
-            for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+            for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
                 pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
                 if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {

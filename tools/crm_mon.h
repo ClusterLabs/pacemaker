@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,35 +13,6 @@
 #include <crm/common/curses_internal.h>
 #include <crm/pengine/pe_types.h>
 #include <crm/stonith-ng.h>
-
-/* Never display node attributes whose name starts with one of these prefixes */
-#define FILTER_STR { PCMK__FAIL_COUNT_PREFIX, PCMK__LAST_FAILURE_PREFIX,   \
-                     "shutdown", "terminate", "standby", "probe_complete", \
-                     "#", NULL }
-
-#if CURSES_ENABLED
-#  define print_dot(output_format) if (output_format == mon_output_console) { \
-	printw(".");				\
-	clrtoeol();				\
-	refresh();				\
-    } else {					\
-	fprintf(stdout, ".");			\
-    }
-#else
-#  define print_dot(output_format) fprintf(stdout, ".");
-#endif
-
-#if CURSES_ENABLED
-#  define print_as(output_format, fmt, args...) if (output_format == mon_output_console) { \
-	printw(fmt, ##args);				\
-	clrtoeol();					\
-	refresh();					\
-    } else {						\
-	fprintf(stdout, fmt, ##args);			\
-    }
-#else
-#  define print_as(output_format, fmt, args...) fprintf(stdout, fmt, ##args);
-#endif
 
 typedef enum mon_output_format_e {
     mon_output_unset,
@@ -91,29 +62,30 @@ typedef enum mon_output_format_e {
 #define mon_op_print_brief          (0x0200U)
 #define mon_op_print_pending        (0x0400U)
 #define mon_op_print_clone_detail   (0x0800U)
+#define mon_op_cib_native           (0x1000U)
 
 #define mon_op_default              (mon_op_print_pending | mon_op_fence_history | mon_op_fence_connect)
 
-void print_status(pcmk__output_t *out, pe_working_set_t *data_set,
+void print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int show, char *prefix, char *only_node,
-                  char *only_rsc);
-void print_xml_status(pcmk__output_t *out, pe_working_set_t *data_set,
-                      crm_exit_t history_rc, stonith_history_t *stonith_history,
-                      unsigned int mon_ops, unsigned int show, char *prefix,
-                      char *only_node, char *only_rsc);
-int print_html_status(pcmk__output_t *out, pe_working_set_t *data_set,
+                  unsigned int print_opts,
+                  unsigned int show, const char *prefix, GList *unames, GList *resources);
+void print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                       stonith_history_t *stonith_history, unsigned int mon_ops,
-                      unsigned int show, char *prefix, char *only_node,
-                      char *only_rsc);
-
-GList *append_attr_list(GList *attr_list, char *name);
-void blank_screen(void);
-unsigned int get_resource_display_options(unsigned int mon_ops);
+                      unsigned int print_opts,
+                      unsigned int show, const char *prefix, GList *unames,
+                      GList *resources);
+int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
+                      stonith_history_t *stonith_history, unsigned int mon_ops,
+                      unsigned int print_opts,
+                      unsigned int show, const char *prefix, GList *unames,
+                      GList *resources);
 
 void crm_mon_register_messages(pcmk__output_t *out);
 
 pcmk__output_t *crm_mon_mk_curses_output(char **argv);
+void curses_formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
+void curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 void curses_indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 void curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 

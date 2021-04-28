@@ -16,7 +16,7 @@ The example commands in this document will use:
 * KVM for virtualization
 * libvirt to manage guest nodes
 * Corosync to provide messaging and membership services on cluster nodes
-* Pacemaker 1.1.16 [#]_ to perform resource management on cluster nodes
+* Pacemaker 2 to perform resource management on cluster nodes
 
 * pcs as the cluster configuration toolset
 
@@ -32,7 +32,6 @@ Table of Contents
    :numbered:
 
    intro
-   example
    options
    kvm-tutorial
    baremetal-tutorial
@@ -43,6 +42,3 @@ Index
 
 * :ref:`genindex`
 * :ref:`search`
-
-.. [#] While this guide is part of the document set for Pacemaker 2.0, it
-       demonstrates the version available in the standard |REMOTE_DISTRO| repositories

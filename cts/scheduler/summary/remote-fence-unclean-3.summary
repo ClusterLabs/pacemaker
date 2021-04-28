@@ -1,0 +1,103 @@
+Current cluster status:
+  * Node List:
+    * Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+    * RemoteOFFLINE: [ overcloud-novacompute-0 ]
+    * GuestOnline: [ galera-bundle-0@overcloud-controller-0 galera-bundle-1@overcloud-controller-1 galera-bundle-2@overcloud-controller-2 rabbitmq-bundle-0@overcloud-controller-0 rabbitmq-bundle-1@overcloud-controller-1 rabbitmq-bundle-2@overcloud-controller-2 redis-bundle-0@overcloud-controller-0 redis-bundle-1@overcloud-controller-1 redis-bundle-2@overcloud-controller-2 ]
+
+  * Full List of Resources:
+    * fence1	(stonith:fence_xvm):	 Stopped
+    * overcloud-novacompute-0	(ocf:pacemaker:remote):	 FAILED overcloud-controller-0
+    * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]:
+      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-controller-0
+      * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-controller-1
+      * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-controller-2
+    * Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted overcloud-controller-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted overcloud-controller-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted overcloud-controller-2
+    * Container bundle set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted overcloud-controller-0
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted overcloud-controller-1
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted overcloud-controller-2
+    * ip-192.168.24.9	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-0
+    * ip-10.0.0.7	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-1
+    * ip-172.16.2.4	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-2
+    * ip-172.16.2.8	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-0
+    * ip-172.16.1.9	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-1
+    * ip-172.16.3.9	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-2
+    * Container bundle set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]:
+      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started overcloud-controller-0
+      * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started overcloud-controller-1
+      * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started overcloud-controller-2
+    * Container bundle: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]:
+      * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started overcloud-controller-0
+    * Container bundle: openstack-cinder-backup [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-backup:latest]:
+      * openstack-cinder-backup-docker-0	(ocf:heartbeat:docker):	 Started overcloud-controller-1
+
+Transition Summary:
+  * Fence (reboot) overcloud-novacompute-0 'the connection is unrecoverable'
+  * Start      fence1                      ( overcloud-controller-0 )
+  * Stop       overcloud-novacompute-0     ( overcloud-controller-0 )  due to node availability
+
+Executing Cluster Transition:
+  * Resource action: fence1          monitor on overcloud-controller-2
+  * Resource action: fence1          monitor on overcloud-controller-1
+  * Resource action: fence1          monitor on overcloud-controller-0
+  * Resource action: overcloud-novacompute-0 stop on overcloud-controller-0
+  * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-2
+  * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-1
+  * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-2
+  * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-0
+  * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-1
+  * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-0
+  * Resource action: galera-bundle-0 monitor on overcloud-controller-2
+  * Resource action: galera-bundle-0 monitor on overcloud-controller-1
+  * Resource action: galera-bundle-1 monitor on overcloud-controller-2
+  * Resource action: galera-bundle-1 monitor on overcloud-controller-0
+  * Resource action: galera-bundle-2 monitor on overcloud-controller-1
+  * Resource action: galera-bundle-2 monitor on overcloud-controller-0
+  * Resource action: redis-bundle-0  monitor on overcloud-controller-2
+  * Resource action: redis-bundle-0  monitor on overcloud-controller-1
+  * Resource action: redis-bundle-1  monitor on overcloud-controller-2
+  * Resource action: redis-bundle-1  monitor on overcloud-controller-0
+  * Resource action: redis-bundle-2  monitor on overcloud-controller-1
+  * Resource action: redis-bundle-2  monitor on overcloud-controller-0
+  * Fencing overcloud-novacompute-0 (reboot)
+  * Resource action: fence1          start on overcloud-controller-0
+  * Resource action: fence1          monitor=60000 on overcloud-controller-0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
+    * RemoteOFFLINE: [ overcloud-novacompute-0 ]
+    * GuestOnline: [ galera-bundle-0@overcloud-controller-0 galera-bundle-1@overcloud-controller-1 galera-bundle-2@overcloud-controller-2 rabbitmq-bundle-0@overcloud-controller-0 rabbitmq-bundle-1@overcloud-controller-1 rabbitmq-bundle-2@overcloud-controller-2 redis-bundle-0@overcloud-controller-0 redis-bundle-1@overcloud-controller-1 redis-bundle-2@overcloud-controller-2 ]
+
+  * Full List of Resources:
+    * fence1	(stonith:fence_xvm):	 Started overcloud-controller-0
+    * overcloud-novacompute-0	(ocf:pacemaker:remote):	 Stopped
+    * Container bundle set: rabbitmq-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest]:
+      * rabbitmq-bundle-0	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-controller-0
+      * rabbitmq-bundle-1	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-controller-1
+      * rabbitmq-bundle-2	(ocf:heartbeat:rabbitmq-cluster):	 Started overcloud-controller-2
+    * Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Promoted overcloud-controller-0
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Promoted overcloud-controller-1
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Promoted overcloud-controller-2
+    * Container bundle set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted overcloud-controller-0
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Unpromoted overcloud-controller-1
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Unpromoted overcloud-controller-2
+    * ip-192.168.24.9	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-0
+    * ip-10.0.0.7	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-1
+    * ip-172.16.2.4	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-2
+    * ip-172.16.2.8	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-0
+    * ip-172.16.1.9	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-1
+    * ip-172.16.3.9	(ocf:heartbeat:IPaddr2):	 Started overcloud-controller-2
+    * Container bundle set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]:
+      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started overcloud-controller-0
+      * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started overcloud-controller-1
+      * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started overcloud-controller-2
+    * Container bundle: openstack-cinder-volume [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest]:
+      * openstack-cinder-volume-docker-0	(ocf:heartbeat:docker):	 Started overcloud-controller-0
+    * Container bundle: openstack-cinder-backup [192.168.24.1:8787/tripleoupstream/centos-binary-cinder-backup:latest]:
+      * openstack-cinder-backup-docker-0	(ocf:heartbeat:docker):	 Started overcloud-controller-1

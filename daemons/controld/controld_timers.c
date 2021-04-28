@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2019 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -225,17 +225,15 @@ controld_init_fsa_timers()
     finalization_timer->fsa_input = I_FINALIZED;
     finalization_timer->callback = crm_timer_popped;
     finalization_timer->log_error = FALSE;
-    /* for possible enabling... a bug in the join protocol left
-     *    a slave in S_PENDING while we think it's in S_NOT_DC
+
+    /* We can't use I_FINALIZED here, because that creates a bug in the join
+     * process where a joining node can be stuck in S_PENDING while we think it
+     * is in S_NOT_DC. This created an infinite transition loop in which we
+     * continually send probes which the node NACKs because it's pending.
      *
-     * raising I_FINALIZED put us into a transition loop which is
-     *    never resolved.
-     * in this loop we continually send probes which the node
-     *    NACK's because it's in S_PENDING
-     *
-     * if we have nodes where the cluster layer is active but the
-     *    CRM is not... then this will be handled in the
-     *    integration phase
+     * If we have nodes where the cluster layer is active but the controller is
+     * not, we can avoid this causing an election/join loop, in the integration
+     * phase.
      */
     finalization_timer->fsa_input = I_ELECTION;
 

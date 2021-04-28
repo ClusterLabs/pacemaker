@@ -67,6 +67,50 @@ CRM_EX_MULTIPLE=109
 CRM_EX_EXPIRED=110
 CRM_EX_NOT_YET_IN_EFFECT=111
 
+reset_shadow_cib_version() {
+    local SHADOWPATH
+
+    SHADOWPATH="$(crm_shadow --file)"
+    # sed -i isn't portable :-(
+    cp -p "$SHADOWPATH" "${SHADOWPATH}.$$" # preserve permissions
+    sed -e 's/epoch="[0-9]*"/epoch="1"/g' \
+        -e 's/num_updates="[0-9]*"/num_updates="0"/g' \
+        -e 's/admin_epoch="[0-9]*"/admin_epoch="0"/g' \
+        "$SHADOWPATH" > "${SHADOWPATH}.$$"
+    mv -- "${SHADOWPATH}.$$" "$SHADOWPATH"
+}
+
+# A newly created empty CIB might or might not have a rsc_defaults section
+# depending on whether the --with-resource-stickiness-default configure
+# option was used. To ensure regression tests behave the same either way,
+# delete any rsc_defaults after creating or erasing a CIB.
+delete_shadow_resource_defaults() {
+    cibadmin --delete --xml-text '<rsc_defaults/>'
+
+    # The above command might or might not bump the CIB version, so reset it
+    # to ensure future changes result in the same version for comparison.
+    reset_shadow_cib_version
+}
+
+create_shadow_cib() {
+    local VALIDATE_WITH
+    local SHADOW_CMD
+
+    VALIDATE_WITH="$1"
+
+    export CIB_shadow_dir="${shadow_dir}"
+
+    SHADOW_CMD="$VALGRIND_CMD crm_shadow --batch --force --create-empty"
+    if [ -z "$VALIDATE_WITH" ]; then
+        $SHADOW_CMD "$shadow" 2>&1
+    else
+        $SHADOW_CMD "$shadow" --validate-with="${VALIDATE_WITH}" 2>&1
+    fi
+
+    export CIB_shadow="$shadow"
+    delete_shadow_resource_defaults
+}
+
 function test_assert() {
     target=$1; shift
     cib=$1; shift
@@ -392,10 +436,8 @@ function test_tools() {
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
     TMPORIG=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.existing.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib
 
     desc="Validate CIB"
     cmd="cibadmin -Q"
@@ -411,11 +453,19 @@ function test_tools() {
 
     desc="Allow CIB erasure with --force"
     cmd="cibadmin -E --force"
+    test_assert $CRM_EX_OK 0
+
+    # Skip outputting the resulting CIB in the previous command, and delete
+    # rsc_defaults now, so tests behave the same regardless of build options.
+    delete_shadow_resource_defaults
+
+    # Verify the output after erasure
+    desc="Query CIB"
+    cmd="cibadmin -Q"
     test_assert $CRM_EX_OK
 
-    desc="Query CIB"
-    cmd="cibadmin -Q > $TMPORIG"
-    test_assert $CRM_EX_OK
+    # Save a copy of the CIB for a later test
+    cibadmin -Q > "$TMPORIG"
 
     desc="Set cluster option"
     cmd="crm_attribute -n cluster-delay -v 60s"
@@ -501,15 +551,15 @@ function test_tools() {
     desc="Default standby value"
     cmd="crm_standby -N node1 -G"
     test_assert $CRM_EX_OK
- 
+
     desc="Set standby status"
     cmd="crm_standby -N node1 -v true"
     test_assert $CRM_EX_OK
- 
+
     desc="Query standby value"
     cmd="crm_standby -N node1 -G"
     test_assert $CRM_EX_OK
- 
+
     desc="Delete standby value"
     cmd="crm_standby -N node1 -D"
     test_assert $CRM_EX_OK
@@ -657,7 +707,7 @@ function test_tools() {
     desc="Drop the status section"
     cmd="cibadmin -R -o status --xml-text '<status/>'"
     test_assert $CRM_EX_OK 0
-    
+
     desc="Create a clone"
     cmd="cibadmin -C -o resources --xml-text '<clone id=\"test-clone\"><primitive id=\"test-primitive\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/></clone>'"
     test_assert $CRM_EX_OK 0
@@ -697,7 +747,7 @@ function test_tools() {
     desc="Update existing resource meta attribute"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true"
     test_assert $CRM_EX_OK
-    
+
     desc="Create a resource meta attribute in the parent"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
     test_assert $CRM_EX_OK
@@ -803,6 +853,70 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     unset CIB_file
+
+    export CIB_file="$test_home/cli/crmadmin-cluster-remote-guest-nodes.xml"
+
+    desc="List all nodes"
+    cmd="crmadmin -N | wc -l | grep 11"
+    test_assert $CRM_EX_OK 0
+
+    desc="List cluster nodes"
+    cmd="crmadmin -N cluster | wc -l | grep 6"
+    test_assert $CRM_EX_OK 0
+
+    desc="List guest nodes"
+    cmd="crmadmin -N guest | wc -l | grep 2"
+    test_assert $CRM_EX_OK 0
+
+    desc="List remote nodes"
+    cmd="crmadmin -N remote | wc -l | grep 3"
+    test_assert $CRM_EX_OK 0
+
+    desc="List cluster,remote nodes"
+    cmd="crmadmin -N cluster,remote | wc -l | grep 9"
+    test_assert $CRM_EX_OK 0
+
+    desc="List guest,remote nodes"
+    cmd="crmadmin -N guest,remote | wc -l | grep 5"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
+
+    export CIB_file="$test_home/cli/crm_mon.xml"
+
+    desc="List a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-clone"
+    test_assert $CRM_EX_OK 0
+
+    desc="List the primitive of a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-rsc"
+    test_assert $CRM_EX_OK 0
+
+    desc="List a single instance of a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-rsc:0"
+    test_assert $CRM_EX_OK 0
+
+    desc="List another instance of a promotable clone resource"
+    cmd="crm_resource --locate -r promotable-rsc:1"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
+
+    export CIB_file="-"
+
+    desc="Check that CIB_file=\"-\" works - crm_mon"
+    cmd="cat $test_home/cli/crm_mon.xml | crm_mon -1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Check that CIB_file=\"-\" works - crm_resource"
+    cmd="cat $test_home/cli/crm_resource_digests.xml | crm_resource --digests -r rsc1 -N node1 --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    desc="Check that CIB_file=\"-\" works - crmadmin"
+    cmd="cat $test_home/cli/crmadmin-cluster-remote-guest-nodes.xml | crmadmin -N | wc -l | grep 11"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_file
 }
 
 INVALID_PERIODS=(
@@ -822,7 +936,7 @@ INVALID_PERIODS=(
     "P1Z/2019-02-20 00:00:00Z"          # Invalid duration unit
     "P1YM/2019-02-20 00:00:00Z"         # No number for duration unit
 )
-        
+
 function test_dates() {
     # Ensure invalid period specifications are rejected
     for spec in '' "${INVALID_PERIODS[@]}"; do
@@ -1179,10 +1293,8 @@ function test_acls() {
     local TMPXML
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib pacemaker-1.3
 
     cat <<EOF > "$TMPXML"
     <acls>
@@ -1261,12 +1373,7 @@ EOF
     cmd="cibadmin --upgrade --force -V"
     test_assert $CRM_EX_OK
 
-    SHADOWPATH="$(crm_shadow --file)"
-    # sed -i isn't portable :-(
-    cp -p "$SHADOWPATH" "${SHADOWPATH}.$$" # to keep permissions
-    sed -e 's/epoch=.2/epoch=\"6/g' -e 's/admin_epoch=.1/admin_epoch=\"0/g' \
-        "$SHADOWPATH" > "${SHADOWPATH}.$$"
-    mv -- "${SHADOWPATH}.$$" "$SHADOWPATH"
+    reset_shadow_cib_version
 
     test_acl_loop "$TMPXML"
 
@@ -1280,10 +1387,8 @@ function test_validity() {
 
     TMPGOOD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.good.xml.XXXXXXXXXX)
     TMPBAD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.bad.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib pacemaker-1.2
     export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
     export PCMK_stderr=1
 
@@ -1354,10 +1459,8 @@ test_upgrade() {
     local TMPXML
 
     TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
-    export CIB_shadow_dir="${shadow_dir}"
 
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-2.10 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib pacemaker-2.10
 
     desc="Set stonith-enabled=false"
     cmd="crm_attribute -n stonith-enabled -v false"
@@ -1407,9 +1510,7 @@ EOF
 test_rules() {
     local TMPXML
 
-    export CIB_shadow_dir="${shadow_dir}"
-    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow 2>&1
-    export CIB_shadow=$shadow
+    create_shadow_cib
 
     cibadmin -C -o resources   --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'
 
@@ -1626,12 +1727,11 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
-    # last-run= and last-rc-change= are always numeric in the CIB.  However,
-    # for the crm_mon test we also need to compare against the XML output of
-    # the crm_mon program.  There, these are shown as human readable strings
-    # (like the output of the `date` command).
+    # last-rc-change= is always numeric in the CIB. However, for the crm_mon
+    # test we also need to compare against the XML output of the crm_mon
+    # program. There, these are shown as human readable strings (like the
+    # output of the `date` command).
     sed -e 's/cib-last-written.*>/>/'\
-        -e 's/ last-run=\"[A-Za-z0-9: ]*\"//'\
         -e 's/Last updated: .*/Last updated:/' \
         -e 's/Last change: .*/Last change:/' \
         -e 's/(version .*)/(version)/' \
@@ -1656,6 +1756,11 @@ for t in $tests; do
         -e 's/ start=\"[0-9][-+: 0-9]*Z*\"/ start=\"\"/' \
         -e 's/^Error checking rule: Device not configured/Error checking rule: No such device or address/' \
         -e 's/^lt-//' \
+        -e 's/ocf::/ocf:/' \
+        -e 's/Masters:/Promoted:/' \
+        -e 's/Slaves:/Unpromoted:/' \
+        -e 's/Master/Promoted/' \
+        -e 's/Slave/Unpromoted/' \
         "$TMPFILE" > "${TMPFILE}.$$"
     mv -- "${TMPFILE}.$$" "$TMPFILE"
 
@@ -1665,7 +1770,7 @@ for t in $tests; do
 done
 
 rm -rf "${shadow_dir}"
-    
+
 failed=0
 
 if [ $verbose -eq 1 ]; then

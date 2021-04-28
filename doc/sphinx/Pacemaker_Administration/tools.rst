@@ -432,9 +432,6 @@ How to interpret the graphical output:
 
    .. image:: ../shared/images/Policy-Engine-small.png
       :alt: An example transition graph as represented by Graphviz
-      :height: 325
-      :width: 1161
-      :scale: 75 %
       :align: center
 
 In the above example, it appears that a new node, ``pcmk-2``, has come online
@@ -451,9 +448,6 @@ perform the start actions. For some reason, the cluster does not want to start
 
    .. image:: ../shared/images/Policy-Engine-big.png
       :alt: Complex transition graph that you're not expected to be able to read
-      :width: 1455
-      :height: 1945
-      :scale: 75 %
       :align: center
 
 
@@ -473,8 +467,6 @@ see the ``crm_simulate`` man page for more details.
 This capability is useful when using a shadow CIB to edit the configuration.
 Before committing the changes to the live cluster with ``crm_shadow --commit``,
 you can use ``crm_simulate`` to see how the cluster will react to the changes.
-
-.. _attrd_updater:
 
 .. _crm_attribute:
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,20 +22,13 @@
 #include <pacemaker-internal.h>
 #include <crm/common/ipc_internal.h>
 
-gboolean show_scores = FALSE;
-gboolean show_utilization = FALSE;
+extern bool pcmk__is_daemon;
 
 static void
 log_resource_details(pe_working_set_t *data_set)
 {
-    int rc = pcmk_rc_ok;
-    pcmk__output_t *out = NULL;
-    const char* argv[] = { "", NULL };
-    GListPtr all = NULL;
-    pcmk__supported_format_t formats[] = {
-        PCMK__SUPPORTED_FORMAT_LOG,
-        { NULL, NULL, NULL }
-    };
+    pcmk__output_t *out = data_set->priv;
+    GList *all = NULL;
 
     /* We need a list of nodes that we are allowed to output information for.
      * This is necessary because out->message for all the resource-related
@@ -43,15 +36,6 @@ log_resource_details(pe_working_set_t *data_set)
      * we just make it a list of all the nodes.
      */
     all = g_list_prepend(all, strdup("*"));
-
-    pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(&out, "log", NULL, (char**)argv);
-    if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        crm_err("Can't log resource details due to internal error: %s\n",
-                pcmk_rc_str(rc));
-        return;
-    }
-    pe__register_messages(out);
 
     for (GList *item = data_set->resources; item != NULL; item = item->next) {
         pe_resource_t *rsc = (pe_resource_t *) item->data;
@@ -63,7 +47,6 @@ log_resource_details(pe_working_set_t *data_set)
         }
     }
 
-    pcmk__output_free(out);
     g_list_free_full(all, free);
 }
 
@@ -79,9 +62,7 @@ xmlNode *
 pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                        crm_time_t *now)
 {
-    GListPtr gIter = NULL;
-
-/*	pe_debug_on(); */
+    GList *gIter = NULL;
 
     CRM_ASSERT(xml_input || pcmk_is_set(data_set->flags, pe_flag_have_status));
 
@@ -100,7 +81,8 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
 
     crm_trace("Calculate cluster status");
     stage0(data_set);
-    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location)) {
+    if (!pcmk_is_set(data_set->flags, pe_flag_quick_location) &&
+         pcmk__is_daemon) {
         log_resource_details(data_set);
     }
 

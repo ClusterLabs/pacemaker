@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <glib.h>
 #include <crm/crm.h>
 #include <crm/cluster.h>
-#include <crm/cluster/election.h>
+#include <crm/cluster/election_internal.h>
 #include <crm/cib/internal.h>
 
 void attrd_init_mainloop(void);

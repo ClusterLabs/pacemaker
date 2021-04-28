@@ -1,0 +1,29 @@
+0 of 5 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ fastvm-rhel-7-5-73 fastvm-rhel-7-5-74 ]
+
+  * Full List of Resources:
+    * fence-fastvm-rhel-7-5-73	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-74
+    * fence-fastvm-rhel-7-5-74	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-73
+    * outside_resource	(ocf:pacemaker:Dummy):	 FAILED fastvm-rhel-7-5-73 (blocked)
+    * Resource Group: grp:
+      * inside_resource_2	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
+      * inside_resource_3	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ fastvm-rhel-7-5-73 fastvm-rhel-7-5-74 ]
+
+  * Full List of Resources:
+    * fence-fastvm-rhel-7-5-73	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-74
+    * fence-fastvm-rhel-7-5-74	(stonith:fence_xvm):	 Started fastvm-rhel-7-5-73
+    * outside_resource	(ocf:pacemaker:Dummy):	 FAILED fastvm-rhel-7-5-73 (blocked)
+    * Resource Group: grp:
+      * inside_resource_2	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74
+      * inside_resource_3	(ocf:pacemaker:Dummy):	 Started fastvm-rhel-7-5-74

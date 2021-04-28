@@ -1,0 +1,413 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-3.7" epoch="71" num_updates="166" admin_epoch="0" cib-last-written="Wed Aug 21 12:00:45 2019" update-origin="node1" update-client="crm_resource" update-user="root" have-quorum="0" dc-uuid="1" no-quorum-panic="1" execution-date="1566795162">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.19-8.el7_6.4-c3c624ea3d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="600s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-1-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@node1"/>
+          <nvpair id="nodes-1-galera-role" name="galera-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="node2">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-2-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@node2"/>
+          <nvpair id="nodes-2-galera-role" name="galera-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="node3">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-3-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@node3"/>
+          <nvpair id="nodes-3-galera-role" name="galera-role" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <bundle id="rabbitmq-bundle">
+        <docker image="192.168.122.139:8787/rhosp13/openstack-rabbitmq:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3122"/>
+        <storage>
+          <storage-mapping id="rabbitmq-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/rabbitmq.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="rabbitmq-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/rabbitmq/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="rabbitmq-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="rabbitmq-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="rabbitmq-lib" options="rw" source-dir="/var/lib/rabbitmq" target-dir="/var/lib/rabbitmq"/>
+          <storage-mapping id="rabbitmq-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="rabbitmq-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="rabbitmq-log" options="rw" source-dir="/var/log/containers/rabbitmq" target-dir="/var/log/rabbitmq"/>
+          <storage-mapping id="rabbitmq-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="rabbitmq" provider="heartbeat" type="rabbitmq-cluster">
+          <instance_attributes id="rabbitmq-instance_attributes">
+            <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+          </instance_attributes>
+          <meta_attributes id="rabbitmq-meta_attributes">
+            <nvpair id="rabbitmq-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="rabbitmq-monitor-interval-10s" interval="10s" name="monitor" timeout="40s"/>
+            <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="rabbitmq-bundle-meta_attributes"/>
+      </bundle>
+      <bundle id="galera-bundle">
+        <docker image="192.168.122.139:8787/rhosp13/openstack-mariadb:pcmklatest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="mysql-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/mysql/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="mysql-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="mysql-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="mysql-lib" options="rw" source-dir="/var/lib/mysql" target-dir="/var/lib/mysql"/>
+          <storage-mapping id="mysql-log-mariadb" options="rw" source-dir="/var/log/mariadb" target-dir="/var/log/mariadb"/>
+          <storage-mapping id="mysql-log" options="rw" source-dir="/var/log/containers/mysql" target-dir="/var/log/mysql"/>
+          <storage-mapping id="mysql-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-additional_parameters" name="additional_parameters" value="--open-files-limit=16384"/>
+            <nvpair id="galera-instance_attributes-cluster_host_map" name="cluster_host_map" value="node1:node1.internalapi.localdomain;node2:node2.internalapi.localdomain;node3:node3.internalapi.localdomain"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-log" name="log" value="/var/log/mysql/mysqld.log"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://node1.internalapi.localdomain,node2.internalapi.localdomain,node3.internalapi.localdomain"/>
+          </instance_attributes>
+          <meta_attributes id="galera-meta_attributes">
+            <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
+            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
+            <op id="galera-monitor-interval-20s" interval="20s" name="monitor" timeout="30s"/>
+            <op id="galera-monitor-interval-10s" interval="10s" name="monitor" role="Promoted" timeout="30s"/>
+            <op id="galera-monitor-interval-30s" interval="30s" name="monitor" role="Unpromoted" timeout="30s"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120s"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <primitive class="stonith" id="stonith-fence_ipmilan-node1" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-node1-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-node1-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="node1"/>
+        </instance_attributes>
+        <meta_attributes id="stonith-fence_ipmilan-node1-meta_attributes">
+          <nvpair id="stonith-fence_ipmilan-node1-meta_attributes-failure-timeout" name="failure-timeout" value="600s"/>
+          <nvpair id="stonith-fence_ipmilan-node1-meta_attributes-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-node1-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-node3" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-node3-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-node3-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="node3"/>
+        </instance_attributes>
+        <meta_attributes id="stonith-fence_ipmilan-node3-meta_attributes">
+          <nvpair id="stonith-fence_ipmilan-node3-meta_attributes-failure-timeout" name="failure-timeout" value="600s"/>
+          <nvpair id="stonith-fence_ipmilan-node3-meta_attributes-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-node3-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-node2" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-node2-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-node2-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="node2"/>
+        </instance_attributes>
+        <meta_attributes id="stonith-fence_ipmilan-node2-meta_attributes">
+          <nvpair id="stonith-fence_ipmilan-node2-meta_attributes-failure-timeout" name="failure-timeout" value="600s"/>
+          <nvpair id="stonith-fence_ipmilan-node2-meta_attributes-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-node2-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="location-rabbitmq-bundle" resource-discovery="exclusive" rsc="rabbitmq-bundle">
+        <rule id="location-rabbitmq-bundle-rule" score="0">
+          <expression attribute="rabbitmq-role" id="location-rabbitmq-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-galera-bundle" resource-discovery="exclusive" rsc="galera-bundle">
+        <rule id="location-galera-bundle-rule" score="0">
+          <expression attribute="galera-role" id="location-galera-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-stonith-fence_ipmilan-node1-node1--INFINITY" node="node1" rsc="stonith-fence_ipmilan-node1" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-node3-node3--INFINITY" node="node3" rsc="stonith-fence_ipmilan-node3" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-node2-node2--INFINITY" node="node2" rsc="stonith-fence_ipmilan-node2" score="-INFINITY"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@node1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="26:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;26:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="0" queue-time="0" op-digest="4e9836c1fe6ca784363329f38f1a6bab" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="28:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;28:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="0" queue-time="0" op-digest="6c8e8fc40a3a8bc0990cb4086a91cb5a" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node1" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node1_last_0" operation_key="stonith-fence_ipmilan-node1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="42:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;42:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="61" rc-code="7" op-status="0" interval="0" last-run="1566435865" last-rc-change="1566435865" exec-time="139" queue-time="0" op-digest="40ba273e494269d4d7bded2368059e8d" op-secure-params=" password  passwd " op-secure-digest="3ffa7c4b1189e29b87161a1808ba7d9f"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="46:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;46:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="75" rc-code="0" op-status="0" interval="0" last-run="1566435865" last-rc-change="1566435865" exec-time="2053" queue-time="0" op-digest="14ba0643d7f91ddb1789cd6c29f9ac3f"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_monitor_60000" operation_key="rabbitmq-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="47:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;47:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="80" rc-code="0" op-status="0" interval="60000" last-rc-change="1566435867" exec-time="161" queue-time="0" op-digest="f18bc65b8186d36c889d9d67beeef1b3"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="25:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;25:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="196" queue-time="0" op-digest="6611df38a8c054188fb3906bac2a4ac6"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node2" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node2_last_0" operation_key="stonith-fence_ipmilan-node2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="44:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;44:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="69" rc-code="7" op-status="0" interval="0" last-run="1566435865" last-rc-change="1566435865" exec-time="0" queue-time="0" op-digest="7252381349b2722d90a4ce9fba7ba3b5" op-secure-params=" password  passwd " op-secure-digest="5265a046a980e16fb93d35f07f19a6d4"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="80:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;80:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="74" rc-code="0" op-status="0" interval="0" last-run="1566435865" last-rc-change="1566435865" exec-time="1784" queue-time="0" op-digest="c9e60e09c1b2adcdac0169e69cbeb76e"/>
+            <lrm_rsc_op id="galera-bundle-docker-0_monitor_60000" operation_key="galera-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="81:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;81:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="78" rc-code="0" op-status="0" interval="60000" last-rc-change="1566435867" exec-time="235" queue-time="0" op-digest="5826a0cfeef03a64959f74a25e81bbc4"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="32:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;32:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="0" queue-time="0" op-digest="5902e2bf7cfd38a4e959ce335356dc1f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="34:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;34:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="0" queue-time="0" op-digest="f724287411b756a9cac4dba67d3bddf6" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="27:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;27:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="166" queue-time="0" op-digest="7ade29d4352e8007c537badef8a2e0b0"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="31:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;31:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="155" queue-time="0" op-digest="c6f303ef421236554d0dea3151b97cb3"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="33:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;33:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1566435864" last-rc-change="1566435864" exec-time="174" queue-time="0" op-digest="bb5745d5e3a6dedaf2449265ce05625b"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node3" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node3_last_0" operation_key="stonith-fence_ipmilan-node3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="43:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:7;43:889:7:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="65" rc-code="7" op-status="0" interval="0" last-run="1566435865" last-rc-change="1566435865" exec-time="0" queue-time="0" op-digest="094b99e257ba32c2b718b61813e80256" op-secure-params=" password  passwd " op-secure-digest="765c80b4e1ed30f2ef368a8296f7481c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="82:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;82:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1566435867" last-rc-change="1566435867" exec-time="0" queue-time="0" op-digest="8193f24828986601946578a7993cbb74" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-0_monitor_60000" operation_key="galera-bundle-0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="67:890:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;67:890:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="10" rc-code="0" op-status="0" interval="60000" last-rc-change="1566435871" exec-time="0" queue-time="0" op-digest="aa427f07df30a17686d41e30145bf557"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="48:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;48:889:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1566435867" last-rc-change="1566435867" exec-time="0" queue-time="0" op-digest="2c6afa7ac6b48957892b7238a3270a5d" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-0_monitor_60000" operation_key="rabbitmq-bundle-0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="32:890:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;32:890:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="9" rc-code="0" op-status="0" interval="60000" last-rc-change="1566435871" exec-time="0" queue-time="0" op-digest="deffe42b0e1f26d58665d8c3a846a8eb"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="false" crmd="offline" crm-debug-origin="do_state_transition" join="down" expected="down">
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@node2"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="27:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;27:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1566356445" last-rc-change="1566356445" exec-time="0" queue-time="0" op-digest="4e9836c1fe6ca784363329f38f1a6bab" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-1_monitor_60000" operation_key="rabbitmq-bundle-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="36:754:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;36:754:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="13" rc-code="0" op-status="0" interval="60000" last-rc-change="1566356446" exec-time="0" queue-time="0" op-digest="7fe12a754b9debfddd5a529c95d4ea6c"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="28:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;28:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="0" queue-time="0" op-digest="6c8e8fc40a3a8bc0990cb4086a91cb5a" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="29:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;29:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="204" queue-time="0" op-digest="c9e60e09c1b2adcdac0169e69cbeb76e"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node1" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node1_last_0" operation_key="stonith-fence_ipmilan-node1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="125:17:0:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:0;125:17:0:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="82" rc-code="0" op-status="0" interval="0" last-run="1565266314" last-rc-change="1565266314" exec-time="322" queue-time="0" op-digest="40ba273e494269d4d7bded2368059e8d" op-secure-params=" password  passwd " op-secure-digest="3ffa7c4b1189e29b87161a1808ba7d9f"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-node1_monitor_60000" operation_key="stonith-fence_ipmilan-node1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="126:17:0:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:0;126:17:0:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="83" rc-code="0" op-status="0" interval="60000" last-rc-change="1565266315" exec-time="239" queue-time="0" op-digest="865620c5b61a242892a200a6a0e1cd35" op-secure-params=" password  passwd " op-secure-digest="3ffa7c4b1189e29b87161a1808ba7d9f"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="23:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;23:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="215" queue-time="0" op-digest="14ba0643d7f91ddb1789cd6c29f9ac3f"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="25:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;25:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="94" rc-code="0" op-status="0" interval="0" last-run="1566356445" last-rc-change="1566356445" exec-time="598" queue-time="0" op-digest="6611df38a8c054188fb3906bac2a4ac6"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_monitor_60000" operation_key="rabbitmq-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="26:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;26:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="95" rc-code="0" op-status="0" interval="60000" last-rc-change="1566356445" exec-time="163" queue-time="0" op-digest="256b8a21685f8d8237dfff64197a60b0"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node2" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node2_last_0" operation_key="stonith-fence_ipmilan-node2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="44:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;44:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="69" rc-code="7" op-status="0" interval="0" last-run="1565265997" last-rc-change="1565265997" exec-time="0" queue-time="0" op-digest="7252381349b2722d90a4ce9fba7ba3b5" op-secure-params=" password  passwd " op-secure-digest="5265a046a980e16fb93d35f07f19a6d4"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="30:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;30:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="0" queue-time="0" op-digest="8193f24828986601946578a7993cbb74" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="84:12:0:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:0;84:12:0:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="76" rc-code="0" op-status="0" interval="0" last-run="1565265997" last-rc-change="1565265997" exec-time="2055" queue-time="0" op-digest="c6f303ef421236554d0dea3151b97cb3"/>
+            <lrm_rsc_op id="galera-bundle-docker-1_monitor_60000" operation_key="galera-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="85:12:0:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:0;85:12:0:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="80" rc-code="0" op-status="0" interval="60000" last-rc-change="1565265999" exec-time="240" queue-time="0" op-digest="b6b5570d0c79fe1f2c57f97e38d0c454"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="34:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;34:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="0" queue-time="0" op-digest="f724287411b756a9cac4dba67d3bddf6" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="33:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;33:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="161" queue-time="0" op-digest="bb5745d5e3a6dedaf2449265ce05625b"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node3" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node3_last_0" operation_key="stonith-fence_ipmilan-node3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="117:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;117:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="88" rc-code="0" op-status="0" interval="0" last-run="1565925136" last-rc-change="1565925136" exec-time="196" queue-time="0" op-digest="094b99e257ba32c2b718b61813e80256" op-secure-params=" password  passwd " op-secure-digest="765c80b4e1ed30f2ef368a8296f7481c"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-node3_monitor_60000" operation_key="stonith-fence_ipmilan-node3_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="118:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;118:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="89" rc-code="0" op-status="0" interval="60000" last-rc-change="1565925136" exec-time="197" queue-time="0" op-digest="14dda17b1320f5f4ce99f062334a12da" op-secure-params=" password  passwd " op-secure-digest="765c80b4e1ed30f2ef368a8296f7481c"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="27:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;27:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="171" queue-time="0" op-digest="7ade29d4352e8007c537badef8a2e0b0"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="86:12:0:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:0;86:12:0:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1565265999" last-rc-change="1565265999" exec-time="0" queue-time="0" op-digest="5902e2bf7cfd38a4e959ce335356dc1f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-1_monitor_60000" operation_key="galera-bundle-1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="71:13:0:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:0;71:13:0:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="10" rc-code="0" op-status="0" interval="60000" last-rc-change="1565266003" exec-time="0" queue-time="0" op-digest="9cd0e6ae49720131ba1b94817d9df3c7"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="24:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:7;24:12:7:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1565265995" last-rc-change="1565265995" exec-time="0" queue-time="0" op-digest="2c6afa7ac6b48957892b7238a3270a5d" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="node3" in_ccm="false" crmd="offline" crm-debug-origin="do_state_transition" join="down" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="26:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;26:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="0" queue-time="0" op-digest="4e9836c1fe6ca784363329f38f1a6bab" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="31:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;31:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1566356445" last-rc-change="1566356445" exec-time="0" queue-time="0" op-digest="6c8e8fc40a3a8bc0990cb4086a91cb5a" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-2_monitor_60000" operation_key="rabbitmq-bundle-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="41:754:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;41:754:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="13" rc-code="0" op-status="0" interval="60000" last-rc-change="1566356446" exec-time="0" queue-time="0" op-digest="2633a5ceafe55cf96d15c4984e9cb635"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node1" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node1_last_0" operation_key="stonith-fence_ipmilan-node1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="42:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;42:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="61" rc-code="7" op-status="0" interval="0" last-run="1565267341" last-rc-change="1565267341" exec-time="143" queue-time="1" op-digest="40ba273e494269d4d7bded2368059e8d" op-secure-params=" password  passwd " op-secure-digest="3ffa7c4b1189e29b87161a1808ba7d9f"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="23:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;23:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="195" queue-time="0" op-digest="14ba0643d7f91ddb1789cd6c29f9ac3f"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="25:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;25:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="176" queue-time="0" op-digest="6611df38a8c054188fb3906bac2a4ac6"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node2" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node2_last_0" operation_key="stonith-fence_ipmilan-node2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="120:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;120:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="82" rc-code="0" op-status="0" interval="0" last-run="1565925136" last-rc-change="1565925136" exec-time="251" queue-time="1" op-digest="7252381349b2722d90a4ce9fba7ba3b5" op-secure-params=" password  passwd " op-secure-digest="5265a046a980e16fb93d35f07f19a6d4"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-node2_monitor_60000" operation_key="stonith-fence_ipmilan-node2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="121:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;121:1:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="83" rc-code="0" op-status="0" interval="60000" last-rc-change="1565925136" exec-time="194" queue-time="0" op-digest="8fa93fafac88b73db2fde1123f0fac16" op-secure-params=" password  passwd " op-secure-digest="5265a046a980e16fb93d35f07f19a6d4"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="30:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;30:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="0" queue-time="0" op-digest="8193f24828986601946578a7993cbb74" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="32:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;32:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="0" queue-time="0" op-digest="5902e2bf7cfd38a4e959ce335356dc1f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="88:12:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:0;88:12:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="76" rc-code="0" op-status="0" interval="0" last-run="1565267341" last-rc-change="1565267341" exec-time="1505" queue-time="0" op-digest="bb5745d5e3a6dedaf2449265ce05625b"/>
+            <lrm_rsc_op id="galera-bundle-docker-2_monitor_60000" operation_key="galera-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="89:12:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:0;89:12:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="78" rc-code="0" op-status="0" interval="60000" last-rc-change="1565267343" exec-time="255" queue-time="0" op-digest="382bc0d634f7dc834b2e7106a1f740f4"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="29:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;29:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="163" queue-time="0" op-digest="c9e60e09c1b2adcdac0169e69cbeb76e"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="31:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;31:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="205" queue-time="0" op-digest="c6f303ef421236554d0dea3151b97cb3"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="90:12:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:0;90:12:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1565267343" last-rc-change="1565267343" exec-time="0" queue-time="0" op-digest="f724287411b756a9cac4dba67d3bddf6" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-2_monitor_60000" operation_key="galera-bundle-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="75:13:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:0;75:13:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="10" rc-code="0" op-status="0" interval="60000" last-rc-change="1565267347" exec-time="0" queue-time="0" op-digest="d7f8ff67dde73741c39fc99235612a69"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="29:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;29:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="90" rc-code="0" op-status="0" interval="0" last-run="1566356445" last-rc-change="1566356445" exec-time="589" queue-time="0" op-digest="7ade29d4352e8007c537badef8a2e0b0"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_monitor_60000" operation_key="rabbitmq-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="30:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;30:753:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="91" rc-code="0" op-status="0" interval="60000" last-rc-change="1566356445" exec-time="159" queue-time="0" op-digest="43e4544c25234613205b2a31701bbaa5"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-node3" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-node3_last_0" operation_key="stonith-fence_ipmilan-node3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="43:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;43:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="65" rc-code="7" op-status="0" interval="0" last-run="1565267341" last-rc-change="1565267341" exec-time="0" queue-time="0" op-digest="094b99e257ba32c2b718b61813e80256" op-secure-params=" password  passwd " op-secure-digest="765c80b4e1ed30f2ef368a8296f7481c"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="24:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:7;24:12:7:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1565267340" last-rc-change="1565267340" exec-time="0" queue-time="0" op-digest="2c6afa7ac6b48957892b7238a3270a5d" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-2" uname="rabbitmq-bundle-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="48:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;48:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1566356483" last-rc-change="1566356483" exec-time="21171" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="49:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;49:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node3" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1566356505" exec-time="6280" queue-time="1" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-1" uname="rabbitmq-bundle-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="46:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;46:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1566356462" last-rc-change="1566356462" exec-time="20783" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="47:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;47:755:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node2" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1566356505" exec-time="6246" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-0" uname="rabbitmq-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="49:890:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;49:890:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1566435880" last-rc-change="1566435880" exec-time="24518" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="46:891:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;46:891:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="32" rc-code="0" op-status="0" interval="10000" last-rc-change="1566435907" exec-time="6252" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-2" uname="galera-bundle-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="88:14:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:0;88:14:0:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1565267357" last-rc-change="1565267357" exec-time="38152" queue-time="0" op-digest="1b6366d05865bce625517a6aaed95684" op-secure-params=" user " op-secure-digest="1b6366d05865bce625517a6aaed95684"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="91:15:8:0bfc4f89-f653-4db4-9512-87ae7f0afc87" transition-magic="0:8;91:15:8:0bfc4f89-f653-4db4-9512-87ae7f0afc87" exit-reason="" on_node="node3" call-id="66" rc-code="8" op-status="0" interval="10000" last-rc-change="1565267396" exec-time="1009" queue-time="0" op-digest="29e39b115884dbdd932fbce6501ece1b" op-secure-params=" user " op-secure-digest="1b6366d05865bce625517a6aaed95684"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-2">
+        <instance_attributes id="status-galera-bundle-2"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-1" uname="galera-bundle-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="88:14:0:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:0;88:14:0:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1565266015" last-rc-change="1565266015" exec-time="27052" queue-time="0" op-digest="1b6366d05865bce625517a6aaed95684" op-secure-params=" user " op-secure-digest="1b6366d05865bce625517a6aaed95684"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="86:15:8:e9b2624a-a468-4541-8cb4-526ee5466e26" transition-magic="0:8;86:15:8:e9b2624a-a468-4541-8cb4-526ee5466e26" exit-reason="" on_node="node2" call-id="66" rc-code="8" op-status="0" interval="10000" last-rc-change="1565266043" exec-time="961" queue-time="0" op-digest="29e39b115884dbdd932fbce6501ece1b" op-secure-params=" user " op-secure-digest="1b6366d05865bce625517a6aaed95684"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-1">
+        <instance_attributes id="status-galera-bundle-1"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-0" uname="galera-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="89:891:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:0;89:891:0:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1566435907" last-rc-change="1566435907" exec-time="10647" queue-time="0" op-digest="1b6366d05865bce625517a6aaed95684" op-secure-params=" user " op-secure-digest="1b6366d05865bce625517a6aaed95684"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="83:892:8:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:8;83:892:8:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="" on_node="node1" call-id="66" rc-code="8" op-status="0" interval="10000" last-rc-change="1566435919" exec-time="1059" queue-time="0" op-digest="29e39b115884dbdd932fbce6501ece1b" op-secure-params=" user " op-secure-digest="1b6366d05865bce625517a6aaed95684"/>
+            <lrm_rsc_op id="galera_last_failure_0" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="83:892:8:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" transition-magic="0:1;83:892:8:5da9c0f3-4bc1-4a60-b177-1bca293a6d60" exit-reason="local node &lt;node1&gt; is started, but not in primary mode. Unknown state." on_node="node1" call-id="66" rc-code="1" op-status="0" interval="10000" last-rc-change="1566795150" exec-time="0" queue-time="0" op-digest="29e39b115884dbdd932fbce6501ece1b" op-secure-params=" user " op-secure-digest="1b6366d05865bce625517a6aaed95684"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

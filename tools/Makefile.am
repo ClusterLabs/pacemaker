@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2019 the Pacemaker project contributors
+# Copyright 2004-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -23,14 +23,15 @@ sbin_SCRIPTS		+= cibsecret
 endif
 noinst_SCRIPTS		= pcmk_simtimes
 
-EXTRA_DIST		= crm_diff.8.inc \
+EXTRA_DIST		= crm_attribute.8.inc \
+				  crm_diff.8.inc \
 				  crm_error.8.inc \
-			  crm_mon.sysconfig		\
 			  crm_mon.8.inc			\
 			  crm_node.8.inc \
 			  crm_resource.8.inc \
 			  crm_rule.8.inc \
 			  crm_simulate.8.inc \
+			  crm_verify.8.inc \
 			  crmadmin.8.inc \
 			  fix-manpages \
 			  stonith_admin.8.inc
@@ -97,7 +98,7 @@ crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
 crm_diff_SOURCES	= crm_diff.c
 crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c crm_mon_print.c crm_mon_runtime.c
+crm_mon_SOURCES		= crm_mon.c crm_mon_curses.c crm_mon_print.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/lib/fencing/libstonithd.la	\
 			  $(top_builddir)/lib/pacemaker/libpacemaker.la	\

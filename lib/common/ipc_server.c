@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -171,7 +171,6 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
     }
 
     if (c) {
-#if ENABLE_ACL
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = strdup("#unprivileged");
@@ -179,7 +178,6 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
             crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
                     uid_client);
         }
-#endif
         client->ipcs = c;
         pcmk__set_client_flags(client, pcmk__client_ipc);
         client->pid = pcmk__client_pid(c);
@@ -352,22 +350,21 @@ pcmk__free_client(pcmk__client_t *c)
  * \param[in,out] client     Client to modify
  * \param[in]     qmax       New threshold (as non-NULL string)
  *
- * \return TRUE if change was allowed, FALSE otherwise
+ * \return true if change was allowed, false otherwise
  */
 bool
 pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 {
     if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
-        long long qmax_int;
+        long long qmax_ll;
 
-        errno = 0;
-        qmax_int = crm_parse_ll(qmax, NULL);
-        if ((errno == 0) && (qmax_int > 0)) {
-            client->queue_max = (unsigned int) qmax_int;
-            return TRUE;
+        if ((pcmk__scan_ll(qmax, &qmax_ll, 0LL) == pcmk_rc_ok)
+            && (qmax_ll > 0LL) && (qmax_ll <= UINT_MAX)) {
+            client->queue_max = (unsigned int) qmax_ll;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 int
@@ -918,6 +915,32 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
         crm_err("Failed to create fencer: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the pacemakerd API
+ *
+ * \param[in] cb  IPC callbacks
+ *
+ * \note This function exits with CRM_EX_OSERR if unable to create the servers.
+ */
+void
+pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
+                       struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        crm_err("Couldn't start pacemakerd IPC server");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
+         * if we want to prevent pacemakerd from restarting them.
+         * With pacemakerd we leave the exit-code shown to e.g. systemd
+         * to what it was prior to moving the code here from pacemakerd.c
+         */
+        crm_exit(CRM_EX_OSERR);
     }
 }
 

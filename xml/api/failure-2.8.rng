@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-failure"/>
+    </start>
+
+    <define name="element-failure">
+        <element name="failure">
+            <choice>
+                <attribute name="op_key"> <text/> </attribute>
+                <attribute name="id"> <text/> </attribute>
+            </choice>
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="exitstatus"> <text /> </attribute>
+            <attribute name="exitreason"> <text /> </attribute>
+            <attribute name="exitcode"> <data type="nonNegativeInteger" /> </attribute>
+            <attribute name="call"> <data type="integer" /> </attribute>
+            <attribute name="status"> <text /> </attribute>
+            <optional>
+                <group>
+                    <attribute name="last-rc-change"> <text /> </attribute>
+                    <attribute name="queued"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="exec"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="interval"> <data type="nonNegativeInteger" /> </attribute>
+                    <attribute name="task"> <text /> </attribute>
+                </group>
+            </optional>
+        </element>
+    </define>
+</grammar>
+

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -226,7 +226,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
         }
 
-        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
             if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
@@ -248,7 +248,7 @@ create_docker_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             }
         }
 
-        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
@@ -392,7 +392,7 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
         }
 
-        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
             if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
@@ -414,7 +414,7 @@ create_podman_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             }
         }
 
-        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
@@ -556,7 +556,7 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
         }
 
-        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
             pe__bundle_mount_t *mount = pIter->data;
 
             if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
@@ -584,7 +584,7 @@ create_rkt_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
             volid++;
         }
 
-        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+        for(GList *pIter = data->ports; pIter != NULL; pIter = pIter->next) {
             pe__bundle_port_t *port = pIter->data;
 
             if (replica->ipaddr) {
@@ -683,7 +683,7 @@ disallow_node(pe_resource_t *rsc, const char *uname)
         ((pe_node_t *) match)->rsc_discover_mode = pe_discover_never;
     }
     if (rsc->children) {
-        GListPtr child;
+        GList *child;
 
         for (child = rsc->children; child != NULL; child = child->next) {
             disallow_node((pe_resource_t *) (child->data), uname);
@@ -698,7 +698,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
 {
     if (replica->child && valid_network(data)) {
         GHashTableIter gIter;
-        GListPtr rsc_iter = NULL;
+        GList *rsc_iter = NULL;
         pe_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
         char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
@@ -722,7 +722,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         connect_name = (replica->ipaddr? replica->ipaddr : "#uname");
 
         if (data->control_port == NULL) {
-            port_s = crm_itoa(DEFAULT_REMOTE_PORT);
+            port_s = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
 
         /* This sets replica->container as replica->remote's container, which is
@@ -786,9 +786,7 @@ create_remote_resource(pe_resource_t *parent, pe__bundle_variant_data_t *data,
         if (replica->child->allowed_nodes != NULL) {
             g_hash_table_destroy(replica->child->allowed_nodes);
         }
-        replica->child->allowed_nodes = g_hash_table_new_full(crm_str_hash,
-                                                              g_str_equal,
-                                                              NULL, free);
+        replica->child->allowed_nodes = pcmk__strkey_table(NULL, free);
         g_hash_table_insert(replica->child->allowed_nodes,
                             (gpointer) replica->node->details->id,
                             pe__copy_node(replica->node));
@@ -1044,27 +1042,20 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         }
     }
 
+    // Use 0 for default, minimum, and invalid promoted-max
     value = crm_element_value(xml_obj, XML_RSC_ATTR_PROMOTED_MAX);
     if (value == NULL) {
         // @COMPAT deprecated since 2.0.0
         value = crm_element_value(xml_obj, "masters");
     }
-    bundle_data->promoted_max = crm_parse_int(value, "0");
-    if (bundle_data->promoted_max < 0) {
-        pe_err("%s for %s must be nonnegative integer, using 0",
-               XML_RSC_ATTR_PROMOTED_MAX, rsc->id);
-        bundle_data->promoted_max = 0;
-    }
+    pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
+    // Default replicas to promoted-max if it was specified and 1 otherwise
     value = crm_element_value(xml_obj, "replicas");
-    if ((value == NULL) && bundle_data->promoted_max) {
+    if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;
     } else {
-        bundle_data->nreplicas = crm_parse_int(value, "1");
-    }
-    if (bundle_data->nreplicas < 1) {
-        pe_err("'replicas' for %s must be positive integer, using 1", rsc->id);
-        bundle_data->nreplicas = 1;
+        pcmk__scan_min_int(value, &bundle_data->nreplicas, 1);
     }
 
     /*
@@ -1073,12 +1064,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
      *   --userland-proxy=false --ip-masq=false
      */
     value = crm_element_value(xml_obj, "replicas-per-host");
-    bundle_data->nreplicas_per_host = crm_parse_int(value, "1");
-    if (bundle_data->nreplicas_per_host < 1) {
-        pe_err("'replicas-per-host' for %s must be positive integer, using 1",
-               rsc->id);
-        bundle_data->nreplicas_per_host = 1;
-    }
+    pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
         pe__clear_resource_flags(rsc, pe_rsc_unique);
     }
@@ -1171,12 +1157,12 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
 
-        value = crm_itoa(bundle_data->nreplicas);
+        value = pcmk__itoa(bundle_data->nreplicas);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_MAX, value);
         free(value);
 
-        value = crm_itoa(bundle_data->nreplicas_per_host);
+        value = pcmk__itoa(bundle_data->nreplicas_per_host);
         crm_create_nvpair_xml(xml_set, NULL,
                               XML_RSC_ATTR_INCARNATION_NODEMAX, value);
         free(value);
@@ -1188,7 +1174,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
 
-            value = crm_itoa(bundle_data->promoted_max);
+            value = pcmk__itoa(bundle_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTED_MAX, value);
             free(value);
@@ -1205,7 +1191,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     if(xml_resource) {
         int lpc = 0;
-        GListPtr childIter = NULL;
+        GList *childIter = NULL;
         pe_resource_t *new_rsc = NULL;
         pe__bundle_port_t *port = NULL;
 
@@ -1263,7 +1249,7 @@ pe__unpack_bundle(pe_resource_t *rsc, pe_working_set_t *data_set)
              * environment and the connection resource parameters, and the user
              * can use a different port if desired by setting control-port.
              */
-            port->source = crm_itoa(DEFAULT_REMOTE_PORT);
+            port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
         port->target = strdup(port->source);
         bundle_data->ports = g_list_append(bundle_data->ports, port);
@@ -1352,7 +1338,7 @@ gboolean
 pe__bundle_active(pe_resource_t *rsc, gboolean all)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
-    GListPtr iter = NULL;
+    GList *iter = NULL;
 
     get_bundle_variant_data(bundle_data, rsc);
     for (iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
@@ -1510,7 +1496,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
-        char *id = crm_itoa(replica->offset);
+        char *id = pcmk__itoa(replica->offset);
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
@@ -2069,7 +2055,7 @@ pe__count_bundle(pe_resource_t *rsc)
 }
 
 gboolean
-pe__bundle_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
     gboolean passes = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;

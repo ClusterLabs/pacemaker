@@ -1,0 +1,62 @@
+3 of 10 resource instances DISABLED and 0 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ vbox4 ]
+    * OFFLINE: [ vbox3 ]
+
+  * Full List of Resources:
+    * Clone Set: drbd [drbd0] (promotable):
+      * Stopped: [ vbox3 vbox4 ]
+    * Clone Set: cman_clone [cman]:
+      * Stopped: [ vbox3 vbox4 ]
+    * Clone Set: clvmd_clone [clvmd]:
+      * Stopped: [ vbox3 vbox4 ]
+    * vmnci36	(ocf:heartbeat:vm):	 Stopped
+    * vmnci37	(ocf:heartbeat:vm):	 Stopped (disabled)
+    * vmnci38	(ocf:heartbeat:vm):	 Stopped (disabled)
+    * vmnci55	(ocf:heartbeat:vm):	 Stopped (disabled)
+
+Transition Summary:
+  * Start      drbd0:0     ( vbox4 )
+  * Start      cman:0      ( vbox4 )
+
+Executing Cluster Transition:
+  * Resource action: drbd0:0         monitor on vbox4
+  * Pseudo action:   drbd_pre_notify_start_0
+  * Resource action: cman:0          monitor on vbox4
+  * Pseudo action:   cman_clone_start_0
+  * Resource action: clvmd:0         monitor on vbox4
+  * Resource action: vmnci36         monitor on vbox4
+  * Resource action: vmnci37         monitor on vbox4
+  * Resource action: vmnci38         monitor on vbox4
+  * Resource action: vmnci55         monitor on vbox4
+  * Pseudo action:   drbd_confirmed-pre_notify_start_0
+  * Pseudo action:   drbd_start_0
+  * Resource action: cman:0          start on vbox4
+  * Pseudo action:   cman_clone_running_0
+  * Resource action: drbd0:0         start on vbox4
+  * Pseudo action:   drbd_running_0
+  * Pseudo action:   drbd_post_notify_running_0
+  * Resource action: drbd0:0         notify on vbox4
+  * Pseudo action:   drbd_confirmed-post_notify_running_0
+  * Resource action: drbd0:0         monitor=60000 on vbox4
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ vbox4 ]
+    * OFFLINE: [ vbox3 ]
+
+  * Full List of Resources:
+    * Clone Set: drbd [drbd0] (promotable):
+      * Unpromoted: [ vbox4 ]
+      * Stopped: [ vbox3 ]
+    * Clone Set: cman_clone [cman]:
+      * Started: [ vbox4 ]
+      * Stopped: [ vbox3 ]
+    * Clone Set: clvmd_clone [clvmd]:
+      * Stopped: [ vbox3 vbox4 ]
+    * vmnci36	(ocf:heartbeat:vm):	 Stopped
+    * vmnci37	(ocf:heartbeat:vm):	 Stopped (disabled)
+    * vmnci38	(ocf:heartbeat:vm):	 Stopped (disabled)
+    * vmnci55	(ocf:heartbeat:vm):	 Stopped (disabled)

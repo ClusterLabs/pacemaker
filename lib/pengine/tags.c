@@ -1,11 +1,13 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#include <crm_internal.h>
 
 #include <glib.h>
 #include <stdbool.h>
@@ -14,11 +16,11 @@
 #include <crm/pengine/internal.h>
 #include <crm/pengine/pe_types.h>
 
-GListPtr
+GList *
 pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name)
 {
     gpointer value;
-    GListPtr retval = NULL;
+    GList *retval = NULL;
 
     if (data_set->tags == NULL) {
         return retval;
@@ -30,7 +32,7 @@ pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name)
         return retval;
     }
 
-    for (GListPtr refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
         const char *id = (const char *) refs->data;
         pe_resource_t *rsc = pe_find_resource_with_flags(data_set->resources, id,
                                                          pe_find_renamed|pe_find_any);
@@ -45,11 +47,11 @@ pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name)
     return retval;
 }
 
-GListPtr
+GList *
 pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
 {
     gpointer value;
-    GListPtr retval = NULL;
+    GList *retval = NULL;
 
     if (data_set->tags == NULL) {
         return retval;
@@ -62,7 +64,7 @@ pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
     }
 
     /* Iterate over the list of node IDs. */
-    for (GListPtr refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
+    for (GList *refs = ((pe_tag_t *) value)->refs; refs; refs = refs->next) {
         /* Find the node that has this ID. */
         const char *id = (const char *) refs->data;
         pe_node_t *node = pe_find_node_id(data_set->nodes, id);
@@ -81,7 +83,7 @@ pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name)
 bool
 pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc_name, const char *tag_name)
 {
-    GListPtr rscs = pe__rscs_with_tag(data_set, tag_name);
+    GList *rscs = pe__rscs_with_tag(data_set, tag_name);
     bool retval = false;
 
     if (rscs == NULL) {
@@ -96,7 +98,7 @@ pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc_name, const char *ta
 bool
 pe__uname_has_tag(pe_working_set_t *data_set, const char *node_name, const char *tag_name)
 {
-    GListPtr unames = pe__unames_with_tag(data_set, tag_name);
+    GList *unames = pe__unames_with_tag(data_set, tag_name);
     bool retval = false;
 
     if (unames == NULL) {

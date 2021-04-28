@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,7 +37,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
         return NULL;
     }
 
-    action->id = crm_parse_int(value, NULL);
+    pcmk__scan_min_int(value, &(action->id), -1);
     action->type = action_type_rsc;
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
@@ -55,14 +55,15 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     action->params = xml2list(action->xml);
 
     value = g_hash_table_lookup(action->params, "CRM_meta_timeout");
-    if (value != NULL) {
-        action->timeout = crm_parse_int(value, NULL);
-    }
+    pcmk__scan_min_int(value, &(action->timeout), 0);
 
     /* Take start-delay into account for the timeout of the action timer */
     value = g_hash_table_lookup(action->params, "CRM_meta_start_delay");
-    if (value != NULL) {
-        action->timeout += crm_parse_int(value, NULL);
+    {
+        int start_delay;
+
+        pcmk__scan_min_int(value, &start_delay, 0);
+        action->timeout += start_delay;
     }
 
     if (pcmk__guint_from_hash(action->params,
@@ -74,6 +75,12 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
     if (value != NULL) {
         crm_str_to_boolean(value, &(action->can_fail));
+#ifndef PCMK__COMPAT_2_0
+        if (action->can_fail) {
+            crm_warn("Support for the can_fail meta-attribute is deprecated"
+                     " and will be removed in a future release");
+        }
+#endif
     }
 
     crm_trace("Action %d has timer set to %dms", action->id, action->timeout);
@@ -93,12 +100,10 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     crm_trace("looking in synapse %s", ID(xml_synapse));
 
     new_synapse = calloc(1, sizeof(synapse_t));
-    new_synapse->id = crm_parse_int(ID(xml_synapse), NULL);
+    pcmk__scan_min_int(ID(xml_synapse), &(new_synapse->id), 0);
 
     value = crm_element_value(xml_synapse, XML_CIB_ATTR_PRIORITY);
-    if (value != NULL) {
-        new_synapse->priority = crm_parse_int(value, NULL);
-    }
+    pcmk__scan_min_int(value, &(new_synapse->priority), 0);
 
     CRM_CHECK(new_synapse->id >= 0, free(new_synapse);
               return NULL);
@@ -200,7 +205,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         t_id = crm_element_value(xml_graph, "transition_id");
         CRM_CHECK(t_id != NULL, free(new_graph);
                   return NULL);
-        new_graph->id = crm_parse_int(t_id, "-1");
+        pcmk__scan_min_int(t_id, &(new_graph->id), -1);
 
         time = crm_element_value(xml_graph, "cluster-delay");
         CRM_CHECK(time != NULL, free(new_graph);
@@ -214,11 +219,16 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
             new_graph->stonith_timeout = crm_parse_interval_spec(time);
         }
 
+        // Use 0 (dynamic limit) as default/invalid, -1 (no limit) as minimum
         t_id = crm_element_value(xml_graph, "batch-limit");
-        new_graph->batch_limit = crm_parse_int(t_id, "0");
+        if ((t_id == NULL)
+            || (pcmk__scan_min_int(t_id, &(new_graph->batch_limit),
+                                   -1) != pcmk_rc_ok)) {
+            new_graph->batch_limit = 0;
+        }
 
         t_id = crm_element_value(xml_graph, "migration-limit");
-        new_graph->migration_limit = crm_parse_int(t_id, "-1");
+        pcmk__scan_min_int(t_id, &(new_graph->migration_limit), -1);
     }
 
     for (synapse = pcmk__xml_first_child(xml_graph); synapse != NULL;
@@ -314,8 +324,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     op->op_status = status;
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
-
-    op->params = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+    op->params = pcmk__strkey_table(free, free);
 
     g_hash_table_iter_init(&iter, action->params);
     while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {

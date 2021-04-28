@@ -443,12 +443,6 @@ crm_write_blackbox(int nsig, struct qb_log_callsite *cs)
     }
 }
 
-gboolean
-crm_log_cli_init(const char *entity)
-{
-    return crm_log_init(entity, LOG_ERR, FALSE, FALSE, 0, NULL, TRUE);
-}
-
 static const char *
 crm_quark_to_string(uint32_t tag)
 {
@@ -974,3 +968,27 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
 
     } while (next != NULL && next[0] != 0);
 }
+
+void
+pcmk__cli_init_logging(const char *name, unsigned int verbosity)
+{
+    crm_log_init(name, LOG_ERR, FALSE, FALSE, 0, NULL, TRUE);
+
+    for (int i = 0; i < verbosity; i++) {
+        /* These arguments are ignored, so pass placeholders. */
+        crm_bump_log_level(0, NULL);
+    }
+}
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/common/logging_compat.h>
+
+gboolean
+crm_log_cli_init(const char *entity)
+{
+    pcmk__cli_init_logging(entity, 0);
+    return TRUE;
+}
+
+// End deprecated API

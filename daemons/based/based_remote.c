@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -445,9 +445,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     crm_xml_add(command, F_TYPE, T_CIB);
     crm_xml_add(command, F_CIB_CLIENTID, client->id);
     crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
-#if ENABLE_ACL
     crm_xml_add(command, F_CIB_USER, client->user);
-#endif
 
     if (crm_element_value(command, F_CIB_CALLID) == NULL) {
         char *call_uuid = crm_generate_uuid();
@@ -511,10 +509,8 @@ cib_remote_msg(gpointer data)
     /* must pass auth before we will process anything else */
     if (client->remote->authenticated == FALSE) {
         xmlNode *reg;
-
-#if ENABLE_ACL
         const char *user = NULL;
-#endif
+
         command = pcmk__remote_message_xml(client->remote);
         if (cib_remote_auth(command) == FALSE) {
             free_xml(command);
@@ -527,12 +523,10 @@ cib_remote_msg(gpointer data)
         client->remote->auth_timeout = 0;
         client->name = crm_element_value_copy(command, "name");
 
-#if ENABLE_ACL
         user = crm_element_value(command, "user");
         if (user) {
             client->user = strdup(user);
         }
-#endif
 
         /* send ACK */
         reg = create_xml_node(NULL, "cib_result");

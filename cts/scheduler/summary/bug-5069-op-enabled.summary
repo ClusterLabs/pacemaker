@@ -1,0 +1,19 @@
+Current cluster status:
+  * Node List:
+    * Online: [ fc16-builder2 ]
+    * OFFLINE: [ fc16-builder fc16-builder3 ]
+
+  * Full List of Resources:
+    * A	(ocf:pacemaker:Dummy):	 Started fc16-builder2 (failure ignored)
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ fc16-builder2 ]
+    * OFFLINE: [ fc16-builder fc16-builder3 ]
+
+  * Full List of Resources:
+    * A	(ocf:pacemaker:Dummy):	 Started fc16-builder2 (failure ignored)

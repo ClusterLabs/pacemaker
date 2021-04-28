@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,6 +47,15 @@ struct trigger_s {
     void *user_data;
     guint id;
 
+};
+
+struct mainloop_timer_s {
+        guint id;
+        guint period_ms;
+        bool repeat;
+        char *name;
+        GSourceFunc cb;
+        void *userdata;
 };
 
 static gboolean
@@ -875,6 +884,22 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
     return pcmk_rc_ok;
 }
 
+/*!
+ * \brief Get period for mainloop timer
+ *
+ * \param[in]  timer      Timer
+ *
+ * \return Period in ms
+ */
+guint
+pcmk__mainloop_timer_get_period(mainloop_timer_t *timer)
+{
+    if (timer) {
+        return timer->period_ms;
+    }
+    return 0;
+}
+
 mainloop_io_t *
 mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                         void *userdata, struct ipc_client_callbacks *callbacks)
@@ -973,7 +998,7 @@ mainloop_del_fd(mainloop_io_t * client)
     }
 }
 
-static GListPtr child_list = NULL;
+static GList *child_list = NULL;
 
 pid_t
 mainloop_child_pid(mainloop_child_t * child)
@@ -1158,7 +1183,7 @@ child_signal_init(gpointer p)
 gboolean
 mainloop_child_kill(pid_t pid)
 {
-    GListPtr iter;
+    GList *iter;
     mainloop_child_t *child = NULL;
     mainloop_child_t *match = NULL;
     /* It is impossible to block SIGKILL, this allows us to
@@ -1251,15 +1276,6 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
 {
     mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, callback);
 }
-
-struct mainloop_timer_s {
-        guint id;
-        guint period_ms;
-        bool repeat;
-        char *name;
-        GSourceFunc cb;
-        void *userdata;
-};
 
 static gboolean
 mainloop_timer_cb(gpointer user_data)
@@ -1441,15 +1457,13 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
 }
 
 // Deprecated functions kept only for backward API compatibility
-gboolean crm_signal(int sig, void (*dispatch) (int sig));
 
-/*
- * \brief Use crm_signal_handler() instead
- * \deprecated
- */
+#include <crm/common/mainloop_compat.h>
+
 gboolean
 crm_signal(int sig, void (*dispatch) (int sig))
 {
     return crm_signal_handler(sig, dispatch) != SIG_ERR;
 }
 
+// End deprecated API

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,6 +20,7 @@
 #include <string.h>
 #include <glib.h>
 #include <crm/common/ipc.h>
+#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/stonith-ng.h>
@@ -235,22 +236,6 @@ is_dirty(gpointer key, gpointer value, gpointer user_data)
     return pcmk_is_set(((crm_node_t*)value)->flags, crm_node_dirty);
 }
 
-/* search string to find CIB resources entries for guest nodes */
-#define XPATH_GUEST_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
-    "[@name='" XML_RSC_ATTR_REMOTE_NODE "']"
-
-/* search string to find CIB resources entries for remote nodes */
-#define XPATH_REMOTE_NODE_CONFIG \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
-    "[@type='remote'][@provider='pacemaker']"
-
-/* search string to find CIB node status entries for pacemaker_remote nodes */
-#define XPATH_REMOTE_NODE_STATUS \
-    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
-    "[@" XML_NODE_IS_REMOTE "='true']"
-
 /*!
  * \brief Repopulate the remote peer cache based on CIB XML
  *
@@ -272,7 +257,7 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
     /* Look for guest nodes and remote nodes in the status section */
     data.field = "id";
     data.has_state = TRUE;
-    crm_foreach_xpath_result(cib, XPATH_REMOTE_NODE_STATUS,
+    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_STATUS,
                              remote_cache_refresh_helper, &data);
 
     /* Look for guest nodes and remote nodes in the configuration section,
@@ -283,11 +268,11 @@ crm_remote_peer_cache_refresh(xmlNode *cib)
      */
     data.field = "value";
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, XPATH_GUEST_NODE_CONFIG,
+    crm_foreach_xpath_result(cib, PCMK__XP_GUEST_NODE_CONFIG,
                              remote_cache_refresh_helper, &data);
     data.field = "id";
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, XPATH_REMOTE_NODE_CONFIG,
+    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_CONFIG,
                              remote_cache_refresh_helper, &data);
 
     /* Remove all old cache entries that weren't seen in the CIB */
@@ -416,17 +401,15 @@ void
 crm_peer_init(void)
 {
     if (crm_peer_cache == NULL) {
-        crm_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, destroy_crm_node);
+        crm_peer_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
 
     if (crm_remote_peer_cache == NULL) {
-        crm_remote_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, destroy_crm_node);
+        crm_remote_peer_cache = pcmk__strikey_table(NULL, destroy_crm_node);
     }
 
     if (known_node_cache == NULL) {
-        known_node_cache = g_hash_table_new_full(crm_strcase_hash,
-                                                 crm_strcase_equal, free,
-                                                 destroy_crm_node);
+        known_node_cache = pcmk__strikey_table(free, destroy_crm_node);
     }
 }
 
@@ -1247,10 +1230,6 @@ known_node_cache_refresh_helper(xmlNode *xml_node, void *user_data)
 
 }
 
-#define XPATH_MEMBER_NODE_CONFIG \
-    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
-
 static void
 refresh_known_node_cache(xmlNode *cib)
 {
@@ -1258,7 +1237,7 @@ refresh_known_node_cache(xmlNode *cib)
 
     g_hash_table_foreach(known_node_cache, mark_dirty, NULL);
 
-    crm_foreach_xpath_result(cib, XPATH_MEMBER_NODE_CONFIG,
+    crm_foreach_xpath_result(cib, PCMK__XP_MEMBER_NODE_CONFIG,
                              known_node_cache_refresh_helper, NULL);
 
     /* Remove all old cache entries that weren't seen in the CIB */
@@ -1310,24 +1289,18 @@ pcmk__search_known_node_cache(unsigned int id, const char *uname,
 
 // Deprecated functions kept only for backward API compatibility
 
-int crm_terminate_member(int nodeid, const char *uname, void *unused);
-int crm_terminate_member_no_mainloop(int nodeid, const char *uname,
-                                     int *connection);
-/*!
- * \deprecated Use stonith_api_kick() from libstonithd instead
- */
+#include <crm/cluster/compat.h>
+
 int
 crm_terminate_member(int nodeid, const char *uname, void *unused)
 {
-    /* Always use the synchronous, non-mainloop version */
     return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
 
-/*!
- * \deprecated Use stonith_api_kick() from libstonithd instead
- */
 int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
     return stonith_api_kick(nodeid, uname, 120, TRUE);
 }
+
+// End deprecated API

@@ -1,0 +1,28 @@
+Current cluster status:
+  * Node List:
+    * Node hs21d: UNCLEAN (offline)
+    * Online: [ hs21c ]
+
+  * Full List of Resources:
+    * stonith-1	(stonith:dummy):	 Stopped
+    * apache_1	(ocf:heartbeat:apache):	 Stopped
+    * nfs_1	(ocf:heartbeat:Filesystem):	 Stopped
+
+Transition Summary:
+  * Fence (reboot) hs21d 'node is unclean'
+
+Executing Cluster Transition:
+  * Resource action: stonith-1       monitor on hs21c
+  * Resource action: apache_1        monitor on hs21c
+  * Resource action: nfs_1           monitor on hs21c
+  * Fencing hs21d (reboot)
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ hs21c ]
+    * OFFLINE: [ hs21d ]
+
+  * Full List of Resources:
+    * stonith-1	(stonith:dummy):	 Stopped
+    * apache_1	(ocf:heartbeat:apache):	 Stopped
+    * nfs_1	(ocf:heartbeat:Filesystem):	 Stopped
