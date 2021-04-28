@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,11 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <stdlib.h>
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/common/output_internal.h>
 
 GOptionEntry pcmk__none_output_entries[] = {
     { NULL }
@@ -57,9 +58,9 @@ none_err(pcmk__output_t *out, const char *format, ...) {
 }
 
 G_GNUC_PRINTF(2, 3)
-static void
+static int
 none_info(pcmk__output_t *out, const char *format, ...) {
-    /* This function intentionally left blank */
+    return pcmk_rc_no_output;
 }
 
 static void
@@ -95,6 +96,21 @@ none_is_quiet(pcmk__output_t *out) {
     return out->quiet;
 }
 
+static void
+none_spacer(pcmk__output_t *out) {
+    /* This function intentionally left blank */
+}
+
+static void
+none_progress(pcmk__output_t *out, bool end) {
+    /* This function intentionally left blank */
+}
+
+static void
+none_prompt(const char *prompt, bool echo, char **dest) {
+    /* This function intentionally left blank */
+}
+
 pcmk__output_t *
 pcmk__mk_none_output(char **argv) {
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
@@ -126,6 +142,9 @@ pcmk__mk_none_output(char **argv) {
     retval->end_list = none_end_list;
 
     retval->is_quiet = none_is_quiet;
+    retval->spacer = none_spacer;
+    retval->progress = none_progress;
+    retval->prompt = none_prompt;
 
     return retval;
 }

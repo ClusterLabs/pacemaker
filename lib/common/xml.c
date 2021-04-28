@@ -385,7 +385,7 @@ pcmk__xml_match(xmlNode *haystack, xmlNode *needle, bool exact)
 void
 xml_log_changes(uint8_t log_level, const char *function, xmlNode * xml)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xml_private_t *doc = NULL;
 
     if (log_level == LOG_NEVER) {
@@ -1059,7 +1059,7 @@ filename2xml(const char *filename)
         uncompressed = !pcmk__ends_with_ext(filename, ".bz2");
     }
 
-    if (filename == NULL) {
+    if (filename == NULL || !strcmp(filename, "-")) {
         /* STDIN_FILENO == fileno(stdin) */
         output = xmlCtxtReadFd(ctxt, STDIN_FILENO, "unknown.xml", NULL,
                                PCMK__XML_PARSE_OPTS);
@@ -2979,7 +2979,7 @@ pcmk__xe_set_props(xmlNodePtr node, ...)
 
 // Deprecated functions kept only for backward API compatibility
 
-xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
+#include <crm/common/xml_compat.h>
 
 xmlNode *
 find_entity(xmlNode *parent, const char *node_name, const char *id)
@@ -2987,3 +2987,5 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
     return pcmk__xe_match(parent, node_name,
                           ((id == NULL)? id : XML_ATTR_ID), id);
 }
+
+// End deprecated API

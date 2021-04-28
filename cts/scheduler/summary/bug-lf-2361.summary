@@ -1,0 +1,44 @@
+Current cluster status:
+  * Node List:
+    * Online: [ alice.demo bob.demo ]
+
+  * Full List of Resources:
+    * dummy1	(ocf:heartbeat:Dummy):	 Stopped
+    * Clone Set: ms_stateful [stateful] (promotable):
+      * Stopped: [ alice.demo bob.demo ]
+    * Clone Set: cl_dummy2 [dummy2]:
+      * Stopped: [ alice.demo bob.demo ]
+
+Transition Summary:
+  * Start      stateful:0     ( alice.demo )
+  * Start      stateful:1     (   bob.demo )
+  * Start      dummy2:0       ( alice.demo )  due to unrunnable dummy1 start (blocked)
+  * Start      dummy2:1       (   bob.demo )  due to unrunnable dummy1 start (blocked)
+
+Executing Cluster Transition:
+  * Pseudo action:   ms_stateful_pre_notify_start_0
+  * Resource action: service2:0      delete on alice.demo
+  * Resource action: service2:0      delete on bob.demo
+  * Resource action: service2:1      delete on bob.demo
+  * Resource action: service1        delete on alice.demo
+  * Resource action: service1        delete on bob.demo
+  * Pseudo action:   ms_stateful_confirmed-pre_notify_start_0
+  * Pseudo action:   ms_stateful_start_0
+  * Resource action: stateful:0      start on alice.demo
+  * Resource action: stateful:1      start on bob.demo
+  * Pseudo action:   ms_stateful_running_0
+  * Pseudo action:   ms_stateful_post_notify_running_0
+  * Resource action: stateful:0      notify on alice.demo
+  * Resource action: stateful:1      notify on bob.demo
+  * Pseudo action:   ms_stateful_confirmed-post_notify_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ alice.demo bob.demo ]
+
+  * Full List of Resources:
+    * dummy1	(ocf:heartbeat:Dummy):	 Stopped
+    * Clone Set: ms_stateful [stateful] (promotable):
+      * Unpromoted: [ alice.demo bob.demo ]
+    * Clone Set: cl_dummy2 [dummy2]:
+      * Stopped: [ alice.demo bob.demo ]

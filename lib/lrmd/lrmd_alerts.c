@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,7 +44,7 @@ static lrmd_key_value_t *
 alert_key2param_int(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                     int value)
 {
-    char *value_s = crm_itoa(value);
+    char *value_s = pcmk__itoa(value);
 
     head = alert_key2param(head, name, value_s);
     free(value_s);
@@ -136,7 +136,8 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum pcmk__alert_flags kind,
     char timestamp_usec[7];
 
     params = alert_key2param(params, PCMK__alert_key_kind, kind_s);
-    params = alert_key2param(params, PCMK__alert_key_version, VERSION);
+    params = alert_key2param(params, PCMK__alert_key_version,
+                             PACEMAKER_VERSION);
 
     for (GList *iter = g_list_first(alert_list); iter; iter = g_list_next(iter)) {
         pcmk__alert_t *entry = (pcmk__alert_t *)(iter->data);

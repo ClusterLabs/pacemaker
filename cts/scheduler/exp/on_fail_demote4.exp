@@ -1,0 +1,1818 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="32" operation="monitor" operation_key="Fencing_monitor_120000" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="120000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="rhel7-1 remote-rhel7-1 rhel7-2 remote-rhel7-2 rhel7-3 remote-rhel7-3 rhel7-4 remote-rhel7-4 rhel7-5 remote-rhel7-5" pcmk_host_map="remote-rhel7-1:rhel7-1;remote-rhel7-2:rhel7-2;remote-rhel7-3:rhel7-3;remote-rhel7-4:rhel7-4;remote-rhel7-5:rhel7-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="31" operation="start" operation_key="Fencing_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="31" operation="start" operation_key="Fencing_start_0" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="rhel7-1 remote-rhel7-1 rhel7-2 remote-rhel7-2 rhel7-3 remote-rhel7-3 rhel7-4 remote-rhel7-4 rhel7-5 remote-rhel7-5" pcmk_host_map="remote-rhel7-1:rhel7-1;remote-rhel7-2:rhel7-2;remote-rhel7-3:rhel7-3;remote-rhel7-4:rhel7-4;remote-rhel7-5:rhel7-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="30" operation="stop" operation_key="Fencing_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="30" operation="stop" operation_key="Fencing_stop_0">
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  key_file="/etc/pacemaker/fence_xvm.key" multicast_address="239.255.100.100" pcmk_host_list="rhel7-1 remote-rhel7-1 rhel7-2 remote-rhel7-2 rhel7-3 remote-rhel7-3 rhel7-4 remote-rhel7-4 rhel7-5 remote-rhel7-5" pcmk_host_map="remote-rhel7-1:rhel7-1;remote-rhel7-2:rhel7-2;remote-rhel7-3:rhel7-3;remote-rhel7-4:rhel7-4;remote-rhel7-5:rhel7-5;"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="34" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="demote" operation_key="rsc1_demote_0" internal_operation_key="rsc1:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="51" operation="stop" operation_key="rsc1-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="33" operation="demote" operation_key="rsc1_demote_0" internal_operation_key="rsc1:0_demote_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="demote" operation_key="rsc1-clone_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="38" operation="monitor" operation_key="rsc1_monitor_10000" internal_operation_key="rsc1:1_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="37" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="37" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="2" operation="cancel" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="53" operation="promote" operation_key="rsc1-clone_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="2" operation="cancel" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc1" long-id="rsc1:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <pseudo_event id="43" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:4_stop_0">
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="51" operation="stop" operation_key="rsc1-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="46" operation="monitor" operation_key="rsc1_monitor_11000" internal_operation_key="rsc1:5_monitor_11000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="rsc1" long-id="rsc1:5" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="45" operation="start" operation_key="rsc1_start_0" internal_operation_key="rsc1:5_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="45" operation="start" operation_key="rsc1_start_0" internal_operation_key="rsc1:5_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="rsc1" long-id="rsc1:5" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:5_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="49" operation="start" operation_key="rsc1-clone_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <pseudo_event id="44" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:5_stop_0">
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="51" operation="stop" operation_key="rsc1-clone_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12" priority="1000000">
+    <action_set>
+      <pseudo_event id="56" operation="demoted" operation_key="rsc1-clone_demoted_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="33" operation="demote" operation_key="rsc1_demote_0" internal_operation_key="rsc1:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="demote" operation_key="rsc1-clone_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="55" operation="demote" operation_key="rsc1-clone_demote_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="14" priority="1000000">
+    <action_set>
+      <pseudo_event id="54" operation="promoted" operation_key="rsc1-clone_promoted_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="37" operation="promote" operation_key="rsc1_promote_0" internal_operation_key="rsc1:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <pseudo_event id="53" operation="promote" operation_key="rsc1-clone_promote_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="50" operation="running" operation_key="rsc1-clone_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="52" operation="stopped" operation_key="rsc1-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="demoted" operation_key="rsc1-clone_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="1000000">
+    <action_set>
+      <pseudo_event id="52" operation="stopped" operation_key="rsc1-clone_stopped_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="34" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="43" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:4_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:5_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="51" operation="stop" operation_key="rsc1-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="51" operation="stop" operation_key="rsc1-clone_stop_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="demoted" operation_key="rsc1-clone_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18" priority="1000000">
+    <action_set>
+      <pseudo_event id="50" operation="running" operation_key="rsc1-clone_running_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="45" operation="start" operation_key="rsc1_start_0" internal_operation_key="rsc1:5_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="49" operation="start" operation_key="rsc1-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <pseudo_event id="49" operation="start" operation_key="rsc1-clone_start_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="52" operation="stopped" operation_key="rsc1-clone_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="demoted" operation_key="rsc1-clone_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="57" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="75" operation="stop" operation_key="rsc2-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="61" operation="monitor" operation_key="rsc2_monitor_10000" internal_operation_key="rsc2:1_monitor_10000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc2" long-id="rsc2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="60" operation="promote" operation_key="rsc2_promote_0" internal_operation_key="rsc2:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="60" operation="promote" operation_key="rsc2_promote_0" internal_operation_key="rsc2:1_promote_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc2" long-id="rsc2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="3" operation="cancel" operation_key="rsc2_monitor_11000" internal_operation_key="rsc2:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="77" operation="promote" operation_key="rsc2-master_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="3" operation="cancel" operation_key="rsc2_monitor_11000" internal_operation_key="rsc2:1_monitor_11000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="rsc2" long-id="rsc2:1" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <pseudo_event id="67" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:4_stop_0">
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="66" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:4_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="75" operation="stop" operation_key="rsc2-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <pseudo_event id="66" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:4_demote_0">
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="10000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="79" operation="demote" operation_key="rsc2-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="70" operation="monitor" operation_key="rsc2_monitor_11000" internal_operation_key="rsc2:5_monitor_11000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="rsc2" long-id="rsc2:5" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="69" operation="start" operation_key="rsc2_start_0" internal_operation_key="rsc2:5_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="69" operation="start" operation_key="rsc2_start_0" internal_operation_key="rsc2:5_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="rsc2" long-id="rsc2:5" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="68" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:5_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="73" operation="start" operation_key="rsc2-master_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <pseudo_event id="68" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:5_stop_0">
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="75" operation="stop" operation_key="rsc2-master_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29" priority="1000000">
+    <action_set>
+      <pseudo_event id="80" operation="demoted" operation_key="rsc2-master_demoted_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="66" operation="demote" operation_key="rsc2_demote_0" internal_operation_key="rsc2:4_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="79" operation="demote" operation_key="rsc2-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <pseudo_event id="79" operation="demote" operation_key="rsc2-master_demote_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="31" priority="1000000">
+    <action_set>
+      <pseudo_event id="78" operation="promoted" operation_key="rsc2-master_promoted_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="60" operation="promote" operation_key="rsc2_promote_0" internal_operation_key="rsc2:1_promote_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <pseudo_event id="77" operation="promote" operation_key="rsc2-master_promote_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="74" operation="running" operation_key="rsc2-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="76" operation="stopped" operation_key="rsc2-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="80" operation="demoted" operation_key="rsc2-master_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33" priority="1000000">
+    <action_set>
+      <pseudo_event id="76" operation="stopped" operation_key="rsc2-master_stopped_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="57" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="67" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:4_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="68" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:5_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="75" operation="stop" operation_key="rsc2-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <pseudo_event id="75" operation="stop" operation_key="rsc2-master_stop_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="80" operation="demoted" operation_key="rsc2-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35" priority="1000000">
+    <action_set>
+      <pseudo_event id="74" operation="running" operation_key="rsc2-master_running_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="69" operation="start" operation_key="rsc2_start_0" internal_operation_key="rsc2:5_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="73" operation="start" operation_key="rsc2-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <pseudo_event id="73" operation="start" operation_key="rsc2-master_start_0">
+        <attributes CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="76" operation="stopped" operation_key="rsc2-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="80" operation="demoted" operation_key="rsc2-master_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <rsc_op id="81" operation="start" operation_key="remote-rhel7-2_start_0" on_node="rhel7-1" on_node_uuid="1">
+        <primitive id="remote-rhel7-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  server="rhel7-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="stop" operation_key="remote-rhel7-2_stop_0" on_node="rhel7-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="22" operation="stop" operation_key="remote-rhel7-2_stop_0" on_node="rhel7-1" on_node_uuid="1">
+        <primitive id="remote-rhel7-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000"  server="rhel7-2"/>
+        <downed>
+          <node id="remote-rhel7-2"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="stop" operation_key="rsc1_stop_0" internal_operation_key="rsc1:4_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="67" operation="stop" operation_key="rsc2_stop_0" internal_operation_key="rsc2:4_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="20" operation="monitor" operation_key="remote-rhel7-2_monitor_60000" on_node="rhel7-1" on_node_uuid="1">
+        <primitive id="remote-rhel7-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="90000"  server="rhel7-2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="81" operation="start" operation_key="remote-rhel7-2_start_0" on_node="rhel7-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <rsc_op id="84" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_remote_node="lxc2" CRM_meta_timeout="90000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="stop" operation_key="container2_stop_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <rsc_op id="6" operation="stop" operation_key="container2_stop_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_remote_node="lxc2" CRM_meta_timeout="90000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="146" operation="stop" operation_key="lxc2_stop_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="42">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="container2_monitor_20000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="container2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
+        <attributes CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_remote_node="lxc2" CRM_meta_timeout="90000" config="/var/lib/pacemaker/cts/lxc/lxc2.xml"  force_stop="true" hypervisor="lxc:///"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <rsc_op id="88" operation="monitor" operation_key="lxc-ms_monitor_10000" internal_operation_key="lxc-ms:0_monitor_10000" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_op_target_rc="8" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="86" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="44">
+    <action_set>
+      <rsc_op id="87" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="86" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="95" operation="promote" operation_key="lxc-ms-master_promote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <rsc_op id="86" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3">
+        <primitive id="lxc-ms" long-id="lxc-ms:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="85" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="91" operation="start" operation_key="lxc-ms-master_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46">
+    <action_set>
+      <pseudo_event id="85" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="stop" operation_key="lxc-ms-master_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="47">
+    <action_set>
+      <pseudo_event id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="97" operation="demote" operation_key="lxc-ms-master_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="48" priority="1000000">
+    <action_set>
+      <pseudo_event id="98" operation="demoted" operation_key="lxc-ms-master_demoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="23" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="demote" operation_key="lxc-ms-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <pseudo_event id="97" operation="demote" operation_key="lxc-ms-master_demote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="50" priority="1000000">
+    <action_set>
+      <pseudo_event id="96" operation="promoted" operation_key="lxc-ms-master_promoted_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="87" operation="promote" operation_key="lxc-ms_promote_0" internal_operation_key="lxc-ms:0_promote_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="51">
+    <action_set>
+      <pseudo_event id="95" operation="promote" operation_key="lxc-ms-master_promote_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="92" operation="running" operation_key="lxc-ms-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="94" operation="stopped" operation_key="lxc-ms-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="98" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52" priority="1000000">
+    <action_set>
+      <pseudo_event id="94" operation="stopped" operation_key="lxc-ms-master_stopped_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="85" operation="stop" operation_key="lxc-ms_stop_0" internal_operation_key="lxc-ms:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="stop" operation_key="lxc-ms-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="53">
+    <action_set>
+      <pseudo_event id="93" operation="stop" operation_key="lxc-ms-master_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="98" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="54" priority="1000000">
+    <action_set>
+      <pseudo_event id="92" operation="running" operation_key="lxc-ms-master_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="86" operation="start" operation_key="lxc-ms_start_0" internal_operation_key="lxc-ms:0_start_0" on_node="lxc2" on_node_uuid="lxc2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="91" operation="start" operation_key="lxc-ms-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="55">
+    <action_set>
+      <pseudo_event id="91" operation="start" operation_key="lxc-ms-master_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="94" operation="stopped" operation_key="lxc-ms-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="98" operation="demoted" operation_key="lxc-ms-master_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="56">
+    <action_set>
+      <rsc_op id="126" operation="monitor" operation_key="bundled_monitor_10000" internal_operation_key="bundled:0_monitor_10000" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5">
+        <primitive id="bundled" long-id="bundled:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_fail="demote" CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="rhel7-5" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="20000"  pcmk_external_ip="192.168.122.131"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="103" operation="start" operation_key="stateful-bundle-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="124" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:0_start_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="125" operation="promote" operation_key="bundled_promote_0" internal_operation_key="bundled:0_promote_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="57">
+    <action_set>
+      <rsc_op id="125" operation="promote" operation_key="bundled_promote_0" internal_operation_key="bundled:0_promote_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5">
+        <primitive id="bundled" long-id="bundled:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_physical_host="rhel7-5" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.131"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="28" operation="demote" operation_key="bundled_demote_0" internal_operation_key="bundled:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="101" operation="start" operation_key="stateful-bundle-docker-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="103" operation="start" operation_key="stateful-bundle-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="124" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:0_start_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="136" operation="promote" operation_key="stateful-bundle-master_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="58">
+    <action_set>
+      <rsc_op id="124" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:0_start_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5">
+        <primitive id="bundled" long-id="bundled:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_physical_host="rhel7-5" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.131"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="101" operation="start" operation_key="stateful-bundle-docker-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="103" operation="start" operation_key="stateful-bundle-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="123" operation="stop" operation_key="bundled_stop_0" internal_operation_key="bundled:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="132" operation="start" operation_key="stateful-bundle-master_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="59">
+    <action_set>
+      <pseudo_event id="123" operation="stop" operation_key="bundled_stop_0" internal_operation_key="bundled:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_physical_host="rhel7-5" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.131"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="28" operation="demote" operation_key="bundled_demote_0" internal_operation_key="bundled:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="stateful-bundle_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="129" operation="stop" operation_key="bundled_stop_0" internal_operation_key="bundled:2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="134" operation="stop" operation_key="stateful-bundle-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="60">
+    <action_set>
+      <pseudo_event id="28" operation="demote" operation_key="bundled_demote_0" internal_operation_key="bundled:0_demote_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_physical_host="rhel7-5" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.131"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="138" operation="demote" operation_key="stateful-bundle-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="61">
+    <action_set>
+      <rsc_op id="131" operation="monitor" operation_key="bundled_monitor_11000" internal_operation_key="bundled:2_monitor_11000" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2" router_node="rhel7-3">
+        <primitive id="bundled" long-id="bundled:2" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="11000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="stateful-bundle-2" CRM_meta_on_node_uuid="stateful-bundle-2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Unpromoted" CRM_meta_timeout="20000"  pcmk_external_ip="192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="117" operation="start" operation_key="stateful-bundle-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="130" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:2_start_0" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2" router_node="rhel7-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="62">
+    <action_set>
+      <rsc_op id="130" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:2_start_0" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2" router_node="rhel7-3">
+        <primitive id="bundled" long-id="bundled:2" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="stateful-bundle-2" CRM_meta_on_node_uuid="stateful-bundle-2" CRM_meta_physical_host="rhel7-3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="114" operation="start" operation_key="stateful-bundle-docker-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="117" operation="start" operation_key="stateful-bundle-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="124" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:0_start_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="129" operation="stop" operation_key="bundled_stop_0" internal_operation_key="bundled:2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="132" operation="start" operation_key="stateful-bundle-master_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="63">
+    <action_set>
+      <pseudo_event id="129" operation="stop" operation_key="bundled_stop_0" internal_operation_key="bundled:2_stop_0">
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_physical_host="rhel7-4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000"  pcmk_external_ip="192.168.122.133"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="stateful-bundle_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="134" operation="stop" operation_key="stateful-bundle-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="64" priority="1000000">
+    <action_set>
+      <pseudo_event id="139" operation="demoted" operation_key="stateful-bundle-master_demoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="28" operation="demote" operation_key="bundled_demote_0" internal_operation_key="bundled:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="138" operation="demote" operation_key="stateful-bundle-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="65">
+    <action_set>
+      <pseudo_event id="138" operation="demote" operation_key="stateful-bundle-master_demote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="142" operation="demote" operation_key="stateful-bundle_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="66" priority="1000000">
+    <action_set>
+      <pseudo_event id="137" operation="promoted" operation_key="stateful-bundle-master_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="125" operation="promote" operation_key="bundled_promote_0" internal_operation_key="bundled:0_promote_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="67">
+    <action_set>
+      <pseudo_event id="136" operation="promote" operation_key="stateful-bundle-master_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="133" operation="running" operation_key="stateful-bundle-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="135" operation="stopped" operation_key="stateful-bundle-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="139" operation="demoted" operation_key="stateful-bundle-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="140" operation="promote" operation_key="stateful-bundle_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="68" priority="1000000">
+    <action_set>
+      <pseudo_event id="135" operation="stopped" operation_key="stateful-bundle-master_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="123" operation="stop" operation_key="bundled_stop_0" internal_operation_key="bundled:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="129" operation="stop" operation_key="bundled_stop_0" internal_operation_key="bundled:2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="134" operation="stop" operation_key="stateful-bundle-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="69">
+    <action_set>
+      <pseudo_event id="134" operation="stop" operation_key="stateful-bundle-master_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="stateful-bundle_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="139" operation="demoted" operation_key="stateful-bundle-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="70" priority="1000000">
+    <action_set>
+      <pseudo_event id="133" operation="running" operation_key="stateful-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="124" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:0_start_0" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0" router_node="rhel7-5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="130" operation="start" operation_key="bundled_start_0" internal_operation_key="bundled:2_start_0" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2" router_node="rhel7-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="132" operation="start" operation_key="stateful-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="71">
+    <action_set>
+      <pseudo_event id="132" operation="start" operation_key="stateful-bundle-master_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="119" operation="start" operation_key="stateful-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="135" operation="stopped" operation_key="stateful-bundle-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="139" operation="demoted" operation_key="stateful-bundle-master_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="72">
+    <action_set>
+      <rsc_op id="101" operation="start" operation_key="stateful-bundle-docker-0_start_0" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="stateful-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/stateful-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h stateful-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/stateful-bundle-0:/var/log -p 192.168.122.131:80:80 -p 192.168.122.131:9999:9999 --log-driver=journald  --add-host=stateful-bundle-0:192.168.122.131 --add-host=stateful-bundle-1:192.168.122.132 --add-host=stateful-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="stop" operation_key="stateful-bundle-docker-0_stop_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="119" operation="start" operation_key="stateful-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="73">
+    <action_set>
+      <rsc_op id="13" operation="stop" operation_key="stateful-bundle-docker-0_stop_0" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="stateful-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/stateful-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h stateful-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/stateful-bundle-0:/var/log -p 192.168.122.131:80:80 -p 192.168.122.131:9999:9999 --log-driver=journald  --add-host=stateful-bundle-0:192.168.122.131 --add-host=stateful-bundle-1:192.168.122.132 --add-host=stateful-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="102" operation="stop" operation_key="stateful-bundle-0_stop_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="stateful-bundle_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="74">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="stateful-bundle-docker-0_monitor_60000" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="stateful-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/stateful-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h stateful-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/stateful-bundle-0:/var/log -p 192.168.122.131:80:80 -p 192.168.122.131:9999:9999 --log-driver=journald  --add-host=stateful-bundle-0:192.168.122.131 --add-host=stateful-bundle-1:192.168.122.132 --add-host=stateful-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="101" operation="start" operation_key="stateful-bundle-docker-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="75">
+    <action_set>
+      <rsc_op id="103" operation="start" operation_key="stateful-bundle-0_start_0" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="stateful-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="stateful-bundle-docker-0" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="101" operation="start" operation_key="stateful-bundle-docker-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="102" operation="stop" operation_key="stateful-bundle-0_stop_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="76">
+    <action_set>
+      <rsc_op id="102" operation="stop" operation_key="stateful-bundle-0_stop_0" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="stateful-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="stateful-bundle-docker-0" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="90000" addr="192.168.122.131"  port="9999"/>
+        <downed>
+          <node id="stateful-bundle-0"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="77">
+    <action_set>
+      <rsc_op id="11" operation="monitor" operation_key="stateful-bundle-0_monitor_30000" on_node="rhel7-5" on_node_uuid="5">
+        <primitive id="stateful-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="stateful-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_timeout="30000" addr="192.168.122.131"  port="9999"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="103" operation="start" operation_key="stateful-bundle-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="78">
+    <action_set>
+      <rsc_op id="112" operation="monitor" operation_key="stateful-bundle-ip-192.168.122.133_monitor_60000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="stateful-bundle-ip-192.168.122.133" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" cidr_netmask="24"  ip="192.168.122.133" nic="eth0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="111" operation="start" operation_key="stateful-bundle-ip-192.168.122.133_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="79">
+    <action_set>
+      <rsc_op id="111" operation="start" operation_key="stateful-bundle-ip-192.168.122.133_start_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="stateful-bundle-ip-192.168.122.133" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" cidr_netmask="24"  ip="192.168.122.133" nic="eth0"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="110" operation="stop" operation_key="stateful-bundle-ip-192.168.122.133_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="80">
+    <action_set>
+      <pseudo_event id="110" operation="stop" operation_key="stateful-bundle-ip-192.168.122.133_stop_0">
+        <attributes CRM_meta_timeout="90000" cidr_netmask="24"  ip="192.168.122.133" nic="eth0"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="113" operation="stop" operation_key="stateful-bundle-docker-2_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="81">
+    <action_set>
+      <rsc_op id="115" operation="monitor" operation_key="stateful-bundle-docker-2_monitor_60000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="stateful-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/stateful-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h stateful-bundle-2 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/stateful-bundle-2:/var/log -p 192.168.122.133:80:80 -p 192.168.122.133:9999:9999 --log-driver=journald  --add-host=stateful-bundle-0:192.168.122.131 --add-host=stateful-bundle-1:192.168.122.132 --add-host=stateful-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="114" operation="start" operation_key="stateful-bundle-docker-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="82">
+    <action_set>
+      <rsc_op id="114" operation="start" operation_key="stateful-bundle-docker-2_start_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="stateful-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/stateful-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h stateful-bundle-2 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/stateful-bundle-2:/var/log -p 192.168.122.133:80:80 -p 192.168.122.133:9999:9999 --log-driver=journald  --add-host=stateful-bundle-0:192.168.122.131 --add-host=stateful-bundle-1:192.168.122.132 --add-host=stateful-bundle-2:192.168.122.133"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="111" operation="start" operation_key="stateful-bundle-ip-192.168.122.133_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="113" operation="stop" operation_key="stateful-bundle-docker-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="119" operation="start" operation_key="stateful-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="83">
+    <action_set>
+      <pseudo_event id="113" operation="stop" operation_key="stateful-bundle-docker-2_stop_0">
+        <attributes CRM_meta_timeout="90000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/stateful-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h stateful-bundle-2 -e PCMK_stderr=1 -e PCMK_remote_port=9999 -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/stateful-bundle-2:/var/log -p 192.168.122.133:80:80 -p 192.168.122.133:9999:9999 --log-driver=journald  --add-host=stateful-bundle-0:192.168.122.131 --add-host=stateful-bundle-1:192.168.122.132 --add-host=stateful-bundle-2:192.168.122.133"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="stateful-bundle_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="84">
+    <action_set>
+      <rsc_op id="118" operation="monitor" operation_key="stateful-bundle-2_monitor_30000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="stateful-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="stateful-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="192.168.122.133"  port="9999"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="117" operation="start" operation_key="stateful-bundle-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="85">
+    <action_set>
+      <rsc_op id="117" operation="start" operation_key="stateful-bundle-2_start_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="stateful-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="stateful-bundle-docker-2" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" addr="192.168.122.133"  port="9999"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="114" operation="start" operation_key="stateful-bundle-docker-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="86">
+    <action_set>
+      <pseudo_event id="116" operation="stop" operation_key="stateful-bundle-2_stop_0">
+        <attributes CRM_meta_container="stateful-bundle-docker-2" CRM_meta_timeout="90000" addr="192.168.122.133"  port="9999"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="87">
+    <action_set>
+      <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="container2" CRM_meta_name="start" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="container2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="146" operation="stop" operation_key="lxc2_stop_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="88">
+    <action_set>
+      <rsc_op id="146" operation="stop" operation_key="lxc2_stop_0" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="container2" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="90000" />
+        <downed>
+          <node id="lxc2"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="89">
+    <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="lxc2_monitor_30000" on_node="rhel7-3" on_node_uuid="3">
+        <primitive id="lxc2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="container2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="147" operation="start" operation_key="lxc2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="90">
+    <action_set>
+      <pseudo_event id="150" operation="stonith" operation_key="stonith-stateful-bundle-2-reboot" on_node="stateful-bundle-2" on_node_uuid="stateful-bundle-2">
+        <attributes CRM_meta_master_bundled="5" CRM_meta_on_node="stateful-bundle-2" CRM_meta_on_node_uuid="stateful-bundle-2" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="stateful-bundle-2"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="91">
+    <action_set>
+      <pseudo_event id="149" operation="stonith" operation_key="stonith-stateful-bundle-0-reboot" on_node="stateful-bundle-0" on_node_uuid="stateful-bundle-0">
+        <attributes CRM_meta_master_bundled="10" CRM_meta_on_node="stateful-bundle-0" CRM_meta_on_node_uuid="stateful-bundle-0" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="stateful-bundle-0"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="stop" operation_key="stateful-bundle-docker-0_stop_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="92">
+    <action_set>
+      <pseudo_event id="148" operation="stonith" operation_key="stonith-lxc2-reboot" on_node="lxc2" on_node_uuid="lxc2">
+        <attributes CRM_meta_master_lxc_ms="10" CRM_meta_master_rsc1="5" CRM_meta_master_rsc2="5" CRM_meta_on_node="lxc2" CRM_meta_on_node_uuid="lxc2" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="lxc2"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="stop" operation_key="container2_stop_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="93" priority="1000000">
+    <action_set>
+      <pseudo_event id="143" operation="demoted" operation_key="stateful-bundle_demoted_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="139" operation="demoted" operation_key="stateful-bundle-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="142" operation="demote" operation_key="stateful-bundle_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="94">
+    <action_set>
+      <pseudo_event id="142" operation="demote" operation_key="stateful-bundle_demote_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="95" priority="1000000">
+    <action_set>
+      <pseudo_event id="141" operation="promoted" operation_key="stateful-bundle_promoted_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="137" operation="promoted" operation_key="stateful-bundle-master_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="96">
+    <action_set>
+      <pseudo_event id="140" operation="promote" operation_key="stateful-bundle_promote_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="120" operation="running" operation_key="stateful-bundle_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="122" operation="stopped" operation_key="stateful-bundle_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="143" operation="demoted" operation_key="stateful-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="97" priority="1000000">
+    <action_set>
+      <pseudo_event id="122" operation="stopped" operation_key="stateful-bundle_stopped_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="stop" operation_key="stateful-bundle-docker-0_stop_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="113" operation="stop" operation_key="stateful-bundle-docker-2_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="135" operation="stopped" operation_key="stateful-bundle-master_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="98">
+    <action_set>
+      <pseudo_event id="121" operation="stop" operation_key="stateful-bundle_stop_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="143" operation="demoted" operation_key="stateful-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="99" priority="1000000">
+    <action_set>
+      <pseudo_event id="120" operation="running" operation_key="stateful-bundle_running_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="101" operation="start" operation_key="stateful-bundle-docker-0_start_0" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="114" operation="start" operation_key="stateful-bundle-docker-2_start_0" on_node="rhel7-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="133" operation="running" operation_key="stateful-bundle-master_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="100">
+    <action_set>
+      <pseudo_event id="119" operation="start" operation_key="stateful-bundle_start_0">
+        <attributes CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="122" operation="stopped" operation_key="stateful-bundle_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="143" operation="demoted" operation_key="stateful-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="101">
+    <action_set>
+      <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2">
+        <attributes CRM_meta_master_rsc1="5" CRM_meta_master_rsc2="10" CRM_meta_on_node="remote-rhel7-2" CRM_meta_on_node_uuid="remote-rhel7-2" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="remote-rhel7-2"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="102">
+    <action_set>
+      <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-4-reboot" on_node="rhel7-4" on_node_uuid="4">
+        <attributes CRM_meta_master_rsc1="10" CRM_meta_master_rsc2="10" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="4" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="4"/>
+          <node id="stateful-bundle-2"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="21" operation="stonith" operation_key="stonith-remote-rhel7-2-reboot" on_node="remote-rhel7-2" on_node_uuid="remote-rhel7-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -97,7 +97,10 @@ print_ticket(pe_ticket_t * ticket, gboolean raw, gboolean details)
             }
             fprintf(stdout, "%s=", name);
             if (pcmk__str_any_of(name, "last-granted", "expires", NULL)) {
-                print_date(crm_parse_int(value, 0));
+                long long time_ll;
+
+                pcmk__scan_ll(value, &time_ll, 0);
+                print_date((time_t) time_ll);
             } else {
                 fprintf(stdout, "%s", value);
             }
@@ -159,7 +162,7 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
                               cib_sync_call | cib_scope_local | cib_xpath);
 
     if (rc != pcmk_ok) {
-        goto bail;
+        goto done;
     }
 
     crm_log_xml_debug(xml_search, "Match");
@@ -172,7 +175,7 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
         *ticket_state_xml = xml_search;
     }
 
-  bail:
+  done:
     free(xpath_string);
     return rc;
 }
@@ -204,13 +207,13 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
                               cib_sync_call | cib_scope_local | cib_xpath);
 
     if (rc != pcmk_ok) {
-        goto bail;
+        goto done;
     }
 
     crm_log_xml_debug(xml_search, "Match");
     *ticket_cons_xml = xml_search;
 
-  bail:
+  done:
     free(xpath_string);
     return rc;
 }
@@ -330,11 +333,11 @@ ticket_warning(const char *ticket_id, const char *action)
 }
 
 static gboolean
-allow_modification(const char *ticket_id, GListPtr attr_delete,
+allow_modification(const char *ticket_id, GList *attr_delete,
                    GHashTable *attr_set)
 {
     const char *value = NULL;
-    GListPtr list_iter = NULL;
+    GList *list_iter = NULL;
 
     if (do_force) {
         return TRUE;
@@ -364,7 +367,7 @@ allow_modification(const char *ticket_id, GListPtr attr_delete,
 }
 
 static int
-modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * attr_set,
+modify_ticket_state(const char * ticket_id, GList *attr_delete, GHashTable * attr_set,
                     cib_t * cib, pe_working_set_t * data_set)
 {
     int rc = pcmk_ok;
@@ -372,7 +375,7 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     xmlNode *ticket_state_xml = NULL;
     gboolean found = FALSE;
 
-    GListPtr list_iter = NULL;
+    GList *list_iter = NULL;
     GHashTableIter hash_iter;
 
     char *key = NULL;
@@ -416,7 +419,7 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
             && (ticket == NULL || ticket->granted == FALSE)
             && crm_is_true(value)) {
 
-            char *now = crm_ttoa(time(NULL));
+            char *now = pcmk__ttoa(time(NULL));
 
             crm_xml_add(ticket_state_xml, "last-granted", now);
             free(now);
@@ -720,8 +723,8 @@ main(int argc, char **argv)
     int flag;
     guint modified = 0;
 
-    GListPtr attr_delete = NULL;
-    GHashTable *attr_set = crm_str_table_new();
+    GList *attr_delete = NULL;
+    GHashTable *attr_set = pcmk__strkey_table(free, free);
 
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     pcmk__set_cli_options(NULL, "<query>|<command> [options]", long_options,
@@ -847,7 +850,7 @@ main(int argc, char **argv)
     if (data_set == NULL) {
         crm_perror(LOG_CRIT, "Could not allocate working set");
         exit_code = CRM_EX_OSERR;
-        goto bail;
+        goto done;
     }
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
@@ -855,14 +858,14 @@ main(int argc, char **argv)
     if (cib_conn == NULL) {
         CMD_ERR("Could not connect to the CIB manager");
         exit_code = CRM_EX_DISCONNECT;
-        goto bail;
+        goto done;
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
         CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
         exit_code = crm_errno2exit(rc);
-        goto bail;
+        goto done;
     }
 
     if (xml_file != NULL) {
@@ -873,14 +876,14 @@ main(int argc, char **argv)
         if (rc != pcmk_ok) {
             CMD_ERR("Could not get local CIB: %s", pcmk_strerror(rc));
             exit_code = crm_errno2exit(rc);
-            goto bail;
+            goto done;
         }
     }
 
     if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
         CMD_ERR("Could not update local CIB to latest schema version");
         exit_code = CRM_EX_CONFIG;
-        goto bail;
+        goto done;
     }
 
     data_set->input = cib_xml_copy;
@@ -909,7 +912,7 @@ main(int argc, char **argv)
             if (ticket == NULL) {
                 CMD_ERR("No such ticket '%s'", ticket_id);
                 exit_code = CRM_EX_NOSUCH;
-                goto bail;
+                goto done;
             }
             rc = print_ticket(ticket, raw, details);
 
@@ -941,7 +944,7 @@ main(int argc, char **argv)
         if (ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_NOSUCH;
-            goto bail;
+            goto done;
         }
 
         rc = get_ticket_state_attr(ticket_id, get_attr_name, &value, data_set);
@@ -957,7 +960,7 @@ main(int argc, char **argv)
         if (ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
         }
 
         if (do_force == FALSE) {
@@ -967,13 +970,13 @@ main(int argc, char **argv)
             if (ticket == NULL) {
                 CMD_ERR("No such ticket '%s'", ticket_id);
                 exit_code = CRM_EX_NOSUCH;
-                goto bail;
+                goto done;
             }
 
             if (ticket->granted) {
                 ticket_warning(ticket_id, "revoke");
                 exit_code = CRM_EX_INSUFFICIENT_PRIV;
-                goto bail;
+                goto done;
             }
         }
 
@@ -987,27 +990,27 @@ main(int argc, char **argv)
         if (ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
         }
 
         if (attr_value
             && (pcmk__str_empty(attr_name))) {
             CMD_ERR("Must supply attribute name with -S for -v %s", attr_value);
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
         }
 
         if (attr_name
             && (pcmk__str_empty(attr_value))) {
             CMD_ERR("Must supply attribute value with -v for -S %s", attr_name);
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
         }
 
         if (allow_modification(ticket_id, attr_delete, attr_set) == FALSE) {
             CMD_ERR("Ticket modification not allowed");
             exit_code = CRM_EX_INSUFFICIENT_PRIV;
-            goto bail;
+            goto done;
         }
 
         rc = modify_ticket_state(ticket_id, attr_delete, attr_set, cib_conn, data_set);
@@ -1025,19 +1028,19 @@ main(int argc, char **argv)
             // We only get here if ticket_cmd was left as default
             CMD_ERR("Must supply a command");
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
         }
 
         if (ticket_id == NULL) {
             CMD_ERR("Must supply ticket ID with -t");
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
         }
 
         if (pcmk__str_empty(attr_value)) {
             CMD_ERR("Must supply value with -v for -S %s", attr_name);
             exit_code = CRM_EX_USAGE;
-            goto bail;
+            goto done;
         }
 
     } else {
@@ -1045,7 +1048,7 @@ main(int argc, char **argv)
         exit_code = CRM_EX_USAGE;
     }
 
-  bail:
+ done:
     if (attr_set) {
         g_hash_table_destroy(attr_set);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2020 the Pacemaker project contributors
+ * Copyright 2008-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,13 +26,14 @@
 #include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
+#include <crm/common/output_internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
 #  include <gnutls/gnutls.h>
 gnutls_anon_client_credentials_t anon_cred_c;
 
-#  define DEFAULT_CLIENT_HANDSHAKE_TIMEOUT 5000 /* 5 seconds */
+#define TLS_HANDSHAKE_TIMEOUT_MS 5000
 
 const int kx_prio[] = {
     GNUTLS_KX_ANON_DH,
@@ -58,6 +59,7 @@ typedef struct cib_remote_opaque_s {
     gboolean encrypted;
     pcmk__remote_t command;
     pcmk__remote_t callback;
+    pcmk__output_t *out;
 
 } cib_remote_opaque_t;
 
@@ -187,16 +189,6 @@ cib_tls_close(cib_t * cib)
     return 0;
 }
 
-static inline int
-cib__tls_client_handshake(pcmk__remote_t *remote)
-{
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    return pcmk__tls_client_handshake(remote, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT);
-#else
-    return 0;
-#endif
-}
-
 static int
 cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 {
@@ -243,7 +235,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             return -1;
         }
 
-        if (cib__tls_client_handshake(connection) != pcmk_rc_ok) {
+        if (pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT_MS)
+                != pcmk_rc_ok) {
             crm_err("Session creation for %s:%d failed", private->server, private->port);
 
             gnutls_deinit(*connection->tls_session);
@@ -385,27 +378,14 @@ cib_remote_signon(cib_t * cib, const char *name, enum cib_conn_type type)
     cib_remote_opaque_t *private = cib->variant_opaque;
 
     if (private->passwd == NULL) {
-        struct termios settings;
-
-        rc = tcgetattr(0, &settings);
-        if(rc == 0) {
-            settings.c_lflag &= ~ECHO;
-            rc = tcsetattr(0, TCSANOW, &settings);
+        if (private->out == NULL) {
+            /* If no pcmk__output_t is set, just assume that a text prompt
+             * is good enough.
+             */
+            pcmk__text_prompt("Password", false, &(private->passwd));
+        } else {
+            private->out->prompt("Password", false, &(private->passwd));
         }
-
-        if(rc == 0) {
-            fprintf(stderr, "Password: ");
-            private->passwd = calloc(1, 1024);
-            rc = scanf("%1023s", private->passwd);
-            fprintf(stderr, "\n");
-        }
-
-        if (rc < 1) {
-            private->passwd = NULL;
-        }
-
-        settings.c_lflag |= ECHO;
-        rc = tcsetattr(0, TCSANOW, &settings);
     }
 
     if (private->server == NULL || private->user == NULL) {
@@ -630,4 +610,17 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     free_xml(op_reply);
 
     return rc;
+}
+
+void
+cib__set_output(cib_t *cib, pcmk__output_t *out)
+{
+    cib_remote_opaque_t *private;
+
+    if (cib->variant != cib_remote) {
+        return;
+    }
+
+    private = cib->variant_opaque;
+    private->out = out;
 }

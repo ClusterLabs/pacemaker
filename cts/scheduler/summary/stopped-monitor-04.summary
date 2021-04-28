@@ -1,0 +1,19 @@
+1 of 1 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 FAILED node1 (disabled, blocked)
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 FAILED node1 (disabled, blocked)

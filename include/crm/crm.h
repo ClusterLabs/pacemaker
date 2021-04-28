@@ -29,6 +29,21 @@ extern "C" {
 
 #  include <libxml/tree.h>
 
+#ifndef PCMK_ALLOW_DEPRECATED
+/*!
+ * \brief Allow use of deprecated Pacemaker APIs
+ *
+ * By default, external code using Pacemaker headers is allowed to use
+ * deprecated Pacemaker APIs. If PCMK_ALLOW_DEPRECATED is defined to 0 before
+ * including any Pacemaker headers, deprecated APIs will be unusable. It is
+ * strongly recommended to leave this unchanged for production and release
+ * builds, to avoid breakage when users upgrade to new Pacemaker releases that
+ * deprecate more APIs. This should be defined to 0 only for development and
+ * testing builds when desiring to check for usage of currently deprecated APIs.
+ */
+#define PCMK_ALLOW_DEPRECATED 1
+#endif
+
 /*!
  * The CRM feature set assists with compatibility in mixed-version clusters.
  * The major version number increases when nodes with different versions
@@ -41,7 +56,7 @@ extern "C" {
  * The feature set also affects the processing of old saved CIBs (such as for
  * many scheduler regression tests).
  *
- * Particular feature points currently used by pacemaker:
+ * Particular feature points currently tested by Pacemaker code:
  *
  * >2.1:     Operation updates include timing data
  * >=3.0.5:  XML v2 digests are created
@@ -51,31 +66,20 @@ extern "C" {
  * >=3.0.13: Fail counts include operation name and interval
  * >=3.2.0:  DC supports PCMK_LRM_OP_INVALID and PCMK_LRM_OP_NOT_CONNECTED
  */
-#  define CRM_FEATURE_SET		"3.7.0"
+#  define CRM_FEATURE_SET		"3.10.0"
 
-#  define EOS		'\0'
-#  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
-
-#  ifndef MAX_NAME
-#    define MAX_NAME	256
-#  endif
-
-#  ifndef __GNUC__
-#    define __builtin_expect(expr, result) (expr)
-#  endif
-
-/* Some handy macros used by the Linux kernel */
-#  define __likely(expr) __builtin_expect(expr, 1)
-#  define __unlikely(expr) __builtin_expect(expr, 0)
+/* Pacemaker's CPG protocols use fixed-width binary fields for the sender and
+ * recipient of a CPG message. This imposes an arbitrary limit on cluster node
+ * names.
+ */
+//! \brief Maximum length of a Corosync cluster node name (in bytes)
+#define MAX_NAME	256
 
 #  define CRM_META			"CRM_meta"
 
 extern char *crm_system_name;
 
 /* *INDENT-OFF* */
-
-// Used for some internal IPC timeouts (maybe should be configurable option)
-#  define MAX_IPC_DELAY   120
 
 // How we represent "infinite" scores
 #  define CRM_SCORE_INFINITY    1000000
@@ -165,6 +169,7 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_CANCEL		"cancel"
 
 #  define CRMD_ACTION_RELOAD		"reload"
+#  define CRMD_ACTION_RELOAD_AGENT	"reload-agent"
 #  define CRMD_ACTION_MIGRATE		"migrate_to"
 #  define CRMD_ACTION_MIGRATED		"migrate_from"
 
@@ -211,8 +216,6 @@ extern char *crm_system_name;
 #  define RSC_METADATA	CRMD_ACTION_METADATA
 /* *INDENT-ON* */
 
-typedef GList *GListPtr;
-
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 
@@ -224,6 +227,10 @@ crm_action_str(const char *task, guint interval_ms) {
     }
     return task;
 }
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/crm_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

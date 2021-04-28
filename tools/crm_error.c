@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/strings_internal.h>
 
 #include <crm/crm.h>
@@ -68,31 +69,29 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 int
 main(int argc, char **argv)
 {
-    GError *error = NULL;
-    GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = build_arg_context(args, &output_group);
-
+    crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_rc_ok;
     int lpc;
     const char *name = NULL;
     const char *desc = NULL;
 
-    crm_log_cli_init("crm_error");
+    GError *error = NULL;
 
-    processed_args = pcmk__cmdline_preproc(argv, "lrnX");
+    GOptionGroup *output_group = NULL;
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "lrnX");
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        return CRM_EX_USAGE;
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_error", args->verbosity);
 
     if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
         /* FIXME:  When crm_error is converted to use formatted output, this can go. */
         pcmk__cli_help('v', CRM_EX_USAGE);
     }
@@ -131,12 +130,13 @@ main(int argc, char **argv)
             char *help = g_option_context_get_help(context, TRUE, NULL);
             fprintf(stderr, "%s", help);
             g_free(help);
-            return CRM_EX_USAGE;
+            exit_code = CRM_EX_USAGE;
+            goto done;
         }
 
         /* Skip #1 because that's the program name. */
         for (lpc = 1; processed_args[lpc] != NULL; lpc++) {
-            rc = crm_atoi(processed_args[lpc], NULL);
+            pcmk__scan_min_int(processed_args[lpc], &rc, INT_MIN);
             get_strings(rc, &name, &desc);
             if (options.with_name) {
                 printf("%s - %s\n", name, desc);
@@ -145,5 +145,11 @@ main(int argc, char **argv)
             }
         }
     }
-    return CRM_EX_OK;
+
+ done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, NULL);
+    return exit_code;
 }

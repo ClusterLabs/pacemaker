@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2021 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -148,7 +150,7 @@ strdup_null(const char *val)
 }
 
 static void
-stonith_plugin(int priority, const char *fmt, ...) __attribute__((__format__ (__printf__, 2, 3)));
+stonith_plugin(int priority, const char *fmt, ...) G_GNUC_PRINTF(2, 3);
 
 static void
 stonith_plugin(int priority, const char *format, ...)

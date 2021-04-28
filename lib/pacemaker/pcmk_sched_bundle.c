@@ -31,7 +31,7 @@ is_bundle_node(pe__bundle_variant_data_t *data, pe_node_t *node)
 }
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
-void distribute_children(pe_resource_t *rsc, GListPtr children, GListPtr nodes,
+void distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
                          int max, int per_host_max, pe_working_set_t * data_set);
 
 static GList *
@@ -103,8 +103,8 @@ pe_node_t *
 pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                       pe_working_set_t *data_set)
 {
-    GListPtr containers = NULL;
-    GListPtr nodes = NULL;
+    GList *containers = NULL;
+    GList *nodes = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return NULL);
@@ -114,7 +114,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     containers = get_container_list(rsc);
 
-    pe__show_node_weights(!show_scores, rsc, __func__, rsc->allowed_nodes);
+    pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
+                          rsc, __func__, rsc->allowed_nodes, data_set);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
     nodes = sort_nodes_by_weight(nodes, NULL, data_set);
@@ -205,7 +206,7 @@ void
 pcmk__bundle_create_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
-    GListPtr containers = NULL;
+    GList *containers = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(rsc != NULL, return);
@@ -398,7 +399,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                    enum rsc_role_e filter, gboolean current,
                    pe_working_set_t *data_set)
 {
-    GListPtr scratch = NULL;
+    GList *scratch = NULL;
     pe_resource_t *pair = NULL;
     pe_node_t *active_node_lh = NULL;
 
@@ -411,7 +412,7 @@ compatible_replica(pe_resource_t *rsc_lh, pe_resource_t *rsc,
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
     scratch = sort_nodes_by_weight(scratch, NULL, data_set);
 
-    for (GListPtr gIter = scratch; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = scratch; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
         pair = compatible_replica_for_node(rsc_lh, node, rsc, filter, current);
@@ -458,7 +459,16 @@ int copies_per_node(pe_resource_t * rsc)
         case pe_clone:
             {
                 const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
-                return crm_parse_int(max_clones_node, "1");
+
+                if (max_clones_node == NULL) {
+                    return 1;
+
+                } else {
+                    int max_i;
+
+                    pcmk__scan_min_int(max_clones_node, &max_i, 0);
+                    return max_i;
+                }
             }
         case pe_container:
             {
@@ -475,7 +485,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                                pcmk__colocation_t *constraint,
                                pe_working_set_t *data_set)
 {
-    GListPtr allocated_rhs = NULL;
+    GList *allocated_rhs = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     CRM_CHECK(constraint != NULL, return);
@@ -529,12 +539,12 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
                 || is_set_recursive(replica->container, pe_rsc_block, TRUE)) {
                 continue;
             }
-            if ((constraint->role_rh >= RSC_ROLE_MASTER)
+            if ((constraint->role_rh >= RSC_ROLE_PROMOTED)
                 && (replica->child == NULL)) {
                 continue;
             }
-            if ((constraint->role_rh >= RSC_ROLE_MASTER)
-                && (replica->child->next_role < RSC_ROLE_MASTER)) {
+            if ((constraint->role_rh >= RSC_ROLE_PROMOTED)
+                && (replica->child->next_role < RSC_ROLE_PROMOTED)) {
                 continue;
             }
 
@@ -552,7 +562,7 @@ pcmk__bundle_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 enum pe_action_flags
 pcmk__bundle_action_flags(pe_action_t *action, pe_node_t *node)
 {
-    GListPtr containers = NULL;
+    GList *containers = NULL;
     enum pe_action_flags flags = 0;
     pe__bundle_variant_data_t *data = NULL;
 
@@ -583,8 +593,8 @@ pe_resource_t *
 find_compatible_child_by_node(pe_resource_t * local_child, pe_node_t * local_node, pe_resource_t * rsc,
                               enum rsc_role_e filter, gboolean current)
 {
-    GListPtr gIter = NULL;
-    GListPtr children = NULL;
+    GList *gIter = NULL;
+    GList *children = NULL;
 
     if (local_node == NULL) {
         crm_err("Can't colocate unrunnable child %s with %s", local_child->id, rsc->id);
@@ -641,8 +651,8 @@ multi_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                                 enum pe_ordering type,
                                 pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
-    GListPtr children = NULL;
+    GList *gIter = NULL;
+    GList *children = NULL;
     gboolean current = FALSE;
     enum pe_graph_flags changed = pe_graph_none;
 
@@ -824,8 +834,8 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                                                   filter, type, data_set);
 
     } else if(then->rsc) {
-        GListPtr gIter = NULL;
-        GListPtr children = NULL;
+        GList *gIter = NULL;
+        GList *children = NULL;
 
         // Handle the 'primitive' ordering case
         changed |= native_update_actions(first, then, node, flags, filter,
@@ -847,7 +857,7 @@ pcmk__multi_update_actions(pe_action_t *first, pe_action_t *then,
                 }
                 changed |= then_child_changed;
                 if (then_child_changed & pe_graph_updated_then) {
-                    for (GListPtr lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
+                    for (GList *lpc = then_child_action->actions_after; lpc != NULL; lpc = lpc->next) {
                         pe_action_wrapper_t *next = (pe_action_wrapper_t *) lpc->data;
                         update_action(next->action, data_set);
                     }
@@ -884,8 +894,8 @@ pcmk__bundle_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
     }
 
     if (bundle_data->child
-        && ((constraint->role_filter == RSC_ROLE_SLAVE)
-            || (constraint->role_filter == RSC_ROLE_MASTER))) {
+        && ((constraint->role_filter == RSC_ROLE_UNPROMOTED)
+            || (constraint->role_filter == RSC_ROLE_PROMOTED))) {
         bundle_data->child->cmds->rsc_location(bundle_data->child, constraint);
         bundle_data->child->rsc_location = g_list_prepend(bundle_data->child->rsc_location,
                                                           constraint);
@@ -1065,8 +1075,7 @@ pcmk__bundle_append_meta(pe_resource_t *rsc, xmlNode *xml)
 }
 
 void
-pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
-                         gboolean terminal)
+pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
 
@@ -1079,16 +1088,16 @@ pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
 
         CRM_ASSERT(replica);
         if (replica->ip) {
-            LogActions(replica->ip, data_set, terminal);
+            LogActions(replica->ip, data_set);
         }
         if (replica->container) {
-            LogActions(replica->container, data_set, terminal);
+            LogActions(replica->container, data_set);
         }
         if (replica->remote) {
-            LogActions(replica->remote, data_set, terminal);
+            LogActions(replica->remote, data_set);
         }
         if (replica->child) {
-            LogActions(replica->child, data_set, terminal);
+            LogActions(replica->child, data_set);
         }
     }
 }

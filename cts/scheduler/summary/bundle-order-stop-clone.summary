@@ -1,0 +1,88 @@
+Current cluster status:
+  * Node List:
+    * Online: [ metal-1 metal-2 metal-3 ]
+    * RemoteOFFLINE: [ rabbitmq-bundle-0 ]
+    * GuestOnline: [ galera-bundle-0@metal-1 galera-bundle-1@metal-2 galera-bundle-2@metal-3 redis-bundle-0@metal-1 redis-bundle-1@metal-2 redis-bundle-2@metal-3 ]
+
+  * Full List of Resources:
+    * Clone Set: storage-clone [storage]:
+      * Started: [ metal-1 metal-2 metal-3 ]
+      * Stopped: [ rabbitmq-bundle-0 ]
+    * Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Unpromoted metal-1
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Unpromoted metal-2
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Unpromoted metal-3
+    * Container bundle set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]:
+      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started metal-1
+      * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started metal-2
+      * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started metal-3
+    * Container bundle set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted metal-1
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Promoted metal-2
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Promoted metal-3
+
+Transition Summary:
+  * Stop       storage:0                  (               metal-1 )  due to node availability
+  * Stop       galera-bundle-docker-0     (               metal-1 )  due to node availability
+  * Stop       galera-bundle-0            (               metal-1 )  due to unrunnable galera-bundle-docker-0 start
+  * Stop       galera:0                   ( Unpromoted galera-bundle-0 )  due to unrunnable galera-bundle-docker-0 start
+
+Executing Cluster Transition:
+  * Pseudo action:   storage-clone_pre_notify_stop_0
+  * Resource action: galera-bundle-0 monitor on metal-3
+  * Resource action: galera-bundle-0 monitor on metal-2
+  * Resource action: galera-bundle-1 monitor on metal-3
+  * Resource action: galera-bundle-1 monitor on metal-1
+  * Resource action: galera-bundle-2 monitor on metal-2
+  * Resource action: galera-bundle-2 monitor on metal-1
+  * Resource action: redis-bundle-0  monitor on metal-3
+  * Resource action: redis-bundle-0  monitor on metal-2
+  * Resource action: redis-bundle-1  monitor on metal-3
+  * Resource action: redis-bundle-1  monitor on metal-1
+  * Resource action: redis-bundle-2  monitor on metal-2
+  * Resource action: redis-bundle-2  monitor on metal-1
+  * Pseudo action:   galera-bundle_stop_0
+  * Resource action: storage:0       notify on metal-1
+  * Resource action: storage:1       notify on metal-2
+  * Resource action: storage:2       notify on metal-3
+  * Pseudo action:   storage-clone_confirmed-pre_notify_stop_0
+  * Pseudo action:   galera-bundle-master_stop_0
+  * Resource action: galera:0        stop on galera-bundle-0
+  * Pseudo action:   galera-bundle-master_stopped_0
+  * Resource action: galera-bundle-0 stop on metal-1
+  * Resource action: galera-bundle-docker-0 stop on metal-1
+  * Pseudo action:   galera-bundle_stopped_0
+  * Pseudo action:   galera-bundle_start_0
+  * Pseudo action:   storage-clone_stop_0
+  * Pseudo action:   galera-bundle-master_start_0
+  * Resource action: storage:0       stop on metal-1
+  * Pseudo action:   storage-clone_stopped_0
+  * Pseudo action:   galera-bundle-master_running_0
+  * Pseudo action:   galera-bundle_running_0
+  * Pseudo action:   storage-clone_post_notify_stopped_0
+  * Resource action: storage:1       notify on metal-2
+  * Resource action: storage:2       notify on metal-3
+  * Pseudo action:   storage-clone_confirmed-post_notify_stopped_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ metal-1 metal-2 metal-3 ]
+    * RemoteOFFLINE: [ rabbitmq-bundle-0 ]
+    * GuestOnline: [ galera-bundle-1@metal-2 galera-bundle-2@metal-3 redis-bundle-0@metal-1 redis-bundle-1@metal-2 redis-bundle-2@metal-3 ]
+
+  * Full List of Resources:
+    * Clone Set: storage-clone [storage]:
+      * Started: [ metal-2 metal-3 ]
+      * Stopped: [ metal-1 rabbitmq-bundle-0 ]
+    * Container bundle set: galera-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest]:
+      * galera-bundle-0	(ocf:heartbeat:galera):	 Stopped
+      * galera-bundle-1	(ocf:heartbeat:galera):	 Unpromoted metal-2
+      * galera-bundle-2	(ocf:heartbeat:galera):	 Unpromoted metal-3
+    * Container bundle set: haproxy-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest]:
+      * haproxy-bundle-docker-0	(ocf:heartbeat:docker):	 Started metal-1
+      * haproxy-bundle-docker-1	(ocf:heartbeat:docker):	 Started metal-2
+      * haproxy-bundle-docker-2	(ocf:heartbeat:docker):	 Started metal-3
+    * Container bundle set: redis-bundle [192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest]:
+      * redis-bundle-0	(ocf:heartbeat:redis):	 Promoted metal-1
+      * redis-bundle-1	(ocf:heartbeat:redis):	 Promoted metal-2
+      * redis-bundle-2	(ocf:heartbeat:redis):	 Promoted metal-3

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -285,23 +285,15 @@ char *xml_get_path(xmlNode *xml);
 
 char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);
-void crm_xml_set_id(xmlNode *xml, const char *format, ...)
-    __attribute__ ((__format__ (__printf__, 2, 3)));
+void crm_xml_set_id(xmlNode *xml, const char *format, ...) G_GNUC_PRINTF(2, 3);
 
 /*!
  * \brief xmlNode destructor which can be used in glib collections
  */
 void crm_destroy_xml(gpointer data);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-xmlNode *find_entity(xmlNode *parent, const char *node_name, const char *id);
-
-gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
-
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/xml_compat.h>
 #endif
 
 #ifdef __cplusplus

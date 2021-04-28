@@ -1,0 +1,19 @@
+Current cluster status:
+  * Node List:
+    * Node node1: standby
+    * Online: [ node2 ]
+
+  * Full List of Resources:
+    * rsc3	(ocf:heartbeat:apache):	 Started node2
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Node node1: standby
+    * Online: [ node2 ]
+
+  * Full List of Resources:
+    * rsc3	(ocf:heartbeat:apache):	 Started node2

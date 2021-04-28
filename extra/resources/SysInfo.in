@@ -3,7 +3,7 @@
 # ocf:pacemaker:SysInfo resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2019 the Pacemaker project contributors
+# Later changes copyright 2008-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -20,6 +20,15 @@
 : ${OCF_FUNCTIONS:="${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs"}
 . "${OCF_FUNCTIONS}"
 : ${__OCF_ACTION:="$1"}
+
+# Explicitly list all environment variables used, to make static analysis happy
+: ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
+: ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/SysInfo-${OCF_RESOURCE_INSTANCE}"}
+: ${OCF_RESKEY_disk_unit:="G"}
+: ${OCF_RESKEY_clone:="0"}
+: ${OCF_RESKEY_disks:=""}
+: ${OCF_RESKEY_delay:=""}
+: ${OCF_RESKEY_mind_disk_free:=""}
 
 #######################################################################
 
@@ -335,9 +344,6 @@ if [ $# -ne 1 ]; then
     exit $OCF_ERR_ARGS
 fi
 
-: ${OCF_RESKEY_pidfile:="${HA_VARRUN%%/}/SysInfo-${OCF_RESOURCE_INSTANCE}"}
-: ${OCF_RESKEY_disk_unit:="G"}
-: ${OCF_RESKEY_clone:="0"}
 if [ -n "${OCF_RESKEY_delay}" ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
 else

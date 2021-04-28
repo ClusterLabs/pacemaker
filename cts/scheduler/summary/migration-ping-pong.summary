@@ -1,0 +1,27 @@
+Using the original execution date of: 2019-06-06 13:56:45Z
+Current cluster status:
+  * Node List:
+    * Node ha-idg-2: standby
+    * Online: [ ha-idg-1 ]
+
+  * Full List of Resources:
+    * fence_ilo_ha-idg-2	(stonith:fence_ilo2):	 Started ha-idg-1
+    * fence_ilo_ha-idg-1	(stonith:fence_ilo4):	 Stopped
+    * vm_idcc_devel	(ocf:heartbeat:VirtualDomain):	 Started ha-idg-1
+    * vm_severin	(ocf:heartbeat:VirtualDomain):	 Started ha-idg-1
+
+Transition Summary:
+
+Executing Cluster Transition:
+Using the original execution date of: 2019-06-06 13:56:45Z
+
+Revised Cluster Status:
+  * Node List:
+    * Node ha-idg-2: standby
+    * Online: [ ha-idg-1 ]
+
+  * Full List of Resources:
+    * fence_ilo_ha-idg-2	(stonith:fence_ilo2):	 Started ha-idg-1
+    * fence_ilo_ha-idg-1	(stonith:fence_ilo4):	 Stopped
+    * vm_idcc_devel	(ocf:heartbeat:VirtualDomain):	 Started ha-idg-1
+    * vm_severin	(ocf:heartbeat:VirtualDomain):	 Started ha-idg-1

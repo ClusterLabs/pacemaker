@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the Pacemaker project contributors
+ * Copyright 2011-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -141,7 +141,6 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 
 #  define F_STONITH_DEVICE        "st_device_id"
 #  define F_STONITH_ACTION        "st_device_action"
-#  define F_STONITH_MODE          "st_mode"
 #  define F_STONITH_MERGED        "st_op_merged"
 
 #  define T_STONITH_NG        "stonith-ng"
@@ -197,5 +196,19 @@ stonith_history_t *stonith__first_matching_event(stonith_history_t *history,
 bool stonith__event_state_pending(stonith_history_t *history, void *user_data);
 bool stonith__event_state_eq(stonith_history_t *history, void *user_data);
 bool stonith__event_state_neq(stonith_history_t *history, void *user_data);
+
+/*!
+ * \internal
+ * \brief Is a fencing operation in pending state?
+ *
+ * \param[in] state     State as enum op_state value
+ *
+ * \return A boolean
+ */
+static inline bool
+stonith__op_state_pending(enum op_state state)
+{
+    return state != st_failed && state != st_done;
+}
 
 #endif

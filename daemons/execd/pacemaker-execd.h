@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,7 +85,7 @@ stonith_t *get_stonith_connection(void);
  */
 void stonith_connection_failed(void);
 
-#ifdef SUPPORT_REMOTE
+#ifdef PCMK__COMPILE_REMOTE
 void ipc_proxy_init(void);
 void ipc_proxy_cleanup(void);
 void ipc_proxy_add_provider(pcmk__client_t *client);

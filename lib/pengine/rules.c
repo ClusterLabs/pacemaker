@@ -273,29 +273,32 @@ pe_cron_range_satisfied(crm_time_t * now, xmlNode * cron_spec)
     return pcmk_rc_ok;
 }
 
-#define update_field(xml_field, time_fn)			\
-    value = crm_element_value(duration_spec, xml_field);	\
-    if(value != NULL) {						\
-	int value_i = crm_parse_int(value, "0");		\
-	time_fn(end, value_i);					\
+static void
+update_field(crm_time_t *t, xmlNode *xml, const char *attr,
+            void (*time_fn)(crm_time_t *, int))
+{
+    long long value;
+
+    if ((pcmk__scan_ll(crm_element_value(xml, attr), &value, 0LL) == pcmk_rc_ok)
+        && (value != 0LL) && (value >= INT_MIN) && (value <= INT_MAX)) {
+        time_fn(t, (int) value);
     }
+}
 
 crm_time_t *
 pe_parse_xml_duration(crm_time_t * start, xmlNode * duration_spec)
 {
-    crm_time_t *end = NULL;
-    const char *value = NULL;
+    crm_time_t *end = crm_time_new_undefined();
 
-    end = crm_time_new(NULL);
     crm_time_set(end, start);
 
-    update_field("years", crm_time_add_years);
-    update_field("months", crm_time_add_months);
-    update_field("weeks", crm_time_add_weeks);
-    update_field("days", crm_time_add_days);
-    update_field("hours", crm_time_add_hours);
-    update_field("minutes", crm_time_add_minutes);
-    update_field("seconds", crm_time_add_seconds);
+    update_field(end, duration_spec, "years", crm_time_add_years);
+    update_field(end, duration_spec, "months", crm_time_add_months);
+    update_field(end, duration_spec, "weeks", crm_time_add_weeks);
+    update_field(end, duration_spec, "days", crm_time_add_days);
+    update_field(end, duration_spec, "hours", crm_time_add_hours);
+    update_field(end, duration_spec, "minutes", crm_time_add_minutes);
+    update_field(end, duration_spec, "seconds", crm_time_add_seconds);
 
     return end;
 }
@@ -712,10 +715,10 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
 GHashTable*
 pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
 {
-    GHashTable *hash = crm_str_table_new();
+    GHashTable *hash = pcmk__strkey_table(free, free);
 
     if (versioned_params && ra_version) {
-        GHashTable *node_hash = crm_str_table_new();
+        GHashTable *node_hash = pcmk__strkey_table(free, free);
         xmlNode *attr_set = pcmk__xe_first_child(versioned_params);
 
         if (attr_set) {
@@ -910,13 +913,13 @@ compare_attr_expr_vals(const char *l_val, const char *r_val, const char *type,
             cmp = strcasecmp(l_val, r_val);
 
         } else if (pcmk__str_eq(type, "integer", pcmk__str_casei)) {
-            long long l_val_num = crm_parse_ll(l_val, NULL);
-            int rc1 = errno;
+            long long l_val_num;
+            int rc1 = pcmk__scan_ll(l_val, &l_val_num, 0LL);
 
-            long long r_val_num = crm_parse_ll(r_val, NULL);
-            int rc2 = errno;
+            long long r_val_num;
+            int rc2 = pcmk__scan_ll(r_val, &r_val_num, 0LL);
 
-            if (rc1 == 0 && rc2 == 0) {
+            if ((rc1 == pcmk_rc_ok) && (rc2 == pcmk_rc_ok)) {
                 if (l_val_num < r_val_num) {
                     cmp = -1;
                 } else if (l_val_num > r_val_num) {
@@ -1272,7 +1275,8 @@ pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
         }
 
     } else if (pcmk__str_eq(op, "not_defined", pcmk__str_casei)) {
-        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+        if ((rule_data->role > RSC_ROLE_UNKNOWN)
+            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
             accept = TRUE;
         }
 
@@ -1283,7 +1287,8 @@ pe__eval_role_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 
     } else if (pcmk__str_eq(op, "ne", pcmk__str_casei)) {
         // Test "ne" only with promotable clone roles
-        if (rule_data->role < RSC_ROLE_SLAVE && rule_data->role > RSC_ROLE_UNKNOWN) {
+        if ((rule_data->role > RSC_ROLE_UNKNOWN)
+            && (rule_data->role < RSC_ROLE_UNPROMOTED)) {
             accept = FALSE;
 
         } else if (text2role(value) != rule_data->role) {
@@ -1330,27 +1335,8 @@ pe__eval_rsc_expr(xmlNodePtr expr, pe_rule_eval_data_t *rule_data)
 }
 
 // Deprecated functions kept only for backward API compatibility
-gboolean test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now);
-gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
-                   crm_time_t *now);
-gboolean pe_test_rule_re(xmlNode *rule, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now,
-                         pe_re_match_data_t *re_match_data);
-gboolean pe_test_rule_full(xmlNode *rule, GHashTable *node_hash,
-                           enum rsc_role_e role, crm_time_t *now,
-                           pe_match_data_t *match_data);
-gboolean test_expression(xmlNode *expr, GHashTable *node_hash,
-                         enum rsc_role_e role, crm_time_t *now);
-gboolean pe_test_expression_re(xmlNode *expr, GHashTable *node_hash,
-                               enum rsc_role_e role, crm_time_t *now,
-                               pe_re_match_data_t *re_match_data);
-gboolean pe_test_expression_full(xmlNode *expr, GHashTable *node_hash,
-                                 enum rsc_role_e role, crm_time_t *now,
-                                 pe_match_data_t *match_data);
-void unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj,
-                                const char *set_name, GHashTable *node_hash,
-                                GHashTable *hash, const char *always_first,
-                                gboolean overwrite, crm_time_t *now);
+
+#include <crm/pengine/rules_compat.h>
 
 gboolean
 test_ruleset(xmlNode *ruleset, GHashTable *node_hash, crm_time_t *now)
@@ -1425,3 +1411,5 @@ unpack_instance_attributes(xmlNode *top, xmlNode *xml_obj, const char *set_name,
     unpack_nvpair_blocks(top, xml_obj, set_name, hash, always_first,
                          overwrite, &rule_data, NULL, unpack_attr_set);
 }
+
+// End deprecated API

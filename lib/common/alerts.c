@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -136,7 +136,7 @@ pcmk__dup_alert(pcmk__alert_t *entry)
 
     new_entry->timeout = entry->timeout;
     new_entry->flags = entry->flags;
-    new_entry->envvars = crm_str_table_dup(entry->envvars);
+    new_entry->envvars = pcmk__str_table_dup(entry->envvars);
     if (entry->tstamp_format) {
         new_entry->tstamp_format = strdup(entry->tstamp_format);
     }
@@ -169,7 +169,7 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
 {
     for (const char **key = pcmk__alert_keys[name]; *key; key++) {
         crm_trace("Inserting alert key %s = %d", *key, value);
-        g_hash_table_insert(table, strdup(*key), crm_itoa(value));
+        g_hash_table_insert(table, strdup(*key), pcmk__itoa(value));
     }
 }
 

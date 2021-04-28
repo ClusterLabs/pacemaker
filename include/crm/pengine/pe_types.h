@@ -22,8 +22,8 @@ extern "C" {
 
 #  include <stdbool.h>              // bool
 #  include <sys/types.h>            // time_t
+#  include <libxml/tree.h>          // xmlNode
 #  include <glib.h>                 // gboolean, guint, GList, GHashTable
-#  include <crm/crm.h>              // GListPtr
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 
@@ -47,13 +47,14 @@ typedef struct resource_object_functions_s {
     /* parameter result must be free'd */
     char *(*parameter) (pe_resource_t*, pe_node_t*, gboolean, const char*,
                         pe_working_set_t*);
+    //! \deprecated will be removed in a future release
     void (*print) (pe_resource_t*, const char*, long, void*);
     gboolean (*active) (pe_resource_t*, gboolean);
     enum rsc_role_e (*state) (const pe_resource_t*, gboolean);
     pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (pe_resource_t*);
     void (*count) (pe_resource_t*);
-    gboolean (*is_filtered) (pe_resource_t*, GListPtr, gboolean);
+    gboolean (*is_filtered) (pe_resource_t*, GList *, gboolean);
 } resource_object_functions_t;
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
@@ -104,7 +105,10 @@ enum pe_find {
 #  define pe_flag_stop_everything       0x00000400ULL
 
 #  define pe_flag_start_failure_fatal   0x00001000ULL
+
+//! \deprecated
 #  define pe_flag_remove_after_stop     0x00002000ULL
+
 #  define pe_flag_startup_fencing       0x00004000ULL
 #  define pe_flag_shutdown_lock         0x00008000ULL
 
@@ -114,6 +118,8 @@ enum pe_find {
 
 #  define pe_flag_quick_location        0x00100000ULL
 #  define pe_flag_sanitized             0x00200000ULL
+
+//! \deprecated
 #  define pe_flag_stdout                0x00400000ULL
 
 //! Don't count total, disabled and blocked resource instances
@@ -123,6 +129,9 @@ enum pe_find {
  * (Internal code should always set this.)
  */
 #  define pe_flag_no_compat             0x01000000ULL
+
+#  define pe_flag_show_scores           0x02000000ULL
+#  define pe_flag_show_utilization      0x04000000ULL
 
 struct pe_working_set_s {
     xmlNode *input;
@@ -145,14 +154,14 @@ struct pe_working_set_s {
     // Actions for which there can be only one (e.g. fence nodeX)
     GHashTable *singletons;
 
-    GListPtr nodes;
-    GListPtr resources;
-    GListPtr placement_constraints;
-    GListPtr ordering_constraints;
-    GListPtr colocation_constraints;
-    GListPtr ticket_constraints;
+    GList *nodes;
+    GList *resources;
+    GList *placement_constraints;
+    GList *ordering_constraints;
+    GList *colocation_constraints;
+    GList *ticket_constraints;
 
-    GListPtr actions;
+    GList *actions;
     xmlNode *failed;
     xmlNode *op_defaults;
     xmlNode *rsc_defaults;
@@ -179,6 +188,8 @@ struct pe_working_set_s {
     int ninstances;     // Total number of resource instances
     guint shutdown_lock;// How long (seconds) to lock resources to shutdown node
     int priority_fencing_delay; // Priority fencing delay
+
+    void *priv;
 };
 
 enum pe_check_parameters {
@@ -217,8 +228,8 @@ struct pe_node_shared_s {
 
     int num_resources;
     pe_resource_t *remote_rsc;
-    GListPtr running_rsc;       /* pe_resource_t* */
-    GListPtr allocated_rsc;     /* pe_resource_t* */
+    GList *running_rsc;       /* pe_resource_t* */
+    GList *allocated_rsc;     /* pe_resource_t* */
 
     GHashTable *attrs;          /* char* => char* */
     GHashTable *utilization;
@@ -341,17 +352,17 @@ struct pe_resource_s {
 
     //!@{
     //! This field should be treated as internal to Pacemaker
-    GListPtr rsc_cons_lhs;      // List of pcmk__colocation_t*
-    GListPtr rsc_cons;          // List of pcmk__colocation_t*
-    GListPtr rsc_location;      // List of pe__location_t*
-    GListPtr actions;           // List of pe_action_t*
-    GListPtr rsc_tickets;       // List of rsc_ticket*
+    GList *rsc_cons_lhs;      // List of pcmk__colocation_t*
+    GList *rsc_cons;          // List of pcmk__colocation_t*
+    GList *rsc_location;      // List of pe__location_t*
+    GList *actions;           // List of pe_action_t*
+    GList *rsc_tickets;       // List of rsc_ticket*
     //!@}
 
     pe_node_t *allocated_to;
     pe_node_t *partial_migration_target;
     pe_node_t *partial_migration_source;
-    GListPtr running_on;        /* pe_node_t*   */
+    GList *running_on;        /* pe_node_t*   */
     GHashTable *known_on;       /* pe_node_t*   */
     GHashTable *allowed_nodes;  /* pe_node_t*   */
 
@@ -362,11 +373,11 @@ struct pe_resource_s {
     GHashTable *parameters; //! \deprecated Use pe_rsc_params() instead
     GHashTable *utilization;
 
-    GListPtr children;          /* pe_resource_t*   */
-    GListPtr dangling_migrations;       /* pe_node_t*       */
+    GList *children;          /* pe_resource_t*   */
+    GList *dangling_migrations;       /* pe_node_t*       */
 
     pe_resource_t *container;
-    GListPtr fillers;
+    GList *fillers;
 
     pe_node_t *pending_node;    // Node on which pending_task is happening
     pe_node_t *lock_node;       // Resource is shutdown-locked to this node
@@ -432,8 +443,8 @@ struct pe_action_s {
      * to be considered runnable */ 
     int required_runnable_before;
 
-    GListPtr actions_before;    /* pe_action_wrapper_t* */
-    GListPtr actions_after;     /* pe_action_wrapper_t* */
+    GList *actions_before;    /* pe_action_wrapper_t* */
+    GList *actions_after;     /* pe_action_wrapper_t* */
 
     /* Some of the above fields could be moved to the details,
      * except for API backward compatibility.
@@ -451,7 +462,7 @@ typedef struct pe_ticket_s {
 
 typedef struct pe_tag_s {
     char *id;
-    GListPtr refs;
+    GList *refs;
 } pe_tag_t;
 
 //! Internal tracking for transition graph creation
@@ -475,7 +486,7 @@ enum pe_ordering {
 
     pe_order_implies_first         = 0x10,      /* If 'then' is required, ensure 'first' is too */
     pe_order_implies_then          = 0x20,      /* If 'first' is required, ensure 'then' is too */
-    pe_order_implies_first_master  = 0x40,      /* Imply 'first' is required when 'then' is required and then's rsc holds Master role. */
+    pe_order_promoted_implies_first = 0x40,     /* If 'then' is required and then's rsc is promoted, ensure 'first' becomes required too */
 
     /* first requires then to be both runnable and migrate runnable. */
     pe_order_implies_first_migratable  = 0x80,
@@ -508,6 +519,11 @@ enum pe_ordering {
     pe_order_preserve              = 0x1000000, /* Hack for breaking user ordering constraints with container resources */
     pe_order_then_cancels_first    = 0x2000000, // if 'then' becomes required, 'first' becomes optional
     pe_order_trace                 = 0x4000000, /* test marker */
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    // \deprecated Use pe_order_promoted_implies_first instead
+    pe_order_implies_first_master  = pe_order_promoted_implies_first,
+#endif
 };
 /* *INDENT-ON* */
 
@@ -517,26 +533,8 @@ typedef struct pe_action_wrapper_s {
     pe_action_t *action;
 } pe_action_wrapper_t;
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//!< \deprecated Use pe_action_t instead
-typedef struct pe_action_s action_t;
-//!< \deprecated Use pe_action_wrapper_t instead
-typedef struct pe_action_wrapper_s action_wrapper_t;
-//!< \deprecated Use pe_node_t instead
-typedef struct pe_node_s node_t;
-//!< \deprecated Use enum pe_quorum_policy instead
-typedef enum pe_quorum_policy no_quorum_policy_t;
-//!< \deprecated use pe_resource_t instead
-typedef struct pe_resource_s resource_t;
-//!< \deprecated Use pe_tag_t instead
-typedef struct pe_tag_s tag_t;
-//!< \deprecated Use pe_ticket_t instead
-typedef struct pe_ticket_s ticket_t;
-
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/pengine/pe_types_compat.h>
 #endif
 
 #ifdef __cplusplus

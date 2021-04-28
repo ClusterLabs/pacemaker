@@ -1,0 +1,22 @@
+Current cluster status:
+  * Node List:
+    * Online: [ pcmk-1 pcmk-2 pcmk-3 ]
+
+  * Full List of Resources:
+    * dummy	(ocf:heartbeat:IPaddr2):	 Stopped
+
+Transition Summary:
+  * Start      dummy   ( pcmk-1 )
+
+Executing Cluster Transition:
+  * Resource action: dummy           monitor on pcmk-3
+  * Resource action: dummy           monitor on pcmk-2
+  * Resource action: dummy           monitor on pcmk-1
+  * Resource action: dummy           start on pcmk-1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ pcmk-1 pcmk-2 pcmk-3 ]
+
+  * Full List of Resources:
+    * dummy	(ocf:heartbeat:IPaddr2):	 Started pcmk-1

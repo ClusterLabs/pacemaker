@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -262,21 +262,21 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
         }
     }
 
-    if (type & pe_order_implies_first_master) {
+    if (type & pe_order_promoted_implies_first) {
         processed = TRUE;
         if (then->rsc) {
             changed |= then->rsc->cmds->update_actions(first, then, node,
                 first_flags & pe_action_optional, pe_action_optional,
-                pe_order_implies_first_master, data_set);
+                pe_order_promoted_implies_first, data_set);
         }
 
         if (changed) {
             pe_rsc_trace(then->rsc,
-                         "implies left when right rsc is Master role: %s then %s: changed",
-                         first->uuid, then->uuid);
+                         "implies left when right resource is promoted: "
+                         "%s then %s: changed", first->uuid, then->uuid);
         } else {
-            crm_trace("implies left when right rsc is Master role: %s then %s", first->uuid,
-                      then->uuid);
+            crm_trace("implies left when right resource is promoted: "
+                      "%s then %s", first->uuid, then->uuid);
         }
     }
 
@@ -456,7 +456,7 @@ static void
 mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
                    pe_working_set_t *data_set)
 {
-    GListPtr gIter = rsc->actions;
+    GList *gIter = rsc->actions;
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
@@ -478,7 +478,7 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
 void
 update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     pe_resource_t *rsc = NULL;
 
     if (!pcmk_is_set(action->flags, pe_action_runnable)
@@ -486,8 +486,8 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 
         rsc = uber_parent(action->rsc);
         if (rsc->parent) {
-            /* For bundles, uber_parent() returns the clone/master, not the
-             * bundle, so the existence of rsc->parent implies this is a bundle.
+            /* For bundles, uber_parent() returns the clone, not the bundle, so
+             * the existence of rsc->parent implies this is a bundle.
              * In this case, we need the bundle resource, so that we can check
              * if all containers are stopped/stopping.
              */
@@ -521,7 +521,7 @@ update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 gboolean
 update_action(pe_action_t *then, pe_working_set_t *data_set)
 {
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
     enum pe_graph_flags changed = pe_graph_none;
     int last_flags = then->flags;
 
@@ -596,10 +596,10 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
             && !pcmk_is_set(then->flags, pe_action_optional)) {
 
             /* 'then' is required, so we must abandon 'first'
-             * (e.g. a required stop cancels any reload).
+             * (e.g. a required stop cancels any agent reload).
              */
             pe__set_action_flags(other->action, pe_action_optional);
-            if (!strcmp(first->task, CRMD_ACTION_RELOAD)) {
+            if (!strcmp(first->task, CRMD_ACTION_RELOAD_AGENT)) {
                 pe__clear_resource_flags(first->rsc, pe_rsc_reload);
             }
         }
@@ -666,7 +666,7 @@ update_action(pe_action_t *then, pe_working_set_t *data_set)
         }
 
         if (changed & pe_graph_updated_first) {
-            GListPtr lpc2 = NULL;
+            GList *lpc2 = NULL;
 
             crm_trace("Updated %s (first %s %s %s), processing dependents ",
                       first->uuid,
@@ -720,7 +720,7 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
     /* add the stop to the before lists so it counts as a pre-req
      * for the shutdown
      */
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     for (lpc = data_set->actions; lpc != NULL; lpc = lpc->next) {
         pe_action_t *action = (pe_action_t *) lpc->data;
@@ -783,7 +783,6 @@ get_router_node(pe_action_t *action)
 {
     pe_node_t *began_on = NULL;
     pe_node_t *ended_on = NULL;
-    pe_node_t *router_node = NULL;
     bool partial_migration = FALSE;
     const char *task = action->task;
 
@@ -802,52 +801,76 @@ get_router_node(pe_action_t *action)
         partial_migration = TRUE;
     }
 
-    /* if there is only one location to choose from,
-     * this is easy. Check for those conditions first */
-    if (!began_on || !ended_on) {
-        /* remote rsc is either shutting down or starting up */
-        return began_on ? began_on : ended_on;
-    } else if (began_on->details == ended_on->details) {
-        /* remote rsc didn't move nodes. */
+    if (began_on == NULL) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "next node %s (starting)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (ended_on? ended_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
+        return ended_on;
+    }
+
+    if (ended_on == NULL) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "current node %s (stopping)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (began_on? began_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
         return began_on;
     }
 
-    /* If we have get here, we know the remote resource
-     * began on one node and is moving to another node.
-     *
-     * This means some actions will get routed through the cluster
-     * node the connection rsc began on, and others are routed through
-     * the cluster node the connection rsc ends up on.
-     *
-     * 1. stop, demote, migrate actions of resources living in the remote
-     *    node _MUST_ occur _BEFORE_ the connection can move (these actions
-     *    are all required before the remote rsc stop action can occur.) In
-     *    this case, we know these actions have to be routed through the initial
-     *    cluster node the connection resource lived on before the move takes place.
-     *    The exception is a partial migration of a (non-guest) remote
-     *    connection resource; in that case, all actions (even these) will be
-     *    ordered after the connection's pseudo-start on the migration target,
-     *    so the target is the router node.
-     *
-     * 2. Everything else (start, promote, monitor, probe, refresh, clear failcount
-     *    delete ....) must occur after the resource starts on the node it is
-     *    moving to.
+    if (began_on->details == ended_on->details) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "current node %s (not moving)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (began_on? began_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
+        return began_on;
+    }
+
+    /* If we get here, the remote connection is moving during this transition.
+     * This means some actions for resources behind the connection will get
+     * routed through the cluster node the connection reource is currently on,
+     * and others are routed through the cluster node the connection will end up
+     * on.
      */
 
     if (pcmk__str_eq(task, "notify", pcmk__str_casei)) {
         task = g_hash_table_lookup(action->meta, "notify_operation");
     }
 
-    /* 1. before connection rsc moves. */
-    if (pcmk__strcase_any_of(task, "stop", "demote", "migrate_from", "migrate_to",
-                             NULL) && !partial_migration) {
-        router_node = began_on;
-
-    /* 2. after connection rsc moves. */
-    } else {
-        router_node = ended_on;
+    /*
+     * Stop, demote, and migration actions must occur before the connection can
+     * move (these actions are required before the remote resource can stop). In
+     * this case, we know these actions have to be routed through the initial
+     * cluster node the connection resource lived on before the move takes
+     * place.
+     *
+     * The exception is a partial migration of a (non-guest) remote connection
+     * resource; in that case, all actions (even these) will be ordered after
+     * the connection's pseudo-start on the migration target, so the target is
+     * the router node.
+     */
+    if (pcmk__strcase_any_of(task, "cancel", "stop", "demote", "migrate_from",
+                             "migrate_to", NULL) && !partial_migration) {
+        crm_trace("Routing %s for %s through remote connection's "
+                  "current node %s (moving)%s",
+                  action->task, (action->rsc? action->rsc->id : "no resource"),
+                  (began_on? began_on->details->uname : "none"),
+                  partial_migration? " (partial migration)" : "");
+        return began_on;
     }
-    return router_node;
+
+    /* Everything else (start, promote, monitor, probe, refresh,
+     * clear failcount, delete, ...) must occur after the connection starts on
+     * the node it is moving to.
+     */
+    crm_trace("Routing %s for %s through remote connection's "
+              "next node %s (moving)%s",
+              action->task, (action->rsc? action->rsc->id : "no resource"),
+              (ended_on? ended_on->details->uname : "none"),
+              partial_migration? " (partial migration)" : "");
+    return ended_on;
 }
 
 /*!
@@ -891,7 +914,7 @@ add_node_to_xml(const pe_node_t *node, void *xml)
 static int
 add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     xmlNode *maintenance =
         xml?create_xml_node(xml, XML_GRAPH_TAG_MAINTENANCE):NULL;
     int count = 0;
@@ -978,7 +1001,7 @@ add_downed_nodes(xmlNode *xml, const pe_action_t *action,
         /* Stopping a remote connection resource makes connected node down,
          * unless it's part of a migration
          */
-        GListPtr iter;
+        GList *iter;
         pe_action_t *input;
         gboolean migrating = FALSE;
 
@@ -1198,7 +1221,7 @@ action2xml(pe_action_t * action, gboolean as_input, pe_working_set_t *data_set)
             crm_xml_add(rsc_xml, XML_ATTR_ID, action->rsc->id);
         }
 
-        for (lpc = 0; lpc < DIMOF(attr_list); lpc++) {
+        for (lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
             crm_xml_add(rsc_xml, attr_list[lpc],
                         g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
         }
@@ -1360,7 +1383,7 @@ should_dump_action(pe_action_t *action)
 
     } else if (pcmk_is_set(action->flags, pe_action_pseudo)
                && pcmk__str_eq(action->task, CRM_OP_PROBED, pcmk__str_casei)) {
-        GListPtr lpc = NULL;
+        GList *lpc = NULL;
 
         /* This is a horrible but convenient hack
          *

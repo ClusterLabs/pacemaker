@@ -1,6 +1,6 @@
 /*
  * Original copyright 2009 International Business Machines, IBM, Mark Hamzy
- * Later changes copyright 2009-2020 the Pacemaker project contributors
+ * Later changes copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -103,7 +103,7 @@ main(int argc, char *argv[])
     struct sl_event *event = NULL;
     uint64_t event_id = 0;
 
-    crm_log_cli_init("notifyServicelogEvent");
+    pcmk__cli_init_logging("notifyServicelogEvent", 0);
     pcmk__set_cli_options(NULL, "<event_id>", long_options,
                           "handle events written to servicelog database");
 
@@ -141,14 +141,14 @@ main(int argc, char *argv[])
         crm_err("Error: could not read event_id from args!");
 
         rc = 1;
-        goto cleanup;
+        goto done;
     }
 
     if (event_id == 0) {
         crm_err("Error: event_id is 0!");
 
         rc = 1;
-        goto cleanup;
+        goto done;
     }
 
     rc = servicelog_open(&slog, 0);     /* flags is one of SL_FLAG_xxx */
@@ -157,7 +157,7 @@ main(int argc, char *argv[])
         crm_err("Error: servicelog_open failed, rc = %d", rc);
 
         rc = 1;
-        goto cleanup;
+        goto done;
     }
 
     if (slog) {
@@ -194,7 +194,7 @@ main(int argc, char *argv[])
         crm_err("Error: servicelog_event_get failed, rc = %d", rc);
     }
 
-  cleanup:
+  done:
     if (event) {
         servicelog_event_free(event);
     }

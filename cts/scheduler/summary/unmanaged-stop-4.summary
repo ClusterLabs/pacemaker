@@ -1,0 +1,27 @@
+3 of 3 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ yingying.site ]
+
+  * Full List of Resources:
+    * Resource Group: group1 (disabled):
+      * rsc1	(ocf:pacemaker:Dummy):	 Started yingying.site (disabled)
+      * rsc2	(ocf:pacemaker:Dummy):	 FAILED yingying.site (disabled, blocked)
+      * rsc3	(ocf:heartbeat:Dummy):	 Stopped (disabled)
+
+Transition Summary:
+  * Stop       rsc1    ( yingying.site )  due to node availability (blocked)
+
+Executing Cluster Transition:
+  * Pseudo action:   group1_stop_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ yingying.site ]
+
+  * Full List of Resources:
+    * Resource Group: group1 (disabled):
+      * rsc1	(ocf:pacemaker:Dummy):	 Started yingying.site (disabled)
+      * rsc2	(ocf:pacemaker:Dummy):	 FAILED yingying.site (disabled, blocked)
+      * rsc3	(ocf:heartbeat:Dummy):	 Stopped (disabled)

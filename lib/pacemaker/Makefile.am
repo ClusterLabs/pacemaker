@@ -31,6 +31,7 @@ libpacemaker_la_SOURCES	=
 libpacemaker_la_SOURCES += pcmk_cluster_queries.c
 libpacemaker_la_SOURCES += pcmk_fence.c
 libpacemaker_la_SOURCES += pcmk_output.c
+libpacemaker_la_SOURCES += pcmk_output_utils.c
 libpacemaker_la_SOURCES += pcmk_resource.c
 libpacemaker_la_SOURCES	+= pcmk_sched_allocate.c
 libpacemaker_la_SOURCES += pcmk_sched_bundle.c

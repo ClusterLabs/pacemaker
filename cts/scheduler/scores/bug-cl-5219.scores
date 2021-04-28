@@ -1,0 +1,43 @@
+
+pcmk__clone_allocate: child1 allocation score on ha1.test.anchor.net.au: 0
+pcmk__clone_allocate: child1 allocation score on ha2.test.anchor.net.au: 0
+pcmk__clone_allocate: child2 allocation score on ha1.test.anchor.net.au: 0
+pcmk__clone_allocate: child2 allocation score on ha2.test.anchor.net.au: 0
+pcmk__clone_allocate: parent allocation score on ha1.test.anchor.net.au: 0
+pcmk__clone_allocate: parent allocation score on ha2.test.anchor.net.au: 0
+pcmk__clone_allocate: stateful-child1:0 allocation score on ha1.test.anchor.net.au: 0
+pcmk__clone_allocate: stateful-child1:0 allocation score on ha2.test.anchor.net.au: 11
+pcmk__clone_allocate: stateful-child1:1 allocation score on ha1.test.anchor.net.au: 6
+pcmk__clone_allocate: stateful-child1:1 allocation score on ha2.test.anchor.net.au: 0
+pcmk__clone_allocate: stateful-child2:0 allocation score on ha1.test.anchor.net.au: 0
+pcmk__clone_allocate: stateful-child2:0 allocation score on ha2.test.anchor.net.au: 11
+pcmk__clone_allocate: stateful-child2:1 allocation score on ha1.test.anchor.net.au: 6
+pcmk__clone_allocate: stateful-child2:1 allocation score on ha2.test.anchor.net.au: 0
+pcmk__clone_allocate: stateful-parent:0 allocation score on ha1.test.anchor.net.au: 0
+pcmk__clone_allocate: stateful-parent:0 allocation score on ha2.test.anchor.net.au: 11
+pcmk__clone_allocate: stateful-parent:1 allocation score on ha1.test.anchor.net.au: 6
+pcmk__clone_allocate: stateful-parent:1 allocation score on ha2.test.anchor.net.au: 0
+pcmk__native_allocate: child1-service allocation score on ha1.test.anchor.net.au: -INFINITY
+pcmk__native_allocate: child1-service allocation score on ha2.test.anchor.net.au: -INFINITY
+pcmk__native_allocate: child2-service allocation score on ha1.test.anchor.net.au: -INFINITY
+pcmk__native_allocate: child2-service allocation score on ha2.test.anchor.net.au: 11
+pcmk__native_allocate: parent-service allocation score on ha1.test.anchor.net.au: -INFINITY
+pcmk__native_allocate: parent-service allocation score on ha2.test.anchor.net.au: 11
+pcmk__native_allocate: stateful-child1:0 allocation score on ha1.test.anchor.net.au: 0
+pcmk__native_allocate: stateful-child1:0 allocation score on ha2.test.anchor.net.au: 11
+pcmk__native_allocate: stateful-child1:1 allocation score on ha1.test.anchor.net.au: 6
+pcmk__native_allocate: stateful-child1:1 allocation score on ha2.test.anchor.net.au: -INFINITY
+pcmk__native_allocate: stateful-child2:0 allocation score on ha1.test.anchor.net.au: 0
+pcmk__native_allocate: stateful-child2:0 allocation score on ha2.test.anchor.net.au: 11
+pcmk__native_allocate: stateful-child2:1 allocation score on ha1.test.anchor.net.au: 6
+pcmk__native_allocate: stateful-child2:1 allocation score on ha2.test.anchor.net.au: -INFINITY
+pcmk__native_allocate: stateful-parent:0 allocation score on ha1.test.anchor.net.au: 0
+pcmk__native_allocate: stateful-parent:0 allocation score on ha2.test.anchor.net.au: 11
+pcmk__native_allocate: stateful-parent:1 allocation score on ha1.test.anchor.net.au: 6
+pcmk__native_allocate: stateful-parent:1 allocation score on ha2.test.anchor.net.au: -INFINITY
+stateful-child1:0 promotion score on ha2.test.anchor.net.au: INFINITY
+stateful-child1:1 promotion score on ha1.test.anchor.net.au: -INFINITY
+stateful-child2:0 promotion score on ha2.test.anchor.net.au: INFINITY
+stateful-child2:1 promotion score on ha1.test.anchor.net.au: -INFINITY
+stateful-parent:0 promotion score on ha2.test.anchor.net.au: 10
+stateful-parent:1 promotion score on ha1.test.anchor.net.au: 5

@@ -1,0 +1,17 @@
+Current cluster status:
+  * Node List:
+    * OFFLINE: [ node1 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:heartbeat:apache):	 Stopped
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * OFFLINE: [ node1 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:heartbeat:apache):	 Stopped

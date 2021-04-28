@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -126,7 +126,7 @@ extern gboolean clone_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_act
                                    gboolean force, pe_working_set_t * data_set);
 extern void clone_append_meta(pe_resource_t * rsc, xmlNode * xml);
 
-void apply_master_prefs(pe_resource_t *rsc);
+void pcmk__add_promotion_scores(pe_resource_t *rsc);
 pe_node_t *pcmk__set_instance_roles(pe_resource_t *rsc,
                                     pe_working_set_t *data_set);
 void create_promotable_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
@@ -143,10 +143,9 @@ extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
 extern gboolean unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set);
 
-void LogNodeActions(pe_working_set_t * data_set, gboolean terminal);
-void LogActions(pe_resource_t * rsc, pe_working_set_t * data_set, gboolean terminal);
-void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set,
-                              gboolean terminal);
+void LogNodeActions(pe_working_set_t * data_set);
+void LogActions(pe_resource_t * rsc, pe_working_set_t * data_set);
+void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
 
 extern void rsc_stonith_ordering(pe_resource_t * rsc, pe_action_t * stonith_op,
                                  pe_working_set_t * data_set);
@@ -176,5 +175,5 @@ gboolean update_action(pe_action_t *action, pe_working_set_t *data_set);
 void complex_set_cmds(pe_resource_t * rsc);
 void pcmk__log_transition_summary(const char *filename);
 void clone_create_pseudo_actions(
-    pe_resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
+    pe_resource_t * rsc, GList *children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
 #endif

@@ -1,0 +1,64 @@
+
+W:0 promotion score on dvossel-laptop2: 10
+W:1 promotion score on 18builder: -1
+W:2 promotion score on none: 0
+X:0 promotion score on dvossel-laptop2: 10
+X:1 promotion score on 18builder: -1
+X:2 promotion score on none: 0
+pcmk__clone_allocate: W-master allocation score on 18builder: 0
+pcmk__clone_allocate: W-master allocation score on 18node1: 0
+pcmk__clone_allocate: W-master allocation score on dvossel-laptop2: 0
+pcmk__clone_allocate: W:0 allocation score on 18builder: 0
+pcmk__clone_allocate: W:0 allocation score on 18node1: 0
+pcmk__clone_allocate: W:0 allocation score on dvossel-laptop2: 11
+pcmk__clone_allocate: W:1 allocation score on 18builder: 0
+pcmk__clone_allocate: W:1 allocation score on 18node1: 0
+pcmk__clone_allocate: W:1 allocation score on dvossel-laptop2: 10
+pcmk__clone_allocate: W:2 allocation score on 18builder: 0
+pcmk__clone_allocate: W:2 allocation score on 18node1: 0
+pcmk__clone_allocate: W:2 allocation score on dvossel-laptop2: 10
+pcmk__clone_allocate: X-master allocation score on 18builder: 0
+pcmk__clone_allocate: X-master allocation score on 18node1: 0
+pcmk__clone_allocate: X-master allocation score on dvossel-laptop2: 0
+pcmk__clone_allocate: X:0 allocation score on 18builder: 0
+pcmk__clone_allocate: X:0 allocation score on 18node1: 0
+pcmk__clone_allocate: X:0 allocation score on dvossel-laptop2: 11
+pcmk__clone_allocate: X:1 allocation score on 18builder: 0
+pcmk__clone_allocate: X:1 allocation score on 18node1: 0
+pcmk__clone_allocate: X:1 allocation score on dvossel-laptop2: 10
+pcmk__clone_allocate: X:2 allocation score on 18builder: 0
+pcmk__clone_allocate: X:2 allocation score on 18node1: 0
+pcmk__clone_allocate: X:2 allocation score on dvossel-laptop2: 10
+pcmk__native_allocate: 18builder allocation score on 18builder: -INFINITY
+pcmk__native_allocate: 18builder allocation score on 18node1: -INFINITY
+pcmk__native_allocate: 18builder allocation score on dvossel-laptop2: 0
+pcmk__native_allocate: 18node1 allocation score on 18builder: -INFINITY
+pcmk__native_allocate: 18node1 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: 18node1 allocation score on dvossel-laptop2: -INFINITY
+pcmk__native_allocate: FAKE allocation score on 18builder: 0
+pcmk__native_allocate: FAKE allocation score on 18node1: 0
+pcmk__native_allocate: FAKE allocation score on dvossel-laptop2: 0
+pcmk__native_allocate: W:0 allocation score on 18builder: 0
+pcmk__native_allocate: W:0 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: W:0 allocation score on dvossel-laptop2: 11
+pcmk__native_allocate: W:1 allocation score on 18builder: 0
+pcmk__native_allocate: W:1 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: W:1 allocation score on dvossel-laptop2: -INFINITY
+pcmk__native_allocate: W:2 allocation score on 18builder: -INFINITY
+pcmk__native_allocate: W:2 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: W:2 allocation score on dvossel-laptop2: -INFINITY
+pcmk__native_allocate: X:0 allocation score on 18builder: 0
+pcmk__native_allocate: X:0 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: X:0 allocation score on dvossel-laptop2: 11
+pcmk__native_allocate: X:1 allocation score on 18builder: 0
+pcmk__native_allocate: X:1 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: X:1 allocation score on dvossel-laptop2: -INFINITY
+pcmk__native_allocate: X:2 allocation score on 18builder: -INFINITY
+pcmk__native_allocate: X:2 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: X:2 allocation score on dvossel-laptop2: -INFINITY
+pcmk__native_allocate: vm allocation score on 18builder: -INFINITY
+pcmk__native_allocate: vm allocation score on 18node1: -INFINITY
+pcmk__native_allocate: vm allocation score on dvossel-laptop2: 0
+pcmk__native_allocate: vm2 allocation score on 18builder: -INFINITY
+pcmk__native_allocate: vm2 allocation score on 18node1: -INFINITY
+pcmk__native_allocate: vm2 allocation score on dvossel-laptop2: -INFINITY

@@ -96,7 +96,7 @@ def update_path():
         # For pacemaker-fenced and cts-fence-helper
         new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path) # For stonith_admin
-        new_path = "%s/cts:%s" % (BUILD_DIR, new_path)   # For cts-support
+        new_path = "%s/cts/support:%s" % (BUILD_DIR, new_path) # For cts-support
 
     else:
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)

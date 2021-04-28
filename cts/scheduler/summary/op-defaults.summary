@@ -1,0 +1,48 @@
+Current cluster status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * fencing	(stonith:fence_xvm):	 Stopped
+    * ip-rsc	(ocf:heartbeat:IPaddr2):	 Stopped
+    * ip-rsc2	(ocf:heartbeat:IPaddr2):	 Stopped
+    * dummy-rsc	(ocf:pacemaker:Dummy):	 Stopped
+    * ping-rsc-ping	(ocf:pacemaker:ping):	 Stopped
+
+Transition Summary:
+  * Start      fencing           ( cluster01 )
+  * Start      ip-rsc            ( cluster02 )
+  * Start      ip-rsc2           ( cluster01 )
+  * Start      dummy-rsc         ( cluster02 )
+  * Start      ping-rsc-ping     ( cluster01 )
+
+Executing Cluster Transition:
+  * Resource action: fencing         monitor on cluster02
+  * Resource action: fencing         monitor on cluster01
+  * Resource action: ip-rsc          monitor on cluster02
+  * Resource action: ip-rsc          monitor on cluster01
+  * Resource action: ip-rsc2         monitor on cluster02
+  * Resource action: ip-rsc2         monitor on cluster01
+  * Resource action: dummy-rsc       monitor on cluster02
+  * Resource action: dummy-rsc       monitor on cluster01
+  * Resource action: ping-rsc-ping   monitor on cluster02
+  * Resource action: ping-rsc-ping   monitor on cluster01
+  * Resource action: fencing         start on cluster01
+  * Resource action: ip-rsc          start on cluster02
+  * Resource action: ip-rsc2         start on cluster01
+  * Resource action: dummy-rsc       start on cluster02
+  * Resource action: ping-rsc-ping   start on cluster01
+  * Resource action: ip-rsc          monitor=20000 on cluster02
+  * Resource action: ip-rsc2         monitor=10000 on cluster01
+  * Resource action: dummy-rsc       monitor=60000 on cluster02
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ cluster01 cluster02 ]
+
+  * Full List of Resources:
+    * fencing	(stonith:fence_xvm):	 Started cluster01
+    * ip-rsc	(ocf:heartbeat:IPaddr2):	 Started cluster02
+    * ip-rsc2	(ocf:heartbeat:IPaddr2):	 Started cluster01
+    * dummy-rsc	(ocf:pacemaker:Dummy):	 Started cluster02
+    * ping-rsc-ping	(ocf:pacemaker:ping):	 Started cluster01

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,21 +25,29 @@
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/strings_internal.h>
 
+/* This says whether the current application is a Pacemaker daemon or not,
+ * and is used to change default logging settings such as whether to log to
+ * stderr, etc., as well as a few other details such as whether blackbox signal
+ * handling is enabled.
+ *
+ * It is set when logging is initialized, and does not need to be set directly.
+ */
+extern bool pcmk__is_daemon;
+
+// Number of elements in a statically defined array
+#define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
+
 // Internal ACL-related utilities (from acl.c)
 
 char *pcmk__uid2username(uid_t uid);
 const char *pcmk__update_acl_user(xmlNode *request, const char *field,
                                   const char *peer_user);
 
-#if ENABLE_ACL
-#  include <string.h>
 static inline bool
 pcmk__is_privileged(const char *user)
 {
     return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
-#endif
-
 
 #if SUPPORT_CIBSECRETS
 // Internal CIB utilities (from cib_secrets.c) */
@@ -95,69 +103,25 @@ pcmk__open_devnull(int flags)
 }
 
 
-/* internal logging utilities */
-
-/*!
- * \internal
- * \brief Log a configuration error
- *
- * \param[in] fmt   printf(3)-style format string
- * \param[in] ...   Arguments for format string
- */
-#  define pcmk__config_err(fmt...) do {     \
-        pcmk__config_error = true;          \
-        crm_err(fmt);                       \
-    } while (0)
-
-/*!
- * \internal
- * \brief Log a configuration warning
- *
- * \param[in] fmt   printf(3)-style format string
- * \param[in] ...   Arguments for format string
- */
-#  define pcmk__config_warn(fmt...) do {    \
-        pcmk__config_warning = true;        \
-        crm_warn(fmt);                      \
-    } while (0)
-
-/*!
- * \internal
- * \brief Execute code depending on whether message would be logged
- *
- * This is similar to do_crm_log_unlikely() except instead of logging, it either
- * continues past this statement or executes else_action depending on whether a
- * message of the given severity would be logged or not. This allows whole
- * blocks of code to be skipped if tracing or debugging is turned off.
- *
- * \param[in] level        Severity at which to continue past this statement
- * \param[in] else_action  Code block to execute if severity would not be logged
- *
- * \note else_action must not contain a break or continue statement
- */
-#  define pcmk__log_else(level, else_action) do {                           \
-        static struct qb_log_callsite *trace_cs = NULL;                     \
-                                                                            \
-        if (trace_cs == NULL) {                                             \
-            trace_cs = qb_log_callsite_get(__func__, __FILE__, "log_else",  \
-                                           level, __LINE__, 0);             \
-        }                                                                   \
-        if (!crm_is_callsite_active(trace_cs, level, 0)) {                  \
-            else_action;                                                    \
-        }                                                                   \
-    } while(0)
-
-
 /* internal main loop utilities (from mainloop.c) */
 
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
+guint pcmk__mainloop_timer_get_period(mainloop_timer_t *timer);
 
 
 /* internal messaging utilities (from messages.c) */
 
 const char *pcmk__message_name(const char *name);
+
+
+/* internal name/value utilities (from nvpair.c) */
+
+int pcmk__scan_nvpair(const char *input, char **name, char **value);
+char *pcmk__format_nvpair(const char *name, const char *value,
+                          const char *units);
+char *pcmk__format_named_time(const char *name, time_t epoch_time);
 
 
 /* internal procfs utilities (from procfs.c) */
@@ -286,6 +250,7 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 void pcmk__daemonize(const char *name, const char *pidfile);
 void pcmk__panic(const char *origin);
 pid_t pcmk__locate_sbd(void);
+void pcmk__sleep_ms(unsigned int ms);
 
 extern int pcmk__score_red;
 extern int pcmk__score_green;

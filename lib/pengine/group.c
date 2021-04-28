@@ -91,7 +91,7 @@ group_active(pe_resource_t * rsc, gboolean all)
 {
     gboolean c_all = TRUE;
     gboolean c_any = FALSE;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -114,7 +114,7 @@ group_active(pe_resource_t * rsc, gboolean all)
 static void
 group_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     char *child_text = crm_strdup_printf("%s     ", pre_text);
 
     status_print("%s<group id=\"%s\" ", pre_text, rsc->id);
@@ -135,7 +135,7 @@ void
 group_print(pe_resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
     char *child_text = NULL;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (pre_text == NULL) {
         pre_text = " ";
@@ -190,7 +190,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     GList *gIter = rsc->children;
-    char *count = crm_itoa(g_list_length(gIter));
+    char *count = pcmk__itoa(g_list_length(gIter));
 
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
@@ -348,7 +348,7 @@ group_free(pe_resource_t * rsc)
 
     pe_rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         CRM_ASSERT(child_rsc);
@@ -366,7 +366,7 @@ enum rsc_role_e
 group_resource_state(const pe_resource_t * rsc, gboolean current)
 {
     enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -382,7 +382,7 @@ group_resource_state(const pe_resource_t * rsc, gboolean current)
 }
 
 gboolean
-pe__group_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent)
+pe__group_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
     gboolean passes = FALSE;
 
@@ -393,7 +393,7 @@ pe__group_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_pare
     } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id)) {
         passes = TRUE;
     } else {
-        for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
             if (!child_rsc->fns->is_filtered(child_rsc, only_rsc, FALSE)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -558,14 +558,8 @@ bool stonith_agent_exists(const char *agent, int timeout);
  */
 const char *stonith_action_str(const char *action);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated Use stonith_get_namespace() instead
-const char *get_stonith_provider(const char *agent, const char *provider);
-
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/fencing/compat.h>
 #endif
 
 #ifdef __cplusplus

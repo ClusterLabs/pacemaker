@@ -23,7 +23,7 @@ have a ``.in`` extension, and its first line should be:
    #!@PYTHON@
 
 which will be replaced with the appropriate python executable when Pacemaker is
-built. To make that happen, add an ``AC_CONFIG_FILES()`` line to
+built. To make that happen, add an entry to ``CONFIG_FILES_EXEC()`` in
 ``configure.ac``, and add the file name without ``.in`` to ``.gitignore`` (see
 existing examples).
 
@@ -54,16 +54,10 @@ or "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)".
 Python Version Compatibility
 ############################
 
-Pacemaker targets compatibility with Python 3.2 and later.
+Pacemaker targets compatibility with Python 3.4 and later.
 
-Do not use features not available in all targeted Python versions. Some
-examples include:
-
-  * The ``u`` prefix for string literals
-  * The ``ipaddress`` module
-  * The ``subprocess.run()`` function
-  * The ``subprocess.DEVNULL`` constant
-  * ``subprocess`` module-specific exceptions
+Do not use features not available in all targeted Python versions. An
+example is the ``subprocess.run()`` function.
 
 
 .. index::

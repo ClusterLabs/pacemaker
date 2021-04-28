@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,9 +40,9 @@ extern "C" {
 #endif
 
 #  define CRM_ASSERT(expr) do {                                              \
-        if(__unlikely((expr) == FALSE)) {                                    \
+        if (!(expr)) {                                                       \
             crm_abort(__FILE__, __func__, __LINE__, #expr, TRUE, FALSE);     \
-            abort(); /* Redundant but it makes static analyzers happy */     \
+            abort(); /* crm_abort() doesn't always abort! */                 \
         }                                                                    \
     } while(0)
 
@@ -156,15 +156,15 @@ enum ocf_exitcode {
     PCMK_OCF_NOT_INSTALLED        = 5,
     PCMK_OCF_NOT_CONFIGURED       = 6,
     PCMK_OCF_NOT_RUNNING          = 7,  /* End of overlap with LSB */
-    PCMK_OCF_RUNNING_MASTER       = 8,
-    PCMK_OCF_FAILED_MASTER        = 9,
+    PCMK_OCF_RUNNING_PROMOTED     = 8,
+    PCMK_OCF_FAILED_PROMOTED      = 9,
 
 
     /* 150-199	reserved for application use */
     PCMK_OCF_CONNECTION_DIED = 189, // Deprecated (see PCMK_LRM_OP_NOT_CONNECTED)
 
-    PCMK_OCF_DEGRADED        = 190, /* Active resource that is no longer 100% functional */
-    PCMK_OCF_DEGRADED_MASTER = 191, /* Promoted resource that is no longer 100% functional */
+    PCMK_OCF_DEGRADED           = 190, // Resource active but more likely to fail soon
+    PCMK_OCF_DEGRADED_PROMOTED  = 191, // Resource promoted but more likely to fail soon
 
     PCMK_OCF_EXEC_ERROR    = 192, /* Generic problem invoking the agent */
     PCMK_OCF_UNKNOWN       = 193, /* State of the service is unknown - used for recording in-flight operations */
@@ -174,6 +174,17 @@ enum ocf_exitcode {
     PCMK_OCF_CANCELLED     = 197,
     PCMK_OCF_TIMEOUT       = 198,
     PCMK_OCF_OTHER_ERROR   = 199, /* Keep the same codes as PCMK_LSB */
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated Use PCMK_OCF_RUNNING_PROMOTED instead
+    PCMK_OCF_RUNNING_MASTER     = PCMK_OCF_RUNNING_PROMOTED,
+
+    //! \deprecated Use PCMK_OCF_FAILED_PROMOTED instead
+    PCMK_OCF_FAILED_MASTER      = PCMK_OCF_FAILED_PROMOTED,
+
+    //! \deprecated Use PCMK_OCF_DEGRADED_PROMOTED instead
+    PCMK_OCF_DEGRADED_MASTER    = PCMK_OCF_DEGRADED_PROMOTED,
+#endif
 };
 
 /*

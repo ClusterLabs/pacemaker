@@ -3,7 +3,7 @@ Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=cts-cli ; export CIB_shadow
 =#=#=#= Begin test: Validate CIB =#=#=#=
-<cib epoch="0" num_updates="0" admin_epoch="0">
+<cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -13,7 +13,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   <status/>
 </cib>
 =#=#=#= Current cib after: Validate CIB =#=#=#=
-<cib epoch="0" num_updates="0" admin_epoch="0">
+<cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -26,7 +26,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: cibadmin       - Validate CIB
 =#=#=#= Begin test: Configure something before erasing =#=#=#=
 =#=#=#= Current cib after: Configure something before erasing =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -44,7 +44,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 =#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
 The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
 =#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -60,8 +60,10 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= End test: Require --force for CIB erasure - Operation not safe (107) =#=#=#=
 * Passed: cibadmin       - Require --force for CIB erasure
 =#=#=#= Begin test: Allow CIB erasure with --force =#=#=#=
-=#=#=#= Current cib after: Allow CIB erasure with --force =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="1">
+=#=#=#= End test: Allow CIB erasure with --force - OK (0) =#=#=#=
+* Passed: cibadmin       - Allow CIB erasure with --force
+=#=#=#= Begin test: Query CIB =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -70,11 +72,8 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Allow CIB erasure with --force - OK (0) =#=#=#=
-* Passed: cibadmin       - Allow CIB erasure with --force
-=#=#=#= Begin test: Query CIB =#=#=#=
 =#=#=#= Current cib after: Query CIB =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="1">
+<cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -87,7 +86,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Query CIB
 =#=#=#= Begin test: Set cluster option =#=#=#=
 =#=#=#= Current cib after: Set cluster option =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="1">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -105,7 +104,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 =#=#=#= Begin test: Query new cluster option =#=#=#=
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
 =#=#=#= Current cib after: Query new cluster option =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="1">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -122,7 +121,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Query new cluster option
 =#=#=#= Begin test: Query cluster options =#=#=#=
 =#=#=#= Current cib after: Query cluster options =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="1">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -139,7 +138,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: cibadmin       - Query cluster options
 =#=#=#= Begin test: Set no-quorum policy =#=#=#=
 =#=#=#= Current cib after: Set no-quorum policy =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="1">
+<cib epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -157,7 +156,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 * Passed: crm_attribute  - Set no-quorum policy
 =#=#=#= Begin test: Delete nvpair =#=#=#=
 =#=#=#= Current cib after: Delete nvpair =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="1">
+<cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -182,7 +181,7 @@ Call failed: File exists
   </failed_update>
 </failed>
 =#=#=#= Current cib after: Create operation should fail =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="1">
+<cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -199,7 +198,7 @@ Call failed: File exists
 * Passed: cibadmin       - Create operation should fail
 =#=#=#= Begin test: Modify cluster options section =#=#=#=
 =#=#=#= Current cib after: Modify cluster options section =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="1">
+<cib epoch="5" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -218,7 +217,7 @@ Call failed: File exists
 =#=#=#= Begin test: Query updated cluster option =#=#=#=
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
 =#=#=#= Current cib after: Query updated cluster option =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="1">
+<cib epoch="5" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -236,7 +235,7 @@ Call failed: File exists
 * Passed: cibadmin       - Query updated cluster option
 =#=#=#= Begin test: Set duplicate cluster option =#=#=#=
 =#=#=#= Current cib after: Set duplicate cluster option =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="1">
+<cib epoch="6" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -261,7 +260,7 @@ Multiple attributes match name=cluster-delay
   Value: 40s 	(id=duplicate-cluster-delay)
 Please choose from one of the matches above and supply the 'id' with --attr-id
 =#=#=#= Current cib after: Setting multiply defined cluster option should fail =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="1">
+<cib epoch="6" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -282,7 +281,7 @@ Please choose from one of the matches above and supply the 'id' with --attr-id
 * Passed: crm_attribute  - Setting multiply defined cluster option should fail
 =#=#=#= Begin test: Set cluster option with -s =#=#=#=
 =#=#=#= Current cib after: Set cluster option with -s =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="1">
+<cib epoch="7" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -305,7 +304,7 @@ Please choose from one of the matches above and supply the 'id' with --attr-id
 Deleted crm_config option: id=(null) name=cluster-delay
 
 =#=#=#= Current cib after: Delete cluster option with -i =#=#=#=
-<cib epoch="9" num_updates="0" admin_epoch="1">
+<cib epoch="8" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -324,23 +323,21 @@ Deleted crm_config option: id=(null) name=cluster-delay
 =#=#=#= End test: Delete cluster option with -i - OK (0) =#=#=#=
 * Passed: crm_attribute  - Delete cluster option with -i
 =#=#=#= Begin test: Create node1 and bring it online =#=#=#=
-
 Current cluster status:
 
-
-Performing requested modifications
- + Bringing node node1 online
+Performing Requested Modifications:
+  * Bringing node node1 online
 
 Transition Summary:
 
-Executing cluster transition:
+Executing Cluster Transition:
 
-Revised cluster status:
-Online: [ node1 ]
-
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 ]
 
 =#=#=#= Current cib after: Create node1 and bring it online =#=#=#=
-<cib epoch="10" num_updates="2" admin_epoch="1">
+<cib epoch="9" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -364,7 +361,7 @@ Online: [ node1 ]
 * Passed: crm_simulate   - Create node1 and bring it online
 =#=#=#= Begin test: Create node attribute =#=#=#=
 =#=#=#= Current cib after: Create node attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1">
+<cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -393,7 +390,7 @@ Online: [ node1 ]
 =#=#=#= Begin test: Query new node attribute =#=#=#=
       <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
 =#=#=#= Current cib after: Query new node attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="1">
+<cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -421,7 +418,7 @@ Online: [ node1 ]
 * Passed: cibadmin       - Query new node attribute
 =#=#=#= Begin test: Set a transient (fail-count) node attribute =#=#=#=
 =#=#=#= Current cib after: Set a transient (fail-count) node attribute =#=#=#=
-<cib epoch="11" num_updates="1" admin_epoch="1">
+<cib epoch="10" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -456,7 +453,7 @@ Online: [ node1 ]
 =#=#=#= Begin test: Query a fail count =#=#=#=
 scope=status  name=fail-count-foo value=3
 =#=#=#= Current cib after: Query a fail count =#=#=#=
-<cib epoch="11" num_updates="1" admin_epoch="1">
+<cib epoch="10" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -492,7 +489,7 @@ scope=status  name=fail-count-foo value=3
 Deleted status attribute: id=status-node1-fail-count-foo name=fail-count-foo
 
 =#=#=#= Current cib after: Delete a transient (fail-count) node attribute =#=#=#=
-<cib epoch="11" num_updates="2" admin_epoch="1">
+<cib epoch="10" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -524,7 +521,7 @@ Deleted status attribute: id=status-node1-fail-count-foo name=fail-count-foo
 * Passed: crm_attribute  - Delete a transient (fail-count) node attribute
 =#=#=#= Begin test: Digest calculation =#=#=#=
 Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
-<cib epoch="11" num_updates="2" admin_epoch="1">
+<cib epoch="10" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -557,7 +554,7 @@ Digest: =#=#=#= Current cib after: Digest calculation =#=#=#=
 =#=#=#= Begin test: Replace operation should fail =#=#=#=
 Call failed: Update was older than existing configuration
 =#=#=#= Current cib after: Replace operation should fail =#=#=#=
-<cib epoch="11" num_updates="2" admin_epoch="1">
+<cib epoch="10" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -590,7 +587,7 @@ Call failed: Update was older than existing configuration
 =#=#=#= Begin test: Default standby value =#=#=#=
 scope=status  name=standby value=off
 =#=#=#= Current cib after: Default standby value =#=#=#=
-<cib epoch="11" num_updates="2" admin_epoch="1">
+<cib epoch="10" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -622,7 +619,7 @@ scope=status  name=standby value=off
 * Passed: crm_standby    - Default standby value
 =#=#=#= Begin test: Set standby status =#=#=#=
 =#=#=#= Current cib after: Set standby status =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="1">
+<cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -656,7 +653,7 @@ scope=status  name=standby value=off
 =#=#=#= Begin test: Query standby value =#=#=#=
 scope=nodes  name=standby value=true
 =#=#=#= Current cib after: Query standby value =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="1">
+<cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -691,7 +688,7 @@ scope=nodes  name=standby value=true
 Deleted nodes attribute: id=nodes-node1-standby name=standby
 
 =#=#=#= Current cib after: Delete standby value =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="1">
+<cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -723,7 +720,7 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
 * Passed: crm_standby    - Delete standby value
 =#=#=#= Begin test: Create a resource =#=#=#=
 =#=#=#= Current cib after: Create a resource =#=#=#=
-<cib epoch="14" num_updates="0" admin_epoch="1">
+<cib epoch="13" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -758,7 +755,7 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
 Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="15" num_updates="0" admin_epoch="1">
+<cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -797,7 +794,7 @@ Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attribute
 =#=#=#= Begin test: Query a resource meta attribute =#=#=#=
 false
 =#=#=#= Current cib after: Query a resource meta attribute =#=#=#=
-<cib epoch="15" num_updates="0" admin_epoch="1">
+<cib epoch="14" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -836,7 +833,7 @@ false
 =#=#=#= Begin test: Remove a resource meta attribute =#=#=#=
 Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Remove a resource meta attribute =#=#=#=
-<cib epoch="16" num_updates="0" admin_epoch="1">
+<cib epoch="15" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -886,7 +883,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
 Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attributes name=delay value=10s
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
-<cib epoch="19" num_updates="0" admin_epoch="1">
+<cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -925,9 +922,9 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 * Passed: crm_resource   - Create a resource attribute
 =#=#=#= Begin test: List the configured resources =#=#=#=
 Full List of Resources:
-  * dummy	(ocf::pacemaker:Dummy):	 Stopped
+  * dummy	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= Current cib after: List the configured resources =#=#=#=
-<cib epoch="19" num_updates="0" admin_epoch="1">
+<cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -969,7 +966,7 @@ dummy
 =#=#=#= End test: List IDs of instantiated resources - OK (0) =#=#=#=
 * Passed: crm_resource   - List IDs of instantiated resources
 =#=#=#= Begin test: Show XML configuration of resource =#=#=#=
-dummy	(ocf::pacemaker:Dummy):	 Stopped
+dummy	(ocf:pacemaker:Dummy):	 Stopped
 Resource XML:
 <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
   <meta_attributes id="dummy-meta_attributes"/>
@@ -984,7 +981,7 @@ crm_resource: Resource 'dummy' not moved: active in 0 locations.
 To prevent 'dummy' from running on a specific location, specify a node.
 Error performing operation: Invalid argument
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
-<cib epoch="19" num_updates="0" admin_epoch="1">
+<cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1024,7 +1021,7 @@ Error performing operation: Invalid argument
 =#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
 crm_resource: Error performing operation: Node not found
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
-<cib epoch="19" num_updates="0" admin_epoch="1">
+<cib epoch="18" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1063,7 +1060,7 @@ crm_resource: Error performing operation: Node not found
 * Passed: crm_resource   - Don't support migration to non-existent locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 =#=#=#= Current cib after: Create a fencing resource =#=#=#=
-<cib epoch="20" num_updates="0" admin_epoch="1">
+<cib epoch="19" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1102,31 +1099,33 @@ crm_resource: Error performing operation: Node not found
 =#=#=#= End test: Create a fencing resource - OK (0) =#=#=#=
 * Passed: cibadmin       - Create a fencing resource
 =#=#=#= Begin test: Bring resources online =#=#=#=
-
 Current cluster status:
-Online: [ node1 ]
+  * Node List:
+    * Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Stopped
- Fence	(stonith:fence_true):	 Stopped
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Stopped
+    * Fence	(stonith:fence_true):	 Stopped
 
 Transition Summary:
- * Start      dummy   ( node1 )  
- * Start      Fence   ( node1 )  
+  * Start      dummy   ( node1 )
+  * Start      Fence   ( node1 )
 
-Executing cluster transition:
- * Resource action: dummy           monitor on node1
- * Resource action: Fence           monitor on node1
- * Resource action: dummy           start on node1
- * Resource action: Fence           start on node1
+Executing Cluster Transition:
+  * Resource action: dummy           monitor on node1
+  * Resource action: Fence           monitor on node1
+  * Resource action: dummy           start on node1
+  * Resource action: Fence           start on node1
 
-Revised cluster status:
-Online: [ node1 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node1
-
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node1
 =#=#=#= Current cib after: Bring resources online =#=#=#=
-<cib epoch="20" num_updates="4" admin_epoch="1">
+<cib epoch="19" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1177,7 +1176,7 @@ Online: [ node1 ]
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
 crm_resource: Error performing operation: Already in requested state
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
-<cib epoch="20" num_updates="4" admin_epoch="1">
+<cib epoch="19" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1230,7 +1229,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
-<cib epoch="21" num_updates="0" admin_epoch="1">
+<cib epoch="20" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1283,7 +1282,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Clear out constraints generated by --move =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Clear out constraints generated by --move =#=#=#=
-<cib epoch="22" num_updates="0" admin_epoch="1">
+<cib epoch="21" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1334,7 +1333,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Default ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Default ticket granted state =#=#=#=
-<cib epoch="22" num_updates="0" admin_epoch="1">
+<cib epoch="21" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1384,7 +1383,7 @@ false
 * Passed: crm_ticket     - Default ticket granted state
 =#=#=#= Begin test: Set ticket granted state =#=#=#=
 =#=#=#= Current cib after: Set ticket granted state =#=#=#=
-<cib epoch="22" num_updates="1" admin_epoch="1">
+<cib epoch="21" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1438,7 +1437,7 @@ false
 =#=#=#= Begin test: Query ticket granted state =#=#=#=
 false
 =#=#=#= Current cib after: Query ticket granted state =#=#=#=
-<cib epoch="22" num_updates="1" admin_epoch="1">
+<cib epoch="21" num_updates="1" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1491,7 +1490,7 @@ false
 * Passed: crm_ticket     - Query ticket granted state
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
 =#=#=#= Current cib after: Delete ticket granted state =#=#=#=
-<cib epoch="22" num_updates="2" admin_epoch="1">
+<cib epoch="21" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1544,7 +1543,7 @@ false
 * Passed: crm_ticket     - Delete ticket granted state
 =#=#=#= Begin test: Make a ticket standby =#=#=#=
 =#=#=#= Current cib after: Make a ticket standby =#=#=#=
-<cib epoch="22" num_updates="3" admin_epoch="1">
+<cib epoch="21" num_updates="3" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1598,7 +1597,7 @@ false
 =#=#=#= Begin test: Query ticket standby state =#=#=#=
 true
 =#=#=#= Current cib after: Query ticket standby state =#=#=#=
-<cib epoch="22" num_updates="3" admin_epoch="1">
+<cib epoch="21" num_updates="3" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1651,7 +1650,7 @@ true
 * Passed: crm_ticket     - Query ticket standby state
 =#=#=#= Begin test: Activate a ticket =#=#=#=
 =#=#=#= Current cib after: Activate a ticket =#=#=#=
-<cib epoch="22" num_updates="4" admin_epoch="1">
+<cib epoch="21" num_updates="4" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1704,7 +1703,7 @@ true
 * Passed: crm_ticket     - Activate a ticket
 =#=#=#= Begin test: Delete ticket standby state =#=#=#=
 =#=#=#= Current cib after: Delete ticket standby state =#=#=#=
-<cib epoch="22" num_updates="5" admin_epoch="1">
+<cib epoch="21" num_updates="5" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1758,7 +1757,7 @@ true
 =#=#=#= Begin test: Ban a resource on unknown node =#=#=#=
 crm_resource: Error performing operation: Node not found
 =#=#=#= Current cib after: Ban a resource on unknown node =#=#=#=
-<cib epoch="22" num_updates="5" admin_epoch="1">
+<cib epoch="21" num_updates="5" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1810,36 +1809,38 @@ crm_resource: Error performing operation: Node not found
 =#=#=#= End test: Ban a resource on unknown node - No such object (105) =#=#=#=
 * Passed: crm_resource   - Ban a resource on unknown node
 =#=#=#= Begin test: Create two more nodes and bring them online =#=#=#=
-
 Current cluster status:
-Online: [ node1 ]
+  * Node List:
+    * Online: [ node1 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node1
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node1
 
-Performing requested modifications
- + Bringing node node2 online
- + Bringing node node3 online
+Performing Requested Modifications:
+  * Bringing node node2 online
+  * Bringing node node3 online
 
 Transition Summary:
- * Move       Fence   ( node1 -> node2 )  
+  * Move       Fence   ( node1 -> node2 )
 
-Executing cluster transition:
- * Resource action: dummy           monitor on node3
- * Resource action: dummy           monitor on node2
- * Resource action: Fence           stop on node1
- * Resource action: Fence           monitor on node3
- * Resource action: Fence           monitor on node2
- * Resource action: Fence           start on node2
+Executing Cluster Transition:
+  * Resource action: dummy           monitor on node3
+  * Resource action: dummy           monitor on node2
+  * Resource action: Fence           stop on node1
+  * Resource action: Fence           monitor on node3
+  * Resource action: Fence           monitor on node2
+  * Resource action: Fence           start on node2
 
-Revised cluster status:
-Online: [ node1 node2 node3 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node2
-
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
-<cib epoch="24" num_updates="8" admin_epoch="1">
+<cib epoch="23" num_updates="8" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1921,7 +1922,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 =#=#=#=
-<cib epoch="25" num_updates="0" admin_epoch="1">
+<cib epoch="24" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2014,7 +2015,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
 	This will prevent dummy from running on node2 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node2 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node2 =#=#=#=
-<cib epoch="26" num_updates="0" admin_epoch="1">
+<cib epoch="25" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2095,28 +2096,30 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score 
 =#=#=#= End test: Ban dummy from node2 - OK (0) =#=#=#=
 * Passed: crm_resource   - Ban dummy from node2
 =#=#=#= Begin test: Relocate resources due to ban =#=#=#=
-
 Current cluster status:
-Online: [ node1 node2 node3 ]
+  * Node List:
+    * Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node1
- Fence	(stonith:fence_true):	 Started node2
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node1
+    * Fence	(stonith:fence_true):	 Started node2
 
 Transition Summary:
- * Move       dummy   ( node1 -> node3 )  
+  * Move       dummy   ( node1 -> node3 )
 
-Executing cluster transition:
- * Resource action: dummy           stop on node1
- * Resource action: dummy           start on node3
+Executing Cluster Transition:
+  * Resource action: dummy           stop on node1
+  * Resource action: dummy           start on node3
 
-Revised cluster status:
-Online: [ node1 node2 node3 ]
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
 
- dummy	(ocf::pacemaker:Dummy):	 Started node3
- Fence	(stonith:fence_true):	 Started node2
-
+  * Full List of Resources:
+    * dummy	(ocf:pacemaker:Dummy):	 Started node3
+    * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
-<cib epoch="26" num_updates="2" admin_epoch="1">
+<cib epoch="25" num_updates="2" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2198,7 +2201,7 @@ Online: [ node1 node2 node3 ]
 * Passed: crm_simulate   - Relocate resources due to ban
 =#=#=#= Begin test: Move dummy to node1 =#=#=#=
 =#=#=#= Current cib after: Move dummy to node1 =#=#=#=
-<cib epoch="28" num_updates="0" admin_epoch="1">
+<cib epoch="27" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2281,7 +2284,7 @@ Online: [ node1 node2 node3 ]
 =#=#=#= Begin test: Clear implicit constraints for dummy on node2 =#=#=#=
 Removing constraint: cli-ban-dummy-on-node2
 =#=#=#= Current cib after: Clear implicit constraints for dummy on node2 =#=#=#=
-<cib epoch="29" num_updates="0" admin_epoch="1">
+<cib epoch="28" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2370,7 +2373,7 @@ Removing constraint: cli-ban-dummy-on-node2
 Performing update of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="31" num_updates="0" admin_epoch="1">
+<cib epoch="30" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2415,7 +2418,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="32" num_updates="0" admin_epoch="1">
+<cib epoch="31" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2469,7 +2472,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates =#=#=#=
-<cib epoch="33" num_updates="0" admin_epoch="1">
+<cib epoch="32" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2518,7 +2521,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Update resource meta attribute with duplicates (force clone) =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates (force clone) =#=#=#=
-<cib epoch="34" num_updates="0" admin_epoch="1">
+<cib epoch="33" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2571,7 +2574,7 @@ Multiple attributes match name=is-managed
 
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=false
 =#=#=#= Current cib after: Update child resource meta attribute with duplicates =#=#=#=
-<cib epoch="35" num_updates="0" admin_epoch="1">
+<cib epoch="34" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2625,7 +2628,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing delete on that instead of 'test-clone'
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute with duplicates =#=#=#=
-<cib epoch="36" num_updates="0" admin_epoch="1">
+<cib epoch="35" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2673,7 +2676,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 Performing delete of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute in parent =#=#=#=
-<cib epoch="37" num_updates="0" admin_epoch="1">
+<cib epoch="36" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2718,7 +2721,7 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="38" num_updates="0" admin_epoch="1">
+<cib epoch="37" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2766,7 +2769,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update existing resource meta attribute =#=#=#=
-<cib epoch="39" num_updates="0" admin_epoch="1">
+<cib epoch="38" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2813,7 +2816,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Create a resource meta attribute in the parent =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in the parent =#=#=#=
-<cib epoch="40" num_updates="0" admin_epoch="1">
+<cib epoch="39" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2865,7 +2868,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Delete resource parent meta attribute (force) =#=#=#=
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource parent meta attribute (force) =#=#=#=
-<cib epoch="41" num_updates="0" admin_epoch="1">
+<cib epoch="40" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2911,7 +2914,7 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
 * Passed: crm_resource   - Delete resource parent meta attribute (force)
 =#=#=#= Begin test: Restore duplicates =#=#=#=
 =#=#=#= Current cib after: Restore duplicates =#=#=#=
-<cib epoch="42" num_updates="0" admin_epoch="1">
+<cib epoch="41" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2964,7 +2967,7 @@ Multiple attributes match name=is-managed
 
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource child meta attribute =#=#=#=
-<cib epoch="43" num_updates="0" admin_epoch="1">
+<cib epoch="42" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3011,7 +3014,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 =#=#=#= Begin test: Create a resource meta attribute in dummy1 =#=#=#=
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in dummy1 =#=#=#=
-<cib epoch="45" num_updates="0" admin_epoch="1">
+<cib epoch="44" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3067,7 +3070,7 @@ Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attrib
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed name=is-managed value=false
 Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-group-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in dummy-group =#=#=#=
-<cib epoch="47" num_updates="0" admin_epoch="1">
+<cib epoch="46" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3125,7 +3128,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
-<cib epoch="50" num_updates="0" admin_epoch="1">
+<cib epoch="49" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3176,7 +3179,7 @@ Migration will take effect until:
 * Passed: crm_resource   - Specify a lifetime when moving a resource
 =#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
 =#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
-<cib epoch="52" num_updates="0" admin_epoch="1">
+<cib epoch="51" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3226,7 +3229,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
-<cib epoch="53" num_updates="0" admin_epoch="1">
+<cib epoch="52" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3279,7 +3282,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Remove expired constraints =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Remove expired constraints =#=#=#=
-<cib epoch="54" num_updates="0" admin_epoch="1">
+<cib epoch="53" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3326,7 +3329,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Clear all implicit constraints for dummy =#=#=#=
 Removing constraint: cli-prefer-dummy
 =#=#=#= Current cib after: Clear all implicit constraints for dummy =#=#=#=
-<cib epoch="55" num_updates="0" admin_epoch="1">
+<cib epoch="54" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3370,7 +3373,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource   - Clear all implicit constraints for dummy
 =#=#=#= Begin test: Delete a resource =#=#=#=
 =#=#=#= Current cib after: Delete a resource =#=#=#=
-<cib epoch="56" num_updates="0" admin_epoch="1">
+<cib epoch="55" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -4053,3 +4056,98 @@ Resources colocated with clone:
 </pacemaker-result>
 =#=#=#= End test: Show resource digests with overrides - OK (0) =#=#=#=
 * Passed: crm_resource   - Show resource digests with overrides
+=#=#=#= Begin test: List all nodes =#=#=#=
+11
+=#=#=#= End test: List all nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List all nodes
+=#=#=#= Begin test: List cluster nodes =#=#=#=
+6
+=#=#=#= End test: List cluster nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List cluster nodes
+=#=#=#= Begin test: List guest nodes =#=#=#=
+2
+=#=#=#= End test: List guest nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List guest nodes
+=#=#=#= Begin test: List remote nodes =#=#=#=
+3
+=#=#=#= End test: List remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List remote nodes
+=#=#=#= Begin test: List cluster,remote nodes =#=#=#=
+9
+=#=#=#= End test: List cluster,remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List cluster,remote nodes
+=#=#=#= Begin test: List guest,remote nodes =#=#=#=
+5
+=#=#=#= End test: List guest,remote nodes - OK (0) =#=#=#=
+* Passed: crmadmin       - List guest,remote nodes
+=#=#=#= Begin test: List a promotable clone resource =#=#=#=
+resource promotable-clone is running on: cluster01
+resource promotable-clone is running on: cluster02 Promoted
+=#=#=#= End test: List a promotable clone resource - OK (0) =#=#=#=
+* Passed: crm_resource   - List a promotable clone resource
+=#=#=#= Begin test: List the primitive of a promotable clone resource =#=#=#=
+resource promotable-rsc is running on: cluster01
+resource promotable-rsc is running on: cluster02 Promoted
+=#=#=#= End test: List the primitive of a promotable clone resource - OK (0) =#=#=#=
+* Passed: crm_resource   - List the primitive of a promotable clone resource
+=#=#=#= Begin test: List a single instance of a promotable clone resource =#=#=#=
+resource promotable-rsc:0 is running on: cluster02 Promoted
+=#=#=#= End test: List a single instance of a promotable clone resource - OK (0) =#=#=#=
+* Passed: crm_resource   - List a single instance of a promotable clone resource
+=#=#=#= Begin test: List another instance of a promotable clone resource =#=#=#=
+resource promotable-rsc:1 is running on: cluster01
+=#=#=#= End test: List another instance of a promotable clone resource - OK (0) =#=#=#=
+* Passed: crm_resource   - List another instance of a promotable clone resource
+=#=#=#= Begin test: Check that CIB_file="-" works - crm_mon =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 5 nodes configured
+  * 32 resource instances configured (4 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster01 httpd-bundle-1@cluster02 ]
+
+Active Resources:
+  * Clone Set: ping-clone [ping]:
+    * Started: [ cluster01 cluster02 ]
+  * Fencing	(stonith:fence_xvm):	 Started cluster01
+  * dummy	(ocf:pacemaker:Dummy):	 Started cluster02
+  * Container bundle set: httpd-bundle [pcmk:http]:
+    * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster01
+    * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Started cluster02
+    * httpd-bundle-2 (192.168.122.133)	(ocf:heartbeat:apache):	 Stopped
+  * Resource Group: exim-group:
+    * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster02
+    * Email	(lsb:exim):	 Started cluster02
+  * Clone Set: mysql-clone-group [mysql-group]:
+    * Started: [ cluster01 cluster02 ]
+  * Clone Set: promotable-clone [promotable-rsc] (promotable):
+    * Promoted: [ cluster02 ]
+    * Unpromoted: [ cluster01 ]
+=#=#=#= End test: Check that CIB_file="-" works - crm_mon - OK (0) =#=#=#=
+* Passed: cat            - Check that CIB_file="-" works - crm_mon
+=#=#=#= Begin test: Check that CIB_file="-" works - crm_resource =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --digests -r rsc1 -N node1 --output-as=xml">
+  <digests resource="rsc1" node="node1" task="start" interval="0ms">
+    <digest type="all" hash="3acdbe4c12734ebeb1251a59545af936">
+      <parameters passwd="secret" fake="0"/>
+    </digest>
+    <digest type="nonprivate" hash="279c477dbc38c621904a00ab9e599b2f">
+      <parameters fake="0"/>
+    </digest>
+    <digest type="nonreloadable" hash="5de1fd72a2e7762ed41543231034f6d7">
+      <parameters passwd="secret"/>
+    </digest>
+  </digests>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Check that CIB_file="-" works - crm_resource - OK (0) =#=#=#=
+* Passed: cat            - Check that CIB_file="-" works - crm_resource
+=#=#=#= Begin test: Check that CIB_file="-" works - crmadmin =#=#=#=
+11
+=#=#=#= End test: Check that CIB_file="-" works - crmadmin - OK (0) =#=#=#=
+* Passed: cat            - Check that CIB_file="-" works - crmadmin

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -242,7 +242,7 @@ acl_to_text(enum xml_private_flags flags)
 void
 pcmk__apply_acl(xmlNode *xml)
 {
-    GListPtr aIter = NULL;
+    GList *aIter = NULL;
     xml_private_t *p = xml->doc->_private;
     xmlXPathObjectPtr xpathObj = NULL;
 
@@ -287,7 +287,6 @@ pcmk__apply_acl(xmlNode *xml)
 void
 pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 {
-#if ENABLE_ACL
     xml_private_t *p = NULL;
 
     if ((target == NULL) || (target->doc == NULL)
@@ -326,7 +325,6 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
             }
         }
     }
-#endif
 }
 
 static inline bool
@@ -405,7 +403,7 @@ bool
 xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                       xmlNode **result)
 {
-    GListPtr aIter = NULL;
+    GList *aIter = NULL;
     xmlNode *target = NULL;
     xml_private_t *doc = NULL;
 
@@ -604,7 +602,6 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
     CRM_ASSERT(xml->doc);
     CRM_ASSERT(xml->doc->_private);
 
-#if ENABLE_ACL
     if (pcmk__tracking_xml_changes(xml, false) && xml_acl_enabled(xml)) {
         int offset = 0;
         xmlNode *parent = xml;
@@ -659,7 +656,6 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
         pcmk__set_xml_doc_flag(xml, xpf_acl_denied);
         return false;
     }
-#endif
 
     return true;
 }
@@ -674,7 +670,6 @@ pcmk__check_acl(xmlNode *xml, const char *name, enum xml_private_flags mode)
 bool
 pcmk_acl_required(const char *user)
 {
-#if ENABLE_ACL
     if (pcmk__str_empty(user)) {
         crm_trace("ACLs not required because no user set");
         return false;
@@ -685,13 +680,8 @@ pcmk_acl_required(const char *user)
     }
     crm_trace("ACLs required for %s", user);
     return true;
-#else
-    crm_trace("ACLs not required because not supported by this build");
-    return false;
-#endif
 }
 
-#if ENABLE_ACL
 char *
 pcmk__uid2username(uid_t uid)
 {
@@ -791,4 +781,3 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
 
     return requested_user;
 }
-#endif

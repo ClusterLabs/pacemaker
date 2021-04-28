@@ -1,0 +1,23 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc_stonith	(stonith:null):	 Started node1
+    * Clone Set: clone1 [rsc1]:
+      * Stopped: [ node1 node2 ]
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Resource action: rsc1:0          monitor on node2
+  * Resource action: rsc1:0          monitor on node1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+
+  * Full List of Resources:
+    * rsc_stonith	(stonith:null):	 Started node1
+    * Clone Set: clone1 [rsc1]:
+      * Stopped: [ node1 node2 ]

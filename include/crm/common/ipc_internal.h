@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,6 +39,9 @@ extern "C" {
    is meant to carry "unset" meaning, and better not to bet on/conditionalize
    over signedness of pid_t */
 #define PCMK__SPECIAL_PID  1
+
+// Timeout (in seconds) to use for IPC client sends, reply waits, etc.
+#define PCMK__IPC_TIMEOUT 120
 
 #if defined(US_AUTH_GETPEEREID)
 /* on FreeBSD, we don't want to expose "non-yieldable PID" (leading to
@@ -221,6 +224,8 @@ void pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                            struct qb_ipcs_service_handlers *cb);
 void pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                             struct qb_ipcs_service_handlers *cb);
+void pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
+                                struct qb_ipcs_service_handlers *cb);
 qb_ipcs_service_t *pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb);
 
 void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -315,7 +315,7 @@ cib_init(void)
 #endif
     }
 
-    config_hash = crm_str_table_new();
+    config_hash = pcmk__strkey_table(free, free);
 
     if (startCib("cib.xml") == FALSE) {
         crm_crit("Cannot start CIB... terminating");
@@ -353,21 +353,18 @@ startCib(const char *filename)
 
     if (activateCibXml(cib, TRUE, "start") == 0) {
         int port = 0;
-        const char *port_s = NULL;
 
         active = TRUE;
 
         cib_read_config(config_hash, cib);
 
-        port_s = crm_element_value(cib, "remote-tls-port");
-        if (port_s) {
-            port = crm_parse_int(port_s, "0");
+        pcmk__scan_port(crm_element_value(cib, "remote-tls-port"), &port);
+        if (port >= 0) {
             remote_tls_fd = init_remote_listener(port, TRUE);
         }
 
-        port_s = crm_element_value(cib, "remote-clear-port");
-        if (port_s) {
-            port = crm_parse_int(port_s, "0");
+        pcmk__scan_port(crm_element_value(cib, "remote-clear-port"), &port);
+        if (port >= 0) {
             remote_fd = init_remote_listener(port, FALSE);
         }
     }

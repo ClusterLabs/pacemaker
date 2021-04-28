@@ -1,0 +1,24 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node-0 node-1 ]
+
+  * Full List of Resources:
+    * Clone Set: ms0 [s0] (promotable):
+      * Unpromoted: [ node-0 node-1 ]
+
+Transition Summary:
+  * Promote    s0:1    ( Unpromoted -> Promoted node-1 )
+
+Executing Cluster Transition:
+  * Pseudo action:   ms0_promote_0
+  * Resource action: s0:1            promote on node-1
+  * Pseudo action:   ms0_promoted_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node-0 node-1 ]
+
+  * Full List of Resources:
+    * Clone Set: ms0 [s0] (promotable):
+      * Promoted: [ node-1 ]
+      * Unpromoted: [ node-0 ]

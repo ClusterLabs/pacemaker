@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,8 +89,8 @@ static pcmk__cluster_option_t pe_opts[] = {
             "until they start again on that node after it rejoins (or for at "
             "most shutdown-lock-limit, if set). Stonith resources and "
             "Pacemaker Remote connections are never locked. Clone and bundle "
-            "instances and the master role of promotable clones are currently "
-            "never locked, though support could be added in a future release."
+            "instances and the promoted role of promotable clones are currently"
+            " never locked, though support could be added in a future release."
     },
     {
         XML_CONFIG_ATTR_SHUTDOWN_LOCK_LIMIT, NULL, "time", NULL,
@@ -139,12 +139,7 @@ static pcmk__cluster_option_t pe_opts[] = {
     },
     {
         "concurrent-fencing", NULL, "boolean", NULL,
-#ifdef DEFAULT_CONCURRENT_FENCING_TRUE
-        "true",
-#else
-        "false",
-#endif
-        pcmk__valid_boolean,
+        PCMK__CONCURRENT_FENCING_DEFAULT, pcmk__valid_boolean,
         "Allow performing fencing operations in parallel",
         NULL
     },
@@ -222,9 +217,10 @@ static pcmk__cluster_option_t pe_opts[] = {
     {
         "remove-after-stop", NULL, "boolean", NULL,
         "false", pcmk__valid_boolean,
-        "*** Advanced Use Only *** Whether to remove stopped resources from "
+        "*** Deprecated *** Whether to remove stopped resources from "
             "the executor",
         "Values other than default are poorly tested and potentially dangerous."
+            " This option will be removed in a future release."
     },
 
     /* Storing inputs */
@@ -299,19 +295,19 @@ pe_metadata(void)
                                 "Pacemaker scheduler options",
                                 "Cluster options used by Pacemaker's scheduler"
                                     " (formerly called pengine)",
-                                pe_opts, DIMOF(pe_opts));
+                                pe_opts, PCMK__NELEM(pe_opts));
 }
 
 void
 verify_pe_options(GHashTable * options)
 {
-    pcmk__validate_cluster_options(options, pe_opts, DIMOF(pe_opts));
+    pcmk__validate_cluster_options(options, pe_opts, PCMK__NELEM(pe_opts));
 }
 
 const char *
 pe_pref(GHashTable * options, const char *name)
 {
-    return pcmk__cluster_option(options, pe_opts, DIMOF(pe_opts), name);
+    return pcmk__cluster_option(options, pe_opts, PCMK__NELEM(pe_opts), name);
 }
 
 const char *
@@ -469,10 +465,18 @@ role2text(enum rsc_role_e role)
             return RSC_ROLE_STOPPED_S;
         case RSC_ROLE_STARTED:
             return RSC_ROLE_STARTED_S;
-        case RSC_ROLE_SLAVE:
-            return RSC_ROLE_SLAVE_S;
-        case RSC_ROLE_MASTER:
-            return RSC_ROLE_MASTER_S;
+        case RSC_ROLE_UNPROMOTED:
+#ifdef PCMK__COMPAT_2_0
+            return RSC_ROLE_UNPROMOTED_LEGACY_S;
+#else
+            return RSC_ROLE_UNPROMOTED_S;
+#endif
+        case RSC_ROLE_PROMOTED:
+#ifdef PCMK__COMPAT_2_0
+            return RSC_ROLE_PROMOTED_LEGACY_S;
+#else
+            return RSC_ROLE_PROMOTED_S;
+#endif
     }
     CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
     CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
@@ -488,10 +492,12 @@ text2role(const char *role)
         return RSC_ROLE_STOPPED;
     } else if (pcmk__str_eq(role, RSC_ROLE_STARTED_S, pcmk__str_casei)) {
         return RSC_ROLE_STARTED;
-    } else if (pcmk__str_eq(role, RSC_ROLE_SLAVE_S, pcmk__str_casei)) {
-        return RSC_ROLE_SLAVE;
-    } else if (pcmk__str_eq(role, RSC_ROLE_MASTER_S, pcmk__str_casei)) {
-        return RSC_ROLE_MASTER;
+    } else if (pcmk__strcase_any_of(role, RSC_ROLE_UNPROMOTED_S,
+                                    RSC_ROLE_UNPROMOTED_LEGACY_S, NULL)) {
+        return RSC_ROLE_UNPROMOTED;
+    } else if (pcmk__strcase_any_of(role, RSC_ROLE_PROMOTED_S,
+                                    RSC_ROLE_PROMOTED_LEGACY_S, NULL)) {
+        return RSC_ROLE_PROMOTED;
     } else if (pcmk__str_eq(role, RSC_ROLE_UNKNOWN_S, pcmk__str_casei)) {
         return RSC_ROLE_UNKNOWN;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -130,7 +130,7 @@ static void log_action(stonith_action_t *action, pid_t pid);
 enum stonith_namespace
 stonith_text2namespace(const char *namespace_s)
 {
-    if (pcmk__str_eq(namespace_s, "any", pcmk__str_null_matches)) {
+    if ((namespace_s == NULL) || !strcmp(namespace_s, "any")) {
         return st_namespace_any;
 
     } else if (!strcmp(namespace_s, "redhat")
@@ -487,7 +487,7 @@ make_args(const char *agent, const char *action, const char *victim,
 
     CRM_CHECK(action != NULL, return NULL);
 
-    arg_list = crm_str_table_new();
+    arg_list = pcmk__strkey_table(free, free);
 
     // Add action to arguments (using an alias if requested)
     if (device_args) {
@@ -1271,15 +1271,13 @@ stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
     if (all_callbacks) {
         private->op_callback = NULL;
         g_hash_table_destroy(private->stonith_op_callback_table);
-        private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                                   NULL,
-                                                                   stonith_destroy_op_callback);
+        private->stonith_op_callback_table = pcmk__intkey_table(stonith_destroy_op_callback);
 
     } else if (call_id == 0) {
         private->op_callback = NULL;
 
     } else {
-        g_hash_table_remove(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+        pcmk__intkey_table_remove(private->stonith_op_callback_table, call_id);
     }
     return pcmk_ok;
 }
@@ -1321,8 +1319,8 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
 
     CRM_CHECK(call_id > 0, crm_log_xml_err(msg, "Bad result"));
 
-    blob = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
-
+    blob = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
+                                     call_id);
     if (blob != NULL) {
         local_blob = *blob;
         blob = NULL;
@@ -1398,7 +1396,8 @@ update_callback_timeout(int call_id, int timeout, stonith_t * st)
     stonith_callback_client_t *callback = NULL;
     stonith_private_t *private = st->st_private;
 
-    callback = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+    callback = pcmk__intkey_table_lookup(private->stonith_op_callback_table,
+                                         call_id);
     if (!callback || !callback->allow_timeout_updates) {
         return;
     }
@@ -1528,7 +1527,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
             } else {
 #if HAVE_MSGFROMIPC_TIMEOUT
-                stonith->call_timeout = MAX_IPC_DELAY;
+                stonith->call_timeout = PCMK__IPC_TIMEOUT;
 #endif
                 crm_debug("Connection to fencer by %s succeeded (registration token: %s)",
                           display_name, native->token);
@@ -1683,7 +1682,8 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
         set_callback_timeout(blob, stonith, call_id, timeout);
     }
 
-    g_hash_table_insert(private->stonith_op_callback_table, GINT_TO_POINTER(call_id), blob);
+    pcmk__intkey_table_insert(private->stonith_op_callback_table, call_id,
+                              blob);
     crm_trace("Added callback to %s for call %d", callback_name, call_id);
 
     return TRUE;
@@ -2036,7 +2036,7 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     const char *target = "node1";
     const char *host_arg = NULL;
 
-    GHashTable *params_table = crm_str_table_new();
+    GHashTable *params_table = pcmk__strkey_table(free, free);
 
     // Convert parameter list to a hash table
     for (; params; params = params->next) {
@@ -2111,8 +2111,7 @@ stonith_api_new(void)
     }
     new_stonith->st_private = private;
 
-    private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                               NULL, stonith_destroy_op_callback);
+    private->stonith_op_callback_table = pcmk__intkey_table(stonith_destroy_op_callback);
     private->notify_list = NULL;
     private->notify_refcnt = 0;
     private->notify_deletes = FALSE;
@@ -2260,7 +2259,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
         api_log(LOG_ERR, "Connection failed, could not kick (%s) node %u/%s : %s (%d)",
                 action, nodeid, uname, pcmk_strerror(rc), rc);
     } else {
-        char *name = (uname == NULL)? crm_itoa(nodeid) : strdup(uname);
+        char *name = (uname == NULL)? pcmk__itoa(nodeid) : strdup(uname);
         int opts = 0;
 
         stonith__set_call_options(opts, name,
@@ -2305,7 +2304,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         int progress = 0;
         int completed = 0;
         int opts = 0;
-        char *name = (uname == NULL)? crm_itoa(nodeid) : strdup(uname);
+        char *name = (uname == NULL)? pcmk__itoa(nodeid) : strdup(uname);
 
         stonith__set_call_options(opts, name, st_opt_sync_call);
         if ((uname == NULL) && (nodeid > 0)) {
@@ -2654,18 +2653,6 @@ stonith__event_state_neq(stonith_history_t *history, void *user_data)
     return history->state != GPOINTER_TO_INT(user_data);
 }
 
-// Deprecated functions kept only for backward API compatibility
-const char *get_stonith_provider(const char *agent, const char *provider);
-
-/*!
- * \brief Deprecated (use stonith_get_namespace() instead)
- */
-const char *
-get_stonith_provider(const char *agent, const char *provider)
-{
-    return stonith_namespace2text(stonith_get_namespace(agent, provider));
-}
-
 void
 stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
                                 xmlNode *metadata)
@@ -2707,3 +2694,15 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
     freeXpathObject(xpath);
 }
+
+// Deprecated functions kept only for backward API compatibility
+
+#include <crm/fencing/compat.h>
+
+const char *
+get_stonith_provider(const char *agent, const char *provider)
+{
+    return stonith_namespace2text(stonith_get_namespace(agent, provider));
+}
+
+// End deprecated API

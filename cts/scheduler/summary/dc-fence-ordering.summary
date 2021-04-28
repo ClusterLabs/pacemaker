@@ -1,0 +1,82 @@
+Using the original execution date of: 2018-11-28 18:37:16Z
+Current cluster status:
+  * Node List:
+    * Node rhel7-1: UNCLEAN (online)
+    * Online: [ rhel7-2 rhel7-4 rhel7-5 ]
+    * OFFLINE: [ rhel7-3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Stopped
+    * FencingPass	(stonith:fence_dummy):	 Stopped
+    * FencingFail	(stonith:fence_dummy):	 Stopped
+    * rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-2	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-3	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-4	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-5	(ocf:heartbeat:IPaddr2):	 Stopped
+    * migrator	(ocf:pacemaker:Dummy):	 Stopped
+    * Clone Set: Connectivity [ping-1]:
+      * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+    * Clone Set: promotable-1 [stateful-1] (promotable):
+      * Promoted: [ rhel7-1 ]
+      * Unpromoted: [ rhel7-2 rhel7-4 rhel7-5 ]
+      * Stopped: [ rhel7-3 ]
+    * Resource Group: group-1:
+      * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-1
+      * petulant	(service:pacemaker-cts-dummyd@10):	 FAILED rhel7-1
+      * r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Stopped
+    * lsb-dummy	(lsb:LSBDummy):	 Stopped
+
+Transition Summary:
+  * Fence (reboot) rhel7-1 'petulant failed there'
+  * Stop       stateful-1:0         (  Unpromoted rhel7-5 )  due to node availability
+  * Stop       stateful-1:1         ( Promoted rhel7-1 )  due to node availability
+  * Stop       stateful-1:2         (  Unpromoted rhel7-2 )  due to node availability
+  * Stop       stateful-1:3         (  Unpromoted rhel7-4 )  due to node availability
+  * Stop       r192.168.122.207     (        rhel7-1 )  due to node availability
+  * Stop       petulant             (        rhel7-1 )  due to node availability
+
+Executing Cluster Transition:
+  * Fencing rhel7-1 (reboot)
+  * Pseudo action:   group-1_stop_0
+  * Pseudo action:   petulant_stop_0
+  * Pseudo action:   r192.168.122.207_stop_0
+  * Pseudo action:   group-1_stopped_0
+  * Pseudo action:   promotable-1_demote_0
+  * Pseudo action:   stateful-1_demote_0
+  * Pseudo action:   promotable-1_demoted_0
+  * Pseudo action:   promotable-1_stop_0
+  * Resource action: stateful-1      stop on rhel7-5
+  * Pseudo action:   stateful-1_stop_0
+  * Resource action: stateful-1      stop on rhel7-2
+  * Resource action: stateful-1      stop on rhel7-4
+  * Pseudo action:   promotable-1_stopped_0
+  * Cluster action:  do_shutdown on rhel7-5
+  * Cluster action:  do_shutdown on rhel7-4
+  * Cluster action:  do_shutdown on rhel7-2
+Using the original execution date of: 2018-11-28 18:37:16Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel7-2 rhel7-4 rhel7-5 ]
+    * OFFLINE: [ rhel7-1 rhel7-3 ]
+
+  * Full List of Resources:
+    * Fencing	(stonith:fence_xvm):	 Stopped
+    * FencingPass	(stonith:fence_dummy):	 Stopped
+    * FencingFail	(stonith:fence_dummy):	 Stopped
+    * rsc_rhel7-1	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-2	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-3	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-4	(ocf:heartbeat:IPaddr2):	 Stopped
+    * rsc_rhel7-5	(ocf:heartbeat:IPaddr2):	 Stopped
+    * migrator	(ocf:pacemaker:Dummy):	 Stopped
+    * Clone Set: Connectivity [ping-1]:
+      * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+    * Clone Set: promotable-1 [stateful-1] (promotable):
+      * Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
+    * Resource Group: group-1:
+      * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Stopped
+      * petulant	(service:pacemaker-cts-dummyd@10):	 Stopped
+      * r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Stopped
+    * lsb-dummy	(lsb:LSBDummy):	 Stopped

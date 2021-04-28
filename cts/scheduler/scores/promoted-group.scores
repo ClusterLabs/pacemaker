@@ -1,0 +1,31 @@
+
+grp_ms_sf:0 promotion score on rh44-2: 49
+grp_ms_sf:1 promotion score on rh44-1: 99
+pcmk__clone_allocate: grp_ms_sf:0 allocation score on rh44-1: 0
+pcmk__clone_allocate: grp_ms_sf:0 allocation score on rh44-2: 0
+pcmk__clone_allocate: grp_ms_sf:1 allocation score on rh44-1: 0
+pcmk__clone_allocate: grp_ms_sf:1 allocation score on rh44-2: 0
+pcmk__clone_allocate: master_slave_Stateful:0 allocation score on rh44-1: 0
+pcmk__clone_allocate: master_slave_Stateful:0 allocation score on rh44-2: INFINITY
+pcmk__clone_allocate: master_slave_Stateful:1 allocation score on rh44-1: INFINITY
+pcmk__clone_allocate: master_slave_Stateful:1 allocation score on rh44-2: 0
+pcmk__clone_allocate: ms-sf allocation score on rh44-1: 0
+pcmk__clone_allocate: ms-sf allocation score on rh44-2: 0
+pcmk__group_allocate: grp_ms_sf:0 allocation score on rh44-1: 0
+pcmk__group_allocate: grp_ms_sf:0 allocation score on rh44-2: 0
+pcmk__group_allocate: grp_ms_sf:1 allocation score on rh44-1: 0
+pcmk__group_allocate: grp_ms_sf:1 allocation score on rh44-2: -INFINITY
+pcmk__group_allocate: master_slave_Stateful:0 allocation score on rh44-1: 0
+pcmk__group_allocate: master_slave_Stateful:0 allocation score on rh44-2: INFINITY
+pcmk__group_allocate: master_slave_Stateful:1 allocation score on rh44-1: INFINITY
+pcmk__group_allocate: master_slave_Stateful:1 allocation score on rh44-2: -INFINITY
+pcmk__group_allocate: resource_1 allocation score on rh44-1: INFINITY
+pcmk__group_allocate: resource_1 allocation score on rh44-2: 100
+pcmk__group_allocate: test allocation score on rh44-1: 200
+pcmk__group_allocate: test allocation score on rh44-2: 100
+pcmk__native_allocate: master_slave_Stateful:0 allocation score on rh44-1: 0
+pcmk__native_allocate: master_slave_Stateful:0 allocation score on rh44-2: INFINITY
+pcmk__native_allocate: master_slave_Stateful:1 allocation score on rh44-1: INFINITY
+pcmk__native_allocate: master_slave_Stateful:1 allocation score on rh44-2: -INFINITY
+pcmk__native_allocate: resource_1 allocation score on rh44-1: INFINITY
+pcmk__native_allocate: resource_1 allocation score on rh44-2: 100

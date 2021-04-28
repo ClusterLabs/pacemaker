@@ -1,0 +1,21 @@
+Current cluster status:
+  * Node List:
+    * Node sle12sp2-2: OFFLINE (maintenance)
+    * Online: [ sle12sp2-1 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started sle12sp2-1
+    * dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-2 (unmanaged)
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Node sle12sp2-2: OFFLINE (maintenance)
+    * Online: [ sle12sp2-1 ]
+
+  * Full List of Resources:
+    * st-sbd	(stonith:external/sbd):	 Started sle12sp2-1
+    * dummy1	(ocf:pacemaker:Dummy):	 Started sle12sp2-2 (unmanaged)

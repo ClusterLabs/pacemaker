@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -276,24 +276,6 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
     }
 }
 
-#define NODE_PATT "/lrm[@id="
-static char *get_node_from_xpath(const char *xpath) 
-{
-    char *nodeid = NULL;
-    char *tmp = strstr(xpath, NODE_PATT);
-
-    if(tmp) {
-        tmp += strlen(NODE_PATT);
-        tmp += 1;
-
-        nodeid = strdup(tmp);
-        tmp = strstr(nodeid, "\'");
-        CRM_ASSERT(tmp);
-        tmp[0] = 0;
-    }
-    return nodeid;
-}
-
 static char *extract_node_uuid(const char *xpath) 
 {
     char *mutable_path = strdup(xpath);
@@ -522,19 +504,19 @@ te_update_diff_v2(xmlNode *diff)
             process_resource_updates(ID(match), match, change, op, xpath);
 
         } else if (strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             process_resource_updates(local_node, match, change, op, xpath);
             free(local_node);
 
         } else if (strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             process_lrm_resource_diff(match, local_node);
             free(local_node);
 
         } else if (strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
+            char *local_node = pcmk__xpath_node_id(xpath, "lrm");
 
             process_graph_event(match, local_node);
             free(local_node);

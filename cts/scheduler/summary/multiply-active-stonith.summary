@@ -1,0 +1,28 @@
+Using the original execution date of: 2018-05-09 09:54:39Z
+Current cluster status:
+  * Node List:
+    * Node node2: UNCLEAN (online)
+    * Online: [ node1 node3 ]
+
+  * Full List of Resources:
+    * fencer	(stonith:fence_ipmilan):	 Started [ node2 node3 ]
+    * rsc1	(lsb:rsc1):	 FAILED node2
+
+Transition Summary:
+  * Fence (reboot) node2 'rsc1 failed there'
+  * Stop       rsc1    ( node2 )  due to node availability
+
+Executing Cluster Transition:
+  * Resource action: fencer          monitor=60000 on node3
+  * Fencing node2 (reboot)
+  * Pseudo action:   rsc1_stop_0
+Using the original execution date of: 2018-05-09 09:54:39Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node3 ]
+    * OFFLINE: [ node2 ]
+
+  * Full List of Resources:
+    * fencer	(stonith:fence_ipmilan):	 Started node3
+    * rsc1	(lsb:rsc1):	 Stopped

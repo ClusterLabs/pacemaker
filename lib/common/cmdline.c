@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,14 +7,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef _GNU_SOURCE
-#  define _GNU_SOURCE
-#endif
-
-#ifndef PCMK__CONFIG_H
-#  define PCMK__CONFIG_H
-#  include <config.h>
-#endif
+#include <crm_internal.h>
 
 #include <glib.h>
 
@@ -150,12 +143,11 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
 
 gchar **
 pcmk__cmdline_preproc(char **argv, const char *special) {
-    gchar **retval = NULL;
     GPtrArray *arr = NULL;
     bool saw_dash_dash = false;
 
     if (argv == NULL) {
-        return retval;
+        return NULL;
     }
 
     if (g_get_prgname() == NULL && argv && *argv) {
@@ -237,18 +229,9 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
         }
     }
 
-    /* Convert the GPtrArray into a gchar **, which the command line parsing
-     * code knows how to deal with.  Then we can free the array (but not its
-     * contents).
-     */
-    retval = calloc(arr->len+1, sizeof(char *));
-    for (int i = 0; i < arr->len; i++) {
-        retval[i] = (gchar *) g_ptr_array_index(arr, i);
-    }
+    g_ptr_array_add(arr, NULL);
 
-    g_ptr_array_free(arr, FALSE);
-
-    return retval;
+    return (char **) g_ptr_array_free(arr, FALSE);
 }
 
 G_GNUC_PRINTF(3, 4)

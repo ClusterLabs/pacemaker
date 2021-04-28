@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,8 +11,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <crm/crm.h>
-#include <crm/common/curses_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
@@ -76,6 +74,8 @@ curses_init(pcmk__output_t *out) {
 
 static void
 curses_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+    CRM_ASSERT(out != NULL);
+
     echo();
     nocbreak();
     endwin();
@@ -92,6 +92,8 @@ curses_reset(pcmk__output_t *out) {
 static void
 curses_subprocess_output(pcmk__output_t *out, int exit_status,
                          const char *proc_stdout, const char *proc_stderr) {
+    CRM_ASSERT(out != NULL);
+
     if (proc_stdout != NULL) {
         printw("%s\n", proc_stdout);
     }
@@ -109,6 +111,8 @@ curses_subprocess_output(pcmk__output_t *out, int exit_status,
  */
 static void
 curses_ver(pcmk__output_t *out, bool extended) {
+    CRM_ASSERT(out != NULL);
+
     if (extended) {
         printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
@@ -121,6 +125,8 @@ G_GNUC_PRINTF(2, 3)
 static void
 curses_error(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
+
+    CRM_ASSERT(out != NULL);
 
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
@@ -138,9 +144,15 @@ curses_error(pcmk__output_t *out, const char *format, ...) {
 }
 
 G_GNUC_PRINTF(2, 3)
-static void
+static int
 curses_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
+
+    CRM_ASSERT(out != NULL);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
 
     /* Informational output does not get indented, to separate it from other
      * potentially indented list output.
@@ -154,13 +166,12 @@ curses_info(pcmk__output_t *out, const char *format, ...) {
 
     clrtoeol();
     refresh();
+    return pcmk_rc_ok;
 }
 
 static void
 curses_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
-    private_data_t *priv = out->priv;
-
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
     curses_indented_printf(out, "%s", buf);
 }
 
@@ -168,11 +179,12 @@ G_GNUC_PRINTF(4, 5)
 static void
 curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
                   const char *format, ...) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     curses_list_data_t *new_list = NULL;
     va_list ap;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     va_start(ap, format);
 
@@ -192,10 +204,9 @@ curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *pl
 G_GNUC_PRINTF(3, 4)
 static void
 curses_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
-    private_data_t *priv = out->priv;
     va_list ap;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     va_start(ap, format);
 
@@ -214,10 +225,12 @@ curses_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
 
 static void
 curses_increment_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     gpointer tail;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     tail = g_queue_peek_tail(priv->parent_q);
     CRM_ASSERT(tail != NULL);
     ((curses_list_data_t *) tail)->len++;
@@ -225,10 +238,12 @@ curses_increment_list(pcmk__output_t *out) {
 
 static void
 curses_end_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     curses_list_data_t *node = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     node = g_queue_pop_tail(priv->parent_q);
 
     if (node->singular_noun != NULL && node->plural_noun != NULL) {
@@ -244,12 +259,67 @@ curses_end_list(pcmk__output_t *out) {
 
 static bool
 curses_is_quiet(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     return out->quiet;
 }
 
 static void
 curses_spacer(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     addch('\n');
+}
+
+static void
+curses_progress(pcmk__output_t *out, bool end) {
+    CRM_ASSERT(out != NULL);
+
+    if (end) {
+        printw(".\n");
+    } else {
+        addch('.');
+    }
+}
+
+static void
+curses_prompt(const char *prompt, bool do_echo, char **dest)
+{
+    int rc = OK;
+
+    CRM_ASSERT(prompt != NULL);
+    CRM_ASSERT(dest != NULL);
+
+    /* This is backwards from the text version of this function on purpose.  We
+     * disable echo by default in curses_init, so we need to enable it here if
+     * asked for.
+     */
+    if (do_echo) {
+        rc = echo();
+    }
+
+    if (rc == OK) {
+        printw("%s: ", prompt);
+
+        if (*dest != NULL) {
+            free(*dest);
+        }
+
+        *dest = calloc(1, 1024);
+        /* On older systems, scanw is defined as taking a char * for its first argument,
+         * while newer systems rightly want a const char *.  Accomodate both here due
+         * to building with -Werror.
+         */
+        rc = scanw((NCURSES_CONST char *) "%1023s", *dest);
+        addch('\n');
+    }
+
+    if (rc < 1) {
+        free(*dest);
+        *dest = NULL;
+    }
+
+    if (do_echo) {
+        noecho();
+    }
 }
 
 pcmk__output_t *
@@ -284,8 +354,29 @@ crm_mon_mk_curses_output(char **argv) {
 
     retval->is_quiet = curses_is_quiet;
     retval->spacer = curses_spacer;
+    retval->progress = curses_progress;
+    retval->prompt = curses_prompt;
 
     return retval;
+}
+
+G_GNUC_PRINTF(2, 0)
+void
+curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    vw_printw(stdscr, format, args);
+
+    clrtoeol();
+    refresh();
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+curses_formatted_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    va_start(ap, format);
+    curses_formatted_vprintf(out, format, ap);
+    va_end(ap);
 }
 
 G_GNUC_PRINTF(2, 0)
@@ -306,10 +397,7 @@ curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
         printw("* ");
     }
 
-    vw_printw(stdscr, format, args);
-
-    clrtoeol();
-    refresh();
+    curses_formatted_vprintf(out, format, args);
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -320,6 +408,24 @@ curses_indented_printf(pcmk__output_t *out, const char *format, ...) {
     va_start(ap, format);
     curses_indented_vprintf(out, format, ap);
     va_end(ap);
+}
+
+PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
+static int
+cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
+    unsigned long long flags = va_arg(args, unsigned long long);
+
+    if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
+        curses_formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
+        curses_formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
+        return pcmk_rc_ok;
+    } else if (pcmk_is_set(flags, pe_flag_stop_everything)) {
+        curses_formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
+        curses_formatted_printf(out, "  The cluster will keep all resources stopped\n");
+        return pcmk_rc_ok;
+    } else {
+        return pcmk_rc_no_output;
+    }
 }
 
 PCMK__OUTPUT_ARGS("stonith-event", "stonith_history_t *", "gboolean", "gboolean")
@@ -380,7 +486,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "fencing-list", "console", stonith__history },
     { "full-fencing-list", "console", stonith__full_history },
     { "group", "console", pe__group_text },
-    { "maint-mode", "console", pe__cluster_maint_mode_text },
+    { "maint-mode", "console", cluster_maint_mode_console },
     { "node", "console", pe__node_text },
     { "node-attribute", "console", pe__node_attribute_text },
     { "node-list", "console", pe__node_list_text },
@@ -405,6 +511,18 @@ pcmk__output_t *
 crm_mon_mk_curses_output(char **argv) {
     /* curses was disabled in the build, so fall back to text. */
     return pcmk__mk_text_output(argv);
+}
+
+G_GNUC_PRINTF(2, 0)
+void
+curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    return;
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+curses_formatted_printf(pcmk__output_t *out, const char *format, ...) {
+    return;
 }
 
 G_GNUC_PRINTF(2, 0)

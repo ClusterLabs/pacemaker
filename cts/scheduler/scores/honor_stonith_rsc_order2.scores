@@ -1,0 +1,12 @@
+
+pcmk__clone_allocate: S_A:0 allocation score on fc16-builder: 0
+pcmk__clone_allocate: S_CLONE allocation score on fc16-builder: 0
+pcmk__group_allocate: S_B allocation score on fc16-builder: 0
+pcmk__group_allocate: S_C allocation score on fc16-builder: 0
+pcmk__group_allocate: S_D allocation score on fc16-builder: 0
+pcmk__group_allocate: S_GROUP allocation score on fc16-builder: 0
+pcmk__native_allocate: A allocation score on fc16-builder: 0
+pcmk__native_allocate: S_A:0 allocation score on fc16-builder: 0
+pcmk__native_allocate: S_B allocation score on fc16-builder: 0
+pcmk__native_allocate: S_C allocation score on fc16-builder: 0
+pcmk__native_allocate: S_D allocation score on fc16-builder: 0

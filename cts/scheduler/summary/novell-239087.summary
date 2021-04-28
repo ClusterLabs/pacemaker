@@ -1,0 +1,23 @@
+Current cluster status:
+  * Node List:
+    * Online: [ xen-1 xen-2 ]
+
+  * Full List of Resources:
+    * fs_1	(ocf:heartbeat:Filesystem):	 Started xen-1
+    * Clone Set: ms-drbd0 [drbd0] (promotable):
+      * Promoted: [ xen-1 ]
+      * Unpromoted: [ xen-2 ]
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ xen-1 xen-2 ]
+
+  * Full List of Resources:
+    * fs_1	(ocf:heartbeat:Filesystem):	 Started xen-1
+    * Clone Set: ms-drbd0 [drbd0] (promotable):
+      * Promoted: [ xen-1 ]
+      * Unpromoted: [ xen-2 ]

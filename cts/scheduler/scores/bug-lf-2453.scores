@@ -1,0 +1,22 @@
+
+pcmk__clone_allocate: CloneResource1 allocation score on domu1: INFINITY
+pcmk__clone_allocate: CloneResource1 allocation score on domu2: INFINITY
+pcmk__clone_allocate: CloneResource2 allocation score on domu1: INFINITY
+pcmk__clone_allocate: CloneResource2 allocation score on domu2: INFINITY
+pcmk__clone_allocate: DummyResource:0 allocation score on domu1: INFINITY
+pcmk__clone_allocate: DummyResource:0 allocation score on domu2: INFINITY
+pcmk__clone_allocate: DummyResource:1 allocation score on domu1: INFINITY
+pcmk__clone_allocate: DummyResource:1 allocation score on domu2: INFINITY
+pcmk__clone_allocate: apache:0 allocation score on domu1: INFINITY
+pcmk__clone_allocate: apache:0 allocation score on domu2: INFINITY
+pcmk__clone_allocate: apache:1 allocation score on domu1: INFINITY
+pcmk__clone_allocate: apache:1 allocation score on domu2: INFINITY
+pcmk__native_allocate: DummyResource:0 allocation score on domu1: INFINITY
+pcmk__native_allocate: DummyResource:0 allocation score on domu2: INFINITY
+pcmk__native_allocate: DummyResource:1 allocation score on domu1: -INFINITY
+pcmk__native_allocate: DummyResource:1 allocation score on domu2: INFINITY
+pcmk__native_allocate: PrimitiveResource1 allocation score on domu1: INFINITY
+pcmk__native_allocate: apache:0 allocation score on domu1: -INFINITY
+pcmk__native_allocate: apache:0 allocation score on domu2: -INFINITY
+pcmk__native_allocate: apache:1 allocation score on domu1: -INFINITY
+pcmk__native_allocate: apache:1 allocation score on domu2: -INFINITY

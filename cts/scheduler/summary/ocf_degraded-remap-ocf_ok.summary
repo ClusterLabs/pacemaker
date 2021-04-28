@@ -1,0 +1,21 @@
+Using the original execution date of: 2020-09-30 10:24:21Z
+Current cluster status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 ]
+
+  * Full List of Resources:
+    * xvmfence	(stonith:fence_xvm):	 Started rhel8-1
+    * dummy	(ocf:pacemaker:Dummy):	 Started rhel8-1
+
+Transition Summary:
+
+Executing Cluster Transition:
+Using the original execution date of: 2020-09-30 10:24:21Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel8-1 rhel8-2 ]
+
+  * Full List of Resources:
+    * xvmfence	(stonith:fence_xvm):	 Started rhel8-1
+    * dummy	(ocf:pacemaker:Dummy):	 Started rhel8-1

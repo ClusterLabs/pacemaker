@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 the Pacemaker project contributors
+ * Copyright 2014-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,20 +11,36 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
-static GListPtr find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc,
+static GList *find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc,
                                     pe_resource_t * orig_rsc);
 
-static GListPtr group_find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc,
+static GList *group_find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc,
                                           pe_resource_t * orig_rsc);
 
 static void group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                                              GListPtr all_rscs);
+                                              GList *all_rscs);
 
 struct compare_data {
     const pe_node_t *node1;
     const pe_node_t *node2;
     int result;
 };
+
+static int
+utilization_value(const char *s)
+{
+    int value = 0;
+
+    /* @TODO It would make sense to restrict utilization values to nonnegative
+     * integers, but the documentation just says "integers" and we didn't
+     * restrict them initially, so for backward compatibility, allow any
+     * integer.
+     */
+    if (s != NULL) {
+        pcmk__scan_min_int(s, &value, INT_MIN);
+    }
+    return value;
+}
 
 static void
 do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
@@ -33,9 +49,8 @@ do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
     int node2_capacity = 0;
     struct compare_data *data = user_data;
 
-    node1_capacity = crm_parse_int(value, "0");
-    node2_capacity =
-        crm_parse_int(g_hash_table_lookup(data->node2->details->utilization, key), "0");
+    node1_capacity = utilization_value(value);
+    node2_capacity = utilization_value(g_hash_table_lookup(data->node2->details->utilization, key));
 
     if (node1_capacity > node2_capacity) {
         data->result--;
@@ -56,7 +71,7 @@ do_compare_capacity2(gpointer key, gpointer value, gpointer user_data)
     }
 
     node1_capacity = 0;
-    node2_capacity = crm_parse_int(value, "0");
+    node2_capacity = utilization_value(value);
 
     if (node1_capacity > node2_capacity) {
         data->result--;
@@ -97,11 +112,11 @@ do_calculate_utilization(gpointer key, gpointer value, gpointer user_data)
 
     current = g_hash_table_lookup(data->current_utilization, key);
     if (data->plus) {
-        result = crm_itoa(crm_parse_int(current, "0") + crm_parse_int(value, "0"));
+        result = pcmk__itoa(utilization_value(current) + utilization_value(value));
         g_hash_table_replace(data->current_utilization, strdup(key), result);
 
     } else if (current) {
-        result = crm_itoa(crm_parse_int(current, "0") - crm_parse_int(value, "0"));
+        result = pcmk__itoa(utilization_value(current) - utilization_value(value));
         g_hash_table_replace(data->current_utilization, strdup(key), result);
     }
 }
@@ -135,8 +150,8 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     int remaining = 0;
     struct capacity_data *data = user_data;
 
-    required = crm_parse_int(value, "0");
-    remaining = crm_parse_int(g_hash_table_lookup(data->node->details->utilization, key), "0");
+    required = utilization_value(value);
+    remaining = utilization_value(g_hash_table_lookup(data->node->details->utilization, key));
 
     if (required > remaining) {
         CRM_ASSERT(data->rsc_id);
@@ -175,7 +190,7 @@ native_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t *
 
 static void
 add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                    GListPtr all_rscs, pe_resource_t * orig_rsc)
+                    GList *all_rscs, pe_resource_t * orig_rsc)
 {
     if (!pcmk_is_set(rsc->flags, pe_rsc_provisional)) {
         return;
@@ -192,14 +207,14 @@ add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
         group_add_unallocated_utilization(all_utilization, rsc, all_rscs);
 
     } else if (pe_rsc_is_clone(rsc)) {
-        GListPtr gIter1 = NULL;
+        GList *gIter1 = NULL;
         gboolean existing = FALSE;
 
         /* Check if there's any child already existing in the list */
         gIter1 = rsc->children;
         for (; gIter1 != NULL; gIter1 = gIter1->next) {
             pe_resource_t *child = (pe_resource_t *) gIter1->data;
-            GListPtr gIter2 = NULL;
+            GList *gIter2 = NULL;
 
             if (g_list_find(all_rscs, child)) {
                 existing = TRUE;
@@ -233,11 +248,11 @@ add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
 }
 
 static GHashTable *
-sum_unallocated_utilization(pe_resource_t * rsc, GListPtr colocated_rscs)
+sum_unallocated_utilization(pe_resource_t * rsc, GList *colocated_rscs)
 {
-    GListPtr gIter = NULL;
-    GListPtr all_rscs = NULL;
-    GHashTable *all_utilization = crm_str_table_new();
+    GList *gIter = NULL;
+    GList *all_rscs = NULL;
+    GHashTable *all_utilization = pcmk__strkey_table(free, free);
 
     all_rscs = g_list_copy(colocated_rscs);
     if (g_list_find(all_rscs, rsc) == FALSE) {
@@ -260,10 +275,10 @@ sum_unallocated_utilization(pe_resource_t * rsc, GListPtr colocated_rscs)
     return all_utilization;
 }
 
-static GListPtr
-find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
+static GList *
+find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (rsc == NULL) {
         return colocated_rscs;
@@ -333,7 +348,7 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
     CRM_CHECK(rsc && prefer && data_set, return);
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
         GHashTableIter iter;
-        GListPtr colocated_rscs = NULL;
+        GList *colocated_rscs = NULL;
         gboolean any_capable = FALSE;
         pe_node_t *node = NULL;
 
@@ -407,21 +422,21 @@ process_utilization(pe_resource_t * rsc, pe_node_t ** prefer, pe_working_set_t *
                 }
             }
         }
-        pe__show_node_weights(true, rsc, "Post-utilization", rsc->allowed_nodes);
+        pe__show_node_weights(true, rsc, "Post-utilization", rsc->allowed_nodes, data_set);
     }
 }
 
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>
 
-GListPtr
-group_find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
+GList *
+group_find_colocated_rscs(GList *colocated_rscs, pe_resource_t * rsc, pe_resource_t * orig_rsc)
 {
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
     if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -442,13 +457,13 @@ group_find_colocated_rscs(GListPtr colocated_rscs, pe_resource_t * rsc, pe_resou
 
 static void
 group_add_unallocated_utilization(GHashTable * all_utilization, pe_resource_t * rsc,
-                                  GListPtr all_rscs)
+                                  GList *all_rscs)
 {
     group_variant_data_t *group_data = NULL;
 
     get_group_variant_data(group_data, rsc);
     if (group_data->colocated || pe_rsc_is_clone(rsc->parent)) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;

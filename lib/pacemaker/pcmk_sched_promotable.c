@@ -17,6 +17,8 @@
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
+extern bool pcmk__is_daemon;
+
 static void
 child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
                             pe_resource_t * rsc, pe_resource_t * child, pe_resource_t * last,
@@ -93,7 +95,7 @@ static void
 check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
                          gboolean *promoting)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (rsc->children) {
         gIter = rsc->children;
@@ -127,14 +129,16 @@ check_promotable_actions(pe_resource_t *rsc, gboolean *demoting,
     }
 }
 
-static void apply_master_location(pe_resource_t *child, GListPtr location_constraints, pe_node_t *chosen)
+static void
+apply_promoted_location(pe_resource_t *child, GList *location_constraints,
+                        pe_node_t *chosen)
 {
     CRM_CHECK(child && chosen, return);
-    for (GListPtr gIter = location_constraints; gIter; gIter = gIter->next) {
+    for (GList *gIter = location_constraints; gIter; gIter = gIter->next) {
         pe_node_t *cons_node = NULL;
         pe__location_t *cons = gIter->data;
 
-        if (cons->role_filter == RSC_ROLE_MASTER) {
+        if (cons->role_filter == RSC_ROLE_PROMOTED) {
             pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);
             cons_node = pe_find_node_id(cons->node_list_rh, chosen->details->id);
         }
@@ -159,7 +163,7 @@ guest_location(pe_node_t *guest_node)
 }
 
 static pe_node_t *
-can_be_master(pe_resource_t * rsc)
+node_to_be_promoted_on(pe_resource_t *rsc)
 {
     pe_node_t *node = NULL;
     pe_node_t *local_node = NULL;
@@ -174,12 +178,12 @@ can_be_master(pe_resource_t * rsc)
 #endif
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-            if (can_be_master(child) == NULL) {
+            if (node_to_be_promoted_on(child) == NULL) {
                 pe_rsc_trace(rsc, "Child %s of %s can't be promoted", child->id, rsc->id);
                 return NULL;
             }
@@ -188,12 +192,12 @@ can_be_master(pe_resource_t * rsc)
 
     node = rsc->fns->location(rsc, NULL, FALSE);
     if (node == NULL) {
-        pe_rsc_trace(rsc, "%s cannot be master: not allocated", rsc->id);
+        pe_rsc_trace(rsc, "%s cannot be promoted: not allocated", rsc->id);
         return NULL;
 
     } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-        if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
-            crm_notice("Forcing unmanaged master %s to remain promoted on %s",
+        if (rsc->fns->state(rsc, TRUE) == RSC_ROLE_PROMOTED) {
+            crm_notice("Forcing unmanaged instance %s to remain promoted on %s",
                        rsc->id, node->details->uname);
 
         } else {
@@ -201,7 +205,8 @@ can_be_master(pe_resource_t * rsc)
         }
 
     } else if (rsc->priority < 0) {
-        pe_rsc_trace(rsc, "%s cannot be master: preference: %d", rsc->id, rsc->priority);
+        pe_rsc_trace(rsc, "%s cannot be promoted: preference: %d",
+                     rsc->id, rsc->priority);
         return NULL;
 
     } else if (can_run_resources(node) == FALSE) {
@@ -230,7 +235,8 @@ can_be_master(pe_resource_t * rsc)
         return local_node;
 
     } else {
-        pe_rsc_trace(rsc, "%s cannot be master on %s: node full", rsc->id, node->details->uname);
+        pe_rsc_trace(rsc, "%s cannot be promoted on %s: node full",
+                     rsc->id, node->details->uname);
     }
 
     return NULL;
@@ -273,7 +279,7 @@ sort_promotable_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 static void
 promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -282,10 +288,10 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (clone_data->merged_master_weights) {
+    if (clone_data->added_promoted_constraints) {
         return;
     }
-    clone_data->merged_master_weights = TRUE;
+    clone_data->added_promoted_constraints = true;
     pe_rsc_trace(rsc, "Merging weights for %s", rsc->id);
     pe__set_resource_flags(rsc, pe_rsc_merging);
 
@@ -294,7 +300,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
     }
-    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Before", rsc->allowed_nodes, data_set);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -308,23 +314,23 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         node = (pe_node_t *) pe_hash_table_lookup(rsc->allowed_nodes, chosen->details->id);
         CRM_ASSERT(node != NULL);
-        /* adds in master preferences and rsc_location.role=Master */
+        // Add promotion preferences and rsc_location scores when role=Promoted
         score2char_stack(child->sort_index, score, len);
         pe_rsc_trace(rsc, "Adding %s to %s from %s", score,
                      node->details->uname, child->id);
         node->weight = pe__add_scores(child->sort_index, node->weight);
     }
 
-    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Middle", rsc->allowed_nodes, data_set);
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__colocation_t *constraint = (pcmk__colocation_t *) gIter->data;
 
-        /* (re-)adds location preferences of resources that the
-         * master instance should/must be colocated with
+        /* (Re-)add location preferences of resources that a promoted instance
+         * should/must be colocated with.
          */
-        if (constraint->role_lh == RSC_ROLE_MASTER) {
+        if (constraint->role_lh == RSC_ROLE_PROMOTED) {
             enum pe_weights flags = constraint->score == INFINITY ? 0 : pe_weights_rollback;
 
             pe_rsc_trace(rsc, "RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
@@ -345,10 +351,10 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
             continue;
         }
 
-        /* (re-)adds location preferences of resource that wish to be
-         * colocated with the master instance
+        /* (Re-)add location preferences of resources that wish to be colocated
+         * with a promoted instance.
          */
-        if (constraint->role_rh == RSC_ROLE_MASTER) {
+        if (constraint->role_rh == RSC_ROLE_PROMOTED) {
             pe_rsc_trace(rsc, "LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id,
                          constraint->score);
             rsc->allowed_nodes =
@@ -365,13 +371,13 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         rsc_ticket_t *rsc_ticket = (rsc_ticket_t *) gIter->data;
 
-        if (rsc_ticket->role_lh == RSC_ROLE_MASTER
+        if ((rsc_ticket->role_lh == RSC_ROLE_PROMOTED)
             && (rsc_ticket->ticket->granted == FALSE || rsc_ticket->ticket->standby)) {
             resource_location(rsc, NULL, -INFINITY, "__stateful_without_ticket__", data_set);
         }
     }
 
-    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "After", rsc->allowed_nodes, data_set);
 
     /* write them back and sort */
 
@@ -381,7 +387,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         chosen = child->fns->location(child, NULL, FALSE);
         if (!pcmk_is_set(child->flags, pe_rsc_managed)
-            && (child->next_role == RSC_ROLE_MASTER)) {
+            && (child->next_role == RSC_ROLE_PROMOTED)) {
             child->sort_index = INFINITY;
 
         } else if (chosen == NULL || child->sort_index < 0) {
@@ -404,7 +410,7 @@ promotion_order(pe_resource_t *rsc, pe_working_set_t *data_set)
 static gboolean
 filter_anonymous_instance(pe_resource_t *rsc, const pe_node_t *node)
 {
-    GListPtr rIter = NULL;
+    GList *rIter = NULL;
     char *key = clone_strip(rsc->id);
     pe_resource_t *parent = uber_parent(rsc);
 
@@ -459,7 +465,7 @@ lookup_promotion_score(pe_resource_t *rsc, const pe_node_t *node, const char *na
     const char *attr_value = NULL;
 
     if (node && name) {
-        char *attr_name = crm_strdup_printf("master-%s", name);
+        char *attr_name = pcmk_promotion_score_name(name);
 
         attr_value = pe_node_attribute_calculated(node, attr_name, rsc);
         free(attr_name);
@@ -478,7 +484,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
     CRM_CHECK(node != NULL, return not_set_value);
 
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child = (pe_resource_t *) gIter->data;
@@ -527,7 +533,7 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
 
     if (rsc->clone_name) {
         /* Use the name the lrm knows this resource as,
-         * since that's what crm_master would have used too
+         * since that's what crm_attribute --promotion would have used
          */
         name = rsc->clone_name;
     }
@@ -558,20 +564,20 @@ promotion_score(pe_resource_t *rsc, const pe_node_t *node, int not_set_value)
 }
 
 void
-apply_master_prefs(pe_resource_t *rsc)
+pcmk__add_promotion_scores(pe_resource_t *rsc)
 {
     int score, new_score;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (clone_data->applied_master_prefs) {
+    if (clone_data->added_promotion_scores) {
         /* Make sure we only do this once */
         return;
     }
 
-    clone_data->applied_master_prefs = TRUE;
+    clone_data->added_promotion_scores = true;
 
     for (; gIter != NULL; gIter = gIter->next) {
         GHashTableIter iter;
@@ -581,9 +587,8 @@ apply_master_prefs(pe_resource_t *rsc)
         g_hash_table_iter_init(&iter, child_rsc->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
             if (can_run_resources(node) == FALSE) {
-                /* This node will never be promoted to master,
-                 *  so don't apply the promotion score as that may
-                 *  lead to clone shuffling
+                /* This node will never be promoted, so don't apply the
+                 * promotion score, as that may lead to clone shuffling.
                  */
                 continue;
             }
@@ -609,49 +614,44 @@ apply_master_prefs(pe_resource_t *rsc)
 }
 
 static void
-set_role_slave(pe_resource_t * rsc, gboolean current)
+set_role_unpromoted(pe_resource_t *rsc, bool current)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (current) {
         if (rsc->role == RSC_ROLE_STARTED) {
-            rsc->role = RSC_ROLE_SLAVE;
+            rsc->role = RSC_ROLE_UNPROMOTED;
         }
 
     } else {
-        GListPtr allocated = NULL;
+        GList *allocated = NULL;
 
         rsc->fns->location(rsc, &allocated, FALSE);
-
-        if (allocated) {
-            rsc->next_role = RSC_ROLE_SLAVE;
-
-        } else {
-            rsc->next_role = RSC_ROLE_STOPPED;
-        }
+        pe__set_next_role(rsc, (allocated? RSC_ROLE_UNPROMOTED : RSC_ROLE_STOPPED),
+                          "unpromoted instance");
         g_list_free(allocated);
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        set_role_slave(child_rsc, current);
+        set_role_unpromoted(child_rsc, current);
     }
 }
 
 static void
-set_role_master(pe_resource_t * rsc)
+set_role_promoted(pe_resource_t *rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (rsc->next_role == RSC_ROLE_UNKNOWN) {
-        rsc->next_role = RSC_ROLE_MASTER;
+        pe__set_next_role(rsc, RSC_ROLE_PROMOTED, "promoted instance");
     }
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        set_role_master(child_rsc);
+        set_role_promoted(child_rsc);
     }
 }
 
@@ -659,8 +659,8 @@ pe_node_t *
 pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     int promoted = 0;
-    GListPtr gIter = NULL;
-    GListPtr gIter2 = NULL;
+    GList *gIter = NULL;
+    GList *gIter2 = NULL;
     GHashTableIter iter;
     pe_node_t *node = NULL;
     pe_node_t *chosen = NULL;
@@ -671,7 +671,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    /* count now tracks the number of masters allocated */
+    // Repurpose count to track the number of promoted instances allocated
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
         node->count = 0;
@@ -681,14 +681,14 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
      * assign priority
      */
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        GListPtr list = NULL;
+        GList *list = NULL;
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
         pe_rsc_trace(rsc, "Assigning priority for %s: %s", child_rsc->id,
                      role2text(child_rsc->next_role));
 
         if (child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
-            set_role_slave(child_rsc, TRUE);
+            set_role_unpromoted(child_rsc, true);
         }
 
         chosen = child_rsc->fns->location(child_rsc, &list, FALSE);
@@ -709,7 +709,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                 /*
                  * Default to -1 if no value is set
                  *
-                 * This allows master locations to be specified
+                 * This allows instances eligible for promotion to be specified
                  * based solely on rsc_location constraints,
                  * but prevents anyone from being promoted if
                  * neither a constraint nor a promotion score is present
@@ -717,11 +717,11 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                 child_rsc->priority = promotion_score(child_rsc, chosen, -1);
                 break;
 
-            case RSC_ROLE_SLAVE:
+            case RSC_ROLE_UNPROMOTED:
             case RSC_ROLE_STOPPED:
                 child_rsc->priority = -INFINITY;
                 break;
-            case RSC_ROLE_MASTER:
+            case RSC_ROLE_PROMOTED:
                 /* We will arrive here if we're re-creating actions after a stonith
                  */
                 break;
@@ -730,8 +730,8 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
                           crm_err("Unknown resource role: %d for %s", next_role, child_rsc->id));
         }
 
-        apply_master_location(child_rsc, child_rsc->rsc_location, chosen);
-        apply_master_location(child_rsc, rsc->rsc_location, chosen);
+        apply_promoted_location(child_rsc, child_rsc->rsc_location, chosen);
+        apply_promoted_location(child_rsc, rsc->rsc_location, chosen);
 
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             pcmk__colocation_t *cons = (pcmk__colocation_t *) gIter2->data;
@@ -743,26 +743,24 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         child_rsc->sort_index = child_rsc->priority;
         pe_rsc_trace(rsc, "Assigning priority for %s: %d", child_rsc->id, child_rsc->priority);
 
-        if (next_role == RSC_ROLE_MASTER) {
+        if (next_role == RSC_ROLE_PROMOTED) {
             child_rsc->sort_index = INFINITY;
         }
     }
 
-    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes);
+    pe__show_node_weights(true, rsc, "Pre merge", rsc->allowed_nodes, data_set);
     promotion_order(rsc, data_set);
 
-    /* mark the first N as masters */
-
+    // Choose the first N eligible instances to be promoted
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
         score2char_stack(child_rsc->sort_index, score, len);
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-        if (show_scores) {
-            if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-                printf("%s promotion score on %s: %s\n",
-                       child_rsc->id,
-                       (chosen? chosen->details->uname : "none"), score);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_scores) && !pcmk__is_daemon) {
+            if (data_set->priv != NULL) {
+                pcmk__output_t *out = data_set->priv;
+                out->message(out, "promotion-score", child_rsc, chosen, score);
             }
 
         } else {
@@ -779,32 +777,32 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
 
         } else if ((promoted < clone_data->promoted_max)
                    || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            chosen = can_be_master(child_rsc);
+            chosen = node_to_be_promoted_on(child_rsc);
         }
 
         pe_rsc_debug(rsc, "%s promotion score: %d", child_rsc->id, child_rsc->priority);
 
         if (chosen == NULL) {
-            set_role_slave(child_rsc, FALSE);
+            set_role_unpromoted(child_rsc, false);
             continue;
 
-        } else if(child_rsc->role < RSC_ROLE_MASTER
+        } else if ((child_rsc->role < RSC_ROLE_PROMOTED)
               && !pcmk_is_set(data_set->flags, pe_flag_have_quorum)
               && data_set->no_quorum_policy == no_quorum_freeze) {
             crm_notice("Resource %s cannot be elevated from %s to %s: no-quorum-policy=freeze",
                        child_rsc->id, role2text(child_rsc->role), role2text(child_rsc->next_role));
-            set_role_slave(child_rsc, FALSE);
+            set_role_unpromoted(child_rsc, false);
             continue;
         }
 
         chosen->count++;
         pe_rsc_info(rsc, "Promoting %s (%s %s)",
                     child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
-        set_role_master(child_rsc);
+        set_role_promoted(child_rsc);
         promoted++;
     }
 
-    pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d to master",
+    pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d",
                 rsc->id, promoted, clone_data->promoted_max);
 
     return NULL;
@@ -814,7 +812,7 @@ void
 create_promotable_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
     pe_action_t *action = NULL;
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     pe_action_t *action_complete = NULL;
     gboolean any_promoting = FALSE;
     gboolean any_demoting = FALSE;
@@ -922,7 +920,7 @@ promote_demote_constraints(pe_resource_t *rsc, pe_working_set_t *data_set)
 void
 promotable_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     pe_resource_t *last_rsc = NULL;
     clone_variant_data_t *clone_data = NULL;
 
@@ -977,10 +975,10 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
                          pcmk__colocation_t *constraint,
                          pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (pcmk_is_set(rsc_lh->flags, pe_rsc_provisional)) {
-        GListPtr rhs = NULL;
+        GList *rhs = NULL;
 
         for (gIter = rsc_rh->children; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -999,17 +997,20 @@ promotable_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
             }
         }
 
-        /* Only do this if it's not a master-master colocation
-         * Doing this unconditionally would prevent the slaves from being started
+        /* Only do this if it's not a promoted-with-promoted colocation. Doing
+         * this unconditionally would prevent unpromoted instances from being
+         * started.
          */
-        if (constraint->role_lh != RSC_ROLE_MASTER || constraint->role_rh != RSC_ROLE_MASTER) {
+        if ((constraint->role_lh != RSC_ROLE_PROMOTED)
+            || (constraint->role_rh != RSC_ROLE_PROMOTED)) {
+
             if (constraint->score >= INFINITY) {
                 node_list_exclude(rsc_lh->allowed_nodes, rhs, TRUE);
             }
         }
         g_list_free(rhs);
 
-    } else if (constraint->role_lh == RSC_ROLE_MASTER) {
+    } else if (constraint->role_lh == RSC_ROLE_PROMOTED) {
         pe_resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh,
                                                         constraint->role_rh,
                                                         FALSE, data_set);

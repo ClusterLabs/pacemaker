@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,7 @@ static qb_ipcs_service_t *cib_shm = NULL;
 static qb_ipcs_service_t *attrd_ipcs = NULL;
 static qb_ipcs_service_t *crmd_ipcs = NULL;
 static qb_ipcs_service_t *stonith_ipcs = NULL;
+static qb_ipcs_service_t *pacemakerd_ipcs = NULL;
 
 // An IPC provider is a cluster node controller connecting as a client
 static GList *ipc_providers = NULL;
@@ -123,6 +124,12 @@ static int32_t
 stonith_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     return ipc_proxy_accept(c, uid, gid, "stonith-ng");
+}
+
+static int32_t
+pacemakerd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+{
+    return -EREMOTEIO;
 }
 
 static int32_t
@@ -356,6 +363,14 @@ static struct qb_ipcs_service_handlers stonith_proxy_callbacks = {
     .connection_destroyed = ipc_proxy_destroy
 };
 
+static struct qb_ipcs_service_handlers pacemakerd_proxy_callbacks = {
+    .connection_accept = pacemakerd_proxy_accept,
+    .connection_created = NULL,
+    .msg_process = NULL,
+    .connection_closed = NULL,
+    .connection_destroyed = NULL
+};
+
 static struct qb_ipcs_service_handlers cib_proxy_callbacks_ro = {
     .connection_accept = cib_proxy_accept_ro,
     .connection_created = NULL,
@@ -386,7 +401,7 @@ ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
     pcmk__client_t *ipc_client = NULL;
     char *key = NULL;
     GList *remove_these = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     ipc_providers = g_list_remove(ipc_providers, ipc_proxy);
 
@@ -416,12 +431,13 @@ ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
 void
 ipc_proxy_init(void)
 {
-    ipc_clients = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+    ipc_clients = pcmk__strkey_table(NULL, NULL);
 
     pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_shm, &cib_proxy_callbacks_ro,
                           &cib_proxy_callbacks_rw);
     pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
     pcmk__serve_fenced_ipc(&stonith_ipcs, &stonith_proxy_callbacks);
+    pcmk__serve_pacemakerd_ipc(&pacemakerd_ipcs, &pacemakerd_proxy_callbacks);
     crmd_ipcs = pcmk__serve_controld_ipc(&crmd_proxy_callbacks);
     if (crmd_ipcs == NULL) {
         crm_err("Failed to create controller: exiting and inhibiting respawn");
@@ -444,6 +460,7 @@ ipc_proxy_cleanup(void)
     pcmk__stop_based_ipc(cib_ro, cib_rw, cib_shm);
     qb_ipcs_destroy(attrd_ipcs);
     qb_ipcs_destroy(stonith_ipcs);
+    qb_ipcs_destroy(pacemakerd_ipcs);
     qb_ipcs_destroy(crmd_ipcs);
     cib_ro = NULL;
     cib_rw = NULL;

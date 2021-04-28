@@ -1,0 +1,187 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-3.7" epoch="53" num_updates="5" admin_epoch="0" cib-last-written="Thu Nov 22 15:35:52 2018" update-origin="ra2" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="3" execution-date="1542918967">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.19-8.el7_6.1-c3c624ea3d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="ratester"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1542909574"/>
+      </cluster_property_set>
+      <cluster_property_set id="redis_replication">
+        <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="ra2"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="ra1"/>
+      <node id="2" uname="ra2"/>
+      <node id="3" uname="ra3"/>
+    </nodes>
+    <resources>
+      <bundle id="redis-bundle">
+        <docker promoted-max="1" network="host" replicas="3" image="docker.io/tripleoqueens/centos-binary-redis:current-tripleo-rdo" run-command="/usr/sbin/pacemaker_remoted" options="--user=root --log-driver=journald"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping target-dir="/dev/log" id="map0" source-dir="/dev/log"/>
+          <storage-mapping target-dir="/etc/libqb/force-filesystem-sockets" options="ro" id="map1" source-dir="/dev/zero"/>
+          <storage-mapping target-dir="/etc/hosts" options="ro" id="map2" source-dir="/etc/hosts"/>
+          <storage-mapping target-dir="/etc/localtime" options="ro" id="map3" source-dir="/etc/localtime"/>
+          <storage-mapping target-dir="/etc/redis.conf" options="ro" id="map4" source-dir="/etc/redis.conf"/>
+          <storage-mapping target-dir="/var/lib/redis" options="rw" id="map5" source-dir="/var/lib/redis"/>
+          <storage-mapping target-dir="/var/log/redis" options="rw" id="map6" source-dir="/var/log/redis"/>
+          <storage-mapping target-dir="/var/run/redis" options="rw" id="map7" source-dir="/var/run/redis"/>
+          <storage-mapping target-dir="/usr/lib/ocf" options="rw" id="map8" source-dir="/usr/lib/ocf"/>
+          <storage-mapping target-dir="/var/log/pacemaker" options="rw" id="pcmk1" source-dir="/var/log/pacemaker"/>
+        </storage>
+        <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
+          <instance_attributes id="redis-instance_attributes">
+            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="redis-meta_attributes">
+            <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
+            <op id="redis-monitor-interval-45s" interval="45s" name="monitor" timeout="60s"/>
+            <op id="redis-monitor-interval-20s" interval="20s" name="monitor" role="Promoted" timeout="60s"/>
+            <op id="redis-monitor-interval-60s" interval="60s" name="monitor" role="Unpromoted" timeout="60s"/>
+            <op id="redis-notify-interval-0s" interval="0s" name="notify" timeout="90s"/>
+            <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120s"/>
+            <op id="redis-start-interval-0s" interval="0s" name="start" timeout="120s"/>
+            <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-redis-bundle-on-ra2" rsc="redis-bundle" role="Started" node="ra2" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="2" uname="ra2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:38:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;7:38:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="53" rc-code="7" op-status="0" interval="0" last-run="1542907811" last-rc-change="1542907811" exec-time="65" queue-time="0" op-digest="317386a3af010667314d88ddf93a0150"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;7:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="61" rc-code="7" op-status="0" interval="0" last-run="1542907815" last-rc-change="1542907815" exec-time="122" queue-time="0" op-digest="cabda3f80e7220806c7022b88efab9d4"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="6:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;6:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="81" rc-code="0" op-status="0" interval="0" last-run="1542918685" last-rc-change="1542918685" exec-time="1479" queue-time="0" op-digest="ad90cb2f61c71c84e840c796e44d628a"/>
+            <lrm_rsc_op id="redis-bundle-docker-1_monitor_60000" operation_key="redis-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;7:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="82" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918686" exec-time="173" queue-time="0" op-digest="51d9043cab411f1c983d9539d2997c26"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="5:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;5:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1542907819" last-rc-change="1542907819" exec-time="0" queue-time="0" op-digest="109c7a28bbb65c3c294a591f03377dd3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="8:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;8:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1542918686" last-rc-change="1542918686" exec-time="0" queue-time="0" op-digest="9c100f1c3496f07f7a953f9cc8fbd746" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-1_monitor_60000" operation_key="redis-bundle-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="17:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;17:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="14" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918687" exec-time="0" queue-time="0" op-digest="21306bcef84a89e55ae729d77ceca1dc"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;7:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1542907819" last-rc-change="1542907819" exec-time="0" queue-time="0" op-digest="6ed7cb9eb2c67afe77784971250638a7" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2"/>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="ra1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="4:37:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;4:37:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="57" rc-code="7" op-status="0" interval="0" last-run="1542907811" last-rc-change="1542907811" exec-time="63" queue-time="0" op-digest="0160bbff6f3f012b38edc9bddb631132"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="2:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;2:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="84" rc-code="0" op-status="0" interval="0" last-run="1542918685" last-rc-change="1542918685" exec-time="1504" queue-time="0" op-digest="cabda3f80e7220806c7022b88efab9d4"/>
+            <lrm_rsc_op id="redis-bundle-docker-0_monitor_60000" operation_key="redis-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;3:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="85" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918686" exec-time="167" queue-time="0" op-digest="922138cf0d1c7127c35f2e174c4af461"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="4:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;4:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="68" rc-code="7" op-status="0" interval="0" last-run="1542907815" last-rc-change="1542907815" exec-time="132" queue-time="0" op-digest="ad90cb2f61c71c84e840c796e44d628a"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="4:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;4:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1542918686" last-rc-change="1542918686" exec-time="0" queue-time="0" op-digest="109c7a28bbb65c3c294a591f03377dd3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-0_monitor_60000" operation_key="redis-bundle-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;12:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="14" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918687" exec-time="0" queue-time="0" op-digest="478c16eefb4fa513134f527efb7e063a"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;3:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1542907819" last-rc-change="1542907819" exec-time="0" queue-time="0" op-digest="9c100f1c3496f07f7a953f9cc8fbd746" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="4:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;4:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1542907819" last-rc-change="1542907819" exec-time="0" queue-time="0" op-digest="6ed7cb9eb2c67afe77784971250638a7" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="ra3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="10:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;10:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="77" rc-code="0" op-status="0" interval="0" last-run="1542918685" last-rc-change="1542918685" exec-time="1501" queue-time="0" op-digest="317386a3af010667314d88ddf93a0150"/>
+            <lrm_rsc_op id="redis-bundle-docker-2_monitor_60000" operation_key="redis-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="11:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;11:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="78" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918687" exec-time="165" queue-time="0" op-digest="b4fcc691b4f687c09bb3dd0610b658ca"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;12:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="57" rc-code="7" op-status="0" interval="0" last-run="1542907815" last-rc-change="1542907815" exec-time="129" queue-time="0" op-digest="cabda3f80e7220806c7022b88efab9d4"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="14:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;14:39:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="61" rc-code="7" op-status="0" interval="0" last-run="1542907815" last-rc-change="1542907815" exec-time="111" queue-time="0" op-digest="ad90cb2f61c71c84e840c796e44d628a"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="8:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;8:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1542907819" last-rc-change="1542907819" exec-time="0" queue-time="0" op-digest="109c7a28bbb65c3c294a591f03377dd3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="9:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:7;9:40:7:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1542907819" last-rc-change="1542907819" exec-time="0" queue-time="0" op-digest="9c100f1c3496f07f7a953f9cc8fbd746" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;12:142:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1542918687" last-rc-change="1542918687" exec-time="0" queue-time="0" op-digest="6ed7cb9eb2c67afe77784971250638a7" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-2_monitor_60000" operation_key="redis-bundle-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="22:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;22:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="14" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918688" exec-time="0" queue-time="0" op-digest="6815f4f1d3f361f086d1e45371d9cb53"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-0" uname="redis-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="redis-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="27:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;27:143:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1542918688" last-rc-change="1542918688" exec-time="5253" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="32:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;32:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="78" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918713" exec-time="1195" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="31:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;31:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra1" call-id="79" rc-code="0" op-status="0" interval="45000" last-rc-change="1542918715" exec-time="1191" queue-time="1114" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-1" uname="redis-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="redis-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="30:148:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;30:148:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="143" rc-code="0" op-status="0" interval="0" last-run="1542918963" last-rc-change="1542918963" exec-time="2398" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_20000" operation_key="redis_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:145:8:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:8;28:145:8:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra2" call-id="59" rc-code="8" op-status="0" interval="20000" last-rc-change="1542918715" exec-time="1210" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-2" uname="redis-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="redis-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="32:144:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;32:144:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1542918700" last-rc-change="1542918700" exec-time="5173" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="36:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;36:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="77" rc-code="0" op-status="0" interval="60000" last-rc-change="1542918714" exec-time="1184" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="35:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" transition-magic="0:0;35:145:0:ae78ea4e-f87a-4433-b26e-94016870d3fc" exit-reason="" on_node="ra3" call-id="78" rc-code="0" op-status="0" interval="45000" last-rc-change="1542918715" exec-time="1157" queue-time="1102" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

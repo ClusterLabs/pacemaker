@@ -707,8 +707,9 @@ health attribute to green. For example:
 
 .. index::
    single: reload
+   single: reload-agent
 
-Reloading Services After a Definition Change
+Reloading an Agent After a Definition Change
 ############################################
 
 The cluster automatically detects changes to the configuration of active
@@ -719,33 +720,25 @@ restarting.
 
 To take advantage of this capability, the resource agent must:
 
-* Accept the ``reload`` action and handle it appropriately. The actions
-  here depend completely on your application!
+* Implement the ``reload-agent`` action. What it should do depends completely
+  on your application!
 
-  .. warning::
+  .. note::
 
-     Many resource agents define the ``reload`` action to make the managed
-     service reload its own *native* configuration. This is not compatible with
-     Pacemaker's reload feature, which requires the reload action to
-     accommodate changes in the resource's *Pacemaker* configuration (that is,
-     the values of the agent's reloadable parameters).
+     Resource agents may also implement a ``reload`` action to make the managed
+     service reload its own *native* configuration. This is different from
+     ``reload-agent``, which makes effective changes in the resource's
+     *Pacemaker* configuration (specifically, the values of the agent's
+     reloadable parameters).
 
-     Pacemaker is likely to use a different action name in a future release, to
-     avoid conflicts with agents that perform a native reload.
-
-* Advertise the ``reload`` operation in the ``actions`` section of its
+* Advertise the ``reload-agent`` operation in the ``actions`` section of its
   meta-data.
 
-* Set the ``unique`` attribute set to 0 in the ``parameters`` section of
+* Set the ``reloadable`` attribute to 1 in the ``parameters`` section of
   its meta-data for any parameters eligible to be reloaded after a change.
 
-  .. warning::
-
-     Pacemaker's use of ``unique`` to indicate reloadability is non-standard and
-     likely to change in a future release.
-
 Once these requirements are satisfied, the cluster will automatically know to
-reload the resource (instead of restarting) when a non-unique parameter
+reload the resource (instead of restarting) when a reloadable parameter
 changes.
 
 .. note::
@@ -756,8 +749,8 @@ changes.
 
 .. note::
 
-   If both a unique and non-unique parameter are changed simultaneously, the
-   resource will be restarted.
+   If both a reloadable and non-reloadable parameter are changed
+   simultaneously, the resource will be restarted.
 
 .. rubric:: Footnotes
 

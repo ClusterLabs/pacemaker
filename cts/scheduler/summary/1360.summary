@@ -1,0 +1,30 @@
+Current cluster status:
+  * Node List:
+    * Online: [ ssgtest1a ssgtest1b ]
+
+  * Full List of Resources:
+    * Resource Group: ClusterAlias:
+      * VIP	(ocf:testing:VIP-RIP.sh):	 Started ssgtest1a
+    * Clone Set: dolly [dollies]:
+      * Started: [ ssgtest1a ]
+
+Transition Summary:
+  * Move       dollies:0     ( ssgtest1a -> ssgtest1b )
+
+Executing Cluster Transition:
+  * Pseudo action:   dolly_stop_0
+  * Resource action: dollies:0       stop on ssgtest1a
+  * Pseudo action:   dolly_stopped_0
+  * Pseudo action:   dolly_start_0
+  * Resource action: dollies:0       start on ssgtest1b
+  * Pseudo action:   dolly_running_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ ssgtest1a ssgtest1b ]
+
+  * Full List of Resources:
+    * Resource Group: ClusterAlias:
+      * VIP	(ocf:testing:VIP-RIP.sh):	 Started ssgtest1a
+    * Clone Set: dolly [dollies]:
+      * Started: [ ssgtest1b ]

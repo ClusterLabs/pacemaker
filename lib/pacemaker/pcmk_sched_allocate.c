@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,6 +23,8 @@
 #include <pacemaker-internal.h>
 
 CRM_TRACE_INIT_DATA(pacemaker);
+
+extern bool pcmk__is_daemon;
 
 void set_alloc_actions(pe_working_set_t * data_set);
 extern void ReloadRsc(pe_resource_t * rsc, pe_node_t *node, pe_working_set_t * data_set);
@@ -162,7 +164,7 @@ check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
         XML_AGENT_ATTR_PROVIDER
     };
 
-    for (; attr_lpc < DIMOF(attr_list); attr_lpc++) {
+    for (; attr_lpc < PCMK__NELEM(attr_list); attr_lpc++) {
         value = crm_element_value(rsc->xml, attr_list[attr_lpc]);
         old_value = crm_element_value(rsc_entry, attr_list[attr_lpc]);
         if (value == old_value  /* i.e. NULL */
@@ -280,11 +282,12 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
        && digest_secure
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
-        if (pcmk_is_set(data_set->flags, pe_flag_stdout)) {
-            printf("Only 'private' parameters to " PCMK__OP_FMT
-                   " on %s changed: %s\n",
-                   rsc->id, task, interval_ms, active_node->details->uname,
-                   crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+        if (!pcmk__is_daemon && data_set->priv != NULL) {
+            pcmk__output_t *out = data_set->priv;
+            out->info(out, "Only 'private' parameters to "
+                      PCMK__OP_FMT " on %s changed: %s", rsc->id, task,
+                      interval_ms, active_node->details->uname,
+                      crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
 
     } else if (digest_data->rc == RSC_DIGEST_RESTART) {
@@ -301,7 +304,7 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
         trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
 
     } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
-        /* Changes that can potentially be handled by a reload */
+        // Changes that can potentially be handled by an agent reload
         const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
         did_change = TRUE;
@@ -330,7 +333,8 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
 
         } else {
             pe_action_t *required = NULL;
-            pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
+            pe_rsc_trace(rsc, "Resource %s doesn't support agent reloads",
+                         rsc->id);
 
             /* Re-send the start/demote/promote op
              * Recurring ops will be detected independently
@@ -391,7 +395,7 @@ check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
 static void
 check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     int offset = -1;
     int stop_index = 0;
     int start_index = 0;
@@ -399,8 +403,8 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
     const char *task = NULL;
 
     xmlNode *rsc_op = NULL;
-    GListPtr op_list = NULL;
-    GListPtr sorted_op_list = NULL;
+    GList *op_list = NULL;
+    GList *sorted_op_list = NULL;
 
     CRM_CHECK(node != NULL, return);
 
@@ -492,11 +496,11 @@ check_actions_for(xmlNode * rsc_entry, pe_resource_t * rsc, pe_node_t * node, pe
     g_list_free(sorted_op_list);
 }
 
-static GListPtr
-find_rsc_list(GListPtr result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
+static GList *
+find_rsc_list(GList *result, pe_resource_t * rsc, const char *id, gboolean renamed_clones,
               gboolean partial, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     gboolean match = FALSE;
 
     if (id == NULL) {
@@ -592,8 +596,8 @@ check_actions(pe_working_set_t * data_set)
                     if (pcmk__str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, pcmk__str_none)) {
 
                         if (xml_has_children(rsc_entry)) {
-                            GListPtr gIter = NULL;
-                            GListPtr result = NULL;
+                            GList *gIter = NULL;
+                            GList *result = NULL;
                             const char *rsc_id = ID(rsc_entry);
 
                             CRM_CHECK(rsc_id != NULL, return);
@@ -697,7 +701,7 @@ static void
 common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
     if (rsc->children) {
-        GListPtr gIter = rsc->children;
+        GList *gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -754,7 +758,7 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
 void
 complex_set_cmds(pe_resource_t * rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     rsc->cmds = &resource_class_alloc_functions[rsc->variant];
 
@@ -769,7 +773,7 @@ void
 set_alloc_actions(pe_working_set_t * data_set)
 {
 
-    GListPtr gIter = data_set->resources;
+    GList *gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -803,7 +807,7 @@ calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
 static gboolean
 apply_system_health(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     const char *health_strategy = pe_pref(data_set->config_hash, "node-health-strategy");
     int base_health = 0;
 
@@ -837,7 +841,8 @@ apply_system_health(pe_working_set_t * data_set)
          * Defaults are provided by the pe_prefs table
          * Also, custom health "base score" can be used
          */
-        base_health = crm_parse_int(pe_pref(data_set->config_hash, "node-health-base"), "0");
+        base_health = char2score(pe_pref(data_set->config_hash,
+                                         "node-health-base"));
 
     } else if (pcmk__str_eq(health_strategy, "custom", pcmk__str_casei)) {
 
@@ -869,7 +874,7 @@ apply_system_health(pe_working_set_t * data_set)
          */
         if (system_health != 0) {
 
-            GListPtr gIter2 = data_set->resources;
+            GList *gIter2 = data_set->resources;
 
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
@@ -911,7 +916,7 @@ probe_resources(pe_working_set_t * data_set)
 {
     pe_action_t *probe_node_complete = NULL;
 
-    for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
         const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
 
@@ -940,7 +945,7 @@ probe_resources(pe_working_set_t * data_set)
             continue;
         }
 
-        for (GListPtr gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
+        for (GList *gIter2 = data_set->resources; gIter2 != NULL; gIter2 = gIter2->next) {
             pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
             rsc->cmds->create_probe(rsc, node, probe_node_complete, FALSE, data_set);
@@ -952,7 +957,7 @@ probe_resources(pe_working_set_t * data_set)
 static void
 rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
     pe_resource_t *top = uber_parent(rsc);
     pe_node_t *match;
 
@@ -978,10 +983,10 @@ shutdown_time(pe_node_t *node, pe_working_set_t *data_set)
     time_t result = 0;
 
     if (shutdown) {
-        errno = 0;
-        result = (time_t) crm_parse_ll(shutdown, NULL);
-        if (errno != 0) {
-            result = 0;
+        long long result_ll;
+
+        if (pcmk__scan_ll(shutdown, &result_ll, 0LL) == pcmk_rc_ok) {
+            result = (time_t) result_ll;
         }
     }
     return result? result : get_effective_time(data_set);
@@ -1078,7 +1083,7 @@ apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
 gboolean
 stage2(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
         for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
@@ -1102,7 +1107,7 @@ stage2(pe_working_set_t * data_set)
 
     gIter = data_set->nodes;
     for (; gIter != NULL; gIter = gIter->next) {
-        GListPtr gIter2 = NULL;
+        GList *gIter2 = NULL;
         pe_node_t *node = (pe_node_t *) gIter->data;
 
         gIter2 = data_set->resources;
@@ -1124,7 +1129,7 @@ gboolean
 stage3(pe_working_set_t * data_set)
 {
 
-    GListPtr gIter = data_set->resources;
+    GList *gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -1161,13 +1166,13 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 
     const char *reason = "existence";
 
-    const GListPtr nodes = (GListPtr) data;
+    GList *nodes = (GList *) data;
     const pe_resource_t *resource1 = a;
     const pe_resource_t *resource2 = b;
 
     pe_node_t *r1_node = NULL;
     pe_node_t *r2_node = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     GHashTable *r1_nodes = NULL;
     GHashTable *r2_nodes = NULL;
 
@@ -1193,12 +1198,14 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     r1_nodes = pcmk__native_merge_weights(convert_const_pointer(resource1),
                                           resource1->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
-    pe__show_node_weights(true, NULL, resource1->id, r1_nodes);
+    pe__show_node_weights(true, NULL, resource1->id, r1_nodes,
+                          resource1->cluster);
 
     r2_nodes = pcmk__native_merge_weights(convert_const_pointer(resource2),
                                           resource2->id, NULL, NULL, 1,
                                           pe_weights_forward | pe_weights_init);
-    pe__show_node_weights(true, NULL, resource2->id, r2_nodes);
+    pe__show_node_weights(true, NULL, resource2->id, r2_nodes,
+                          resource2->cluster);
 
     /* Current location score */
     reason = "current location";
@@ -1283,7 +1290,7 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 static void
 allocate_resources(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     if (pcmk_is_set(data_set->flags, pe_flag_have_remote_nodes)) {
         /* Allocate remote connection resources first (which will also allocate
@@ -1348,7 +1355,7 @@ order_action_then_stop(pe_action_t *lh_action, pe_resource_t *rh_rsc,
 static void
 cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
@@ -1375,11 +1382,11 @@ cleanup_orphans(pe_resource_t * rsc, pe_working_set_t * data_set)
 gboolean
 stage5(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
-    int log_prio = show_utilization? LOG_STDOUT : LOG_TRACE;
+    pcmk__output_t *out = data_set->priv;
+    GList *gIter = NULL;
 
     if (!pcmk__str_eq(data_set->placement_strategy, "default", pcmk__str_casei)) {
-        GListPtr nodes = g_list_copy(data_set->nodes);
+        GList *nodes = g_list_copy(data_set->nodes);
 
         nodes = sort_nodes_by_weight(nodes, NULL, data_set);
         data_set->resources =
@@ -1392,7 +1399,9 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(log_prio, "Original", node);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            out->message(out, "node-capacity", node, "Original");
+        }
     }
 
     crm_trace("Allocating services");
@@ -1404,7 +1413,9 @@ stage5(pe_working_set_t * data_set)
     for (; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        dump_node_capacity(log_prio, "Remaining", node);
+        if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            out->message(out, "node-capacity", node, "Remaining");
+        }
     }
 
     // Process deferred action checks
@@ -1479,7 +1490,7 @@ stage5(pe_working_set_t * data_set)
 static gboolean
 is_managed(const pe_resource_t * rsc)
 {
-    GListPtr gIter = rsc->children;
+    GList *gIter = rsc->children;
 
     if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
         return TRUE;
@@ -1500,7 +1511,7 @@ static gboolean
 any_managed_resources(pe_working_set_t * data_set)
 {
 
-    GListPtr gIter = data_set->resources;
+    GList *gIter = data_set->resources;
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -1609,8 +1620,8 @@ stage6(pe_working_set_t * data_set)
     pe_action_t *stonith_op = NULL;
     gboolean integrity_lost = FALSE;
     gboolean need_stonith = TRUE;
-    GListPtr gIter;
-    GListPtr stonith_ops = NULL;
+    GList *gIter;
+    GList *stonith_ops = NULL;
     GList *shutdown_ops = NULL;
 
     /* Remote ordering constraints need to happen prior to calculating fencing
@@ -1760,10 +1771,10 @@ stage6(pe_working_set_t * data_set)
  * Mark dependencies of un-runnable actions un-runnable
  *
  */
-static GListPtr
-find_actions_by_task(GListPtr actions, pe_resource_t * rsc, const char *original_key)
+static GList *
+find_actions_by_task(GList *actions, pe_resource_t * rsc, const char *original_key)
 {
-    GListPtr list = NULL;
+    GList *list = NULL;
 
     list = find_actions(actions, original_key, NULL);
     if (list == NULL) {
@@ -1791,8 +1802,8 @@ static void
 rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
                pe__ordering_t *order)
 {
-    GListPtr gIter = NULL;
-    GListPtr rh_actions = NULL;
+    GList *gIter = NULL;
+    GList *rh_actions = NULL;
     pe_action_t *rh_action = NULL;
     enum pe_ordering type;
 
@@ -1850,8 +1861,8 @@ static void
 rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
                 pe_working_set_t *data_set)
 {
-    GListPtr gIter = NULL;
-    GListPtr lh_actions = NULL;
+    GList *gIter = NULL;
+    GList *lh_actions = NULL;
     pe_action_t *lh_action = order->lh_action;
     pe_resource_t *rh_rsc = order->rh_rsc;
 
@@ -1878,7 +1889,8 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                          lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
 
-        } else if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_SLAVE && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
+        } else if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
+                   && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
             free(key);
             pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
                          lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
@@ -2235,7 +2247,7 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
         return;
     }
 
-    for (GListPtr gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+    for (GList *gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
         pe_resource_t *remote = NULL;
 
@@ -2357,7 +2369,7 @@ order_first_probe_unneeded(pe_action_t * probe, pe_action_t * rh_action)
 static void
 order_first_probes_imply_stops(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
         pe__ordering_t *order = gIter->data;
@@ -2370,10 +2382,10 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
         const char *lh_action_task = order->lh_action_task;
         const char *rh_action_task = order->rh_action_task;
 
-        GListPtr probes = NULL;
-        GListPtr rh_actions = NULL;
+        GList *probes = NULL;
+        GList *rh_actions = NULL;
 
-        GListPtr pIter = NULL;
+        GList *pIter = NULL;
 
         if (lh_rsc == NULL) {
             continue;
@@ -2462,7 +2474,7 @@ order_first_probes_imply_stops(pe_working_set_t * data_set)
 
         for (pIter = probes; pIter != NULL; pIter = pIter->next) {
             pe_action_t *probe = (pe_action_t *) pIter->data;
-            GListPtr rIter = NULL;
+            GList *rIter = NULL;
 
             for (rIter = rh_actions; rIter != NULL; rIter = rIter->next) {
                 pe_action_t *rh_action_iter = (pe_action_t *) rIter->data;
@@ -2484,7 +2496,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
                                          pe_action_t * after,
                                          pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     bool interleave = FALSE;
     pe_resource_t *compatible_rsc = NULL;
 
@@ -2520,7 +2532,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
         && after->rsc->variant == pe_native
         && probe->rsc != after->rsc) {
 
-            GListPtr then_actions = NULL;
+            GList *then_actions = NULL;
             enum pe_ordering probe_order_type = pe_order_optional;
 
             if (pcmk__str_eq(after->task, RSC_START, pcmk__str_casei)) {
@@ -2613,7 +2625,7 @@ order_first_probe_then_restart_repromote(pe_action_t * probe,
 
 static void clear_actions_tracking_flag(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
@@ -2627,8 +2639,8 @@ static void clear_actions_tracking_flag(pe_working_set_t * data_set)
 static void
 order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
-    GListPtr probes = NULL;
+    GList *gIter = NULL;
+    GList *probes = NULL;
 
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t * child = (pe_resource_t *) gIter->data;
@@ -2644,7 +2656,7 @@ order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     for (gIter = probes; gIter != NULL; gIter= gIter->next) {
         pe_action_t *probe = (pe_action_t *) gIter->data;
-        GListPtr aIter = NULL;
+        GList *aIter = NULL;
 
         for (aIter = probe->actions_after; aIter != NULL; aIter = aIter->next) {
             pe_action_wrapper_t *after_wrapper = (pe_action_wrapper_t *) aIter->data;
@@ -2660,7 +2672,7 @@ order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
 static void
 order_first_probes(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -2675,7 +2687,7 @@ static void
 order_then_probes(pe_working_set_t * data_set)
 {
 #if 0
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
@@ -2723,8 +2735,8 @@ order_then_probes(pe_working_set_t * data_set)
          * should remain disabled until someone gets smarter.
          */
         pe_action_t *start = NULL;
-        GListPtr actions = NULL;
-        GListPtr probes = NULL;
+        GList *actions = NULL;
+        GList *probes = NULL;
 
         actions = pe__resource_actions(rsc, NULL, RSC_START, FALSE);
 
@@ -2743,12 +2755,12 @@ order_then_probes(pe_working_set_t * data_set)
         for (actions = start->actions_before; actions != NULL; actions = actions->next) {
             pe_action_wrapper_t *before = (pe_action_wrapper_t *) actions->data;
 
-            GListPtr pIter = NULL;
+            GList *pIter = NULL;
             pe_action_t *first = before->action;
             pe_resource_t *first_rsc = first->rsc;
 
             if(first->required_runnable_before) {
-                GListPtr clone_actions = NULL;
+                GList *clone_actions = NULL;
                 for (clone_actions = first->actions_before; clone_actions != NULL; clone_actions = clone_actions->next) {
                     before = (pe_action_wrapper_t *) clone_actions->data;
 
@@ -2798,6 +2810,8 @@ order_probes(pe_working_set_t * data_set)
 gboolean
 stage7(pe_working_set_t * data_set)
 {
+    pcmk__output_t *prev_out = data_set->priv;
+    pcmk__output_t *out = NULL;
     GList *gIter = NULL;
 
     crm_trace("Applying ordering constraints");
@@ -2864,12 +2878,31 @@ stage7(pe_working_set_t * data_set)
         }
     }
 
-    LogNodeActions(data_set, FALSE);
+    /* stage7 only ever outputs to the log, so ignore whatever output object was
+     * previously set and just log instead.
+     */
+    out = pcmk__new_logger();
+    if (out == NULL) {
+        return FALSE;
+    }
+
+    pcmk__output_set_log_level(out, LOG_NOTICE);
+    data_set->priv = out;
+
+    out->begin_list(out, NULL, NULL, "Actions");
+    LogNodeActions(data_set);
+
     for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *rsc = (pe_resource_t *) gIter->data;
 
-        LogActions(rsc, data_set, FALSE);
+        LogActions(rsc, data_set);
     }
+
+    out->end_list(out);
+    out->finish(out, CRM_EX_OK, true, NULL);
+    pcmk__output_free(out);
+
+    data_set->priv = prev_out;
     return TRUE;
 }
 
@@ -2885,18 +2918,24 @@ void
 pcmk__log_transition_summary(const char *filename)
 {
     if (was_processing_error) {
-        crm_err("Calculated transition %d (with errors), saving inputs in %s",
-                transition_id, filename);
+        crm_err("Calculated transition %d (with errors)%s%s",
+                transition_id,
+                (filename == NULL)? "" : ", saving inputs in ",
+                (filename == NULL)? "" : filename);
 
     } else if (was_processing_warning) {
-        crm_warn("Calculated transition %d (with warnings), saving inputs in %s",
-                 transition_id, filename);
+        crm_warn("Calculated transition %d (with warnings)%s%s",
+                 transition_id,
+                 (filename == NULL)? "" : ", saving inputs in ",
+                 (filename == NULL)? "" : filename);
 
     } else {
-        crm_notice("Calculated transition %d, saving inputs in %s",
-                   transition_id, filename);
+        crm_notice("Calculated transition %d%s%s",
+                   transition_id,
+                   (filename == NULL)? "" : ", saving inputs in ",
+                   (filename == NULL)? "" : filename);
     }
-    if (pcmk__config_error) {
+    if (crm_config_error) {
         crm_notice("Configuration errors found during scheduler processing,"
                    "  please run \"crm_verify -L\" to identify issues");
     }
@@ -2908,8 +2947,9 @@ pcmk__log_transition_summary(const char *filename)
 gboolean
 stage8(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     const char *value = NULL;
+    long long limit = 0LL;
 
     transition_id++;
     crm_trace("Creating transition graph %d.", transition_id);
@@ -2936,7 +2976,7 @@ stage8(pe_working_set_t * data_set)
     crm_xml_add_int(data_set->graph, "transition_id", transition_id);
 
     value = pe_pref(data_set->config_hash, "migration-limit");
-    if (crm_parse_ll(value, NULL) > 0) {
+    if ((pcmk__scan_ll(value, &limit, 0LL) == pcmk_rc_ok) && (limit > 0)) {
         crm_xml_add(data_set->graph, "migration-limit", value);
     }
 
@@ -3015,9 +3055,10 @@ stage8(pe_working_set_t * data_set)
 }
 
 void
-LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
+LogNodeActions(pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
+    pcmk__output_t *out = data_set->priv;
+    GList *gIter = NULL;
 
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         char *node_name = NULL;
@@ -3044,17 +3085,7 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
             task = crm_strdup_printf("Fence (%s)", op);
         }
 
-        if(task == NULL) {
-            /* Nothing to report */
-        } else if(terminal && action->reason) {
-            printf(" * %s %s '%s'\n", task, node_name, action->reason);
-        } else if(terminal) {
-            printf(" * %s %s\n", task, node_name);
-        } else if(action->reason) {
-            crm_notice(" * %s %s '%s'\n", task, node_name, action->reason);
-        } else {
-            crm_notice(" * %s %s\n", task, node_name);
-        }
+        out->message(out, "node-action", task, node_name, action->reason);
 
         free(node_name);
         free(task);

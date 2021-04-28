@@ -1,3 +1,0 @@
-Allocation scores:
-pcmk__native_allocate: rsc1 allocation score on node1: -INFINITY
-pcmk__native_allocate: rsc1 allocation score on node2: -INFINITY

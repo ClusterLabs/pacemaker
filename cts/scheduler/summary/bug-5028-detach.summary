@@ -1,0 +1,28 @@
+
+              *** Resource management is DISABLED ***
+  The cluster will not attempt to start, stop or recover services
+
+0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ bl460g6a bl460g6b ]
+
+  * Full List of Resources:
+    * Resource Group: dummy-g (unmanaged):
+      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a (unmanaged)
+      * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Cluster action:  do_shutdown on bl460g6a
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ bl460g6a bl460g6b ]
+
+  * Full List of Resources:
+    * Resource Group: dummy-g (unmanaged):
+      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a (unmanaged)
+      * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)

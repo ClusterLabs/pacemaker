@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@ const char *get_object_parent(const char *object_type);
 xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 xmlNode *create_cib_fragment_adv(xmlNode * update, const char *section, const char *source);
 
-xmlNode *createEmptyCib(int admin_epoch);
+xmlNode *createEmptyCib(int cib_epoch);
 gboolean verifyCibXml(xmlNode * cib);
 
 gboolean cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates);
@@ -65,15 +65,8 @@ xmlNode *cib_get_generation(cib_t * cib);
 void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated This function will be removed in a future version of Pacemaker
-int cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level);
-
-#endif
+int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
+                          int level);
 
 #ifdef __cplusplus
 }

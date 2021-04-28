@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -58,7 +58,7 @@ struct device_search_s {
     /* function to call when all replies have been received */
     void (*callback) (GList * devices, void *user_data);
     /* devices capable of performing requested action (or off if remapping) */
-    GListPtr capable;
+    GList *capable;
 };
 
 static gboolean stonith_device_dispatch(gpointer user_data);
@@ -68,6 +68,9 @@ static void stonith_send_reply(xmlNode * reply, int call_options, const char *re
 
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
+
+static xmlNode * get_agent_metadata(const char *agent);
+static void read_action_metadata(stonith_device_t *device);
 
 typedef struct async_command_s {
 
@@ -91,10 +94,9 @@ typedef struct async_command_s {
     uint32_t victim_nodeid;
     char *action;
     char *device;
-    char *mode;
 
-    GListPtr device_list;
-    GListPtr device_next;
+    GList *device_list;
+    GList *device_next;
 
     void *internal_user_data;
     void (*done_cb) (GPid pid, int rc, const char *output, gpointer user_data);
@@ -222,7 +224,6 @@ free_async_command(async_command_t * cmd)
     free(cmd->client);
     free(cmd->client_name);
     free(cmd->origin);
-    free(cmd->mode);
     free(cmd->op);
     free(cmd);
 }
@@ -252,7 +253,6 @@ create_async_command(xmlNode * msg)
     cmd->op = crm_element_value_copy(msg, F_STONITH_OPERATION);
     cmd->action = strdup(action);
     cmd->victim = crm_element_value_copy(op, F_STONITH_TARGET);
-    cmd->mode = crm_element_value_copy(op, F_STONITH_MODE);
     cmd->device = crm_element_value_copy(op, F_STONITH_DEVICE);
 
     CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
@@ -270,14 +270,11 @@ get_action_limit(stonith_device_t * device)
     int action_limit = 1;
 
     value = g_hash_table_lookup(device->params, PCMK_STONITH_ACTION_LIMIT);
-    if (value) {
-       action_limit = crm_parse_int(value, "1");
-       if (action_limit == 0) {
-           /* pcmk_action_limit should not be 0. Enforce it to be 1. */
-           action_limit = 1;
-       }
+    if ((value == NULL)
+        || (pcmk__scan_min_int(value, &action_limit, INT_MIN) != pcmk_rc_ok)
+        || (action_limit == 0)) {
+        action_limit = 1;
     }
-
     return action_limit;
 }
 
@@ -285,8 +282,8 @@ static int
 get_active_cmds(stonith_device_t * device)
 {
     int counter = 0;
-    GListPtr gIter = NULL;
-    GListPtr gIterNext = NULL;
+    GList *gIter = NULL;
+    GList *gIterNext = NULL;
 
     CRM_CHECK(device != NULL, return 0);
 
@@ -323,6 +320,25 @@ fork_cb(GPid pid, gpointer user_data)
     cmd->activating_on = NULL;
 }
 
+static int
+get_agent_metadata_cb(gpointer data) {
+    stonith_device_t *device = data;
+
+    device->agent_metadata = get_agent_metadata(device->agent);
+    if (device->agent_metadata) {
+        read_action_metadata(device);
+        stonith__device_parameter_flags(&(device->flags), device->id,
+                                        device->agent_metadata);
+        return G_SOURCE_REMOVE;
+    } else {
+        guint period_ms = pcmk__mainloop_timer_get_period(device->timer);
+        if (period_ms < 160 * 1000) {
+            mainloop_timer_set_period(device->timer, 2 * period_ms);
+        }
+        return G_SOURCE_CONTINUE;
+    }
+}
+
 static gboolean
 stonith_device_execute(stonith_device_t * device)
 {
@@ -333,8 +349,8 @@ stonith_device_execute(stonith_device_t * device)
     stonith_action_t *action = NULL;
     int active_cmds = 0;
     int action_limit = 0;
-    GListPtr gIter = NULL;
-    GListPtr gIterNext = NULL;
+    GList *gIter = NULL;
+    GList *gIterNext = NULL;
 
     CRM_CHECK(device != NULL, return FALSE);
 
@@ -553,7 +569,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 static void
 free_device(gpointer data)
 {
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
     stonith_device_t *device = data;
 
     g_hash_table_destroy(device->params);
@@ -568,6 +584,11 @@ free_device(gpointer data)
     g_list_free(device->pending_ops);
 
     g_list_free_full(device->targets, free);
+
+    if (device->timer) {
+        mainloop_timer_stop(device->timer);
+        mainloop_timer_del(device->timer);
+    }
 
     mainloop_destroy_trigger(device->work);
 
@@ -591,17 +612,16 @@ void
 init_device_list(void)
 {
     if (device_list == NULL) {
-        device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
-                                            free_device);
+        device_list = pcmk__strkey_table(NULL, free_device);
     }
 }
 
 static GHashTable *
-build_port_aliases(const char *hostmap, GListPtr * targets)
+build_port_aliases(const char *hostmap, GList ** targets)
 {
     char *name = NULL;
     int last = 0, lpc = 0, max = 0, added = 0;
-    GHashTable *aliases = crm_strcase_table_new();
+    GHashTable *aliases = pcmk__strikey_table(free, free);
 
     if (hostmap == NULL) {
         return aliases;
@@ -676,7 +696,7 @@ free_metadata_cache(void) {
 static void
 init_metadata_cache(void) {
     if (metadata_cache == NULL) {
-        metadata_cache = crm_str_table_new();
+        metadata_cache = pcmk__strkey_table(free, free);
     }
 }
 
@@ -916,6 +936,14 @@ build_device_from_xml(xmlNode * msg)
         read_action_metadata(device);
         stonith__device_parameter_flags(&(device->flags), device->id,
                                         device->agent_metadata);
+    } else {
+        if (device->timer == NULL) {
+            device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
+                                           TRUE, get_agent_metadata_cb, device);
+        }
+        if (!mainloop_timer_running(device->timer)) {
+            mainloop_timer_start(device->timer);
+        }
     }
 
     value = g_hash_table_lookup(device->params, "nodeid");
@@ -999,7 +1027,7 @@ schedule_internal_command(const char *origin,
 }
 
 gboolean
-string_in_list(GListPtr list, const char *item)
+string_in_list(GList *list, const char *item)
 {
     int lpc = 0;
     int max = g_list_length(list);
@@ -1173,6 +1201,8 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
                   device->id, ndevices, pcmk__plural_s(ndevices));
         free_device(device);
         device = dup;
+        dup = g_hash_table_lookup(device_list, device->id);
+        dup->dirty = FALSE;
 
     } else {
         stonith_device_t *old = g_hash_table_lookup(device_list, device->id);
@@ -1299,8 +1329,7 @@ void
 init_topology_list(void)
 {
     if (topology == NULL) {
-        topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
-                                         free_topology_entry);
+        topology = pcmk__strkey_table(NULL, free_topology_entry);
     }
 }
 
@@ -1932,7 +1961,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     int available_devices = 0;
     xmlNode *dev = NULL;
     xmlNode *list = NULL;
-    GListPtr lpc = NULL;
+    GList *lpc = NULL;
 
     /* Pack the results into XML */
     list = create_xml_node(NULL, __func__);
@@ -2178,8 +2207,8 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
     stonith_device_t *next_device = NULL;
     async_command_t *cmd = user_data;
 
-    GListPtr gIter = NULL;
-    GListPtr gIterNext = NULL;
+    GList *gIter = NULL;
+    GList *gIterNext = NULL;
 
     CRM_CHECK(cmd != NULL, return);
 
@@ -2201,7 +2230,7 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
               cmd->action, cmd->device, rc, g_list_length(cmd->device_next));
 
     if (rc == 0) {
-        GListPtr iter;
+        GList *iter;
         /* see if there are any required devices left to execute for this op */
         for (iter = cmd->device_next; iter != NULL; iter = iter->next) {
             next_device = g_hash_table_lookup(device_list, iter->data);
@@ -2364,10 +2393,11 @@ stonith_fence(xmlNode * msg)
         const char *host = crm_element_value(dev, F_STONITH_TARGET);
 
         if (cmd->options & st_opt_cs_nodeid) {
-            int nodeid = crm_atoi(host, NULL);
-            crm_node_t *node = pcmk__search_known_node_cache(nodeid, NULL,
-                                                             CRM_GET_PEER_ANY);
+            int nodeid;
+            crm_node_t *node;
 
+            pcmk__scan_min_int(host, &nodeid, 0);
+            node = pcmk__search_known_node_cache(nodeid, NULL, CRM_GET_PEER_ANY);
             if (node) {
                 host = node->uname;
             }
@@ -2418,7 +2448,7 @@ stonith_construct_reply(xmlNode * request, const char *output, xmlNode * data, i
 
         crm_trace("Creating a result reply with%s reply output (rc=%d)",
                   (data? "" : "out"), rc);
-        for (int lpc = 0; lpc < DIMOF(names); lpc++) {
+        for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
             name = names[lpc];
             value = crm_element_value(request, name);
             crm_xml_add(reply, name, value);
@@ -2557,7 +2587,7 @@ remove_relay_op(xmlNode * request)
 
             /* If the operation to be deleted is registered as a duplicate, delete the registration. */
             while (g_hash_table_iter_next(&iter, NULL, (void **)&list_op)) {
-                GListPtr dup_iter = NULL;
+                GList *dup_iter = NULL;
                 if (list_op != relay_op) {
                     for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
                         remote_fencing_op_t *other = dup_iter->data;
@@ -2593,18 +2623,14 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
 
-#if ENABLE_ACL
     /* IPC commands related to fencing configuration may be done only by
-     * privileged users (i.e. root or hacluster) when ACLs are supported,
-     * because all other users should go through the CIB to have ACLs applied.
+     * privileged users (i.e. root or hacluster), because all other users should
+     * go through the CIB to have ACLs applied.
      *
      * If no client was given, this is a peer request, which is always allowed.
      */
     bool allowed = (client == NULL)
                    || pcmk_is_set(client->flags, pcmk__client_privileged);
-#else
-    bool allowed = true;
-#endif
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
 

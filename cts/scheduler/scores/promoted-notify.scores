@@ -1,0 +1,28 @@
+
+fake:0 promotion score on rhel7-auto1: 5
+fake:1 promotion score on rhel7-auto3: 5
+fake:2 promotion score on rhel7-auto2: 5
+pcmk__clone_allocate: fake-master allocation score on rhel7-auto1: 0
+pcmk__clone_allocate: fake-master allocation score on rhel7-auto2: 0
+pcmk__clone_allocate: fake-master allocation score on rhel7-auto3: 0
+pcmk__clone_allocate: fake:0 allocation score on rhel7-auto1: 6
+pcmk__clone_allocate: fake:0 allocation score on rhel7-auto2: 0
+pcmk__clone_allocate: fake:0 allocation score on rhel7-auto3: 0
+pcmk__clone_allocate: fake:1 allocation score on rhel7-auto1: 0
+pcmk__clone_allocate: fake:1 allocation score on rhel7-auto2: 0
+pcmk__clone_allocate: fake:1 allocation score on rhel7-auto3: 6
+pcmk__clone_allocate: fake:2 allocation score on rhel7-auto1: 0
+pcmk__clone_allocate: fake:2 allocation score on rhel7-auto2: 6
+pcmk__clone_allocate: fake:2 allocation score on rhel7-auto3: 0
+pcmk__native_allocate: fake:0 allocation score on rhel7-auto1: 6
+pcmk__native_allocate: fake:0 allocation score on rhel7-auto2: 0
+pcmk__native_allocate: fake:0 allocation score on rhel7-auto3: 0
+pcmk__native_allocate: fake:1 allocation score on rhel7-auto1: -INFINITY
+pcmk__native_allocate: fake:1 allocation score on rhel7-auto2: 0
+pcmk__native_allocate: fake:1 allocation score on rhel7-auto3: 6
+pcmk__native_allocate: fake:2 allocation score on rhel7-auto1: -INFINITY
+pcmk__native_allocate: fake:2 allocation score on rhel7-auto2: 6
+pcmk__native_allocate: fake:2 allocation score on rhel7-auto3: -INFINITY
+pcmk__native_allocate: shooter allocation score on rhel7-auto1: 0
+pcmk__native_allocate: shooter allocation score on rhel7-auto2: 0
+pcmk__native_allocate: shooter allocation score on rhel7-auto3: 0

@@ -75,7 +75,7 @@ extern gboolean stage6(pe_working_set_t * data_set);
 extern gboolean stage7(pe_working_set_t * data_set);
 extern gboolean stage8(pe_working_set_t * data_set);
 
-extern gboolean summary(GListPtr resources);
+extern gboolean summary(GList *resources);
 
 extern gboolean unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set);
 
@@ -103,8 +103,6 @@ xmlNode *pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
                                 crm_time_t *now);
 bool pcmk__ordering_is_invalid(pe_action_t *action, pe_action_wrapper_t *input);
 
-extern gboolean show_scores;
-extern gboolean show_utilization;
 extern const char *transition_idle_timeout;
 
 /*!

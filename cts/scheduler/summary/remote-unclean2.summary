@@ -1,0 +1,27 @@
+Current cluster status:
+  * Node List:
+    * RemoteNode rhel7-auto4: UNCLEAN (offline)
+    * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+
+  * Full List of Resources:
+    * shooter	(stonith:fence_xvm):	 Started rhel7-auto2
+    * rhel7-auto4	(ocf:pacemaker:remote):	 FAILED rhel7-auto1
+
+Transition Summary:
+  * Fence (reboot) rhel7-auto4 'remote connection is unrecoverable'
+  * Recover    rhel7-auto4     ( rhel7-auto1 )
+
+Executing Cluster Transition:
+  * Resource action: rhel7-auto4     stop on rhel7-auto1
+  * Fencing rhel7-auto4 (reboot)
+  * Resource action: rhel7-auto4     start on rhel7-auto1
+  * Resource action: rhel7-auto4     monitor=60000 on rhel7-auto1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
+    * RemoteOnline: [ rhel7-auto4 ]
+
+  * Full List of Resources:
+    * shooter	(stonith:fence_xvm):	 Started rhel7-auto2
+    * rhel7-auto4	(ocf:pacemaker:remote):	 Started rhel7-auto1

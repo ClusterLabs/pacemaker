@@ -1,0 +1,59 @@
+Current cluster status:
+  * Node List:
+    * Node bob: standby (with active resources)
+    * Online: [ alice ]
+
+  * Full List of Resources:
+    * Clone Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01] (promotable):
+      * Promoted: [ alice ]
+      * Unpromoted: [ bob ]
+    * Clone Set: cl_tgtd [res_tgtd]:
+      * Started: [ alice bob ]
+    * Resource Group: rg_iscsivg01:
+      * res_portblock_iscsivg01_block	(ocf:heartbeat:portblock):	 Started alice
+      * res_lvm_iscsivg01	(ocf:heartbeat:LVM):	 Started alice
+      * res_target_iscsivg01	(ocf:heartbeat:iSCSITarget):	 Started alice
+      * res_lu_iscsivg01_lun1	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+      * res_lu_iscsivg01_lun2	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+      * res_ip_alicebob01	(ocf:heartbeat:IPaddr2):	 Started alice
+      * res_portblock_iscsivg01_unblock	(ocf:heartbeat:portblock):	 Started alice
+
+Transition Summary:
+  * Stop       res_drbd_iscsivg01:0     ( Unpromoted bob )  due to node availability
+  * Stop       res_tgtd:0               (       bob )  due to node availability
+
+Executing Cluster Transition:
+  * Pseudo action:   ms_drbd_iscsivg01_pre_notify_stop_0
+  * Pseudo action:   cl_tgtd_stop_0
+  * Resource action: res_drbd_iscsivg01:0 notify on bob
+  * Resource action: res_drbd_iscsivg01:1 notify on alice
+  * Pseudo action:   ms_drbd_iscsivg01_confirmed-pre_notify_stop_0
+  * Pseudo action:   ms_drbd_iscsivg01_stop_0
+  * Resource action: res_tgtd:0      stop on bob
+  * Pseudo action:   cl_tgtd_stopped_0
+  * Resource action: res_drbd_iscsivg01:0 stop on bob
+  * Pseudo action:   ms_drbd_iscsivg01_stopped_0
+  * Pseudo action:   ms_drbd_iscsivg01_post_notify_stopped_0
+  * Resource action: res_drbd_iscsivg01:1 notify on alice
+  * Pseudo action:   ms_drbd_iscsivg01_confirmed-post_notify_stopped_0
+
+Revised Cluster Status:
+  * Node List:
+    * Node bob: standby
+    * Online: [ alice ]
+
+  * Full List of Resources:
+    * Clone Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01] (promotable):
+      * Promoted: [ alice ]
+      * Stopped: [ bob ]
+    * Clone Set: cl_tgtd [res_tgtd]:
+      * Started: [ alice ]
+      * Stopped: [ bob ]
+    * Resource Group: rg_iscsivg01:
+      * res_portblock_iscsivg01_block	(ocf:heartbeat:portblock):	 Started alice
+      * res_lvm_iscsivg01	(ocf:heartbeat:LVM):	 Started alice
+      * res_target_iscsivg01	(ocf:heartbeat:iSCSITarget):	 Started alice
+      * res_lu_iscsivg01_lun1	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+      * res_lu_iscsivg01_lun2	(ocf:heartbeat:iSCSILogicalUnit):	 Started alice
+      * res_ip_alicebob01	(ocf:heartbeat:IPaddr2):	 Started alice
+      * res_portblock_iscsivg01_unblock	(ocf:heartbeat:portblock):	 Started alice

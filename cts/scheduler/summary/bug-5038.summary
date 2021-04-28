@@ -1,0 +1,25 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node-0 node-2 ]
+
+  * Full List of Resources:
+    * Clone Set: clone-node-app-rsc [node-app-rsc]:
+      * Started: [ node-0 node-2 ]
+    * Resource Group: group-dc:
+      * failover-ip	(ocf:heartbeat:IPaddr2):	 Started node-0
+      * master-app-rsc	(lsb:cluster-master):	 Started node-0
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node-0 node-2 ]
+
+  * Full List of Resources:
+    * Clone Set: clone-node-app-rsc [node-app-rsc]:
+      * Started: [ node-0 node-2 ]
+    * Resource Group: group-dc:
+      * failover-ip	(ocf:heartbeat:IPaddr2):	 Started node-0
+      * master-app-rsc	(lsb:cluster-master):	 Started node-0

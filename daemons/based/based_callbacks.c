@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -236,7 +236,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         const char *value = crm_element_value(op_request, F_CIB_CLIENTNAME);
 
         if (value == NULL) {
-            cib_client->name = crm_itoa(cib_client->pid);
+            cib_client->name = pcmk__itoa(cib_client->pid);
         } else {
             cib_client->name = strdup(value);
             if (crm_is_daemon_name(value)) {
@@ -259,10 +259,8 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
     crm_xml_add(op_request, F_CIB_CLIENTID, cib_client->id);
     crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
 
-#if ENABLE_ACL
     CRM_LOG_ASSERT(cib_client->user != NULL);
     pcmk__update_acl_user(op_request, F_CIB_USER, cib_client->user);
-#endif
 
     cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
     free_xml(op_request);
@@ -311,8 +309,17 @@ process_ping_reply(xmlNode *reply)
     const char *seq_s = crm_element_value(pong, F_CIB_PING_ID);
     const char *digest = crm_element_value(pong, XML_ATTR_DIGEST);
 
-    if (seq_s) {
-        seq = (uint64_t) crm_parse_ll(seq_s, NULL);
+    if (seq_s == NULL) {
+        crm_debug("Ignoring ping reply with no " F_CIB_PING_ID);
+        return;
+
+    } else {
+        long long seq_ll;
+
+        if (pcmk__scan_ll(seq_s, &seq_ll, 0LL) != pcmk_rc_ok) {
+            return;
+        }
+        seq = (uint64_t) seq_ll;
     }
 
     if(digest == NULL) {
@@ -447,12 +454,12 @@ check_local_notify(int bcast_id)
         return;
     }
 
-    notify = g_hash_table_lookup(local_notify_queue, GINT_TO_POINTER(bcast_id));
+    notify = pcmk__intkey_table_lookup(local_notify_queue, bcast_id);
 
     if (notify) {
         do_local_notify(notify->notify_src, notify->client_id, notify->sync_reply,
                         notify->from_peer);
-        g_hash_table_remove(local_notify_queue, GINT_TO_POINTER(bcast_id));
+        pcmk__intkey_table_remove(local_notify_queue, bcast_id);
     }
 }
 
@@ -468,12 +475,9 @@ queue_local_notify(xmlNode * notify_src, const char *client_id, gboolean sync_re
     notify->from_peer = from_peer;
 
     if (!local_notify_queue) {
-        local_notify_queue = g_hash_table_new_full(g_direct_hash,
-                                                   g_direct_equal, NULL,
-                                                   local_notify_destroy_callback);
+        local_notify_queue = pcmk__intkey_table(local_notify_destroy_callback);
     }
-
-    g_hash_table_insert(local_notify_queue, GINT_TO_POINTER(cib_local_bcast_num), notify);
+    pcmk__intkey_table_insert(local_notify_queue, cib_local_bcast_num, notify);
     // cppcheck doesn't know notify will get freed when hash table is destroyed
     // cppcheck-suppress memleak
 }

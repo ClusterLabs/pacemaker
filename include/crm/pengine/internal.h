@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,13 +139,14 @@
 // Some warnings we don't want to print every transition
 
 enum pe_warn_once_e {
-    pe_wo_blind         = 0x0001,
-    pe_wo_restart_type  = 0x0002,
-    pe_wo_role_after    = 0x0004,
-    pe_wo_poweroff      = 0x0008,
-    pe_wo_require_all   = 0x0010,
-    pe_wo_order_score   = 0x0020,
-    pe_wo_neg_threshold = 0x0040,
+    pe_wo_blind         = (1 << 0),
+    pe_wo_restart_type  = (1 << 1),
+    pe_wo_role_after    = (1 << 2),
+    pe_wo_poweroff      = (1 << 3),
+    pe_wo_require_all   = (1 << 4),
+    pe_wo_order_score   = (1 << 5),
+    pe_wo_neg_threshold = (1 << 6),
+    pe_wo_remove_after  = (1 << 7),
 };
 
 extern uint32_t pe_wo;
@@ -169,7 +170,7 @@ typedef struct pe__location_constraint_s {
     pe_resource_t *rsc_lh;              // Resource being located
     enum rsc_role_e role_filter;        // Role to locate
     enum pe_discover_e discover_mode;   // Resource discovery
-    GListPtr node_list_rh;              // List of pe_node_t*
+    GList *node_list_rh;              // List of pe_node_t*
 } pe__location_t;
 
 typedef struct pe__order_constraint_s {
@@ -197,14 +198,14 @@ typedef struct notify_data_s {
     pe_action_t *pre_done;
     pe_action_t *post_done;
 
-    GListPtr active;            /* notify_entry_t*  */
-    GListPtr inactive;          /* notify_entry_t*  */
-    GListPtr start;             /* notify_entry_t*  */
-    GListPtr stop;              /* notify_entry_t*  */
-    GListPtr demote;            /* notify_entry_t*  */
-    GListPtr promote;           /* notify_entry_t*  */
-    GListPtr master;            /* notify_entry_t*  */
-    GListPtr slave;             /* notify_entry_t*  */
+    GList *active;            /* notify_entry_t*  */
+    GList *inactive;          /* notify_entry_t*  */
+    GList *start;             /* notify_entry_t*  */
+    GList *stop;              /* notify_entry_t*  */
+    GList *demote;            /* notify_entry_t*  */
+    GList *promote;           /* notify_entry_t*  */
+    GList *promoted;          /* notify_entry_t*  */
+    GList *unpromoted;        /* notify_entry_t*  */
     GHashTable *allowed_nodes;
 
 } notify_data_t;
@@ -222,7 +223,7 @@ void pe_metadata(void);
 void verify_pe_options(GHashTable * options);
 
 void common_update_score(pe_resource_t * rsc, const char *id, int score);
-void native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set);
+void native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set, gboolean failed);
 
 gboolean native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set);
@@ -313,9 +314,9 @@ extern time_t get_effective_time(pe_working_set_t * data_set);
 
 // bit flags for fail count handling options
 enum pe_fc_flags_e {
-    pe_fc_default   = 0x00,
-    pe_fc_effective = 0x01, // don't count expired failures
-    pe_fc_fillers   = 0x02, // if container, include filler failures in count
+    pe_fc_default   = (1 << 0),
+    pe_fc_effective = (1 << 1), // don't count expired failures
+    pe_fc_fillers   = (1 << 2), // if container, include filler failures in count
 };
 
 int pe_get_failcount(pe_node_t *node, pe_resource_t *rsc, time_t *last_failure,
@@ -342,7 +343,7 @@ pe__current_node(const pe_resource_t *rsc)
 
 
 /* Binary like operators for lists of nodes */
-extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
+extern void node_list_exclude(GHashTable * list, GList *list2, gboolean merge_scores);
 
 GHashTable *pe__node_list2table(GList *list);
 
@@ -359,20 +360,17 @@ extern pe_action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set)
 extern gboolean order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering order);
 
 /* Printing functions for debug */
-extern void print_node(const char *pre_text, pe_node_t * node, gboolean details);
 extern void print_str_str(gpointer key, gpointer value, gpointer user_data);
 extern void pe__output_node(pe_node_t * node, gboolean details, pcmk__output_t *out);
 
-extern void dump_node_capacity(int level, const char *comment, pe_node_t * node);
-extern void dump_rsc_utilization(int level, const char *comment, pe_resource_t * rsc, pe_node_t * node);
-
 void pe__show_node_weights_as(const char *file, const char *function,
                               int line, bool to_log, pe_resource_t *rsc,
-                              const char *comment, GHashTable *nodes);
+                              const char *comment, GHashTable *nodes,
+                              pe_working_set_t *data_set);
 
-#define pe__show_node_weights(level, rsc, text, nodes)              \
+#define pe__show_node_weights(level, rsc, text, nodes, data_set)    \
         pe__show_node_weights_as(__FILE__, __func__, __LINE__,      \
-                                 (level), (rsc), (text), (nodes))
+                                 (level), (rsc), (text), (nodes), (data_set))
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
@@ -398,7 +396,7 @@ extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *ta
 		rsc, stop_key(rsc), CRMD_ACTION_STOP, node,		\
 		optional, TRUE, data_set);
 
-#  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD, 0)
+#  define reload_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_RELOAD_AGENT, 0)
 #  define start_key(rsc) pcmk__op_key(rsc->id, CRMD_ACTION_START, 0)
 #  define start_action(rsc, node, optional) custom_action(		\
 		rsc, start_key(rsc), CRMD_ACTION_START, node,		\
@@ -432,15 +430,15 @@ extern pe_action_t *custom_action(pe_resource_t * rsc, char *key, const char *ta
 extern int pe_get_configured_timeout(pe_resource_t *rsc, const char *action,
                                      pe_working_set_t *data_set);
 
-extern pe_action_t *find_first_action(GListPtr input, const char *uuid, const char *task,
+extern pe_action_t *find_first_action(GList *input, const char *uuid, const char *task,
                                       pe_node_t * on_node);
 extern enum action_tasks get_complex_task(pe_resource_t * rsc, const char *name,
                                           gboolean allow_non_atomic);
 
-extern GListPtr find_actions(GListPtr input, const char *key, const pe_node_t *on_node);
+extern GList *find_actions(GList *input, const char *key, const pe_node_t *on_node);
 GList *find_actions_exact(GList *input, const char *key,
                           const pe_node_t *on_node);
-extern GListPtr find_recurring_actions(GListPtr input, pe_node_t * not_on_node);
+extern GList *find_recurring_actions(GList *input, pe_node_t * not_on_node);
 GList *pe__resource_actions(const pe_resource_t *rsc, const pe_node_t *node,
                             const char *task, bool require_node);
 
@@ -533,9 +531,9 @@ void pe__clear_resource_flags_on_all(pe_working_set_t *data_set, uint64_t flag);
 
 gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref);
 
-void print_rscs_brief(GListPtr rsc_list, const char * pre_text, long options,
+void print_rscs_brief(GList *rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
-int pe__rscs_brief_output(pcmk__output_t *out, GListPtr rsc_list, long options, gboolean print_all);
+int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboolean print_all);
 void pe_fence_node(pe_working_set_t * data_set, pe_node_t * node, const char *reason, bool priority_delay);
 
 pe_node_t *pe_create_node(const char *id, const char *uname, const char *type,
@@ -582,19 +580,21 @@ bool pe__resource_is_disabled(pe_resource_t *rsc);
 pe_action_t *pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
                                         pe_working_set_t *data_set);
 
-GListPtr pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name);
-GListPtr pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);
+GList *pe__rscs_with_tag(pe_working_set_t *data_set, const char *tag_name);
+GList *pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);
 bool pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc, const char *tag);
 bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char *tag);
 
-bool pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GListPtr node_list);
-GListPtr pe__filter_rsc_list(GListPtr rscs, GListPtr filter);
+bool pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list);
+GList *pe__filter_rsc_list(GList *rscs, GList *filter);
+GList * pe__build_node_name_list(pe_working_set_t *data_set, const char *s);
+GList * pe__build_rsc_list(pe_working_set_t *data_set, const char *s);
 
-bool pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GListPtr only_node);
+bool pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GList *only_node);
 
-gboolean pe__bundle_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
-gboolean pe__clone_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
-gboolean pe__group_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
-gboolean pe__native_is_filtered(pe_resource_t *rsc, GListPtr only_rsc, gboolean check_parent);
+gboolean pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent);
+gboolean pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent);
+gboolean pe__group_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent);
+gboolean pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent);
 
 #endif

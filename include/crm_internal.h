@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2020 the Pacemaker project contributors
+ * Copyright 2006-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,21 +17,30 @@
 
 #  include <portability.h>
 
+/* Our minimum glib dependency is 2.42. Define that as both the minimum and
+ * maximum glib APIs that are allowed (i.e. APIs that were already deprecated
+ * in 2.42, and APIs introduced after 2.42, cannot be used by Pacemaker code).
+ */
+#define GLIB_VERSION_MIN_REQUIRED GLIB_VERSION_2_42
+#define GLIB_VERSION_MAX_ALLOWED GLIB_VERSION_2_42
+
 #  include <glib.h>
 #  include <stdbool.h>
 #  include <libxml/tree.h>
 
-/* Public API headers can guard deprecated code with this symbol, thus
- * preventing internal code (which includes this header) from using it, while
- * still allowing external code (which can't include this header) to use it,
- * for backward compatibility.
+/* Public API headers can guard including deprecated API headers with this
+ * symbol, thus preventing internal code (which includes this header) from using
+ * deprecated APIs, while still allowing external code to use them by default.
  */
-#define PCMK__NO_COMPAT
+#define PCMK_ALLOW_DEPRECATED 0
 
 #  include <crm/lrmd.h>
 #  include <crm/common/logging.h>
+#  include <crm/common/logging_internal.h>
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/options_internal.h>
+#  include <crm/common/output_internal.h>
+#  include <crm/common/xml_internal.h>
 #  include <crm/common/internal.h>
 
 

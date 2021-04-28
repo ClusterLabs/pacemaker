@@ -14,6 +14,39 @@
 extern "C" {
 #endif
 
+/* This file defines constants for various XML syntax (mainly element and
+ * attribute names).
+ *
+ * For consistency, new constants should start with "PCMK_", followed by "XE"
+ * for XML element names and "XA" for XML attribute names. Old names that don't
+ * follow this policy should eventually be deprecated and replaced with names
+ * that do.
+ */
+
+/*
+ * XML elements
+ */
+
+/* This has been deprecated as a CIB element (an alias for <clone> with
+ * "promotable" set to "true") since 2.0.0.
+ */
+#define PCMK_XE_PROMOTABLE_LEGACY           "master"
+
+
+/*
+ * XML attributes
+ */
+
+/* These have been deprecated as CIB <clone> element attributes (aliases for
+ * "promoted-max" and "promoted-node-max") since 2.0.0.
+ */
+#define PCMK_XE_PROMOTED_MAX_LEGACY         "master-max"
+#define PCMK_XE_PROMOTED_NODE_MAX_LEGACY    "master-node-max"
+
+/*
+ * Older constants that don't follow current naming
+ */
+
 #  ifndef F_ORIG
 #    define F_ORIG    "src"
 #  endif
@@ -181,7 +214,6 @@ extern "C" {
 #  define XML_CIB_TAG_RESOURCE	  	"primitive"
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
-#  define XML_CIB_TAG_MASTER        "master" // deprecated since 2.0.0
 #  define XML_CIB_TAG_CONTAINER		"bundle"
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
@@ -197,8 +229,6 @@ extern "C" {
 #  define XML_RSC_ATTR_PROMOTABLE       "promotable"
 #  define XML_RSC_ATTR_PROMOTED_MAX     "promoted-max"
 #  define XML_RSC_ATTR_PROMOTED_NODEMAX "promoted-node-max"
-#  define XML_RSC_ATTR_MASTER_MAX       "master-max"      // deprecated since 2.0.0
-#  define XML_RSC_ATTR_MASTER_NODEMAX   "master-node-max" // deprecated since 2.0.0
 #  define XML_RSC_ATTR_MANAGED		"is-managed"
 #  define XML_RSC_ATTR_TARGET_ROLE	"target-role"
 #  define XML_RSC_ATTR_UNIQUE		"globally-unique"
@@ -427,14 +457,8 @@ extern "C" {
 #  define TYPE(x) crm_element_name(x)
 
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated Use PCMK_STONITH_PROVIDES instead
-#  define XML_RSC_ATTR_PROVIDES		"provides"
-
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/msg_xml_compat.h>
 #endif
 
 #ifdef __cplusplus

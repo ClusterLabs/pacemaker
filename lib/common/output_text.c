@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,12 +7,12 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <glib.h>
-
-#include <crm/crm.h>
-#include <crm/common/output_internal.h>
+#include <termios.h>
 
 static gboolean fancy = FALSE;
 
@@ -69,14 +69,17 @@ text_init(pcmk__output_t *out) {
 
 static void
 text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
-    /* This function intentionally left blank */
+    fflush(out->dest);
 }
 
 static void
 text_reset(pcmk__output_t *out) {
     CRM_ASSERT(out != NULL);
 
-    out->dest = freopen(NULL, "w", out->dest);
+    if (out->dest != stdout) {
+        out->dest = freopen(NULL, "w", out->dest);
+    }
+
     CRM_ASSERT(out->dest != NULL);
 
     text_free_priv(out);
@@ -86,6 +89,8 @@ text_reset(pcmk__output_t *out) {
 static void
 text_subprocess_output(pcmk__output_t *out, int exit_status,
                        const char *proc_stdout, const char *proc_stderr) {
+    CRM_ASSERT(out != NULL);
+
     if (proc_stdout != NULL) {
         fprintf(out->dest, "%s\n", proc_stdout);
     }
@@ -97,6 +102,8 @@ text_subprocess_output(pcmk__output_t *out, int exit_status,
 
 static void
 text_version(pcmk__output_t *out, bool extended) {
+    CRM_ASSERT(out != NULL);
+
     if (extended) {
         fprintf(out->dest, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
     } else {
@@ -110,6 +117,8 @@ static void
 text_err(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
     int len = 0;
+
+    CRM_ASSERT(out != NULL);
 
     va_start(ap, format);
 
@@ -125,10 +134,16 @@ text_err(pcmk__output_t *out, const char *format, ...) {
 }
 
 G_GNUC_PRINTF(2, 3)
-static void
+static int
 text_info(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
     int len = 0;
+
+    CRM_ASSERT(out != NULL);
+
+    if (out->is_quiet(out)) {
+        return pcmk_rc_no_output;
+    }
 
     va_start(ap, format);
 
@@ -141,13 +156,12 @@ text_info(pcmk__output_t *out, const char *format, ...) {
 
     /* Add a newline. */
     fprintf(out->dest, "\n");
+    return pcmk_rc_ok;
 }
 
 static void
 text_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
-    private_data_t *priv = out->priv;
-
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
     pcmk__indented_printf(out, "%s", buf);
 }
 
@@ -155,11 +169,12 @@ G_GNUC_PRINTF(4, 5)
 static void
 text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
                 const char *format, ...) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     text_list_data_t *new_list = NULL;
     va_list ap;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
 
     va_start(ap, format);
 
@@ -181,10 +196,9 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 G_GNUC_PRINTF(3, 4)
 static void
 text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
-    private_data_t *priv = out->priv;
     va_list ap;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL);
 
     va_start(ap, format);
 
@@ -204,6 +218,7 @@ text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
     }
 
     fputc('\n', out->dest);
+    fflush(out->dest);
     va_end(ap);
 
     out->increment_list(out);
@@ -211,10 +226,12 @@ text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
 
 static void
 text_increment_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     gpointer tail;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     tail = g_queue_peek_tail(priv->parent_q);
     CRM_ASSERT(tail != NULL);
     ((text_list_data_t *) tail)->len++;
@@ -222,10 +239,12 @@ text_increment_list(pcmk__output_t *out) {
 
 static void
 text_end_list(pcmk__output_t *out) {
-    private_data_t *priv = out->priv;
+    private_data_t *priv = NULL;
     text_list_data_t *node = NULL;
 
-    CRM_ASSERT(priv != NULL);
+    CRM_ASSERT(out != NULL && out->priv != NULL);
+    priv = out->priv;
+
     node = g_queue_pop_tail(priv->parent_q);
 
     if (node->singular_noun != NULL && node->plural_noun != NULL) {
@@ -241,12 +260,27 @@ text_end_list(pcmk__output_t *out) {
 
 static bool
 text_is_quiet(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     return out->quiet;
 }
 
 static void
 text_spacer(pcmk__output_t *out) {
+    CRM_ASSERT(out != NULL);
     fprintf(out->dest, "\n");
+}
+
+static void
+text_progress(pcmk__output_t *out, bool end) {
+    CRM_ASSERT(out != NULL);
+
+    if (out->dest == stdout) {
+        fprintf(out->dest, ".");
+
+        if (end) {
+            fprintf(out->dest, "\n");
+        }
+    }
 }
 
 pcmk__output_t *
@@ -281,14 +315,43 @@ pcmk__mk_text_output(char **argv) {
 
     retval->is_quiet = text_is_quiet;
     retval->spacer = text_spacer;
+    retval->progress = text_progress;
+    retval->prompt = pcmk__text_prompt;
 
     return retval;
 }
 
 G_GNUC_PRINTF(2, 0)
 void
-pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
     int len = 0;
+
+    CRM_ASSERT(out != NULL);
+
+    len = vfprintf(out->dest, format, args);
+    CRM_ASSERT(len >= 0);
+}
+
+G_GNUC_PRINTF(2, 3)
+void
+pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) {
+    va_list ap;
+
+    CRM_ASSERT(out != NULL);
+
+    va_start(ap, format);
+    pcmk__formatted_vprintf(out, format, ap);
+    va_end(ap);
+}
+
+G_GNUC_PRINTF(2, 0)
+void
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+    CRM_ASSERT(out != NULL);
+
+    if (!pcmk__str_eq(out->fmt_name, "text", pcmk__str_none)) {
+        return;
+    }
 
     if (fancy) {
         int level = 0;
@@ -307,8 +370,7 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
         }
     }
 
-    len = vfprintf(out->dest, format, args);
-    CRM_ASSERT(len >= 0);
+    pcmk__formatted_vprintf(out, format, args);
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -316,7 +378,56 @@ void
 pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
     va_list ap;
 
+    CRM_ASSERT(out != NULL);
+
     va_start(ap, format);
     pcmk__indented_vprintf(out, format, ap);
     va_end(ap);
+}
+
+void
+pcmk__text_prompt(const char *prompt, bool echo, char **dest)
+{
+    int rc = 0;
+    struct termios settings;
+    tcflag_t orig_c_lflag = 0;
+
+    CRM_ASSERT(prompt != NULL);
+    CRM_ASSERT(dest != NULL);
+
+    if (!echo) {
+        rc = tcgetattr(0, &settings);
+        if (rc == 0) {
+            orig_c_lflag = settings.c_lflag;
+            settings.c_lflag &= ~ECHO;
+            rc = tcsetattr(0, TCSANOW, &settings);
+        }
+    }
+
+    if (rc == 0) {
+        fprintf(stderr, "%s: ", prompt);
+
+        if (*dest != NULL) {
+            free(*dest);
+            *dest = NULL;
+        }
+
+#if SSCANF_HAS_M
+        rc = scanf("%ms", dest);
+#else
+        *dest = calloc(1, 1024);
+        rc = scanf("%1023s", *dest);
+#endif
+        fprintf(stderr, "\n");
+    }
+
+    if (rc < 1) {
+        free(*dest);
+        *dest = NULL;
+    }
+
+    if (orig_c_lflag != 0) {
+        settings.c_lflag = orig_c_lflag;
+        /* rc = */ tcsetattr(0, TCSANOW, &settings);
+    }
 }

@@ -1,6 +1,0 @@
-Allocation scores:
-Using the original execution date of: 2020-09-30 10:24:21Z
-pcmk__native_allocate: dummy allocation score on rhel8-1: INFINITY
-pcmk__native_allocate: dummy allocation score on rhel8-2: 0
-pcmk__native_allocate: xvmfence allocation score on rhel8-1: INFINITY
-pcmk__native_allocate: xvmfence allocation score on rhel8-2: 0

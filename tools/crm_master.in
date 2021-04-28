@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2009-2018 the Pacemaker project contributors
+# Copyright 2009-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,29 +9,9 @@
 #
 
 USAGE_TEXT="Usage: crm_master <command> [<options>]
-Common options:
- --help 		Display this text, then exit
- --version 		Display version information, then exit
- -V, --verbose 		Specify multiple times to increase debug output
- -q, --quiet 		Print only the value (if querying)
 
-Commands:
- -G, --query 		Query the current value of the promotion score
- -v, --update=VALUE	Update the value of the promotion score
- -D, --delete 		Delete the promotion score
-
-Additional Options:
- -r, --resource=RSC     ID of resource to act on
- -N, --node=NODE	Use promotion score on named node (instead of local node)
- -l, --lifetime=VALUE	Until when should the setting take effect
-                     	(valid values: reboot, forever)
- -i, --id=VALUE		(Advanced) XML ID used to identify promotion score attribute"
-
-HELP_TEXT="crm_master - Query, update, or delete a resource's promotion score
-
-This program should normally be invoked only from inside an OCF resource agent.
-
-$USAGE_TEXT"
+This command is deprecated. Use crm_attribute with the --promotion option
+instead."
 
 exit_usage() {
 	if [ $# -gt 0 ]; then
@@ -63,7 +43,9 @@ options="--lifetime forever"
 while true ; do
 	case "$1" in
 		--help) 
-			echo "$HELP_TEXT"
+			echo "crm_master - Query, update, or delete a resource's promotion score"
+			echo
+			echo "$USAGE_TEXT"
 			exit 0
 			;;
 		--version)
@@ -104,9 +86,7 @@ while true ; do
 done
 
 if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
-	echo "This program should normally only be invoked from inside an OCF resource agent."
-	echo "To set a promotion score from the command line, please specify resource with -r."
-	exit 1
+	exit_usage "No resource specified"
 fi
 
 crm_attribute -n master-$OCF_RESOURCE_INSTANCE $options

@@ -1,0 +1,33 @@
+Current cluster status:
+  * Node List:
+    * Online: [ sel3 sel4 ]
+
+  * Full List of Resources:
+    * Clone Set: ms-drbd0 [drbd0] (promotable):
+      * Promoted: [ sel3 ]
+      * Unpromoted: [ sel4 ]
+    * Clone Set: ms-sf [sf] (promotable) (unique):
+      * sf:0	(ocf:heartbeat:Stateful):	 Unpromoted sel3
+      * sf:1	(ocf:heartbeat:Stateful):	 Unpromoted sel4
+    * fs0	(ocf:heartbeat:Filesystem):	 Started sel3
+
+Transition Summary:
+  * Promote    sf:0    ( Unpromoted -> Promoted sel3 )
+
+Executing Cluster Transition:
+  * Pseudo action:   ms-sf_promote_0
+  * Resource action: sf:0            promote on sel3
+  * Pseudo action:   ms-sf_promoted_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ sel3 sel4 ]
+
+  * Full List of Resources:
+    * Clone Set: ms-drbd0 [drbd0] (promotable):
+      * Promoted: [ sel3 ]
+      * Unpromoted: [ sel4 ]
+    * Clone Set: ms-sf [sf] (promotable) (unique):
+      * sf:0	(ocf:heartbeat:Stateful):	 Promoted sel3
+      * sf:1	(ocf:heartbeat:Stateful):	 Unpromoted sel4
+    * fs0	(ocf:heartbeat:Filesystem):	 Started sel3

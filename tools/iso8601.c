@@ -122,7 +122,7 @@ main(int argc, char **argv)
     const char *date_time_s = NULL;
     const char *expected_s = NULL;
 
-    crm_log_cli_init("iso8601");
+    pcmk__cli_init_logging("iso8601", 0);
     pcmk__set_cli_options(NULL, "<command> [options] ", long_options,
                           "display and parse ISO 8601 dates and times");
 

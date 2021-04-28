@@ -1,0 +1,26 @@
+0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Node dl380g5c: standby (with active resources)
+    * Online: [ dl380g5d ]
+
+  * Full List of Resources:
+    * Clone Set: stateful [dummy] (promotable):
+      * dummy	(ocf:pacemaker:Stateful):	 FAILED Promoted dl380g5c (blocked)
+      * Unpromoted: [ dl380g5d ]
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Resource action: dummy:1         monitor=20000 on dl380g5d
+
+Revised Cluster Status:
+  * Node List:
+    * Node dl380g5c: standby (with active resources)
+    * Online: [ dl380g5d ]
+
+  * Full List of Resources:
+    * Clone Set: stateful [dummy] (promotable):
+      * dummy	(ocf:pacemaker:Stateful):	 FAILED Promoted dl380g5c (blocked)
+      * Unpromoted: [ dl380g5d ]

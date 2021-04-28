@@ -164,24 +164,23 @@ unset to be false, and anything else to be an error.
    |                            | and any recurring operations for those will         |
    |                            | be cancelled.                                       |
    |                            |                                                     |
-   |                            | .. warning::                                        |
-   |                            |    Restarting pacemaker on a node that is in        |
-   |                            |    single-node maintenance mode will likely         |
-   |                            |    lead to undesirable effects. If                  |
-   |                            |    ``maintenance`` is set as a transient            |
-   |                            |    attribute, it will be erased when                |
-   |                            |    Pacemaker is stopped, which will                 |
-   |                            |    immediately take the node out of                 |
-   |                            |    maintenance mode and likely get it               |
-   |                            |    fenced. Even if permanent, if Pacemaker          |
-   |                            |    is restarted, any resources active on the        |
-   |                            |    node will have their local history erased        |
-   |                            |    when the node rejoins, so the cluster            |
-   |                            |    will no longer consider them running on          |
-   |                            |    the node and thus will consider them             |
-   |                            |    managed again, leading them to be started        |
-   |                            |    elsewhere. This behavior might be                |
-   |                            |    improved in a future release.                    |
+   |                            | **Warning:** Restarting pacemaker on a node that is |
+   |                            | in single-node maintenance mode will likely         |
+   |                            | lead to undesirable effects. If                     |
+   |                            | ``maintenance`` is set as a transient               |
+   |                            | attribute, it will be erased when                   |
+   |                            | Pacemaker is stopped, which will                    |
+   |                            | immediately take the node out of                    |
+   |                            | maintenance mode and likely get it                  |
+   |                            | fenced. Even if permanent, if Pacemaker             |
+   |                            | is restarted, any resources active on the           |
+   |                            | node will have their local history erased           |
+   |                            | when the node rejoins, so the cluster               |
+   |                            | will no longer consider them running on             |
+   |                            | the node and thus will consider them                |
+   |                            | managed again, leading them to be started           |
+   |                            | elsewhere. This behavior might be                   |
+   |                            | improved in a future release.                       |
    +----------------------------+-----------------------------------------------------+
    | probe_complete             | .. index::                                          |
    |                            |    pair: node attribute; probe_complete             |

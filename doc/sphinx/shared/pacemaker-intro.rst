@@ -24,7 +24,7 @@ Pacemaker's key features include:
   one of two roles), and containerized services
 * Unified, scriptable cluster management tools
 
-.. note:: Fencing
+.. note:: **Fencing**
 
    *Fencing*, also known as *STONITH* (an acronym for Shoot The Other Node In
    The Head), is the ability to ensure that it is not possible for a node to be
@@ -75,7 +75,6 @@ membership capabilities and Pacemaker for the ability to fence nodes.
 
 .. image:: ../shared/images/pcmk-stack.png
    :alt: Example cluster stack
-   :scale: 75 %
    :align: center
 
 Pacemaker Architecture
@@ -93,7 +92,6 @@ Pacemaker itself is composed of multiple daemons that work together:
 
 .. image:: ../shared/images/pcmk-internals.png
    :alt: Pacemaker software components
-   :scale: 65 %
    :align: center
 
 The Pacemaker master process (pacemakerd) spawns all the other daemons, and
@@ -174,7 +172,6 @@ over.
 .. image:: ../shared/images/pcmk-active-passive.png
    :alt: Active/Passive Redundancy
    :align: center
-   :scale: 75 %
 
 Pacemaker also supports multiple nodes in a shared-failover design, reducing
 hardware costs by allowing several active/passive clusters to be combined and
@@ -183,7 +180,6 @@ share a common backup node.
 .. image:: ../shared/images/pcmk-shared-failover.png
    :alt: Shared Failover
    :align: center
-   :scale: 75 %
 
 When shared storage is available, every node can potentially be used for
 failover. Pacemaker can even run multiple copies of services to spread out the
@@ -192,7 +188,6 @@ workload. This is sometimes called N to N Redundancy.
 .. image:: ../shared/images/pcmk-active-active.png
    :alt: N to N Redundancy
    :align: center
-   :scale: 75 %
 
 .. rubric:: Footnotes
 

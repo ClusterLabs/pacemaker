@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -240,10 +240,8 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
-#if ENABLE_ACL
     CRM_ASSERT(client->user != NULL);
     pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
-#endif
 
     op = crm_element_value(xml, PCMK__XA_TASK);
 
@@ -387,13 +385,13 @@ main(int argc, char **argv)
         old_instance = NULL;
     }
 
-    attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
+    attributes = pcmk__strkey_table(NULL, free_attribute);
 
     /* Connect to the CIB before connecting to the cluster or listening for IPC.
      * This allows us to assume the CIB is connected whenever we process a
      * cluster or IPC message (which also avoids start-up race conditions).
      */
-    if (attrd_cib_connect(10) != pcmk_ok) {
+    if (attrd_cib_connect(30) != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
         goto done;
     }

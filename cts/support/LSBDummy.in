@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+#
+#	Dummy LSB RA. Does nothing but touch and remove a state file
+#
+# Copyright 2006-2021 the Pacemaker project contributors
+#
+# The version control history for this file may have further details.
+#
+# This source code is licensed under the GNU General Public License version 2
+# (GPLv2) WITHOUT ANY WARRANTY.
+
+#######################################################################
+# Initialization:
+
+desc="Dummy LSB service"
+. @OCF_ROOT_DIR@/resource.d/heartbeat/.ocf-directories
+: ${HA_VARRUN=/tmp} # Backup in case .ocf-directories doesn't exist
+
+#######################################################################
+
+success()
+{
+	printf "[  OK  ]\r"
+}
+
+failure()
+{
+	printf "[FAILED]\r"
+}
+
+dummy_usage() {
+	cat <<END
+usage: $0 {start|stop|status}
+
+Dummy LSB resource
+END
+}
+
+dummy_start() {
+    echo -n "Starting $desc: "
+    touch ${state}
+    if [ -f ${state} ]; then
+	success
+	return 0
+    fi
+
+    failure
+    return 1
+}
+
+dummy_stop() {
+    echo -n "Stopping $desc: "
+    rm -f ${state}
+    if [ ! -f ${state} ]; then
+	success
+	return 0
+    fi
+
+    failure
+    return 1
+}
+
+dummy_monitor() {
+    if [ -f ${state} ]; then
+	echo "Running OK"
+	return 0
+    fi
+    echo "$desc is stopped"
+    return 3
+}
+
+state="${HA_VARRUN}/Dummy-`basename $0`.state"
+
+case $1 in
+start)		dummy_start;;
+stop)		dummy_stop;;
+status)		dummy_monitor;;
+*)		dummy_usage
+		exit 1
+		;;
+esac
+rc=$?
+echo "`basename $0` $1 : $rc"
+exit $rc

@@ -1,0 +1,55 @@
+Current cluster status:
+  * Node List:
+    * Online: [ dvossel-laptop2 ]
+
+  * Full List of Resources:
+    * vm	(ocf:heartbeat:VirtualDomain):	 Stopped
+    * vm2	(ocf:heartbeat:VirtualDomain):	 Stopped
+    * FAKE	(ocf:pacemaker:Dummy):	 Started dvossel-laptop2
+    * Clone Set: W-master [W] (promotable):
+      * Promoted: [ dvossel-laptop2 ]
+      * Stopped: [ 18builder 18node1 ]
+    * Clone Set: X-master [X] (promotable):
+      * Promoted: [ dvossel-laptop2 ]
+      * Stopped: [ 18builder 18node1 ]
+
+Transition Summary:
+  * Start      vm            (              dvossel-laptop2 )
+  * Move       FAKE          ( dvossel-laptop2 -> 18builder )
+  * Start      W:1           (                    18builder )
+  * Start      X:1           (                    18builder )
+  * Start      18builder     (              dvossel-laptop2 )
+
+Executing Cluster Transition:
+  * Resource action: vm              start on dvossel-laptop2
+  * Pseudo action:   W-master_start_0
+  * Pseudo action:   X-master_start_0
+  * Resource action: 18builder       monitor on dvossel-laptop2
+  * Resource action: 18builder       start on dvossel-laptop2
+  * Resource action: FAKE            stop on dvossel-laptop2
+  * Resource action: W               start on 18builder
+  * Pseudo action:   W-master_running_0
+  * Resource action: X               start on 18builder
+  * Pseudo action:   X-master_running_0
+  * Resource action: 18builder       monitor=30000 on dvossel-laptop2
+  * Resource action: FAKE            start on 18builder
+  * Resource action: W               monitor=10000 on 18builder
+  * Resource action: X               monitor=10000 on 18builder
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ dvossel-laptop2 ]
+    * GuestOnline: [ 18builder@dvossel-laptop2 ]
+
+  * Full List of Resources:
+    * vm	(ocf:heartbeat:VirtualDomain):	 Started dvossel-laptop2
+    * vm2	(ocf:heartbeat:VirtualDomain):	 Stopped
+    * FAKE	(ocf:pacemaker:Dummy):	 Started 18builder
+    * Clone Set: W-master [W] (promotable):
+      * Promoted: [ dvossel-laptop2 ]
+      * Unpromoted: [ 18builder ]
+      * Stopped: [ 18node1 ]
+    * Clone Set: X-master [X] (promotable):
+      * Promoted: [ dvossel-laptop2 ]
+      * Unpromoted: [ 18builder ]
+      * Stopped: [ 18node1 ]

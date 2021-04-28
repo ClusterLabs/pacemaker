@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2020 the Pacemaker project contributors
+# Copyright 2003-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -28,10 +28,10 @@ BOOKS		?= Clusters_from_Scratch	\
 #  linkcheck  (not actually a format; check validity of external links)
 #
 # The results will end up in <book>/_build/<format>
-BOOK_FORMATS	?= html
+BOOK_FORMATS	?= singlehtml
 
-# Set to "a4" or "letter" if building latex format
-PAPER		?= letter
+# Set to "a4paper" or "letterpaper" if building latex format
+PAPER          ?= letterpaper
 
 # Additional options for sphinx-build
 SPHINXFLAGS	?=
@@ -132,7 +132,8 @@ $(BOOK)/_build: $(STATIC_FILES) $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(src
 		esac;							\
 		$(SPHINX) -b "$$real_format" -d "$@/$$doctrees"		\
 			-c "$(builddir)/$(BOOK)"			\
-			-D latex_paper_size=$(PAPER) $(SPHINXFLAGS)	\
+			-D latex_elements.papersize=$(PAPER)		\
+			$(SPHINXFLAGS)					\
 			"$(srcdir)/$(BOOK)" "$@/$$format"		\
 			$(PCMK_quiet);					\
 		if [ "$$format" = "pdf" ]; then				\

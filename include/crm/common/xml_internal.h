@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 the Pacemaker project contributors
+ * Copyright 2017-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -122,6 +122,29 @@ do {                                                                            
         free(CXLB_buf);                                                         \
     }                                                                           \
 } while (0)
+
+/* XML search strings for guest, remote and pacemaker_remote nodes */
+
+/* search string to find CIB resources entries for cluster nodes */
+#define PCMK__XP_MEMBER_NODE_CONFIG \
+    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
+    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
+
+/* search string to find CIB resources entries for guest nodes */
+#define PCMK__XP_GUEST_NODE_CONFIG \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "//" XML_TAG_META_SETS "//" XML_CIB_TAG_NVPAIR \
+    "[@name='" XML_RSC_ATTR_REMOTE_NODE "']"
+
+/* search string to find CIB resources entries for remote nodes */
+#define PCMK__XP_REMOTE_NODE_CONFIG \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_CONFIGURATION "//" XML_CIB_TAG_RESOURCE \
+    "[@type='remote'][@provider='pacemaker']"
+
+/* search string to find CIB node status entries for pacemaker_remote nodes */
+#define PCMK__XP_REMOTE_NODE_STATUS \
+    "//" XML_TAG_CIB "//" XML_CIB_TAG_STATUS "//" XML_CIB_TAG_STATE \
+    "[@" XML_NODE_IS_REMOTE "='true']"
 
 enum pcmk__xml_artefact_ns {
     pcmk__xml_artefact_ns_legacy_rng = 1,
@@ -272,5 +295,17 @@ pcmk__xe_first_attr(const xmlNode *xe)
 {
     return (xe == NULL)? NULL : xe->properties;
 }
+
+/*!
+ * \internal
+ * \brief Extract the ID attribute from an XML element
+ *
+ * \param[in] xpath String to search
+ * \param[in] node  Node to get the ID for
+ *
+ * \return ID attribute of \p node in xpath string \p xpath
+ */
+char *
+pcmk__xpath_node_id(const char *xpath, const char *node);
 
 #endif // PCMK__XML_INTERNAL__H

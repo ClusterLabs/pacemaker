@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the Pacemaker project contributors
+ * Copyright 2013-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -382,7 +382,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     if (cmd->params) {
         lrmd_key_value_t *tmp;
 
-        op.params = crm_str_table_new();
+        op.params = pcmk__strkey_table(free, free);
         for (tmp = cmd->params; tmp; tmp = tmp->next) {
             g_hash_table_insert(op.params, strdup(tmp->key), strdup(tmp->value));
         }
@@ -835,8 +835,17 @@ handle_remote_ra_exec(gpointer user_data)
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
-        } else if (!strcmp(cmd->action, "reload")) {
-            /* reloads are a no-op right now, add logic here when they become important */
+        } else if (pcmk__str_any_of(cmd->action, CRMD_ACTION_RELOAD,
+                                    CRMD_ACTION_RELOAD_AGENT, NULL))  {
+            /* Currently the only reloadable parameter is reconnect_interval,
+             * which is only used by the scheduler via the CIB, so reloads are a
+             * no-op.
+             *
+             * @COMPAT DC <2.1.0: We only need to check for "reload" in case
+             * we're in a rolling upgrade with a DC scheduling "reload" instead
+             * of "reload-agent". An OCF 1.1 "reload" would be a no-op anyway,
+             * so this would work for that purpose as well.
+             */
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             report_remote_ra_result(cmd);
@@ -916,17 +925,15 @@ remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
 static gboolean
 is_remote_ra_supported_action(const char *action)
 {
-    if (!action) {
-        return FALSE;
-    } else if (strcmp(action, "start") &&
-               strcmp(action, "stop") &&
-               strcmp(action, "reload") &&
-               strcmp(action, "migrate_to") &&
-               strcmp(action, "migrate_from") && strcmp(action, "monitor")) {
-        return FALSE;
-    }
-
-    return TRUE;
+    return pcmk__str_any_of(action,
+                            CRMD_ACTION_START,
+                            CRMD_ACTION_STOP,
+                            CRMD_ACTION_STATUS,
+                            CRMD_ACTION_MIGRATE,
+                            CRMD_ACTION_MIGRATED,
+                            CRMD_ACTION_RELOAD_AGENT,
+                            CRMD_ACTION_RELOAD,
+                            NULL);
 }
 
 static GList *
@@ -934,7 +941,7 @@ fail_all_monitor_cmds(GList * list)
 {
     GList *rm_list = NULL;
     remote_ra_cmd_t *cmd = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
@@ -965,7 +972,7 @@ static GList *
 remove_cmd(GList * list, const char *action, guint interval_ms)
 {
     remote_ra_cmd_t *cmd = NULL;
-    GListPtr gIter = NULL;
+    GList *gIter = NULL;
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
         cmd = gIter->data;
@@ -1165,9 +1172,8 @@ remote_ra_fail(const char *node_name)
  *
  *  <pseudo_event id="103" operation="stonith" operation_key="stonith-lxc1-off"
  *                on_node="lxc1" on_node_uuid="lxc1">
- *     <attributes CRM_meta_master_lxc_ms="10" CRM_meta_on_node="lxc1"
- *                 CRM_meta_on_node_uuid="lxc1" CRM_meta_stonith_action="off"
- *                 crm_feature_set="3.0.12"/>
+ *     <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1"
+ *                 CRM_meta_stonith_action="off" crm_feature_set="3.0.12"/>
  *     <downed>
  *       <node id="lxc1"/>
  *     </downed>
@@ -1269,11 +1275,12 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
             cnt++;
             if (lrm_state && lrm_state->remote_ra_data &&
                 ((remote_ra_data_t *) lrm_state->remote_ra_data)->active) {
-                cnt_remote++;
-                remote_ra_maintenance(lrm_state,
-                                        crm_atoi(crm_element_value(node,
-                                            XML_NODE_IS_MAINTENANCE), "0"));
+                int is_maint;
 
+                cnt_remote++;
+                pcmk__scan_min_int(crm_element_value(node, XML_NODE_IS_MAINTENANCE),
+                                   &is_maint, 0);
+                remote_ra_maintenance(lrm_state, is_maint);
             }
         }
         crm_trace("Action holds %d nodes (%d remotes found) "

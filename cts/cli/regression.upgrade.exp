@@ -4,7 +4,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   CIB_shadow=cts-cli ; export CIB_shadow
 =#=#=#= Begin test: Set stonith-enabled=false =#=#=#=
 =#=#=#= Current cib after: Set stonith-enabled=false =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib epoch="2" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -21,7 +21,7 @@ A new shadow instance was created.  To begin using it paste the following into y
 * Passed: crm_attribute  - Set stonith-enabled=false
 =#=#=#= Begin test: Configure the initial resource =#=#=#=
 =#=#=#= Current cib after: Configure the initial resource =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -88,8 +88,11 @@ update_validation 	debug: Configuration valid for schema: pacemaker-3.5
 update_validation 	debug: pacemaker-3.5-style configuration is also valid for pacemaker-3.6
 update_validation 	debug: Testing 'pacemaker-3.6' validation (20 of X)
 update_validation 	debug: Configuration valid for schema: pacemaker-3.6
-update_validation 	trace: Stopping at pacemaker-3.6
-update_validation 	info: Transformed the configuration from pacemaker-2.10 to pacemaker-3.6
+update_validation 	debug: pacemaker-3.6-style configuration is also valid for pacemaker-3.7
+update_validation 	debug: Testing 'pacemaker-3.7' validation (21 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-3.7
+update_validation 	trace: Stopping at pacemaker-3.7
+update_validation 	info: Transformed the configuration from pacemaker-2.10 to pacemaker-3.7
 =#=#=#= Current cib after: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>

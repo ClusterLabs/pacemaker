@@ -1,0 +1,69 @@
+Current cluster status:
+  * Node List:
+    * Node srv01: UNCLEAN (offline)
+    * Node srv02: UNCLEAN (offline)
+    * Online: [ srv03 ]
+
+  * Full List of Resources:
+    * Resource Group: grpStonith1:
+      * prmStonith1-1	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
+    * Resource Group: grpStonith2:
+      * prmStonith2-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
+    * Resource Group: grpStonith3:
+      * prmStonith3-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
+    * Clone Set: msPostgresql [pgsql] (promotable):
+      * pgsql	(ocf:pacemaker:Stateful):	 Unpromoted srv02 (UNCLEAN)
+      * pgsql	(ocf:pacemaker:Stateful):	 Promoted srv01 (UNCLEAN)
+      * Unpromoted: [ srv03 ]
+    * Clone Set: clnPingd [prmPingd]:
+      * prmPingd	(ocf:pacemaker:ping):	 Started srv02 (UNCLEAN)
+      * prmPingd	(ocf:pacemaker:ping):	 Started srv01 (UNCLEAN)
+      * Started: [ srv03 ]
+
+Transition Summary:
+  * Stop       prmStonith1-1     (        srv02 )  blocked
+  * Stop       prmStonith2-1     (        srv01 )  blocked
+  * Stop       prmStonith3-1     (        srv01 )  due to node availability (blocked)
+  * Stop       pgsql:0           (  Unpromoted srv02 )  due to node availability (blocked)
+  * Stop       pgsql:1           ( Promoted srv01 )  due to node availability (blocked)
+  * Stop       prmPingd:0        (        srv02 )  due to node availability (blocked)
+  * Stop       prmPingd:1        (        srv01 )  due to node availability (blocked)
+
+Executing Cluster Transition:
+  * Pseudo action:   grpStonith1_stop_0
+  * Pseudo action:   grpStonith1_start_0
+  * Pseudo action:   grpStonith2_stop_0
+  * Pseudo action:   grpStonith2_start_0
+  * Pseudo action:   grpStonith3_stop_0
+  * Pseudo action:   msPostgresql_pre_notify_stop_0
+  * Pseudo action:   clnPingd_stop_0
+  * Resource action: pgsql           notify on srv03
+  * Pseudo action:   msPostgresql_confirmed-pre_notify_stop_0
+  * Pseudo action:   msPostgresql_stop_0
+  * Pseudo action:   clnPingd_stopped_0
+  * Pseudo action:   msPostgresql_stopped_0
+  * Pseudo action:   msPostgresql_post_notify_stopped_0
+  * Resource action: pgsql           notify on srv03
+  * Pseudo action:   msPostgresql_confirmed-post_notify_stopped_0
+
+Revised Cluster Status:
+  * Node List:
+    * Node srv01: UNCLEAN (offline)
+    * Node srv02: UNCLEAN (offline)
+    * Online: [ srv03 ]
+
+  * Full List of Resources:
+    * Resource Group: grpStonith1:
+      * prmStonith1-1	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
+    * Resource Group: grpStonith2:
+      * prmStonith2-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
+    * Resource Group: grpStonith3:
+      * prmStonith3-1	(stonith:external/ssh):	 Started srv01 (UNCLEAN)
+    * Clone Set: msPostgresql [pgsql] (promotable):
+      * pgsql	(ocf:pacemaker:Stateful):	 Unpromoted srv02 (UNCLEAN)
+      * pgsql	(ocf:pacemaker:Stateful):	 Promoted srv01 (UNCLEAN)
+      * Unpromoted: [ srv03 ]
+    * Clone Set: clnPingd [prmPingd]:
+      * prmPingd	(ocf:pacemaker:ping):	 Started srv02 (UNCLEAN)
+      * prmPingd	(ocf:pacemaker:ping):	 Started srv01 (UNCLEAN)
+      * Started: [ srv03 ]

@@ -1,0 +1,27 @@
+0 of 9 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Node pcmk-3: UNCLEAN (offline)
+    * Node pcmk-4: UNCLEAN (offline)
+    * Online: [ pcmk-1 pcmk-2 ]
+
+  * Full List of Resources:
+    * Clone Set: dlm-clone [dlm]:
+      * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped
+
+Transition Summary:
+
+Executing Cluster Transition:
+
+Revised Cluster Status:
+  * Node List:
+    * Node pcmk-3: UNCLEAN (offline)
+    * Node pcmk-4: UNCLEAN (offline)
+    * Online: [ pcmk-1 pcmk-2 ]
+
+  * Full List of Resources:
+    * Clone Set: dlm-clone [dlm]:
+      * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
+    * ClusterIP	(ocf:heartbeat:IPaddr2):	 Stopped

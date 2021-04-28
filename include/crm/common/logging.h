@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -67,12 +67,19 @@ crm_extended_logging(int t, int e)
 extern unsigned int crm_log_level;
 extern unsigned int crm_trace_nonlog;
 
-/* These are set when a configuration issue is found, and turn on extra messages
- * at the end of processing. They are set via wrapper functions and do not need
- * to be set directly.
+/*! \deprecated Pacemaker library functions set this when a configuration
+ *              error is found, which turns on extra messages at the end of
+ *              processing. It should not be used directly and will be removed
+ *              from the public C API in a future release.
  */
-extern bool pcmk__config_error;
-extern bool pcmk__config_warning;
+extern gboolean crm_config_error;
+
+/*! \deprecated Pacemaker library functions set this when a configuration
+ *              warning is found, which turns on extra messages at the end of
+ *              processing. It should not be used directly and will be removed
+ *              from the public C API in a future release.
+ */
+extern gboolean crm_config_warning;
 
 enum xml_log_options
 {
@@ -97,8 +104,6 @@ void crm_write_blackbox(int nsig, struct qb_log_callsite *callsite);
 void crm_update_callsites(void);
 
 void crm_log_deinit(void);
-
-gboolean crm_log_cli_init(const char *entity);
 
 void crm_log_preinit(const char *entity, int argc, char **argv);
 gboolean crm_log_init(const char *entity, uint8_t level, gboolean daemon,
@@ -197,7 +202,7 @@ unsigned int get_crm_log_level(void);
     } while (0)
 
 #  define CRM_LOG_ASSERT(expr) do {					\
-        if(__unlikely((expr) == FALSE)) {				\
+        if (!(expr)) {                                                  \
             static struct qb_log_callsite *core_cs = NULL;              \
             if(core_cs == NULL) {                                       \
                 core_cs = qb_log_callsite_get(__func__, __FILE__,       \
@@ -213,7 +218,7 @@ unsigned int get_crm_log_level(void);
  * macro's do-while loop
  */
 #  define CRM_CHECK(expr, failure_action) do {				            \
-	    if (__unlikely((expr) == FALSE)) {				                \
+        if (!(expr)) {                                                  \
             static struct qb_log_callsite *core_cs = NULL;              \
             if (core_cs == NULL) {                                      \
                 core_cs = qb_log_callsite_get(__func__, __FILE__,       \
@@ -372,34 +377,9 @@ unsigned int get_crm_log_level(void);
 
 #  define crm_str(x)    (const char*)(x?x:"<null>")
 
-#ifndef PCMK__NO_COMPAT
-
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-/*!
- * \brief Log a message using constant priority
- *
- * \param[in] level     Priority at which to log the message
- * \param[in] fmt       printf-style format string literal for message
- * \param[in] args      Any arguments needed by format string
- *
- * \deprecated Use one of the other logging functions instead
- * \note This is a macro, and \p level may be evaluated more than once.
- *       This does nothing when level is LOG_STDOUT.
- */
-#  define do_crm_log_always(level, fmt, args...) do {                       \
-        switch (level) {                                                    \
-            case LOG_STDOUT: case LOG_NEVER:                                \
-                break;                                                      \
-            default:                                                        \
-                qb_log((level), fmt , ##args);                              \
-                break;                                                      \
-        }                                                                   \
-    } while (0)
-
-#endif // PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/logging_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

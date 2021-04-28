@@ -1,0 +1,19 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 Started node1
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Resource action: rsc1            monitor on node3
+  * Resource action: rsc1            monitor=20000 on node3
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * rsc1	(ocf:pacemaker:Dummy):	 Started node1

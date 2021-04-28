@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,13 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#include <libxml/tree.h>
+#include <crm_internal.h>
 
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
-#include <crm/common/internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/strings_internal.h>
 #include <libxml/tree.h>
 
 static GHashTable *formatters = NULL;
@@ -67,8 +64,7 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
     }
 
     (*out)->quiet = false;
-
-    (*out)->messages = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+    (*out)->messages = pcmk__strkey_table(free, NULL);
 
     if ((*out)->init(*out) == false) {
         pcmk__output_free(*out);
@@ -86,7 +82,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
     }
 
     if (formatters == NULL) {
-        formatters = g_hash_table_new_full(crm_str_hash, g_str_equal, free, NULL);
+        formatters = pcmk__strkey_table(free, NULL);
     }
 
     if (options != NULL && group != NULL) {
@@ -125,6 +121,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
 
     fn = g_hash_table_lookup(out->messages, message_id);
     if (fn == NULL) {
+        crm_debug("Called unknown output message '%s' for format '%s'",
+                  message_id, out->fmt_name);
         return EINVAL;
     }
 
@@ -150,4 +148,20 @@ pcmk__register_messages(pcmk__output_t *out, pcmk__message_entry_t *table) {
             pcmk__register_message(out, entry->message_id, entry->fn);
         }
     }
+}
+
+void
+pcmk__output_and_clear_error(GError *error, pcmk__output_t *out)
+{
+    if (error == NULL) {
+        return;
+    }
+
+    if (out != NULL) {
+        out->err(out, "%s: %s", g_get_prgname(), error->message);
+    } else {
+        fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+    }
+
+    g_clear_error(&error);
 }

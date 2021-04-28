@@ -7,6 +7,8 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <crm_resource.h>
 #include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
@@ -84,7 +86,7 @@ struct {
     gboolean force;               // --force was given
     gboolean clear_expired;       // --expired was given
     gboolean recursive;           // --recursive was given
-    gboolean promoted_role_only;  // --master was given
+    gboolean promoted_role_only;  // --promoted was given
     gchar *host_uname;            // Value of --node
     gchar *interval_spec;         // Value of --interval
     gchar *move_lifetime;         // Value of --lifetime
@@ -166,6 +168,7 @@ gboolean why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static crm_exit_t exit_code = CRM_EX_OK;
 static pcmk__output_t *out = NULL;
+static pcmk__common_args_t *args = NULL;
 
 // Things that should be cleaned up on exit
 static GError *error = NULL;
@@ -189,15 +192,7 @@ static pcmk__supported_format_t formats[] = {
 static crm_exit_t
 bye(crm_exit_t ec)
 {
-    if (error != NULL) {
-        if (out != NULL) {
-            out->err(out, "%s: %s", g_get_prgname(), error->message);
-        } else {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        }
-
-        g_clear_error(&error);
-    }
+    pcmk__output_and_clear_error(error, out);
 
     if (out != NULL) {
         out->finish(out, ec, true, NULL);
@@ -312,10 +307,10 @@ compare_id(gconstpointer a, gconstpointer b)
     return strcmp((const char *)a, (const char *)b);
 }
 
-static GListPtr
+static GList *
 build_constraint_list(xmlNode *root)
 {
-    GListPtr retval = NULL;
+    GList *retval = NULL;
     xmlNode *cib_constraints = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
     int ndx = 0;
@@ -455,24 +450,24 @@ static GOptionEntry location_entries[] = {
       INDENT "this will return an error if the resource is already running\n"
       INDENT "on the specified node. If --force is specified, this will\n"
       INDENT "always ban the current node.\n"
-      INDENT "Optional: --lifetime, --master. NOTE: This may prevent the\n"
+      INDENT "Optional: --lifetime, --promoted. NOTE: This may prevent the\n"
       INDENT "resource from running on its previous location until the\n"
       INDENT "implicit constraint expires or is removed with --clear.",
       NULL },
     { "ban", 'B', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Create a constraint to keep resource off a node.\n"
-      INDENT "Optional: --node, --lifetime, --master.\n"
+      INDENT "Optional: --node, --lifetime, --promoted.\n"
       INDENT "NOTE: This will prevent the resource from running on the\n"
       INDENT "affected node until the implicit constraint expires or is\n"
       INDENT "removed with --clear. If --node is not specified, it defaults\n"
       INDENT "to the node currently running the resource for primitives\n"
-      INDENT "and groups, or the master for promotable clones with\n"
+      INDENT "and groups, or the promoted instance of promotable clones with\n"
       INDENT "promoted-max=1 (all other situations result in an error as\n"
       INDENT "there is no sane default).",
       NULL },
     { "clear", 'U', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, flag_cb,
       "Remove all constraints created by the --ban and/or --move\n"
-      INDENT "commands. Requires: --resource. Optional: --node, --master,\n"
+      INDENT "commands. Requires: --resource. Optional: --node, --promoted,\n"
       INDENT "--expired. If --node is not specified, all constraints created\n"
       INDENT "by --ban and --move will be removed for the named resource. If\n"
       INDENT "--node and --force are specified, any constraint created by\n"
@@ -488,10 +483,17 @@ static GOptionEntry location_entries[] = {
       "Lifespan (as ISO 8601 duration) of created constraints (with\n"
       INDENT "-B, -M) see https://en.wikipedia.org/wiki/ISO_8601#Durations)",
       "TIMESPEC" },
-    { "master", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.promoted_role_only,
-      "Limit scope of command to Master role (with -B, -M, -U). For\n"
-      INDENT "-B and -M the previous master may remain active in the Slave role.",
+    { "promoted", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.promoted_role_only,
+      "Limit scope of command to promoted role (with -B, -M, -U). For\n"
+      INDENT "-B and -M, previously promoted instances may remain\n"
+      INDENT "active in the unpromoted role.",
       NULL },
+
+    // Deprecated since 2.1.0
+    { "master", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.promoted_role_only,
+      "Deprecated: Use --promoted instead", NULL },
 
     { NULL }
 };
@@ -654,7 +656,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
-        if (!out->is_quiet(out)) {
+        if (!args->quiet) {
             g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
                         "Standard %s does not support parameters\n", optarg);
         }
@@ -773,11 +775,11 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     char *name = NULL;
     char *value = NULL;
 
-    if (pcmk_scan_nvpair(optarg, &name, &value) != 2) {
+    if (pcmk__scan_nvpair(optarg, &name, &value) != 2) {
         return FALSE;
     }
     if (options.cmdline_params == NULL) {
-        options.cmdline_params = crm_str_table_new();
+        options.cmdline_params = pcmk__strkey_table(free, free);
     }
     g_hash_table_replace(options.cmdline_params, name, value);
     return TRUE;
@@ -905,7 +907,7 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
     options.operation = g_strdup(option_name + 2); // skip "--"
     options.find_flags = pe_find_renamed|pe_find_anon;
     if (options.override_params == NULL) {
-        options.override_params = crm_str_table_new();
+        options.override_params = pcmk__strkey_table(free, free);
     }
     return TRUE;
 }
@@ -926,7 +928,7 @@ digests_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     SET_COMMAND(cmd_digests);
     options.find_flags = pe_find_renamed|pe_find_anon;
     if (options.override_params == NULL) {
-        options.override_params = crm_str_table_new();
+        options.override_params = pcmk__strkey_table(free, free);
     }
     options.require_node = TRUE;
     options.require_dataset = TRUE;
@@ -967,14 +969,14 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
 
     } else if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
         int count = 0;
-        GListPtr iter = NULL;
+        GList *iter = NULL;
 
         current = NULL;
         for(iter = rsc->children; iter; iter = iter->next) {
             pe_resource_t *child = (pe_resource_t *)iter->data;
             enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
-            if(child_role == RSC_ROLE_MASTER) {
+            if (child_role == RSC_ROLE_PROMOTED) {
                 count++;
                 current = pe__current_node(child);
             }
@@ -992,7 +994,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
                         "To prevent '%s' from running on a specific location, "
                         "specify a node."
                         "To prevent '%s' from being promoted at a specific "
-                        "location, specify a node and the master option.",
+                        "location, specify a node and the --promoted option.",
                         options.rsc_id, nactive, count, options.rsc_id, options.rsc_id);
         }
 
@@ -1020,7 +1022,7 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 
     crm_debug("Erasing failures of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(out, controld_api, options.host_uname, rsc, options.operation,
+    rc = cli_resource_delete(controld_api, options.host_uname, rsc, options.operation,
                              options.interval_spec, TRUE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
@@ -1036,10 +1038,10 @@ cleanup(pcmk__output_t *out, pe_resource_t *rsc)
 static int
 clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
 {
-    GListPtr before = NULL;
-    GListPtr after = NULL;
-    GListPtr remaining = NULL;
-    GListPtr ele = NULL;
+    GList *before = NULL;
+    GList *after = NULL;
+    GList *remaining = NULL;
+    GList *ele = NULL;
     pe_node_t *dest = NULL;
     int rc = pcmk_rc_ok;
 
@@ -1249,6 +1251,7 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
     }
 
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
+    data_set->priv = out;
     rc = update_working_set_xml(data_set, cib_xml_copy);
     if (rc == pcmk_rc_ok) {
         cluster_status(data_set);
@@ -1312,7 +1315,7 @@ refresh_resource(pcmk__output_t *out, pe_resource_t *rsc)
 
     crm_debug("Re-checking the state of %s (%s requested) on %s",
               rsc->id, options.rsc_id, (options.host_uname? options.host_uname: "all nodes"));
-    rc = cli_resource_delete(out, controld_api, options.host_uname, rsc, NULL,
+    rc = cli_resource_delete(controld_api, options.host_uname, rsc, NULL,
                              0, FALSE, data_set, options.force);
 
     if ((rc == pcmk_rc_ok) && !out->is_quiet(out)) {
@@ -1435,7 +1438,7 @@ validate_cmdline_config(void)
     }
 
     if (options.cmdline_params == NULL) {
-        options.cmdline_params = crm_str_table_new();
+        options.cmdline_params = pcmk__strkey_table(free, free);
     }
     options.require_resource = FALSE;
     options.require_dataset = FALSE;
@@ -1515,41 +1518,38 @@ main(int argc, char **argv)
     pe_node_t *node = NULL;
     int rc = pcmk_rc_ok;
 
+    GOptionGroup *output_group = NULL;
+    gchar **processed_args = NULL;
+    GOptionContext *context = NULL;
+
     /*
      * Parse command line arguments
      */
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    GOptionContext *context = NULL;
-    GOptionGroup *output_group = NULL;
-    gchar **processed_args = NULL;
-
-    context = build_arg_context(args, &output_group);
-    pcmk__register_formats(output_group, formats);
-    crm_log_cli_init("crm_resource");
-
+    args = pcmk__new_common_args(SUMMARY);
     processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
+    context = build_arg_context(args, &output_group);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
-    /*
-     * Set verbosity
-     */
-
-    for (int i = 0; i < args->verbosity; i++) {
-        crm_bump_log_level(argc, argv);
-    }
+    pcmk__cli_init_logging("crm_resource", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Error creating output format %s: %s\n",
-                args->output_ty, pcmk_rc_str(rc));
         exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
+
+    pe__register_messages(out);
+    crm_resource_register_messages(out);
+    lrmd__register_messages(out);
+    pcmk__register_lib_messages(out);
 
     out->quiet = args->quiet;
 
@@ -1649,20 +1649,8 @@ main(int argc, char **argv)
         }
     }
 
-    pe__register_messages(out);
-    crm_resource_register_messages(out);
-    lrmd__register_messages(out);
-    pcmk__register_lib_messages(out);
-
     if (args->version) {
         out->version(out, false);
-        goto done;
-    }
-
-    if (optind > argc) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "Invalid option(s) supplied, use --help for valid usage");
-        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
@@ -1778,7 +1766,7 @@ main(int argc, char **argv)
 
     switch (options.rsc_cmd) {
         case cmd_list_resources: {
-            GListPtr all = NULL;
+            GList *all = NULL;
             all = g_list_prepend(all, strdup("*"));
             rc = out->message(out, "resource-list", data_set,
                               pe_print_rsconly | pe_print_pending,
@@ -1839,7 +1827,7 @@ main(int argc, char **argv)
                     options.override_params, options.timeout_ms,
                     args->verbosity, options.force);
             } else {
-                exit_code = cli_resource_execute(out, rsc, options.rsc_id,
+                exit_code = cli_resource_execute(rsc, options.rsc_id,
                     options.operation, options.override_params,
                     options.timeout_ms, cib_conn, data_set,
                     args->verbosity, options.force);
@@ -1874,11 +1862,11 @@ main(int argc, char **argv)
                 cli_resource_print_cts(out, rsc);
             }
 
-            cli_resource_print_cts_constraints(out, data_set);
+            cli_resource_print_cts_constraints(data_set);
             break;
 
         case cmd_fail:
-            rc = cli_resource_fail(out, controld_api, options.host_uname,
+            rc = cli_resource_fail(controld_api, options.host_uname,
                                    options.rsc_id, data_set);
             if (rc == pcmk_rc_ok) {
                 start_mainloop(controld_api);
@@ -1886,29 +1874,30 @@ main(int argc, char **argv)
             break;
 
         case cmd_list_active_ops:
-            rc = cli_resource_print_operations(out, options.rsc_id,
+            rc = cli_resource_print_operations(options.rsc_id,
                                                options.host_uname, TRUE,
                                                data_set);
             break;
 
         case cmd_list_all_ops:
-            rc = cli_resource_print_operations(out, options.rsc_id,
+            rc = cli_resource_print_operations(options.rsc_id,
                                                options.host_uname, FALSE,
                                                data_set);
             break;
 
         case cmd_locate: {
-            GListPtr resources = cli_resource_search(out, rsc, options.rsc_id, data_set);
-            rc = out->message(out, "resource-search-list", resources, rsc, options.rsc_id);
+            GList *nodes = cli_resource_search(rsc, options.rsc_id, data_set);
+            rc = out->message(out, "resource-search-list", nodes, options.rsc_id);
+            g_list_free_full(nodes, free);
             break;
         }
 
         case cmd_query_xml:
-            rc = cli_resource_print(out, rsc, data_set, TRUE);
+            rc = cli_resource_print(rsc, data_set, TRUE);
             break;
 
         case cmd_query_raw_xml:
-            rc = cli_resource_print(out, rsc, data_set, FALSE);
+            rc = cli_resource_print(rsc, data_set, FALSE);
             break;
 
         case cmd_why:
@@ -1928,7 +1917,7 @@ main(int argc, char **argv)
             if (options.host_uname == NULL) {
                 rc = ban_or_move(out, rsc, options.move_lifetime, &exit_code);
             } else {
-                rc = cli_resource_move(out, rsc, options.rsc_id, options.host_uname,
+                rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
                                        options.move_lifetime, cib_conn,
                                        options.cib_options, data_set,
                                        options.promoted_role_only,
@@ -1980,11 +1969,11 @@ main(int argc, char **argv)
                 free_params = false;
 
             } else if (pcmk__str_eq(options.attr_set_type, XML_TAG_META_SETS, pcmk__str_casei)) {
-                params = crm_str_table_new();
+                params = pcmk__strkey_table(free, free);
                 get_meta_attributes(params, rsc, current, data_set);
 
             } else {
-                params = crm_str_table_new();
+                params = pcmk__strkey_table(free, free);
                 pe__unpack_dataset_nvpairs(rsc->xml, XML_TAG_UTILIZATION, NULL, params,
                                            NULL, FALSE, data_set);
             }
@@ -2005,7 +1994,7 @@ main(int argc, char **argv)
             }
 
             /* coverity[var_deref_model] False positive */
-            rc = cli_resource_update_attribute(out, rsc, options.rsc_id,
+            rc = cli_resource_update_attribute(rsc, options.rsc_id,
                                                options.prop_set,
                                                options.attr_set_type,
                                                options.prop_id,
@@ -2018,7 +2007,7 @@ main(int argc, char **argv)
 
         case cmd_delete_param:
             /* coverity[var_deref_model] False positive */
-            rc = cli_resource_delete_attribute(out, rsc, options.rsc_id,
+            rc = cli_resource_delete_attribute(rsc, options.rsc_id,
                                                options.prop_set,
                                                options.attr_set_type,
                                                options.prop_id,
@@ -2029,7 +2018,7 @@ main(int argc, char **argv)
 
         case cmd_cleanup:
             if (rsc == NULL) {
-                rc = cli_cleanup_all(out, controld_api, options.host_uname,
+                rc = cli_cleanup_all(controld_api, options.host_uname,
                                      options.operation, options.interval_spec,
                                      data_set);
                 if (rc == pcmk_rc_ok) {
@@ -2063,7 +2052,12 @@ main(int argc, char **argv)
      */
 
 done:
-    if (rc != pcmk_rc_ok) {
+    /* Don't do any of this for pcmk_rc_no_output (doesn't make sense to show an
+     * error message for no output) or for CRM_EX_USAGE (we don't want to show
+     * an "error: OK" message from pcmk_rc_str).
+     */
+    if ((rc != pcmk_rc_ok && rc != pcmk_rc_no_output) ||
+        (exit_code != CRM_EX_OK && exit_code != CRM_EX_USAGE)) {
         if (rc == pcmk_rc_no_quorum) {
             g_prefix_error(&error, "To ignore quorum, use the force option.\n");
         }
@@ -2078,10 +2072,10 @@ done:
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Error performing operation: %s", pcmk_rc_str(rc));
         }
+    }
 
-        if (exit_code == CRM_EX_OK) {
-            exit_code = pcmk_rc2exitc(rc);
-        }
+    if (exit_code == CRM_EX_OK) {
+        exit_code = pcmk_rc2exitc(rc);
     }
 
     g_free(options.host_uname);

@@ -1,0 +1,26 @@
+0 of 2 resource instances DISABLED and 1 BLOCKED from further action due to failure
+
+Current cluster status:
+  * Node List:
+    * Online: [ bl460g6a bl460g6b ]
+
+  * Full List of Resources:
+    * Resource Group: dummy-g:
+      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a
+      * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)
+
+Transition Summary:
+  * Stop       dummy01     ( bl460g6a )  due to unrunnable dummy02 stop (blocked)
+
+Executing Cluster Transition:
+  * Pseudo action:   dummy-g_stop_0
+  * Pseudo action:   dummy-g_start_0
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ bl460g6a bl460g6b ]
+
+  * Full List of Resources:
+    * Resource Group: dummy-g:
+      * dummy01	(ocf:heartbeat:Dummy):	 Started bl460g6a
+      * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 FAILED bl460g6a (blocked)

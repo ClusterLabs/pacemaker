@@ -611,7 +611,7 @@ main(int argc, char **argv)
 
     enum test_modes mode = test_standard;
 
-    crm_log_cli_init("cts-fence-helper");
+    pcmk__cli_init_logging("cts-fence-helper", 0);
     pcmk__set_cli_options(NULL, "<mode> [options]", long_options,
                           "inject commands into the Pacemaker fencer, "
                           "and watch for events");

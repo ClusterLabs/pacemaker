@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,80 +38,18 @@ extern "C" {
 #  define ONLINESTATUS  "online"  // Status of an online client
 #  define OFFLINESTATUS "offline" // Status of an offline client
 
-// public name/value pair functions (from nvpair.c)
-int pcmk_scan_nvpair(const char *input, char **name, char **value);
-char *pcmk_format_nvpair(const char *name, const char *value, const char *units);
-char *pcmk_format_named_time(const char *name, time_t epoch_time);
+/* public node attribute functions (from attrd_client.c) */
+char *pcmk_promotion_score_name(const char *rsc_id);
 
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
 
 /* public string functions (from strings.c) */
-char *crm_itoa_stack(int an_int, char *buf, size_t len);
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
-long long crm_parse_ll(const char *text, const char *default_text);
-int crm_parse_int(const char *text, const char *default_text);
 long long crm_get_msec(const char *input);
 char * crm_strip_trailing_newline(char *str);
-gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
-guint crm_strcase_hash(gconstpointer v);
-guint g_str_hash_traditional(gconstpointer v);
-char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
-int pcmk_numeric_strcasecmp(const char *s1, const char *s2);
-
-#  define crm_str_hash g_str_hash_traditional
-
-static inline char *
-crm_itoa(int an_int)
-{
-    return crm_strdup_printf("%d", an_int);
-}
-
-static inline char *
-crm_ftoa(double a_float)
-{
-    return crm_strdup_printf("%f", a_float);
-}
-
-static inline char *
-crm_ttoa(time_t epoch_time)
-{
-    return crm_strdup_printf("%lld", (long long) epoch_time);
-}
-
-/*!
- * \brief Create hash table with dynamically allocated string keys/values
- *
- * \return Newly allocated hash table
- * \note It is the caller's responsibility to free the result, using
- *       g_hash_table_destroy().
- */
-static inline GHashTable *
-crm_str_table_new(void)
-{
-    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
-}
-
-/*!
- * \brief Create hash table with case-insensitive dynamically allocated string keys/values
- *
- * \return Newly allocated hash table
- * \note It is the caller's responsibility to free the result, using
- *       g_hash_table_destroy().
- */
-static inline GHashTable *
-crm_strcase_table_new(void)
-{
-    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, free);
-}
-
-GHashTable *crm_str_table_dup(GHashTable *old_table);
-
-#  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
-
-/* public I/O functions (from io.c) */
-void crm_build_path(const char *path_c, mode_t mode);
+char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
 
 guint crm_parse_interval_spec(const char *input);
 int char2score(const char *score);
@@ -175,15 +113,6 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
  */
 #define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
 
-static inline guint
-crm_hash_table_size(GHashTable * hashtable)
-{
-    if (hashtable == NULL) {
-        return 0;
-    }
-    return g_hash_table_size(hashtable);
-}
-
 char *crm_meta_name(const char *field);
 const char *crm_meta_value(GHashTable * hash, const char *field);
 
@@ -206,45 +135,9 @@ char *pcmk_hostname(void);
 bool pcmk_str_is_infinity(const char *s);
 bool pcmk_str_is_minus_infinity(const char *s);
 
-#ifndef PCMK__NO_COMPAT
-/* Everything here is deprecated and kept only for public API backward
- * compatibility. It will be moved to compatibility.h in a future release.
- */
-
-//! \deprecated Use crm_parse_interval_spec() instead
-#define crm_get_interval crm_parse_interval_spec
-
-//! \deprecated Use !pcmk_is_set() or !pcmk_all_flags_set() instead
-static inline gboolean
-is_not_set(long long word, long long bit)
-{
-    return ((word & bit) == 0);
-}
-
-//! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
-static inline gboolean
-is_set(long long word, long long bit)
-{
-    return ((word & bit) == bit);
-}
-
-//! \deprecated Use pcmk_any_flags_set() instead
-static inline gboolean
-is_set_any(long long word, long long bit)
-{
-    return ((word & bit) != 0);
-}
-
-//! \deprecated Use strcmp or strcasecmp instead
-gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
-
-//! \deprecated Use strcmp instead
-gboolean safe_str_neq(const char *a, const char *b);
-
-//! \deprecated Use strcasecmp instead
-#define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
-
-#endif // PCMK__NO_COMPAT
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/util_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

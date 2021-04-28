@@ -94,7 +94,7 @@ TESTS = [
     ],
     [
         [ "target-0", "Target Role : baseline" ],
-        [ "target-1", "Target Role : master" ],
+        [ "target-1", "Target Role : promoted" ],
         [ "target-2", "Target Role : invalid" ],
     ],
     [
@@ -211,7 +211,7 @@ TESTS = [
         [ "coloc-many-one", "Colocation - many-to-one" ],
         [ "coloc-list", "Colocation - many-to-one with list" ],
         [ "coloc-group", "Colocation - groups" ],
-        [ "coloc-slave-anti", "Anti-colocation with slave shouldn't prevent master colocation" ],
+        [ "coloc-unpromoted-anti", "Anti-colocation with unpromoted shouldn't prevent promoted colocation" ],
         [ "coloc-attr", "Colocation based on node attributes" ],
         [ "coloc-negative-group", "Negative colocation with a group" ],
         [ "coloc-intra-set", "Intra-set colocation" ],
@@ -219,14 +219,14 @@ TESTS = [
         [ "coloc-clone-stays-active",
           "Ensure clones don't get stopped/demoted because a dependent must stop" ],
         [ "coloc_fp_logic", "Verify floating point calculations in colocation are working" ],
-        [ "colo_master_w_native",
-          "cl#5070 - Verify promotion order is affected when colocating master to native rsc" ],
-        [ "colo_slave_w_native",
-          "cl#5070 - Verify promotion order is affected when colocating slave to native rsc" ],
+        [ "colo_promoted_w_native",
+          "cl#5070 - Verify promotion order is affected when colocating promoted with primitive" ],
+        [ "colo_unpromoted_w_native",
+          "cl#5070 - Verify promotion order is affected when colocating unpromoted with primitive" ],
         [ "anti-colocation-order",
           "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node" ],
-        [ "anti-colocation-master", "Organize order of actions for master resources in anti-colocations" ],
-        [ "anti-colocation-slave", "Organize order of actions for slave resources in anti-colocations" ],
+        [ "anti-colocation-promoted", "Organize order of actions for promoted resources in anti-colocations" ],
+        [ "anti-colocation-unpromoted", "Organize order of actions for unpromoted resources in anti-colocations" ],
         [ "enforce-colo1", "Always enforce B with A INFINITY" ],
         [ "complex_enforce_colo", "Always enforce B with A INFINITY. (make sure heat-engine stops)" ],
         [ "coloc-dependee-should-stay", "Stickiness outweighs group colocation" ],
@@ -237,7 +237,7 @@ TESTS = [
         [ "rsc-sets-seq-true", "Resource Sets - sequential=false" ],
         [ "rsc-sets-seq-false", "Resource Sets - sequential=true" ],
         [ "rsc-sets-clone", "Resource Sets - Clone" ],
-        [ "rsc-sets-master", "Resource Sets - Master" ],
+        [ "rsc-sets-promoted", "Resource Sets - Promoted" ],
         [ "rsc-sets-clone-1", "Resource Sets - Clone (lf#2404)" ],
     ],
     [
@@ -452,68 +452,68 @@ TESTS = [
         [ "unfence-device", "Unfencing when a cluster has only fence devices" ],
     ],
     [
-        [ "master-0", "Stopped -> Slave" ],
-        [ "master-1", "Stopped -> Promote" ],
-        [ "master-2", "Stopped -> Promote : notify" ],
-        [ "master-3", "Stopped -> Promote : master location" ],
-        [ "master-4", "Started -> Promote : master location" ],
-        [ "master-5", "Promoted -> Promoted" ],
-        [ "master-6", "Promoted -> Promoted (2)" ],
-        [ "master-7", "Promoted -> Fenced" ],
-        [ "master-8", "Promoted -> Fenced -> Moved" ],
-        [ "master-9", "Stopped + Promotable + No quorum" ],
-        [ "master-10", "Stopped -> Promotable : notify with monitor" ],
-        [ "master-11", "Stopped -> Promote : colocation" ],
+        [ "promoted-0", "Stopped -> Unpromoted" ],
+        [ "promoted-1", "Stopped -> Promote" ],
+        [ "promoted-2", "Stopped -> Promote : notify" ],
+        [ "promoted-3", "Stopped -> Promote : promoted location" ],
+        [ "promoted-4", "Started -> Promote : promoted location" ],
+        [ "promoted-5", "Promoted -> Promoted" ],
+        [ "promoted-6", "Promoted -> Promoted (2)" ],
+        [ "promoted-7", "Promoted -> Fenced" ],
+        [ "promoted-8", "Promoted -> Fenced -> Moved" ],
+        [ "promoted-9", "Stopped + Promotable + No quorum" ],
+        [ "promoted-10", "Stopped -> Promotable : notify with monitor" ],
+        [ "promoted-11", "Stopped -> Promote : colocation" ],
         [ "novell-239082", "Demote/Promote ordering" ],
-        [ "novell-239087", "Stable master placement" ],
-        [ "master-12", "Promotion based solely on rsc_location constraints" ],
-        [ "master-13", "Include preferences of colocated resources when placing master" ],
-        [ "master-demote", "Ordering when actions depends on demoting a slave resource" ],
-        [ "master-ordering", "Prevent resources from starting that need a master" ],
-        [ "bug-1765", "Master-Master Colocation (do not stop the slaves)" ],
-        [ "master-group", "Promotion of cloned groups" ],
-        [ "bug-lf-1852", "Don't shuffle master/slave instances unnecessarily" ],
-        [ "master-failed-demote", "Don't retry failed demote actions" ],
-        [ "master-failed-demote-2", "Don't retry failed demote actions (notify=false)" ],
-        [ "master-depend",
-          "Ensure resources that depend on the master don't get allocated until the master does" ],
-        [ "master-reattach", "Re-attach to a running master" ],
-        [ "master-allow-start", "Don't include master score if it would prevent allocation" ],
-        [ "master-colocation",
-          "Allow master instances placemaker to be influenced by colocation constraints" ],
-        [ "master-pseudo", "Make sure promote/demote pseudo actions are created correctly" ],
-        [ "master-role", "Prevent target-role from promoting more than master-max instances" ],
-        [ "bug-lf-2358", "Master-Master anti-colocation" ],
-        [ "master-promotion-constraint", "Mandatory master colocation constraints" ],
-        [ "unmanaged-master", "Ensure role is preserved for unmanaged resources" ],
-        [ "master-unmanaged-monitor", "Start the correct monitor operation for unmanaged masters" ],
-        [ "master-demote-2", "Demote does not clear past failure" ],
-        [ "master-move", "Move master based on failure of colocated group" ],
-        [ "master-probed-score", "Observe the promotion score of probed resources" ],
-        [ "colocation_constraint_stops_master",
-          "cl#5054 - Ensure master is demoted when stopped by colocation constraint" ],
-        [ "colocation_constraint_stops_slave",
-          "cl#5054 - Ensure slave is not demoted when stopped by colocation constraint" ],
-        [ "order_constraint_stops_master",
-          "cl#5054 - Ensure master is demoted when stopped by order constraint" ],
-        [ "order_constraint_stops_slave",
-          "cl#5054 - Ensure slave is not demoted when stopped by order constraint" ],
-        [ "master_monitor_restart", "cl#5072 - Ensure master monitor operation will start after promotion" ],
+        [ "novell-239087", "Stable promoted placement" ],
+        [ "promoted-12", "Promotion based solely on rsc_location constraints" ],
+        [ "promoted-13", "Include preferences of colocated resources when placing promoted" ],
+        [ "promoted-demote", "Ordering when actions depends on demoting an unpromoted resource" ],
+        [ "promoted-ordering", "Prevent resources from starting that need a promoted" ],
+        [ "bug-1765", "Verify promoted-with-promoted colocation does not stop unpromoted instances" ],
+        [ "promoted-group", "Promotion of cloned groups" ],
+        [ "bug-lf-1852", "Don't shuffle promotable instances unnecessarily" ],
+        [ "promoted-failed-demote", "Don't retry failed demote actions" ],
+        [ "promoted-failed-demote-2", "Don't retry failed demote actions (notify=false)" ],
+        [ "promoted-depend",
+          "Ensure resources that depend on promoted instance don't get allocated until that does" ],
+        [ "promoted-reattach", "Re-attach to a running promoted" ],
+        [ "promoted-allow-start", "Don't include promoted score if it would prevent allocation" ],
+        [ "promoted-colocation",
+          "Allow promoted instances placemaker to be influenced by colocation constraints" ],
+        [ "promoted-pseudo", "Make sure promote/demote pseudo actions are created correctly" ],
+        [ "promoted-role", "Prevent target-role from promoting more than promoted-max instances" ],
+        [ "bug-lf-2358", "Anti-colocation of promoted instances" ],
+        [ "promoted-promotion-constraint", "Mandatory promoted colocation constraints" ],
+        [ "unmanaged-promoted", "Ensure role is preserved for unmanaged resources" ],
+        [ "promoted-unmanaged-monitor", "Start correct monitor for unmanaged promoted instances" ],
+        [ "promoted-demote-2", "Demote does not clear past failure" ],
+        [ "promoted-move", "Move promoted based on failure of colocated group" ],
+        [ "promoted-probed-score", "Observe the promotion score of probed resources" ],
+        [ "colocation_constraint_stops_promoted",
+          "cl#5054 - Ensure promoted is demoted when stopped by colocation constraint" ],
+        [ "colocation_constraint_stops_unpromoted",
+          "cl#5054 - Ensure unpromoted is not demoted when stopped by colocation constraint" ],
+        [ "order_constraint_stops_promoted",
+          "cl#5054 - Ensure promoted is demoted when stopped by order constraint" ],
+        [ "order_constraint_stops_unpromoted",
+          "cl#5054 - Ensure unpromoted is not demoted when stopped by order constraint" ],
+        [ "promoted_monitor_restart", "cl#5072 - Ensure promoted monitor operation will start after promotion" ],
         [ "bug-rh-880249", "Handle replacement of an m/s resource with a primitive" ],
-        [ "bug-5143-ms-shuffle", "Prevent master shuffling due to promotion score" ],
-        [ "master-demote-block", "Block promotion if demote fails with on-fail=block" ],
-        [ "master-dependent-ban",
+        [ "bug-5143-ms-shuffle", "Prevent promoted instance shuffling due to promotion score" ],
+        [ "promoted-demote-block", "Block promotion if demote fails with on-fail=block" ],
+        [ "promoted-dependent-ban",
           "Don't stop instances from being active because a dependent is banned from that host" ],
-        [ "master-stop", "Stop instances due to location constraint with role=Started" ],
-        [ "master-partially-demoted-group", "Allow partially demoted group to finish demoting" ],
+        [ "promoted-stop", "Stop instances due to location constraint with role=Started" ],
+        [ "promoted-partially-demoted-group", "Allow partially demoted group to finish demoting" ],
         [ "bug-cl-5213", "Ensure role colocation with -INFINITY is enforced" ],
         [ "bug-cl-5219", "Allow unrelated resources with a common colocation target to remain promoted" ],
-        [ "master-asymmetrical-order",
+        [ "promoted-asymmetrical-order",
           "Fix the behaviors of multi-state resources with asymmetrical ordering" ],
-        [ "master-notify", "Master promotion with notifies" ],
-        [ "master-score-startup", "Use permanent master scores without LRM history" ],
-        [ "failed-demote-recovery", "Recover resource in slave role after demote fails" ],
-        [ "failed-demote-recovery-master", "Recover resource in master role after demote fails" ],
+        [ "promoted-notify", "Promotion with notifications" ],
+        [ "promoted-score-startup", "Use permanent promoted scores without LRM history" ],
+        [ "failed-demote-recovery", "Recover resource in unpromoted role after demote fails" ],
+        [ "failed-demote-recovery-promoted", "Recover resource in promoted role after demote fails" ],
         [ "on_fail_demote1", "Recovery with on-fail=\"demote\" on healthy cluster, remote, guest, and bundle nodes" ],
         [ "on_fail_demote2", "Recovery with on-fail=\"demote\" with promotion on different node" ],
         [ "on_fail_demote3", "Recovery with on-fail=\"demote\" with no promotion" ],
@@ -586,9 +586,9 @@ TESTS = [
         [ "stonith-3", "Stonith startup" ],
         [ "stonith-4", "Stonith node state" ],
         [ "dc-fence-ordering", "DC needs fencing while other nodes are shutting down" ],
-        [ "bug-1572-1", "Recovery of groups depending on master/slave" ],
-        [ "bug-1572-2", "Recovery of groups depending on master/slave when the master is never re-promoted" ],
-        [ "bug-1685", "Depends-on-master ordering" ],
+        [ "bug-1572-1", "Recovery of groups depending on promotable role" ],
+        [ "bug-1572-2", "Recovery of groups depending on promotable role when promoted is not re-promoted" ],
+        [ "bug-1685", "Depends-on-promoted ordering" ],
         [ "bug-1822", "Don't promote partially active groups" ],
         [ "bug-pm-11", "New resource added to a m/s group" ],
         [ "bug-pm-12", "Recover only the failed portion of a cloned group" ],
@@ -626,7 +626,7 @@ TESTS = [
           "Verify ordered sets work with symmetrical=false" ],
         [ "bug-5014-ordered-set-symmetrical-true",
           "Verify ordered sets work with symmetrical=true" ],
-        [ "bug-5007-masterslave_colocation",
+        [ "clbz5007-promotable-colocation",
           "Verify use of colocation scores other than INFINITY and -INFINITY work on multi-state resources" ],
         [ "bug-5038", "Prevent restart of anonymous clones when clone-max decreases" ],
         [ "bug-5025-1", "Automatically clean up failcount after resource config change with reload" ],
@@ -843,30 +843,30 @@ TESTS = [
         [ "ticket-clone-24", "Ticket - Clone (loss-policy=freeze, standby, revoked)" ],
     ],
     [
-        [ "ticket-master-1", "Ticket - Master (loss-policy=stop, initial)" ],
-        [ "ticket-master-2", "Ticket - Master (loss-policy=stop, granted)" ],
-        [ "ticket-master-3", "Ticket - Master (loss-policy-stop, revoked)" ],
-        [ "ticket-master-4", "Ticket - Master (loss-policy=demote, initial)" ],
-        [ "ticket-master-5", "Ticket - Master (loss-policy=demote, granted)" ],
-        [ "ticket-master-6", "Ticket - Master (loss-policy=demote, revoked)" ],
-        [ "ticket-master-7", "Ticket - Master (loss-policy=fence, initial)" ],
-        [ "ticket-master-8", "Ticket - Master (loss-policy=fence, granted)" ],
-        [ "ticket-master-9", "Ticket - Master (loss-policy=fence, revoked)" ],
-        [ "ticket-master-10", "Ticket - Master (loss-policy=freeze, initial)" ],
-        [ "ticket-master-11", "Ticket - Master (loss-policy=freeze, granted)" ],
-        [ "ticket-master-12", "Ticket - Master (loss-policy=freeze, revoked)" ],
-        [ "ticket-master-13", "Ticket - Master (loss-policy=stop, standby, granted)" ],
-        [ "ticket-master-14", "Ticket - Master (loss-policy=stop, granted, standby)" ],
-        [ "ticket-master-15", "Ticket - Master (loss-policy=stop, standby, revoked)" ],
-        [ "ticket-master-16", "Ticket - Master (loss-policy=demote, standby, granted)" ],
-        [ "ticket-master-17", "Ticket - Master (loss-policy=demote, granted, standby)" ],
-        [ "ticket-master-18", "Ticket - Master (loss-policy=demote, standby, revoked)" ],
-        [ "ticket-master-19", "Ticket - Master (loss-policy=fence, standby, granted)" ],
-        [ "ticket-master-20", "Ticket - Master (loss-policy=fence, granted, standby)" ],
-        [ "ticket-master-21", "Ticket - Master (loss-policy=fence, standby, revoked)" ],
-        [ "ticket-master-22", "Ticket - Master (loss-policy=freeze, standby, granted)" ],
-        [ "ticket-master-23", "Ticket - Master (loss-policy=freeze, granted, standby)" ],
-        [ "ticket-master-24", "Ticket - Master (loss-policy=freeze, standby, revoked)" ],
+        [ "ticket-promoted-1", "Ticket - Promoted (loss-policy=stop, initial)" ],
+        [ "ticket-promoted-2", "Ticket - Promoted (loss-policy=stop, granted)" ],
+        [ "ticket-promoted-3", "Ticket - Promoted (loss-policy-stop, revoked)" ],
+        [ "ticket-promoted-4", "Ticket - Promoted (loss-policy=demote, initial)" ],
+        [ "ticket-promoted-5", "Ticket - Promoted (loss-policy=demote, granted)" ],
+        [ "ticket-promoted-6", "Ticket - Promoted (loss-policy=demote, revoked)" ],
+        [ "ticket-promoted-7", "Ticket - Promoted (loss-policy=fence, initial)" ],
+        [ "ticket-promoted-8", "Ticket - Promoted (loss-policy=fence, granted)" ],
+        [ "ticket-promoted-9", "Ticket - Promoted (loss-policy=fence, revoked)" ],
+        [ "ticket-promoted-10", "Ticket - Promoted (loss-policy=freeze, initial)" ],
+        [ "ticket-promoted-11", "Ticket - Promoted (loss-policy=freeze, granted)" ],
+        [ "ticket-promoted-12", "Ticket - Promoted (loss-policy=freeze, revoked)" ],
+        [ "ticket-promoted-13", "Ticket - Promoted (loss-policy=stop, standby, granted)" ],
+        [ "ticket-promoted-14", "Ticket - Promoted (loss-policy=stop, granted, standby)" ],
+        [ "ticket-promoted-15", "Ticket - Promoted (loss-policy=stop, standby, revoked)" ],
+        [ "ticket-promoted-16", "Ticket - Promoted (loss-policy=demote, standby, granted)" ],
+        [ "ticket-promoted-17", "Ticket - Promoted (loss-policy=demote, granted, standby)" ],
+        [ "ticket-promoted-18", "Ticket - Promoted (loss-policy=demote, standby, revoked)" ],
+        [ "ticket-promoted-19", "Ticket - Promoted (loss-policy=fence, standby, granted)" ],
+        [ "ticket-promoted-20", "Ticket - Promoted (loss-policy=fence, granted, standby)" ],
+        [ "ticket-promoted-21", "Ticket - Promoted (loss-policy=fence, standby, revoked)" ],
+        [ "ticket-promoted-22", "Ticket - Promoted (loss-policy=freeze, standby, granted)" ],
+        [ "ticket-promoted-23", "Ticket - Promoted (loss-policy=freeze, granted, standby)" ],
+        [ "ticket-promoted-24", "Ticket - Promoted (loss-policy=freeze, standby, revoked)" ],
     ],
     [
         [ "ticket-rsc-sets-1", "Ticket - Resource sets (1 ticket, initial)" ],
@@ -998,6 +998,8 @@ TESTS = [
         [ "remote-reconnect-delay", "Waiting for remote reconnect interval to expire" ],
         [ "remote-connection-unrecoverable",
           "Remote connection host must be fenced, with connection unrecoverable" ],
+        [ "cancel-behind-moving-remote",
+          "Route recurring monitor cancellations through original node of a moving remote connection" ],
     ],
     [
         [ "resource-discovery", "Exercises resource-discovery location constraint option" ],
@@ -1014,8 +1016,8 @@ TESTS = [
     ],
     [   [ "stop-all-resources", "Test stop-all-resources=true "],
     ],
-    [   [ "ocf_degraded-remap-ocf_ok", "Test DEGRADED remapped to OK" ],
-        [ "ocf_degraded_master-remap-ocf_ok", "Test DEGRADED_MASTER remapped to OK"],
+    [   [ "ocf_degraded-remap-ocf_ok", "Test degraded remapped to OK" ],
+        [ "ocf_degraded_promoted-remap-ocf_ok", "Test degraded promoted remapped to OK"],
     ],
     
     # @TODO: If pacemaker implements versioned attributes, uncomment these tests
@@ -1027,7 +1029,7 @@ TESTS = [
     #[
     #    [ "versioned-operations-1", "Use #ra-version to configure operations of native resources" ],
     #    [ "versioned-operations-2", "Use #ra-version to configure operations of stonith resources" ],
-    #    [ "versioned-operations-3", "Use #ra-version to configure operations of master/slave resources" ],
+    #    [ "versioned-operations-3", "Use #ra-version to configure operations of promotable resources" ],
     #    [ "versioned-operations-4", "Use #ra-version to configure operations of groups of the resources" ],
     #],
 ]
@@ -1045,12 +1047,13 @@ class BuildVars(object):
     CRM_SCHEMA_DIRECTORY = "@CRM_SCHEMA_DIRECTORY@"
 
 
-# These values must be kept in sync with include/crm/crm.h
+# These values must be kept in sync with crm_exit_t
 class CrmExit(object):
     OK                   =    0
     ERROR                =    1
     NOT_INSTALLED        =    5
     NOINPUT              =   66
+    CANTCREAT            =   73
 
 
 def is_executable(path):
@@ -1238,6 +1241,13 @@ class CtsScheduler(object):
         if self.args.io_dir is None:
             self.args.io_dir = os.path.join(self.test_home, "scheduler")
 
+        self.xml_input_dir = os.path.join(self.args.io_dir, "xml")
+        self.expected_dir = os.path.join(self.args.io_dir, "exp")
+        self.dot_expected_dir = os.path.join(self.args.io_dir, "dot")
+        self.scores_dir = os.path.join(self.args.io_dir, "scores")
+        self.summary_dir = os.path.join(self.args.io_dir, "summary")
+        self.stderr_expected_dir = os.path.join(self.args.io_dir, "stderr")
+
         # Where to store generated files
         if self.args.out_dir is None:
             self.args.out_dir = self.args.io_dir
@@ -1246,6 +1256,13 @@ class CtsScheduler(object):
             self.failed_filename = os.path.join(self.args.out_dir, ".regression.failed.diff")
         os.environ['CIB_shadow_dir'] = self.args.out_dir
         self.failed_file = None
+
+        self.outfile_out_dir = os.path.join(self.args.out_dir, "out")
+        self.dot_out_dir = os.path.join(self.args.out_dir, "dot")
+        self.scores_out_dir = os.path.join(self.args.out_dir, "scores")
+        self.summary_out_dir = os.path.join(self.args.out_dir, "summary")
+        self.stderr_out_dir = os.path.join(self.args.out_dir, "stderr")
+        self.valgrind_out_dir = os.path.join(self.args.out_dir, "valgrind")
 
         # Single test mode (if requested)
         try:
@@ -1264,14 +1281,39 @@ class CtsScheduler(object):
         self.num_failed = 0
         self.num_tests = 0
 
+        # Ensure that the main output directory exists
+        # We don't want to create it with os.makedirs below
+        if not os.path.isdir(self.args.out_dir):
+            self._error("Output directory missing; can't create output files")
+            sys.exit(CrmExit.CANTCREAT)
+
+        # Create output subdirectories if they don't exist
+        try:
+            os.makedirs(self.outfile_out_dir, 0o755, True)
+            os.makedirs(self.dot_out_dir, 0o755, True)
+            os.makedirs(self.scores_out_dir, 0o755, True)
+            os.makedirs(self.summary_out_dir, 0o755, True)
+            os.makedirs(self.stderr_out_dir, 0o755, True)
+            if self.valgrind_args:
+                os.makedirs(self.valgrind_out_dir, 0o755, True)
+        except OSError as ex:
+            self._error("Unable to create output subdirectory: %s" % ex)
+            remove_files([
+                self.outfile_out_dir,
+                self.dot_out_dir,
+                self.scores_out_dir,
+                self.summary_out_dir,
+                self.stderr_out_dir,
+            ])
+            sys.exit(CrmExit.CANTCREAT)
+
     def _compare_files(self, filename1, filename2):
         """ Add any file differences to failed results """
 
-        with io.open("/dev/null", "wt") as dev_null:
-            if diff(filename1, filename2, stdout=dev_null) != 0:
-                diff(filename1, filename2, stdout=self.failed_file, stderr=dev_null)
-                self.failed_file.write("\n");
-                return True
+        if diff(filename1, filename2, stdout=subprocess.DEVNULL) != 0:
+            diff(filename1, filename2, stdout=self.failed_file, stderr=subprocess.DEVNULL)
+            self.failed_file.write("\n");
+            return True
         return False
 
     def run_one(self, test_name, test_desc, test_args=[]):
@@ -1283,20 +1325,32 @@ class CtsScheduler(object):
         self.num_tests = self.num_tests + 1
 
         # Test inputs
-        input_filename = "%s/%s.xml" % (self.args.io_dir, test_name)
-        expected_filename = "%s/%s.exp" % (self.args.io_dir, test_name)
-        dot_expected_filename = "%s/%s.dot" % (self.args.io_dir, test_name)
-        scores_filename = "%s/%s.scores" % (self.args.io_dir, test_name)
-        summary_filename = "%s/%s.summary" % (self.args.io_dir, test_name)
-        stderr_expected_filename = "%s/%s.stderr" % (self.args.io_dir, test_name)
+        input_filename = os.path.join(
+            self.xml_input_dir, "%s.xml" % test_name)
+        expected_filename = os.path.join(
+            self.expected_dir, "%s.exp" % test_name)
+        dot_expected_filename = os.path.join(
+            self.dot_expected_dir, "%s.dot" % test_name)
+        scores_filename = os.path.join(
+            self.scores_dir, "%s.scores" % test_name)
+        summary_filename = os.path.join(
+            self.summary_dir, "%s.summary" % test_name)
+        stderr_expected_filename = os.path.join(
+            self.stderr_expected_dir, "%s.stderr" % test_name)
 
         # (Intermediate) test outputs
-        output_filename = "%s/%s.out" % (self.args.out_dir, test_name)
-        dot_output_filename = "%s/%s.pe.dot" % (self.args.out_dir, test_name)
-        score_output_filename = "%s/%s.scores.pe" % (self.args.out_dir, test_name)
-        summary_output_filename = "%s/%s.summary.pe" % (self.args.out_dir, test_name)
-        stderr_output_filename = "%s/%s.stderr.pe" % (self.args.out_dir, test_name)
-        valgrind_output_filename = "%s/%s.valgrind" % (self.args.out_dir, test_name)
+        output_filename = os.path.join(
+            self.outfile_out_dir, "%s.out" % test_name)
+        dot_output_filename = os.path.join(
+            self.dot_out_dir, "%s.dot.pe" % test_name)
+        score_output_filename = os.path.join(
+            self.scores_out_dir, "%s.scores.pe" % test_name)
+        summary_output_filename = os.path.join(
+            self.summary_out_dir, "%s.summary.pe" % test_name)
+        stderr_output_filename = os.path.join(
+            self.stderr_out_dir, "%s.stderr.pe" % test_name)
+        valgrind_output_filename = os.path.join(
+            self.valgrind_out_dir, "%s.valgrind" % test_name)
 
         # Common arguments for running test
         test_cmd = []
@@ -1324,7 +1378,21 @@ class CtsScheduler(object):
             # @TODO Why isn't test_args added here?
             test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ]
         with io.open(summary_output_filename, "wt") as f:
-            subprocess.call(test_cmd_full, stdout=f, stderr=subprocess.STDOUT, env=os.environ)
+            simulation = subprocess.Popen(test_cmd_full, stdout=subprocess.PIPE,
+                                          stderr=subprocess.STDOUT,
+                                          env=os.environ)
+            # This makes diff happy regardless of --enable-compat-2.0.
+            # Use sed -E to make Linux and BSD special characters more compatible.
+            sed = subprocess.Popen(["sed", "-E",
+                                    "-e", "s/ocf::/ocf:/g",
+                                    "-e", r"s/Masters:/Promoted:/",
+                                    "-e", r"s/Slaves:/Unpromoted:/",
+                                    "-e", r"s/ Master( |\[|$)/ Promoted\1/",
+                                    "-e", r"s/ Slave / Unpromoted /",
+                                   ], stdin=simulation.stdout, stdout=f,
+                                   stderr=subprocess.STDOUT)
+            simulation.stdout.close()
+            sed.communicate()
         if self.args.run:
             cat(summary_output_filename)
 

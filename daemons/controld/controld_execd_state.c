@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -117,24 +117,14 @@ lrm_state_create(const char *node_name)
     }
 
     state->node_name = strdup(node_name);
-
-    state->rsc_info_cache = g_hash_table_new_full(crm_str_hash,
-                                                g_str_equal, NULL, free_rsc_info);
-
-    state->deletion_ops = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
-                                                free_deletion_op);
-
-    state->pending_ops = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
-                                               free_recurring_op);
-
-    state->resource_history = g_hash_table_new_full(crm_str_hash,
-                                                    g_str_equal, NULL, history_free);
-
+    state->rsc_info_cache = pcmk__strkey_table(NULL, free_rsc_info);
+    state->deletion_ops = pcmk__strkey_table(free, free_deletion_op);
+    state->pending_ops = pcmk__strkey_table(free, free_recurring_op);
+    state->resource_history = pcmk__strkey_table(NULL, history_free);
     state->metadata_cache = metadata_cache_new();
 
     g_hash_table_insert(lrm_state_table, (char *)state->node_name, state);
     return state;
-
 }
 
 void
@@ -227,14 +217,12 @@ lrm_state_init_local(void)
         return TRUE;
     }
 
-    lrm_state_table =
-        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, internal_lrm_state_destroy);
+    lrm_state_table = pcmk__strikey_table(NULL, internal_lrm_state_destroy);
     if (!lrm_state_table) {
         return FALSE;
     }
 
-    proxy_table =
-        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, remote_proxy_free);
+    proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
     if (!proxy_table) {
         g_hash_table_destroy(lrm_state_table);
         lrm_state_table = NULL;
@@ -457,7 +445,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     } else {
         lrmd_t * lrmd = (lrmd_t *)user_data;
         crm_time_t *now = crm_time_new(NULL);
-        GHashTable *config_hash = crm_str_table_new();
+        GHashTable *config_hash = pcmk__strkey_table(free, free);
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 
@@ -497,13 +485,12 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {
         char *now_s = NULL;
-        time_t now = time(NULL);
 
         crm_notice("%s requested shutdown of its remote connection",
                    lrm_state->node_name);
 
         if (!remote_ra_is_in_maintenance(lrm_state)) {
-            now_s = crm_itoa(now);
+            now_s = pcmk__ttoa(time(NULL));
             update_attrd(lrm_state->node_name, XML_CIB_ATTR_SHUTDOWN, now_s, NULL, TRUE);
             free(now_s);
 
@@ -527,11 +514,9 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
 
         CRM_CHECK(request != NULL, return);
-#if ENABLE_ACL
         CRM_CHECK(lrm_state->node_name, return);
         crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
         pcmk__update_acl_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
-#endif
 
         /* Pacemaker Remote nodes don't know their own names (as known to the
          * cluster). When getting a node info request with no name or ID, add
@@ -754,7 +739,7 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
  * Functions for sending alerts via local executor connection
  */
 
-static GListPtr crmd_alert_list = NULL;
+static GList *crmd_alert_list = NULL;
 
 void
 crmd_unpack_alerts(xmlNode *alerts)
