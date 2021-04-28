@@ -1139,7 +1139,8 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
     char *dirs = strdup(root);
     char *dir = NULL;
 
-    if (dirs == NULL) {
+    if (pcmk__str_empty(dirs)) {
+        free(dirs);
         return result;
     }
 
