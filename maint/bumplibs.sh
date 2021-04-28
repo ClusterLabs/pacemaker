@@ -11,15 +11,14 @@
 declare -A HEADERS
 HEADERS[cib]="include/crm/cib.h include/crm/cib/*.h"
 HEADERS[crmcommon]="include/crm/crm.h
-                    include/crm/attrd.h
                     include/crm/msg_xml.h
                     include/crm/common/*.h"
 HEADERS[crmcluster]="include/crm/cluster.h include/crm/cluster/*.h"
-HEADERS[crmservice]="include/crm/services.h"
+HEADERS[crmservice]="include/crm/services*.h"
 HEADERS[lrmd]="include/crm/lrmd*.h"
-HEADERS[pacemaker]="include/pacemaker*.h include/pcmki/*.h"
-HEADERS[pe_rules]="include/crm/pengine/rules*.h"
-HEADERS[pe_status]="include/crm/pengine/*.h"
+HEADERS[pacemaker]="include/pacemaker*.h"
+HEADERS[pe_rules]="include/crm/pengine/ru*.h"
+HEADERS[pe_status]="include/crm/pengine/[^r]*.h include/crm/pengine/r[^u]*.h"
 HEADERS[stonithd]="include/crm/stonith-ng.h include/crm/fencing/*.h"
 
 prompt_to_continue() {
