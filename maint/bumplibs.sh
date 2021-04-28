@@ -120,9 +120,8 @@ process_lib() {
     local HEADERS_DIFF
     local HEADERS_GONE
     local HEADERS_ADDED
-    local HEADERS_COMMON
     local CHANGE
-    local CHANGES
+    local DEFAULT_CHANGE
 
     if [ -z "${HEADERS[$LIB]}" ]; then
         echo "Can't check lib$LIB until this script is updated with its headers"
@@ -148,18 +147,20 @@ process_lib() {
     HEADERS_DIFF="$(diff <(echo "$HEADERS_LAST") <(echo "$HEADERS_HEAD"))"
     HEADERS_GONE="$(echo "$HEADERS_DIFF" | sed -n -e 's/^< //p')"
     HEADERS_ADDED="$(echo "$HEADERS_DIFF" | sed -n -e 's/^> //p')"
-    HEADERS_COMMON="$(echo -e "$HEADERS_LAST\n$HEADERS_HEAD" | sed -n -e 's/^ *\(.*\) *$/\1/p' | sort | uniq -d)"
 
     # Check whether there were any changes to headers or sources
     SOURCES="$(find_sources "$LIB" "$AMFILE")"
-    CHANGES=$(git diff -w $LAST_RELEASE..HEAD $HEADERS_COMMON $SOURCES | wc -l)
-    if [ $CHANGES -eq 0 ]; then
-        if [ -z "$HEADERS_GONE" ]; then
-          echo "No changes to $LIB interface"
-          prompt_to_continue
-          echo ""
-          return
-        fi
+    if [ -n "$HEADERS_GONE" ]; then
+        DEFAULT_CHANGE="i" # Removed public header is incompatible change
+    elif [ -n "$HEADERS_ADDED" ]; then
+        DEFAULT_CHANGE="c" # Additions are likely compatible
+    elif git diff --quiet -w $LAST_RELEASE..HEAD $HEADERS_HEAD $SOURCES ; then
+        echo "No changes to $LIB interface"
+        prompt_to_continue
+        echo ""
+        return
+    else
+        DEFAULT_CHANGE="f" # Sources changed, so it's at least a fix
     fi
 
     # Show all header changes since last release
@@ -195,9 +196,9 @@ process_lib() {
     echo ""
 
     # Ask for human guidance
-    # @TODO: change default based on intelligent analysis
     echo "Are the changes to lib$LIB:"
-    read -p "[c]ompatible additions, [i]ncompatible additions/removals or [f]ixes? [None]: " CHANGE
+    read -p "[c]ompatible additions, [i]ncompatible additions/removals or [f]ixes? [$DEFAULT_CHANGE]: " CHANGE
+    [ -z "$CHANGE" ] && CHANGE="$DEFAULT_CHANGE"
 
     # Get (and show) shared library version at last release
     VER=$(git show $LAST_RELEASE:$AMFILE | extract_version $LIB)
