@@ -116,6 +116,7 @@ struct {
     guint reconnect_ms;
     gboolean daemonize;
     gboolean one_shot;
+    gboolean print_pending;
     gboolean show_bans;
     gboolean watch_fencing;
     char *pid_file;
@@ -129,7 +130,8 @@ struct {
     GSList *includes_excludes;
 } options = {
     .reconnect_ms = RECONNECT_MSECS,
-    .mon_ops = mon_op_default
+    .mon_ops = mon_op_default,
+    .print_pending = TRUE
 };
 
 static void clean_up_cib_connection(void);
@@ -457,12 +459,6 @@ print_clone_detail_cb(const gchar *option_name, const gchar *optarg, gpointer da
 }
 
 static gboolean
-print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_pending;
-    return TRUE;
-}
-
-static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     options.mon_ops |= mon_op_print_timing;
     return include_exclude_cb("--include", "operations", data, err);
@@ -633,7 +629,7 @@ static GOptionEntry display_entries[] = {
       "Brief output",
       NULL },
 
-    { "pending", 'j', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_pending_cb,
+    { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
@@ -680,7 +676,7 @@ get_resource_display_options(unsigned int mon_ops)
 {
     int print_opts = 0;
 
-    if (pcmk_is_set(mon_ops, mon_op_print_pending)) {
+    if (options.print_pending) {
         print_opts |= pe_print_pending;
     }
     if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
@@ -1169,7 +1165,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 show_opts ^= pcmk_show_brief;
                 break;
             case 'j':
-                options.mon_ops ^= mon_op_print_pending;
+                options.print_pending = !options.print_pending;
                 break;
             case '?':
                 config_mode = TRUE;
@@ -1196,7 +1192,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
         print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
-        print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
+        print_option_help(out, 'j', options.print_pending);
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
         curses_formatted_printf(out, "%s", "\nToggle fields via field letter, type any other key to return\n");
     }
