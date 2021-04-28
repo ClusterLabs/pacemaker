@@ -190,11 +190,14 @@ process_lib() {
         prompt_to_continue
     fi
 
-    # Show merged PRs since last release touching this lib
-    echo ""
-    echo "- PRs merged touching lib$LIB since $LAST_RELEASE:"
-    git log Pacemaker-2.0.3..HEAD -z $HEADERS_HEAD $SOURCES $AMFILE|grep -z "Merge pull request"|sed -zr "s/.*#([0-9]+).*/#\1 /"
-    echo ""
+    # @TODO this seems broken ...
+    #echo ""
+    #if yesno "Show merged PRs touching lib$LIB since $LAST_RELEASE [y/N]?"
+    #then
+    #    git log --merges $LAST_RELEASE..HEAD $HEADERS_HEAD $SOURCES $AMFILE
+    #    echo
+    #    prompt_to_continue
+    #fi
 
     # Show summary of source changes since last release
     echo ""
