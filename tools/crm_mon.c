@@ -34,6 +34,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/output.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -142,9 +143,9 @@ static void refresh_after_event(gboolean data_updated, gboolean enforce);
 static unsigned int
 all_includes(mon_output_format_t fmt) {
     if (fmt == mon_output_monitor || fmt == mon_output_plain || fmt == mon_output_console) {
-        return ~mon_show_options;
+        return ~pcmk_section_options;
     } else {
-        return mon_show_all;
+        return pcmk_section_all;
     }
 }
 
@@ -154,8 +155,8 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_monitor:
         case mon_output_plain:
         case mon_output_console:
-            return mon_show_stack | mon_show_dc | mon_show_times | mon_show_counts |
-                   mon_show_nodes | mon_show_resources | mon_show_failures;
+            return pcmk_section_stack | pcmk_section_dc | pcmk_section_times | pcmk_section_counts |
+                   pcmk_section_nodes | pcmk_section_resources | pcmk_section_failures;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
@@ -163,8 +164,8 @@ default_includes(mon_output_format_t fmt) {
 
         case mon_output_html:
         case mon_output_cgi:
-            return mon_show_summary | mon_show_nodes | mon_show_resources |
-                   mon_show_failures;
+            return pcmk_section_summary | pcmk_section_nodes | pcmk_section_resources |
+                   pcmk_section_failures;
 
         default:
             return 0;
@@ -175,24 +176,24 @@ struct {
     const char *name;
     unsigned int bit;
 } sections[] = {
-    { "attributes", mon_show_attributes },
-    { "bans", mon_show_bans },
-    { "counts", mon_show_counts },
-    { "dc", mon_show_dc },
-    { "failcounts", mon_show_failcounts },
-    { "failures", mon_show_failures },
-    { "fencing", mon_show_fencing_all },
-    { "fencing-failed", mon_show_fence_failed },
-    { "fencing-pending", mon_show_fence_pending },
-    { "fencing-succeeded", mon_show_fence_worked },
-    { "nodes", mon_show_nodes },
-    { "operations", mon_show_operations },
-    { "options", mon_show_options },
-    { "resources", mon_show_resources },
-    { "stack", mon_show_stack },
-    { "summary", mon_show_summary },
-    { "tickets", mon_show_tickets },
-    { "times", mon_show_times },
+    { "attributes", pcmk_section_attributes },
+    { "bans", pcmk_section_bans },
+    { "counts", pcmk_section_counts },
+    { "dc", pcmk_section_dc },
+    { "failcounts", pcmk_section_failcounts },
+    { "failures", pcmk_section_failures },
+    { "fencing", pcmk_section_fencing_all },
+    { "fencing-failed", pcmk_section_fence_failed },
+    { "fencing-pending", pcmk_section_fence_pending },
+    { "fencing-succeeded", pcmk_section_fence_worked },
+    { "nodes", pcmk_section_nodes },
+    { "operations", pcmk_section_operations },
+    { "options", pcmk_section_options },
+    { "resources", pcmk_section_resources },
+    { "stack", pcmk_section_stack },
+    { "summary", pcmk_section_summary },
+    { "tickets", pcmk_section_tickets },
+    { "times", pcmk_section_times },
     { NULL }
 };
 
@@ -249,7 +250,7 @@ apply_include(const gchar *includes, GError **error) {
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (pcmk__starts_with(*s, "bans")) {
-            show |= mon_show_bans;
+            show |= pcmk_section_bans;
             if (options.neg_location_prefix != NULL) {
                 free(options.neg_location_prefix);
                 options.neg_location_prefix = NULL;
@@ -919,23 +920,23 @@ set_fencing_options(int level)
     switch (level) {
         case 3:
             options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
-            show |= mon_show_fencing_all;
+            show |= pcmk_section_fencing_all;
             break;
 
         case 2:
             options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
-            show |= mon_show_fencing_all;
+            show |= pcmk_section_fencing_all;
             break;
 
         case 1:
             options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
-            show |= mon_show_fence_failed | mon_show_fence_pending;
+            show |= pcmk_section_fence_failed | pcmk_section_fence_pending;
             break;
 
         default:
             interactive_fence_level = 0;
             options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
-            show &= ~mon_show_fencing_all;
+            show &= ~pcmk_section_fencing_all;
             break;
     }
 }
@@ -1132,17 +1133,17 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 set_fencing_options(interactive_fence_level);
                 break;
             case 'c':
-                show ^= mon_show_tickets;
+                show ^= pcmk_section_tickets;
                 break;
             case 'f':
-                show ^= mon_show_failcounts;
+                show ^= pcmk_section_failcounts;
                 break;
             case 'n':
                 options.mon_ops ^= mon_op_group_by_node;
                 break;
             case 'o':
-                show ^= mon_show_operations;
-                if (!pcmk_is_set(show, mon_show_operations)) {
+                show ^= pcmk_section_operations;
+                if (!pcmk_is_set(show, pcmk_section_operations)) {
                     options.mon_ops &= ~mon_op_print_timing;
                 }
                 break;
@@ -1155,28 +1156,24 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
             case 't':
                 options.mon_ops ^= mon_op_print_timing;
                 if (pcmk_is_set(options.mon_ops, mon_op_print_timing)) {
-                    show |= mon_show_operations;
+                    show |= pcmk_section_operations;
                 }
                 break;
             case 'A':
-                show ^= mon_show_attributes;
+                show ^= pcmk_section_attributes;
                 break;
             case 'L':
-                show ^= mon_show_bans;
+                show ^= pcmk_section_bans;
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (pcmk_any_flags_set(show,
-                                       mon_show_stack
-                                       |mon_show_dc
-                                       |mon_show_times
-                                       |mon_show_counts)) {
-                    show &= ~mon_show_summary;
+                if (pcmk_any_flags_set(show, pcmk_section_summary)) {
+                    show &= ~pcmk_section_summary;
                 } else {
-                    show |= mon_show_summary;
+                    show |= pcmk_section_summary;
                 }
                 /* Regardless, we don't show options in console mode. */
-                show &= ~mon_show_options;
+                show &= ~pcmk_section_options;
                 break;
             case 'b':
                 options.mon_ops ^= mon_op_print_brief;
@@ -1198,15 +1195,15 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         blank_screen();
 
         curses_formatted_printf(out, "%s", "Display option change mode\n");
-        print_option_help(out, 'c', pcmk_is_set(show, mon_show_tickets));
-        print_option_help(out, 'f', pcmk_is_set(show, mon_show_failcounts));
+        print_option_help(out, 'c', pcmk_is_set(show, pcmk_section_tickets));
+        print_option_help(out, 'f', pcmk_is_set(show, pcmk_section_failcounts));
         print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
-        print_option_help(out, 'o', pcmk_is_set(show, mon_show_operations));
+        print_option_help(out, 'o', pcmk_is_set(show, pcmk_section_operations));
         print_option_help(out, 'r', pcmk_is_set(options.mon_ops, mon_op_inactive_resources));
         print_option_help(out, 't', pcmk_is_set(options.mon_ops, mon_op_print_timing));
-        print_option_help(out, 'A', pcmk_is_set(show, mon_show_attributes));
-        print_option_help(out, 'L', pcmk_is_set(show,mon_show_bans));
-        print_option_help(out, 'D', !pcmk_is_set(show, mon_show_summary));
+        print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
+        print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
+        print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
         print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
         print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
         print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
@@ -1615,11 +1612,11 @@ main(int argc, char **argv)
     /* Sync up the initial value of interactive_fence_level with whatever was set with
      * --include/--exclude= options.
      */
-    if (pcmk_is_set(show, mon_show_fencing_all)) {
+    if (pcmk_is_set(show, pcmk_section_fencing_all)) {
         interactive_fence_level = 3;
-    } else if (pcmk_is_set(show, mon_show_fence_worked)) {
+    } else if (pcmk_is_set(show, pcmk_section_fence_worked)) {
         interactive_fence_level = 2;
-    } else if (pcmk_any_flags_set(show, mon_show_fence_failed | mon_show_fence_pending)) {
+    } else if (pcmk_any_flags_set(show, pcmk_section_fence_failed | pcmk_section_fence_pending)) {
         interactive_fence_level = 1;
     } else {
         interactive_fence_level = 0;
@@ -2208,7 +2205,7 @@ mon_refresh_display(gpointer user_data)
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
-    if (pcmk_is_set(show, mon_show_bans) || pcmk_is_set(show, mon_show_tickets)) {
+    if (pcmk_is_set(show, pcmk_section_bans) || pcmk_is_set(show, pcmk_section_tickets)) {
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                    mon_data_set->input);
         unpack_constraints(cib_constraints, mon_data_set);

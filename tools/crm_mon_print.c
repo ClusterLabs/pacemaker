@@ -30,7 +30,9 @@
 #include <crm/common/internal.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/util.h>
+#include <crm/common/output.h>
 #include <crm/fencing/internal.h>
+#include <pacemaker.h>
 
 #include "crm_mon.h"
 
@@ -63,13 +65,13 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     CHECK_RC(rc, out->message(out, "cluster-summary", data_set,
                               pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                              pcmk_is_set(show, mon_show_stack),
-                              pcmk_is_set(show, mon_show_dc),
-                              pcmk_is_set(show, mon_show_times),
-                              pcmk_is_set(show, mon_show_counts),
-                              pcmk_is_set(show, mon_show_options)));
+                              pcmk_is_set(show, pcmk_section_stack),
+                              pcmk_is_set(show, pcmk_section_dc),
+                              pcmk_is_set(show, pcmk_section_times),
+                              pcmk_is_set(show, pcmk_section_counts),
+                              pcmk_is_set(show, pcmk_section_options)));
 
-    if (pcmk_is_set(show, mon_show_nodes) && unames) {
+    if (pcmk_is_set(show, pcmk_section_nodes) && unames) {
         PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
         CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames,
                                   resources, print_opts,
@@ -79,7 +81,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print resources section, if needed */
-    if (pcmk_is_set(show, mon_show_resources)) {
+    if (pcmk_is_set(show, pcmk_section_resources)) {
         CHECK_RC(rc, out->message(out, "resource-list", data_set, print_opts,
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
                                   pcmk_is_set(mon_ops, mon_op_inactive_resources),
@@ -88,7 +90,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* print Node Attributes section if requested */
-    if (pcmk_is_set(show, mon_show_attributes)) {
+    if (pcmk_is_set(show, pcmk_section_attributes)) {
         CHECK_RC(rc, out->message(out, "node-attribute-list", data_set,
                                   print_opts, rc == pcmk_rc_ok,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -100,11 +102,11 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_is_set(show, mon_show_operations)
-        || pcmk_is_set(show, mon_show_failcounts)) {
+    if (pcmk_is_set(show, pcmk_section_operations)
+        || pcmk_is_set(show, pcmk_section_failcounts)) {
 
         CHECK_RC(rc, out->message(out, "node-summary", data_set, unames,
-                                  resources, pcmk_is_set(show, mon_show_operations),
+                                  resources, pcmk_is_set(show, pcmk_section_operations),
                                   print_opts,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                                   pcmk_is_set(mon_ops, mon_op_print_brief),
@@ -114,7 +116,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* If there were any failed actions, print them */
-    if (pcmk_is_set(show, mon_show_failures)
+    if (pcmk_is_set(show, pcmk_section_failures)
         && xml_has_children(data_set->failed)) {
 
         CHECK_RC(rc, out->message(out, "failed-action-list", data_set, unames,
@@ -122,7 +124,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print failed stonith actions */
-    if (pcmk_is_set(show, mon_show_fence_failed)
+    if (pcmk_is_set(show, pcmk_section_fence_failed)
         && pcmk_is_set(mon_ops, mon_op_fence_history)) {
 
         if (history_rc == 0) {
@@ -146,12 +148,12 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print tickets if requested */
-    if (pcmk_is_set(show, mon_show_tickets)) {
+    if (pcmk_is_set(show, pcmk_section_tickets)) {
         CHECK_RC(rc, out->message(out, "ticket-list", data_set, rc == pcmk_rc_ok));
     }
 
     /* Print negative location constraints if requested */
-    if (pcmk_is_set(show, mon_show_bans)) {
+    if (pcmk_is_set(show, pcmk_section_bans)) {
         CHECK_RC(rc, out->message(out, "ban-list", data_set, prefix, resources,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                                   rc == pcmk_rc_ok));
@@ -167,7 +169,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                                crm_exit_str(history_rc));
                 out->end_list(out);
             }
-        } else if (pcmk_is_set(show, mon_show_fence_worked)) {
+        } else if (pcmk_is_set(show, pcmk_section_fence_worked)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_neq,
                                                                   GINT_TO_POINTER(st_failed));
 
@@ -176,7 +178,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                                           pcmk_is_set(mon_ops, mon_op_fence_full_history),
                                           rc == pcmk_rc_ok));
             }
-        } else if (pcmk_is_set(show, mon_show_fence_pending)) {
+        } else if (pcmk_is_set(show, pcmk_section_fence_pending)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
@@ -209,14 +211,14 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     out->message(out, "cluster-summary", data_set,
                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                 pcmk_is_set(show, mon_show_stack),
-                 pcmk_is_set(show, mon_show_dc),
-                 pcmk_is_set(show, mon_show_times),
-                 pcmk_is_set(show, mon_show_counts),
-                 pcmk_is_set(show, mon_show_options));
+                 pcmk_is_set(show, pcmk_section_stack),
+                 pcmk_is_set(show, pcmk_section_dc),
+                 pcmk_is_set(show, pcmk_section_times),
+                 pcmk_is_set(show, pcmk_section_counts),
+                 pcmk_is_set(show, pcmk_section_options));
 
     /*** NODES ***/
-    if (pcmk_is_set(show, mon_show_nodes)) {
+    if (pcmk_is_set(show, pcmk_section_nodes)) {
         out->message(out, "node-list", data_set->nodes, unames,
                      resources, print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -225,7 +227,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print resources section, if needed */
-    if (pcmk_is_set(show, mon_show_resources)) {
+    if (pcmk_is_set(show, pcmk_section_resources)) {
         out->message(out, "resource-list", data_set, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_inactive_resources),
@@ -233,7 +235,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* print Node Attributes section if requested */
-    if (pcmk_is_set(show, mon_show_attributes)) {
+    if (pcmk_is_set(show, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", data_set,
                      print_opts, FALSE,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -245,11 +247,11 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_is_set(show, mon_show_operations)
-        || pcmk_is_set(show, mon_show_failcounts)) {
+    if (pcmk_is_set(show, pcmk_section_operations)
+        || pcmk_is_set(show, pcmk_section_failcounts)) {
 
         out->message(out, "node-summary", data_set, unames,
-                     resources, pcmk_is_set(show, mon_show_operations),
+                     resources, pcmk_is_set(show, pcmk_section_operations),
                      print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_print_brief),
@@ -259,7 +261,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* If there were any failed actions, print them */
-    if (pcmk_is_set(show, mon_show_failures)
+    if (pcmk_is_set(show, pcmk_section_failures)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
@@ -267,7 +269,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print stonith history */
-    if (pcmk_is_set(show, mon_show_fencing_all)
+    if (pcmk_is_set(show, pcmk_section_fencing_all)
         && pcmk_is_set(mon_ops, mon_op_fence_history)) {
 
         out->message(out, "full-fencing-list", history_rc, stonith_history,
@@ -276,12 +278,12 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print tickets if requested */
-    if (pcmk_is_set(show, mon_show_tickets)) {
+    if (pcmk_is_set(show, pcmk_section_tickets)) {
         out->message(out, "ticket-list", data_set, FALSE);
     }
 
     /* Print negative location constraints if requested */
-    if (pcmk_is_set(show, mon_show_bans)) {
+    if (pcmk_is_set(show, pcmk_section_bans)) {
         out->message(out, "ban-list", data_set, prefix, resources,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
     }
@@ -310,14 +312,14 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     out->message(out, "cluster-summary", data_set,
                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                 pcmk_is_set(show, mon_show_stack),
-                 pcmk_is_set(show, mon_show_dc),
-                 pcmk_is_set(show, mon_show_times),
-                 pcmk_is_set(show, mon_show_counts),
-                 pcmk_is_set(show, mon_show_options));
+                 pcmk_is_set(show, pcmk_section_stack),
+                 pcmk_is_set(show, pcmk_section_dc),
+                 pcmk_is_set(show, pcmk_section_times),
+                 pcmk_is_set(show, pcmk_section_counts),
+                 pcmk_is_set(show, pcmk_section_options));
 
     /*** NODE LIST ***/
-    if (pcmk_is_set(show, mon_show_nodes) && unames) {
+    if (pcmk_is_set(show, pcmk_section_nodes) && unames) {
         out->message(out, "node-list", data_set->nodes, unames,
                      resources, print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -326,7 +328,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print resources section, if needed */
-    if (pcmk_is_set(show, mon_show_resources)) {
+    if (pcmk_is_set(show, pcmk_section_resources)) {
         out->message(out, "resource-list", data_set, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_inactive_resources),
@@ -335,7 +337,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* print Node Attributes section if requested */
-    if (pcmk_is_set(show, mon_show_attributes)) {
+    if (pcmk_is_set(show, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", data_set,
                      print_opts, FALSE,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
@@ -347,11 +349,11 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_is_set(show, mon_show_operations)
-        || pcmk_is_set(show, mon_show_failcounts)) {
+    if (pcmk_is_set(show, pcmk_section_operations)
+        || pcmk_is_set(show, pcmk_section_failcounts)) {
 
         out->message(out, "node-summary", data_set, unames,
-                     resources, pcmk_is_set(show, mon_show_operations),
+                     resources, pcmk_is_set(show, pcmk_section_operations),
                      print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_print_brief),
@@ -361,7 +363,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* If there were any failed actions, print them */
-    if (pcmk_is_set(show, mon_show_failures)
+    if (pcmk_is_set(show, pcmk_section_failures)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
@@ -369,7 +371,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print failed stonith actions */
-    if (pcmk_is_set(show, mon_show_fence_failed)
+    if (pcmk_is_set(show, pcmk_section_fence_failed)
         && pcmk_is_set(mon_ops, mon_op_fence_history)) {
 
         if (history_rc == 0) {
@@ -397,7 +399,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                                crm_exit_str(history_rc));
                 out->end_list(out);
             }
-        } else if (pcmk_is_set(show, mon_show_fence_worked)) {
+        } else if (pcmk_is_set(show, pcmk_section_fence_worked)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_neq,
                                                                   GINT_TO_POINTER(st_failed));
 
@@ -406,7 +408,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                              pcmk_is_set(mon_ops, mon_op_fence_full_history),
                              FALSE);
             }
-        } else if (pcmk_is_set(show, mon_show_fence_pending)) {
+        } else if (pcmk_is_set(show, pcmk_section_fence_pending)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
@@ -418,12 +420,12 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print tickets if requested */
-    if (pcmk_is_set(show, mon_show_tickets)) {
+    if (pcmk_is_set(show, pcmk_section_tickets)) {
         out->message(out, "ticket-list", data_set, FALSE);
     }
 
     /* Print negative location constraints if requested */
-    if (pcmk_is_set(show, mon_show_bans)) {
+    if (pcmk_is_set(show, pcmk_section_bans)) {
         out->message(out, "ban-list", data_set, prefix, resources,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
     }

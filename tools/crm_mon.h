@@ -26,30 +26,6 @@ typedef enum mon_output_format_e {
     mon_output_cgi
 } mon_output_format_t;
 
-#define mon_show_stack          (1 << 0)
-#define mon_show_dc             (1 << 1)
-#define mon_show_times          (1 << 2)
-#define mon_show_counts         (1 << 3)
-#define mon_show_options        (1 << 4)
-#define mon_show_nodes          (1 << 5)
-#define mon_show_resources      (1 << 6)
-#define mon_show_attributes     (1 << 7)
-#define mon_show_failcounts     (1 << 8)
-#define mon_show_operations     (1 << 9)
-#define mon_show_fence_failed   (1 << 10)
-#define mon_show_fence_pending  (1 << 11)
-#define mon_show_fence_worked   (1 << 12)
-#define mon_show_tickets        (1 << 13)
-#define mon_show_bans           (1 << 14)
-#define mon_show_failures       (1 << 15)
-
-#define mon_show_fencing_all    (mon_show_fence_failed | mon_show_fence_pending | mon_show_fence_worked)
-#define mon_show_summary        (mon_show_stack | mon_show_dc | mon_show_times | mon_show_counts)
-#define mon_show_all            (mon_show_summary | mon_show_nodes | mon_show_resources | \
-                                 mon_show_attributes | mon_show_failcounts | mon_show_operations | \
-                                 mon_show_fencing_all | mon_show_tickets | mon_show_bans | \
-                                 mon_show_failures | mon_show_options)
-
 #define mon_op_group_by_node        (0x0001U)
 #define mon_op_inactive_resources   (0x0002U)
 #define mon_op_one_shot             (0x0004U)
