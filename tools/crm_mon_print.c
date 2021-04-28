@@ -95,8 +95,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
      */
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         CHECK_RC(rc, out->message(out, "node-summary", data_set, unames,
-                                  resources, pcmk_is_set(section_opts, pcmk_section_operations),
-                                  show_opts, print_opts,
+                                  resources, section_opts, show_opts, print_opts,
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
                                   pcmk_is_set(mon_ops, mon_op_print_timing),
                                   rc == pcmk_rc_ok));
@@ -229,8 +228,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
      */
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         out->message(out, "node-summary", data_set, unames,
-                     resources, pcmk_is_set(section_opts, pcmk_section_operations),
-                     show_opts, print_opts,
+                     resources, section_opts, show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_print_timing),
                      FALSE);
@@ -317,8 +315,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
      */
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         out->message(out, "node-summary", data_set, unames,
-                     resources, pcmk_is_set(section_opts, pcmk_section_operations),
-                     show_opts, print_opts,
+                     resources, section_opts, show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_print_timing),
                      FALSE);

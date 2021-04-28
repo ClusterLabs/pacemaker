@@ -1776,7 +1776,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("node-history-list", "pe_working_set_t *", "pe_node_t *", "xmlNodePtr",
-                  "GList *", "GList *", "gboolean", "unsigned int", "unsigned int",
+                  "GList *", "GList *", "unsigned int", "unsigned int", "unsigned int",
                   "gboolean", "gboolean")
 static int
 node_history_list(pcmk__output_t *out, va_list args) {
@@ -1785,7 +1785,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
     xmlNode *node_state = va_arg(args, xmlNode *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
-    gboolean operations = va_arg(args, gboolean);
+    unsigned int section_opts = va_arg(args, unsigned int);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean group_by_node = va_arg(args, gboolean);
@@ -1828,7 +1828,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
             }
         }
 
-        if (operations == FALSE) {
+        if (!pcmk_is_set(section_opts, pcmk_section_operations)) {
             time_t last_failure = 0;
             int failcount = pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
                                              NULL, data_set);
@@ -2066,14 +2066,14 @@ node_list_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-summary", "pe_working_set_t *", "GList *", "GList *",
-                  "gboolean", "unsigned int", "unsigned int", "gboolean",
+                  "unsigned int", "unsigned int", "unsigned int", "gboolean",
                   "gboolean", "gboolean")
 static int
 node_summary(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
-    gboolean operations = va_arg(args, gboolean);
+    unsigned int section_opts = va_arg(args, unsigned int);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean group_by_node = va_arg(args, gboolean);
@@ -2107,10 +2107,11 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, operations ? "Operations" : "Migration Summary");
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc,
+                                 pcmk_is_set(section_opts, pcmk_section_operations) ? "Operations" : "Migration Summary");
 
         out->message(out, "node-history-list", data_set, node, node_state,
-                     only_node, only_rsc, operations, show_opts, print_opts,
+                     only_node, only_rsc, section_opts, show_opts, print_opts,
                      group_by_node, print_timing);
     }
 
