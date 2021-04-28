@@ -253,15 +253,14 @@ resources_action_create(const char *name, const char *standard,
             if (stat(buf, &st) == 0) {
                 break;
             }
-
+            free(buf);
+            buf = NULL;
         }
 
         free(dirs);
-        free(buf);
 
-        if (!pcmk__str_empty(dir)) {
-            op->opaque->exec = crm_strdup_printf("%s/%s/%s",
-                                                 dir, provider, agent);
+        if (buf) {
+            op->opaque->exec = crm_strdup_printf("%s", buf);
         } else {
             services_handle_exec_error(op, ENOENT);
             goto return_error;
