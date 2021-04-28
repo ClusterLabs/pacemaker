@@ -259,7 +259,7 @@ resources_action_create(const char *name, const char *standard,
         free(dirs);
         free(buf);
 
-        if (dir) {
+        if (!pcmk__str_empty(dir)) {
             op->opaque->exec = crm_strdup_printf("%s/%s/%s",
                                                  dir, provider, agent);
         } else {
