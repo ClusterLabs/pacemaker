@@ -2365,8 +2365,8 @@ print_resource_header(pcmk__output_t *out, gboolean group_by_node,
 
 
 PCMK__OUTPUT_ARGS("resource-list", "pe_working_set_t *", "unsigned int",
-                  "unsigned int", "gboolean", "gboolean", "gboolean",
-                  "GList *", "GList *", "gboolean")
+                  "unsigned int", "gboolean", "gboolean", "GList *",
+                  "GList *", "gboolean")
 static int
 resource_list(pcmk__output_t *out, va_list args)
 {
@@ -2374,7 +2374,6 @@ resource_list(pcmk__output_t *out, va_list args)
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean group_by_node = va_arg(args, gboolean);
-    gboolean inactive_resources = va_arg(args, gboolean);
     gboolean print_summary = va_arg(args, gboolean);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -2387,7 +2386,7 @@ resource_list(pcmk__output_t *out, va_list args)
     /* If we already showed active resources by node, and
      * we're not showing inactive resources, we have nothing to do
      */
-    if (group_by_node && !inactive_resources) {
+    if (group_by_node && !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
         return rc;
     }
 
@@ -2397,10 +2396,10 @@ resource_list(pcmk__output_t *out, va_list args)
         GList *rscs = pe__filter_rsc_list(data_set->resources, only_rsc);
 
         PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-        print_resource_header(out, group_by_node, inactive_resources);
+        print_resource_header(out, group_by_node, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
         printed_header = true;
 
-        rc = pe__rscs_brief_output(out, rscs, print_opts, inactive_resources);
+        rc = pe__rscs_brief_output(out, rscs, print_opts, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
         g_list_free(rscs);
     }
 
@@ -2430,7 +2429,7 @@ resource_list(pcmk__output_t *out, va_list args)
         /* Skip resources that aren't at least partially active,
          * unless we're displaying inactive resources
          */
-        } else if (!partially_active && !inactive_resources) {
+        } else if (!partially_active && !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
             continue;
 
         } else if (partially_active && !pe__rsc_running_on_any_node_in_list(rsc, only_node)) {
@@ -2439,7 +2438,7 @@ resource_list(pcmk__output_t *out, va_list args)
 
         if (!printed_header) {
             PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            print_resource_header(out, group_by_node, inactive_resources);
+            print_resource_header(out, group_by_node, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
             printed_header = true;
         }
 
@@ -2454,13 +2453,13 @@ resource_list(pcmk__output_t *out, va_list args)
     if (print_summary && rc != pcmk_rc_ok) {
         if (!printed_header) {
             PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            print_resource_header(out, group_by_node, inactive_resources);
+            print_resource_header(out, group_by_node, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
             printed_header = true;
         }
 
         if (group_by_node) {
             out->list_item(out, NULL, "No inactive resources");
-        } else if (inactive_resources) {
+        } else if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
             out->list_item(out, NULL, "No resources");
         } else {
             out->list_item(out, NULL, "No active resources");

@@ -78,7 +78,6 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
         CHECK_RC(rc, out->message(out, "resource-list", data_set, show_opts, print_opts,
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
-                                  pcmk_is_set(mon_ops, mon_op_inactive_resources),
                                   TRUE, unames, resources, rc == pcmk_rc_ok));
     }
 
@@ -210,7 +209,6 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
         out->message(out, "resource-list", data_set, full_show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
-                     pcmk_is_set(mon_ops, mon_op_inactive_resources),
                      FALSE, unames, resources, FALSE);
     }
 
@@ -296,7 +294,6 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
         out->message(out, "resource-list", data_set, show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
-                     pcmk_is_set(mon_ops, mon_op_inactive_resources),
                      TRUE, unames, resources, FALSE);
     }
 

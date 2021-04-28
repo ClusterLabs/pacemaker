@@ -442,7 +442,7 @@ hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_inactive_resources;
+    show_opts |= pcmk_show_inactive_rscs;
     return TRUE;
 }
 
@@ -691,7 +691,7 @@ get_resource_display_options(unsigned int mon_ops)
     if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
         print_opts |= pe_print_implicit;
     }
-    if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
+    if (!pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
         print_opts |= pe_print_clone_active;
     }
     return print_opts;
@@ -1146,7 +1146,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 }
                 break;
             case 'r':
-                options.mon_ops ^= mon_op_inactive_resources;
+                show_opts ^= pcmk_show_inactive_rscs;
                 break;
             case 'R':
                 show_opts ^= pcmk_show_details;
@@ -1197,7 +1197,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'f', pcmk_is_set(show, pcmk_section_failcounts));
         print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
         print_option_help(out, 'o', pcmk_is_set(show, pcmk_section_operations));
-        print_option_help(out, 'r', pcmk_is_set(options.mon_ops, mon_op_inactive_resources));
+        print_option_help(out, 'r', pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
         print_option_help(out, 't', pcmk_is_set(show_opts, pcmk_show_timing));
         print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
         print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
@@ -1644,8 +1644,7 @@ main(int argc, char **argv)
     }
 
     if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
-        options.mon_ops |= mon_op_inactive_resources;
-        show_opts |= pcmk_show_timing;
+        show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
 
         if (!options.daemonize) {
             options.one_shot = TRUE;

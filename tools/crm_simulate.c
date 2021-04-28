@@ -23,6 +23,7 @@
 #include <crm/cib.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/output.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
@@ -405,8 +406,8 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int print_opts)
     rc = out->message(out, "node-list", data_set->nodes, all, all, 0, print_opts,
                       FALSE);
     PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
-    rc = out->message(out, "resource-list", data_set, 0, print_opts, FALSE, TRUE,
-                      FALSE, all, all, FALSE);
+    rc = out->message(out, "resource-list", data_set, pcmk_show_inactive_rscs,
+                      print_opts, TRUE, FALSE, all, all, FALSE);
 
     if (options.show_attrs) {
         out->message(out, "node-attribute-list", data_set,
