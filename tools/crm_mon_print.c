@@ -56,7 +56,8 @@ void
 print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
              stonith_history_t *stonith_history, unsigned int mon_ops,
              unsigned int print_opts, unsigned int section_opts,
-             const char *prefix, GList *unames, GList *resources)
+             unsigned int show_opts, const char *prefix, GList *unames,
+             GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -70,27 +71,24 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
         PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
         CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames,
-                                  resources, print_opts,
+                                  resources, show_opts, print_opts,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                                  pcmk_is_set(mon_ops, mon_op_print_brief),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node)));
     }
 
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
-        CHECK_RC(rc, out->message(out, "resource-list", data_set, print_opts,
+        CHECK_RC(rc, out->message(out, "resource-list", data_set, show_opts, print_opts,
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
                                   pcmk_is_set(mon_ops, mon_op_inactive_resources),
-                                  pcmk_is_set(mon_ops, mon_op_print_brief), TRUE, unames,
-                                  resources, rc == pcmk_rc_ok));
+                                  TRUE, unames, resources, rc == pcmk_rc_ok));
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
         CHECK_RC(rc, out->message(out, "node-attribute-list", data_set,
-                                  print_opts, rc == pcmk_rc_ok,
+                                  show_opts, print_opts, rc == pcmk_rc_ok,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                                  pcmk_is_set(mon_ops, mon_op_print_brief),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
                                   unames, resources));
     }
@@ -101,9 +99,8 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         CHECK_RC(rc, out->message(out, "node-summary", data_set, unames,
                                   resources, pcmk_is_set(section_opts, pcmk_section_operations),
-                                  print_opts,
+                                  show_opts, print_opts,
                                   pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                                  pcmk_is_set(mon_ops, mon_op_print_brief),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
                                   pcmk_is_set(mon_ops, mon_op_print_timing),
                                   rc == pcmk_rc_ok));
@@ -199,7 +196,8 @@ void
 print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  stonith_history_t *stonith_history, unsigned int mon_ops,
                  unsigned int print_opts, unsigned int section_opts,
-                 const char *prefix, GList *unames, GList *resources)
+                 unsigned int show_opts, const char *prefix, GList *unames,
+                 GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -210,26 +208,27 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
         out->message(out, "node-list", data_set->nodes, unames,
-                     resources, print_opts,
+                     resources, show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                     pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node));
     }
 
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
-        out->message(out, "resource-list", data_set, print_opts,
+        /* XML output always displays full details. */
+        unsigned int full_show_opts = show_opts & ~pcmk_show_brief;
+
+        out->message(out, "resource-list", data_set, full_show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_inactive_resources),
-                     FALSE, FALSE, unames, resources, FALSE);
+                     FALSE, unames, resources, FALSE);
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", data_set,
-                     print_opts, FALSE,
+                     show_opts, print_opts, FALSE,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                     pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      unames, resources);
     }
@@ -240,9 +239,8 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         out->message(out, "node-summary", data_set, unames,
                      resources, pcmk_is_set(section_opts, pcmk_section_operations),
-                     print_opts,
+                     show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                     pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_print_timing),
                      FALSE);
@@ -292,7 +290,8 @@ int
 print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, unsigned int mon_ops,
                   unsigned int print_opts, unsigned int section_opts,
-                  const char *prefix, GList *unames, GList *resources)
+                  unsigned int show_opts, const char *prefix, GList *unames,
+                  GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -305,27 +304,24 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
         out->message(out, "node-list", data_set->nodes, unames,
-                     resources, print_opts,
+                     resources, show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                     pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node));
     }
 
     /* Print resources section, if needed */
     if (pcmk_is_set(section_opts, pcmk_section_resources)) {
-        out->message(out, "resource-list", data_set, print_opts,
+        out->message(out, "resource-list", data_set, show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_inactive_resources),
-                     pcmk_is_set(mon_ops, mon_op_print_brief), TRUE, unames,
-                     resources, FALSE);
+                     TRUE, unames, resources, FALSE);
     }
 
     /* print Node Attributes section if requested */
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", data_set,
-                     print_opts, FALSE,
+                     show_opts, print_opts, FALSE,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                     pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      unames, resources);
     }
@@ -336,9 +332,8 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_any_flags_set(section_opts, pcmk_section_operations | pcmk_section_failcounts)) {
         out->message(out, "node-summary", data_set, unames,
                      resources, pcmk_is_set(section_opts, pcmk_section_operations),
-                     print_opts,
+                     show_opts, print_opts,
                      pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                     pcmk_is_set(mon_ops, mon_op_print_brief),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_print_timing),
                      FALSE);

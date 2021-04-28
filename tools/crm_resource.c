@@ -1768,9 +1768,9 @@ main(int argc, char **argv)
         case cmd_list_resources: {
             GList *all = NULL;
             all = g_list_prepend(all, strdup("*"));
-            rc = out->message(out, "resource-list", data_set,
+            rc = out->message(out, "resource-list", data_set, 0,
                               pe_print_rsconly | pe_print_pending,
-                              FALSE, TRUE, FALSE, TRUE, all, all, FALSE);
+                              TRUE, FALSE, TRUE, all, all, FALSE);
             g_list_free_full(all, free);
 
             if (rc == pcmk_rc_no_output) {

@@ -57,6 +57,7 @@
  */
 
 static unsigned int show;
+static unsigned int show_opts;
 
 /*
  * Definitions indicating how to output
@@ -445,7 +446,7 @@ no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
 static gboolean
 print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_brief;
+    show_opts |= pcmk_show_brief;
     return TRUE;
 }
 
@@ -687,9 +688,6 @@ get_resource_display_options(unsigned int mon_ops)
     }
     if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
         print_opts |= pe_print_clone_active;
-    }
-    if (pcmk_is_set(mon_ops, mon_op_print_brief)) {
-        print_opts |= pe_print_brief;
     }
     return print_opts;
 }
@@ -1168,7 +1166,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 show &= ~pcmk_section_options;
                 break;
             case 'b':
-                options.mon_ops ^= mon_op_print_brief;
+                show_opts ^= pcmk_show_brief;
                 break;
             case 'j':
                 options.mon_ops ^= mon_op_print_pending;
@@ -1197,7 +1195,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
         print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
         print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
-        print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
+        print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
         print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
         curses_formatted_printf(out, "%s", "\nToggle fields via field letter, type any other key to return\n");
@@ -2216,7 +2214,7 @@ mon_refresh_display(gpointer user_data)
             if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
                                   stonith_history, options.mon_ops,
                                   get_resource_display_options(options.mon_ops),
-                                  show, options.neg_location_prefix,
+                                  show, show_opts, options.neg_location_prefix,
                                   unames, resources) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
@@ -2229,7 +2227,8 @@ mon_refresh_display(gpointer user_data)
             print_xml_status(mon_data_set, crm_errno2exit(history_rc),
                              stonith_history, options.mon_ops,
                              get_resource_display_options(options.mon_ops), show,
-                             options.neg_location_prefix, unames, resources);
+                             show_opts, options.neg_location_prefix, unames,
+                             resources);
             break;
 
         case mon_output_monitor:
@@ -2248,7 +2247,7 @@ mon_refresh_display(gpointer user_data)
             blank_screen();
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
                          options.mon_ops, get_resource_display_options(options.mon_ops),
-                         show, options.neg_location_prefix, unames, resources);
+                         show, show_opts, options.neg_location_prefix, unames, resources);
             refresh();
             break;
 #endif
@@ -2256,7 +2255,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_plain:
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
                          options.mon_ops, get_resource_display_options(options.mon_ops),
-                         show, options.neg_location_prefix, unames, resources);
+                         show, show_opts, options.neg_location_prefix, unames, resources);
             break;
 
         case mon_output_unset:
