@@ -23,14 +23,18 @@ HEADERS[pe_rules]="include/crm/pengine/ru.*.h"
 HEADERS[pe_status]="include/crm/pengine/[^r].*.h include/crm/pengine/r[^u].*.h"
 HEADERS[stonithd]="include/crm/stonith-ng.h include/crm/fencing/.*.h"
 
-prompt_to_continue() {
+yesno() {
     local RESPONSE
 
-    read -p "Continue? " RESPONSE
-    case "$RESPONSE" in
-        y|Y|yes|ano|ja|si|oui) ;;
-        *) exit 0 ;;
+    read -p "$1 " RESPONSE
+    case $(echo "$RESPONSE" | tr A-Z a-z) in
+        y|yes|ano|ja|si|oui) return 0 ;;
+        *) return 1 ;;
     esac
+}
+
+prompt_to_continue() {
+    yesno "Continue?" || exit 0
 }
 
 find_last_release() {
@@ -177,10 +181,14 @@ process_lib() {
     fi
     git --no-pager diff --color -w $LAST_RELEASE..HEAD $HEADERS_HEAD
 
-    # Show commits touching lib since last release
     echo ""
-    echo "- Commits (without Refactor & Build) touching lib$LIB since $LAST_RELEASE:"
-    git log --color Pacemaker-2.0.3..HEAD -z $HEADERS_HEAD $SOURCES $AMFILE|grep -vzE "Refactor:|Build:|Merge pull request"
+    if yesno "Show commits (minus refactor/build/merge) touching lib$LIB since $LAST_RELEASE [y/N]?"
+    then
+        git log --color $LAST_RELEASE..HEAD -z $HEADERS_HEAD $SOURCES $AMFILE \
+            | grep -vzE "Refactor:|Build:|Merge pull request"
+        echo
+        prompt_to_continue
+    fi
 
     # Show merged PRs since last release touching this lib
     echo ""
