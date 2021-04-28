@@ -466,7 +466,7 @@ print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_timing;
+    show_opts |= pcmk_show_timing;
     return include_exclude_cb("--include", "operations", data, err);
 }
 
@@ -1142,7 +1142,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
             case 'o':
                 show ^= pcmk_section_operations;
                 if (!pcmk_is_set(show, pcmk_section_operations)) {
-                    options.mon_ops &= ~mon_op_print_timing;
+                    show_opts &= ~pcmk_show_timing;
                 }
                 break;
             case 'r':
@@ -1152,8 +1152,8 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 show_opts ^= pcmk_show_details;
                 break;
             case 't':
-                options.mon_ops ^= mon_op_print_timing;
-                if (pcmk_is_set(options.mon_ops, mon_op_print_timing)) {
+                show_opts ^= pcmk_show_timing;
+                if (pcmk_is_set(show_opts, pcmk_show_timing)) {
                     show |= pcmk_section_operations;
                 }
                 break;
@@ -1198,7 +1198,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
         print_option_help(out, 'o', pcmk_is_set(show, pcmk_section_operations));
         print_option_help(out, 'r', pcmk_is_set(options.mon_ops, mon_op_inactive_resources));
-        print_option_help(out, 't', pcmk_is_set(options.mon_ops, mon_op_print_timing));
+        print_option_help(out, 't', pcmk_is_set(show_opts, pcmk_show_timing));
         print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
         print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
         print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
@@ -1644,7 +1644,8 @@ main(int argc, char **argv)
     }
 
     if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
-        options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
+        options.mon_ops |= mon_op_inactive_resources;
+        show_opts |= pcmk_show_timing;
 
         if (!options.daemonize) {
             options.one_shot = TRUE;

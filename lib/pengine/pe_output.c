@@ -1777,7 +1777,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
 
 PCMK__OUTPUT_ARGS("node-history-list", "pe_working_set_t *", "pe_node_t *", "xmlNodePtr",
                   "GList *", "GList *", "unsigned int", "unsigned int", "unsigned int",
-                  "gboolean", "gboolean")
+                  "gboolean")
 static int
 node_history_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -1789,7 +1789,6 @@ node_history_list(pcmk__output_t *out, va_list args) {
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean group_by_node = va_arg(args, gboolean);
-    gboolean print_timing = va_arg(args, gboolean);
 
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
@@ -1861,7 +1860,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
             }
 
             out->message(out, "resource-operation-list", data_set, rsc, node,
-                         op_list, print_timing);
+                         op_list, show_opts);
         }
     }
 
@@ -2067,7 +2066,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("node-summary", "pe_working_set_t *", "GList *", "GList *",
                   "unsigned int", "unsigned int", "unsigned int", "gboolean",
-                  "gboolean", "gboolean")
+                  "gboolean")
 static int
 node_summary(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -2077,7 +2076,6 @@ node_summary(pcmk__output_t *out, va_list args) {
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean group_by_node = va_arg(args, gboolean);
-    gboolean print_timing = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
     xmlNode *node_state = NULL;
@@ -2112,7 +2110,7 @@ node_summary(pcmk__output_t *out, va_list args) {
 
         out->message(out, "node-history-list", data_set, node, node_state,
                      only_node, only_rsc, section_opts, show_opts, print_opts,
-                     group_by_node, print_timing);
+                     group_by_node);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -2160,16 +2158,18 @@ node_weight_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int", "gboolean")
+PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int",
+                  "unsigned int")
 int
 pe__op_history_text(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     const char *task = va_arg(args, const char *);
     const char *interval_ms_s = va_arg(args, const char *);
     int rc = va_arg(args, int);
-    gboolean print_timing = va_arg(args, gboolean);
+    unsigned int show_opts = va_arg(args, unsigned int);
 
-    char *buf = op_history_string(xml_op, task, interval_ms_s, rc, print_timing);
+    char *buf = op_history_string(xml_op, task, interval_ms_s, rc,
+                                  pcmk_is_set(show_opts, pcmk_show_timing));
 
     out->list_item(out, NULL, "%s", buf);
 
@@ -2177,14 +2177,15 @@ pe__op_history_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int", "gboolean")
+PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int",
+                  "unsigned int")
 static int
 op_history_xml(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     const char *task = va_arg(args, const char *);
     const char *interval_ms_s = va_arg(args, const char *);
     int rc = va_arg(args, int);
-    gboolean print_timing = va_arg(args, gboolean);
+    unsigned int show_opts = va_arg(args, unsigned int);
 
     char *rc_s = pcmk__itoa(rc);
     xmlNodePtr node = pcmk__output_create_xml_node(out, "operation_history",
@@ -2201,7 +2202,7 @@ op_history_xml(pcmk__output_t *out, va_list args) {
         free(s);
     }
 
-    if (print_timing) {
+    if (pcmk_is_set(show_opts, pcmk_show_timing)) {
         const char *value = NULL;
         time_t epoch = 0;
 
@@ -2474,7 +2475,7 @@ resource_list(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("resource-operation-list", "pe_working_set_t *", "pe_resource_t *",
-                  "pe_node_t *", "GList *", "gboolean")
+                  "pe_node_t *", "GList *", "unsigned int")
 static int
 resource_operation_list(pcmk__output_t *out, va_list args)
 {
@@ -2482,7 +2483,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     pe_node_t *node = va_arg(args, pe_node_t *);
     GList *op_list = va_arg(args, GList *);
-    gboolean print_timing = va_arg(args, gboolean);
+    unsigned int show_opts = va_arg(args, unsigned int);
 
     GList *gIter = NULL;
     int rc = pcmk_rc_no_output;
@@ -2517,7 +2518,7 @@ resource_operation_list(pcmk__output_t *out, va_list args)
 
         /* Print the operation */
         out->message(out, "op-history", xml_op, task, interval_ms_s,
-                     op_rc_i, print_timing);
+                     op_rc_i, show_opts);
     }
 
     /* Free the list we created (no need to free the individual items) */
