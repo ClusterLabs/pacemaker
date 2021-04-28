@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012-2019 the Pacemaker project contributors
+# Copyright 2012-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -41,12 +41,12 @@ find_last_release() {
 }
 
 find_libs() {
-    find . -name "*.am" -exec grep "lib.*_la_LDFLAGS.*version-info" \{\} \; \
+    find lib -name "*.am" -exec grep "lib.*_la_LDFLAGS.*version-info" \{\} \; \
         | sed -e 's/lib\(.*\)_la_LDFLAGS.*/\1/'
 }
 
 find_makefile() {
-    find . -name Makefile.am -exec grep -l "lib${1}_la.*version-info" \{\} \;
+    find lib -name Makefile.am -exec grep -l "lib${1}_la.*version-info" \{\} \;
 }
 
 find_sources() {
