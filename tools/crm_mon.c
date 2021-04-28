@@ -459,8 +459,8 @@ print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 }
 
 static gboolean
-print_clone_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_clone_detail;
+print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    show_opts |= pcmk_show_details;
     return TRUE;
 }
 
@@ -627,7 +627,7 @@ static GOptionEntry display_entries[] = {
       "Hide all headers",
       NULL },
 
-    { "show-detail", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_clone_detail_cb,
+    { "show-detail", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_detail_cb,
       "Show more details (node IDs, individual clone instances)",
       NULL },
 
@@ -685,8 +685,11 @@ get_resource_display_options(unsigned int mon_ops)
     if (options.print_pending) {
         print_opts |= pe_print_pending;
     }
-    if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
-        print_opts |= pe_print_clone_details|pe_print_implicit;
+    if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
+        print_opts |= pe_print_clone_details;
+    }
+    if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
+        print_opts |= pe_print_implicit;
     }
     if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
         print_opts |= pe_print_clone_active;
@@ -1146,7 +1149,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 options.mon_ops ^= mon_op_inactive_resources;
                 break;
             case 'R':
-                options.mon_ops ^= mon_op_print_clone_detail;
+                show_opts ^= pcmk_show_details;
                 break;
             case 't':
                 options.mon_ops ^= mon_op_print_timing;
@@ -1199,7 +1202,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
         print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
         print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
-        print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
+        print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details));
         print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
         print_option_help(out, 'j', options.print_pending);
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));

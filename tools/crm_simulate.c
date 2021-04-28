@@ -403,14 +403,14 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int print_opts)
     all = g_list_prepend(all, strdup("*"));
 
     rc = out->message(out, "node-list", data_set->nodes, all, all, 0, print_opts,
-                      FALSE, FALSE);
+                      FALSE);
     PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
     rc = out->message(out, "resource-list", data_set, 0, print_opts, FALSE, TRUE,
                       FALSE, all, all, FALSE);
 
     if (options.show_attrs) {
         out->message(out, "node-attribute-list", data_set,
-                     0, rc == pcmk_rc_ok, FALSE, FALSE, FALSE, all, all);
+                     0, rc == pcmk_rc_ok, FALSE, FALSE, all, all);
     }
 
     if (options.show_failcounts) {

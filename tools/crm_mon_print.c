@@ -65,14 +65,12 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     bool already_printed_failure = false;
 
     CHECK_RC(rc, out->message(out, "cluster-summary", data_set,
-                              pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                              section_opts));
+                              section_opts, show_opts));
 
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
         PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
         CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames,
                                   resources, show_opts, print_opts,
-                                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node)));
     }
 
@@ -88,7 +86,6 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
         CHECK_RC(rc, out->message(out, "node-attribute-list", data_set,
                                   show_opts, print_opts, rc == pcmk_rc_ok,
-                                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
                                   unames, resources));
     }
@@ -100,7 +97,6 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
         CHECK_RC(rc, out->message(out, "node-summary", data_set, unames,
                                   resources, pcmk_is_set(section_opts, pcmk_section_operations),
                                   show_opts, print_opts,
-                                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                                   pcmk_is_set(mon_ops, mon_op_group_by_node),
                                   pcmk_is_set(mon_ops, mon_op_print_timing),
                                   rc == pcmk_rc_ok));
@@ -146,8 +142,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
         CHECK_RC(rc, out->message(out, "ban-list", data_set, prefix, resources,
-                                  pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                                  rc == pcmk_rc_ok));
+                                  show_opts, rc == pcmk_rc_ok));
     }
 
     /* Print stonith history */
@@ -201,15 +196,12 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 {
     pcmk__output_t *out = data_set->priv;
 
-    out->message(out, "cluster-summary", data_set,
-                 pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                 section_opts);
+    out->message(out, "cluster-summary", data_set, section_opts, show_opts);
 
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
         out->message(out, "node-list", data_set->nodes, unames,
                      resources, show_opts, print_opts,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_group_by_node));
     }
 
@@ -228,7 +220,6 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", data_set,
                      show_opts, print_opts, FALSE,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      unames, resources);
     }
@@ -240,7 +231,6 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
         out->message(out, "node-summary", data_set, unames,
                      resources, pcmk_is_set(section_opts, pcmk_section_operations),
                      show_opts, print_opts,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_print_timing),
                      FALSE);
@@ -270,8 +260,8 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
-        out->message(out, "ban-list", data_set, prefix, resources,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
+        out->message(out, "ban-list", data_set, prefix, resources, show_opts,
+                     FALSE);
     }
 }
 
@@ -297,15 +287,12 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     bool already_printed_failure = false;
 
-    out->message(out, "cluster-summary", data_set,
-                 pcmk_is_set(mon_ops, mon_op_print_clone_detail),
-                 section_opts);
+    out->message(out, "cluster-summary", data_set, section_opts, show_opts);
 
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
         out->message(out, "node-list", data_set->nodes, unames,
                      resources, show_opts, print_opts,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_group_by_node));
     }
 
@@ -321,7 +308,6 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", data_set,
                      show_opts, print_opts, FALSE,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      unames, resources);
     }
@@ -333,7 +319,6 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
         out->message(out, "node-summary", data_set, unames,
                      resources, pcmk_is_set(section_opts, pcmk_section_operations),
                      show_opts, print_opts,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail),
                      pcmk_is_set(mon_ops, mon_op_group_by_node),
                      pcmk_is_set(mon_ops, mon_op_print_timing),
                      FALSE);
@@ -403,8 +388,8 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
     /* Print negative location constraints if requested */
     if (pcmk_is_set(section_opts, pcmk_section_bans)) {
-        out->message(out, "ban-list", data_set, prefix, resources,
-                     pcmk_is_set(mon_ops, mon_op_print_clone_detail), FALSE);
+        out->message(out, "ban-list", data_set, prefix, resources, show_opts,
+                     FALSE);
     }
 
     return 0;
