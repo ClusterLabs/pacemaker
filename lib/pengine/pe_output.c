@@ -1272,7 +1272,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "unsigned int", "gboolean",
-                  "const char *", "gboolean", "GList *", "GList *")
+                  "const char *", "GList *", "GList *")
 int
 pe__node_html(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1280,7 +1280,6 @@ pe__node_html(pcmk__output_t *out, va_list args) {
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
-    gboolean group_by_node = va_arg(args, gboolean);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1309,7 +1308,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
         } else {
             pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE");
         }
-        if (pcmk_is_set(show_opts, pcmk_show_brief) && group_by_node) {
+        if (pcmk_all_flags_set(show_opts, pcmk_show_brief | pcmk_show_rscs_by_node)) {
             GList *rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
 
             if (rscs != NULL) {
@@ -1318,7 +1317,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
                 out->end_list(out);
             }
 
-        } else if (group_by_node) {
+        } else if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             GList *lpc2 = NULL;
 
             out->begin_list(out, NULL, NULL, NULL);
@@ -1339,7 +1338,7 @@ pe__node_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "unsigned int", "gboolean",
-                  "const char *", "gboolean", "GList *", "GList *")
+                  "const char *", "GList *", "GList *")
 int
 pe__node_text(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1347,7 +1346,6 @@ pe__node_text(pcmk__output_t *out, va_list args) {
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode = va_arg(args, const char *);
-    gboolean group_by_node = va_arg(args, gboolean);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1365,7 +1363,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
         }
 
         /* If we're grouping by node, print its resources */
-        if (group_by_node) {
+        if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             if (pcmk_is_set(show_opts, pcmk_show_brief)) {
                 GList *rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
 
@@ -1410,7 +1408,7 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "unsigned int", "gboolean",
-                  "const char *", "gboolean", "GList *", "GList *")
+                  "const char *", "GList *", "GList *")
 int
 pe__node_xml(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
@@ -1418,7 +1416,6 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
     const char *node_mode G_GNUC_UNUSED = va_arg(args, const char *);
-    gboolean group_by_node = va_arg(args, gboolean);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1457,7 +1454,7 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
             crm_xml_add(xml_node, "id_as_resource", node->details->remote_rsc->container->id);
         }
 
-        if (group_by_node) {
+        if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             GList *lpc = NULL;
 
             for (lpc = node->details->running_rsc; lpc != NULL; lpc = lpc->next) {
@@ -1675,14 +1672,13 @@ node_attribute_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-attribute-list", "pe_working_set_t *", "unsigned int",
-                  "unsigned int", "gboolean", "gboolean", "GList *", "GList *")
+                  "unsigned int", "gboolean", "GList *", "GList *")
 static int
 node_attribute_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
     gboolean print_spacer = va_arg(args, gboolean);
-    gboolean group_by_node = va_arg(args, gboolean);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
@@ -1716,7 +1712,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Node Attributes");
 
         out->message(out, "node", node, show_opts, print_opts, FALSE, NULL,
-                     group_by_node, only_node, only_rsc);
+                     only_node, only_rsc);
 
         for (GList *aIter = attr_list; aIter != NULL; aIter = aIter->next) {
             const char *name = aIter->data;
@@ -1776,8 +1772,7 @@ node_capacity_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("node-history-list", "pe_working_set_t *", "pe_node_t *", "xmlNodePtr",
-                  "GList *", "GList *", "unsigned int", "unsigned int", "unsigned int",
-                  "gboolean")
+                  "GList *", "GList *", "unsigned int", "unsigned int", "unsigned int")
 static int
 node_history_list(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -1788,7 +1783,6 @@ node_history_list(pcmk__output_t *out, va_list args) {
     unsigned int section_opts = va_arg(args, unsigned int);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
-    gboolean group_by_node = va_arg(args, gboolean);
 
     xmlNode *lrm_rsc = NULL;
     xmlNode *rsc_entry = NULL;
@@ -1839,7 +1833,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
                 out->message(out, "node", node, show_opts, print_opts, FALSE, NULL,
-                             group_by_node, only_node, only_rsc);
+                             only_node, only_rsc);
             }
 
             out->message(out, "resource-history", rsc, rsc_id, FALSE,
@@ -1856,7 +1850,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
             if (rc == pcmk_rc_no_output) {
                 rc = pcmk_rc_ok;
                 out->message(out, "node", node, show_opts, print_opts, FALSE, NULL,
-                             group_by_node, only_node, only_rsc);
+                             only_node, only_rsc);
             }
 
             out->message(out, "resource-operation-list", data_set, rsc, node,
@@ -1869,7 +1863,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int",
-                  "unsigned int", "gboolean")
+                  "unsigned int")
 static int
 node_list_html(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
@@ -1877,7 +1871,6 @@ node_list_html(pcmk__output_t *out, va_list args) {
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
-    gboolean group_by_node = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
@@ -1891,7 +1884,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
 
         out->message(out, "node", node, show_opts, print_opts, TRUE, NULL,
-                     group_by_node, only_node, only_rsc);
+                     only_node, only_rsc);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -1899,7 +1892,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int",
-                  "unsigned int", "gboolean")
+                  "unsigned int")
 int
 pe__node_list_text(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
@@ -1907,7 +1900,6 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
-    gboolean group_by_node = va_arg(args, gboolean);
 
     /* space-separated lists of node names */
     char *online_nodes = NULL;
@@ -1974,7 +1966,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
 
         } else if (node->details->online) {
             node_mode = "online";
-            if (group_by_node == FALSE) {
+            if (!pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
                 if (pe__is_guest_node(node)) {
                     pcmk__add_word(&online_guest_nodes,
                                    &online_guest_nodes_len, node_name);
@@ -1990,7 +1982,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
 
         } else {
             node_mode = "OFFLINE";
-            if (group_by_node == FALSE) {
+            if (!pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
                 if (pe__is_remote_node(node)) {
                     pcmk__add_word(&offline_remote_nodes,
                                    &offline_remote_nodes_len, node_name);
@@ -2007,7 +1999,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
 
         /* If we get here, node is in bad state, or we're grouping by node */
         out->message(out, "node", node, show_opts, print_opts, TRUE, node_mode,
-                     group_by_node, only_node, only_rsc);
+                     only_node, only_rsc);
         free(node_name);
     }
 
@@ -2038,7 +2030,7 @@ pe__node_list_text(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int",
-                  "unsigned int", "gboolean")
+                  "unsigned int")
 static int
 node_list_xml(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
@@ -2046,7 +2038,6 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
-    gboolean group_by_node = va_arg(args, gboolean);
 
     out->begin_list(out, NULL, NULL, "nodes");
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
@@ -2057,7 +2048,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
         }
 
         out->message(out, "node", node, show_opts, print_opts, TRUE, NULL,
-                     group_by_node, only_node, only_rsc);
+                     only_node, only_rsc);
     }
     out->end_list(out);
 
@@ -2065,8 +2056,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-summary", "pe_working_set_t *", "GList *", "GList *",
-                  "unsigned int", "unsigned int", "unsigned int", "gboolean",
-                  "gboolean")
+                  "unsigned int", "unsigned int", "unsigned int", "gboolean")
 static int
 node_summary(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
@@ -2075,7 +2065,6 @@ node_summary(pcmk__output_t *out, va_list args) {
     unsigned int section_opts = va_arg(args, unsigned int);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
-    gboolean group_by_node = va_arg(args, gboolean);
     gboolean print_spacer = va_arg(args, gboolean);
 
     xmlNode *node_state = NULL;
@@ -2109,8 +2098,7 @@ node_summary(pcmk__output_t *out, va_list args) {
                                  pcmk_is_set(section_opts, pcmk_section_operations) ? "Operations" : "Migration Summary");
 
         out->message(out, "node-history-list", data_set, node, node_state,
-                     only_node, only_rsc, section_opts, show_opts, print_opts,
-                     group_by_node);
+                     only_node, only_rsc, section_opts, show_opts, print_opts);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
@@ -2350,13 +2338,12 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
 }
 
 static void
-print_resource_header(pcmk__output_t *out, gboolean group_by_node,
-                      gboolean inactive_resources)
+print_resource_header(pcmk__output_t *out, unsigned int show_opts)
 {
-    if (group_by_node) {
+    if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
         /* Active resources have already been printed by node */
         out->begin_list(out, NULL, NULL, "Inactive Resources");
-    } else if (inactive_resources) {
+    } else if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
         out->begin_list(out, NULL, NULL, "Full List of Resources");
     } else {
         out->begin_list(out, NULL, NULL, "Active Resources");
@@ -2365,15 +2352,13 @@ print_resource_header(pcmk__output_t *out, gboolean group_by_node,
 
 
 PCMK__OUTPUT_ARGS("resource-list", "pe_working_set_t *", "unsigned int",
-                  "unsigned int", "gboolean", "gboolean", "GList *",
-                  "GList *", "gboolean")
+                  "unsigned int", "gboolean", "GList *", "GList *", "gboolean")
 static int
 resource_list(pcmk__output_t *out, va_list args)
 {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     unsigned int show_opts = va_arg(args, unsigned int);
     unsigned int print_opts = va_arg(args, unsigned int);
-    gboolean group_by_node = va_arg(args, gboolean);
     gboolean print_summary = va_arg(args, gboolean);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -2386,17 +2371,18 @@ resource_list(pcmk__output_t *out, va_list args)
     /* If we already showed active resources by node, and
      * we're not showing inactive resources, we have nothing to do
      */
-    if (group_by_node && !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
+    if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node) &&
+        !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
         return rc;
     }
 
     /* If we haven't already printed resources grouped by node,
      * and brief output was requested, print resource summary */
-    if (pcmk_is_set(show_opts, pcmk_show_brief) && !group_by_node) {
+    if (pcmk_is_set(show_opts, pcmk_show_brief) && !pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
         GList *rscs = pe__filter_rsc_list(data_set->resources, only_rsc);
 
         PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-        print_resource_header(out, group_by_node, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+        print_resource_header(out, show_opts);
         printed_header = true;
 
         rc = pe__rscs_brief_output(out, rscs, print_opts, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
@@ -2417,7 +2403,7 @@ resource_list(pcmk__output_t *out, va_list args)
             continue;
 
         /* Skip active resources if we already displayed them by node */
-        } else if (group_by_node) {
+        } else if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             if (is_active) {
                 continue;
             }
@@ -2438,7 +2424,7 @@ resource_list(pcmk__output_t *out, va_list args)
 
         if (!printed_header) {
             PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            print_resource_header(out, group_by_node, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+            print_resource_header(out, show_opts);
             printed_header = true;
         }
 
@@ -2453,11 +2439,11 @@ resource_list(pcmk__output_t *out, va_list args)
     if (print_summary && rc != pcmk_rc_ok) {
         if (!printed_header) {
             PCMK__OUTPUT_SPACER_IF(out, print_spacer);
-            print_resource_header(out, group_by_node, pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+            print_resource_header(out, show_opts);
             printed_header = true;
         }
 
-        if (group_by_node) {
+        if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             out->list_item(out, NULL, "No inactive resources");
         } else if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
             out->list_item(out, NULL, "No resources");

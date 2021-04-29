@@ -431,7 +431,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_group_by_node;
+    show_opts |= pcmk_show_rscs_by_node;
     return TRUE;
 }
 
@@ -1137,7 +1137,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 show ^= pcmk_section_failcounts;
                 break;
             case 'n':
-                options.mon_ops ^= mon_op_group_by_node;
+                show_opts ^= pcmk_show_rscs_by_node;
                 break;
             case 'o':
                 show ^= pcmk_section_operations;
@@ -1195,7 +1195,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         curses_formatted_printf(out, "%s", "Display option change mode\n");
         print_option_help(out, 'c', pcmk_is_set(show, pcmk_section_tickets));
         print_option_help(out, 'f', pcmk_is_set(show, pcmk_section_failcounts));
-        print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
+        print_option_help(out, 'n', pcmk_is_set(show_opts, pcmk_show_rscs_by_node));
         print_option_help(out, 'o', pcmk_is_set(show, pcmk_section_operations));
         print_option_help(out, 'r', pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
         print_option_help(out, 't', pcmk_is_set(show_opts, pcmk_show_timing));
