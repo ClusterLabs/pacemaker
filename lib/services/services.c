@@ -260,7 +260,7 @@ resources_action_create(const char *name, const char *standard,
         free(dirs);
 
         if (buf) {
-            op->opaque->exec = crm_strdup_printf("%s", buf);
+            op->opaque->exec = buf;
         } else {
             services_handle_exec_error(op, ENOENT);
             goto return_error;
