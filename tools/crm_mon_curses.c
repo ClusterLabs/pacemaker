@@ -486,31 +486,9 @@ stonith_event_console(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
-    { "ban", "console", pe__ban_text },
-    { "bundle", "console", pe__bundle_text },
-    { "clone", "console", pe__clone_text },
-    { "cluster-counts", "console", pe__cluster_counts_text },
-    { "cluster-dc", "console", pe__cluster_dc_text },
-    { "cluster-options", "console", pe__cluster_options_text },
-    { "cluster-stack", "console", pe__cluster_stack_text },
     { "cluster-status", "console", cluster_status_console },
-    { "cluster-summary", "console", pe__cluster_summary },
-    { "cluster-times", "console", pe__cluster_times_text },
-    { "failed-action", "console", pe__failed_action_text },
-    { "failed-fencing-list", "console", stonith__failed_history },
-    { "fencing-list", "console", stonith__history },
-    { "full-fencing-list", "console", stonith__full_history },
-    { "group", "console", pe__group_text },
     { "maint-mode", "console", cluster_maint_mode_console },
-    { "node", "console", pe__node_text },
-    { "node-attribute", "console", pe__node_attribute_text },
-    { "node-list", "console", pe__node_list_text },
-    { "op-history", "console", pe__op_history_text },
-    { "pending-fencing-list", "console", stonith__pending_actions },
-    { "primitive", "console", pe__resource_text },
-    { "resource-history", "console", pe__resource_history_text },
     { "stonith-event", "console", stonith_event_console },
-    { "ticket", "console", pe__ticket_text },
 
     { NULL, NULL, NULL }
 };

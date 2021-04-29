@@ -360,8 +360,8 @@ resource_history_string(pe_resource_t *rsc, const char *rsc_id, gboolean all,
 }
 
 PCMK__OUTPUT_ARGS("cluster-summary", "pe_working_set_t *", "unsigned int", "unsigned int")
-int
-pe__cluster_summary(pcmk__output_t *out, va_list args) {
+static int
+cluster_summary(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
     unsigned int section_opts = va_arg(args, unsigned int);
     unsigned int show_opts = va_arg(args, unsigned int);
@@ -604,8 +604,8 @@ ban_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("ban", "pe_node_t *", "pe__location_t *", "unsigned int")
-int
-pe__ban_text(pcmk__output_t *out, va_list args) {
+static int
+ban_text(pcmk__output_t *out, va_list args) {
     pe_node_t *pe_node = va_arg(args, pe_node_t *);
     pe__location_t *location = va_arg(args, pe__location_t *);
     unsigned int show_opts = va_arg(args, unsigned int);
@@ -752,8 +752,8 @@ cluster_counts_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-counts", "unsigned int", "int", "int", "int")
-int
-pe__cluster_counts_text(pcmk__output_t *out, va_list args) {
+static int
+cluster_counts_text(pcmk__output_t *out, va_list args) {
     unsigned int nnodes = va_arg(args, unsigned int);
     int nresources = va_arg(args, int);
     int ndisabled = va_arg(args, int);
@@ -850,8 +850,8 @@ cluster_dc_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-dc", "pe_node_t *", "const char *", "const char *", "char *")
-int
-pe__cluster_dc_text(pcmk__output_t *out, va_list args) {
+static int
+cluster_dc_text(pcmk__output_t *out, va_list args) {
     pe_node_t *dc = va_arg(args, pe_node_t *);
     const char *quorum = va_arg(args, const char *);
     const char *dc_version_s = va_arg(args, const char *);
@@ -894,8 +894,8 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("maint-mode", "unsigned long long int")
-int
-pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
+static int
+cluster_maint_mode_text(pcmk__output_t *out, va_list args) {
     unsigned long long flags = va_arg(args, unsigned long long);
 
     if (pcmk_is_set(flags, pe_flag_maintenance_mode)) {
@@ -981,8 +981,8 @@ cluster_options_log(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-options", "pe_working_set_t *")
-int
-pe__cluster_options_text(pcmk__output_t *out, va_list args) {
+static int
+cluster_options_text(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     out->list_item(out, NULL, "STONITH of failed nodes %s",
@@ -1070,8 +1070,8 @@ cluster_stack_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-stack", "const char *")
-int
-pe__cluster_stack_text(pcmk__output_t *out, va_list args) {
+static int
+cluster_stack_text(pcmk__output_t *out, va_list args) {
     const char *stack_s = va_arg(args, const char *);
 
     out->list_item(out, "Stack", "%s", stack_s);
@@ -1136,8 +1136,8 @@ cluster_times_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("cluster-times", "const char *", "const char *", "const char *", "const char *")
-int
-pe__cluster_times_text(pcmk__output_t *out, va_list args) {
+static int
+cluster_times_text(pcmk__output_t *out, va_list args) {
     const char *last_written = va_arg(args, const char *);
     const char *user = va_arg(args, const char *);
     const char *client = va_arg(args, const char *);
@@ -1153,8 +1153,8 @@ pe__cluster_times_text(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr")
-int
-pe__failed_action_text(pcmk__output_t *out, va_list args) {
+static int
+failed_action_text(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
 
     char *s = failed_action_string(xml_op);
@@ -1273,8 +1273,8 @@ failed_action_list(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
                   "GList *", "GList *")
-int
-pe__node_html(pcmk__output_t *out, va_list args) {
+static int
+node_html(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int show_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
@@ -1339,8 +1339,8 @@ pe__node_html(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
                   "GList *", "GList *")
-int
-pe__node_text(pcmk__output_t *out, va_list args) {
+static int
+node_text(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int show_opts = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
@@ -1409,8 +1409,8 @@ pe__node_text(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
                   "GList *", "GList *")
-int
-pe__node_xml(pcmk__output_t *out, va_list args) {
+static int
+node_xml(pcmk__output_t *out, va_list args) {
     pe_node_t *node = va_arg(args, pe_node_t *);
     unsigned int show_opts G_GNUC_UNUSED = va_arg(args, unsigned int);
     gboolean full = va_arg(args, gboolean);
@@ -1476,8 +1476,8 @@ pe__node_xml(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-attribute", "const char *", "const char *", "gboolean", "int")
-int
-pe__node_attribute_text(pcmk__output_t *out, va_list args) {
+static int
+node_attribute_text(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
     gboolean add_extra = va_arg(args, gboolean);
@@ -1883,8 +1883,8 @@ node_list_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int")
-int
-pe__node_list_text(pcmk__output_t *out, va_list args) {
+static int
+node_list_text(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -2132,8 +2132,8 @@ node_weight_xml(pcmk__output_t *out, va_list args)
 
 PCMK__OUTPUT_ARGS("op-history", "xmlNodePtr", "const char *", "const char *", "int",
                   "unsigned int")
-int
-pe__op_history_text(pcmk__output_t *out, va_list args) {
+static int
+op_history_text(pcmk__output_t *out, va_list args) {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
     const char *task = va_arg(args, const char *);
     const char *interval_ms_s = va_arg(args, const char *);
@@ -2257,8 +2257,8 @@ resource_config(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("resource-history", "pe_resource_t *", "const char *", "gboolean", "int", "time_t", "gboolean")
-int
-pe__resource_history_text(pcmk__output_t *out, va_list args) {
+static int
+resource_history_text(pcmk__output_t *out, va_list args) {
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     const char *rsc_id = va_arg(args, const char *);
     gboolean all = va_arg(args, gboolean);
@@ -2556,8 +2556,8 @@ ticket_html(pcmk__output_t *out, va_list args) {
 }
 
 PCMK__OUTPUT_ARGS("ticket", "pe_ticket_t *")
-int
-pe__ticket_text(pcmk__output_t *out, va_list args) {
+static int
+ticket_text(pcmk__output_t *out, va_list args) {
     pe_ticket_t *ticket = va_arg(args, pe_ticket_t *);
 
     if (ticket->last_granted > -1) {
@@ -2629,88 +2629,75 @@ ticket_list(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "ban", "default", ban_text },
     { "ban", "html", ban_html },
-    { "ban", "log", pe__ban_text },
-    { "ban", "text", pe__ban_text },
     { "ban", "xml", ban_xml },
     { "ban-list", "default", ban_list },
+    { "bundle", "default", pe__bundle_text },
     { "bundle", "xml",  pe__bundle_xml },
     { "bundle", "html",  pe__bundle_html },
-    { "bundle", "text",  pe__bundle_text },
-    { "bundle", "log",  pe__bundle_text },
+    { "clone", "default", pe__clone_text },
     { "clone", "xml",  pe__clone_xml },
     { "clone", "html",  pe__clone_html },
-    { "clone", "text",  pe__clone_text },
-    { "clone", "log",  pe__clone_text },
+    { "cluster-counts", "default", cluster_counts_text },
     { "cluster-counts", "html", cluster_counts_html },
-    { "cluster-counts", "log", pe__cluster_counts_text },
-    { "cluster-counts", "text", pe__cluster_counts_text },
     { "cluster-counts", "xml", cluster_counts_xml },
+    { "cluster-dc", "default", cluster_dc_text },
     { "cluster-dc", "html", cluster_dc_html },
-    { "cluster-dc", "log", pe__cluster_dc_text },
-    { "cluster-dc", "text", pe__cluster_dc_text },
     { "cluster-dc", "xml", cluster_dc_xml },
+    { "cluster-options", "default", cluster_options_text },
     { "cluster-options", "html", cluster_options_html },
     { "cluster-options", "log", cluster_options_log },
-    { "cluster-options", "text", pe__cluster_options_text },
     { "cluster-options", "xml", cluster_options_xml },
-    { "cluster-summary", "default", pe__cluster_summary },
+    { "cluster-summary", "default", cluster_summary },
     { "cluster-summary", "html", cluster_summary_html },
+    { "cluster-stack", "default", cluster_stack_text },
     { "cluster-stack", "html", cluster_stack_html },
-    { "cluster-stack", "log", pe__cluster_stack_text },
-    { "cluster-stack", "text", pe__cluster_stack_text },
     { "cluster-stack", "xml", cluster_stack_xml },
+    { "cluster-times", "default", cluster_times_text },
     { "cluster-times", "html", cluster_times_html },
-    { "cluster-times", "log", pe__cluster_times_text },
-    { "cluster-times", "text", pe__cluster_times_text },
     { "cluster-times", "xml", cluster_times_xml },
-    { "failed-action", "default", pe__failed_action_text },
+    { "failed-action", "default", failed_action_text },
     { "failed-action", "xml", failed_action_xml },
     { "failed-action-list", "default", failed_action_list },
+    { "group", "default",  pe__group_text },
     { "group", "xml",  pe__group_xml },
     { "group", "html",  pe__group_html },
-    { "group", "text",  pe__group_text },
-    { "group", "log",  pe__group_text },
-    { "maint-mode", "text", pe__cluster_maint_mode_text },
-    { "node", "html", pe__node_html },
-    { "node", "log", pe__node_text },
-    { "node", "text", pe__node_text },
-    { "node", "xml", pe__node_xml },
+    { "maint-mode", "text", cluster_maint_mode_text },
+    { "node", "default", node_text },
+    { "node", "html", node_html },
+    { "node", "xml", node_xml },
     { "node-and-op", "default", node_and_op },
     { "node-and-op", "xml", node_and_op_xml },
     { "node-capacity", "default", node_capacity },
     { "node-capacity", "xml", node_capacity_xml },
     { "node-history-list", "default", node_history_list },
+    { "node-list", "default", node_list_text },
     { "node-list", "html", node_list_html },
-    { "node-list", "log", pe__node_list_text },
-    { "node-list", "text", pe__node_list_text },
     { "node-list", "xml", node_list_xml },
     { "node-weight", "default", node_weight },
     { "node-weight", "xml", node_weight_xml },
+    { "node-attribute", "default", node_attribute_text },
     { "node-attribute", "html", node_attribute_html },
-    { "node-attribute", "log", pe__node_attribute_text },
-    { "node-attribute", "text", pe__node_attribute_text },
     { "node-attribute", "xml", node_attribute_xml },
     { "node-attribute-list", "default", node_attribute_list },
     { "node-summary", "default", node_summary },
-    { "op-history", "default", pe__op_history_text },
+    { "op-history", "default", op_history_text },
     { "op-history", "xml", op_history_xml },
+    { "primitive", "default",  pe__resource_text },
     { "primitive", "xml",  pe__resource_xml },
     { "primitive", "html",  pe__resource_html },
-    { "primitive", "text",  pe__resource_text },
-    { "primitive", "log",  pe__resource_text },
     { "promotion-score", "default", promotion_score },
     { "promotion-score", "xml", promotion_score_xml },
     { "resource-config", "default", resource_config },
-    { "resource-history", "default", pe__resource_history_text },
+    { "resource-history", "default", resource_history_text },
     { "resource-history", "xml", resource_history_xml },
     { "resource-list", "default", resource_list },
     { "resource-operation-list", "default", resource_operation_list },
     { "resource-util", "default", resource_util },
     { "resource-util", "xml", resource_util_xml },
+    { "ticket", "default", ticket_text },
     { "ticket", "html", ticket_html },
-    { "ticket", "log", pe__ticket_text },
-    { "ticket", "text", pe__ticket_text },
     { "ticket", "xml", ticket_xml },
     { "ticket-list", "default", ticket_list },
 

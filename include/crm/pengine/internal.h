@@ -273,22 +273,6 @@ int pe__resource_xml(pcmk__output_t *out, va_list args);
 int pe__resource_html(pcmk__output_t *out, va_list args);
 int pe__resource_text(pcmk__output_t *out, va_list args);
 
-/* Exported for crm_mon to reference */
-int pe__ban_text(pcmk__output_t *out, va_list args);
-int pe__cluster_counts_text(pcmk__output_t *out, va_list args);
-int pe__cluster_dc_text(pcmk__output_t *out, va_list args);
-int pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args);
-int pe__cluster_options_text(pcmk__output_t *out, va_list args);
-int pe__cluster_stack_text(pcmk__output_t *out, va_list args);
-int pe__cluster_summary(pcmk__output_t *out, va_list args);
-int pe__cluster_times_text(pcmk__output_t *out, va_list args);
-int pe__failed_action_text(pcmk__output_t *out, va_list args);
-int pe__node_attribute_text(pcmk__output_t *out, va_list args);
-int pe__node_list_text(pcmk__output_t *out, va_list args);
-int pe__op_history_text(pcmk__output_t *out, va_list args);
-int pe__resource_history_text(pcmk__output_t *out, va_list args);
-int pe__ticket_text(pcmk__output_t *out, va_list args);
-
 void native_free(pe_resource_t * rsc);
 void group_free(pe_resource_t * rsc);
 void clone_free(pe_resource_t * rsc);
