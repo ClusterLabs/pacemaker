@@ -48,16 +48,14 @@
  * \param[in] data_set        Cluster state to display.
  * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
- * \param[in] mon_ops         Bitmask of mon_op_*.
  * \param[in] show            Bitmask of mon_show_*.
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
 print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
              stonith_history_t *stonith_history, gboolean fence_history,
-             unsigned int mon_ops, unsigned int section_opts,
-             unsigned int show_opts, const char *prefix, GList *unames,
-             GList *resources)
+             unsigned int section_opts, unsigned int show_opts,
+             const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -169,16 +167,14 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
  * \param[in] data_set        Cluster state to display.
  * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
- * \param[in] mon_ops         Bitmask of mon_op_*.
  * \param[in] show            Bitmask of mon_show_*.
  * \param[in] prefix          ID prefix to filter results by.
  */
 void
 print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                  stonith_history_t *stonith_history, gboolean fence_history,
-                 unsigned int mon_ops, unsigned int section_opts,
-                 unsigned int show_opts, const char *prefix, GList *unames,
-                 GList *resources)
+                 unsigned int section_opts, unsigned int show_opts,
+                 const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -245,16 +241,14 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
  * \param[in] data_set        Cluster state to display.
  * \param[in] history_rc      Result of getting stonith history
  * \param[in] stonith_history List of stonith actions.
- * \param[in] mon_ops         Bitmask of mon_op_*.
  * \param[in] show            Bitmask of mon_show_*.
  * \param[in] prefix          ID prefix to filter results by.
  */
 int
 print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, gboolean fence_history,
-                  unsigned int mon_ops, unsigned int section_opts,
-                  unsigned int show_opts, const char *prefix, GList *unames,
-                  GList *resources)
+                  unsigned int section_opts, unsigned int show_opts,
+                  const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 

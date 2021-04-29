@@ -127,7 +127,6 @@ struct {
     char *neg_location_prefix;
     char *only_node;
     char *only_rsc;
-    unsigned int mon_ops;
     GSList *user_includes_excludes;
     GSList *includes_excludes;
 } options = {
@@ -1708,8 +1707,7 @@ main(int argc, char **argv)
  *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
  */
 static void
-print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
-                    unsigned int mon_ops)
+print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
     int nodes_online = 0;
@@ -2193,9 +2191,8 @@ mon_refresh_display(gpointer user_data)
         case mon_output_html:
         case mon_output_cgi:
             if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
-                                  stonith_history, fence_history, options.mon_ops,
-                                  show, show_opts, options.neg_location_prefix,
-                                  unames, resources) != 0) {
+                                  stonith_history, fence_history, show, show_opts,
+                                  options.neg_location_prefix, unames, resources) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return 0;
@@ -2205,13 +2202,12 @@ mon_refresh_display(gpointer user_data)
         case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, fence_history, options.mon_ops,
-                             show, show_opts, options.neg_location_prefix, unames,
-                             resources);
+                             stonith_history, fence_history, show, show_opts,
+                             options.neg_location_prefix, unames, resources);
             break;
 
         case mon_output_monitor:
-            print_simple_status(out, mon_data_set, options.mon_ops);
+            print_simple_status(out, mon_data_set);
             if (has_warnings) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
@@ -2225,16 +2221,16 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         fence_history, options.mon_ops, show, show_opts,
-                         options.neg_location_prefix, unames, resources);
+                         fence_history, show, show_opts, options.neg_location_prefix,
+                         unames, resources);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         fence_history, options.mon_ops, show, show_opts,
-                         options.neg_location_prefix, unames, resources);
+                         fence_history, show, show_opts, options.neg_location_prefix,
+                         unames, resources);
             break;
 
         case mon_output_unset:

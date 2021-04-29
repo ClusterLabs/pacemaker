@@ -26,37 +26,18 @@ typedef enum mon_output_format_e {
     mon_output_cgi
 } mon_output_format_t;
 
-#define mon_op_group_by_node        (0x0001U)
-#define mon_op_inactive_resources   (0x0002U)
-#define mon_op_one_shot             (0x0004U)
-#define mon_op_has_warnings         (0x0008U)
-#define mon_op_print_timing         (0x0010U)
-#define mon_op_watch_fencing        (0x0020U)
-#define mon_op_fence_history        (0x0040U)
-#define mon_op_fence_full_history   (0x0080U)
-#define mon_op_fence_connect        (0x0100U)
-#define mon_op_print_brief          (0x0200U)
-#define mon_op_print_pending        (0x0400U)
-#define mon_op_print_clone_detail   (0x0800U)
-#define mon_op_cib_native           (0x1000U)
-
-#define mon_op_default              (mon_op_print_pending | mon_op_fence_history | mon_op_fence_connect)
-
 void print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                   stonith_history_t *stonith_history, gboolean fence_history,
-                  unsigned int mon_ops, unsigned int section_opts,
-                  unsigned int show_opts, const char *prefix, GList *unames,
-                  GList *resources);
+                  unsigned int section_opts, unsigned int show_opts,
+                  const char *prefix, GList *unames, GList *resources);
 void print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                       stonith_history_t *stonith_history, gboolean fence_history,
-                      unsigned int mon_ops, unsigned int section_opts,
-                      unsigned int show_opts, const char *prefix, GList *unames,
-                      GList *resources);
+                      unsigned int section_opts, unsigned int show_opts,
+                      const char *prefix, GList *unames, GList *resources);
 int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                       stonith_history_t *stonith_history, gboolean fence_history,
-                      unsigned int mon_ops, unsigned int section_opts,
-                      unsigned int show_opts, const char *prefix, GList *unames,
-                      GList *resources);
+                      unsigned int section_opts, unsigned int show_opts,
+                      const char *prefix, GList *unames, GList *resources);
 
 void crm_mon_register_messages(pcmk__output_t *out);
 
