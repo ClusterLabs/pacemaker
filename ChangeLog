@@ -1,3 +1,206 @@
+* Thu Apr 29 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.0-rc1
+- Changesets: 781
+- Diff:
+ 323 files changed, 21034 insertions(+), 12145 deletions(-)
+
+- Features added since Pacemaker-2.0.5
+  + support for OCF Resource Agent API 1.1 standard
+    - allow Promoted and Unpromoted role names in CIB (in addition to Master
+      and Slave, which are deprecated), and use new role names in output,
+      logs, and constraints created by crm_resource --ban
+    - advertise 1.1 support to agents, and provide notify_promoted_* and
+      notify_unpromoted_* environment variables to agents with notify actions
+    - support "reloadable" parameter attribute and "reload-agent" action in
+      agents that advertise 1.1 support
+    - support 1.1 standard in ocf:pacemaker:Dummy, ocf:pacemaker:remote, and
+      ocf:pacemaker:Stateful resource agents
+    - add "promoted-only" (in addition to "master-only", which is deprecated)
+      in crm_mon XML output for bans
+  + support for noncritical resources
+    - colocation constraints accept an "influence" attribute that determines
+      whether dependent influences main resource's location (the default of
+      "true" preserves the previous behavior, while "false" makes the
+      dependent stop if it reaches its migration-threshold in failures rather
+      than cause both resources to move to another node)
+    - resources accept a "critical" meta-attribute that serves as default for
+      all colocation constraints involving the resource as the dependent, as
+      well as groups involving the resource
+  + detail log uses millisecond-resolution timestamps when Pacemaker is built
+    with libqb 2.0 or later
+  + CIB: deprecate the remove-after-stop cluster property, can_fail action
+         meta-attribute, and support for Upstart-based resources
+  + controller: the PCMK_panic_action environment variable may be set to
+                sync-crash or sync-reboot to attempt to synchronize local
+                disks before crashing or rebooting, which can be helpful to
+                record cached log messages but runs the risk of the sync
+                hanging and leaving the host running after a critical error
+  + tools: CIB_file="-" can be used to get the CIB from standard input
+  + tools: crmadmin, crm_resource, crm_simulate, and crm_verify support
+           standard --output-as/--output-to options (including XML output,
+           intended for parsing by scripts and higher-level tools)
+  + tools: crm_attribute accepts -p/--promotion option to operate on
+           promotion score (replacing crm_master, which is deprecated)
+  + tools: crm_resource accepts --promoted option (replacing --master, which
+           is deprecated)
+  + tools: crm_resource accepts --digests advanced option
+  + tools: crm_simulate accepts --show-attrs and --show-failcounts options
+
+- Build process changes since Pacemaker-2.0.5
+  + Pacemaker requires newer versions of certain dependencies, including
+    Python 3.2 or later (support for Python 2 has been dropped), glib 2.32.0
+    or later, libqb 0.17.0 or later, GnuTLS 2.12.0 or later (to enable
+    Pacemaker Remote support), rpm 4.11.0 (if building RPMs), and a C library
+    that provides setenv() and unsetenv()
+  + configure: --enable-legacy-links (which is deprecated) defaults to "no",
+               meaning that symbolic links will not be created for the
+               Pacemaker 1 daemon names
+  + configure: --enable-compat-2.0 prevents certain output changes (most
+               significantly role names) to maintain compatibility with older
+               tools, scripts, and resource agents that rely on previous output
+  + configure: --with-resource-stickiness-default sets a resource-stickiness
+               default in newly created CIBs
+  + configure: --with-concurrent-fencing-default specifies default for
+               concurrent-fencing cluster property
+  + configure: --with-gnutls="no" explicitly disables support for
+               Pacemaker Remote and the remote-tls-port cluster property
+  + configure: --with-acl has been removed (support for ACLs is always built)
+  + configure: deprecated --with-pkgname, --with-pkg-name, --with-brand,
+               --enable-ansi, and --enable-no-stack options have been removed
+  + environment variables file (typically /etc/sysconfig/pacemaker or
+    /etc/default/pacemaker) will be installed when "make install" is run
+  + documentation has dependency on python3-sphinx instead of publican, and is
+    generated beneath doc/sphinx
+
+- Fixes since Pacemaker-2.0.5
+  + controller: always refresh agent meta-data after start, in case agent was
+                updated (regression introduced in 1.1.18)
+  + tools: avoid crash when running crm_mon in daemonized mode with CGI output
+           (regression introduced in 2.0.3)
+  + tools: correctly treat unspecified node as all nodes instead of local node
+           when attrd_updater --query or crm_resource --cleanup is run on a
+           Pacemaker Remote node (regressions introduced in 1.1.14 and 1.1.17)
+  + pacemaker-attrd: avoid race condition where transient attributes for a
+                     leaving node could be reinstated when the node rejoins,
+                     potentially causing a node that was just rebooted to exit
+                     the cluster immediately after rejoining
+  + controller,scheduler: fix year 2038 issues affecting shutdowns,
+                          remote node fencing, last-rc-change, and
+                          ticket last-granted dates
+  + controller: retry scheduler connection after failure, to avoid cluster
+                stopping on a node without stopping resources (clbz#5445)
+  + fencing: avoid pending fencing entry getting "stuck" in history if
+             originating node was unreachable when result was received
+  + fencing: retry getting agent meta-data if initial attempt fails
+  + fencing: detect when devices have been removed from configuration
+  + scheduler: constrain clone-min, clone-max, clone-node-max, promoted-max,
+               and promoted-node-max options to non-negative values
+  + scheduler: constrain resource priorities and node-health-base to score range
+  + scheduler: treat invalid duration fields in time-based rules as 0, not -1
+  + scheduler: node attribute rule expressions with a value-source of "param"
+               or "meta" work when rsc or rsc-pattern with an inverted match
+               is given, as well as when rsc-pattern with a regular
+               match is given
+  + scheduler: node attribute rule expressions with a value-source of "param"
+               work with a resource parameter that itself is determined by a
+               node attribute rule expression
+  + scheduler: avoid remote connection shutdown hanging when connection
+               history for node hosting connection is not last in CIB status
+  + scheduler: route monitor cancellations behind moving remote connections correctly
+  + libcrmcommon: avoid potential integer overflow when adding seconds to times
+  + tools: cibsecret syncs to remote nodes and guest nodes as well as
+           cluster nodes
+  + tools: show other available cluster information in crm_mon even if
+           fence history is not available
+  + tools: retry failed fencer and CIB connections in crm_mon
+  + tools: crm_mon reports if Pacemaker is waiting for sbd at start-up
+  + tools: respect rules when showing node attributes in crm_mon
+  + tools: improve messages when crm_mon is run on disconnected remote node
+  + tools: constrain node IDs to non-negative values for crm_node -N
+  + tools: crm_node -l on restarted node works even when Corosync 2 is used
+           without node names specified in Corosync configuration
+  + tools: fix issues in calculation of non-sensitive resource parameter
+           digests that made crm_simulate wrongly think configuration changed
+
+- C API changes since Pacemaker-2.0.5
+  + all: new PCMK_ALLOW_DEPRECATED constant controls API availability
+  + libcrmcluster: deprecate crm_terminate_member()
+  + libcrmcluster: deprecate crm_terminate_member_no_mainloop()
+  + libcrmcommon: add CRMD_ACTION_RELOAD_AGENT string constant
+  + libcrmcommon: add PCMK_OCF_MAJOR_VERSION string constant
+  + libcrmcommon: add PCMK_OCF_MINOR_VERSION string constant
+  + libcrmcommon: add PCMK_OCF_RUNNING_PROMOTED enum value
+  + libcrmcommon: add PCMK_OCF_VERSION string constant
+  + libcrmcommon: add PCMK_XE_PROMOTABLE_LEGACY string constant
+  + libcrmcommon: add PCMK_XE_PROMOTED_MAX_LEGACY string constant
+  + libcrmcommon: add PCMK_XE_PROMOTED_NODE_MAX_LEGACY string constant
+  + libcrmcommon: add enum ocf_exitcode (moved from libcrmservice)
+  + libcrmcommon: deprecate __builtin_expect()
+  + libcrmcommon: deprecate __likely()
+  + libcrmcommon: deprecate __unlikely()
+  + libcrmcommon: deprecate crm_atoi()
+  + libcrmcommon: deprecate crm_build_path()
+  + libcrmcommon: deprecate crm_config_error global variable
+  + libcrmcommon: deprecate crm_config_warning global variable
+  + libcrmcommon: deprecate crm_ftoa()
+  + libcrmcommon: deprecate crm_hash_table_size()
+  + libcrmcommon: deprecate crm_itoa()
+  + libcrmcommon: deprecate crm_itoa_stack()
+  + libcrmcommon: deprecate crm_log_cli_init()
+  + libcrmcommon: deprecate crm_parse_int()
+  + libcrmcommon: deprecate crm_parse_ll()
+  + libcrmcommon: deprecate crm_str_hash()
+  + libcrmcommon: deprecate crm_str_table_dup()
+  + libcrmcommon: deprecate crm_str_table_new()
+  + libcrmcommon: deprecate crm_strcase_equal()
+  + libcrmcommon: deprecate crm_strcase_hash()
+  + libcrmcommon: deprecate crm_strcase_table_new()
+  + libcrmcommon: deprecate crm_strip_trailing_newline()
+  + libcrmcommon: deprecate crm_ttoa()
+  + libcrmcommon: deprecate EOS constant
+  + libcrmcommon: deprecate GListPtr type
+  + libcrmcommon: deprecate g_str_hash_traditional()
+  + libcrmcommon: deprecate MAX_IPC_DELAY constant
+  + libcrmcommon: deprecate pcmk_format_named_time()
+  + libcrmcommon: deprecate pcmk_format_nvpair()
+  + libcrmcommon: deprecate pcmk_numeric_strcasecmp()
+  + libcrmcommon: deprecate PCMK_OCF_DEGRADED_MASTER enum value
+  + libcrmcommon: deprecate PCMK_OCF_FAILED_MASTER enum value
+  + libcrmcommon: deprecate PCMK_OCF_RUNNING_MASTER enum value
+  + libcrmcommon: deprecate pcmk_scan_nvpair()
+  + libcrmcommon: deprecate XML_CIB_TAG_MASTER string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_MASTER_MAX string constant
+  + libcrmcommon: deprecate XML_RSC_ATTR_MASTER_NODEMAX string constant
+  + libcrmservice: enum ocf_exitcode is obtained from libcrmcommon
+  + libpacemaker: add pcmk_controller_status() function
+  + libpacemaker: add pcmk_designated_controller() function
+  + libpacemaker: add pcmk_list_nodes() function
+  + libpacemaker: add pcmk_pacemakerd_status() function
+  + libpacemaker: add pcmk_resource_digests() function
+  + libpe_status: add parameter_cache member to pe_resource_t
+  + libpe_status: add pe_order_promoted_implies_first enum value
+  + libpe_status: add pe_rsc_params()
+  + libpe_status: add RSC_ROLE_PROMOTED enum value
+  + libpe_status: add RSC_ROLE_PROMOTED_LEGACY_S string constant
+  + libpe_status: add RSC_ROLE_PROMOTED_S string constant
+  + libpe_status: add RSC_ROLE_UNPROMOTED enum value
+  + libpe_status: add RSC_ROLE_UNPROMOTED_LEGACY_S string constant
+  + libpe_status: add RSC_ROLE_UNPROMOTED_S string constant
+  + libpe_status: add priv member to pcmk_working_set_t, for Pacemaker use only
+  + libpe_status: deprecate pe_order_implies_first_master enum value
+  + libpe_status: deprecate pe_print_details enum value
+  + libpe_status: deprecate pe_print_dev enum value
+  + libpe_status: deprecate pe_print_html enum value
+  + libpe_status: deprecate pe_print_log enum value
+  + libpe_status: deprecate pe_print_max_details enum value
+  + libpe_status: deprecate pe_print_ncurses enum value
+  + libpe_status: deprecate pe_print_xml enum value
+  + libpe_status: deprecate pe_resource_t parameters member
+  + libpe_status: deprecate RSC_ROLE_MASTER enum value
+  + libpe_status: deprecate RSC_ROLE_MASTER_S string constant
+  + libpe_status: deprecate RSC_ROLE_SLAVE enum value
+  + libpe_status: deprecate RSC_ROLE_SLAVE_S string constant
+  + libpe_status: ignore ->parameter() resource object function's create argument
+
 * Wed Dec 02 2020 Chris Lumens <clumens@redhat.com> Pacemaker-2.0.5
 - Changesets: 534
 - Diff: 286 files changed, 23133 insertions(+), 14626 deletions(-)
@@ -26,6 +229,7 @@
 
 - Fixes for regressions introduced in Pacemaker-2.0.3
   + tools: Fix adding HTTP headers to crm_mon in daemon mode.
+  + tools: Show expected score of ping attributes in crm_mon XML output
 
 - Fixes for regressions introduced in Pacemaker-2.0.1
   + scheduler: require pre-/post-start notifications correctly.
@@ -1665,7 +1869,7 @@
 
 - Changes since Pacemaker-1.1.4
   + Add the ability to delegate sub-sections of the cluster to non-root users via ACLs
-	  Needs to be enabled at compile time, not enabled by default.
+    Needs to be enabled at compile time, not enabled by default.
   + ais: Bug lf#2550 - Report failed processes immediately
   + Core: Prevent recently introduced use-after-free in replace_xml_child()
   + Core: Reinstate the logic that skips past non-XML_ELEMENT_NODE children
