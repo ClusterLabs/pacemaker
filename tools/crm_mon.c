@@ -132,7 +132,6 @@ struct {
     GSList *includes_excludes;
 } options = {
     .fence_connect = TRUE,
-    .mon_ops = mon_op_default,
     .print_pending = TRUE,
     .reconnect_ms = RECONNECT_MSECS
 };
@@ -405,7 +404,6 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
     switch (interactive_fence_level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history;
             options.fence_connect = TRUE;
             fence_history = TRUE;
             return include_exclude_cb("--include", "fencing", data, err);
@@ -915,7 +913,6 @@ set_fencing_options(int level)
 {
     switch (level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history;
             options.fence_connect = TRUE;
             fence_history = TRUE;
             show |= pcmk_section_fencing_all;
@@ -1613,7 +1610,7 @@ main(int argc, char **argv)
     /* Sync up the initial value of interactive_fence_level with whatever was set with
      * --include/--exclude= options.
      */
-    if (pcmk_is_set(show, pcmk_section_fencing_all)) {
+    if (pcmk_all_flags_set(show, pcmk_section_fencing_all)) {
         interactive_fence_level = 3;
     } else if (pcmk_is_set(show, pcmk_section_fence_worked)) {
         interactive_fence_level = 2;
@@ -2156,7 +2153,7 @@ get_fencing_history(stonith_history_t **stonith_history)
 
             if (rc == 0) {
                 *stonith_history = stonith__sort_history(*stonith_history);
-                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
+                if (!pcmk_all_flags_set(show, pcmk_section_fencing_all)
                     && (output_format != mon_output_xml)) {
 
                     *stonith_history = pcmk__reduce_fence_history(*stonith_history);

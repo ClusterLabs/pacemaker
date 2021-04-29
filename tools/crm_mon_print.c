@@ -111,8 +111,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
             if (hp) {
                 CHECK_RC(rc, out->message(out, "failed-fencing-list", stonith_history, unames,
-                                          pcmk_is_set(mon_ops, mon_op_fence_full_history),
-                                          rc == pcmk_rc_ok));
+                                          section_opts, rc == pcmk_rc_ok));
             }
         } else {
             PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -152,16 +151,14 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
             if (hp) {
                 CHECK_RC(rc, out->message(out, "fencing-list", hp, unames,
-                                          pcmk_is_set(mon_ops, mon_op_fence_full_history),
-                                          rc == pcmk_rc_ok));
+                                          section_opts, rc == pcmk_rc_ok));
             }
         } else if (pcmk_is_set(section_opts, pcmk_section_fence_pending)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
                 CHECK_RC(rc, out->message(out, "pending-fencing-list", hp, unames,
-                                          pcmk_is_set(mon_ops, mon_op_fence_full_history),
-                                          rc == pcmk_rc_ok));
+                                          section_opts, rc == pcmk_rc_ok));
             }
         }
     }
@@ -231,8 +228,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     /* Print stonith history */
     if (pcmk_is_set(section_opts, pcmk_section_fencing_all) && fence_history) {
         out->message(out, "full-fencing-list", history_rc, stonith_history,
-                     unames, pcmk_is_set(mon_ops, mon_op_fence_full_history),
-                     FALSE);
+                     unames, section_opts, FALSE);
     }
 
     /* Print tickets if requested */
@@ -315,7 +311,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
 
             if (hp) {
                 out->message(out, "failed-fencing-list", stonith_history, unames,
-                             pcmk_is_set(mon_ops, mon_op_fence_full_history), FALSE);
+                             section_opts, FALSE);
             }
         } else {
             out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
@@ -339,17 +335,14 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
                                                                   GINT_TO_POINTER(st_failed));
 
             if (hp) {
-                out->message(out, "fencing-list", hp, unames,
-                             pcmk_is_set(mon_ops, mon_op_fence_full_history),
-                             FALSE);
+                out->message(out, "fencing-list", hp, unames, section_opts, FALSE);
             }
         } else if (pcmk_is_set(section_opts, pcmk_section_fence_pending)) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_pending, NULL);
 
             if (hp) {
                 out->message(out, "pending-fencing-list", hp, unames,
-                             pcmk_is_set(mon_ops, mon_op_fence_full_history),
-                             FALSE);
+                             section_opts, FALSE);
             }
         }
     }
