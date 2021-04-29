@@ -669,21 +669,6 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
-static void
-blank_screen(void)
-{
-#if CURSES_ENABLED
-    int lpc = 0;
-
-    for (lpc = 0; lpc < LINES; lpc++) {
-        move(lpc, 0);
-        clrtoeol();
-    }
-    move(0, 0);
-    refresh();
-#endif
-}
-
 /* Reconnect to the CIB and fencing agent after reconnect_ms has passed.  This sounds
  * like it would be more broadly useful, but only ever happens after a disconnect via
  * mon_cib_connection_destroy.
@@ -1592,6 +1577,7 @@ main(int argc, char **argv)
         interactive_fence_level = 0;
     }
 
+    pcmk__register_lib_messages(out);
     crm_mon_register_messages(out);
     pe__register_messages(out);
     stonith__register_messages(out);
@@ -2190,20 +2176,13 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
-                                  stonith_history, fence_history, show, show_opts,
-                                  options.neg_location_prefix, unames, resources) != 0) {
+            if (out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
+                             stonith_history, fence_history, show, show_opts,
+                             options.neg_location_prefix, unames, resources) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return 0;
             }
-            break;
-
-        case mon_output_legacy_xml:
-        case mon_output_xml:
-            print_xml_status(mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, fence_history, show, show_opts,
-                             options.neg_location_prefix, unames, resources);
             break;
 
         case mon_output_monitor:
@@ -2214,27 +2193,14 @@ mon_refresh_display(gpointer user_data)
             }
             break;
 
-        case mon_output_console:
-            /* If curses is not enabled, this will just fall through to the plain
-             * text case.
-             */
-#if CURSES_ENABLED
-            blank_screen();
-            print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         fence_history, show, show_opts, options.neg_location_prefix,
-                         unames, resources);
-            refresh();
-            break;
-#endif
-
-        case mon_output_plain:
-            print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         fence_history, show, show_opts, options.neg_location_prefix,
-                         unames, resources);
-            break;
-
         case mon_output_unset:
         case mon_output_none:
+            break;
+
+        default:
+            out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
+                         stonith_history, fence_history, show, show_opts,
+                         options.neg_location_prefix, unames, resources);
             break;
     }
 

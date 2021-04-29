@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the Pacemaker project contributors
+ * Copyright 2019-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,6 +27,8 @@ void pcmk__out_epilogue(pcmk__output_t *out, xmlNodePtr *xml, int retval);
  * messages at a time.
  */
 void pcmk__register_lib_messages(pcmk__output_t *out);
+
+int pcmk__cluster_status_text(pcmk__output_t *out, va_list args);
 
 #ifdef __cplusplus
 }
