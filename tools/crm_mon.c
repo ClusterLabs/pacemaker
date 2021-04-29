@@ -57,7 +57,7 @@
  */
 
 static unsigned int show;
-static unsigned int show_opts;
+static unsigned int show_opts = pcmk_show_pending;
 
 /*
  * Definitions indicating how to output
@@ -132,7 +132,6 @@ struct {
     GSList *includes_excludes;
 } options = {
     .fence_connect = TRUE,
-    .print_pending = TRUE,
     .reconnect_ms = RECONNECT_MSECS
 };
 
@@ -671,32 +670,6 @@ static GOptionEntry deprecated_entries[] = {
 };
 /* *INDENT-ON* */
 
-/*!
- * \internal
- * \brief Return resource display options corresponding to command-line choices
- *
- * \return Bitmask of pe_print_options suitable for resource print functions
- */
-static unsigned int
-get_resource_display_options(unsigned int mon_ops)
-{
-    int print_opts = 0;
-
-    if (options.print_pending) {
-        print_opts |= pe_print_pending;
-    }
-    if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
-        print_opts |= pe_print_clone_details;
-    }
-    if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
-        print_opts |= pe_print_implicit;
-    }
-    if (!pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
-        print_opts |= pe_print_clone_active;
-    }
-    return print_opts;
-}
-
 static void
 blank_screen(void)
 {
@@ -1177,7 +1150,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 show_opts ^= pcmk_show_brief;
                 break;
             case 'j':
-                options.print_pending = !options.print_pending;
+                show_opts ^= pcmk_show_pending;
                 break;
             case '?':
                 config_mode = TRUE;
@@ -1204,7 +1177,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
         print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details));
         print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
-        print_option_help(out, 'j', options.print_pending);
+        print_option_help(out, 'j', pcmk_is_set(show_opts, pcmk_show_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
         curses_formatted_printf(out, "%s", "\nToggle fields via field letter, type any other key to return\n");
     }
@@ -2221,7 +2194,6 @@ mon_refresh_display(gpointer user_data)
         case mon_output_cgi:
             if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
                                   stonith_history, fence_history, options.mon_ops,
-                                  get_resource_display_options(options.mon_ops),
                                   show, show_opts, options.neg_location_prefix,
                                   unames, resources) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
@@ -2234,8 +2206,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_xml:
             print_xml_status(mon_data_set, crm_errno2exit(history_rc),
                              stonith_history, fence_history, options.mon_ops,
-                             get_resource_display_options(options.mon_ops), show,
-                             show_opts, options.neg_location_prefix, unames,
+                             show, show_opts, options.neg_location_prefix, unames,
                              resources);
             break;
 
@@ -2254,16 +2225,16 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         fence_history, options.mon_ops, get_resource_display_options(options.mon_ops),
-                         show, show_opts, options.neg_location_prefix, unames, resources);
+                         fence_history, options.mon_ops, show, show_opts,
+                         options.neg_location_prefix, unames, resources);
             refresh();
             break;
 #endif
 
         case mon_output_plain:
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         fence_history, options.mon_ops, get_resource_display_options(options.mon_ops),
-                         show, show_opts, options.neg_location_prefix, unames, resources);
+                         fence_history, options.mon_ops, show, show_opts,
+                         options.neg_location_prefix, unames, resources);
             break;
 
         case mon_output_unset:

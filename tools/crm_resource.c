@@ -1770,8 +1770,7 @@ main(int argc, char **argv)
             GList *all = NULL;
             all = g_list_prepend(all, strdup("*"));
             rc = out->message(out, "resource-list", data_set,
-                              pcmk_show_inactive_rscs,
-                              pe_print_rsconly | pe_print_pending,
+                              pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
                               TRUE, all, all, FALSE);
             g_list_free_full(all, free);
 

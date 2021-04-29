@@ -11,6 +11,7 @@
 
 #include <crm_resource.h>
 #include <crm/common/lists_internal.h>
+#include <crm/common/output.h>
 
 #define cons_string(x) x?x:"NA"
 void
@@ -114,13 +115,13 @@ int
 cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
     pcmk__output_t *out = data_set->priv;
-    unsigned int opts = pe_print_pending;
+    unsigned int show_opts = pcmk_show_pending;
     GList *all = NULL;
 
     all = g_list_prepend(all, strdup("*"));
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, crm_map_element_name(rsc->xml), opts, rsc, all, all);
+    out->message(out, crm_map_element_name(rsc->xml), show_opts, rsc, all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
