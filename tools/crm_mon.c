@@ -85,6 +85,7 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
+static gboolean fence_history = FALSE;
 static gboolean has_warnings = FALSE;
 static gboolean on_remote_node = FALSE;
 static gboolean use_cib_native = FALSE;
@@ -404,23 +405,24 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
     switch (interactive_fence_level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history;
+            options.mon_ops |= mon_op_fence_full_history;
             options.fence_connect = TRUE;
+            fence_history = TRUE;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 2:
-            options.mon_ops |= mon_op_fence_history;
             options.fence_connect = TRUE;
+            fence_history = TRUE;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 1:
-            options.mon_ops |= mon_op_fence_history;
             options.fence_connect = TRUE;
+            fence_history = TRUE;
             return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
 
         case 0:
-            options.mon_ops &= ~mon_op_fence_history;
             options.fence_connect = FALSE;
+            fence_history = FALSE;
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
@@ -913,27 +915,28 @@ set_fencing_options(int level)
 {
     switch (level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history;
+            options.mon_ops |= mon_op_fence_full_history;
             options.fence_connect = TRUE;
+            fence_history = TRUE;
             show |= pcmk_section_fencing_all;
             break;
 
         case 2:
-            options.mon_ops |= mon_op_fence_history;
             options.fence_connect = TRUE;
+            fence_history = TRUE;
             show |= pcmk_section_fencing_all;
             break;
 
         case 1:
-            options.mon_ops |= mon_op_fence_history;
             options.fence_connect = TRUE;
+            fence_history = TRUE;
             show |= pcmk_section_fence_failed | pcmk_section_fence_pending;
             break;
 
         default:
             interactive_fence_level = 0;
-            options.mon_ops &= ~mon_op_fence_history;
             options.fence_connect = FALSE;
+            fence_history = FALSE;
             show &= ~pcmk_section_fencing_all;
             break;
     }
@@ -2147,7 +2150,7 @@ get_fencing_history(stonith_history_t **stonith_history)
 {
     int rc = 0;
 
-    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
+    while (fence_history) {
         if (st != NULL) {
             rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
 
@@ -2220,7 +2223,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_html:
         case mon_output_cgi:
             if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
-                                  stonith_history, options.mon_ops,
+                                  stonith_history, fence_history, options.mon_ops,
                                   get_resource_display_options(options.mon_ops),
                                   show, show_opts, options.neg_location_prefix,
                                   unames, resources) != 0) {
@@ -2233,7 +2236,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_legacy_xml:
         case mon_output_xml:
             print_xml_status(mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, options.mon_ops,
+                             stonith_history, fence_history, options.mon_ops,
                              get_resource_display_options(options.mon_ops), show,
                              show_opts, options.neg_location_prefix, unames,
                              resources);
@@ -2254,7 +2257,7 @@ mon_refresh_display(gpointer user_data)
 #if CURSES_ENABLED
             blank_screen();
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, get_resource_display_options(options.mon_ops),
+                         fence_history, options.mon_ops, get_resource_display_options(options.mon_ops),
                          show, show_opts, options.neg_location_prefix, unames, resources);
             refresh();
             break;
@@ -2262,7 +2265,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_plain:
             print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, get_resource_display_options(options.mon_ops),
+                         fence_history, options.mon_ops, get_resource_display_options(options.mon_ops),
                          show, show_opts, options.neg_location_prefix, unames, resources);
             break;
 

@@ -43,20 +43,20 @@ typedef enum mon_output_format_e {
 #define mon_op_default              (mon_op_print_pending | mon_op_fence_history | mon_op_fence_connect)
 
 void print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                  stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int print_opts, unsigned int section_opts,
+                  stonith_history_t *stonith_history, gboolean fence_history,
+                  unsigned int mon_ops, unsigned int print_opts, unsigned int section_opts,
                   unsigned int show_opts, const char *prefix, GList *unames,
                   GList *resources);
 void print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                      stonith_history_t *stonith_history, unsigned int mon_ops,
-                      unsigned int print_opts, unsigned int section_opts,
-                      unsigned int show_opts, const char *prefix, GList *unames,
-                      GList *resources);
+                      stonith_history_t *stonith_history, gboolean fence_history,
+                      unsigned int mon_ops, unsigned int print_opts,
+                      unsigned int section_opts, unsigned int show_opts,
+                      const char *prefix, GList *unames, GList *resources);
 int print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                      stonith_history_t *stonith_history, unsigned int mon_ops,
-                      unsigned int print_opts, unsigned int section_opts,
-                      unsigned int show_opts, const char *prefix, GList *unames,
-                      GList *resources);
+                      stonith_history_t *stonith_history, gboolean fence_history,
+                      unsigned int mon_ops, unsigned int print_opts,
+                      unsigned int section_opts, unsigned int show_opts,
+                      const char *prefix, GList *unames, GList *resources);
 
 void crm_mon_register_messages(pcmk__output_t *out);
 

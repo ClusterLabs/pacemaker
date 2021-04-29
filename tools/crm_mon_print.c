@@ -54,10 +54,10 @@
  */
 void
 print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-             stonith_history_t *stonith_history, unsigned int mon_ops,
-             unsigned int print_opts, unsigned int section_opts,
-             unsigned int show_opts, const char *prefix, GList *unames,
-             GList *resources)
+             stonith_history_t *stonith_history, gboolean fence_history,
+             unsigned int mon_ops, unsigned int print_opts,
+             unsigned int section_opts, unsigned int show_opts,
+             const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -104,9 +104,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print failed stonith actions */
-    if (pcmk_is_set(section_opts, pcmk_section_fence_failed)
-        && pcmk_is_set(mon_ops, mon_op_fence_history)) {
-
+    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) && fence_history) {
         if (history_rc == 0) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
                                                                   GINT_TO_POINTER(st_failed));
@@ -139,7 +137,7 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print stonith history */
-    if (pcmk_is_set(mon_ops, mon_op_fence_history)) {
+    if (fence_history && pcmk_any_flags_set(section_opts, pcmk_section_fencing_all)) {
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -182,10 +180,10 @@ print_status(pe_working_set_t *data_set, crm_exit_t history_rc,
  */
 void
 print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                 stonith_history_t *stonith_history, unsigned int mon_ops,
-                 unsigned int print_opts, unsigned int section_opts,
-                 unsigned int show_opts, const char *prefix, GList *unames,
-                 GList *resources)
+                 stonith_history_t *stonith_history, gboolean fence_history,
+                 unsigned int mon_ops, unsigned int print_opts,
+                 unsigned int section_opts, unsigned int show_opts,
+                 const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -231,9 +229,7 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print stonith history */
-    if (pcmk_is_set(section_opts, pcmk_section_fencing_all)
-        && pcmk_is_set(mon_ops, mon_op_fence_history)) {
-
+    if (pcmk_is_set(section_opts, pcmk_section_fencing_all) && fence_history) {
         out->message(out, "full-fencing-list", history_rc, stonith_history,
                      unames, pcmk_is_set(mon_ops, mon_op_fence_full_history),
                      FALSE);
@@ -264,10 +260,10 @@ print_xml_status(pe_working_set_t *data_set, crm_exit_t history_rc,
  */
 int
 print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
-                  stonith_history_t *stonith_history, unsigned int mon_ops,
-                  unsigned int print_opts, unsigned int section_opts,
-                  unsigned int show_opts, const char *prefix, GList *unames,
-                  GList *resources)
+                  stonith_history_t *stonith_history, gboolean fence_history,
+                  unsigned int mon_ops, unsigned int print_opts,
+                  unsigned int section_opts, unsigned int show_opts,
+                  const char *prefix, GList *unames, GList *resources)
 {
     pcmk__output_t *out = data_set->priv;
 
@@ -312,9 +308,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print failed stonith actions */
-    if (pcmk_is_set(section_opts, pcmk_section_fence_failed)
-        && pcmk_is_set(mon_ops, mon_op_fence_history)) {
-
+    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) && fence_history) {
         if (history_rc == 0) {
             stonith_history_t *hp = stonith__first_matching_event(stonith_history, stonith__event_state_eq,
                                                                   GINT_TO_POINTER(st_failed));
@@ -332,7 +326,7 @@ print_html_status(pe_working_set_t *data_set, crm_exit_t history_rc,
     }
 
     /* Print stonith history */
-    if (pcmk_is_set(mon_ops, mon_op_fence_history)) {
+    if (fence_history && pcmk_any_flags_set(section_opts, pcmk_section_fencing_all)) {
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
