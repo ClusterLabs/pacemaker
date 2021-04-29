@@ -449,6 +449,8 @@ extern void resource_location(pe_resource_t * rsc, pe_node_t * node, int score, 
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 extern gboolean get_target_role(pe_resource_t * rsc, enum rsc_role_e *role);
+void pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role,
+                       const char *why);
 
 extern pe_resource_t *find_clone_instance(pe_resource_t * rsc, const char *sub_id,
                                           pe_working_set_t * data_set);
