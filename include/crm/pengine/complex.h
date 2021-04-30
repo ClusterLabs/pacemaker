@@ -35,9 +35,6 @@ void pe_get_versioned_attributes(xmlNode *meta_hash, pe_resource_t *rsc,
 gboolean is_parent(pe_resource_t *child, pe_resource_t *rsc);
 pe_resource_t *uber_parent(pe_resource_t *rsc);
 
-void pe__set_next_role(pe_resource_t *rsc, enum rsc_role_e role,
-                       const char *why);
-
 #ifdef __cplusplus
 }
 #endif

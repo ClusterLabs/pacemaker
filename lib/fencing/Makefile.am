@@ -12,7 +12,7 @@ include $(top_srcdir)/mk/common.mk
 
 lib_LTLIBRARIES		= libstonithd.la
 
-libstonithd_la_LDFLAGS	= -version-info 30:1:4
+libstonithd_la_LDFLAGS	= -version-info 31:0:5
 
 libstonithd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

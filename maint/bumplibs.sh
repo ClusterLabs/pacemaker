@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012-2019 the Pacemaker project contributors
+# Copyright 2012-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -8,28 +8,33 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+# List regular expressions (not globs) that match all of a library's public API
+# headers. Any files ending in "internal.h" will be excluded from matches.
 declare -A HEADERS
-HEADERS[cib]="include/crm/cib.h include/crm/cib/*.h"
+HEADERS[cib]="include/crm/cib.h include/crm/cib/.*.h"
 HEADERS[crmcommon]="include/crm/crm.h
-                    include/crm/attrd.h
                     include/crm/msg_xml.h
-                    include/crm/common/*.h"
-HEADERS[crmcluster]="include/crm/cluster.h include/crm/cluster/*.h"
-HEADERS[crmservice]="include/crm/services.h"
-HEADERS[lrmd]="include/crm/lrmd*.h"
-HEADERS[pacemaker]="include/pacemaker*.h include/pcmki/*.h"
-HEADERS[pe_rules]="include/crm/pengine/rules*.h"
-HEADERS[pe_status]="include/crm/pengine/*.h"
-HEADERS[stonithd]="include/crm/stonith-ng.h include/crm/fencing/*.h"
+                    include/crm/common/.*.h"
+HEADERS[crmcluster]="include/crm/cluster.h include/crm/cluster/.*.h"
+HEADERS[crmservice]="include/crm/services.*.h"
+HEADERS[lrmd]="include/crm/lrmd.*.h"
+HEADERS[pacemaker]="include/pacemaker.*.h"
+HEADERS[pe_rules]="include/crm/pengine/ru.*.h"
+HEADERS[pe_status]="include/crm/pengine/[^r].*.h include/crm/pengine/r[^u].*.h"
+HEADERS[stonithd]="include/crm/stonith-ng.h include/crm/fencing/.*.h"
 
-prompt_to_continue() {
+yesno() {
     local RESPONSE
 
-    read -p "Continue? " RESPONSE
-    case "$RESPONSE" in
-        y|Y|yes|ano|ja|si|oui) ;;
-        *) exit 0 ;;
+    read -p "$1 " RESPONSE
+    case $(echo "$RESPONSE" | tr A-Z a-z) in
+        y|yes|ano|ja|si|oui) return 0 ;;
+        *) return 1 ;;
     esac
+}
+
+prompt_to_continue() {
+    yesno "Continue?" || exit 0
 }
 
 find_last_release() {
@@ -41,12 +46,12 @@ find_last_release() {
 }
 
 find_libs() {
-    find . -name "*.am" -exec grep "lib.*_la_LDFLAGS.*version-info" \{\} \; \
+    find lib -name "*.am" -exec grep "lib.*_la_LDFLAGS.*version-info" \{\} \; \
         | sed -e 's/lib\(.*\)_la_LDFLAGS.*/\1/'
 }
 
 find_makefile() {
-    find . -name Makefile.am -exec grep -l "lib${1}_la.*version-info" \{\} \;
+    find lib -name Makefile.am -exec grep -l "lib${1}_la.*version-info" \{\} \;
 }
 
 find_sources() {
@@ -79,6 +84,25 @@ find_sources() {
     done
 }
 
+find_headers_as_of() {
+    local TAG
+    local LIB
+    local FILE
+    local PATTERN
+
+    TAG="$1"
+    LIB="$2"
+
+    for FILE in $(git ls-tree -r --name-only "$TAG"); do
+        for PATTERN in ${HEADERS[$LIB]}; do
+            if [[ $FILE =~ $PATTERN ]] && [[ ! $FILE =~ internal.h$ ]]; then
+                echo "$FILE"
+                break
+            fi
+        done
+    done
+}
+
 extract_version() {
     grep "lib${1}_la.*version-info" | sed -e 's/.*version-info\s*\(\S*\)/\1/'
 }
@@ -95,23 +119,18 @@ process_lib() {
     local LAST_RELEASE="$2"
     local AMFILE
     local SOURCES
-    local HEADERS_EXP
+    local HEADERS_LAST
+    local HEADERS_HEAD
+    local HEADERS_DIFF
     local HEADERS_GONE
+    local HEADERS_ADDED
     local CHANGE
-    local CHANGES
+    local DEFAULT_CHANGE
 
     if [ -z "${HEADERS[$LIB]}" ]; then
         echo "Can't check lib$LIB until this script is updated with its headers"
         prompt_to_continue
     fi
-
-    for HEADER in $(ls ${HEADERS[$LIB]} 2>&1|sed -e 's/.* include/include/' -e 's/:.*//'); do
-      if [ -f "$HEADER" ]; then
-        HEADERS_EXP+=" $HEADER"
-      else
-        HEADERS_GONE+=" $HEADER"
-      fi
-    done
 
     AMFILE="$(find_makefile "$LIB")"
 
@@ -127,49 +146,70 @@ process_lib() {
         return
     fi
 
+    HEADERS_LAST="$(find_headers_as_of "$LAST_RELEASE" "$LIB")"
+    HEADERS_HEAD="$(find_headers_as_of "HEAD" "$LIB")"
+    HEADERS_DIFF="$(diff <(echo "$HEADERS_LAST") <(echo "$HEADERS_HEAD"))"
+    HEADERS_GONE="$(echo "$HEADERS_DIFF" | sed -n -e 's/^< //p')"
+    HEADERS_ADDED="$(echo "$HEADERS_DIFF" | sed -n -e 's/^> //p')"
+
     # Check whether there were any changes to headers or sources
     SOURCES="$(find_sources "$LIB" "$AMFILE")"
-    CHANGES=$(git diff -w $LAST_RELEASE..HEAD $HEADERS_EXP $SOURCES | wc -l)
-    if [ $CHANGES -eq 0 ]; then
-        if [ -z "$HEADERS_GONE" ]; then
-          echo "No changes to $LIB interface"
-          prompt_to_continue
-          echo ""
-          return
-        fi
+    if [ -n "$HEADERS_GONE" ]; then
+        DEFAULT_CHANGE="i" # Removed public header is incompatible change
+    elif [ -n "$HEADERS_ADDED" ]; then
+        DEFAULT_CHANGE="c" # Additions are likely compatible
+    elif git diff --quiet -w $LAST_RELEASE..HEAD $HEADERS_HEAD $SOURCES ; then
+        echo "No changes to $LIB interface"
+        prompt_to_continue
+        echo ""
+        return
+    else
+        DEFAULT_CHANGE="f" # Sources changed, so it's at least a fix
     fi
 
     # Show all header changes since last release
-    echo "- Changes in Headers ($HEADERS_EXP) since $LAST_RELEASE:"
-    if [ ! -z "$HEADERS_GONE" ]; then
-      for HEADER in $HEADERS_GONE; do
-        echo "$HEADER not found in current release!"
-      done
+    echo "- Changes in lib$LIB public headers since $LAST_RELEASE:"
+    if [ -n "$HEADERS_GONE" ]; then
+        for HEADER in $HEADERS_GONE; do
+            echo "-- $HEADER was removed"
+        done
     fi
-    git --no-pager diff --color -w $LAST_RELEASE..HEAD ${HEADERS_EXP}
+    if [ -n "$HEADERS_ADDED" ]; then
+        for HEADER in $HEADERS_ADDED; do
+            echo "++ $HEADER is new"
+        done
+    fi
+    git --no-pager diff --color -w $LAST_RELEASE..HEAD $HEADERS_HEAD
 
-    # Show commits touching lib since last release
     echo ""
-    echo "- Commits (without Refactor & Build) touching lib$LIB since $LAST_RELEASE:"
-    git log --color Pacemaker-2.0.3..HEAD -z ${HEADERS_EXP} $SOURCES $AMFILE|grep -vzE "Refactor:|Build:|Merge pull request"
+    if yesno "Show commits (minus refactor/build/merge) touching lib$LIB since $LAST_RELEASE [y/N]?"
+    then
+        git log --color $LAST_RELEASE..HEAD -z $HEADERS_HEAD $SOURCES $AMFILE \
+            | grep -vzE "Refactor:|Build:|Merge pull request"
+        echo
+        prompt_to_continue
+    fi
 
-    # Show merged PRs since last release touching this lib
-    echo ""
-    echo "- PRs merged touching lib$LIB since $LAST_RELEASE:"
-    git log Pacemaker-2.0.3..HEAD -z ${HEADERS_EXP} $SOURCES $AMFILE|grep -z "Merge pull request"|sed -zr "s/.*#([0-9]+).*/#\1 /"
-    echo ""
+    # @TODO this seems broken ...
+    #echo ""
+    #if yesno "Show merged PRs touching lib$LIB since $LAST_RELEASE [y/N]?"
+    #then
+    #    git log --merges $LAST_RELEASE..HEAD $HEADERS_HEAD $SOURCES $AMFILE
+    #    echo
+    #    prompt_to_continue
+    #fi
 
     # Show summary of source changes since last release
     echo ""
-    echo "- Headers: ${HEADERS_EXP}"
+    echo "- Headers: $HEADERS_HEAD"
     echo "- Changed sources since $LAST_RELEASE:"
     git --no-pager diff --color -w $LAST_RELEASE..HEAD --stat $SOURCES
     echo ""
 
     # Ask for human guidance
-    # @TODO: change default based on intelligent analysis
     echo "Are the changes to lib$LIB:"
-    read -p "[c]ompatible additions, [i]ncompatible additions/removals or [f]ixes? [None]: " CHANGE
+    read -p "[c]ompatible additions, [i]ncompatible additions/removals or [f]ixes? [$DEFAULT_CHANGE]: " CHANGE
+    [ -z "$CHANGE" ] && CHANGE="$DEFAULT_CHANGE"
 
     # Get (and show) shared library version at last release
     VER=$(git show $LAST_RELEASE:$AMFILE | extract_version $LIB)
@@ -193,7 +233,7 @@ process_lib() {
 
             # Some headers define constants for shared library names,
             # update them if the name changed
-            for H in $HEADERS_EXP; do
+            for H in $HEADERS_HEAD; do
                 sed -i -e "s/$(shared_lib_name "$LIB" "$VER_NOW")/$(shared_lib_name "$LIB" "$VER_1:0:0")/" $H
             done
             ;;
