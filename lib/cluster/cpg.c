@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -252,13 +252,10 @@ crm_cs_flush(gpointer data)
     }
 
     queue_len -= sent;
-    if ((sent > 1) || (cs_message_queue != NULL)) {
-        crm_info("Sent %u CPG messages  (%d remaining): %s (%d)",
-                 sent, queue_len, pcmk__cs_err_str(rc), (int) rc);
-    } else {
-        crm_trace("Sent %u CPG messages  (%d remaining): %s (%d)",
-                  sent, queue_len, pcmk__cs_err_str(rc), (int) rc);
-    }
+    do_crm_log((queue_len > 5)? LOG_INFO : LOG_TRACE,
+               "Sent %u CPG message%s (%d still queued): %s (rc=%d)",
+               sent, pcmk__plural_s(sent), queue_len, pcmk__cs_err_str(rc),
+               (int) rc);
 
     if (cs_message_queue) {
         uint32_t delay_ms = 100;
