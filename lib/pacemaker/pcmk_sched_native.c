@@ -1289,8 +1289,8 @@ native_create_actions(pe_resource_t * rsc, pe_working_set_t * data_set)
         } else {
             const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
-            // Resource was incorrectly multiply active
-            pe_proc_err("%s resource %s is active on %u nodes (%s)",
+            // Resource was (possibly) incorrectly multiply active
+            pe_proc_err("%s resource %s might be active on %u nodes (%s)",
                         crm_str(class), rsc->id, num_all_active,
                         recovery2text(rsc->recovery_type));
             crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
