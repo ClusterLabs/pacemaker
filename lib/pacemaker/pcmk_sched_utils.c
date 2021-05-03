@@ -833,13 +833,17 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
     remaining_tries = rsc->migration_threshold - fail_count;
 
     if (remaining_tries <= 0) {
-        crm_warn("Forcing %s away from %s after %d failures (max=%d)",
+        crm_warn("%s cannot run on %s due to reaching migration threshold "
+                 "(clean up resource to allow again)"
+                 CRM_XS " failures=%d migration-threshold=%d",
                  failed->id, node->details->uname, fail_count,
                  rsc->migration_threshold);
         return failed;
     }
 
-    crm_info("%s can fail %d more times on %s before being forced off",
-             failed->id, remaining_tries, node->details->uname);
+    crm_info("%s can fail %d more time%s on "
+             "%s before reaching migration threshold (%d)",
+             failed->id, remaining_tries, pcmk__plural_s(remaining_tries),
+             node->details->uname, rsc->migration_threshold);
     return NULL;
 }
