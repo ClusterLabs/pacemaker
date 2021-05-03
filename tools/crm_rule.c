@@ -210,7 +210,8 @@ build_arg_context(pcmk__common_args_t *args) {
     GOptionContext *context = NULL;
 
     const char *description = "This tool is currently experimental.\n"
-                              "The interface, behavior, and output may change with any version of pacemaker.";
+                              "The interface, behavior, and output may change "
+                              "with any version of Pacemaker.";
 
     context = pcmk__build_arg_context(args, NULL, NULL, NULL);
     g_option_context_set_description(context, description);

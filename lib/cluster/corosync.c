@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -58,7 +58,7 @@ pcmk__corosync_uuid(crm_node_t *node)
         if (node->id > 0) {
             return crm_strdup_printf("%u", node->id);
         } else {
-            crm_info("Node %s is not yet known by corosync", node->uname);
+            crm_info("Node %s is not yet known by Corosync", node->uname);
         }
     }
     return NULL;
@@ -607,7 +607,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
     }
 
     crm_peer_init();
-    crm_trace("Initializing corosync nodelist");
+    crm_trace("Initializing Corosync node list");
     for (lpc = 0; TRUE; lpc++) {
         uint32_t nodeid = 0;
         char *name = NULL;

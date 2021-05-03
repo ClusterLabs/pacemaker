@@ -301,8 +301,8 @@ mcp_read_config(void)
 
     stack = get_cluster_type();
     if (stack != pcmk_cluster_corosync) {
-        crm_crit("Expected corosync stack but detected %s " CRM_XS " stack=%d",
-                 name_for_cluster_type(stack), stack);
+        crm_crit("Expected Corosync cluster layer but detected %s "
+                 CRM_XS " stack=%d", name_for_cluster_type(stack), stack);
         return FALSE;
     }
 

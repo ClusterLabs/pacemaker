@@ -1395,7 +1395,8 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster", FALSE);
 
     } else if (pcmk__str_eq(join, CRMD_JOINSTATE_NACK, pcmk__str_casei)) {
-        pe_fence_node(data_set, this_node, "peer failed the pacemaker membership criteria", FALSE);
+        pe_fence_node(data_set, this_node,
+                      "peer failed Pacemaker membership criteria", FALSE);
 
     } else if (do_terminate == FALSE && pcmk__str_eq(exp_state, CRMD_JOINSTATE_DOWN, pcmk__str_casei)) {
 
@@ -1559,7 +1560,7 @@ determine_online_status(xmlNode * node_state, pe_node_t * this_node, pe_working_
     }
 
     if (this_node->details->type == node_ping) {
-        crm_info("Node %s is not a pacemaker node", this_node->details->uname);
+        crm_info("Node %s is not a Pacemaker node", this_node->details->uname);
 
     } else if (this_node->details->unclean) {
         pe_proc_warn("Node %s is unclean", this_node->details->uname);
@@ -3626,7 +3627,7 @@ update_resource_state(pe_resource_t * rsc, pe_node_t * node, xmlNode * xml_op, c
  *
  * Certain OCF result codes are for providing extended information to the
  * user about services that aren't yet failed but not entirely healthy either.
- * These must be treated as the "normal" result by pacemaker.
+ * These must be treated as the "normal" result by Pacemaker.
  *
  * \param[in] rc        Actual result of a monitor action
  * \param[in] xml_op    Operation history XML

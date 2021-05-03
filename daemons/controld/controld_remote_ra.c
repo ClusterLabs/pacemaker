@@ -181,7 +181,7 @@ remote_node_up(const char *node_name)
     enum controld_section_e section = controld_section_all;
 
     CRM_CHECK(node_name != NULL, return);
-    crm_info("Announcing pacemaker_remote node %s", node_name);
+    crm_info("Announcing Pacemaker Remote node %s", node_name);
 
     /* Clear node's entire state (resource history and transient attributes)
      * other than shutdown locks. The transient attributes should and normally
@@ -549,7 +549,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             ra_data->migrate_status = takeover_complete;
 
         } else {
-            crm_err("Unexpected pacemaker_remote client takeover for %s. Disconnecting", op->remote_nodename);
+            crm_err("Disconnecting from Pacemaker Remote node %s due to "
+                    "unexpected client takeover", op->remote_nodename);
             /* In this case, lrmd_tls_connection_destroy() will be called under the control of mainloop. */
             /* Do not free lrm_state->conn yet. */
             /* It'll be freed in the following stop action. */
@@ -1165,7 +1166,7 @@ remote_ra_fail(const char *node_name)
     if (lrm_state && lrm_state_is_connected(lrm_state)) {
         remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
 
-        crm_info("Failing monitors on pacemaker_remote node %s", node_name);
+        crm_info("Failing monitors on Pacemaker Remote node %s", node_name);
         ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
         ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
     }
