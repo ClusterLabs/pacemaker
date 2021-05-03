@@ -1679,7 +1679,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
                                  const char *rsc_type, const char *action,
                                  GHashTable *params, GHashTable *override_hash,
-                                 int timeout_ms, int resource_verbose, gboolean force)
+                                 int timeout_ms, int resource_verbose, gboolean force,
+                                 int check_level)
 {
     GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -1702,6 +1703,12 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
+
+    if (check_level >= 0) {
+        char *level = crm_strdup_printf("%d", check_level);
+        setenv("OCF_CHECK_LEVEL", level, 1);
+        free(level);
+    }
 
     /* resources_action_create frees the params hash table it's passed, but we
      * may need to reuse it in a second call to resources_action_create.  Thus
@@ -1790,7 +1797,7 @@ crm_exit_t
 cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
                      int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
-                     int resource_verbose, gboolean force)
+                     int resource_verbose, gboolean force, int check_level)
 {
     pcmk__output_t *out = data_set->priv;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -1856,7 +1863,7 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
     exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, action,
                                                  params, override_hash, timeout_ms,
-                                                 resource_verbose, force);
+                                                 resource_verbose, force, check_level);
     return exit_code;
 }
 

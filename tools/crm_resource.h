@@ -88,11 +88,11 @@ crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc
                                             const char *rsc_type, const char *rsc_action,
                                             GHashTable *params, GHashTable *override_hash,
                                             int timeout_ms, int resource_verbose,
-                                            gboolean force);
+                                            gboolean force, int check_level);
 crm_exit_t cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                                 const char *rsc_action, GHashTable *override_hash,
                                 int timeout_ms, cib_t *cib, pe_working_set_t *data_set,
-                                int resource_verbose, gboolean force);
+                                int resource_verbose, gboolean force, int check_level);
 
 int cli_resource_update_attribute(pe_resource_t *rsc, const char *requested_name,
                                   const char *attr_set, const char *attr_set_type,
