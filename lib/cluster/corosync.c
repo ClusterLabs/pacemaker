@@ -420,7 +420,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
     if (quorate) {
         crm_notice("Quorum acquired");
     } else {
-        crm_warn("Quorum lost");
+        crm_warn("No quorum");
     }
     quorum_app_callback = dispatch;
     crm_have_quorum = quorate;
