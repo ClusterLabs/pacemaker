@@ -2414,7 +2414,7 @@ resource_list(pcmk__output_t *out, va_list args)
         print_resource_header(out, group_by_node, inactive_resources);
         printed_header = true;
 
-        pe__rscs_brief_output(out, rscs, print_opts, inactive_resources);
+        rc = pe__rscs_brief_output(out, rscs, print_opts, inactive_resources);
         g_list_free(rscs);
     }
 
