@@ -787,3 +787,59 @@ pcmk__new_logger(void)
     pcmk__register_lib_messages(out);
     return out;
 }
+
+/*!
+ * \internal
+ * \brief Check whether a resource has reached its migration threshold on a node
+ *
+ * \param[in] rsc       Resource to check
+ * \param[in] node      Node to check
+ * \param[in] data_set  Cluster working set
+ *
+ * \return Failed resource (possibly a parent of \p rsc) if migration threshold
+ *         has been reached, or NULL otherwise
+ */
+pe_resource_t *
+pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+                        pe_working_set_t *data_set)
+{
+    int fail_count, remaining_tries;
+    pe_resource_t *failed = rsc;
+
+    // Migration threshold of 0 means never force away
+    if (rsc->migration_threshold == 0) {
+        return NULL;
+    }
+
+    // If we're ignoring failures, also ignore the migration threshold
+    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        return NULL;
+    }
+
+    // If there are no failures, there's no need to force away
+    fail_count = pe_get_failcount(node, rsc, NULL,
+                                  pe_fc_effective|pe_fc_fillers, NULL,
+                                  data_set);
+    if (fail_count <= 0) {
+        return NULL;
+    }
+
+    // If failed resource is anonymous clone instance, we'll force clone away
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        failed = uber_parent(rsc);
+    }
+
+    // How many more times recovery will be tried on this node
+    remaining_tries = rsc->migration_threshold - fail_count;
+
+    if (remaining_tries <= 0) {
+        crm_warn("Forcing %s away from %s after %d failures (max=%d)",
+                 failed->id, node->details->uname, fail_count,
+                 rsc->migration_threshold);
+        return failed;
+    }
+
+    crm_info("%s can fail %d more times on %s before being forced off",
+             failed->id, remaining_tries, node->details->uname);
+    return NULL;
+}

@@ -100,4 +100,7 @@ int run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 
 pcmk__output_t *pcmk__new_logger(void);
 
+pe_resource_t *pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+                                       pe_working_set_t *data_set);
+
 #endif

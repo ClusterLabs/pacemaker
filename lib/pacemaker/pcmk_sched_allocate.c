@@ -614,59 +614,6 @@ failcount_clear_action_exists(pe_node_t * node, pe_resource_t * rsc)
     return rc;
 }
 
-/*!
- * \internal
- * \brief Force resource away if failures hit migration threshold
- *
- * \param[in,out] rsc       Resource to check for failures
- * \param[in,out] node      Node to check for failures
- * \param[in,out] data_set  Cluster working set to update
- */
-static void
-check_migration_threshold(pe_resource_t *rsc, pe_node_t *node,
-                          pe_working_set_t *data_set)
-{
-    int fail_count, countdown;
-    pe_resource_t *failed;
-
-    /* Migration threshold of 0 means never force away */
-    if (rsc->migration_threshold == 0) {
-        return;
-    }
-
-    // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        return;
-    }
-
-    /* If there are no failures, there's no need to force away */
-    fail_count = pe_get_failcount(node, rsc, NULL,
-                                  pe_fc_effective|pe_fc_fillers, NULL,
-                                  data_set);
-    if (fail_count <= 0) {
-        return;
-    }
-
-    /* How many more times recovery will be tried on this node */
-    countdown = QB_MAX(rsc->migration_threshold - fail_count, 0);
-
-    /* If failed resource has a parent, we'll force the parent away */
-    failed = rsc;
-    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
-        failed = uber_parent(rsc);
-    }
-
-    if (countdown == 0) {
-        resource_location(failed, node, -INFINITY, "__fail_limit__", data_set);
-        crm_warn("Forcing %s away from %s after %d failures (max=%d)",
-                 failed->id, node->details->uname, fail_count,
-                 rsc->migration_threshold);
-    } else {
-        crm_info("%s can fail %d more times on %s before being forced off",
-                 failed->id, countdown, node->details->uname);
-    }
-}
-
 static void
 common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * data_set)
 {
@@ -721,7 +668,12 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
      * then move it back next transition.
      */
     if (failcount_clear_action_exists(node, rsc) == FALSE) {
-        check_migration_threshold(rsc, node, data_set);
+        pe_resource_t *failed = pcmk__threshold_reached(rsc, node, data_set);
+
+        if (failed != NULL) {
+            resource_location(failed, node, -INFINITY, "__fail_limit__",
+                              data_set);
+        }
     }
 }
 
