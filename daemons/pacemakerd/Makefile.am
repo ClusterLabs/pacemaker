@@ -28,5 +28,6 @@ pacemakerd_SOURCES	= pacemakerd.c
 if BUILD_CS_SUPPORT
 pacemakerd_SOURCES	+= pcmkd_corosync.c
 endif
+pacemakerd_SOURCES	+= pcmkd_subdaemons.c
 
 CLEANFILES = $(man8_MANS)

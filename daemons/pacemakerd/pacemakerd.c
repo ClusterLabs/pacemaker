@@ -58,19 +58,6 @@ static gboolean running_with_sbd = FALSE; /* local copy */
 static unsigned int shutdown_complete_state_reported_to = 0;
 static gboolean shutdown_complete_state_reported_client_closed = FALSE;
 
-typedef struct pcmk_child_s {
-    pid_t pid;
-    int start_seq;
-    int respawn_count;
-    gboolean respawn;
-    const char *name;
-    const char *uid;
-    const char *command;
-    const char *endpoint;  /* IPC server name */
-
-    gboolean active_before_startup;
-} pcmk_child_t;
-
 /* Index into the array below */
 #define PCMK_CHILD_CONTROLD  3
 
@@ -191,41 +178,6 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
     }
 
     pcmk_process_exit(child);
-}
-
-static gboolean
-stop_child(pcmk_child_t * child, int signal)
-{
-    if (signal == 0) {
-        signal = SIGTERM;
-    }
-
-    /* why to skip PID of 1?
-       - FreeBSD ~ how untrackable process behind IPC is masqueraded as
-       - elsewhere: how "init" task is designated; in particular, in systemd
-         arrangement of socket-based activation, this is pretty real */
-    if (child->command == NULL || child->pid == PCMK__SPECIAL_PID) {
-        crm_debug("Nothing to do for child \"%s\" (process %lld)",
-                  child->name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
-        return TRUE;
-    }
-
-    if (child->pid <= 0) {
-        crm_trace("Client %s not running", child->name);
-        return TRUE;
-    }
-
-    errno = 0;
-    if (kill(child->pid, signal) == 0) {
-        crm_notice("Stopping %s "CRM_XS" sent signal %d to process %lld",
-                   child->name, signal, (long long) child->pid);
-
-    } else {
-        crm_err("Could not stop %s (process %lld) with signal %d: %s",
-                child->name, (long long) child->pid, signal, strerror(errno));
-    }
-
-    return TRUE;
 }
 
 static char *opts_default[] = { NULL, NULL };
