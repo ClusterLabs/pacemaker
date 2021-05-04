@@ -12,6 +12,9 @@
 
 #include <crm/msg_xml.h>
 
+#include <errno.h>
+#include <sys/types.h>
+
 void
 pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
 {
@@ -57,6 +60,43 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
             mainloop_set_trigger(startup_trigger);
         }
     }
+}
+
+int32_t
+pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+{
+    crm_trace("Connection %p", c);
+    if (pcmk__new_client(c, uid, gid) == NULL) {
+        return -EIO;
+    }
+    return 0;
+}
+
+/* Error code means? */
+int32_t
+pcmk_ipc_closed(qb_ipcs_connection_t * c)
+{
+    pcmk__client_t *client = pcmk__find_client(c);
+
+    if (client == NULL) {
+        return 0;
+    }
+    crm_trace("Connection %p", c);
+    if (shutdown_complete_state_reported_to == client->pid) {
+        shutdown_complete_state_reported_client_closed = TRUE;
+        if (shutdown_trigger) {
+            mainloop_set_trigger(shutdown_trigger);
+        }
+    }
+    pcmk__free_client(client);
+    return 0;
+}
+
+void
+pcmk_ipc_destroy(qb_ipcs_connection_t * c)
+{
+    crm_trace("Connection %p", c);
+    pcmk_ipc_closed(c);
 }
 
 crm_exit_t

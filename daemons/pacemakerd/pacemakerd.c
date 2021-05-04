@@ -425,16 +425,6 @@ pcmk_shutdown(int nsig)
     mainloop_set_trigger(shutdown_trigger);
 }
 
-static int32_t
-pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
-{
-    crm_trace("Connection %p", c);
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -EIO;
-    }
-    return 0;
-}
-
 /* Exit code means? */
 static int32_t
 pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
@@ -490,33 +480,6 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     free_xml(msg);
     return 0;
-}
-
-/* Error code means? */
-static int32_t
-pcmk_ipc_closed(qb_ipcs_connection_t * c)
-{
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        return 0;
-    }
-    crm_trace("Connection %p", c);
-    if (shutdown_complete_state_reported_to == client->pid) {
-        shutdown_complete_state_reported_client_closed = TRUE;
-        if (shutdown_trigger) {
-            mainloop_set_trigger(shutdown_trigger);
-        }
-    }
-    pcmk__free_client(client);
-    return 0;
-}
-
-static void
-pcmk_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-    pcmk_ipc_closed(c);
 }
 
 struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
