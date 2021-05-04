@@ -732,43 +732,56 @@ struct mainloop_io_s {
 
 };
 
+/*!
+ * \internal
+ * \brief I/O watch callback function (GIOFunc)
+ *
+ * \param[in] gio        I/O channel being watched
+ * \param[in] condition  I/O condition satisfied
+ * \param[in] data       User data passed when source was created
+ *
+ * \return G_SOURCE_REMOVE to remove source, G_SOURCE_CONTINUE to keep it
+ */
 static gboolean
 mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
 {
-    gboolean keep = TRUE;
+    gboolean rc = G_SOURCE_CONTINUE;
     mainloop_io_t *client = data;
 
     CRM_ASSERT(client->fd == g_io_channel_unix_get_fd(gio));
 
     if (condition & G_IO_IN) {
         if (client->ipc) {
-            long rc = 0;
+            long read_rc = 0L;
             int max = 10;
 
             do {
-                rc = crm_ipc_read(client->ipc);
-                if (rc <= 0) {
-                    crm_trace("Message acquisition from %s[%p] failed: %s (%ld)",
-                              client->name, client, pcmk_strerror(rc), rc);
+                read_rc = crm_ipc_read(client->ipc);
+                if (read_rc <= 0) {
+                    crm_trace("Could not read IPC message from %s: %s (%ld)",
+                              client->name, pcmk_strerror(read_rc), read_rc);
 
                 } else if (client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
 
-                    crm_trace("New message from %s[%p] = %ld (I/O condition=%d)", client->name, client, rc, condition);
-                    if (client->dispatch_fn_ipc(buffer, rc, client->userdata) < 0) {
+                    crm_trace("New %ld-byte IPC message from %s "
+                              "after I/O condition %d",
+                              read_rc, client->name, (int) condition);
+                    if (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0) {
                         crm_trace("Connection to %s no longer required", client->name);
-                        keep = FALSE;
+                        rc = G_SOURCE_REMOVE;
                     }
                 }
 
-            } while (keep && rc > 0 && --max > 0);
+            } while ((rc == G_SOURCE_CONTINUE) && (read_rc > 0) && --max > 0);
 
         } else {
-            crm_trace("New message from %s[%p] %u", client->name, client, condition);
+            crm_trace("New I/O event for %s after I/O condition %d",
+                      client->name, (int) condition);
             if (client->dispatch_fn_io) {
                 if (client->dispatch_fn_io(client->userdata) < 0) {
                     crm_trace("Connection to %s no longer required", client->name);
-                    keep = FALSE;
+                    rc = G_SOURCE_REMOVE;
                 }
             }
         }
@@ -777,12 +790,12 @@ mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
     if (client->ipc && crm_ipc_connected(client->ipc) == FALSE) {
         crm_err("Connection to %s closed " CRM_XS "client=%p condition=%d",
                 client->name, client, condition);
-        keep = FALSE;
+        rc = G_SOURCE_REMOVE;
 
     } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
         crm_trace("The connection %s[%p] has been closed (I/O condition=%d)",
                   client->name, client, condition);
-        keep = FALSE;
+        rc = G_SOURCE_REMOVE;
 
     } else if ((condition & G_IO_IN) == 0) {
         /*
@@ -815,10 +828,10 @@ mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
         crm_err("Strange condition: %d", condition);
     }
 
-    /* keep == FALSE results in mainloop_gio_destroy() being called
+    /* G_SOURCE_REMOVE results in mainloop_gio_destroy() being called
      * just before the source is removed from mainloop
      */
-    return keep;
+    return rc;
 }
 
 static void
