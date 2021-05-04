@@ -232,21 +232,25 @@ lrmd_copy_event(lrmd_event_data_t * event)
     return copy;
 }
 
+/*!
+ * \brief Free an executor event
+ *
+ * \param[in]  Executor event object to free
+ */
 void
-lrmd_free_event(lrmd_event_data_t * event)
+lrmd_free_event(lrmd_event_data_t *event)
 {
-    if (!event) {
+    if (event == NULL) {
         return;
     }
-
-    /* free gives me grief if i try to cast */
-    free((char *)event->rsc_id);
-    free((char *)event->op_type);
-    free((char *)event->user_data);
-    free((char *)event->output);
-    free((char *)event->exit_reason);
-    free((char *)event->remote_nodename);
-    if (event->params) {
+    // @TODO Why are these const char *?
+    free((void *) event->rsc_id);
+    free((void *) event->op_type);
+    free((void *) event->user_data);
+    free((void *) event->output);
+    free((void *) event->exit_reason);
+    free((void *) event->remote_nodename);
+    if (event->params != NULL) {
         g_hash_table_destroy(event->params);
     }
     free(event);
