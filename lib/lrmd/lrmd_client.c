@@ -608,15 +608,17 @@ lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
     return pcmk__remote_send_xml(session, msg);
 }
 
-static xmlNode *
-lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int *disconnected)
+// \return Standard Pacemaker return code
+static int
+read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
+                  xmlNode **reply)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *xml = NULL;
     time_t start = time(NULL);
     const char *msg_type = NULL;
     int reply_id = 0;
     int remaining_timeout = 0;
+    int rc = pcmk_rc_ok;
 
     /* A timeout of 0 here makes no sense.  We have to wait a period of time
      * for the response to come back.  If -1 or 0, default to 10 seconds. */
@@ -624,10 +626,10 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
         total_timeout = MAX_TLS_RECV_WAIT;
     }
 
-    while (!xml) {
+    for (*reply = NULL; *reply == NULL; ) {
 
-        xml = pcmk__remote_message_xml(native->remote);
-        if (!xml) {
+        *reply = pcmk__remote_message_xml(native->remote);
+        if (*reply == NULL) {
             /* read some more off the tls buffer if we still have time left. */
             if (remaining_timeout) {
                 remaining_timeout = total_timeout - ((time(NULL) - start) * 1000);
@@ -635,58 +637,49 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
                 remaining_timeout = total_timeout;
             }
             if (remaining_timeout <= 0) {
-                crm_err("Never received the expected reply during the timeout period, disconnecting.");
-                *disconnected = TRUE;
-                return NULL;
+                return ETIME;
             }
 
-            if (pcmk__read_remote_message(native->remote,
-                                          remaining_timeout) == ENOTCONN) {
-                *disconnected = TRUE;
-            } else {
-                *disconnected = FALSE;
+            rc = pcmk__read_remote_message(native->remote, remaining_timeout);
+            if (rc != pcmk_rc_ok) {
+                return rc;
             }
-            xml = pcmk__remote_message_xml(native->remote);
-            if (!xml) {
-                crm_err("Unable to receive expected reply, disconnecting.");
-                *disconnected = TRUE;
-                return NULL;
-            } else if (*disconnected) {
-                return NULL;
+
+            *reply = pcmk__remote_message_xml(native->remote);
+            if (*reply == NULL) {
+                return ENOMSG;
             }
         }
 
-        CRM_ASSERT(xml != NULL);
-
-        crm_element_value_int(xml, F_LRMD_REMOTE_MSG_ID, &reply_id);
-        msg_type = crm_element_value(xml, F_LRMD_REMOTE_MSG_TYPE);
+        crm_element_value_int(*reply, F_LRMD_REMOTE_MSG_ID, &reply_id);
+        msg_type = crm_element_value(*reply, F_LRMD_REMOTE_MSG_TYPE);
 
         if (!msg_type) {
             crm_err("Empty msg type received while waiting for reply");
-            free_xml(xml);
-            xml = NULL;
+            free_xml(*reply);
+            *reply = NULL;
         } else if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             /* got a notify while waiting for reply, trigger the notify to be processed later */
             crm_info("queueing notify");
-            native->pending_notify = g_list_append(native->pending_notify, xml);
+            native->pending_notify = g_list_append(native->pending_notify, *reply);
             if (native->process_notify) {
                 crm_info("notify trigger set.");
                 mainloop_set_trigger(native->process_notify);
             }
-            xml = NULL;
+            *reply = NULL;
         } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             /* msg isn't a reply, make some noise */
             crm_err("Expected a reply, got %s", msg_type);
-            free_xml(xml);
-            xml = NULL;
+            free_xml(*reply);
+            *reply = NULL;
         } else if (reply_id != expected_reply_id) {
             if (native->expected_late_replies > 0) {
                 native->expected_late_replies--;
             } else {
                 crm_err("Got outdated reply, expected id %d got id %d", expected_reply_id, reply_id);
             }
-            free_xml(xml);
-            xml = NULL;
+            free_xml(*reply);
+            *reply = NULL;
         }
     }
 
@@ -694,7 +687,7 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
         mainloop_set_trigger(native->process_notify);
     }
 
-    return xml;
+    return rc;
 }
 
 // \return Standard Pacemaker return code
@@ -723,7 +716,6 @@ static int
 lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
 {
     int rc = 0;
-    int disconnected = 0;
     xmlNode *xml = NULL;
 
     if (!remote_executor_connected(lrmd)) {
@@ -735,17 +727,12 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
         return pcmk_rc2legacy(rc);
     }
 
-    xml = lrmd_tls_recv_reply(lrmd, timeout, global_remote_msg_id, &disconnected);
-
-    if (disconnected) {
-        crm_err("Pacemaker Remote disconnected while waiting for reply to request id %d",
-                global_remote_msg_id);
+    rc = read_remote_reply(lrmd, timeout, global_remote_msg_id, &xml);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Disconnecting remote after request %d reply not received: %s "
+                CRM_XS " rc=%d timeout=%dms",
+                global_remote_msg_id, pcmk_rc_str(rc), rc, timeout);
         lrmd_tls_disconnect(lrmd);
-        rc = -ENOTCONN;
-    } else if (!xml) {
-        crm_err("Did not receive reply from Pacemaker Remote for request id %d (timeout %dms)",
-                global_remote_msg_id, timeout);
-        rc = -ECOMM;
     }
 
     if (reply) {
@@ -754,7 +741,7 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
         free_xml(xml);
     }
 
-    return rc;
+    return pcmk_rc2legacy(rc);
 }
 #endif
 
