@@ -178,7 +178,7 @@ ping_stop() {
 
     rm -f "${OCF_RESKEY_pidfile}"
 
-    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen" $attrd_options
+    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen"
 
     return $OCF_SUCCESS
 }
@@ -302,9 +302,9 @@ ping_update() {
 
     score=$(expr $active \* $OCF_RESKEY_multiplier)
     if [ "$__OCF_ACTION" = "start" ] ; then
-        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen" $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen"
     else
-        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen" $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen"
     fi
     rc=$?
     case $rc in
@@ -395,11 +395,6 @@ case "${OCF_RESKEY_debug}" in
         OCF_RESKEY_debug=false
         ;;
 esac
-
-attrd_options='-q'
-if [ "${OCF_RESKEY_debug}" = "true" ]; then
-    attrd_options=''
-fi
 
 case "$__OCF_ACTION" in
 meta-data)      meta_data
