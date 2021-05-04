@@ -36,6 +36,7 @@ typedef struct pcmk_child_s {
 #define MAX_RESPAWN		100
 
 extern GMainLoop *mainloop;
+extern struct qb_ipcs_service_handlers mcp_ipc_callbacks;
 extern const char *pacemakerd_state;
 extern gboolean running_with_sbd;
 extern unsigned int shutdown_complete_state_reported_to;
@@ -47,8 +48,9 @@ gboolean mcp_read_config(void);
 
 gboolean cluster_connect_cfg(void);
 gboolean cluster_disconnect_cfg(void);
-void pcmkd_shutdown_corosync(void);
-
+int find_and_track_existing_processes(void);
+gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);
 void pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id);
+void pcmkd_shutdown_corosync(void);
 crm_exit_t request_shutdown(crm_ipc_t *ipc);
