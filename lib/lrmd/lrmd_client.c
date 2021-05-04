@@ -348,16 +348,12 @@ lrmd_free_xml(gpointer userdata)
     free_xml((xmlNode *) userdata);
 }
 
-static int
-lrmd_tls_connected(lrmd_t * lrmd)
+static bool
+remote_executor_connected(lrmd_t * lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    if (native->remote->tls_session) {
-        return TRUE;
-    }
-
-    return FALSE;
+    return (native->remote->tls_session != NULL);
 }
 
 static int
@@ -368,7 +364,7 @@ lrmd_tls_dispatch(gpointer userdata)
     xmlNode *xml = NULL;
     int rc = pcmk_rc_ok;
 
-    if (lrmd_tls_connected(lrmd) == FALSE) {
+    if (!remote_executor_connected(lrmd)) {
         crm_trace("TLS dispatch triggered after disconnect");
         return 0;
     }
@@ -718,7 +714,7 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     int disconnected = 0;
     xmlNode *xml = NULL;
 
-    if (lrmd_tls_connected(lrmd) == FALSE) {
+    if (!remote_executor_connected(lrmd)) {
         return -1;
     }
 
@@ -810,7 +806,7 @@ lrmd_api_is_connected(lrmd_t * lrmd)
             return crm_ipc_connected(native->ipc);
 #ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
-            return lrmd_tls_connected(lrmd);
+            return remote_executor_connected(lrmd);
 #endif
         default:
             crm_err("Unsupported connection type: %d", native->type);
