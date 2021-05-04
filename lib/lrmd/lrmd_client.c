@@ -697,10 +697,11 @@ lrmd_tls_recv_reply(lrmd_t * lrmd, int total_timeout, int expected_reply_id, int
     return xml;
 }
 
+// \return Standard Pacemaker return code
 static int
-lrmd_tls_send(lrmd_t * lrmd, xmlNode * msg)
+send_remote_message(lrmd_t *lrmd, xmlNode *msg)
 {
-    int rc = 0;
+    int rc = pcmk_rc_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     global_remote_msg_id++;
@@ -714,9 +715,8 @@ lrmd_tls_send(lrmd_t * lrmd, xmlNode * msg)
         crm_err("Disconnecting because TLS message could not be sent to "
                 "Pacemaker Remote: %s", pcmk_rc_str(rc));
         lrmd_tls_disconnect(lrmd);
-        return -ENOTCONN;
     }
-    return pcmk_ok;
+    return rc;
 }
 
 static int
@@ -730,9 +730,9 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
         return -1;
     }
 
-    rc = lrmd_tls_send(lrmd, msg);
-    if (rc < 0) {
-        return rc;
+    rc = send_remote_message(lrmd, msg);
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc2legacy(rc);
     }
 
     xml = lrmd_tls_recv_reply(lrmd, timeout, global_remote_msg_id, &disconnected);
@@ -792,13 +792,14 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
         case pcmk__client_tls:
-            rc = lrmd_tls_send(lrmd, msg);
-            if (rc == pcmk_ok) {
+            rc = send_remote_message(lrmd, msg);
+            if (rc == pcmk_rc_ok) {
                 /* we don't want to wait around for the reply, but
                  * since the request/reply protocol needs to behave the same
                  * as libqb, a reply will eventually come later anyway. */
                 native->expected_late_replies++;
             }
+            rc = pcmk_rc2legacy(rc);
             break;
 #endif
         default:
