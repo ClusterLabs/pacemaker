@@ -256,7 +256,7 @@ lrmd_free_event(lrmd_event_data_t *event)
     free(event);
 }
 
-static int
+static void
 lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
 {
     const char *type;
@@ -267,11 +267,11 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     if (proxy_session != NULL) {
         /* this is proxy business */
         lrmd_internal_proxy_dispatch(lrmd, msg);
-        return 1;
+        return;
     } else if (!native->callback) {
         /* no callback set */
         crm_trace("notify event received but client has not set callback");
-        return 1;
+        return;
     }
 
     event.remote_nodename = native->remote_nodename;
@@ -314,7 +314,7 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     } else if (pcmk__str_eq(type, LRMD_OP_POKE, pcmk__str_none)) {
         event.type = lrmd_event_poke;
     } else {
-        return 1;
+        return;
     }
 
     crm_trace("op %s notify event received", type);
@@ -323,26 +323,22 @@ lrmd_dispatch_internal(lrmd_t * lrmd, xmlNode * msg)
     if (event.params) {
         g_hash_table_destroy(event.params);
     }
-    return 1;
 }
 
+// \return Always 0, to indicate that IPC mainloop source should be kept
 static int
 lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *msg;
-    int rc;
 
-    if (!native->callback) {
-        /* no callback set */
-        return 1;
+    if (native->callback != NULL) {
+        xmlNode *msg = string2xml(buffer);
+
+        lrmd_dispatch_internal(lrmd, msg);
+        free_xml(msg);
     }
-
-    msg = string2xml(buffer);
-    rc = lrmd_dispatch_internal(lrmd, msg);
-    free_xml(msg);
-    return rc;
+    return 0;
 }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
