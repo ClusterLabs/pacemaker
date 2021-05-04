@@ -10,6 +10,55 @@
 #include <crm_internal.h>
 #include "pacemakerd.h"
 
+#include <crm/msg_xml.h>
+
+void
+pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
+{
+    const char *value = NULL;
+    xmlNode *ping = NULL;
+    xmlNode *reply = NULL;
+    time_t pinged = time(NULL);
+    const char *from = crm_element_value(msg, F_CRM_SYS_FROM);
+
+    /* Pinged for status */
+    crm_trace("Pinged from %s.%s",
+              crm_str(crm_element_value(msg, F_CRM_ORIGIN)),
+              from?from:"unknown");
+    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+    value = crm_element_value(msg, F_CRM_SYS_TO);
+    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
+    crm_xml_add(ping, XML_PING_ATTR_PACEMAKERDSTATE, pacemakerd_state);
+    crm_xml_add_ll(ping, XML_ATTR_TSTAMP, (long long) pinged);
+    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+    reply = create_reply(msg, ping);
+    free_xml(ping);
+    if (reply) {
+        if (pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event) !=
+                pcmk_rc_ok) {
+            crm_err("Failed sending ping reply to client %s",
+                    pcmk__client_name(c));
+        }
+        free_xml(reply);
+    } else {
+        crm_err("Failed building ping reply for client %s",
+                pcmk__client_name(c));
+    }
+    /* just proceed state on sbd pinging us */
+    if (from && strstr(from, "sbd")) {
+        if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_SHUTDOWNCOMPLETE, pcmk__str_none)) {
+            if (pcmk__get_sbd_sync_resource_startup()) {
+                crm_notice("Shutdown-complete-state passed to SBD.");
+            }
+            shutdown_complete_state_reported_to = c->pid;
+        } else if (pcmk__str_eq(pacemakerd_state, XML_PING_ATTR_PACEMAKERDSTATE_WAITPING, pcmk__str_none)) {
+            crm_notice("Received startup-trigger from SBD.");
+            pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_STARTINGDAEMONS;
+            mainloop_set_trigger(startup_trigger);
+        }
+    }
+}
+
 crm_exit_t
 request_shutdown(crm_ipc_t *ipc)
 {

@@ -50,4 +50,5 @@ gboolean cluster_disconnect_cfg(void);
 void pcmkd_shutdown_corosync(void);
 
 void pcmk_shutdown(int nsig);
+void pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id);
 crm_exit_t request_shutdown(crm_ipc_t *ipc);
