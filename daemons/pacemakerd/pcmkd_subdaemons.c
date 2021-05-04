@@ -14,6 +14,30 @@
 #include <signal.h>
 #include <sys/types.h>
 
+#include <crm/msg_xml.h>
+
+crm_trigger_t *shutdown_trigger = NULL;
+crm_trigger_t *startup_trigger = NULL;
+
+/* When contacted via pacemakerd-api by a client having sbd in
+ * the name we assume it is sbd-daemon which wants to know
+ * if pacemakerd shutdown gracefully.
+ * Thus when everything is shutdown properly pacemakerd
+ * waits till it has reported the graceful completion of
+ * shutdown to sbd and just when sbd-client closes the
+ * connection we can assume that the report has arrived
+ * properly so that pacemakerd can finally exit.
+ * Following two variables are used to track that handshake.
+ */
+unsigned int shutdown_complete_state_reported_to = 0;
+gboolean shutdown_complete_state_reported_client_closed = FALSE;
+
+/* state we report when asked via pacemakerd-api status-ping */
+const char *pacemakerd_state = XML_PING_ATTR_PACEMAKERDSTATE_INIT;
+gboolean running_with_sbd = FALSE; /* local copy */
+
+GMainLoop *mainloop = NULL;
+
 /*!
  * \internal
  * \brief Check the liveness of the child based on IPC name and PID if tracked

@@ -35,6 +35,14 @@ typedef struct pcmk_child_s {
 #define SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
 #define MAX_RESPAWN		100
 
+extern GMainLoop *mainloop;
+extern const char *pacemakerd_state;
+extern gboolean running_with_sbd;
+extern unsigned int shutdown_complete_state_reported_to;
+extern gboolean shutdown_complete_state_reported_client_closed;
+extern crm_trigger_t *shutdown_trigger;
+extern crm_trigger_t *startup_trigger;
+
 gboolean mcp_read_config(void);
 
 gboolean cluster_connect_cfg(void);
