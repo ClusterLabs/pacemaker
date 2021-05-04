@@ -356,6 +356,17 @@ remote_executor_connected(lrmd_t * lrmd)
     return (native->remote->tls_session != NULL);
 }
 
+/*!
+ * \internal
+ * \brief TLS dispatch function (for both trigger and file descriptor sources)
+ *
+ * \param[in] userdata  API connection
+ *
+ * \return Always return a nonnegative value, which as a file descriptor
+ *         dispatch function means keep the mainloop source, and as a
+ *         trigger dispatch function, 0 means remove the trigger from the
+ *         mainloop while 1 means keep it (and job completed)
+ */
 static int
 lrmd_tls_dispatch(gpointer userdata)
 {
@@ -1174,16 +1185,53 @@ lrmd__tls_client_handshake(pcmk__remote_t *remote)
     return pcmk__tls_client_handshake(remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT);
 }
 
+/*!
+ * \internal
+ * \brief Add trigger and file descriptor mainloop sources for TLS
+ *
+ * \param[in] lrmd          API connection with established TLS session
+ * \param[in] do_handshake  Whether to perform executor handshake
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+add_tls_to_mainloop(lrmd_t *lrmd, bool do_handshake)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+    int rc = pcmk_rc_ok;
+
+    char *name = crm_strdup_printf("pacemaker-remote-%s:%d",
+                                   native->server, native->port);
+
+    struct mainloop_fd_callbacks tls_fd_callbacks = {
+        .dispatch = lrmd_tls_dispatch,
+        .destroy = lrmd_tls_connection_destroy,
+    };
+
+    native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH,
+                                                  lrmd_tls_dispatch, lrmd);
+    native->source = mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd,
+                                     &tls_fd_callbacks);
+
+    /* Async connections lose the client name provided by the API caller, so we
+     * have to use our generated name here to perform the executor handshake.
+     *
+     * @TODO Keep track of the caller-provided name. Perhaps we should be using
+     * that name in this function instead of generating one anyway.
+     */
+    if (do_handshake) {
+        rc = lrmd_handshake(lrmd, name);
+        rc = pcmk_legacy2rc(rc);
+    }
+    free(name);
+    return rc;
+}
+
 static void
 lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
-    char *name;
-    static struct mainloop_fd_callbacks lrmd_tls_callbacks = {
-        .dispatch = lrmd_tls_dispatch,
-        .destroy = lrmd_tls_connection_destroy,
-    };
     gnutls_datum_t psk_key = { NULL, 0 };
 
     native->async_timer = 0;
@@ -1238,19 +1286,8 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 
     crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
-
-    name = crm_strdup_printf("pacemaker-remote-%s:%d",
-                             native->server, native->port);
-
-    native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);
-    native->source =
-        mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd, &lrmd_tls_callbacks);
-
-    rc = lrmd_handshake(lrmd, name);
-    free(name);
-
-    report_async_connection_result(lrmd, rc);
-    return;
+    rc = add_tls_to_mainloop(lrmd, true);
+    report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
 }
 
 static int
@@ -1277,10 +1314,6 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
 static int
 lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 {
-    static struct mainloop_fd_callbacks lrmd_tls_callbacks = {
-        .dispatch = lrmd_tls_dispatch,
-        .destroy = lrmd_tls_connection_destroy,
-    };
     int rc;
 
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1332,13 +1365,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     if (fd) {
         *fd = native->sock;
     } else {
-        char *name = crm_strdup_printf("pacemaker-remote-%s:%d",
-                                       native->server, native->port);
-
-        native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);
-        native->source =
-            mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd, &lrmd_tls_callbacks);
-        free(name);
+        add_tls_to_mainloop(lrmd, false);
     }
     return pcmk_ok;
 }
