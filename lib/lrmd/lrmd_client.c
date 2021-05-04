@@ -727,7 +727,7 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     xmlNode *xml = NULL;
 
     if (!remote_executor_connected(lrmd)) {
-        return -1;
+        return -ENOTCONN;
     }
 
     rc = send_remote_message(lrmd, msg);
