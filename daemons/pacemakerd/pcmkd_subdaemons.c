@@ -13,7 +13,12 @@
 #include <errno.h>
 #include <grp.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <crm/cluster.h>
 #include <crm/msg_xml.h>

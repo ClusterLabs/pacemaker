@@ -13,6 +13,10 @@
 #include <crm/msg_xml.h>
 
 #include <errno.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+#include <time.h>
 #include <sys/types.h>
 
 void

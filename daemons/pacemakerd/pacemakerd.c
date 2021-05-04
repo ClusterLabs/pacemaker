@@ -11,26 +11,20 @@
 #include "pacemakerd.h"
 
 #include <pwd.h>
-#include <grp.h>
 #include <errno.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <sys/reboot.h>
 
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
-#include <crm/cib/internal.h>  /* cib_channel_ro */
 #include <crm/msg_xml.h>
-#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
-
-#include <dirent.h>
-#include <ctype.h>
 
 static const char *pid_file = PCMK_RUN_DIR "/pacemaker.pid";
 

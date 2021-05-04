@@ -9,15 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/resource.h>
-
 #include <stdint.h>
-
-#include <crm/crm.h>
-#include <crm/common/xml.h>
 
 typedef struct pcmk_child_s {
     pid_t pid;
