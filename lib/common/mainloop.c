@@ -93,24 +93,36 @@ crm_trigger_check(GSource * source)
     return trig->trigger;
 }
 
+/*!
+ * \internal
+ * \brief GSource dispatch function for crm_trigger_t
+ *
+ * \param[in] source    crm_trigger_t being dispatched
+ * \param[in] callback  Callback passed at source creation
+ * \param[in] userdata  User data passed at source creation
+ *
+ * \return G_SOURCE_REMOVE to remove source, G_SOURCE_CONTINUE to keep it
+ */
 static gboolean
 crm_trigger_dispatch(GSource * source, GSourceFunc callback, gpointer userdata)
 {
-    int rc = TRUE;
+    gboolean rc = G_SOURCE_CONTINUE;
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
     if (trig->running) {
         /* Wait until the existing job is complete before starting the next one */
-        return TRUE;
+        return G_SOURCE_CONTINUE;
     }
     trig->trigger = FALSE;
 
     if (callback) {
-        rc = callback(trig->user_data);
-        if (rc < 0) {
+        int callback_rc = callback(trig->user_data);
+
+        if (callback_rc < 0) {
             crm_trace("Trigger handler %p not yet complete", trig);
             trig->running = TRUE;
-            rc = TRUE;
+        } else if (callback_rc == 0) {
+            rc = G_SOURCE_REMOVE;
         }
     }
     return rc;
@@ -159,10 +171,16 @@ mainloop_trigger_complete(crm_trigger_t * trig)
     trig->running = FALSE;
 }
 
-/* If dispatch returns:
- *  -1: Job running but not complete
- *   0: Remove the trigger from mainloop
- *   1: Leave the trigger in mainloop
+/*!
+ * \brief Create a trigger to be used as a mainloop source
+ *
+ * \param[in] priority  Relative priority of source (lower number is higher priority)
+ * \param[in] dispatch  Trigger dispatch function (should return 0 to remove the
+ *                      trigger from the mainloop, -1 if the trigger should be
+ *                      kept but the job is still running and not complete, and
+ *                      1 if the trigger should be kept and the job is complete)
+ *
+ * \return Newly allocated mainloop source for trigger
  */
 crm_trigger_t *
 mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data), gpointer userdata)
