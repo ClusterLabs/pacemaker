@@ -50,3 +50,4 @@ gboolean cluster_disconnect_cfg(void);
 void pcmkd_shutdown_corosync(void);
 
 void pcmk_shutdown(int nsig);
+crm_exit_t request_shutdown(crm_ipc_t *ipc);
