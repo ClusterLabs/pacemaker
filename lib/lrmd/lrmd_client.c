@@ -600,8 +600,8 @@ lrmd_tls_connection_destroy(gpointer userdata)
 
 // \return Standard Pacemaker return code
 int
-lrmd_tls_send_msg(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
-                  const char *msg_type)
+lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
+                      const char *msg_type)
 {
     crm_xml_add_int(msg, F_LRMD_REMOTE_MSG_ID, id);
     crm_xml_add(msg, F_LRMD_REMOTE_MSG_TYPE, msg_type);
@@ -708,7 +708,8 @@ lrmd_tls_send(lrmd_t * lrmd, xmlNode * msg)
         global_remote_msg_id = 1;
     }
 
-    rc = lrmd_tls_send_msg(native->remote, msg, global_remote_msg_id, "request");
+    rc = lrmd__remote_send_xml(native->remote, msg, global_remote_msg_id,
+                               "request");
     if (rc != pcmk_rc_ok) {
         crm_err("Disconnecting because TLS message could not be sent to "
                 "Pacemaker Remote: %s", pcmk_rc_str(rc));

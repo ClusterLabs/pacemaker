@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,8 +30,8 @@ int lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
 int lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
                              const char *node, lrmd_event_data_t *op);
 
-int lrmd_tls_send_msg(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
-                      const char *msg_type);
+int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
+                          const char *msg_type);
 
 /* Shared functions for IPC proxy back end */
 
