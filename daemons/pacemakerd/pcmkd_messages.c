@@ -62,7 +62,7 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     }
 }
 
-int32_t
+static int32_t
 pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
@@ -73,7 +73,7 @@ pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 }
 
 /* Error code means? */
-int32_t
+static int32_t
 pcmk_ipc_closed(qb_ipcs_connection_t * c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
@@ -92,7 +92,7 @@ pcmk_ipc_closed(qb_ipcs_connection_t * c)
     return 0;
 }
 
-void
+static void
 pcmk_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
