@@ -24,7 +24,7 @@
 : ${OCF_RESKEY_dampen:="5s"}
 : ${OCF_RESKEY_attempts:="3"}
 : ${OCF_RESKEY_multiplier:="1"}
-: ${OCF_RESKEY_debug:="false"}
+: ${OCF_RESKEY_debug:="0"}
 : ${OCF_RESKEY_failure_score:="0"}
 : ${OCF_RESKEY_use_fping:="1"}
 : ${OCF_RESKEY_host_list:=""}
@@ -152,7 +152,7 @@ END
 
 ping_conditional_log() {
     level="$1"; shift
-    if [ "${OCF_RESKEY_debug}" = "true" ]; then
+    if [ $OCF_RESKEY_debug -gt 0 ]; then
         ocf_log "$level" "$*"
     fi
 }
@@ -388,8 +388,8 @@ fi
 
 # Check the debug option
 case "${OCF_RESKEY_debug}" in
-    true|True|TRUE|1)    OCF_RESKEY_debug=true;;
-    false|False|FALSE|0) OCF_RESKEY_debug=false;;
+    true|True|TRUE|1)    OCF_RESKEY_debug=0;;
+    false|False|FALSE|0) OCF_RESKEY_debug=1;;
     *)
         ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
         OCF_RESKEY_debug=false
