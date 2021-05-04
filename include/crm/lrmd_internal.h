@@ -53,7 +53,7 @@ remote_proxy_t *remote_proxy_new(lrmd_t *lrmd,
                                  const char *node_name, const char *session_id,
                                  const char *channel);
 
-int  remote_proxy_check(lrmd_t *lrmd, GHashTable *hash);
+int lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash);
 void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
 void remote_proxy_ack_shutdown(lrmd_t *lrmd);
 void remote_proxy_nack_shutdown(lrmd_t *lrmd);

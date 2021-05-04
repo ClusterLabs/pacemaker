@@ -453,7 +453,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                           config_hash, CIB_OPTIONS_FIRST, FALSE, now, NULL);
 
         /* Now send it to the remote peer */
-        remote_proxy_check(lrmd, config_hash);
+        lrmd__validate_remote_settings(lrmd, config_hash);
 
         g_hash_table_destroy(config_hash);
         crm_time_free(now);

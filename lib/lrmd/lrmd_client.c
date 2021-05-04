@@ -923,10 +923,11 @@ lrmd_api_poke_connection(lrmd_t * lrmd)
     return rc < 0 ? rc : pcmk_ok;
 }
 
+// \return Standard Pacemaker return code
 int
-remote_proxy_check(lrmd_t * lrmd, GHashTable *hash)
+lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
     const char *value;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *data = create_xml_node(NULL, F_LRMD_OPERATION);
@@ -939,8 +940,7 @@ remote_proxy_check(lrmd_t * lrmd, GHashTable *hash)
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));
     free_xml(data);
-
-    return rc < 0 ? rc : pcmk_ok;
+    return (rc < 0)? pcmk_legacy2rc(rc) : pcmk_rc_ok;
 }
 
 static int
