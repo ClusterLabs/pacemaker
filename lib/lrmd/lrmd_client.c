@@ -1061,23 +1061,26 @@ clear_gnutls_datum(gnutls_datum_t *datum)
 
 #define KEY_READ_LEN 256
 
+// \return Standard Pacemaker return code
 static int
-set_key(gnutls_datum_t * key, const char *location)
+read_gnutls_key(gnutls_datum_t *key, const char *location)
 {
     FILE *stream;
     size_t buf_len = KEY_READ_LEN;
+
+    // We will cache a key for 60 seconds
     static gnutls_datum_t key_cache = { 0, };
     static time_t key_cache_updated = 0;
 
     if (location == NULL) {
-        return -1;
+        return EINVAL;
     }
 
     if (key_cache.data != NULL) {
         if ((time(NULL) - key_cache_updated) < 60) {
             copy_gnutls_datum(key, &key_cache);
             crm_debug("Using cached Pacemaker Remote key");
-            return 0;
+            return pcmk_rc_ok;
         } else {
             clear_gnutls_datum(&key_cache);
             key_cache_updated = 0;
@@ -1087,7 +1090,7 @@ set_key(gnutls_datum_t * key, const char *location)
 
     stream = fopen(location, "r");
     if (!stream) {
-        return -1;
+        return errno;
     }
 
     key->data = gnutls_malloc(buf_len);
@@ -1097,7 +1100,8 @@ set_key(gnutls_datum_t * key, const char *location)
 
         if (next == EOF) {
             if (!feof(stream)) {
-                crm_err("Error reading Pacemaker Remote key; copy in memory may be corrupted");
+                crm_warn("Pacemaker Remote key read was partially successful "
+                         "(copy in memory may be corrupted)");
             }
             break;
         }
@@ -1112,7 +1116,7 @@ set_key(gnutls_datum_t * key, const char *location)
 
     if (key->size == 0) {
         clear_gnutls_datum(key);
-        return -1;
+        return ENOKEY;
     }
 
     if (key_cache.data == NULL) {
@@ -1121,7 +1125,7 @@ set_key(gnutls_datum_t * key, const char *location)
         crm_debug("Cached Pacemaker Remote key");
     }
 
-    return 0;
+    return pcmk_rc_ok;
 }
 
 int
@@ -1129,7 +1133,7 @@ lrmd_tls_set_key(gnutls_datum_t * key)
 {
     const char *specific_location = getenv("PCMK_authkey_location");
 
-    if (set_key(key, specific_location) == 0) {
+    if (read_gnutls_key(key, specific_location) == pcmk_rc_ok) {
         crm_debug("Using custom authkey location %s", specific_location);
         return pcmk_ok;
 
@@ -1137,8 +1141,8 @@ lrmd_tls_set_key(gnutls_datum_t * key)
         crm_err("No valid Pacemaker Remote key found at %s, trying default location", specific_location);
     }
 
-    if ((set_key(key, DEFAULT_REMOTE_KEY_LOCATION) != 0)
-        && (set_key(key, ALT_REMOTE_KEY_LOCATION) != 0)) {
+    if ((read_gnutls_key(key, DEFAULT_REMOTE_KEY_LOCATION) != pcmk_rc_ok)
+        && (read_gnutls_key(key, ALT_REMOTE_KEY_LOCATION) != pcmk_rc_ok)) {
         crm_err("No valid Pacemaker Remote key found at %s", DEFAULT_REMOTE_KEY_LOCATION);
         return -ENOKEY;
     }
