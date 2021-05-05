@@ -1990,21 +1990,20 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
     return rc;
 }
 
-static int
+static bool
 does_provider_have_agent(const char *agent, const char *provider, const char *class)
 {
-    int found = 0;
+    bool found = false;
     GList *agents = NULL;
     GList *gIter2 = NULL;
 
     agents = resources_list_agents(class, provider);
     for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
         if (pcmk__str_eq(agent, gIter2->data, pcmk__str_casei)) {
-            found = 1;
+            found = true;
         }
     }
     g_list_free_full(agents, free);
-
     return found;
 }
 
