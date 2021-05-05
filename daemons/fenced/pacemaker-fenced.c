@@ -41,7 +41,6 @@
 #include <pacemaker-fenced.h>
 
 char *stonith_our_uname = NULL;
-char *stonith_our_uuid = NULL;
 long stonith_watchdog_timeout_ms = 0;
 
 static GMainLoop *mainloop = NULL;
@@ -1329,7 +1328,7 @@ main(int argc, char **argv)
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
-    crm_cluster_t cluster;
+    crm_cluster_t *cluster = NULL;
     const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
     crm_ipc_t *old_instance = NULL;
     int rc = pcmk_rc_ok;
@@ -1541,24 +1540,26 @@ main(int argc, char **argv)
                               pe_flag_no_counts|pe_flag_no_compat);
     pe__set_working_set_flags(fenced_data_set, pe_flag_show_utilization);
 
+    cluster = calloc(1, sizeof(crm_cluster_t));
+    CRM_ASSERT(cluster != NULL);
+
     if (stand_alone == FALSE) {
 
         if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
-            cluster.destroy = stonith_peer_cs_destroy;
-            cluster.cpg.cpg_deliver_fn = stonith_peer_ais_callback;
-            cluster.cpg.cpg_confchg_fn = pcmk_cpg_membership;
+            cluster->destroy = stonith_peer_cs_destroy;
+            cluster->cpg.cpg_deliver_fn = stonith_peer_ais_callback;
+            cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
 #endif
         }
 
         crm_set_status_callback(&st_peer_update_callback);
 
-        if (crm_cluster_connect(&cluster) == FALSE) {
+        if (crm_cluster_connect(cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }
-        stonith_our_uname = cluster.uname;
-        stonith_our_uuid = cluster.uuid;
+        stonith_our_uname = strdup(cluster->uname);
 
         if (no_cib_connect == FALSE) {
             setup_cib();
@@ -1593,6 +1594,9 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     stonith_cleanup();
+    free(cluster->uuid);
+    free(cluster->uname);
+    free(cluster);
     pe_free_working_set(fenced_data_set);
 
     pcmk__unregister_formats();
