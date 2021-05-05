@@ -61,7 +61,6 @@ void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*call
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define LRMD_CLIENT_HANDSHAKE_TIMEOUT 5000    /* 5 seconds */
 gnutls_psk_client_credentials_t psk_cred_s;
-int lrmd_tls_set_key(gnutls_datum_t * key);
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
@@ -1128,26 +1127,32 @@ read_gnutls_key(gnutls_datum_t *key, const char *location)
     return pcmk_rc_ok;
 }
 
+// \return Standard Pacemaker return code
 int
-lrmd_tls_set_key(gnutls_datum_t * key)
+lrmd__init_remote_key(gnutls_datum_t *key)
 {
     const char *specific_location = getenv("PCMK_authkey_location");
 
-    if (read_gnutls_key(key, specific_location) == pcmk_rc_ok) {
-        crm_debug("Using custom authkey location %s", specific_location);
-        return pcmk_ok;
+    if (specific_location != NULL) {
+        int rc = read_gnutls_key(key, specific_location);
 
-    } else if (specific_location) {
-        crm_err("No valid Pacemaker Remote key found at %s, trying default location", specific_location);
+        if (rc == pcmk_rc_ok) {
+            crm_debug("Using Pacemaker Remote key from %s", specific_location);
+            return pcmk_rc_ok;
+        }
+        crm_warn("Could not read Pacemaker Remote key from %s "
+                 "(will try default location): %s",
+                 specific_location, pcmk_rc_str(rc));
     }
 
     if ((read_gnutls_key(key, DEFAULT_REMOTE_KEY_LOCATION) != pcmk_rc_ok)
         && (read_gnutls_key(key, ALT_REMOTE_KEY_LOCATION) != pcmk_rc_ok)) {
-        crm_err("No valid Pacemaker Remote key found at %s", DEFAULT_REMOTE_KEY_LOCATION);
-        return -ENOKEY;
+        crm_warn("No valid Pacemaker Remote key found at %s",
+                 DEFAULT_REMOTE_KEY_LOCATION);
+        return ENOKEY;
     }
 
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -1249,12 +1254,13 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 
     native->sock = sock;
 
-    rc = lrmd_tls_set_key(&psk_key);
-    if (rc != 0) {
-        crm_warn("Could not set key for Pacemaker Remote at %s:%d " CRM_XS " rc=%d",
-                 native->server, native->port, rc);
+    rc = lrmd__init_remote_key(&psk_key);
+    if (rc != pcmk_rc_ok) {
+        crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
+                 CRM_XS " rc=%d",
+                 native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
-        report_async_connection_result(lrmd, rc);
+        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
         return;
     }
 
@@ -1330,10 +1336,10 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         return -ENOTCONN;
     }
 
-    rc = lrmd_tls_set_key(&psk_key);
-    if (rc < 0) {
+    rc = lrmd__init_remote_key(&psk_key);
+    if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
-        return rc;
+        return pcmk_rc2legacy(rc);
     }
 
     gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
