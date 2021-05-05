@@ -15,6 +15,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
@@ -1473,7 +1474,7 @@ PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList
 int
 pe__bundle_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1535,22 +1536,22 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         CRM_ASSERT(rc == pcmk_rc_ok);
 
         if (print_ip) {
-            out->message(out, crm_map_element_name(replica->ip->xml), options,
+            out->message(out, crm_map_element_name(replica->ip->xml), show_opts,
                          replica->ip, only_node, only_rsc);
         }
 
         if (print_child) {
-            out->message(out, crm_map_element_name(replica->child->xml), options,
+            out->message(out, crm_map_element_name(replica->child->xml), show_opts,
                          replica->child, only_node, only_rsc);
         }
 
         if (print_ctnr) {
-            out->message(out, crm_map_element_name(replica->container->xml), options,
+            out->message(out, crm_map_element_name(replica->container->xml), show_opts,
                          replica->container, only_node, only_rsc);
         }
 
         if (print_remote) {
-            out->message(out, crm_map_element_name(replica->remote->xml), options,
+            out->message(out, crm_map_element_name(replica->remote->xml), show_opts,
                          replica->remote, only_node, only_rsc);
         }
 
@@ -1566,7 +1567,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
 static void
 pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               pe_node_t *node, long options)
+                               pe_node_t *node, unsigned int show_opts)
 {
     pe_resource_t *rsc = replica->child;
 
@@ -1589,14 +1590,14 @@ pe__bundle_replica_output_html(pcmk__output_t *out, pe__bundle_replica_t *replic
                            replica->ipaddr);
     }
 
-    pe__common_output_html(out, rsc, buffer, node, options);
+    pe__common_output_html(out, rsc, buffer, node, show_opts);
 }
 
 PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_html(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1635,16 +1636,12 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         print_remote = replica->remote != NULL &&
                        !replica->remote->fns->is_filtered(replica->remote, only_rsc, print_everything);
 
-        if (pcmk_is_set(options, pe_print_implicit) ||
+        if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs) ||
             (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            unsigned int new_options = options;
-
-            if (!pcmk_is_set(options, pe_print_implicit)) {
-                new_options |= pe_print_implicit;
-            }
+            unsigned int new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
             if (rc == pcmk_rc_no_output) {
                 pcmk__output_create_xml_node(out, "br", NULL);
@@ -1667,22 +1664,22 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
             if (print_ip) {
                 out->message(out, crm_map_element_name(replica->ip->xml),
-                             new_options, replica->ip, only_node, only_rsc);
+                             new_show_opts, replica->ip, only_node, only_rsc);
             }
 
             if (print_child) {
                 out->message(out, crm_map_element_name(replica->child->xml),
-                             new_options, replica->child, only_node, only_rsc);
+                             new_show_opts, replica->child, only_node, only_rsc);
             }
 
             if (print_ctnr) {
                 out->message(out, crm_map_element_name(replica->container->xml),
-                             new_options, replica->container, only_node, only_rsc);
+                             new_show_opts, replica->container, only_node, only_rsc);
             }
 
             if (print_remote) {
                 out->message(out, crm_map_element_name(replica->remote->xml),
-                             new_options, replica->remote, only_node, only_rsc);
+                             new_show_opts, replica->remote, only_node, only_rsc);
             }
 
             out->end_list(out);
@@ -1696,7 +1693,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
             pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
-                                           options);
+                                           show_opts);
         }
 
         pcmk__output_xml_pop_parent(out);
@@ -1708,7 +1705,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
 static void
 pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replica,
-                               pe_node_t *node, long options)
+                               pe_node_t *node, unsigned int show_opts)
 {
     pe_resource_t *rsc = replica->child;
 
@@ -1731,14 +1728,14 @@ pe__bundle_replica_output_text(pcmk__output_t *out, pe__bundle_replica_t *replic
                            replica->ipaddr);
     }
 
-    pe__common_output_text(out, rsc, buffer, node, options);
+    pe__common_output_text(out, rsc, buffer, node, show_opts);
 }
 
 PCMK__OUTPUT_ARGS("bundle", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__bundle_text(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1776,16 +1773,13 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         print_remote = replica->remote != NULL &&
                        !replica->remote->fns->is_filtered(replica->remote, only_rsc, print_everything);
 
-        if (pcmk_is_set(options, pe_print_implicit) ||
+        if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs) ||
             (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            unsigned int new_options = options;
+            unsigned int new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            if (!pcmk_is_set(options, pe_print_implicit)) {
-                new_options |= pe_print_implicit;
-            }
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
@@ -1800,22 +1794,22 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
             if (print_ip) {
                 out->message(out, crm_map_element_name(replica->ip->xml),
-                             new_options, replica->ip, only_node, only_rsc);
+                             new_show_opts, replica->ip, only_node, only_rsc);
             }
 
             if (print_child) {
                 out->message(out, crm_map_element_name(replica->child->xml),
-                             new_options, replica->child, only_node, only_rsc);
+                             new_show_opts, replica->child, only_node, only_rsc);
             }
 
             if (print_ctnr) {
                 out->message(out, crm_map_element_name(replica->container->xml),
-                             new_options, replica->container, only_node, only_rsc);
+                             new_show_opts, replica->container, only_node, only_rsc);
             }
 
             if (print_remote) {
                 out->message(out, crm_map_element_name(replica->remote->xml),
-                             new_options, replica->remote, only_node, only_rsc);
+                             new_show_opts, replica->remote, only_node, only_rsc);
             }
 
             out->end_list(out);
@@ -1829,7 +1823,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                                      pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
             pe__bundle_replica_output_text(out, replica, pe__current_node(replica->container),
-                                           options);
+                                           show_opts);
         }
     }
 

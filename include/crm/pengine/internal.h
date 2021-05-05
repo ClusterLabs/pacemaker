@@ -245,7 +245,7 @@ void pe__print_bundle(pe_resource_t *rsc, const char *pre_text, long options,
                       void *print_data);
 
 gchar * pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                                   long options, const char *target_role, bool show_nodes);
+                                   unsigned long show_opts, const char *target_role, bool show_nodes);
 
 int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name
                          , size_t pairs_count, ...);
@@ -272,22 +272,6 @@ int pe__node_xml(pcmk__output_t *out, va_list args);
 int pe__resource_xml(pcmk__output_t *out, va_list args);
 int pe__resource_html(pcmk__output_t *out, va_list args);
 int pe__resource_text(pcmk__output_t *out, va_list args);
-
-/* Exported for crm_mon to reference */
-int pe__ban_text(pcmk__output_t *out, va_list args);
-int pe__cluster_counts_text(pcmk__output_t *out, va_list args);
-int pe__cluster_dc_text(pcmk__output_t *out, va_list args);
-int pe__cluster_maint_mode_text(pcmk__output_t *out, va_list args);
-int pe__cluster_options_text(pcmk__output_t *out, va_list args);
-int pe__cluster_stack_text(pcmk__output_t *out, va_list args);
-int pe__cluster_summary(pcmk__output_t *out, va_list args);
-int pe__cluster_times_text(pcmk__output_t *out, va_list args);
-int pe__failed_action_text(pcmk__output_t *out, va_list args);
-int pe__node_attribute_text(pcmk__output_t *out, va_list args);
-int pe__node_list_text(pcmk__output_t *out, va_list args);
-int pe__op_history_text(pcmk__output_t *out, va_list args);
-int pe__resource_history_text(pcmk__output_t *out, va_list args);
-int pe__ticket_text(pcmk__output_t *out, va_list args);
 
 void native_free(pe_resource_t * rsc);
 void group_free(pe_resource_t * rsc);
@@ -535,14 +519,14 @@ gboolean add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj
 
 void print_rscs_brief(GList *rsc_list, const char * pre_text, long options,
                       void * print_data, gboolean print_all);
-int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboolean print_all);
+int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int options);
 void pe_fence_node(pe_working_set_t * data_set, pe_node_t * node, const char *reason, bool priority_delay);
 
 pe_node_t *pe_create_node(const char *id, const char *uname, const char *type,
                           const char *score, pe_working_set_t * data_set);
 void common_print(pe_resource_t * rsc, const char *pre_text, const char *name, pe_node_t *node, long options, void *print_data);
-int pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc, const char *name, pe_node_t *node, long options);
-int pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc, const char *name, pe_node_t *node, long options);
+int pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc, const char *name, pe_node_t *node, unsigned int options);
+int pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc, const char *name, pe_node_t *node, unsigned int options);
 pe_resource_t *pe__find_bundle_replica(const pe_resource_t *bundle,
                                        const pe_node_t *node);
 bool pe__bundle_needs_remote_name(pe_resource_t *rsc,

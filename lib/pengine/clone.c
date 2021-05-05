@@ -14,6 +14,7 @@
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
 #include <crm/msg_xml.h>
+#include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
 
 #define VARIANT_CLONE 1
@@ -609,7 +610,7 @@ PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList 
 int
 pe__clone_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -652,7 +653,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
-        out->message(out, crm_map_element_name(child_rsc->xml), options,
+        out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                      child_rsc, only_node, only_rsc);
     }
 
@@ -667,7 +668,7 @@ PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList 
 int
 pe__clone_html(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -716,7 +717,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        if (options & pe_print_clone_details) {
+        if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
             print_full = TRUE;
         }
 
@@ -728,7 +729,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
         // Everything else in this block is for anonymous clones
 
-        } else if (pcmk_is_set(options, pe_print_pending)
+        } else if (pcmk_is_set(show_opts, pcmk_show_pending)
                    && (child_rsc->pending_task != NULL)
                    && strcmp(child_rsc->pending_task, "probe")) {
             // Print individual instance when non-probe action is pending
@@ -737,7 +738,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
-                && !pcmk_is_set(options, pe_print_clone_active)) {
+                && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
                 pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
             }
 
@@ -783,13 +784,13 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, strdup("*"));
-            out->message(out, crm_map_element_name(child_rsc->xml), options,
+            out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, all);
             g_list_free_full(all, free);
         }
     }
 
-    if (pcmk_is_set(options, pe_print_clone_details)) {
+    if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
         free(stopped_list);
         out->end_list(out);
         return pcmk_rc_ok;
@@ -852,7 +853,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
         list_text_len = 0;
     }
 
-    if (!pcmk_is_set(options, pe_print_clone_active)) {
+    if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
         const char *state = "Stopped";
         enum rsc_role_e role = configured_role(rsc);
 
@@ -907,7 +908,7 @@ PCMK__OUTPUT_ARGS("clone", "unsigned int", "pe_resource_t *", "GList *", "GList 
 int
 pe__clone_text(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -956,7 +957,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        if (options & pe_print_clone_details) {
+        if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
             print_full = TRUE;
         }
 
@@ -968,7 +969,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
         // Everything else in this block is for anonymous clones
 
-        } else if (pcmk_is_set(options, pe_print_pending)
+        } else if (pcmk_is_set(show_opts, pcmk_show_pending)
                    && (child_rsc->pending_task != NULL)
                    && strcmp(child_rsc->pending_task, "probe")) {
             // Print individual instance when non-probe action is pending
@@ -977,7 +978,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         } else if (partially_active == FALSE) {
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
-                && !pcmk_is_set(options, pe_print_clone_active)) {
+                && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
                 pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
             }
 
@@ -1023,13 +1024,13 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, strdup("*"));
-            out->message(out, crm_map_element_name(child_rsc->xml), options,
+            out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, all);
             g_list_free_full(all, free);
         }
     }
 
-    if (pcmk_is_set(options, pe_print_clone_details)) {
+    if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
         free(stopped_list);
         out->end_list(out);
         return pcmk_rc_ok;
@@ -1088,7 +1089,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
         list_text = NULL;
     }
 
-    if (!pcmk_is_set(options, pe_print_clone_active)) {
+    if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
         const char *state = "Stopped";
         enum rsc_role_e role = configured_role(rsc);
 

@@ -13,6 +13,7 @@
 #include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/lists_internal.h>
+#include <crm/common/output.h>
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
@@ -1769,8 +1770,8 @@ main(int argc, char **argv)
             GList *all = NULL;
             all = g_list_prepend(all, strdup("*"));
             rc = out->message(out, "resource-list", data_set,
-                              pe_print_rsconly | pe_print_pending,
-                              FALSE, TRUE, FALSE, TRUE, all, all, FALSE);
+                              pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
+                              TRUE, all, all, FALSE);
             g_list_free_full(all, free);
 
             if (rc == pcmk_rc_no_output) {
