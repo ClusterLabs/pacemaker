@@ -205,8 +205,8 @@ pcmk__pacemakerd_api_methods()
     return cmds;
 }
 
-int
-pcmk_pacemakerd_api_ping(pcmk_ipc_api_t *api, const char *ipc_name)
+static int
+do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *task)
 {
     pacemakerd_api_private_t *private;
     xmlNode *cmd;
@@ -216,7 +216,7 @@ pcmk_pacemakerd_api_ping(pcmk_ipc_api_t *api, const char *ipc_name)
     private = api->api_data;
     CRM_ASSERT(private != NULL);
 
-    cmd = create_request(CRM_OP_PING, NULL, NULL, CRM_SYSTEM_MCP,
+    cmd = create_request(task, NULL, NULL, CRM_SYSTEM_MCP,
         ipc_name?ipc_name:((crm_system_name? crm_system_name : "client")),
         private->client_uuid);
 
@@ -233,4 +233,10 @@ pcmk_pacemakerd_api_ping(pcmk_ipc_api_t *api, const char *ipc_name)
     }
 
     return rc;
+}
+
+int
+pcmk_pacemakerd_api_ping(pcmk_ipc_api_t *api, const char *ipc_name)
+{
+    return do_pacemakerd_api_call(api, ipc_name, CRM_OP_PING);
 }
