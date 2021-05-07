@@ -1309,7 +1309,7 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
         crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
                  CRM_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
-        return -1;
+        return pcmk_rc2legacy(rc);
     }
     native->async_timer = timer_id;
     return pcmk_ok;
