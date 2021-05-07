@@ -1058,37 +1058,21 @@ clear_gnutls_datum(gnutls_datum_t *datum)
     datum->size = 0;
 }
 
-#define KEY_READ_LEN 256
+#define KEY_READ_LEN 256    // Chunk size for reading key from file
 
 // \return Standard Pacemaker return code
 static int
-read_gnutls_key(gnutls_datum_t *key, const char *location)
+read_gnutls_key(const char *location, gnutls_datum_t *key)
 {
-    FILE *stream;
+    FILE *stream = NULL;
     size_t buf_len = KEY_READ_LEN;
 
-    // We will cache a key for 60 seconds
-    static gnutls_datum_t key_cache = { 0, };
-    static time_t key_cache_updated = 0;
-
-    if (location == NULL) {
+    if ((location == NULL) || (key == NULL)) {
         return EINVAL;
     }
 
-    if (key_cache.data != NULL) {
-        if ((time(NULL) - key_cache_updated) < 60) {
-            copy_gnutls_datum(key, &key_cache);
-            crm_debug("Using cached Pacemaker Remote key");
-            return pcmk_rc_ok;
-        } else {
-            clear_gnutls_datum(&key_cache);
-            key_cache_updated = 0;
-            crm_debug("Cleared Pacemaker Remote key cache");
-        }
-    }
-
     stream = fopen(location, "r");
-    if (!stream) {
+    if (stream == NULL) {
         return errno;
     }
 
@@ -1117,13 +1101,86 @@ read_gnutls_key(gnutls_datum_t *key, const char *location)
         clear_gnutls_datum(key);
         return ENOKEY;
     }
+    return pcmk_rc_ok;
+}
 
-    if (key_cache.data == NULL) {
-        copy_gnutls_datum(&key_cache, key);
-        key_cache_updated = time(NULL);
-        crm_debug("Cached Pacemaker Remote key");
+// Cache the most recently used Pacemaker Remote authentication key
+
+struct key_cache_s {
+    time_t updated;         // When cached key was read (valid for 1 minute)
+    gnutls_datum_t key;     // Cached key
+};
+
+static bool
+key_is_cached(struct key_cache_s *key_cache)
+{
+    return key_cache->updated != 0;
+}
+
+static bool
+key_cache_expired(struct key_cache_s *key_cache)
+{
+    return (time(NULL) - key_cache->updated) >= 60;
+}
+
+static void
+clear_key_cache(struct key_cache_s *key_cache)
+{
+    clear_gnutls_datum(&(key_cache->key));
+    if (key_cache->updated != 0) {
+        key_cache->updated = 0;
+        crm_debug("Cleared Pacemaker Remote key cache");
+    }
+}
+
+static void
+get_cached_key(struct key_cache_s *key_cache, gnutls_datum_t *key)
+{
+    copy_gnutls_datum(key, &(key_cache->key));
+    crm_debug("Using cached Pacemaker Remote key");
+}
+
+static void
+cache_key(struct key_cache_s *key_cache, gnutls_datum_t *key)
+{
+    key_cache->updated = time(NULL);
+    copy_gnutls_datum(&(key_cache->key), key);
+    crm_debug("Cached Pacemaker Remote key");
+}
+
+/*!
+ * \internal
+ * \brief Get Pacemaker Remote authentication key from file or cache
+ *
+ * \param[in]  location         Path to key file to try
+ * \param[out] key              Key from location or cache
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+get_remote_key(const char *location, gnutls_datum_t *key)
+{
+    static struct key_cache_s key_cache = { 0, };
+    int rc = pcmk_rc_ok;
+
+    if ((location == NULL) || (key == NULL)) {
+        return EINVAL;
     }
 
+    if (key_is_cached(&key_cache)) {
+        if (key_cache_expired(&key_cache)) {
+            clear_key_cache(&key_cache);
+        } else {
+            get_cached_key(&key_cache, key);
+            return pcmk_rc_ok;
+        }
+    }
+
+    rc = read_gnutls_key(location, key);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+    cache_key(&key_cache, key);
     return pcmk_rc_ok;
 }
 
@@ -1131,22 +1188,22 @@ read_gnutls_key(gnutls_datum_t *key, const char *location)
 int
 lrmd__init_remote_key(gnutls_datum_t *key)
 {
-    const char *specific_location = getenv("PCMK_authkey_location");
+    const char *env_location = getenv("PCMK_authkey_location");
 
-    if (specific_location != NULL) {
-        int rc = read_gnutls_key(key, specific_location);
+    if (env_location != NULL) {
+        int rc = get_remote_key(env_location, key);
 
         if (rc == pcmk_rc_ok) {
-            crm_debug("Using Pacemaker Remote key from %s", specific_location);
+            crm_debug("Using Pacemaker Remote key from %s", env_location);
             return pcmk_rc_ok;
         }
         crm_warn("Could not read Pacemaker Remote key from %s "
                  "(will try default location): %s",
-                 specific_location, pcmk_rc_str(rc));
+                 env_location, pcmk_rc_str(rc));
     }
 
-    if ((read_gnutls_key(key, DEFAULT_REMOTE_KEY_LOCATION) != pcmk_rc_ok)
-        && (read_gnutls_key(key, ALT_REMOTE_KEY_LOCATION) != pcmk_rc_ok)) {
+    if ((get_remote_key(DEFAULT_REMOTE_KEY_LOCATION, key) != pcmk_rc_ok)
+        && (get_remote_key(ALT_REMOTE_KEY_LOCATION, key) != pcmk_rc_ok)) {
         crm_warn("No valid Pacemaker Remote key found at %s",
                  DEFAULT_REMOTE_KEY_LOCATION);
         return ENOKEY;
