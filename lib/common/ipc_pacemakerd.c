@@ -144,6 +144,10 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     const char *value = NULL;
     long long value_ll = 0;
 
+    if (pcmk__str_eq((const char *) reply->name, "ack", pcmk__str_casei)) {
+        return;
+    }
+
     value = crm_element_value(reply, F_CRM_MSG_TYPE);
     if ((value == NULL) || (strcmp(value, XML_ATTR_RESPONSE))) {
         crm_debug("Unrecognizable pacemakerd message: invalid message type '%s'",
