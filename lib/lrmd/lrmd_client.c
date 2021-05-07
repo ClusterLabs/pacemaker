@@ -465,10 +465,10 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
             }
 #endif
         default:
-            crm_err("Unsupported connection type: %d", native->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    native->type);
+            return -EPROTONOSUPPORT;
     }
-
-    return 0;
 }
 
 /* Not used with mainloop */
@@ -496,7 +496,8 @@ lrmd_dispatch(lrmd_t * lrmd)
             break;
 #endif
         default:
-            crm_err("Unsupported connection type: %d", private->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    private->type);
     }
 
     if (lrmd_api_is_connected(lrmd) == FALSE) {
@@ -748,7 +749,7 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
 static int
 lrmd_send_xml(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
 {
-    int rc = -1;
+    int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     switch (native->type) {
@@ -761,7 +762,9 @@ lrmd_send_xml(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
             break;
 #endif
         default:
-            crm_err("Unsupported connection type: %d", native->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    native->type);
+            rc = -EPROTONOSUPPORT;
     }
 
     return rc;
@@ -770,7 +773,7 @@ lrmd_send_xml(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
 static int
 lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
 {
-    int rc = -1;
+    int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
     switch (native->type) {
@@ -790,7 +793,9 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
             break;
 #endif
         default:
-            crm_err("Unsupported connection type: %d", native->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    native->type);
+            rc = -EPROTONOSUPPORT;
     }
 
     return rc;
@@ -809,10 +814,10 @@ lrmd_api_is_connected(lrmd_t * lrmd)
             return remote_executor_connected(lrmd);
 #endif
         default:
-            crm_err("Unsupported connection type: %d", native->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    native->type);
+            return 0;
     }
-
-    return 0;
 }
 
 /*!
@@ -1376,7 +1381,9 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
             break;
 #endif
         default:
-            crm_err("Unsupported connection type: %d", native->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    native->type);
+            rc = -EPROTONOSUPPORT;
     }
 
     if (rc == pcmk_ok) {
@@ -1389,10 +1396,10 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
 static int
 lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
 {
-    int rc = 0;
+    int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    CRM_CHECK(native && native->callback, return -1);
+    CRM_CHECK(native && native->callback, return -EINVAL);
 
     switch (native->type) {
         case pcmk__client_ipc:
@@ -1413,7 +1420,9 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
             break;
 #endif
         default:
-            crm_err("Unsupported connection type: %d", native->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    native->type);
+            rc = -EPROTONOSUPPORT;
     }
 
     return rc;
@@ -1479,6 +1488,7 @@ static int
 lrmd_api_disconnect(lrmd_t * lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
+    int rc = pcmk_ok;
 
     crm_info("Disconnecting %s %s executor connection",
              pcmk__client_type_str(native->type),
@@ -1493,7 +1503,9 @@ lrmd_api_disconnect(lrmd_t * lrmd)
             break;
 #endif
         default:
-            crm_err("Unsupported connection type: %d", native->type);
+            crm_err("Unsupported executor connection type (bug?): %d",
+                    native->type);
+            rc = -EPROTONOSUPPORT;
     }
 
     free(native->token);
@@ -1501,7 +1513,7 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 
     free(native->peer_version);
     native->peer_version = NULL;
-    return 0;
+    return rc;
 }
 
 static int
