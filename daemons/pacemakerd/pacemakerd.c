@@ -23,6 +23,7 @@
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
 #include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/ipc_pacemakerd.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
 
@@ -163,9 +164,36 @@ remove_core_file_limit(void)
     }
 }
 
+static void
+pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
+                    enum pcmk_ipc_event event_type, crm_exit_t status,
+                    void *event_data, void *user_data)
+{
+    pcmk_pacemakerd_api_reply_t *reply = event_data;
+
+    switch (event_type) {
+        case pcmk_ipc_event_reply:
+            break;
+
+        default:
+            return;
+    }
+
+    if (status != CRM_EX_OK) {
+        fprintf(stderr, "Bad reply from pacemakerd: %s", crm_exit_str(status));
+        return;
+    }
+
+    if (reply->reply_type != pcmk_pacemakerd_reply_shutdown) {
+        fprintf(stderr, "Unknown reply type %d from pacemakerd",
+                reply->reply_type);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
+    int rc = pcmk_rc_ok;
     int flag;
     int argerr = 0;
 
@@ -173,7 +201,7 @@ main(int argc, char **argv)
     bool old_instance_connected = false;
     gboolean shutdown = FALSE;
 
-    crm_ipc_t *old_instance = NULL;
+    pcmk_ipc_api_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
     crm_log_preinit(NULL, argc, argv);
@@ -237,29 +265,38 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
     crm_debug("Checking for existing Pacemaker instance");
-    old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
-    old_instance_connected = crm_ipc_connect(old_instance);
+
+    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
+    if (old_instance == NULL) {
+        fprintf(stderr, "Could not connect to pacemakerd: %s",
+                pcmk_rc_str(rc));
+        crm_exit(pcmk_rc2exitc(rc));
+    }
+
+    pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
+    rc = pcmk_connect_ipc(old_instance, pcmk_ipc_dispatch_sync);
+    old_instance_connected = pcmk_ipc_is_connected(old_instance);
 
     if (shutdown) {
         if (old_instance_connected) {
-            crm_exit(request_shutdown(old_instance));
+            rc = pcmk_pacemakerd_api_shutdown(old_instance, crm_system_name);
+            pcmk_dispatch_ipc(old_instance);
+            pcmk_free_ipc_api(old_instance);
+            crm_exit(pcmk_rc2exitc(rc));
         } else {
             crm_err("Could not request shutdown of existing "
                     "Pacemaker instance: %s", strerror(errno));
-            crm_ipc_close(old_instance);
-            crm_ipc_destroy(old_instance);
+            pcmk_free_ipc_api(old_instance);
             crm_exit(CRM_EX_DISCONNECT);
         }
 
     } else if (old_instance_connected) {
-        crm_ipc_close(old_instance);
-        crm_ipc_destroy(old_instance);
+        pcmk_free_ipc_api(old_instance);
         crm_err("Aborting start-up because active Pacemaker instance found");
         crm_exit(CRM_EX_FATAL);
     }
 
-    crm_ipc_close(old_instance);
-    crm_ipc_destroy(old_instance);
+    pcmk_free_ipc_api(old_instance);
 
 #ifdef SUPPORT_COROSYNC
     if (mcp_read_config() == FALSE) {
