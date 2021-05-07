@@ -1193,7 +1193,13 @@ get_remote_key(const char *location, gnutls_datum_t *key)
 int
 lrmd__init_remote_key(gnutls_datum_t *key)
 {
-    const char *env_location = getenv("PCMK_authkey_location");
+    static const char *env_location = NULL;
+    static bool need_env = true;
+
+    if (need_env) {
+        env_location = getenv("PCMK_authkey_location");
+        need_env = false;
+    }
 
     if (env_location != NULL) {
         int rc = get_remote_key(env_location, key);
