@@ -1139,7 +1139,8 @@ static void
 get_cached_key(struct key_cache_s *key_cache, gnutls_datum_t *key)
 {
     copy_gnutls_datum(key, &(key_cache->key));
-    crm_debug("Using cached Pacemaker Remote key");
+    crm_debug("Using cached Pacemaker Remote key from %s",
+              crm_str(key_cache->location));
 }
 
 static void
@@ -1149,7 +1150,8 @@ cache_key(struct key_cache_s *key_cache, gnutls_datum_t *key,
     key_cache->updated = time(NULL);
     key_cache->location = location;
     copy_gnutls_datum(&(key_cache->key), key);
-    crm_debug("Cached Pacemaker Remote key");
+    crm_debug("Using (and cacheing) Pacemaker Remote key from %s",
+              crm_str(location));
 }
 
 /*!
@@ -1189,38 +1191,105 @@ get_remote_key(const char *location, gnutls_datum_t *key)
     return pcmk_rc_ok;
 }
 
-// \return Standard Pacemaker return code
+/*!
+ * \internal
+ * \brief Initialize the Pacemaker Remote authentication key
+ *
+ * Try loading the Pacemaker Remote authentication key from cache if available,
+ * otherwise from these locations, in order of preference: the value of the
+ * PCMK_authkey_location environment variable, if set; the Pacemaker default key
+ * file location; or (for historical reasons) /etc/corosync/authkey.
+ *
+ * \param[out] key  Where to store key
+ *
+ * \return Standard Pacemaker return code
+ */
 int
 lrmd__init_remote_key(gnutls_datum_t *key)
 {
     static const char *env_location = NULL;
     static bool need_env = true;
 
+    int env_rc = pcmk_rc_ok;
+    int default_rc = pcmk_rc_ok;
+    int alt_rc = pcmk_rc_ok;
+
+    bool env_is_default = false;
+    bool env_is_fallback = false;
+
     if (need_env) {
         env_location = getenv("PCMK_authkey_location");
         need_env = false;
     }
 
+    // Try location in environment variable, if set
     if (env_location != NULL) {
-        int rc = get_remote_key(env_location, key);
-
-        if (rc == pcmk_rc_ok) {
-            crm_debug("Using Pacemaker Remote key from %s", env_location);
+        env_rc = get_remote_key(env_location, key);
+        if (env_rc == pcmk_rc_ok) {
             return pcmk_rc_ok;
         }
-        crm_warn("Could not read Pacemaker Remote key from %s "
-                 "(will try default location): %s",
-                 env_location, pcmk_rc_str(rc));
+
+        env_is_default = !strcmp(env_location, DEFAULT_REMOTE_KEY_LOCATION);
+        env_is_fallback = !strcmp(env_location, ALT_REMOTE_KEY_LOCATION);
+
+        /* @TODO It would be more secure to fail, rather than fall back to the
+         * default, if an explicitly set key location is not readable, and it
+         * would be better to never use the Corosync location as a fallback.
+         * However, that would break any deployments currently working with the
+         * fallbacks.
+         */
     }
 
-    if ((get_remote_key(DEFAULT_REMOTE_KEY_LOCATION, key) != pcmk_rc_ok)
-        && (get_remote_key(ALT_REMOTE_KEY_LOCATION, key) != pcmk_rc_ok)) {
-        crm_warn("No valid Pacemaker Remote key found at %s",
-                 DEFAULT_REMOTE_KEY_LOCATION);
+    // Try default location, if environment wasn't explicitly set to it
+    if (env_is_default) {
+        default_rc = env_rc;
+    } else {
+        default_rc = get_remote_key(DEFAULT_REMOTE_KEY_LOCATION, key);
+    }
+
+    // Try fallback location, if environment wasn't set to it and default failed
+    if (env_is_fallback) {
+        alt_rc = env_rc;
+    } else if (default_rc != pcmk_rc_ok) {
+        alt_rc = get_remote_key(ALT_REMOTE_KEY_LOCATION, key);
+    }
+
+    // We have all results, so log and return
+
+    if ((env_rc != pcmk_rc_ok) && (default_rc != pcmk_rc_ok)
+        && (alt_rc != pcmk_rc_ok)) { // Environment set, everything failed
+
+        crm_warn("Could not read Pacemaker Remote key from %s (%s%s%s%s%s): %s",
+                 env_location,
+                 env_is_default? "" : "or default location ",
+                 env_is_default? "" : DEFAULT_REMOTE_KEY_LOCATION,
+                 !env_is_default && !env_is_fallback? " " : "",
+                 env_is_fallback? "" : "or fallback location ",
+                 env_is_fallback? "" : ALT_REMOTE_KEY_LOCATION,
+                 pcmk_rc_str(env_rc));
         return ENOKEY;
     }
 
-    return pcmk_rc_ok;
+    if (env_rc != pcmk_rc_ok) { // Environment set but failed, using a default
+        crm_warn("Could not read Pacemaker Remote key from %s "
+                 "(using %s location %s instead): %s",
+                 env_location,
+                 (default_rc == pcmk_rc_ok)? "default" : "fallback",
+                 (default_rc == pcmk_rc_ok)? DEFAULT_REMOTE_KEY_LOCATION : ALT_REMOTE_KEY_LOCATION,
+                 pcmk_rc_str(env_rc));
+        return pcmk_rc_ok;
+    }
+
+    if ((default_rc != pcmk_rc_ok) && (alt_rc != pcmk_rc_ok)) {
+        // Environment unset, defaults failed
+        crm_warn("Could not read Pacemaker Remote key from default location %s"
+                 " (or fallback location %s): %s",
+                 DEFAULT_REMOTE_KEY_LOCATION, ALT_REMOTE_KEY_LOCATION,
+                 pcmk_rc_str(default_rc));
+        return ENOKEY;
+    }
+
+    return pcmk_rc_ok; // Environment variable unset, a default worked
 }
 
 static void
