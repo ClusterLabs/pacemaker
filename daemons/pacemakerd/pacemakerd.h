@@ -44,5 +44,6 @@ int find_and_track_existing_processes(void);
 gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);
 void pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id);
+void pcmk_handle_shutdown_request(pcmk__client_t *c, xmlNode *msg, uint32_t id, uint32_t flags);
 void pcmkd_shutdown_corosync(void);
 crm_exit_t request_shutdown(crm_ipc_t *ipc);
