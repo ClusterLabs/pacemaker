@@ -578,6 +578,66 @@ our_node_allowed_for(pe_resource_t *rsc)
     return node;
 }
 
+static void
+watchdog_device_update(xmlNode *cib)
+{
+    xmlNode *stonith_enabled_xml = NULL;
+    const char *stonith_enabled_s = NULL;
+    long timeout_ms = 0;
+
+    stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']",
+                                           cib, LOG_NEVER);
+    if (stonith_enabled_xml) {
+        stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
+    }
+
+    if (stonith_enabled_s == NULL || crm_is_true(stonith_enabled_s)) {
+        xmlNode *stonith_watchdog_xml = NULL;
+        const char *value = NULL;
+
+        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
+                                                cib, LOG_NEVER);
+        if (stonith_watchdog_xml) {
+            value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
+        }
+        if (value) {
+            timeout_ms = crm_get_msec(value);
+        }
+
+        if (timeout_ms < 0) {
+            timeout_ms = pcmk__auto_watchdog_timeout();
+        }
+    }
+
+    if (timeout_ms != stonith_watchdog_timeout_ms) {
+        crm_notice("New watchdog timeout %lds (was %lds)", timeout_ms/1000, stonith_watchdog_timeout_ms/1000);
+        stonith_watchdog_timeout_ms = timeout_ms;
+
+        if (stonith_watchdog_timeout_ms > 0) {
+            int rc;
+            xmlNode *xml;
+            stonith_key_value_t *params = NULL;
+
+            params = stonith_key_value_add(params, PCMK_STONITH_HOST_LIST,
+                                           stonith_our_uname);
+
+            xml = create_device_registration_xml("watchdog", st_namespace_internal,
+                                                 STONITH_WATCHDOG_AGENT, params,
+                                                 NULL);
+            stonith_key_value_freeall(params, 1, 1);
+            rc = stonith_device_register(xml, NULL, FALSE);
+            free_xml(xml);
+            if (rc != pcmk_ok) {
+                crm_crit("Cannot register watchdog pseudo fence agent");
+                crm_exit(CRM_EX_FATAL);
+            }
+
+        } else {
+            stonith_device_remove("watchdog", FALSE);
+        }
+    }
+}
+
 /*!
  * \internal
  * \brief If a resource or any of its children are STONITH devices, update their
@@ -1012,7 +1072,6 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     int rc = pcmk_ok;
     xmlNode *stonith_enabled_xml = NULL;
-    xmlNode *stonith_watchdog_xml = NULL;
     const char *stonith_enabled_s = NULL;
     static gboolean stonith_enabled_saved = TRUE;
 
@@ -1076,31 +1135,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
     }
 
-    if (stonith_enabled_s == NULL || crm_is_true(stonith_enabled_s)) {
-        long timeout_ms = 0;
-        const char *value = NULL;
-
-        stonith_watchdog_xml = get_xpath_object("//nvpair[@name='stonith-watchdog-timeout']",
-                                                local_cib, LOG_NEVER);
-        if (stonith_watchdog_xml) {
-            value = crm_element_value(stonith_watchdog_xml, XML_NVPAIR_ATTR_VALUE);
-        }
-
-        if(value) {
-            timeout_ms = crm_get_msec(value);
-        }
-        if (timeout_ms < 0) {
-            timeout_ms = pcmk__auto_watchdog_timeout();
-        }
-
-        if(timeout_ms != stonith_watchdog_timeout_ms) {
-            crm_notice("New watchdog timeout %lds (was %lds)", timeout_ms/1000, stonith_watchdog_timeout_ms/1000);
-            stonith_watchdog_timeout_ms = timeout_ms;
-        }
-
-    } else {
-        stonith_watchdog_timeout_ms = 0;
-    }
+    watchdog_device_update(local_cib);
 
     if (stonith_enabled_s && crm_is_true(stonith_enabled_s) == FALSE) {
         crm_trace("Ignoring CIB updates while fencing is disabled");
@@ -1130,6 +1165,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     pcmk__refresh_node_caches_from_cib(local_cib);
 
     fencing_topology_init();
+    watchdog_device_update(local_cib);
     cib_devices_update();
 }
 
@@ -1534,26 +1570,6 @@ main(int argc, char **argv)
 
     init_device_list();
     init_topology_list();
-
-    if(stonith_watchdog_timeout_ms > 0) {
-        int rc;
-        xmlNode *xml;
-        stonith_key_value_t *params = NULL;
-
-        params = stonith_key_value_add(params, PCMK_STONITH_HOST_LIST,
-                                       stonith_our_uname);
-
-        xml = create_device_registration_xml("watchdog", st_namespace_internal,
-                                             STONITH_WATCHDOG_AGENT, params,
-                                             NULL);
-        stonith_key_value_freeall(params, 1, 1);
-        rc = stonith_device_register(xml, NULL, FALSE);
-        free_xml(xml);
-        if (rc != pcmk_ok) {
-            crm_crit("Cannot register watchdog pseudo fence agent");
-            crm_exit(CRM_EX_FATAL);
-        }
-    }
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
 
