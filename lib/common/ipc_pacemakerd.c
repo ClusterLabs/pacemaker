@@ -243,3 +243,9 @@ pcmk_pacemakerd_api_ping(pcmk_ipc_api_t *api, const char *ipc_name)
 {
     return do_pacemakerd_api_call(api, ipc_name, CRM_OP_PING);
 }
+
+int
+pcmk_pacemakerd_api_shutdown(pcmk_ipc_api_t *api, const char *ipc_name)
+{
+    return do_pacemakerd_api_call(api, ipc_name, CRM_OP_QUIT);
+}

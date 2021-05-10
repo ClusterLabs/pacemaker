@@ -64,6 +64,7 @@ typedef struct {
 } pcmk_pacemakerd_api_reply_t;
 
 int pcmk_pacemakerd_api_ping(pcmk_ipc_api_t *api, const char *ipc_name);
+int pcmk_pacemakerd_api_shutdown(pcmk_ipc_api_t *api, const char *ipc_name);
 
 enum pcmk_pacemakerd_state
     pcmk_pacemakerd_api_daemon_state_text2enum(const char *state);
