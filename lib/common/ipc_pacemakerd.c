@@ -130,7 +130,7 @@ reply_expected(pcmk_ipc_api_t *api, xmlNode *request)
     }
 
     // We only need to handle commands that functions in this file can send
-    return !strcmp(command, CRM_OP_PING);
+    return pcmk__str_any_of(command, CRM_OP_PING, CRM_OP_QUIT, NULL);
 }
 
 static void
@@ -163,27 +163,30 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     value = crm_element_value(reply, F_CRM_TASK);
-    if ((value == NULL) || strcmp(value, CRM_OP_PING)) {
+
+    // Parse useful info from reply
+    msg_data = get_message_xml(reply, F_CRM_DATA);
+    crm_element_value_ll(msg_data, XML_ATTR_TSTAMP, &value_ll);
+
+    if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {
+        reply_data.reply_type = pcmk_pacemakerd_reply_ping;
+        reply_data.data.ping.state =
+            pcmk_pacemakerd_api_daemon_state_text2enum(
+                crm_element_value(msg_data, XML_PING_ATTR_PACEMAKERDSTATE));
+        reply_data.data.ping.status =
+            pcmk__str_eq(crm_element_value(msg_data, XML_PING_ATTR_STATUS), "ok",
+                         pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
+        reply_data.data.ping.last_good = (time_t) value_ll;
+        reply_data.data.ping.sys_from = crm_element_value(msg_data,
+                                            XML_PING_ATTR_SYSFROM);
+    } else if (pcmk__str_eq(value, CRM_OP_QUIT, pcmk__str_none)) {
+        reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
+        reply_data.data.shutdown.status = atoi(crm_element_value(msg_data, XML_LRM_ATTR_OPSTATUS));
+    } else {
         crm_debug("Unrecognizable pacemakerd message: '%s'", crm_str(value));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
-
-    // Parse useful info from reply
-
-    msg_data = get_message_xml(reply, F_CRM_DATA);
-    crm_element_value_ll(msg_data, XML_ATTR_TSTAMP, &value_ll);
-
-    reply_data.reply_type = pcmk_pacemakerd_reply_ping;
-    reply_data.data.ping.state =
-        pcmk_pacemakerd_api_daemon_state_text2enum(
-            crm_element_value(msg_data, XML_PING_ATTR_PACEMAKERDSTATE));
-    reply_data.data.ping.status =
-        pcmk__str_eq(crm_element_value(msg_data, XML_PING_ATTR_STATUS), "ok",
-                     pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
-    reply_data.data.ping.last_good = (time_t) value_ll;
-    reply_data.data.ping.sys_from = crm_element_value(msg_data,
-                                        XML_PING_ATTR_SYSFROM);
 
 done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
