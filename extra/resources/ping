@@ -249,10 +249,13 @@ fping_check() {
 
     case $rc in
         0)
+            if [ $OCF_RESKEY_debug -gt 1 ]; then
+                ping_conditional_log info "$output"
+            fi
             ;;
         1)
             for h in $(echo "$output" | grep "is unreachable" | awk '{print $1}'); do
-                ping_conditional_log warn "$h is inactive"
+                ping_conditional_log warn "$h is inactive: $output"
             done
             ;;
         *)
@@ -282,7 +285,12 @@ ping_check() {
         p_out=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
 
         case $rc in
-            0) active=$(expr $active + 1);;
+            0)
+                active=$(expr $active + 1)
+                if [ $OCF_RESKEY_debug -gt 1 ]; then
+                    ping_conditional_log info "$p_out"
+                fi
+                ;;
             1) ping_conditional_log warn "$host is inactive: $p_out";;
             *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
         esac
@@ -388,10 +396,11 @@ fi
 
 # Check the debug option
 case "${OCF_RESKEY_debug}" in
-    true|True|TRUE|1)    OCF_RESKEY_debug=0;;
-    false|False|FALSE|0) OCF_RESKEY_debug=1;;
+    true|True|TRUE|1)    OCF_RESKEY_debug=1;;
+    false|False|FALSE|0) OCF_RESKEY_debug=0;;
+    verbose|Verbose|VERBOSE|2) OCF_RESKEY_debug=2;;
     *)
-        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
+        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true', 'false', or 'verbose', not: ${OCF_RESKEY_debug}"
         OCF_RESKEY_debug=false
         ;;
 esac
