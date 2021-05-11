@@ -244,22 +244,22 @@ fping_check() {
     timeout=$(expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts)
 
     cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
-    output=$($cmd 2>&1); rc=$?
-    active=$(echo "$output" | grep "is alive" | wc -l)
+    fping_output=$($cmd 2>&1); rc=$?
+    active=$(echo "$fping_output" | grep "is alive" | wc -l)
 
     case $rc in
         0)
             if [ $OCF_RESKEY_debug -gt 1 ]; then
-                ping_conditional_log info "$output"
+                ping_conditional_log info "$fping_output"
             fi
             ;;
         1)
-            for h in $(echo "$output" | grep "is unreachable" | awk '{print $1}'); do
-                ping_conditional_log warn "$h is inactive: $output"
+            for h in $(echo "$fping_output" | grep "is unreachable" | awk '{print $1}'); do
+                ping_conditional_log warn "$h is inactive: $fping_output"
             done
             ;;
         *)
-            ocf_log err "Unexpected result for '$cmd' $rc: $(echo "$output" | tr '\n' ';')"
+            ocf_log err "Unexpected result for '$cmd' $rc: $(echo "$fping_output" | tr '\n' ';')"
             ;;
     esac
 
@@ -282,17 +282,17 @@ ping_check() {
             *:*) p_exe=ping6
         esac
 
-        p_out=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
+        ping_output=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
 
         case $rc in
             0)
                 active=$(expr $active + 1)
                 if [ $OCF_RESKEY_debug -gt 1 ]; then
-                    ping_conditional_log info "$p_out"
+                    ping_conditional_log info "$ping_output"
                 fi
                 ;;
-            1) ping_conditional_log warn "$host is inactive: $p_out";;
-            *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
+            1) ping_conditional_log warn "$host is inactive: $ping_output";;
+            *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $ping_output";;
         esac
     done
     return $active
