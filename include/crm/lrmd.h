@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -287,16 +287,15 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Connect to an executor
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*connect) (lrmd_t * lrmd, const char *client_name, int *fd);
 
     /*!
      * \brief Initiate an executor connection without blocking
      *
-     * \return 0 on success (in which case the event callback will be called
-     *         later with the connection result), -1 otherwise
+     * \return Legacy Pacemaker return code (if pcmk_ok, the event callback will
+     *         be called later with the result)
      * \note This function requires a mainloop.
      */
     int (*connect_async) (lrmd_t * lrmd, const char *client_name, int timeout /*ms */ );
@@ -313,16 +312,15 @@ typedef struct lrmd_api_operations_s {
      * \brief Poke executor connection to verify it is still capable of serving requests
      * \note The response comes in the form of a poke event to the callback. 
      *
-     * \retval 0, wait for response in callback
-     * \retval -1, connection failure, callback may not be invoked
+     * \return Legacy Pacemaker return code (if pcmk_ok, the event callback will
+     *         be called later with the result)
      */
     int (*poke_connection) (lrmd_t * lrmd);
 
     /*!
      * \brief Disconnect from the executor.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*disconnect) (lrmd_t * lrmd);
 
@@ -331,8 +329,7 @@ typedef struct lrmd_api_operations_s {
      *
      * \note Synchronous, guaranteed to occur in daemon before function returns.
      *
-     * \retval 0, success
-     * \retval negative error code on failure
+     * \return Legacy Pacemaker return code
      */
     int (*register_rsc) (lrmd_t * lrmd,
                          const char *rsc_id,
@@ -351,7 +348,7 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Retrieve registered recurring operations
      *
-     * \return pcmk_ok on success, -errno otherwise
+     * \return Legacy Pacemaker return code
      */
     int (*get_recurring_ops) (lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
                               enum lrmd_call_options options, GList **output);
@@ -364,11 +361,9 @@ typedef struct lrmd_api_operations_s {
      *
      * \note Synchronous, guaranteed to occur in daemon before function returns.
      *
-     * \retval 0, success
-     * \retval -1, success, but operations are currently executing on the rsc which will
-     *         return once they are completed.
-     * \retval negative error code on failure
-     *
+     * \return Legacy Pacemaker return code (of particular interest, EINPROGRESS
+     *         means that operations are in progress for the resource, and the
+     *         unregistration will be done when they complete)
      */
     int (*unregister_rsc) (lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options);
 
@@ -380,17 +375,15 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Issue a command on a resource
      *
-     * \note Asynchronous, command is queued in daemon on function return, but
-     *       execution of command is not synced.
+     * \return A call ID for the action on success (in which case the action is
+     *         queued in the executor, and the event callback will be called
+     *         later with the result), otherwise a negative legacy Pacemaker
+     *         return code
      *
-     * \note Operations on individual resources are guaranteed to occur
-     *       in the order the client api calls them in.
-     *
-     * \note Operations between different resources are not guaranteed
-     *       to occur in any specific order in relation to one another
-     *       regardless of what order the client api is called in.
-     * \retval call_id to track async event result on success
-     * \retval negative error code on failure
+     * \note exec() and cancel() operations on an individual resource are
+     *       guaranteed to occur in the order the client API is called. However,
+     *       operations on different resources are not guaranteed to occur in
+     *       any specific order.
      */
     int (*exec) (lrmd_t * lrmd, const char *rsc_id, const char *action, const char *userdata,   /* userdata string given back in event notification */
                  guint interval_ms,
@@ -401,25 +394,15 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Cancel a recurring command.
      *
-     * \note Synchronous, guaranteed to occur in daemon before function returns.
+     * \return Legacy Pacemaker return code (if pcmk_ok, command is queued in
+     *         daemon on function return, and the event callback will be called
+     *         later with an exec_complete event with an lrmd_op_status
+     *         signifying that the operation is cancelled)
      *
-     * \note The cancel is completed async from this call.
-     *       We can be guaranteed the cancel has completed once
-     *       the callback receives an exec_complete event with
-     *       the lrmd_op_status signifying that the operation is
-     *       cancelled.
-     * \note For each resource, cancel operations and exec operations
-     *       are processed in the order they are received.
-     *       It is safe to assume that for a single resource, a cancel
-     *       will occur in the executor before an exec if the client's cancel
-     *       api call occurs before the exec api call.
-     *
-     *       It is not however safe to assume any operation on one resource will
-     *       occur before an operation on another resource regardless of
-     *       the order the client api is called in.
-     *
-     * \retval 0, cancel command sent.
-     * \retval negative error code on failure
+     * \note exec() and cancel() operations on an individual resource are
+     *       guaranteed to occur in the order the client API is called. However,
+     *       operations on different resources are not guaranteed to occur in
+     *       any specific order.
      */
     int (*cancel) (lrmd_t *lrmd, const char *rsc_id, const char *action,
                    guint interval_ms);
@@ -434,6 +417,8 @@ typedef struct lrmd_api_operations_s {
      * \param[out] output    Metadata will be stored here (must not be NULL)
      * \param[in]  options   Options to use with any executor API calls (unused)
      *
+     * \return Legacy Pacemaker return code
+     *
      * \note Caller is responsible for freeing output. This call is currently
      *       always synchronous (blocking), and always done directly by the
      *       library (not via the executor connection). This means that it is based
@@ -443,9 +428,6 @@ typedef struct lrmd_api_operations_s {
      *       external agent must be executed, it will be executed by the
      *       caller's user, not the executor's.
      * \todo Add a metadata call to the executor API and let the server handle this.
-     *
-     * \retval lrmd_ok success
-     * \retval negative error code on failure
      */
     int (*get_metadata) (lrmd_t * lrmd,
                          const char *standard,
@@ -455,11 +437,11 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Retrieve a list of installed resource agents.
      *
+     * \return Number of items in list on success, negative legacy Pacemaker
+     *         return code otherwise
+     *
      * \note if standard is not provided, all known agents will be returned
      * \note list must be freed using lrmd_list_freeall()
-     *
-     * \retval num items in list on success
-     * \retval negative error code on failure
      */
     int (*list_agents) (lrmd_t * lrmd, lrmd_list_t ** agents,
                         const char *standard, const char *provider);
@@ -467,39 +449,35 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Retrieve a list of resource agent providers
      *
+     * \return Number of items in list on success, negative legacy Pacemaker
+     *         return code otherwise
+     *
      * \note When the agent is provided, only the agent's provider will be returned
      * \note When no agent is supplied, all providers will be returned.
      * \note List must be freed using lrmd_list_freeall()
-     *
-     * \retval num items in list on success
-     * \retval negative error code on failure
      */
     int (*list_ocf_providers) (lrmd_t * lrmd, const char *agent, lrmd_list_t ** providers);
 
     /*!
      * \brief Retrieve a list of standards supported by this machine/installation
      *
-     * \note List must be freed using lrmd_list_freeall()
+     * \return Number of items in list on success, negative legacy Pacemaker
+     *         return code otherwise
      *
-     * \retval num items in list on success
-     * \retval negative error code on failure
+     * \note List must be freed using lrmd_list_freeall()
      */
     int (*list_standards) (lrmd_t * lrmd, lrmd_list_t ** standards);
 
     /*!
      * \brief Execute an alert agent
      *
-     * \note Asynchronous, command is queued in daemon on function return, but
-     *       execution of command is not synced.
+     * \return Legacy Pacemaker return code (if pcmk_ok, the alert is queued in
+     *         the executor, and the event callback will be called later with
+     *         the result)
      *
-     * \note Operations on individual alerts are guaranteed to occur
-     *       in the order the client api calls them in.
-     *
-     * \note Operations between different alerts are not guaranteed
-     *       to occur in any specific order in relation to one another
-     *       regardless of what order the client api is called in.
-     * \retval call_id to track async event result on success
-     * \retval negative error code on failure
+     * \note Operations on individual alerts (by ID) are guaranteed to occur in
+     *       the order the client API is called. Operations on different alerts
+     *       are not guaranteed to occur in any specific order.
      */
     int (*exec_alert) (lrmd_t *lrmd, const char *alert_id,
                        const char *alert_path, int timeout, /* ms */
@@ -516,11 +494,11 @@ typedef struct lrmd_api_operations_s {
      * \param[in]  options   Options to use with any executor API calls (unused)
      * \param[in]  params    Parameters to pass to agent via environment
      *
+     * \return Legacy Pacemaker return code
+     *
      * \note This is identical to the get_metadata() API call, except parameters
      *       will be passed to the resource agent via environment variables.
      * \note The API will handle freeing params.
-     *
-     * \return lrmd_ok on success, negative error code on failure
      */
     int (*get_metadata_params) (lrmd_t *lrmd, const char *standard,
                                 const char *provider, const char *agent,
