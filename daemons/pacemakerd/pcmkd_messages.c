@@ -66,6 +66,49 @@ pcmk_handle_ping_request(pcmk__client_t *c, xmlNode *msg, uint32_t id)
     }
 }
 
+void
+pcmk_handle_shutdown_request(pcmk__client_t *c, xmlNode *msg, uint32_t id, uint32_t flags)
+{
+    xmlNode *shutdown = NULL;
+    xmlNode *reply = NULL;
+
+    /* Only allow privileged users (i.e. root or hacluster) to shut down
+     * Pacemaker from the command line (or direct IPC), so that other users
+     * are forced to go through the CIB and have ACLs applied.
+     */
+    bool allowed = pcmk_is_set(c->flags, pcmk__client_privileged);
+
+    shutdown = create_xml_node(NULL, XML_CIB_ATTR_SHUTDOWN);
+
+    if (allowed) {
+        crm_notice("Shutting down in response to IPC request %s from %s",
+                   crm_element_value(msg, F_CRM_REFERENCE),
+                   crm_element_value(msg, F_CRM_ORIGIN));
+        crm_xml_add_int(shutdown, XML_LRM_ATTR_OPSTATUS, CRM_EX_OK);
+    } else {
+        crm_warn("Ignoring shutdown request from unprivileged client %s",
+                 pcmk__client_name(c));
+        crm_xml_add_int(shutdown, XML_LRM_ATTR_OPSTATUS, CRM_EX_INSUFFICIENT_PRIV);
+    }
+
+    reply = create_reply(msg, shutdown);
+    free_xml(shutdown);
+    if (reply) {
+        if (pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event) != pcmk_rc_ok) {
+            crm_err("Failed sending shutdown reply to client %s",
+                    pcmk__client_name(c));
+        }
+        free_xml(reply);
+    } else {
+        crm_err("Failed building shutdown reply for client %s",
+                pcmk__client_name(c));
+    }
+
+    if (allowed) {
+        pcmk_shutdown(15);
+    }
+}
+
 static int32_t
 pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
@@ -123,23 +166,8 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     task = crm_element_value(msg, F_CRM_TASK);
     if (pcmk__str_eq(task, CRM_OP_QUIT, pcmk__str_none)) {
-        /* Only allow privileged users (i.e. root or hacluster) to shut down
-         * Pacemaker from the command line (or direct IPC), so that other users
-         * are forced to go through the CIB and have ACLs applied.
-         */
-        bool allowed = pcmk_is_set(c->flags, pcmk__client_privileged);
-
-        if (allowed) {
-            crm_notice("Shutting down in response to IPC request %s from %s",
-                       crm_element_value(msg, F_CRM_REFERENCE),
-                       crm_element_value(msg, F_CRM_ORIGIN));
-            pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_OK);
-            pcmk_shutdown(15);
-        } else {
-            crm_warn("Ignoring shutdown request from unprivileged client %s",
-                     pcmk__client_name(c));
-            pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INSUFFICIENT_PRIV);
-        }
+        pcmk__ipc_send_ack(c, id, flags, "ack", CRM_EX_INDETERMINATE);
+        pcmk_handle_shutdown_request(c, msg, id, flags);
 
     } else if (pcmk__str_eq(task, CRM_OP_RM_NODE_CACHE, pcmk__str_none)) {
         crm_trace("Ignoring request from client %s to purge node "
@@ -158,60 +186,6 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     free_xml(msg);
     return 0;
-}
-
-crm_exit_t
-request_shutdown(crm_ipc_t *ipc)
-{
-    xmlNode *request = NULL;
-    xmlNode *reply = NULL;
-    int rc = 0;
-    crm_exit_t status = CRM_EX_OK;
-
-    request = create_request(CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_MCP,
-                             CRM_SYSTEM_MCP, NULL);
-    if (request == NULL) {
-        crm_err("Unable to create shutdown request"); // Probably memory error
-        status = CRM_EX_TEMPFAIL;
-        goto done;
-    }
-
-    crm_notice("Requesting shutdown of existing Pacemaker instance");
-    rc = crm_ipc_send(ipc, request, crm_ipc_client_response, 0, &reply);
-    if (rc < 0) {
-        crm_err("Could not send shutdown request");
-        status = crm_errno2exit(rc);
-        goto done;
-    }
-
-    if ((rc == 0) || (reply == NULL)) {
-        crm_err("Unrecognized response to shutdown request");
-        status = CRM_EX_PROTOCOL;
-        goto done;
-    }
-
-    if ((crm_element_value_int(reply, "status", &rc) == 0)
-        && (rc != CRM_EX_OK)) {
-        crm_err("Shutdown request failed: %s", crm_exit_str(rc));
-        status = rc;
-        goto done;
-    }
-
-    // Wait for pacemakerd to shut down IPC (with 30-minute timeout)
-    status = CRM_EX_TIMEOUT;
-    for (int i = 0; i < 900; ++i) {
-        if (!crm_ipc_connected(ipc)) {
-            status = CRM_EX_OK;
-            break;
-        }
-        sleep(2);
-    }
-
-done:
-    free_xml(request);
-    crm_ipc_close(ipc);
-    crm_ipc_destroy(ipc);
-    return status;
 }
 
 struct qb_ipcs_service_handlers mcp_ipc_callbacks = {
