@@ -73,8 +73,13 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         rc = readlink(proc_path, exe_path, sizeof(exe_path) - 1);
         if (rc < 0) {
             if (last_asked_pid != pid) {
-                crm_err("Could not read from %s: %s " CRM_XS " errno=%d",
-                        proc_path, strerror(errno), errno);
+                if (errno == EACCES) {
+                    crm_info("Could not read from %s: %s " CRM_XS " errno=%d",
+                             proc_path, strerror(errno), errno);
+                } else {
+                    crm_err("Could not read from %s: %s " CRM_XS " errno=%d",
+                            proc_path, strerror(errno), errno);
+                }
                 last_asked_pid = pid;
             }
             if ((errno == EACCES) && checked_through_kill) {
