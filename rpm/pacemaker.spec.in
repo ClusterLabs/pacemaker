@@ -247,8 +247,8 @@ Requires:      %{python_path}
 BuildRequires: %{python_name}-devel
 
 # Pacemaker requires a minimum libqb functionality
-Requires:      libqb >= 0.13.0
-BuildRequires: libqb-devel >= 0.13.0
+Requires:      libqb >= 0.17.0
+BuildRequires: libqb-devel >= 0.17.0
 
 # Basics required for the build (even if usually satisfied through other BRs)
 BuildRequires: coreutils findutils grep sed
