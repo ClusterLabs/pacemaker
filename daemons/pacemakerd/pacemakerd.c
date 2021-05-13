@@ -27,8 +27,6 @@
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
 
-static const char *pid_file = PCMK_RUN_DIR "/pacemaker.pid";
-
 static void
 pcmk_ignore(int nsig)
 {
@@ -224,7 +222,6 @@ main(int argc, char **argv)
                 /* Legacy */
                 break;
             case 'p':
-                pid_file = optarg;
                 break;
             case 's':
                 pcmk__set_env_option("node_start_state", "standby");
