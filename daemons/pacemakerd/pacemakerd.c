@@ -23,9 +23,51 @@
 #include <crm/crm.h>  /* indirectly: CRM_EX_* */
 #include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc_pacemakerd.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
+
+#define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
+
+struct {
+    gboolean features;
+    gboolean foreground;
+    gboolean shutdown;
+    gboolean standby;
+} options;
+
+static gboolean
+pid_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    return TRUE;
+}
+
+static gboolean
+standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    options.standby = TRUE;
+    pcmk__set_env_option("node_start_state", "standby");
+    return TRUE;
+}
+
+static GOptionEntry entries[] = {
+    { "features", 'F', 0, G_OPTION_ARG_NONE, &options.features,
+      "Display full version and list of features Pacemaker was built with",
+      NULL },
+    { "foreground", 'f', 0, G_OPTION_ARG_NONE, &options.foreground,
+      "(Ignored) Pacemaker always runs in the foreground",
+      NULL },
+    { "pid-file", 'p', 0, G_OPTION_ARG_CALLBACK, pid_cb,
+      "(Ignored) Daemon pid file location",
+      "FILE" },
+    { "shutdown", 'S', 0, G_OPTION_ARG_NONE, &options.shutdown,
+      "Instruct Pacemaker to shutdown on this machine",
+      NULL },
+    { "standby", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, standby_cb,
+      "Start node in standby state",
+      NULL },
+
+    { NULL }
+};
 
 static void
 pcmk_ignore(int nsig)
@@ -38,49 +80,6 @@ pcmk_sigquit(int nsig)
 {
     pcmk__panic(__func__);
 }
-
-static pcmk__cli_option_t long_options[] = {
-    // long option, argument type, storage, short option, description, flags
-    {
-        "help", no_argument, NULL, '?',
-        "\tThis text", pcmk__option_default
-    },
-    {
-        "version", no_argument, NULL, '$',
-        "\tVersion information", pcmk__option_default
-    },
-    {
-        "verbose", no_argument, NULL, 'V',
-        "\tIncrease debug output", pcmk__option_default
-    },
-    {
-        "shutdown", no_argument, NULL, 'S',
-        "\tInstruct Pacemaker to shutdown on this machine", pcmk__option_default
-    },
-    {
-        "features", no_argument, NULL, 'F',
-        "\tDisplay full version and list of features Pacemaker was built with",
-        pcmk__option_default
-    },
-    {
-        "-spacer-", no_argument, NULL, '-',
-        "\nAdditional Options:", pcmk__option_default
-    },
-    {
-        "foreground", no_argument, NULL, 'f',
-        "\t(Ignored) Pacemaker always runs in the foreground",
-        pcmk__option_default
-    },
-    {
-        "pid-file", required_argument, NULL, 'p',
-        "\t(Ignored) Daemon pid file location", pcmk__option_default
-    },
-    {
-        "standby", no_argument, NULL, 's',
-        "\tStart node in standby state", pcmk__option_default
-    },
-    { 0, 0, 0, 0 }
-};
 
 static void
 mcp_chown(const char *path, uid_t uid, gid_t gid)
@@ -188,77 +187,60 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 }
 
+static GOptionContext *
+build_arg_context(pcmk__common_args_t *args) {
+    GOptionContext *context = NULL;
+
+    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    pcmk__add_main_args(context, entries);
+    return context;
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    int flag;
-    int argerr = 0;
+    crm_exit_t exit_code = CRM_EX_OK;
 
-    int option_index = 0;
+    GError *error = NULL;
+
+    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "p");
+    GOptionContext *context = build_arg_context(args);
+
     bool old_instance_connected = false;
-    gboolean shutdown = FALSE;
 
     pcmk_ipc_api_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
 
     crm_log_preinit(NULL, argc, argv);
-    pcmk__set_cli_options(NULL, "[options]", long_options,
-                          "primary Pacemaker daemon that launches and "
-                          "monitors all subsidiary Pacemaker daemons");
     mainloop_add_signal(SIGHUP, pcmk_ignore);
     mainloop_add_signal(SIGQUIT, pcmk_sigquit);
 
-    while (1) {
-        flag = pcmk__next_cli_option(argc, argv, &option_index, NULL);
-        if (flag == -1)
-            break;
-
-        switch (flag) {
-            case 'V':
-                crm_bump_log_level(argc, argv);
-                break;
-            case 'f':
-                /* Legacy */
-                break;
-            case 'p':
-                break;
-            case 's':
-                pcmk__set_env_option("node_start_state", "standby");
-                break;
-            case '$':
-            case '?':
-                pcmk__cli_help(flag, CRM_EX_OK);
-                break;
-            case 'S':
-                shutdown = TRUE;
-                break;
-            case 'F':
-                printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", PACEMAKER_VERSION, BUILD_VERSION,
-                       CRM_FEATURE_SET, CRM_FEATURES);
-                crm_exit(CRM_EX_OK);
-            default:
-                printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
-                ++argerr;
-                break;
-        }
+    if (!g_option_context_parse_strv(context, &processed_args, &error)) {
+        exit_code = CRM_EX_USAGE;
+        goto done;
     }
 
-    if (optind < argc) {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        printf("\n");
-    }
-    if (argerr) {
-        pcmk__cli_help('?', CRM_EX_USAGE);
+    if (options.features) {
+        printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", PACEMAKER_VERSION, BUILD_VERSION,
+               CRM_FEATURE_SET, CRM_FEATURES);
+        exit_code = CRM_EX_OK;
+        goto done;
     }
 
+    if (args->version) {
+        g_strfreev(processed_args);
+        pcmk__free_arg_context(context);
+        /* FIXME:  When pacemakerd is converted to use formatted output, this can go. */
+        pcmk__cli_help('v', CRM_EX_USAGE);
+    }
 
     setenv("LC_ALL", "C", 1);
 
     pcmk__set_env_option("mcp", "true");
 
+    pcmk__cli_init_logging("pacemakerd", args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
     crm_debug("Checking for existing Pacemaker instance");
@@ -267,30 +249,34 @@ main(int argc, char **argv)
     if (old_instance == NULL) {
         fprintf(stderr, "Could not connect to pacemakerd: %s",
                 pcmk_rc_str(rc));
-        crm_exit(pcmk_rc2exitc(rc));
+        exit_code = pcmk_rc2exitc(rc);
+        goto done;
     }
 
     pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
     rc = pcmk_connect_ipc(old_instance, pcmk_ipc_dispatch_sync);
     old_instance_connected = pcmk_ipc_is_connected(old_instance);
 
-    if (shutdown) {
+    if (options.shutdown) {
         if (old_instance_connected) {
             rc = pcmk_pacemakerd_api_shutdown(old_instance, crm_system_name);
             pcmk_dispatch_ipc(old_instance);
             pcmk_free_ipc_api(old_instance);
-            crm_exit(pcmk_rc2exitc(rc));
+            exit_code = pcmk_rc2exitc(rc);
+            goto done;
         } else {
             crm_err("Could not request shutdown of existing "
                     "Pacemaker instance: %s", strerror(errno));
             pcmk_free_ipc_api(old_instance);
-            crm_exit(CRM_EX_DISCONNECT);
+            exit_code = CRM_EX_DISCONNECT;
+            goto done;
         }
 
     } else if (old_instance_connected) {
         pcmk_free_ipc_api(old_instance);
         crm_err("Aborting start-up because active Pacemaker instance found");
-        crm_exit(CRM_EX_FATAL);
+        exit_code = CRM_EX_FATAL;
+        goto done;
     }
 
     pcmk_free_ipc_api(old_instance);
@@ -321,7 +307,8 @@ main(int argc, char **argv)
 #ifdef SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
-        crm_exit(CRM_EX_PROTOCOL);
+        exit_code = CRM_EX_PROTOCOL;
+        goto done;
     }
 #endif
 
@@ -336,9 +323,11 @@ main(int argc, char **argv)
         case pcmk_rc_ok:
             break;
         case pcmk_rc_ipc_unauthorized:
-            crm_exit(CRM_EX_CANTCREAT);
+            exit_code = CRM_EX_CANTCREAT;
+            goto done;
         default:
-            crm_exit(CRM_EX_FATAL);
+            exit_code = CRM_EX_FATAL;
+            goto done;
     };
 
     mainloop_add_signal(SIGTERM, pcmk_shutdown);
@@ -371,5 +360,11 @@ main(int argc, char **argv)
 #ifdef SUPPORT_COROSYNC
     cluster_disconnect_cfg();
 #endif
-    crm_exit(CRM_EX_OK);
+
+done:
+    g_strfreev(processed_args);
+    pcmk__free_arg_context(context);
+
+    pcmk__output_and_clear_error(error, NULL);
+    crm_exit(exit_code);
 }
