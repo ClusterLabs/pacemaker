@@ -24,7 +24,7 @@
 : ${OCF_RESKEY_dampen:="5s"}
 : ${OCF_RESKEY_attempts:="3"}
 : ${OCF_RESKEY_multiplier:="1"}
-: ${OCF_RESKEY_debug:="false"}
+: ${OCF_RESKEY_debug:="0"}
 : ${OCF_RESKEY_failure_score:="0"}
 : ${OCF_RESKEY_use_fping:="1"}
 : ${OCF_RESKEY_host_list:=""}
@@ -152,7 +152,7 @@ END
 
 ping_conditional_log() {
     level="$1"; shift
-    if [ "${OCF_RESKEY_debug}" = "true" ]; then
+    if [ $OCF_RESKEY_debug -gt 0 ]; then
         ocf_log "$level" "$*"
     fi
 }
@@ -178,7 +178,7 @@ ping_stop() {
 
     rm -f "${OCF_RESKEY_pidfile}"
 
-    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen" $attrd_options
+    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen"
 
     return $OCF_SUCCESS
 }
@@ -244,19 +244,22 @@ fping_check() {
     timeout=$(expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts)
 
     cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
-    output=$($cmd 2>&1); rc=$?
-    active=$(echo "$output" | grep "is alive" | wc -l)
+    fping_output=$($cmd 2>&1); rc=$?
+    active=$(echo "$fping_output" | grep "is alive" | wc -l)
 
     case $rc in
         0)
+            if [ $OCF_RESKEY_debug -gt 1 ]; then
+                ping_conditional_log info "$fping_output"
+            fi
             ;;
         1)
-            for h in $(echo "$output" | grep "is unreachable" | awk '{print $1}'); do
-                ping_conditional_log warn "$h is inactive"
+            for h in $(echo "$fping_output" | grep "is unreachable" | awk '{print $1}'); do
+                ping_conditional_log warn "$h is inactive: $fping_output"
             done
             ;;
         *)
-            ocf_log err "Unexpected result for '$cmd' $rc: $(echo "$output" | tr '\n' ';')"
+            ocf_log err "Unexpected result for '$cmd' $rc: $(echo "$fping_output" | tr '\n' ';')"
             ;;
     esac
 
@@ -279,12 +282,17 @@ ping_check() {
             *:*) p_exe=ping6
         esac
 
-        p_out=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
+        ping_output=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
 
         case $rc in
-            0) active=$(expr $active + 1);;
-            1) ping_conditional_log warn "$host is inactive: $p_out";;
-            *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
+            0)
+                active=$(expr $active + 1)
+                if [ $OCF_RESKEY_debug -gt 1 ]; then
+                    ping_conditional_log info "$ping_output"
+                fi
+                ;;
+            1) ping_conditional_log warn "$host is inactive: $ping_output";;
+            *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $ping_output";;
         esac
     done
     return $active
@@ -302,9 +310,9 @@ ping_update() {
 
     score=$(expr $active \* $OCF_RESKEY_multiplier)
     if [ "$__OCF_ACTION" = "start" ] ; then
-        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen" $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen"
     else
-        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen" $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen"
     fi
     rc=$?
     case $rc in
@@ -388,18 +396,14 @@ fi
 
 # Check the debug option
 case "${OCF_RESKEY_debug}" in
-    true|True|TRUE|1)    OCF_RESKEY_debug=true;;
-    false|False|FALSE|0) OCF_RESKEY_debug=false;;
+    true|True|TRUE|1)    OCF_RESKEY_debug=1;;
+    false|False|FALSE|0) OCF_RESKEY_debug=0;;
+    verbose|Verbose|VERBOSE|2) OCF_RESKEY_debug=2;;
     *)
-        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
+        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true', 'false', or 'verbose', not: ${OCF_RESKEY_debug}"
         OCF_RESKEY_debug=false
         ;;
 esac
-
-attrd_options='-q'
-if [ "${OCF_RESKEY_debug}" = "true" ]; then
-    attrd_options=''
-fi
 
 case "$__OCF_ACTION" in
 meta-data)      meta_data
