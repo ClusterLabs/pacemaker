@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2020 the Pacemaker project contributors
+# Copyright 2014-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -68,11 +68,11 @@ HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource ma
 #       and all wrappers to C code.
 %.8:	% $(MAN8DEPS)
 	$(AM_V_at)chmod a+x $(abs_builddir)/$<
-	$(AM_V_MAN)if [ -f $(top_srcdir)/tools/$@.inc ]; then			\
+	$(AM_V_MAN)if [ -f $(abs_srcdir)/$@.inc ]; then			\
 		PATH=$(abs_builddir):$$PATH $(HELP2MAN) $(HELP2MAN_ARGS)	\
 			-h --help-all 						\
 			--no-discard-stderr 					\
-			-i $(top_srcdir)/tools/$@.inc $(abs_builddir)/$<		\
+			-i $(abs_srcdir)/$@.inc $(abs_builddir)/$<		\
 			| sed -f $(top_srcdir)/tools/fix-manpages > $@ ; \
 	else									\
 		PATH=$(abs_builddir):$$PATH $(HELP2MAN) $(HELP2MAN_ARGS)	\
