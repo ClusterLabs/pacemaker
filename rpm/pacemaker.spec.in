@@ -225,7 +225,6 @@ License:       GPLv2+ and LGPLv2+
 License:       GPLv2+ and LGPLv2+ and BSD
 %endif
 Url:           https://www.clusterlabs.org/
-Group:         System Environment/Daemons
 
 # Example: https://codeload.github.com/ClusterLabs/pacemaker/tar.gz/e91769e
 # will download pacemaker-e91769e.tar.gz
@@ -308,7 +307,6 @@ Available rpmbuild rebuild options:
 %package cli
 License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
-Group:         System Environment/Daemons
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 %if 0%{?supports_recommends}
 Recommends:    pcmk-cluster-manager = %{version}-%{release}
@@ -332,7 +330,6 @@ be part of the cluster.
 %package -n %{pkgname_pcmk_libs}
 License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
-Group:         System Environment/Daemons
 Requires(pre): %{pkgname_shadow_utils}
 Requires:      %{name}-schemas = %{version}-%{release}
 # sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
@@ -348,7 +345,6 @@ nodes and those just running the CLI tools.
 %package cluster-libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
-Group:         System Environment/Daemons
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 
 %description cluster-libs
@@ -366,7 +362,6 @@ License:       GPLv2+ and LGPLv2+
 License:       GPLv2+ and LGPLv2+ and BSD
 %endif
 Summary:       Pacemaker remote daemon for non-cluster nodes
-Group:         System Environment/Daemons
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
@@ -389,7 +384,6 @@ nodes not running the full corosync/cluster stack.
 %package -n %{pkgname_pcmk_libs}-devel
 License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
-Group:         Development/Libraries
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
@@ -408,7 +402,6 @@ for developing tools for Pacemaker.
 %package       cts
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
-Group:         System Environment/Daemons
 Requires:      %{python_path}
 Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
@@ -429,7 +422,6 @@ Test framework for cluster-related technologies like Pacemaker
 %package       doc
 License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
-Group:         Documentation
 BuildArch:     noarch
 
 %description   doc
