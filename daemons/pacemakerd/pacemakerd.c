@@ -25,6 +25,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc_pacemakerd.h>
+#include <crm/common/output_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
 
@@ -36,6 +37,14 @@ struct {
     gboolean shutdown;
     gboolean standby;
 } options;
+
+static pcmk__output_t *out = NULL;
+
+static pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    { NULL, NULL, NULL }
+};
 
 static gboolean
 pid_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
@@ -177,21 +186,21 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
     }
 
     if (status != CRM_EX_OK) {
-        fprintf(stderr, "Bad reply from pacemakerd: %s", crm_exit_str(status));
+        out->err(out, "Bad reply from pacemakerd: %s", crm_exit_str(status));
         return;
     }
 
     if (reply->reply_type != pcmk_pacemakerd_reply_shutdown) {
-        fprintf(stderr, "Unknown reply type %d from pacemakerd",
-                reply->reply_type);
+        out->err(out, "Unknown reply type %d from pacemakerd",
+                 reply->reply_type);
     }
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, NULL, NULL, NULL);
+    context = pcmk__build_arg_context(args, "text", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -204,9 +213,10 @@ main(int argc, char **argv)
 
     GError *error = NULL;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "p");
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     bool old_instance_connected = false;
 
@@ -217,23 +227,30 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGHUP, pcmk_ignore);
     mainloop_add_signal(SIGQUIT, pcmk_sigquit);
 
+    pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
     }
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+                    args->output_ty, pcmk_rc_str(rc));
+        goto done;
+    }
+
     if (options.features) {
-        printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", PACEMAKER_VERSION, BUILD_VERSION,
-               CRM_FEATURE_SET, CRM_FEATURES);
+        out->info(out, "Pacemaker %s (Build: %s)\n Supporting v%s: %s", PACEMAKER_VERSION,
+                  BUILD_VERSION, CRM_FEATURE_SET, CRM_FEATURES);
         exit_code = CRM_EX_OK;
         goto done;
     }
 
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-        /* FIXME:  When pacemakerd is converted to use formatted output, this can go. */
-        pcmk__cli_help('v', CRM_EX_USAGE);
+        out->version(out, false);
+        goto done;
     }
 
     setenv("LC_ALL", "C", 1);
@@ -247,8 +264,7 @@ main(int argc, char **argv)
 
     rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
     if (old_instance == NULL) {
-        fprintf(stderr, "Could not connect to pacemakerd: %s",
-                pcmk_rc_str(rc));
+        out->err(out, "Could not check for existing pacemakerd: %s", pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
@@ -280,6 +296,13 @@ main(int argc, char **argv)
     }
 
     pcmk_free_ipc_api(old_instance);
+
+    /* Don't allow any accidental output after this point. */
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+        out = NULL;
+    }
 
 #ifdef SUPPORT_COROSYNC
     if (mcp_read_config() == FALSE) {
@@ -365,6 +388,11 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__output_and_clear_error(error, NULL);
+    pcmk__output_and_clear_error(error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
     crm_exit(exit_code);
 }
