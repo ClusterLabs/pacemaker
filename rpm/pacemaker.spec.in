@@ -30,6 +30,7 @@
 
 ## Upstream commit (full commit ID, abbreviated commit ID, or tag) to build
 %global commit HEAD
+
 ## Since git v2.11, the extent of abbreviation is autoscaled by default
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
 %global commit_abbrev 7
@@ -259,11 +260,12 @@ BuildRequires: %{python_name}-devel
 Requires:      libqb >= 0.17.0
 BuildRequires: libqb-devel >= 0.17.0
 
-# Basics required for the build (even if usually satisfied through other BRs)
+# Required basic build tools
 BuildRequires: coreutils findutils grep sed
+BuildRequires: autoconf automake gcc make pkgconfig
+BuildRequires: libtool %{?pkgname_libtool_devel}
 
 # Required for core functionality
-BuildRequires: automake autoconf gcc libtool pkgconfig %{?pkgname_libtool_devel}
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: %{pkgname_bzip2_devel}
@@ -284,7 +286,7 @@ BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
 %if %{with doc}
-BuildRequires: inkscape asciidoc %{python_name}-sphinx
+BuildRequires: asciidoc inkscape %{python_name}-sphinx
 %endif
 
 Provides:      pcmk-cluster-manager = %{version}-%{release}
@@ -308,8 +310,8 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cibsecrets coverage doc stonithd hardening pre_release
-                profiling upstart_job
+  --with(out) : cibsecrets coverage doc hardening pre_release profiling stonithd
+                upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
@@ -368,7 +370,7 @@ License:       GPLv2+ and LGPLv2+
 # initscript is Revised BSD
 License:       GPLv2+ and LGPLv2+ and BSD
 %endif
-Summary:       Pacemaker remote daemon for non-cluster nodes
+Summary:       Pacemaker remote executor daemon for non-cluster nodes
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
@@ -393,7 +395,7 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
-Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
+Requires:      %{?pkgname_libtool_devel_arch} libuuid-devel%{?_isa}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
