@@ -15,6 +15,8 @@ if BUILD_SYSTEMD
 systemdsystemunit_DATA	= pacemaker.service
 endif
 
+EXTRA_DIST 	= pacemakerd.8.inc
+
 ## SOURCES
 
 noinst_HEADERS		= pacemakerd.h

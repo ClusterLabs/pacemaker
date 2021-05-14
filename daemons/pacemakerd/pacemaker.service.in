@@ -44,7 +44,7 @@ EnvironmentFile=-@CONFIGDIR@/pacemaker
 EnvironmentFile=-@CONFIGDIR@/sbd
 SuccessExitStatus=100
 
-ExecStart=@sbindir@/pacemakerd -f
+ExecStart=@sbindir@/pacemakerd
 
 # Systemd v227 and above can limit the number of processes spawned by a
 # service. That is a bad idea for an HA cluster resource manager, so disable it
