@@ -2,7 +2,7 @@
 """ Regression tests for Pacemaker's fencer
 """
 
-__copyright__ = "Copyright 2012-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -212,14 +212,15 @@ class XmlValidationError(TestError):
 class Test(object):
     """ Executor for a single test """
 
-    def __init__(self, name, description, verbose=0, with_cpg=0, timeout=2, force_wait=0):
+    def __init__(self, name, description, verbose=0, with_cpg=0, timeout=2,
+                 force_wait=0, logdir="/tmp"):
         self.name = name
         self.description = description
         self.cmds = []
         self.verbose = verbose
         self.timeout = timeout
         self.force_wait = force_wait
-        self.logpath = "/tmp/stonith-regression.log"
+        self.logpath = os.path.join(logdir, "pacemaker-fenced.log")
 
         self.result_txt = ""
         self.cmd_tool_output = ""
@@ -335,7 +336,6 @@ class Test(object):
             print("Daemon Output Start")
             print(self.stonith_output)
             print("Daemon Output End")
-        os.remove(self.logpath)
 
     def add_stonith_log_pattern(self, pattern):
         """ Add a log pattern to expect from this test """
@@ -526,17 +526,19 @@ class Test(object):
 class Tests(object):
     """ Collection of all fencing regression tests """
 
-    def __init__(self, verbose=0, timeout=2, force_wait=0):
+    def __init__(self, verbose=0, timeout=2, force_wait=0, logdir="/tmp"):
         self.tests = []
         self.verbose = verbose
         self.timeout = timeout
         self.force_wait = force_wait
+        self.logdir = logdir
         self.autogen_corosync_cfg = not os.path.exists("/etc/corosync/corosync.conf")
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, with_cpg, self.timeout, self.force_wait)
+        test = Test(name, description, self.verbose, with_cpg, self.timeout,
+                    self.force_wait, self.logdir)
         self.tests.append(test)
         return test
 
@@ -1426,11 +1428,9 @@ class Tests(object):
 
         if use_corosync:
             if self.autogen_corosync_cfg:
-                (handle, self.autogen_corosync_log) = tempfile.mkstemp(prefix="cts-fencing-",
-                                                                       suffix=".corosync.log")
-                os.close(handle)
+                logname = os.path.join(self.logdir, "corosync.log")
                 corosync_cfg = io.open("/etc/corosync/corosync.conf", "w")
-                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), self.autogen_corosync_log))
+                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), logname))
                 corosync_cfg.close()
 
             ### make sure we are in control ###
@@ -1448,11 +1448,10 @@ class Tests(object):
             if self.autogen_corosync_cfg:
                 if self.verbose:
                     print("Corosync output")
-                    logfile = io.open(self.autogen_corosync_log, 'rt')
+                    logfile = io.open(os.path.join(self.logdir, "corosync.log"), 'rt')
                     for line in logfile.readlines():
                         print(line.strip())
                     logfile.close()
-                os.remove(self.autogen_corosync_log)
                 os.remove("/etc/corosync/corosync.conf")
 
         subprocess.call(["cts-support", "uninstall"])
@@ -1538,49 +1537,52 @@ def main(argv):
 
     use_corosync = 1
 
-    tests = Tests(opts.options['verbose'], opts.options['timeout'],
-                  opts.options['force-wait'])
-    tests.build_standalone_tests()
-    tests.build_custom_timeout_tests()
-    tests.build_api_sanity_tests()
-    tests.build_fence_merge_tests()
-    tests.build_fence_no_merge_tests()
-    tests.build_unfence_tests()
-    tests.build_unfence_on_target_tests()
-    tests.build_nodeid_tests()
-    tests.build_remap_tests()
+    # Create a temporary directory for log files (the directory and its
+    # contents will automatically be erased when done)
+    with tempfile.TemporaryDirectory(prefix="cts-fencing-") as logdir:
+        tests = Tests(opts.options['verbose'], opts.options['timeout'],
+                      opts.options['force-wait'], logdir)
+        tests.build_standalone_tests()
+        tests.build_custom_timeout_tests()
+        tests.build_api_sanity_tests()
+        tests.build_fence_merge_tests()
+        tests.build_fence_no_merge_tests()
+        tests.build_unfence_tests()
+        tests.build_unfence_on_target_tests()
+        tests.build_nodeid_tests()
+        tests.build_remap_tests()
 
-    if opts.options['list-tests']:
-        tests.print_list()
-        sys.exit(CrmExit.OK)
-    elif opts.options['show-usage']:
-        opts.show_usage()
-        sys.exit(CrmExit.OK)
+        if opts.options['list-tests']:
+            tests.print_list()
+            sys.exit(CrmExit.OK)
+        elif opts.options['show-usage']:
+            opts.show_usage()
+            sys.exit(CrmExit.OK)
 
-    print("Starting ...")
+        print("Starting ...")
 
-    if opts.options['no-cpg']:
-        use_corosync = 0
+        if opts.options['no-cpg']:
+            use_corosync = 0
 
-    tests.setup_environment(use_corosync)
+        tests.setup_environment(use_corosync)
 
-    if opts.options['run-only-pattern'] != "":
-        tests.run_tests_matching(opts.options['run-only-pattern'])
-        tests.print_results()
-    elif opts.options['run-only'] != "":
-        tests.run_single(opts.options['run-only'])
-        tests.print_results()
-    elif opts.options['no-cpg']:
-        tests.run_no_cpg()
-        tests.print_results()
-    elif opts.options['cpg-only']:
-        tests.run_cpg_only()
-        tests.print_results()
-    else:
-        tests.run_tests()
-        tests.print_results()
+        if opts.options['run-only-pattern'] != "":
+            tests.run_tests_matching(opts.options['run-only-pattern'])
+            tests.print_results()
+        elif opts.options['run-only'] != "":
+            tests.run_single(opts.options['run-only'])
+            tests.print_results()
+        elif opts.options['no-cpg']:
+            tests.run_no_cpg()
+            tests.print_results()
+        elif opts.options['cpg-only']:
+            tests.run_cpg_only()
+            tests.print_results()
+        else:
+            tests.run_tests()
+            tests.print_results()
 
-    tests.cleanup_environment(use_corosync)
+        tests.cleanup_environment(use_corosync)
     tests.exit()
 
 
