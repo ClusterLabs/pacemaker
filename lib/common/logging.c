@@ -294,10 +294,10 @@ setenv_logfile(const char *filename)
  *
  * \param[in] filename  Name of log file to use
  *
- * \return TRUE if log could be used, FALSE otherwise
+ * \return Standard Pacemaker return code
  */
-gboolean
-crm_add_logfile(const char *filename)
+int
+pcmk__add_logfile(const char *filename)
 {
     /* No log messages from this function will be logged to the new log!
      * If another target such as syslog has already been added, the messages
@@ -319,21 +319,22 @@ crm_add_logfile(const char *filename)
 
     // If the user doesn't want logging, we're done
     if (logfile_disabled(filename)) {
-        return FALSE;
+        return pcmk_rc_ok;
     }
 
     // If the caller wants the default and we already have it, we're done
     is_default = pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none);
     if (is_default && (default_fd >= 0)) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     // Check whether we have write access to the file
     logfile = fopen(filename, "a");
     if (logfile == NULL) {
+        rc = errno;
         crm_warn("Logging to '%s' is disabled: %s " CRM_XS " uid=%u gid=%u",
-                 filename, strerror(errno), geteuid(), getegid());
-        return FALSE;
+                 filename, strerror(rc), geteuid(), getegid());
+        return rc;
     }
 
     rc = set_logfile_permissions(filename, logfile);
@@ -341,7 +342,7 @@ crm_add_logfile(const char *filename)
         crm_warn("Logging to '%s' is disabled: %s " CRM_XS " permissions",
                  filename, strerror(rc));
         fclose(logfile);
-        return FALSE;
+        return rc;
     }
 
     // Close and reopen as libqb logging target
@@ -350,7 +351,7 @@ crm_add_logfile(const char *filename)
     if (fd < 0) {
         crm_warn("Logging to '%s' is disabled: %s " CRM_XS " qb_log_file_open",
                  filename, strerror(-fd));
-        return FALSE;
+        return -fd; // == +errno
     }
 
     if (is_default) {
@@ -365,7 +366,7 @@ crm_add_logfile(const char *filename)
     crm_notice("Additional logging available in %s", filename);
     enable_logfile(fd);
     have_logfile = true;
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static int blackbox_trigger = 0;
@@ -854,7 +855,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (!pcmk__str_eq("none", logfile, pcmk__str_casei)
             && (pcmk__is_daemon || (logfile != NULL))) {
             // Daemons always get a log file, unless explicitly set to "none"
-            crm_add_logfile(logfile);
+            pcmk__add_logfile(logfile);
         }
     }
 
@@ -1058,6 +1059,12 @@ crm_log_cli_init(const char *entity)
 {
     pcmk__cli_init_logging(entity, 0);
     return TRUE;
+}
+
+gboolean
+crm_add_logfile(const char *filename)
+{
+    return pcmk__add_logfile(filename) == pcmk_rc_ok;
 }
 
 // End deprecated API

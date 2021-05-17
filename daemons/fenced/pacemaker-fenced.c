@@ -1349,7 +1349,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'l':
-                crm_add_logfile(optarg);
+                pcmk__add_logfile(optarg);
                 break;
             case 's':
                 stand_alone = TRUE;

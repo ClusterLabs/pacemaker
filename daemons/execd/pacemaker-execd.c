@@ -440,7 +440,7 @@ main(int argc, char **argv, char **envp)
 
         switch (flag) {
             case 'l':
-                crm_add_logfile(optarg);
+                pcmk__add_logfile(optarg);
                 break;
             case 'p':
                 setenv("PCMK_remote_port", optarg, 1);
