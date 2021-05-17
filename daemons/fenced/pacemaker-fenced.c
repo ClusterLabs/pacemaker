@@ -1349,7 +1349,17 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'l':
-                pcmk__add_logfile(optarg);
+                {
+                    int rc = pcmk__add_logfile(optarg);
+
+                    if (rc != pcmk_rc_ok) {
+                        /* Logging has not yet been initialized, so stderr is
+                         * the only way to get information out
+                         */
+                        fprintf(stderr, "Logging to %s is disabled: %s\n",
+                                optarg, pcmk_rc_str(rc));
+                    }
+                }
                 break;
             case 's':
                 stand_alone = TRUE;

@@ -440,7 +440,17 @@ main(int argc, char **argv, char **envp)
 
         switch (flag) {
             case 'l':
-                pcmk__add_logfile(optarg);
+                {
+                    int rc = pcmk__add_logfile(optarg);
+
+                    if (rc != pcmk_rc_ok) {
+                        /* Logging has not yet been initialized, so stderr is
+                         * the only way to get information out
+                         */
+                        fprintf(stderr, "Logging to %s is disabled: %s\n",
+                                optarg, pcmk_rc_str(rc));
+                    }
+                }
                 break;
             case 'p':
                 setenv("PCMK_remote_port", optarg, 1);
