@@ -56,6 +56,7 @@ API_request_base	= command-output	\
 			  crm_simulate		\
 			  crmadmin		\
 			  digests		\
+			  pacemakerd 		\
 			  stonith_admin		\
 			  version
 

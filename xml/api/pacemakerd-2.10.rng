@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-pacemakerd"/>
+    </start>
+
+    <define name="element-pacemakerd">
+        <element name="pacemakerd">
+            <attribute name="version"> <text /> </attribute>
+            <attribute name="build"> <text /> </attribute>
+            <attribute name="feature_set"> <text /> </attribute>
+
+            <optional>
+                <ref name="feature-list" />
+            </optional>
+        </element>
+    </define>
+
+    <define name="feature-list">
+        <element name="features">
+            <oneOrMore>
+                <element name="feature"> <text/> </element>
+            </oneOrMore>
+        </element>
+    </define>
+</grammar>
