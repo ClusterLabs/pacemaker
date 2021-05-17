@@ -43,6 +43,42 @@ static pcmk__output_t *out = NULL;
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
+static int
+pacemakerd_features(pcmk__output_t *out, va_list args) {
+    out->info(out, "Pacemaker %s (Build: %s)\n Supporting v%s: %s", PACEMAKER_VERSION,
+              BUILD_VERSION, CRM_FEATURE_SET, CRM_FEATURES);
+    return pcmk_rc_ok;
+}
+
+static int
+pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
+    gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
+
+    pcmk__output_xml_create_parent(out, "pacemakerd",
+                                   "version", PACEMAKER_VERSION,
+                                   "build", BUILD_VERSION,
+                                   "feature_set", CRM_FEATURE_SET,
+                                   NULL);
+    out->begin_list(out, NULL, NULL, "features");
+
+    for (char **s = feature_list; *s != NULL; s++) {
+        pcmk__output_create_xml_text_node(out, "feature", *s);
+    }
+
+    out->end_list(out);
+
+    g_strfreev(feature_list);
+    return pcmk_rc_ok;
+}
+
+static pcmk__message_entry_t fmt_functions[] = {
+    { "features", "default", pacemakerd_features },
+    { "features", "xml", pacemakerd_features_xml },
+
     { NULL, NULL, NULL }
 };
 
@@ -200,7 +236,7 @@ static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
-    context = pcmk__build_arg_context(args, "text", group, NULL);
+    context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
 }
@@ -241,9 +277,12 @@ main(int argc, char **argv)
         goto done;
     }
 
+    pcmk__force_args(context, &error, "%s --xml-simple-list", g_get_prgname());
+
+    pcmk__register_messages(out, fmt_functions);
+
     if (options.features) {
-        out->info(out, "Pacemaker %s (Build: %s)\n Supporting v%s: %s", PACEMAKER_VERSION,
-                  BUILD_VERSION, CRM_FEATURE_SET, CRM_FEATURES);
+        out->message(out, "features");
         exit_code = CRM_EX_OK;
         goto done;
     }
