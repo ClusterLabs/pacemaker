@@ -296,8 +296,11 @@ main(int argc, char **argv)
 
     pcmk__set_env_option("mcp", "true");
 
-    pcmk__cli_init_logging("pacemakerd", args->verbosity);
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    if (options.shutdown) {
+        pcmk__cli_init_logging("pacemakerd", args->verbosity);
+    } else {
+        crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    }
 
     crm_debug("Checking for existing Pacemaker instance");
 
