@@ -328,6 +328,21 @@ AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
                    ["$with_concurrent_fencing_default"],
                    [Default value for concurrent-fencing cluster option])
 
+AC_ARG_WITH([sbd-sync-default],
+    [AS_HELP_STRING([--with-sbd-sync-default], m4_normalize([
+        default value used by sbd if SBD_SYNC_RESOURCE_STARTUP
+        environment variable is not set @<:@false@:>@]))],
+)
+AS_CASE([$with_sbd_sync_default],
+        [""], [with_sbd_sync_default=false],
+        [false], [],
+        [true], [PCMK_FEATURES="$PCMK_FEATURES default-sbd-sync"],
+        [AC_MSG_ERROR([Invalid value "$with_sbd_sync_default" for --with-sbd-sync-default])]
+)
+AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
+                   [$with_sbd_sync_default],
+                   [Default value for SBD_SYNC_RESOURCE_STARTUP environment variable])
+
 AC_ARG_WITH([resource-stickiness-default],
     [AS_HELP_STRING([--with-resource-stickiness-default],
         [If positive, value to add to new CIBs as explicit resource default for resource-stickiness @<:@0@:>@])],

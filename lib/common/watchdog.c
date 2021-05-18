@@ -247,8 +247,6 @@ pcmk__get_sbd_timeout(void)
     return sbd_timeout;
 }
 
-#define PCMK__SBD_SYNC_DEFAULT false
-
 bool
 pcmk__get_sbd_sync_resource_startup(void)
 {
