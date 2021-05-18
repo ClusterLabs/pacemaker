@@ -3082,6 +3082,16 @@ class RemoteMigrate(RemoteDriver):
 
         return self.success()
 
+    def is_applicable(self):
+        if not RemoteDriver.is_applicable(self):
+            return 0
+        # This test requires at least three nodes: one to convert to a
+        # remote node, one to host the connection originally, and one
+        # to migrate the connection to.
+        if len(self.Env["nodes"]) < 3:
+            return 0
+        return 1
+
 AllTestClasses.append(RemoteMigrate)
 
 
@@ -3116,6 +3126,16 @@ class RemoteRscFailure(RemoteDriver):
 
         ignore_pats.extend(RemoteDriver.errorstoignore(self))
         return ignore_pats
+
+    def is_applicable(self):
+        if not RemoteDriver.is_applicable(self):
+            return 0
+        # This test requires at least three nodes: one to convert to a
+        # remote node, one to host the connection originally, and one
+        # to migrate the connection to.
+        if len(self.Env["nodes"]) < 3:
+            return 0
+        return 1
 
 AllTestClasses.append(RemoteRscFailure)
 
