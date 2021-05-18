@@ -299,7 +299,7 @@ class LogWatcher(RemoteExec):
 
         for t in pending:
             t.join(60.0)
-            if t.isAlive():
+            if t.is_alive():
                 self.logger.log("%s: Aborting after 20s waiting for %s logging commands" % (self.name, repr(t)))
                 return
 

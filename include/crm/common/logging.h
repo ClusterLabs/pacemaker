@@ -117,8 +117,6 @@ void crm_log_output_fn(const char *file, const char *function, int line, int lev
 #define crm_log_output(level, prefix, output)   \
     crm_log_output_fn(__FILE__, __func__, __LINE__, level, prefix, output)
 
-gboolean crm_add_logfile(const char *filename);
-
 void crm_bump_log_level(int argc, char **argv);
 
 void crm_enable_stderr(int enable);

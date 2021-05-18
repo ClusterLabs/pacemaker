@@ -90,7 +90,7 @@ cfg_connection_destroy(gpointer user_data)
     mainloop_timer_start(reconnect_timer);
 }
 
-gboolean
+void
 cluster_disconnect_cfg(void)
 {
     if (cfg_handle) {
@@ -107,8 +107,6 @@ cluster_disconnect_cfg(void)
         mainloop_timer_del(reconnect_timer);
         reconnect_timer = NULL;
     }
-    pcmk_shutdown(SIGTERM);
-    return TRUE;
 }
 
 #define cs_repeat(counter, max, code) do {		\
