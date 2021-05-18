@@ -1568,7 +1568,8 @@ main(int argc, char **argv)
 
     // --expired without --clear/-U doesn't make sense
     if (options.clear_expired && (options.rsc_cmd != cmd_clear)) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "--expired requires --clear or -U");
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "--expired requires --clear or -U");
         goto done;
     }
 
@@ -1583,7 +1584,8 @@ main(int argc, char **argv)
                 g_hash_table_replace(options.override_params, name, value);
 
             } else {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "Error parsing '%s' as a name=value pair",
                             argv[optind]);
                 free(value);
@@ -1612,8 +1614,9 @@ main(int argc, char **argv)
             i++;
         }
 
+        exit_code = CRM_EX_USAGE;
         msg = g_strjoinv("", strv);
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE, "%s", msg);
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
         g_free(msg);
 
         for(i = 0; i < len; i++) {
@@ -2043,7 +2046,8 @@ main(int argc, char **argv)
             break;
 
         default:
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_SOFTWARE,
+            exit_code = CRM_EX_SOFTWARE;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Unimplemented command: %d", (int) options.rsc_cmd);
             break;
     }
