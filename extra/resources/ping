@@ -53,7 +53,7 @@ Every time the monitor action is run, this resource agent records (in the CIB) t
 <content type="string" default="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}" />
 </parameter>
 
-<parameter name="dampen">
+<parameter name="dampen" reloadable="1">
 <longdesc lang="en">
 The time to wait (dampening) further changes occur
 </longdesc>
@@ -85,7 +85,7 @@ A space separated list of ping nodes to count.
 <content type="string" default=""/>
 </parameter>
 
-<parameter name="attempts">
+<parameter name="attempts" reloadable="1">
 <longdesc lang="en">
 Number of ping attempts, per host, before declaring it dead
 </longdesc>
@@ -93,7 +93,7 @@ Number of ping attempts, per host, before declaring it dead
 <content type="integer" default="3"/>
 </parameter>
 
-<parameter name="timeout">
+<parameter name="timeout" reloadable="1">
 <longdesc lang="en">
 How long, in seconds, to wait before declaring a ping lost
 </longdesc>
@@ -127,7 +127,7 @@ will not be used even if present.
 <content type="boolean" default="1"/>
 </parameter>
 
-<parameter name="debug">
+<parameter name="debug" reloadable="1">
 <longdesc lang="en">
 Enables to use default attrd_updater verbose logging on every call.
 </longdesc>
@@ -143,6 +143,7 @@ Enables to use default attrd_updater verbose logging on every call.
 <action name="monitor" depth="0"  timeout="60s" interval="10s"/>
 <action name="meta-data"  timeout="5s" />
 <action name="validate-all"  timeout="30s" />
+<action name="reload-agent"  timeout="20s" />
 </actions>
 </resource-agent>
 END
@@ -159,7 +160,7 @@ ping_conditional_log() {
 
 ping_usage() {
     cat <<END
-usage: $0 {start|stop|monitor|validate-all|meta-data}
+usage: $0 {start|stop|monitor|validate-all|reload-agent|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -230,6 +231,10 @@ ping_validate() {
     return $OCF_SUCCESS
 }
 
+ping_reload_agent() {
+    # No action required
+    :;
+}
 
 fping_check() {
     p_exe=fping
@@ -413,6 +418,7 @@ start)          ping_start;;
 stop)           ping_stop;;
 monitor)        ping_monitor;;
 validate-all)   ping_validate;;
+reload-agent)         ping_reload_agent;;
 usage|help)     ping_usage
                 exit $OCF_SUCCESS
                 ;;
