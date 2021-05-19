@@ -196,14 +196,22 @@ ping_monitor() {
 }
 
 ping_validate() {
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_pidfile")
-    touch "$state_dir/$$"
-    if [ $? -ne 0 ]; then
-        ocf_log err "Invalid location for 'state': $state_dir is not writable"
-        return $OCF_ERR_ARGS
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_pidfile")
+        touch "$state_dir/$$"
+        if [ $? -ne 0 ]; then
+            ocf_log err "Invalid location for 'state': $state_dir is not writable"
+            return $OCF_ERR_ARGS
+        fi
+        rm "$state_dir/$$"
+
+        # Does the ping binary exist?
+        check_binary ping
+
     fi
-    rm "$state_dir/$$"
 
 # Pidfile better be an absolute path
     case "$OCF_RESKEY_pidfile" in
@@ -225,8 +233,6 @@ ping_validate() {
             exit $OCF_ERR_CONFIGURED
         fi
     fi
-
-    check_binary ping
 
     return $OCF_SUCCESS
 }
