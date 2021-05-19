@@ -250,16 +250,24 @@ pcmk__get_sbd_timeout(void)
 bool
 pcmk__get_sbd_sync_resource_startup(void)
 {
-    static bool sync_resource_startup = false;
+    static int sync_resource_startup = PCMK__SBD_SYNC_DEFAULT;
     static bool checked_sync_resource_startup = false;
 
     if (!checked_sync_resource_startup) {
-        sync_resource_startup =
-            crm_is_true(getenv("SBD_SYNC_RESOURCE_STARTUP"));
+        const char *sync_env = getenv("SBD_SYNC_RESOURCE_STARTUP");
+
+        if (sync_env == NULL) {
+            crm_trace("Defaulting to %sstart-up synchronization with sbd",
+                      (PCMK__SBD_SYNC_DEFAULT? "" : "no "));
+
+        } else if (crm_str_to_boolean(sync_env, &sync_resource_startup) < 0) {
+            crm_warn("Defaulting to %sstart-up synchronization with sbd "
+                     "because environment value '%s' is invalid",
+                     (PCMK__SBD_SYNC_DEFAULT? "" : "no "), sync_env);
+        }
         checked_sync_resource_startup = true;
     }
-
-    return sync_resource_startup;
+    return sync_resource_startup != 0;
 }
 
 long

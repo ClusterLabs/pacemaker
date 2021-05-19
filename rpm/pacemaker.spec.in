@@ -59,6 +59,19 @@
 %bcond_without doc
 %endif
 
+## Add option to default to start-up synchronization with SBD.
+##
+## If enabled, SBD *MUST* be built to default similarly, otherwise data
+## corruption could occur. Building both Pacemaker and SBD to default
+## to synchronization improves safety, without requiring higher-level tools
+## to be aware of the setting or requiring users to modify configurations
+## after upgrading to versions that support synchronization.
+%if 0%{?rhel} && 0%{?rhel} > 8
+%bcond_without sbd_sync
+%else
+%bcond_with sbd_sync
+%endif
+
 ## Add option to prefix package version with "0."
 ## (so later "official" packages will be considered updates)
 %bcond_with pre_release
@@ -478,6 +491,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_profiling:     --with-profiling}                                \
         %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
+        %{?with_sbd_sync:      --with-sbd-sync-default="true"}                  \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         %{?bug_url:            --with-bug-url=%{bug_url}}                       \
         %{?concurrent_fencing}                                                  \

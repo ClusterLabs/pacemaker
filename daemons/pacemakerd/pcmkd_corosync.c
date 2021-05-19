@@ -60,6 +60,21 @@ pcmk_cfg_dispatch(gpointer user_data)
     return 0;
 }
 
+static void
+close_cfg(void)
+{
+    if (cfg_handle != 0) {
+#ifdef HAVE_COROSYNC_CFG_TRACKSTART
+        /* Ideally, we would call corosync_cfg_trackstop(cfg_handle) here, but a
+         * bug in corosync 3.1.1 and 3.1.2 makes it hang forever. Thankfully,
+         * it's not necessary since we exit immediately after this.
+         */
+#endif
+        corosync_cfg_finalize(cfg_handle);
+        cfg_handle = 0;
+    }
+}
+
 static gboolean
 cluster_reconnect_cb(gpointer data)
 {
@@ -93,13 +108,7 @@ cfg_connection_destroy(gpointer user_data)
 void
 cluster_disconnect_cfg(void)
 {
-    if (cfg_handle) {
-#ifdef HAVE_COROSYNC_CFG_TRACKSTART
-        corosync_cfg_trackstop(cfg_handle);
-#endif
-        corosync_cfg_finalize(cfg_handle);
-        cfg_handle = 0;
-    }
+    close_cfg();
     if (reconnect_timer != NULL) {
         /* The mainloop should be gone by this point, so this isn't necessary,
          * but cleaning up memory should make valgrind happier.
@@ -203,11 +212,7 @@ pcmkd_shutdown_corosync(void)
     rc = corosync_cfg_try_shutdown(cfg_handle,
                                     COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
     if (rc == CS_OK) {
-#ifdef HAVE_COROSYNC_CFG_TRACKSTART
-        corosync_cfg_trackstop(cfg_handle);
-#endif
-        corosync_cfg_finalize(cfg_handle);
-        cfg_handle = 0;
+        close_cfg();
     } else {
         crm_warn("Corosync shutdown failed: %s " CRM_XS " rc=%d",
                  cs_strerror(rc), rc);
