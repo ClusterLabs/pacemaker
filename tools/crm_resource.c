@@ -952,8 +952,7 @@ why_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **er
 }
 
 static int
-ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
-            crm_exit_t *exit_code)
+ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime)
 {
     int rc = pcmk_rc_ok;
     pe_node_t *current = NULL;
@@ -988,8 +987,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
 
         } else {
             rc = EINVAL;
-            *exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "Resource '%s' not moved: active in %d locations (promoted in %d).\n"
                         "To prevent '%s' from running on a specific location, "
                         "specify a node."
@@ -1000,8 +998,7 @@ ban_or_move(pcmk__output_t *out, pe_resource_t *rsc, const char *move_lifetime,
 
     } else {
         rc = EINVAL;
-        *exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "Resource '%s' not moved: active in %d locations.\n"
                     "To prevent '%s' from running on a specific location, "
                     "specify a node.",
@@ -1124,7 +1121,7 @@ delete(void)
 }
 
 static int
-list_agents(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
+list_agents(pcmk__output_t *out, const char *agent_spec)
 {
     int rc = pcmk_rc_ok;
     char *provider = strchr(agent_spec, ':');
@@ -1144,12 +1141,11 @@ list_agents(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
     }
 
     if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         if (provider == NULL) {
-            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "No agents found for standard '%s'", agent_spec);
         } else {
-            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "No agents found for standard '%s' and provider '%s'",
                         agent_spec, provider);
         }
@@ -1160,7 +1156,7 @@ list_agents(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
 }
 
 static int
-list_providers(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
+list_providers(pcmk__output_t *out, const char *agent_spec)
 {
     int rc;
     const char *text = NULL;
@@ -1202,23 +1198,20 @@ list_providers(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_cod
             text = "OCF providers";
             break;
         default:
-            *exit_code = CRM_EX_SOFTWARE;
-            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code, "Bug");
+            g_set_error(&error, PCMK__RC_ERROR, pcmk_rc_error, "Bug");
             lrmd_api_delete(lrmd_conn);
             return pcmk_rc_error;
     }
 
     if (rc != pcmk_rc_ok) {
         if (agent_spec != NULL) {
-            *exit_code = CRM_EX_NOSUCH;
-            rc = pcmk_rc_error;
-            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+            rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "No %s found for %s", text, agent_spec);
 
         } else {
-            *exit_code = CRM_EX_NOSUCH;
-            rc = pcmk_rc_error;
-            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+            rc = ENXIO;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "No %s found", text);
         }
     }
@@ -1343,7 +1336,7 @@ set_property(void)
     } else if (pcmk__str_empty(options.prop_value)) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "Must supply -v with new value");
-        rc = EINVAL;
+        rc = ENXIO;
         return rc;
     }
 
@@ -1362,7 +1355,7 @@ set_property(void)
 }
 
 static int
-show_metadata(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code)
+show_metadata(pcmk__output_t *out, const char *agent_spec)
 {
     int rc = pcmk_rc_ok;
     char *standard = NULL;
@@ -1383,8 +1376,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code
         if (metadata) {
             out->output_xml(out, "metadata", metadata);
         } else {
-            *exit_code = crm_errno2exit(rc);
-            g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
+            g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Metadata query for %s failed: %s",
                         agent_spec, pcmk_rc_str(rc));
         }
@@ -1706,15 +1698,16 @@ main(int argc, char **argv)
     if (options.require_cib) {
         cib_conn = cib_new();
         if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
-            rc = pcmk_rc_error;
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_DISCONNECT,
+            exit_code = CRM_EX_DISCONNECT;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not create CIB connection");
             goto done;
         }
         rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not connect to the CIB: %s", pcmk_rc_str(rc));
             goto done;
         }
@@ -1724,6 +1717,7 @@ main(int argc, char **argv)
     if (options.require_dataset) {
         rc = populate_working_set(&cib_xml_copy);
         if (rc != pcmk_rc_ok) {
+            exit_code = pcmk_rc2exitc(rc);
             goto done;
         }
     }
@@ -1733,8 +1727,8 @@ main(int argc, char **argv)
         rsc = pe_find_resource_with_flags(data_set->resources, options.rsc_id,
                                           options.find_flags);
         if (rsc == NULL) {
-            rc = ENXIO;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
+            exit_code = CRM_EX_NOSUCH;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Resource '%s' not found", options.rsc_id);
             goto done;
         }
@@ -1749,7 +1743,8 @@ main(int argc, char **argv)
     if (options.require_crmd) {
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
         if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Error connecting to the controller: %s", pcmk_rc_str(rc));
             goto done;
         }
@@ -1757,7 +1752,8 @@ main(int argc, char **argv)
                                    NULL);
         rc = pcmk_connect_ipc(controld_api, pcmk_ipc_dispatch_main);
         if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
+            exit_code = pcmk_rc2exitc(rc);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Error connecting to the controller: %s", pcmk_rc_str(rc));
             goto done;
         }
@@ -1794,15 +1790,15 @@ main(int argc, char **argv)
         case cmd_list_standards:
         case cmd_list_providers:
         case cmd_list_alternatives:
-            rc = list_providers(out, options.agent_spec, &exit_code);
+            rc = list_providers(out, options.agent_spec);
             break;
 
         case cmd_list_agents:
-            rc = list_agents(out, options.agent_spec, &exit_code);
+            rc = list_agents(out, options.agent_spec);
             break;
 
         case cmd_metadata:
-            rc = show_metadata(out, options.agent_spec, &exit_code);
+            rc = show_metadata(out, options.agent_spec);
             break;
 
         case cmd_restart:
@@ -1835,7 +1831,7 @@ main(int argc, char **argv)
                     options.timeout_ms, cib_conn, data_set,
                     args->verbosity, options.force);
             }
-            break;
+            goto done;
 
         case cmd_digests:
             node = pe_find_node(data_set->nodes, options.host_uname);
@@ -1918,7 +1914,7 @@ main(int argc, char **argv)
 
         case cmd_move:
             if (options.host_uname == NULL) {
-                rc = ban_or_move(out, rsc, options.move_lifetime, &exit_code);
+                rc = ban_or_move(out, rsc, options.move_lifetime);
             } else {
                 rc = cli_resource_move(rsc, options.rsc_id, options.host_uname,
                                        options.move_lifetime, cib_conn,
@@ -1926,11 +1922,17 @@ main(int argc, char **argv)
                                        options.promoted_role_only,
                                        options.force);
             }
+
+            if (rc == EINVAL) {
+                exit_code = CRM_EX_USAGE;
+                goto done;
+            }
+
             break;
 
         case cmd_ban:
             if (options.host_uname == NULL) {
-                rc = ban_or_move(out, rsc, options.move_lifetime, &exit_code);
+                rc = ban_or_move(out, rsc, options.move_lifetime);
             } else if (node == NULL) {
                 rc = pcmk_rc_node_unknown;
             } else {
@@ -1939,6 +1941,12 @@ main(int argc, char **argv)
                                       options.cib_options,
                                       options.promoted_role_only);
             }
+
+            if (rc == EINVAL) {
+                exit_code = CRM_EX_USAGE;
+                goto done;
+            }
+
             break;
 
         case cmd_get_property:
@@ -1990,9 +1998,9 @@ main(int argc, char **argv)
 
         case cmd_set_param:
             if (pcmk__str_empty(options.prop_value)) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                             "You need to supply a value with the -v option");
-                rc = EINVAL;
                 goto done;
             }
 
@@ -2045,10 +2053,19 @@ main(int argc, char **argv)
             break;
 
         default:
-            exit_code = CRM_EX_SOFTWARE;
+            exit_code = CRM_EX_USAGE;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Unimplemented command: %d", (int) options.rsc_cmd);
-            break;
+            goto done;
+    }
+
+    /* Convert rc into an exit code. */
+    if (rc != pcmk_rc_ok && rc != pcmk_rc_no_output) {
+        if (rc == pcmk_rc_no_quorum) {
+            g_prefix_error(&error, "To ignore quorum, use the force option.\n");
+        }
+
+        exit_code = pcmk_rc2exitc(rc);
     }
 
     /*
@@ -2056,30 +2073,24 @@ main(int argc, char **argv)
      */
 
 done:
-    /* Don't do any of this for pcmk_rc_no_output (doesn't make sense to show an
-     * error message for no output) or for CRM_EX_USAGE (we don't want to show
-     * an "error: OK" message from pcmk_rc_str).
+    /* When we get here, exit_code has been set one of two ways - either at one of
+     * the spots where there's a "goto done" (which itself could have happened either
+     * directly or by calling pcmk_rc2exitc), or just up above after any of the break
+     * statements.
+     *
+     * Thus, we can use just exit_code here to decide what to do.
      */
-    if ((rc != pcmk_rc_ok && rc != pcmk_rc_no_output) ||
-        (exit_code != CRM_EX_OK && exit_code != CRM_EX_USAGE)) {
-        if (rc == pcmk_rc_no_quorum) {
-            g_prefix_error(&error, "To ignore quorum, use the force option.\n");
-        }
-
+    if (exit_code != CRM_EX_OK && exit_code != CRM_EX_USAGE) {
         if (error != NULL) {
             char *msg = crm_strdup_printf("%s\nError performing operation: %s",
-                                          error->message, pcmk_rc_str(rc));
+                                          error->message, crm_exit_str(exit_code));
             g_clear_error(&error);
-            g_set_error(&error, PCMK__RC_ERROR, rc, "%s", msg);
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
             free(msg);
         } else {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Error performing operation: %s", pcmk_rc_str(rc));
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Error performing operation: %s", crm_exit_str(exit_code));
         }
-    }
-
-    if (exit_code == CRM_EX_OK) {
-        exit_code = pcmk_rc2exitc(rc);
     }
 
     g_free(options.host_uname);
