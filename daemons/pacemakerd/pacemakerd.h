@@ -39,7 +39,7 @@ extern crm_trigger_t *startup_trigger;
 gboolean mcp_read_config(void);
 
 gboolean cluster_connect_cfg(void);
-gboolean cluster_disconnect_cfg(void);
+void cluster_disconnect_cfg(void);
 int find_and_track_existing_processes(void);
 gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2020 the Pacemaker project contributors
+ * Copyright 2015-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,8 +30,8 @@ int lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
 int lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
                              const char *node, lrmd_event_data_t *op);
 
-int lrmd_tls_send_msg(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
-                      const char *msg_type);
+int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
+                          const char *msg_type);
 
 /* Shared functions for IPC proxy back end */
 
@@ -53,7 +53,7 @@ remote_proxy_t *remote_proxy_new(lrmd_t *lrmd,
                                  const char *node_name, const char *session_id,
                                  const char *channel);
 
-int  remote_proxy_check(lrmd_t *lrmd, GHashTable *hash);
+int lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash);
 void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
 void remote_proxy_ack_shutdown(lrmd_t *lrmd);
 void remote_proxy_nack_shutdown(lrmd_t *lrmd);
@@ -68,5 +68,9 @@ void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg,
                                  int msg_id);
 
 void lrmd__register_messages(pcmk__output_t *out);
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+int lrmd__init_remote_key(gnutls_datum_t *key);
+#endif
 
 #endif

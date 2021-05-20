@@ -12,6 +12,7 @@ import sys
 import subprocess
 import shlex
 import shutil
+import tempfile
 import time
 
 # Where to find test binaries
@@ -138,17 +139,19 @@ class OutputFoundError(TestError):
 class Test(object):
     """ Executor for a single pacemaker-execd regression test """
 
-    def __init__(self, name, description, verbose=0, tls=0, timeout=2, force_wait=0):
+    def __init__(self, name, description, verbose=0, tls=0, timeout=2,
+                 force_wait=0, logdir="/tmp"):
+
         self.name = name
         self.description = description
         self.cmds = []
-        self.logpath = "/tmp/pacemaker-execd-regression.log"
 
         if tls:
             self.daemon_location = "pacemaker-remoted"
         else:
             self.daemon_location = "pacemaker-execd"
 
+        self.logpath = os.path.join(logdir, self.daemon_location + ".log")
         self.test_tool_location = "cts-exec-helper"
         self.verbose = verbose
         self.tls = tls
@@ -248,7 +251,6 @@ class Test(object):
                 logfile = io.open(self.logpath, 'rt', errors='replace')
                 for line in logfile:
                     print(line.strip().encode('utf-8', 'replace'))
-            os.remove(self.logpath)
 
         if self.stonith_process:
             self.stonith_process.terminate()
@@ -385,12 +387,15 @@ class Test(object):
 class Tests(object):
     """ Collection of all pacemaker-execd regression tests """
 
-    def __init__(self, verbose=0, tls=0, timeout=2, force_wait=0):
+    def __init__(self, verbose=0, tls=0, timeout=2, force_wait=0,
+                 logdir="/tmp"):
+
         self.tests = []
         self.verbose = verbose
         self.tls = tls
         self.timeout = timeout
         self.force_wait = force_wait
+        self.logdir = logdir
         self.rsc_classes = output_from_command("crm_resource --list-standards")
         self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
         self.installed_files = []
@@ -496,7 +501,8 @@ class Tests(object):
     def new_test(self, name, description):
         """ Create a named test """
 
-        test = Test(name, description, self.verbose, self.tls, self.timeout, self.force_wait)
+        test = Test(name, description, self.verbose, self.tls, self.timeout,
+                    self.force_wait, self.logdir)
         self.tests.append(test)
         return test
 
@@ -516,13 +522,13 @@ class Tests(object):
         # If we're in build directory, install agents if not already installed
         if os.path.exists("%s/cts/cts-exec.in" % BUILD_DIR):
 
-            if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
+            if not os.path.exists("@OCF_RA_INSTALL_DIR@/pacemaker"):
                 # @TODO remember which components were created and remove them
-                os.makedirs("@OCF_RA_DIR@/pacemaker", 0o755)
+                os.makedirs("@OCF_RA_INSTALL_DIR@/pacemaker", 0o755)
 
             for agent in ["Dummy", "Stateful", "ping"]:
                 agent_source = "%s/extra/resources/%s" % (BUILD_DIR, agent)
-                agent_dest = "@OCF_RA_DIR@/pacemaker/%s" % (agent)
+                agent_dest = "@OCF_RA_INSTALL_DIR@/pacemaker/%s" % (agent)
                 if not os.path.exists(agent_dest):
                     print("Installing %s ..." % (agent_dest))
                     shutil.copyfile(agent_source, agent_dest)
@@ -1219,35 +1225,39 @@ def main(argv):
     opts = TestOptions()
     opts.build_options(argv)
 
-    tests = Tests(opts.options['verbose'], opts.options['pacemaker-remote'],
-                  opts.options['timeout'], opts.options['force-wait'])
+    # Create a temporary directory for log files (the directory will
+    # automatically be erased when done)
+    with tempfile.TemporaryDirectory(prefix="cts-exec-") as logdir:
+        tests = Tests(opts.options['verbose'], opts.options['pacemaker-remote'],
+                      opts.options['timeout'], opts.options['force-wait'],
+                      logdir)
 
-    tests.build_generic_tests()
-    tests.build_multi_rsc_tests()
-    tests.build_negative_tests()
-    tests.build_custom_tests()
-    tests.build_stress_tests()
+        tests.build_generic_tests()
+        tests.build_multi_rsc_tests()
+        tests.build_negative_tests()
+        tests.build_custom_tests()
+        tests.build_stress_tests()
 
-    tests.setup_test_environment()
+        tests.setup_test_environment()
 
-    print("Starting ...")
+        print("Starting ...")
 
-    if opts.options['list-tests']:
-        tests.print_list()
-    elif opts.options['show-usage']:
-        opts.show_usage()
-    elif opts.options['run-only-pattern'] != "":
-        tests.run_tests_matching(opts.options['run-only-pattern'])
-        tests.print_results()
-    elif opts.options['run-only'] != "":
-        tests.run_single(opts.options['run-only'])
-        tests.print_results()
-    else:
-        tests.run_tests()
-        tests.print_results()
+        if opts.options['list-tests']:
+            tests.print_list()
+        elif opts.options['show-usage']:
+            opts.show_usage()
+        elif opts.options['run-only-pattern'] != "":
+            tests.run_tests_matching(opts.options['run-only-pattern'])
+            tests.print_results()
+        elif opts.options['run-only'] != "":
+            tests.run_single(opts.options['run-only'])
+            tests.print_results()
+        else:
+            tests.run_tests()
+            tests.print_results()
 
-    tests.cleanup_test_environment()
-    tests.exit()
+        tests.cleanup_test_environment()
+        tests.exit()
 
 
 if __name__ == "__main__":

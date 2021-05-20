@@ -177,10 +177,140 @@ set_format_string(int method, const char *daemon)
 
 #define DEFAULT_LOG_FILE CRM_LOG_DIR "/pacemaker.log"
 
-gboolean
-crm_add_logfile(const char *filename)
+static bool
+logfile_disabled(const char *filename)
 {
+    return pcmk__str_eq(filename, "none", pcmk__str_casei|pcmk__str_null_matches)
+           || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
+}
+
+/*!
+ * \internal
+ * \brief Fix log file ownership if group is wrong or doesn't have access
+ *
+ * \param[in] filename  Log file name (for logging only)
+ * \param[in] logfd     Log file descriptor
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+chown_logfile(const char *filename, int logfd)
+{
+    uid_t pcmk_uid = 0;
+    gid_t pcmk_gid = 0;
+    struct stat st;
+    int rc;
+
+    // Get the log file's current ownership and permissions
+    if (fstat(logfd, &st) < 0) {
+        return errno;
+    }
+
+    // Any other errors don't prevent file from being used as log
+
+    rc = pcmk_daemon_user(&pcmk_uid, &pcmk_gid);
+    if (rc != pcmk_ok) {
+        rc = pcmk_legacy2rc(rc);
+        crm_warn("Not changing '%s' ownership because user information "
+                 "unavailable: %s", filename, pcmk_rc_str(rc));
+        return pcmk_rc_ok;
+    }
+    if ((st.st_gid == pcmk_gid)
+        && ((st.st_mode & S_IRWXG) == (S_IRGRP|S_IWGRP))) {
+        return pcmk_rc_ok;
+    }
+    if (fchown(logfd, pcmk_uid, pcmk_gid) < 0) {
+        crm_warn("Couldn't change '%s' ownership to user %s gid %d: %s",
+             filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
+    }
+    return pcmk_rc_ok;
+}
+
+// Reset log file permissions (using environment variable if set)
+static void
+chmod_logfile(const char *filename, int logfd)
+{
+    const char *modestr = getenv("PCMK_logfile_mode");
+    mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
+
+    if (modestr != NULL) {
+        long filemode_l = strtol(modestr, NULL, 8);
+
+        if ((filemode_l != LONG_MIN) && (filemode_l != LONG_MAX)) {
+            filemode = (mode_t) filemode_l;
+        }
+    }
+    if ((filemode != 0) && (fchmod(logfd, filemode) < 0)) {
+        crm_warn("Couldn't change '%s' mode to %04o: %s",
+                 filename, filemode, strerror(errno));
+    }
+}
+
+// If we're root, correct a log file's permissions if needed
+static int
+set_logfile_permissions(const char *filename, FILE *logfile)
+{
+    if (geteuid() == 0) {
+        int logfd = fileno(logfile);
+        int rc = chown_logfile(filename, logfd);
+
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+        chmod_logfile(filename, logfd);
+    }
+    return pcmk_rc_ok;
+}
+
+// Enable libqb logging to a new log file
+static void
+enable_logfile(int fd)
+{
+    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
+#if 0
+    qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1); // Turn on synchronous writes
+#endif
+
+#ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
+    // Longer than default, for logging long XML lines
+    qb_log_ctl(fd, QB_LOG_CONF_MAX_LINE_LEN, 800);
+#endif
+
+    crm_update_callsites();
+}
+
+static inline void
+disable_logfile(int fd)
+{
+    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_FALSE);
+}
+
+static void
+setenv_logfile(const char *filename)
+{
+    // Some resource agents will log only if environment variable is set
+    if (pcmk__env_option("logfile") == NULL) {
+        pcmk__set_env_option("logfile", filename);
+    }
+}
+
+/*!
+ * \brief Add a file to be used as a Pacemaker detail log
+ *
+ * \param[in] filename  Name of log file to use
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__add_logfile(const char *filename)
+{
+    /* No log messages from this function will be logged to the new log!
+     * If another target such as syslog has already been added, the messages
+     * should show up there.
+     */
+
     int fd = 0;
+    int rc = pcmk_rc_ok;
     FILE *logfile = NULL;
     bool is_default = false;
 
@@ -193,69 +323,31 @@ crm_add_logfile(const char *filename)
     }
 
     // If the user doesn't want logging, we're done
-    if ((filename == NULL)
-        || pcmk__str_eq(filename, "none", pcmk__str_casei)
-        || pcmk__str_eq(filename, "/dev/null", pcmk__str_none)) {
-        return FALSE;
+    if (logfile_disabled(filename)) {
+        return pcmk_rc_ok;
     }
 
     // If the caller wants the default and we already have it, we're done
-    if (pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none)) {
-        is_default = TRUE;
-    }
+    is_default = pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none);
     if (is_default && (default_fd >= 0)) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     // Check whether we have write access to the file
-    errno = 0;
     logfile = fopen(filename, "a");
     if (logfile == NULL) {
+        rc = errno;
         crm_warn("Logging to '%s' is disabled: %s " CRM_XS " uid=%u gid=%u",
-                 filename, strerror(errno), geteuid(), getegid());
-        return FALSE;
+                 filename, strerror(rc), geteuid(), getegid());
+        return rc;
     }
 
-    // If we're root, correct the file permissions if needed
-    if (geteuid() == 0) {
-        struct stat st;
-        uid_t pcmk_uid = 0;
-        gid_t pcmk_gid = 0;
-        int logfd = fileno(logfile);
-        const char *modestr;
-        mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
-
-        // Get the log file's current ownership and permissions
-        if (fstat(logfd, &st) < 0) {
-            crm_warn("Logging to '%s' is disabled: %s " CRM_XS " fstat",
-                     filename, strerror(errno));
-            fclose(logfile);
-            return FALSE;
-        }
-
-        // Fix ownership if group is wrong or doesn't have read/write access
-        if ((pcmk_daemon_user(&pcmk_uid, &pcmk_gid) == pcmk_ok)
-            && ((st.st_gid != pcmk_gid)
-                || ((st.st_mode & S_IRWXG) != (S_IRGRP|S_IWGRP)))) {
-            if (fchown(logfd, pcmk_uid, pcmk_gid) < 0) {
-                crm_warn("Couldn't change '%s' ownership to user %s gid %d: %s",
-                         filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
-            }
-        }
-
-        // Reset the permissions (using environment variable if set)
-        modestr = getenv("PCMK_logfile_mode");
-        if (modestr) {
-            long filemode_l = strtol(modestr, NULL, 8);
-
-            if ((filemode_l != LONG_MIN) && (filemode_l != LONG_MAX)) {
-                filemode = (mode_t) filemode_l;
-            }
-        }
-        if ((filemode != 0) && (fchmod(logfd, filemode) < 0)) {
-            crm_warn("Couldn't change '%s' mode to %04o: %s",
-                     filename, filemode, strerror(errno));
-        }
+    rc = set_logfile_permissions(filename, logfile);
+    if (rc != pcmk_rc_ok) {
+        crm_warn("Logging to '%s' is disabled: %s " CRM_XS " permissions",
+                 filename, strerror(rc));
+        fclose(logfile);
+        return rc;
     }
 
     // Close and reopen as libqb logging target
@@ -264,39 +356,22 @@ crm_add_logfile(const char *filename)
     if (fd < 0) {
         crm_warn("Logging to '%s' is disabled: %s " CRM_XS " qb_log_file_open",
                  filename, strerror(-fd));
-        return FALSE;
+        return -fd; // == +errno
     }
 
     if (is_default) {
         default_fd = fd;
-
-        // Some resource agents will log only if environment variable is set
-        if (pcmk__env_option("logfile") == NULL) {
-            pcmk__set_env_option("logfile", filename);
-        }
+        setenv_logfile(filename);
 
     } else if (default_fd >= 0) {
         crm_notice("Switching logging to %s", filename);
-        qb_log_ctl(default_fd, QB_LOG_CONF_ENABLED, QB_FALSE);
+        disable_logfile(default_fd);
     }
 
-    // This message can show up in other targets (syslog, etc.)
     crm_notice("Additional logging available in %s", filename);
-
-    // Enable logging to the new log file
-    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
-    /* qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1);  Turn on synchronous writes */
-
-#ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
-    // Longer than default, for logging long XML lines
-    qb_log_ctl(fd, QB_LOG_CONF_MAX_LINE_LEN, 800);
-#endif
-
-    /* Enable callsites */
-    crm_update_callsites();
+    enable_logfile(fd);
     have_logfile = true;
-
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static int blackbox_trigger = 0;
@@ -785,7 +860,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         if (!pcmk__str_eq("none", logfile, pcmk__str_casei)
             && (pcmk__is_daemon || (logfile != NULL))) {
             // Daemons always get a log file, unless explicitly set to "none"
-            crm_add_logfile(logfile);
+            pcmk__add_logfile(logfile);
         }
     }
 
@@ -989,6 +1064,12 @@ crm_log_cli_init(const char *entity)
 {
     pcmk__cli_init_logging(entity, 0);
     return TRUE;
+}
+
+gboolean
+crm_add_logfile(const char *filename)
+{
+    return pcmk__add_logfile(filename) == pcmk_rc_ok;
 }
 
 // End deprecated API

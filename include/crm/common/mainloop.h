@@ -71,8 +71,23 @@ void mainloop_timer_del(mainloop_timer_t *t);
 #  include <qb/qbipcs.h>
 
 struct ipc_client_callbacks {
+    /*!
+     * \brief Dispatch function for an IPC connection used as mainloop source
+     *
+     * \param[in] buffer    Message read from IPC connection
+     * \param[in] length    Number of bytes in \p buffer
+     * \param[in] userdata  User data passed when creating mainloop source
+     *
+     * \return Negative value to remove source, anything else to keep it
+     */
     int (*dispatch) (const char *buffer, ssize_t length, gpointer userdata);
-    void (*destroy) (gpointer);
+
+    /*!
+     * \brief Destroy function for mainloop IPC connection client data
+     *
+     * \param[in] userdata  User data passed when creating mainloop source
+     */
+    void (*destroy) (gpointer userdata);
 };
 
 qb_ipcs_service_t *mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
@@ -112,7 +127,20 @@ void mainloop_del_ipc_client(mainloop_io_t * client);
 crm_ipc_t *mainloop_get_ipc_client(mainloop_io_t * client);
 
 struct mainloop_fd_callbacks {
+    /*!
+     * \brief Dispatch function for mainloop file descriptor with data ready
+     *
+     * \param[in] userdata  User data passed when creating mainloop source
+     *
+     * \return Negative value to remove source, anything else to keep it
+     */
     int (*dispatch) (gpointer userdata);
+
+    /*!
+     * \brief Destroy function for mainloop file descriptor client data
+     *
+     * \param[in] userdata  User data passed when creating mainloop source
+     */
     void (*destroy) (gpointer userdata);
 };
 

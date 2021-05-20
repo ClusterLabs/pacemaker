@@ -22,6 +22,7 @@
 
 #include <crm/crm.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
@@ -1374,7 +1375,7 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     params_copy = pcmk__str_table_dup(cmd->params);
 
-    action = resources_action_create(rsc->rsc_id, rsc->class, rsc->provider,
+    action = services__create_resource_action(rsc->rsc_id, rsc->class, rsc->provider,
                                      rsc->type,
                                      normalize_action_name(rsc, cmd->action),
                                      cmd->interval_ms, cmd->timeout,
@@ -1382,7 +1383,15 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     if (!action) {
         crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
+        cmd->exec_rc = PCMK_OCF_UNKNOWN_ERROR;
         cmd->lrmd_op_status = PCMK_LRM_OP_ERROR;
+        goto exec_done;
+    }
+
+    if (action->rc != 0) {
+        cmd->exec_rc = action->rc;
+        cmd->lrmd_op_status = action->status;
+        services_action_free(action);
         goto exec_done;
     }
 

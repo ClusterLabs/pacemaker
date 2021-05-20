@@ -70,7 +70,7 @@ script:
 - make check
 - ./cts/cts-cli -V
 - ./cts/cts-scheduler -V
-- sudo ./cts/cts-exec -V --force-wait
+- if [ "$TRAVIS_ARCH" != "ppc64le" ]; then sudo ./cts/cts-exec -V --force-wait; fi
 - test $MAINT_EXTRA -eq 0 ||
   { { echo 'looking for presence of control characters...';
       { git ls-files

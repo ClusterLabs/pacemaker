@@ -210,7 +210,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
             return pcmk__ipc_send_xml(client, id, reply, FALSE);
 #ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
-            return lrmd_tls_send_msg(client->remote, reply, id, "reply");
+            return lrmd__remote_send_xml(client->remote, reply, id, "reply");
 #endif
         default:
             crm_err("Could not send reply: unknown type for client %s "
@@ -238,7 +238,7 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
                 crm_trace("Could not notify remote client: disconnected");
                 return ENOTCONN;
             } else {
-                return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
+                return lrmd__remote_send_xml(client->remote, msg, 0, "notify");
             }
 #endif
         default:
@@ -440,7 +440,17 @@ main(int argc, char **argv, char **envp)
 
         switch (flag) {
             case 'l':
-                crm_add_logfile(optarg);
+                {
+                    int rc = pcmk__add_logfile(optarg);
+
+                    if (rc != pcmk_rc_ok) {
+                        /* Logging has not yet been initialized, so stderr is
+                         * the only way to get information out
+                         */
+                        fprintf(stderr, "Logging to %s is disabled: %s\n",
+                                optarg, pcmk_rc_str(rc));
+                    }
+                }
                 break;
             case 'p':
                 setenv("PCMK_remote_port", optarg, 1);
