@@ -75,6 +75,8 @@ extern "C" {
  */
 void pcmk__cli_init_logging(const char *name, unsigned int verbosity);
 
+int pcmk__add_logfile(const char *filename);
+
 #ifdef __cplusplus
 }
 #endif

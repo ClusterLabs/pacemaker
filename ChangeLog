@@ -1,7 +1,21 @@
+* Wed May 19 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.0-rc2
+- Changesets: 48
+- Diff: 25 files changed, 1009 insertions(+), 502 deletions(-)
+
+- Features added since Pacemaker-2.1.0-rc1
+  + build: configure option to specify resource agent directories to search
+  + build: configure option to specify where to install ocf:pacemaker agents
+  + build: configure option to specify default for syncing start-up with sbd
+  + tests: improve compatibility with recent dependency versions
+
+- Fixes since Pacemaker-2.1.0-rc1
+  + fencing: register/remove the watchdog device
+  + pacemakerd: work around bug in Corosync 3.1.1/3.1.2
+  + Pacemaker Remote: improve log messages
+
 * Thu Apr 29 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.0-rc1
 - Changesets: 781
-- Diff:
- 323 files changed, 21034 insertions(+), 12145 deletions(-)
+- Diff: 323 files changed, 21034 insertions(+), 12145 deletions(-)
 
 - Features added since Pacemaker-2.0.5
   + support for OCF Resource Agent API 1.1 standard

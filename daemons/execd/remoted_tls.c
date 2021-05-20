@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the Pacemaker project contributors
+ * Copyright 2012-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/remote_internal.h>
+#include <crm/lrmd_internal.h>
 
 #include <netdb.h>
 #include <sys/socket.h>
@@ -30,9 +31,6 @@
 #ifdef HAVE_GNUTLS_GNUTLS_H
 
 #  include <gnutls/gnutls.h>
-
-// Hidden in liblrmd
-extern int lrmd_tls_set_key(gnutls_datum_t *key);
 
 #  define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
@@ -249,10 +247,11 @@ lrmd_remote_connection_destroy(gpointer user_data)
     return;
 }
 
+// \return 0 on success, -1 on error (gnutls_psk_server_credentials_function)
 static int
 lrmd_tls_server_key_cb(gnutls_session_t session, const char *username, gnutls_datum_t * key)
 {
-    return lrmd_tls_set_key(key);
+    return (lrmd__init_remote_key(key) == pcmk_rc_ok)? 0 : -1;
 }
 
 static int
@@ -361,7 +360,7 @@ lrmd_init_remote_tls_server()
      * read the key. We don't error out, though, because it's fine if the key is
      * going to be added later.
      */
-    if (lrmd_tls_set_key(&psk_key) != pcmk_ok) {
+    if (lrmd__init_remote_key(&psk_key) != pcmk_rc_ok) {
         crm_warn("A cluster connection will not be possible until the key is available");
     }
     gnutls_free(psk_key.data);

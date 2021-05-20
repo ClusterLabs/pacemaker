@@ -171,7 +171,7 @@ pcmk_daemon_user(uid_t *uid, gid_t *gid)
     static uid_t daemon_uid;
     static gid_t daemon_gid;
     static bool found = false;
-    int rc = pcmk_err_generic;
+    int rc = pcmk_ok;
 
     if (!found) {
         rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);

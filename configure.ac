@@ -226,8 +226,8 @@ dnl --enable-* options: compatibility
 
 AC_ARG_ENABLE([compat-2.0],
     [AS_HELP_STRING([--enable-compat-2.0], m4_normalize([
-	preserve certain output as it was in 2.0; this option will be
-	available only for the lifetime of the 2.1 series @<:@no@:>@]))]
+        preserve certain output as it was in 2.0; this option will be
+        available only for the lifetime of the 2.1 series @<:@no@:>@]))]
 )
 yes_no_try "$enable_compat_2_0" "no"
 enable_compat_2_0=$?
@@ -286,8 +286,8 @@ AC_ARG_WITH([daemon-group],
 BUG_URL=""
 AC_ARG_WITH([bug-url],
     [AS_HELP_STRING([--with-bug-url=DIR], m4_normalize([
-	address where users should submit bug reports
-	@<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@]))],
+        address where users should submit bug reports
+        @<:@https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker@:>@]))],
     [ BUG_URL="$withval" ]
 )
 
@@ -319,7 +319,7 @@ AC_ARG_WITH([concurrent-fencing-default],
         [default value for concurrent-fencing cluster option @<:@false@:>@])],
 )
 AS_CASE([$with_concurrent_fencing_default],
-	[""], [with_concurrent_fencing_default="false"],
+        [""], [with_concurrent_fencing_default="false"],
         [false], [],
         [true], [PCMK_FEATURES="$PCMK_FEATURES default-concurrent-fencing"],
         [AC_MSG_ERROR([Invalid value "$with_concurrent_fencing_default" for --with-concurrent-fencing-default])]
@@ -327,6 +327,21 @@ AS_CASE([$with_concurrent_fencing_default],
 AC_DEFINE_UNQUOTED([PCMK__CONCURRENT_FENCING_DEFAULT],
                    ["$with_concurrent_fencing_default"],
                    [Default value for concurrent-fencing cluster option])
+
+AC_ARG_WITH([sbd-sync-default],
+    [AS_HELP_STRING([--with-sbd-sync-default], m4_normalize([
+        default value used by sbd if SBD_SYNC_RESOURCE_STARTUP
+        environment variable is not set @<:@false@:>@]))],
+)
+AS_CASE([$with_sbd_sync_default],
+        [""], [with_sbd_sync_default=false],
+        [false], [],
+        [true], [PCMK_FEATURES="$PCMK_FEATURES default-sbd-sync"],
+        [AC_MSG_ERROR([Invalid value "$with_sbd_sync_default" for --with-sbd-sync-default])]
+)
+AC_DEFINE_UNQUOTED([PCMK__SBD_SYNC_DEFAULT],
+                   [$with_sbd_sync_default],
+                   [Default value for SBD_SYNC_RESOURCE_STARTUP environment variable])
 
 AC_ARG_WITH([resource-stickiness-default],
     [AS_HELP_STRING([--with-resource-stickiness-default],
@@ -431,6 +446,28 @@ AC_ARG_WITH([ocfdir],
 AC_SUBST(OCF_ROOT_DIR)
 AC_DEFINE_UNQUOTED([OCF_ROOT_DIR], ["$OCF_ROOT_DIR"],
                    [OCF root directory for resource agents and libraries])
+
+PKG_CHECK_VAR([OCF_RA_PATH], [resource-agents], [ocfrapath], [],
+              [OCF_RA_PATH="$OCF_ROOT_DIR/resource.d"])
+AC_ARG_WITH([ocfrapath],
+    [AS_HELP_STRING([--with-ocfrapath=DIR], m4_normalize([
+        OCF resource agent directories (colon-separated) to search
+        @<:@value from resource-agents package if available otherwise
+        OCFDIR/resource.d@:>@]))],
+    [ OCF_RA_PATH="$withval" ]
+)
+AC_SUBST(OCF_RA_PATH)
+AC_DEFINE_UNQUOTED([OCF_RA_PATH], ["$OCF_RA_PATH"],
+                   [OCF directories to search for resource agents ])
+
+OCF_RA_INSTALL_DIR="$OCF_ROOT_DIR/resource.d"
+AC_ARG_WITH([ocfrainstalldir],
+    [AS_HELP_STRING([--with-ocfrainstalldir=DIR], m4_normalize([
+        OCF installation directory for Pacemakers resource agents
+        @<:@OCFDIR/resource.d@:>@]))],
+    [ OCF_RA_INSTALL_DIR="$withval" ]
+)
+AC_SUBST(OCF_RA_INSTALL_DIR)
 
 dnl Get default from fence-agents if available
 PKG_CHECK_VAR([FA_PREFIX], [fence-agents], [prefix],
@@ -581,7 +618,7 @@ if [ test "x${runstatedir}" = "x" ]; then
 fi
 eval runstatedir="$(eval echo ${runstatedir})"
 AC_DEFINE_UNQUOTED([PCMK_RUN_DIR], ["$runstatedir"],
-		   [Location for modifiable per-process data])
+                   [Location for modifiable per-process data])
 AC_SUBST(runstatedir)
 
 eval INITDIR="${INITDIR}"
@@ -696,7 +733,7 @@ esac
 
 AC_SUBST(INIT_EXT)
 AC_DEFINE_UNQUOTED([SUPPORT_PROCFS], [$PROCFS],
-		   [Define to 1 if procfs is supported])
+                   [Define to 1 if procfs is supported])
 
 case "$host_cpu" in
     ppc64|powerpc64)
@@ -897,9 +934,9 @@ PKG_CHECK_MODULES([UUID], [uuid],
 
 AC_CHECK_FUNCS([sched_setscheduler])
 if test "$ac_cv_func_sched_setscheduler" != yes; then
-	PC_LIBS_RT=""
+        PC_LIBS_RT=""
 else
-	PC_LIBS_RT="-lrt"
+        PC_LIBS_RT="-lrt"
 fi
 AC_SUBST(PC_LIBS_RT)
 
@@ -1267,7 +1304,7 @@ AC_SUBST(CRM_DAEMON_DIR)
 
 CRM_STATE_DIR="${runstatedir}/crm"
 AC_DEFINE_UNQUOTED([CRM_STATE_DIR], ["$CRM_STATE_DIR"],
-		   [Where to keep state files and sockets])
+                   [Where to keep state files and sockets])
 AC_SUBST(CRM_STATE_DIR)
 
 CRM_RSCTMP_DIR="${runstatedir}/resource-agents"
@@ -1277,10 +1314,6 @@ AC_SUBST(CRM_RSCTMP_DIR)
 PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
 AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
 AC_SUBST(PACEMAKER_CONFIG_DIR)
-
-OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
-AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
-AC_SUBST(OCF_RA_DIR)
 
 AC_DEFINE_UNQUOTED(SBIN_DIR,"$sbindir",[Location for system binaries])
 
@@ -1306,15 +1339,15 @@ AC_SUBST(BUILD_VERSION)
 
 HAVE_dbus=1
 PKG_CHECK_MODULES([DBUS], [dbus-1],
-		  [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
-		  [HAVE_dbus=0])
+                  [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
+                  [HAVE_dbus=0])
 AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 if test $HAVE_dbus = 0; then
-	PC_NAME_DBUS=""
+        PC_NAME_DBUS=""
 else
-	PC_NAME_DBUS="dbus-1"
+        PC_NAME_DBUS="dbus-1"
 fi
 AC_SUBST(PC_NAME_DBUS)
 

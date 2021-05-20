@@ -19,6 +19,9 @@
 ## GitHub entity that distributes source (for ease of using a fork)
 %global github_owner ClusterLabs
 
+## Where bug reports should be submitted
+## Leave bug_url undefined to use ClusterLabs default, others define it here
+
 ## Upstream pacemaker version, and its package version (specversion
 ## can be incremented to build packages reliably considered "newer"
 ## than previously built packages with the same pcmkversion)
@@ -27,6 +30,7 @@
 
 ## Upstream commit (full commit ID, abbreviated commit ID, or tag) to build
 %global commit HEAD
+
 ## Since git v2.11, the extent of abbreviation is autoscaled by default
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
 %global commit_abbrev 7
@@ -47,9 +51,26 @@
 ## Add option to create binaries with coverage analysis
 %bcond_with coverage
 
-## Add option to skip generating documentation
+## Add option to skip (or enable, on RHEL) generating documentation
 ## (the build tools aren't available everywhere)
+%if 0%{?rhel}
+%bcond_with doc
+%else
 %bcond_without doc
+%endif
+
+## Add option to default to start-up synchronization with SBD.
+##
+## If enabled, SBD *MUST* be built to default similarly, otherwise data
+## corruption could occur. Building both Pacemaker and SBD to default
+## to synchronization improves safety, without requiring higher-level tools
+## to be aware of the setting or requiring users to modify configurations
+## after upgrading to versions that support synchronization.
+%if 0%{?rhel} && 0%{?rhel} > 8
+%bcond_without sbd_sync
+%else
+%bcond_with sbd_sync
+%endif
 
 ## Add option to prefix package version with "0."
 ## (so later "official" packages will be considered updates)
@@ -61,9 +82,12 @@
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
-## Add option to enable links for legacy daemon names
+## Add option to enable (or disable, on RHEL 8) links for legacy daemon names
+%if 0%{?rhel} && 0%{?rhel} <= 8
+%bcond_without legacy_links
+%else
 %bcond_with legacy_links
-
+%endif
 
 # Define globals for convenient use later
 
@@ -153,7 +177,7 @@
 ## Distro-specific configuration choices
 
 ### Use 2.0-style output when other distro packages don't support current output
-%if ( 0%{?fedora} && 0%{?fedora} <= 34 ) || ( 0%{?rhel} && 0%{?rhel} <= 8 )
+%if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} <= 8 )
 %global compat20 --enable-compat-2.0
 %endif
 
@@ -222,7 +246,6 @@ License:       GPLv2+ and LGPLv2+
 License:       GPLv2+ and LGPLv2+ and BSD
 %endif
 Url:           https://www.clusterlabs.org/
-Group:         System Environment/Daemons
 
 # Example: https://codeload.github.com/ClusterLabs/pacemaker/tar.gz/e91769e
 # will download pacemaker-e91769e.tar.gz
@@ -247,14 +270,15 @@ Requires:      %{python_path}
 BuildRequires: %{python_name}-devel
 
 # Pacemaker requires a minimum libqb functionality
-Requires:      libqb >= 0.13.0
-BuildRequires: libqb-devel >= 0.13.0
+Requires:      libqb >= 0.17.0
+BuildRequires: libqb-devel >= 0.17.0
 
-# Basics required for the build (even if usually satisfied through other BRs)
+# Required basic build tools
 BuildRequires: coreutils findutils grep sed
+BuildRequires: autoconf automake gcc make pkgconfig
+BuildRequires: libtool %{?pkgname_libtool_devel}
 
 # Required for core functionality
-BuildRequires: automake autoconf gcc libtool pkgconfig %{?pkgname_libtool_devel}
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: %{pkgname_bzip2_devel}
@@ -275,7 +299,7 @@ BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
 %if %{with doc}
-BuildRequires: inkscape asciidoc %{python_name}-sphinx
+BuildRequires: asciidoc inkscape %{python_name}-sphinx
 %endif
 
 Provides:      pcmk-cluster-manager = %{version}-%{release}
@@ -299,13 +323,12 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cibsecrets coverage doc stonithd hardening pre_release
-                profiling upstart_job
+  --with(out) : cibsecrets coverage doc hardening pre_release profiling stonithd
+                upstart_job
 
 %package cli
 License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
-Group:         System Environment/Daemons
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 %if 0%{?supports_recommends}
 Recommends:    pcmk-cluster-manager = %{version}-%{release}
@@ -329,7 +352,6 @@ be part of the cluster.
 %package -n %{pkgname_pcmk_libs}
 License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
-Group:         System Environment/Daemons
 Requires(pre): %{pkgname_shadow_utils}
 Requires:      %{name}-schemas = %{version}-%{release}
 # sbd 1.4.0+ supports the libpe_status API for pe_working_set_t
@@ -345,7 +367,6 @@ nodes and those just running the CLI tools.
 %package cluster-libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
-Group:         System Environment/Daemons
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 
 %description cluster-libs
@@ -362,8 +383,7 @@ License:       GPLv2+ and LGPLv2+
 # initscript is Revised BSD
 License:       GPLv2+ and LGPLv2+ and BSD
 %endif
-Summary:       Pacemaker remote daemon for non-cluster nodes
-Group:         System Environment/Daemons
+Summary:       Pacemaker remote executor daemon for non-cluster nodes
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
@@ -386,10 +406,9 @@ nodes not running the full corosync/cluster stack.
 %package -n %{pkgname_pcmk_libs}-devel
 License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
-Group:         Development/Libraries
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
-Requires:      libuuid-devel%{?_isa} %{?pkgname_libtool_devel_arch}
+Requires:      %{?pkgname_libtool_devel_arch} libuuid-devel%{?_isa}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
@@ -405,7 +424,6 @@ for developing tools for Pacemaker.
 %package       cts
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
-Group:         System Environment/Daemons
 Requires:      %{python_path}
 Requires:      %{pkgname_pcmk_libs} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
@@ -426,7 +444,6 @@ Test framework for cluster-related technologies like Pacemaker
 %package       doc
 License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
-Group:         Documentation
 BuildArch:     noarch
 
 %description   doc
@@ -474,7 +491,9 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_profiling:     --with-profiling}                                \
         %{?with_coverage:      --with-coverage}                                 \
         %{?with_cibsecrets:    --with-cibsecrets}                               \
+        %{?with_sbd_sync:      --with-sbd-sync-default="true"}                  \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
+        %{?bug_url:            --with-bug-url=%{bug_url}}                       \
         %{?concurrent_fencing}                                                  \
         %{?resource_stickiness}                                                 \
         %{?compat20}                                                            \
