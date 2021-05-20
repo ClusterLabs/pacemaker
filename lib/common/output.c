@@ -71,6 +71,8 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name, const char *filenam
         return ENOMEM;
     }
 
+    setenv("OCF_OUTPUT_FORMAT", (*out)->fmt_name, 1);
+
     return pcmk_rc_ok;
 }
 
