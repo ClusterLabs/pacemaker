@@ -100,6 +100,7 @@ struct {
     int timeout_ms;               // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
     gchar *xml_file;              // Value of (deprecated) --xml-file
+    int check_level;              // Optional value of --validate or --force-check
 
     // Resource configuration specified via command-line arguments
     gboolean cmdline_config;      // Resource configuration was via arguments
@@ -113,6 +114,7 @@ struct {
     GHashTable *override_params;  // Resource parameter values that override config
 } options = {
     .attr_set_type = XML_TAG_ATTR_SETS,
+    .check_level = -1,
     .cib_options = cib_sync_call,
     .require_cib = TRUE,
     .require_dataset = TRUE,
@@ -402,14 +404,15 @@ static GOptionEntry query_entries[] = {
 };
 
 static GOptionEntry command_entries[] = {
-    { "validate", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+    { "validate", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       validate_or_force_cb,
       "Validate resource configuration by calling agent's validate-all\n"
       INDENT "action. The configuration may be specified either by giving an\n"
       INDENT "existing resource name with -r, or by specifying --class,\n"
       INDENT "--agent, and --provider arguments, along with any number of\n"
-      INDENT "--option arguments.",
-      NULL },
+      INDENT "--option arguments. An optional LEVEL argument can be given\n"
+      INDENT "to control the level of checking performed.",
+      "LEVEL" },
     { "cleanup", 'C', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, cleanup_refresh_cb,
       "If resource has any past failures, clear its history and fail\n"
       INDENT "count. Optionally filtered by --resource, --node, --operation\n"
@@ -546,11 +549,12 @@ static GOptionEntry advanced_entries[] = {
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
-    { "force-check", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+    { "force-check", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       validate_or_force_cb,
       "(Advanced) Bypass the cluster and check the state of a resource on\n"
-      INDENT "the local node",
-      NULL },
+      INDENT "the local node. An optional LEVEL argument can be given\n"
+      INDENT "to control the level of checking performed.",
+      "LEVEL" },
 
     { NULL }
 };
@@ -910,6 +914,15 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
+
+    if (optarg != NULL) {
+        if (pcmk__scan_min_int(optarg, &options.check_level, 0) != pcmk_rc_ok) {
+            g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
+                        "Invalid check level setting: %s", optarg);
+            return FALSE;
+        }
+    }
+
     return TRUE;
 }
 
@@ -1826,12 +1839,12 @@ main(int argc, char **argv)
                     options.v_class, options.v_provider, options.v_agent,
                     "validate-all", options.cmdline_params,
                     options.override_params, options.timeout_ms,
-                    args->verbosity, options.force);
+                    args->verbosity, options.force, options.check_level);
             } else {
                 exit_code = cli_resource_execute(rsc, options.rsc_id,
                     options.operation, options.override_params,
                     options.timeout_ms, cib_conn, data_set,
-                    args->verbosity, options.force);
+                    args->verbosity, options.force, options.check_level);
             }
             break;
 
