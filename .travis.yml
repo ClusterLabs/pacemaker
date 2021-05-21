@@ -101,12 +101,6 @@ after_failure:
  - env | sort 
  - cat include/config.h
 
-notifications:
-  irc: "irc.freenode.org#pcmk"
-#  email:
-#    recipients:
-#      - developers@clusterlabs.org
-
 # whitelist
 branches:
   only:

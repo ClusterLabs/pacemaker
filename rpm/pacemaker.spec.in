@@ -42,8 +42,12 @@
 ## Add option to enable support for stonith/external fencing agents
 %bcond_with stonithd
 
-## Add option to enable support for storing sensitive information outside CIB
+## Add option for whether to support storing sensitive information outside CIB
+%if (0%{?fedora} && 0%{?fedora} <= 33) || (0%{?rhel} && 0%{?rhel} <= 8)
 %bcond_with cibsecrets
+%else
+%bcond_without cibsecrets
+%endif
 
 ## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
