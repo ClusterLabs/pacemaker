@@ -20,6 +20,7 @@
             <ref name="resource-check" />
             <ref name="resource-config" />
             <ref name="resources-list" />
+            <ref name="resource-agent-action" />
         </choice>
     </define>
 
@@ -224,6 +225,55 @@
                 <attribute name="exec-time"> <data type="nonNegativeInteger" /> </attribute>
             </optional>
             <attribute name="status"> <text/> </attribute>
+        </element>
+    </define>
+
+    <define name="resource-agent-action">
+        <element name="resource-agent-action">
+            <attribute name="action"> <text/> </attribute>
+            <optional>
+                <attribute name="rsc"> <text/> </attribute>
+            </optional>
+            <attribute name="class"> <text/> </attribute>
+            <attribute name="type"> <text/> </attribute>
+            <optional>
+                <attribute name="provider"> <text/> </attribute>
+            </optional>
+            <optional>
+                <ref name="overrides-list"/>
+            </optional>
+            <ref name="agent-status"/>
+            <optional>
+                <choice>
+                    <element name="command">
+                        <text />
+                    </element>
+                    <externalRef href="command-output-1.0.rng"/>
+                </choice>
+            </optional>
+        </element>
+    </define>
+
+    <define name="overrides-list">
+        <element name="overrides">
+            <zeroOrMore>
+                <element name="override">
+                    <optional>
+                        <attribute name="rsc"> <text/> </attribute>
+                    </optional>
+                    <attribute name="name"> <text/> </attribute>
+                    <attribute name="value"> <text/> </attribute>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="agent-status">
+        <element name="agent-status">
+            <attribute name="code"> <data type="integer" /> </attribute>
+            <optional>
+                <attribute name="message"> <text/> </attribute>
+            </optional>
         </element>
     </define>
 
