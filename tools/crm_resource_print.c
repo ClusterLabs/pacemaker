@@ -152,6 +152,57 @@ attribute_list_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
+                  "const char *", "const char *", "int")
+static int
+agent_status_default(pcmk__output_t *out, va_list args) {
+    int status = va_arg(args, int);
+    const char *action = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *class = va_arg(args, const char *);
+    const char *provider = va_arg(args, const char *);
+    const char *type = va_arg(args, const char *);
+    int rc = va_arg(args, int);
+
+    if (status == PCMK_LRM_OP_DONE) {
+        out->info(out, "Operation %s%s%s (%s%s%s:%s) returned: '%s' (%d)",
+                  action, name ? " for " : "", name ? name : "",
+                  class, provider ? ":" : "", provider ? provider : "", type,
+                  services_ocf_exitcode_str(rc), rc);
+    } else {
+        out->err(out, "Operation %s%s%s (%s%s%s:%s) failed: '%s' (%d)",
+                 action, name ? " for " : "", name ? name : "",
+                 class, provider ? ":" : "", provider ? provider : "", type,
+                 services_lrm_status_str(status), status);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
+                  "const char *", "const char *", "int")
+static int
+agent_status_xml(pcmk__output_t *out, va_list args) {
+    int status G_GNUC_UNUSED = va_arg(args, int);
+    const char *action G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *name G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *class G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *provider G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *type G_GNUC_UNUSED = va_arg(args, const char *);
+    int rc = va_arg(args, int);
+
+    char *status_str = pcmk__itoa(rc);
+
+    pcmk__output_create_xml_node(out, "agent-status",
+                                 "code", status_str,
+                                 "message", services_ocf_exitcode_str(rc),
+                                 NULL);
+
+    free(status_str);
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
 static int
 attribute_list_text(pcmk__output_t *out, va_list args) {
@@ -562,6 +613,8 @@ resource_names(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "agent-status", "default", agent_status_default },
+    { "agent-status", "xml", agent_status_xml },
     { "attribute-list", "default", attribute_list_default },
     { "attribute-list", "text", attribute_list_text },
     { "property-list", "default", property_list_default },
