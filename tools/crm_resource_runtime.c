@@ -157,7 +157,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     if (xml_has_children(xml_search)) {
         xmlNode *child = NULL;
 
-        rc = EINVAL;
+        rc = ENOTUNIQ;
         out->info(out, "Multiple attributes match name=%s", attr_name);
 
         for (child = pcmk__xml_first_child(xml_search); child != NULL;
