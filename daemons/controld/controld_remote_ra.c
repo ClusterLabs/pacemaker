@@ -429,8 +429,6 @@ retry_start_cmd_cb(gpointer data)
     }
 
     if (rc != pcmk_rc_ok) {
-        cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
-        cmd->op_status = PCMK_LRM_OP_ERROR;
         report_remote_ra_result(cmd);
 
         if (ra_data->cmds) {
@@ -739,6 +737,7 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int port = 0;
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
+    int rc = pcmk_rc_ok;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
         if (pcmk__strcase_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
@@ -751,8 +750,13 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
         }
     }
 
-    return controld_connect_remote_executor(lrm_state, server, port,
-                                            timeout_used);
+    rc = controld_connect_remote_executor(lrm_state, server, port,
+                                          timeout_used);
+    if (rc != pcmk_rc_ok) {
+        cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
+        cmd->op_status = PCMK_LRM_OP_ERROR;
+    }
+    return rc;
 }
 
 static gboolean
@@ -789,9 +793,6 @@ handle_remote_ra_exec(gpointer user_data)
                           cmd->action);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
-            } else {
-                cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
-                cmd->op_status = PCMK_LRM_OP_ERROR;
             }
             report_remote_ra_result(cmd);
 
