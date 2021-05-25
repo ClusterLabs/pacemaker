@@ -313,6 +313,41 @@ lrm_op_callback(lrmd_event_data_t * op)
     }
 }
 
+static void
+try_local_executor_connect(long long action, fsa_data_t *msg_data,
+                           lrm_state_t *lrm_state)
+{
+    int rc = pcmk_rc_ok;
+
+    crm_debug("Connecting to the local executor");
+
+    // If we can connect, great
+    rc = controld_connect_local_executor(lrm_state);
+    if (rc == pcmk_rc_ok) {
+        controld_set_fsa_input_flags(R_LRM_CONNECTED);
+        crm_info("Connection to the local executor established");
+        return;
+    }
+
+    // Otherwise, if we can try again, set a timer to do so
+    if (lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
+        crm_warn("Failed to connect to the local executor %d time%s "
+                 "(%d max): %s", lrm_state->num_lrm_register_fails,
+                 pcmk__plural_s(lrm_state->num_lrm_register_fails),
+                 MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
+        controld_start_timer(wait_timer);
+        crmd_fsa_stall(FALSE);
+        return;
+    }
+
+    // Otherwise give up
+    crm_err("Failed to connect to the executor the max allowed "
+            "%d time%s: %s", lrm_state->num_lrm_register_fails,
+            pcmk__plural_s(lrm_state->num_lrm_register_fails),
+            pcmk_rc_str(rc));
+    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+}
+
 /*	 A_LRM_CONNECT	*/
 void
 do_lrm_control(long long action,
@@ -352,34 +387,7 @@ do_lrm_control(long long action,
     }
 
     if (action & A_LRM_CONNECT) {
-        int ret = pcmk_ok;
-
-        crm_debug("Connecting to the executor");
-        ret = lrm_state_ipc_connect(lrm_state);
-
-        if (ret != pcmk_ok) {
-            if (lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
-                crm_warn("Failed to connect to the executor %d time%s (%d max)",
-                         lrm_state->num_lrm_register_fails,
-                         pcmk__plural_s(lrm_state->num_lrm_register_fails),
-                         MAX_LRM_REG_FAILS);
-
-                controld_start_timer(wait_timer);
-                crmd_fsa_stall(FALSE);
-                return;
-            }
-        }
-
-        if (ret != pcmk_ok) {
-            crm_err("Failed to connect to the executor the max allowed %d time%s",
-                    lrm_state->num_lrm_register_fails,
-                    pcmk__plural_s(lrm_state->num_lrm_register_fails));
-            register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-            return;
-        }
-
-        controld_set_fsa_input_flags(R_LRM_CONNECTED);
-        crm_info("Connection to the executor established");
+        try_local_executor_connect(action, msg_data, lrm_state);
     }
 
     if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {

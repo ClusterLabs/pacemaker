@@ -364,25 +364,33 @@ lrm_state_poke_connection(lrm_state_t * lrm_state)
     return ((lrmd_t *) lrm_state->conn)->cmds->poke_connection(lrm_state->conn);
 }
 
+// \return Standard Pacemaker return code
 int
-lrm_state_ipc_connect(lrm_state_t * lrm_state)
+controld_connect_local_executor(lrm_state_t *lrm_state)
 {
-    int ret;
+    int rc = pcmk_rc_ok;
 
-    if (!lrm_state->conn) {
-        lrm_state->conn = lrmd_api_new();
-        ((lrmd_t *) lrm_state->conn)->cmds->set_callback(lrm_state->conn, lrm_op_callback);
+    if (lrm_state->conn == NULL) {
+        lrmd_t *api = NULL;
+
+        rc = lrmd__new(&api, NULL, NULL, 0);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+        api->cmds->set_callback(api, lrm_op_callback);
+        lrm_state->conn = api;
     }
 
-    ret = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn, CRM_SYSTEM_CRMD, NULL);
+    rc = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn,
+                                                     CRM_SYSTEM_CRMD, NULL);
+    rc = pcmk_legacy2rc(rc);
 
-    if (ret != pcmk_ok) {
-        lrm_state->num_lrm_register_fails++;
-    } else {
+    if (rc == pcmk_rc_ok) {
         lrm_state->num_lrm_register_fails = 0;
+    } else {
+        lrm_state->num_lrm_register_fails++;
     }
-
-    return ret;
+    return rc;
 }
 
 static remote_proxy_t *
