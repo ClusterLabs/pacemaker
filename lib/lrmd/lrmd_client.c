@@ -2194,67 +2194,129 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Create an executor API object
+ *
+ * \param[out] api       Will be set to newly created API object (it is the
+ *                       caller's responsibility to free this value with
+ *                       lrmd_api_delete() if this function succeeds)
+ * \param[in]  nodename  If the object will be used for a remote connection,
+ *                       the node name to use in cluster for remote executor
+ * \param[in]  server    If the object will be used for a remote connection,
+ *                       the resolvable host name to connect to
+ * \param[in]  port      If the object will be used for a remote connection,
+ *                       port number on \p server to connect to
+ *
+ * \return Standard Pacemaker return code
+ * \note If the caller leaves one of \p nodename or \p server NULL, the other's
+ *       value will be used for both. If the caller leaves both NULL, an API
+ *       object will be created for a local executor connection.
+ */
+int
+lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
+{
+    lrmd_private_t *pvt = NULL;
+
+    if (api == NULL) {
+        return EINVAL;
+    }
+    *api = NULL;
+
+    // Allocate all memory needed
+
+    *api = calloc(1, sizeof(lrmd_t));
+    if (*api == NULL) {
+        return ENOMEM;
+    }
+
+    pvt = calloc(1, sizeof(lrmd_private_t));
+    if (pvt == NULL) {
+        lrmd_api_delete(*api);
+        *api = NULL;
+        return ENOMEM;
+    }
+    (*api)->lrmd_private = pvt;
+
+    // @TODO Do we need to do this for local connections?
+    pvt->remote = calloc(1, sizeof(pcmk__remote_t));
+
+    (*api)->cmds = calloc(1, sizeof(lrmd_api_operations_t));
+
+    if ((pvt->remote == NULL) || ((*api)->cmds == NULL)) {
+        lrmd_api_delete(*api);
+        *api = NULL;
+        return ENOMEM;
+    }
+
+    // Set methods
+    (*api)->cmds->connect = lrmd_api_connect;
+    (*api)->cmds->connect_async = lrmd_api_connect_async;
+    (*api)->cmds->is_connected = lrmd_api_is_connected;
+    (*api)->cmds->poke_connection = lrmd_api_poke_connection;
+    (*api)->cmds->disconnect = lrmd_api_disconnect;
+    (*api)->cmds->register_rsc = lrmd_api_register_rsc;
+    (*api)->cmds->unregister_rsc = lrmd_api_unregister_rsc;
+    (*api)->cmds->get_rsc_info = lrmd_api_get_rsc_info;
+    (*api)->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
+    (*api)->cmds->set_callback = lrmd_api_set_callback;
+    (*api)->cmds->get_metadata = lrmd_api_get_metadata;
+    (*api)->cmds->exec = lrmd_api_exec;
+    (*api)->cmds->cancel = lrmd_api_cancel;
+    (*api)->cmds->list_agents = lrmd_api_list_agents;
+    (*api)->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
+    (*api)->cmds->list_standards = lrmd_api_list_standards;
+    (*api)->cmds->exec_alert = lrmd_api_exec_alert;
+    (*api)->cmds->get_metadata_params = lrmd_api_get_metadata_params;
+
+    if ((nodename == NULL) && (server == NULL)) {
+        pvt->type = pcmk__client_ipc;
+    } else {
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        if (nodename == NULL) {
+            nodename = server;
+        } else if (server == NULL) {
+            server = nodename;
+        }
+        pvt->type = pcmk__client_tls;
+        pvt->remote_nodename = strdup(nodename);
+        pvt->server = strdup(server);
+        if ((pvt->remote_nodename == NULL) || (pvt->server == NULL)) {
+            lrmd_api_delete(*api);
+            *api = NULL;
+            return ENOMEM;
+        }
+        pvt->port = port;
+        if (pvt->port == 0) {
+            pvt->port = crm_default_remote_port();
+        }
+#else
+        crm_err("Cannot communicate with Pacemaker Remote "
+                "because GnuTLS is not enabled for this build");
+        lrmd_api_delete(*api);
+        *api = NULL;
+        return EOPNOTSUPP;
+#endif
+    }
+    return pcmk_rc_ok;
+}
+
 lrmd_t *
 lrmd_api_new(void)
 {
-    lrmd_t *new_lrmd = NULL;
-    lrmd_private_t *pvt = NULL;
+    lrmd_t *api = NULL;
 
-    new_lrmd = calloc(1, sizeof(lrmd_t));
-    pvt = calloc(1, sizeof(lrmd_private_t));
-    pvt->remote = calloc(1, sizeof(pcmk__remote_t));
-    new_lrmd->cmds = calloc(1, sizeof(lrmd_api_operations_t));
-
-    pvt->type = pcmk__client_ipc;
-    new_lrmd->lrmd_private = pvt;
-
-    new_lrmd->cmds->connect = lrmd_api_connect;
-    new_lrmd->cmds->connect_async = lrmd_api_connect_async;
-    new_lrmd->cmds->is_connected = lrmd_api_is_connected;
-    new_lrmd->cmds->poke_connection = lrmd_api_poke_connection;
-    new_lrmd->cmds->disconnect = lrmd_api_disconnect;
-    new_lrmd->cmds->register_rsc = lrmd_api_register_rsc;
-    new_lrmd->cmds->unregister_rsc = lrmd_api_unregister_rsc;
-    new_lrmd->cmds->get_rsc_info = lrmd_api_get_rsc_info;
-    new_lrmd->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
-    new_lrmd->cmds->set_callback = lrmd_api_set_callback;
-    new_lrmd->cmds->get_metadata = lrmd_api_get_metadata;
-    new_lrmd->cmds->exec = lrmd_api_exec;
-    new_lrmd->cmds->cancel = lrmd_api_cancel;
-    new_lrmd->cmds->list_agents = lrmd_api_list_agents;
-    new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
-    new_lrmd->cmds->list_standards = lrmd_api_list_standards;
-    new_lrmd->cmds->exec_alert = lrmd_api_exec_alert;
-    new_lrmd->cmds->get_metadata_params = lrmd_api_get_metadata_params;
-
-    return new_lrmd;
+    CRM_ASSERT(lrmd__new(&api, NULL, NULL, 0) == pcmk_rc_ok);
+    return api;
 }
 
 lrmd_t *
 lrmd_remote_api_new(const char *nodename, const char *server, int port)
 {
-#ifdef HAVE_GNUTLS_GNUTLS_H
-    lrmd_t *new_lrmd = lrmd_api_new();
-    lrmd_private_t *native = new_lrmd->lrmd_private;
+    lrmd_t *api = NULL;
 
-    if (!nodename && !server) {
-        lrmd_api_delete(new_lrmd);
-        return NULL;
-    }
-
-    native->type = pcmk__client_tls;
-    native->remote_nodename = nodename ? strdup(nodename) : strdup(server);
-    native->server = server ? strdup(server) : strdup(nodename);
-    native->port = port;
-    if (native->port == 0) {
-        native->port = crm_default_remote_port();
-    }
-
-    return new_lrmd;
-#else
-    crm_err("Cannot communicate with Pacemaker Remote because GnuTLS is not enabled for this build");
-    return NULL;
-#endif
+    CRM_ASSERT(lrmd__new(&api, nodename, server, port) == pcmk_rc_ok);
+    return api;
 }
 
 void
