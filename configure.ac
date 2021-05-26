@@ -1808,6 +1808,7 @@ AS_CASE([$enable_hardening],
             relro=0
             pie=0
             bindnow=0
+            stackprot="none"
             # daemons incl. libs: partial RELRO
             flag="-Wl,-z,relro"
             CC_CHECK_LDFLAGS(["${flag}"],
@@ -1855,20 +1856,40 @@ AS_CASE([$enable_hardening],
             # universal: prefer strong > all > default stack protector if possible
             flag=
             AS_IF([cc_supports_flag -fstack-protector-strong],
-                  [flag="-fstack-protector-strong"],
-                  [cc_supports_flag -fstack-protector-all],
-                  [flag="-fstack-protector-all"],
-                  [cc_supports_flag -fstack-protector],
-                  [flag="-fstack-protector"]
-            )
-            AS_IF([test -n "${flag}"],
                   [
-                      CC_EXTRAS="${CC_EXTRAS} ${flag}"
-                      stackprot=1
+                      flag="-fstack-protector-strong"
+                      stackprot="strong"
+                  ],
+                  [cc_supports_flag -fstack-protector-all],
+                  [
+                      flag="-fstack-protector-all"
+                      stackprot="all"
+                  ],
+                  [cc_supports_flag -fstack-protector],
+                  [
+                      flag="-fstack-protector"
+                      stackprot="default"
                   ]
             )
-            AS_IF([test "${relro}" = 1 || test "${pie}" = 1 || test "${stackprot}" = 1],
-                  [AC_MSG_NOTICE([Hardening: relro=${relro} pie=${pie} bindnow=${bindnow} stackprot=${flag}])],
+            AS_IF([test -n "${flag}"], [CC_EXTRAS="${CC_EXTRAS} ${flag}"])
+            # universal: enable stack clash protection if possible
+            AS_IF([cc_supports_flag -fstack-clash-protection],
+                  [
+                      CC_EXTRAS="${CC_EXTRAS} -fstack-clash-protection"
+                      AS_IF([test "${stackprot}" = "none"],
+                            [stackprot="clash-only"],
+                            [stackprot="${stackprot}+clash"]
+                      )
+                  ]
+            )
+            # Log a summary
+            AS_IF([test "${relro}" = 1 || test "${pie}" = 1 || test "${stackprot}" != "none"],
+                  [AC_MSG_NOTICE(m4_normalize([Hardening:
+                        relro=${relro}
+                        pie=${pie}
+                        bindnow=${bindnow}
+                        stackprot=${stackprot}]))
+                  ],
                   [AC_MSG_WARN([Hardening: no suitable features in the toolchain detected])]
             )
         ],
