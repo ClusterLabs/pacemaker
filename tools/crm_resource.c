@@ -1376,6 +1376,12 @@ show_metadata(pcmk__output_t *out, const char *agent_spec)
         if (metadata) {
             out->output_xml(out, "metadata", metadata);
         } else {
+            /* We were given a validly formatted spec, but it doesn't necessarily
+             * match up with anything that exists.  Use ENXIO as the return code
+             * here because that maps to an exit code of CRM_EX_NOSUCH, which
+             * probably is the most common reason to get here.
+             */
+            rc = ENXIO;
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Metadata query for %s failed: %s",
                         agent_spec, pcmk_rc_str(rc));
