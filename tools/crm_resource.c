@@ -1397,7 +1397,7 @@ show_metadata(pcmk__output_t *out, const char *agent_spec, crm_exit_t *exit_code
         if (metadata) {
             out->output_xml(out, "metadata", metadata);
         } else {
-            *exit_code = crm_errno2exit(rc);
+            *exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, *exit_code,
                         "Metadata query for %s failed: %s",
                         agent_spec, pcmk_rc_str(rc));
