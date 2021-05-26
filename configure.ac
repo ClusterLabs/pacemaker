@@ -1225,6 +1225,7 @@ AS_IF([test $with_profiling -ne $DISABLED],
       ]
 )
 AC_DEFINE_UNQUOTED([SUPPORT_PROFILING], [$with_profiling], [Support profiling])
+AM_CONDITIONAL([BUILD_PROFILING], [test "$with_profiling" = "$REQUIRED"])
 
 dnl ========================================================================
 dnl    Cluster infrastructure - LibQB
