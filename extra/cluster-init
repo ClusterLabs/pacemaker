@@ -378,7 +378,7 @@ case $INSTALL in
 	    info Configuring Clusterlabs repo: $REPO
 	    yum install -y wget
 	    rm -f /etc/yum.repos.d/clusterlabs.repo
-            wget -O /etc/yum.repos.d/clusterlabs.repo http://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
+            wget -O /etc/yum.repos.d/clusterlabs.repo https://www.clusterlabs.org/$REPO/clusterlabs.repo &>/dev/null
 	    yum clean all
 	fi
 

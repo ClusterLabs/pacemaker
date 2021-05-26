@@ -159,5 +159,5 @@ Frequently Asked Questions
     mailing list for development-related questions, or on the
     `users@ClusterLabs.org <https://lists.ClusterLabs.org/mailman/listinfo/users>`_
     mailing list for general questions about using Pacemaker.
-    Developers often also hang out on `freenode's <http://freenode.net/>`_
-    #clusterlabs IRC channel.
+    Developers often also hang out on the
+    [ClusterLabs IRC channel](https://wiki.clusterlabs.org/wiki/ClusterLabs_IRC_channel).
