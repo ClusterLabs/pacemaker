@@ -1872,6 +1872,16 @@ AS_CASE([$enable_hardening],
                   ]
             )
             AS_IF([test -n "${flag}"], [CC_EXTRAS="${CC_EXTRAS} ${flag}"])
+            # universal: enable stack clash protection if possible
+            AS_IF([cc_supports_flag -fstack-clash-protection],
+                  [
+                      CC_EXTRAS="${CC_EXTRAS} -fstack-clash-protection"
+                      AS_IF([test "${stackprot}" = "none"],
+                            [stackprot="clash-only"],
+                            [stackprot="${stackprot}+clash"]
+                      )
+                  ]
+            )
             # Log a summary
             AS_IF([test "${relro}" = 1 || test "${pie}" = 1 || test "${stackprot}" != "none"],
                   [AC_MSG_NOTICE(m4_normalize([Hardening:
