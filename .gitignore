@@ -255,6 +255,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /test-driver
 
 #Other 
+coverage.html
 coverity-*
 logs
 *.patch
