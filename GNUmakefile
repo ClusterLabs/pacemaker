@@ -451,5 +451,18 @@ gnulib-update:
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
 
-ancillary-clean: spec-clean srpm-clean mock-clean coverity-clean
+## Coverage/profiling
+
+.PHONY: coverage
+coverage: core
+	-find . -name "*.gcda" -exec rm -f \{\} \;
+	$(MAKE) $(AM_MAKEFLAGS) check
+	gcovr -r . --html -o coverage.html -e '.*_test.c' -e 'replace'
+
+.PHONY: coverage-clean
+coverage-clean:
+	-rm -f coverage.html
+	-find . \( -name "*.gcno" -o -name "*.gcda" \) -exec rm -f \{\} \;
+
+ancillary-clean: spec-clean srpm-clean mock-clean coverity-clean coverage-clean
 	-rm -f $(TARFILE)

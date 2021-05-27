@@ -139,3 +139,10 @@ books-upload:
 www: clean-local deprecated-upload manhtml-upload global-upload doxygen-upload books-upload
 
 clean-local: global-clean manhtml-clean doxygen-clean abi-clean deprecated-clean
+
+# "make check" will cause "make all" to be run, which means docs will get built
+# as a part of running tests if they haven't already.  That seems unnecessary, so
+# override the default check-recursive rule with this one that just returns.  If
+# we ever need to add tests to this directory, this rule will have to come out.
+check-recursive:
+	@true
