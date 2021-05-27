@@ -24,6 +24,7 @@
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml_internal.h>
+#include <crm/lrmd_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
@@ -121,8 +122,7 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     xmlNode *xop = NULL;
 
     op = lrmd_new_event(ID(cib_resource), task, interval_ms);
-    op->rc = outcome;
-    op->op_status = PCMK_EXEC_DONE;
+    lrmd__set_result(op, outcome, PCMK_EXEC_DONE, NULL);
     op->params = NULL;          /* TODO: Fill me in */
     op->t_run = (unsigned int) time(NULL);
     op->t_rcchange = op->t_run;

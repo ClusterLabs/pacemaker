@@ -13,6 +13,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/lrmd.h>
+#include <crm/lrmd_internal.h>
 #include <crm/services.h>
 
 #include <pacemaker-controld.h>
@@ -361,12 +362,8 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     op.t_run = (unsigned int) cmd->start_time;
     op.t_rcchange = (unsigned int) cmd->start_time;
 
-    /* Since op's lifetime is just this function, which doesn't free cmd,
-     * point to the exit reason directly rather than copy it.
-     */
-    op.rc = cmd->result.exit_status;
-    op.op_status = cmd->result.exec_status;
-    op.exit_reason = cmd->result.exit_reason;
+    lrmd__set_result(&op, cmd->result.exit_status, cmd->result.exec_status,
+                     cmd->result.exit_reason);
 
     if (cmd->reported_success && (cmd->result.exit_status != PCMK_OCF_OK)) {
         op.t_rcchange = (unsigned int) time(NULL);
@@ -401,6 +398,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     if (op.params) {
         g_hash_table_destroy(op.params);
     }
+    lrmd__reset_result(&op);
 }
 
 static void
@@ -511,11 +509,10 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
     op.type = lrmd_event_exec_complete;
     op.rsc_id = rsc_id;
     op.op_type = op_type;
-    op.rc = PCMK_OCF_OK;
-    op.op_status = PCMK_EXEC_DONE;
     op.t_run = (unsigned int) time(NULL);
     op.t_rcchange = op.t_run;
     op.call_id = generate_callid();
+    lrmd__set_result(&op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     process_lrm_event(lrm_state, &op, NULL, NULL);
 }
 

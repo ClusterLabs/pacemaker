@@ -16,6 +16,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
+#include <crm/lrmd_internal.h>
 #include <pacemaker-internal.h>
 
 
@@ -818,8 +819,7 @@ pcmk__event_from_graph_action(xmlNode *resource, crm_action_t *action,
     op = lrmd_new_event(ID(action_resource),
                         crm_element_value(action->xml, XML_LRM_ATTR_TASK),
                         action->interval_ms);
-    op->rc = rc;
-    op->op_status = status;
+    lrmd__set_result(op, rc, status, NULL);
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
     op->params = pcmk__strkey_table(free, free);

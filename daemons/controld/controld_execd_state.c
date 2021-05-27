@@ -76,8 +76,8 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.user_data = op->user_data;
     event.timeout = 0;
     event.interval_ms = op->interval_ms;
-    event.rc = PCMK_OCF_UNKNOWN_ERROR;
-    event.op_status = PCMK_EXEC_NOT_CONNECTED;
+    lrmd__set_result(&event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                     NULL);
     event.t_run = (unsigned int) op->start_time;
     event.t_rcchange = (unsigned int) op->start_time;
 
