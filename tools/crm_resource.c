@@ -1840,7 +1840,7 @@ main(int argc, char **argv)
 
         case cmd_execute_agent:
             if (options.cmdline_config) {
-                exit_code = cli_resource_execute_from_params(out, "test",
+                exit_code = cli_resource_execute_from_params(out, NULL,
                     options.v_class, options.v_provider, options.v_agent,
                     "validate-all", options.cmdline_params,
                     options.override_params, options.timeout_ms,

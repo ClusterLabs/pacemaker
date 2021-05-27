@@ -1717,14 +1717,14 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
      */
     params_copy = pcmk__str_table_dup(params);
 
-    op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
-                                 timeout_ms, params_copy, 0);
+    op = resources_action_create(rsc_name ? rsc_name : "test", rsc_class, rsc_prov,
+                                 rsc_type, action, 0, timeout_ms, params_copy, 0);
     if (op == NULL) {
         /* Re-run with stderr enabled so we can display a sane error message */
         crm_enable_stderr(TRUE);
         params_copy = pcmk__str_table_dup(params);
-        op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
-                                     timeout_ms, params_copy, 0);
+        op = resources_action_create(rsc_name ? rsc_name : "test", rsc_class, rsc_prov,
+                                     rsc_type, action, 0, timeout_ms, params_copy, 0);
 
         /* Callers of cli_resource_execute expect that the params hash table will
          * be freed.  That function uses this one, so for that reason and for
