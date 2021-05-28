@@ -1962,7 +1962,7 @@ construct_op(lrm_state_t *lrm_state, xmlNode *rsc_op, const char *rsc_id,
     op->type = lrmd_event_exec_complete;
     op->timeout = 0;
     op->start_delay = 0;
-    lrmd__set_result(op, -1, PCMK_EXEC_PENDING, NULL);
+    lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
     if (rsc_op == NULL) {
         CRM_LOG_ASSERT(pcmk__str_eq(CRMD_ACTION_STOP, operation, pcmk__str_casei));
@@ -2363,7 +2363,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
         if ((op->interval_ms > 0)
             && (op->start_delay > START_DELAY_THRESHOLD)) {
-            int target_rc = 0;
+            int target_rc = PCMK_OCF_OK;
 
             crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
             decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);

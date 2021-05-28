@@ -524,7 +524,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib, pcmk_injections_t 
         char *spec = (char *)gIter->data;
 
         int rc = 0;
-        int outcome = 0;
+        int outcome = PCMK_OCF_OK;
         guint interval_ms = 0;
 
         char *key = NULL;
@@ -609,7 +609,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     int rc = 0;
     GList *gIter = NULL;
     lrmd_event_data_t *op = NULL;
-    int target_outcome = 0;
+    int target_outcome = PCMK_OCF_OK;
 
     const char *rtype = NULL;
     const char *rclass = NULL;

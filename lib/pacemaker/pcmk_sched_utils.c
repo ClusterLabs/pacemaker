@@ -613,7 +613,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
              * @TODO It might be better to keep the correct result here, and
              * ignore it in process_graph_event().
              */
-            lrmd__set_result(op, 0, PCMK_EXEC_DONE, NULL);
+            lrmd__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         }
 
     } else if (did_rsc_op_fail(op, target_rc)) {
