@@ -20,4 +20,24 @@ GQuark pcmk__exitc_error_quark(void);
 #define PCMK__RC_ERROR       pcmk__rc_error_quark()
 #define PCMK__EXITC_ERROR    pcmk__exitc_error_quark()
 
+/* Action results */
+
+typedef struct {
+    int exit_status;                    // Child exit status
+    enum pcmk_exec_status exec_status;  // Execution status
+    char *exit_reason;                  // Brief, human-friendly explanation
+    char *action_stdout;                // Action output
+    char *action_stderr;                // Action error output
+} pcmk__action_result_t;
+
+void pcmk__set_result(pcmk__action_result_t *result, int exit_status,
+                      enum pcmk_exec_status exec_status,
+                      const char *exit_reason);
+
+void pcmk__set_result_output(pcmk__action_result_t *result,
+                             const char *action_stdout,
+                             const char *action_stderr);
+
+void pcmk__reset_result(pcmk__action_result_t *result);
+
 #endif // PCMK__COMMON_RESULTS_INTERNAL__H

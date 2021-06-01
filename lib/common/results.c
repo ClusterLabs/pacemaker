@@ -794,3 +794,87 @@ crm_exit(crm_exit_t rc)
 
     exit(rc);
 }
+
+/*
+ * External action results
+ */
+
+/*!
+ * \internal
+ * \brief Set the result of an action
+ *
+ * \param[out] result        Where to set action result
+ * \param[in]  exit_status   OCF exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  exit_reason   Human-friendly description of event to set
+ */
+void
+pcmk__set_result(pcmk__action_result_t *result, int exit_status,
+                 enum pcmk_exec_status exec_status, const char *exit_reason)
+{
+    if (result == NULL) {
+        return;
+    }
+
+    result->exit_status = exit_status;
+    result->exec_status = exec_status;
+
+    if (!pcmk__str_eq(result->exit_reason, exit_reason, pcmk__str_none)) {
+        free(result->exit_reason);
+        result->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set the output of an action
+ *
+ * \param[out] result         Action result to set output for
+ * \param[in]  action_stdout  Action output to copy
+ * \param[in]  action_stderr  Action error output to copy
+ */
+void
+pcmk__set_result_output(pcmk__action_result_t *result,
+                        const char *action_stdout, const char *action_stderr)
+{
+    if (result == NULL) {
+        return;
+    }
+
+    free(result->action_stdout);
+    if (action_stdout == NULL) {
+        result->action_stdout = NULL;
+    } else {
+        result->action_stdout = strdup(action_stdout);
+    }
+
+    free(result->action_stderr);
+    if (action_stderr == NULL) {
+        result->action_stderr = NULL;
+    } else {
+        result->action_stderr = strdup(action_stderr);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Clear a result's exit reason, output, and error output
+ *
+ * \param[in] result  Result to reset
+ */
+void
+pcmk__reset_result(pcmk__action_result_t *result)
+{
+    if (result == NULL) {
+        return;
+    }
+
+    free(result->exit_reason);
+    result->exit_reason = NULL;
+
+    free(result->action_stdout);
+    result->action_stdout = NULL;
+
+    free(result->action_stderr);
+    result->action_stderr = NULL;
+}
