@@ -83,21 +83,6 @@ enum lsb_status_exitcode {
     PCMK_LSB_STATUS_INSUFFICIENT_PRIV  = 151,
 };
 
-enum op_status {
-    PCMK_LRM_OP_UNKNOWN = -2,
-    PCMK_LRM_OP_PENDING = -1,
-    PCMK_LRM_OP_DONE,
-    PCMK_LRM_OP_CANCELLED,
-    PCMK_LRM_OP_TIMEOUT,
-    PCMK_LRM_OP_NOTSUPPORTED,
-    PCMK_LRM_OP_ERROR,
-    PCMK_LRM_OP_ERROR_HARD,
-    PCMK_LRM_OP_ERROR_FATAL,
-    PCMK_LRM_OP_NOT_INSTALLED,
-    PCMK_LRM_OP_NOT_CONNECTED,
-    PCMK_LRM_OP_INVALID,
-};
-
 enum nagios_exitcode {
     NAGIOS_STATE_OK        = 0,
     NAGIOS_STATE_WARNING   = 1,
@@ -391,6 +376,10 @@ gboolean services_alert_async(svc_action_t *action,
         }
         return PCMK_OCF_UNKNOWN_ERROR;
     }
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/services_compat.h>
+#endif
 
 #  ifdef __cplusplus
 }
