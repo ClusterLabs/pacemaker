@@ -283,22 +283,6 @@ svc_action_t *services_alert_create(const char *id, const char *exec,
 gboolean services_alert_async(svc_action_t *action,
                               void (*cb)(svc_action_t *op));
 
-    static inline const char *services_lrm_status_str(enum op_status status) {
-        switch (status) {
-            case PCMK_LRM_OP_PENDING:
-                return "pending";
-                case PCMK_LRM_OP_DONE:return "complete";
-                case PCMK_LRM_OP_CANCELLED:return "Cancelled";
-                case PCMK_LRM_OP_TIMEOUT:return "Timed Out";
-                case PCMK_LRM_OP_NOTSUPPORTED:return "NOT SUPPORTED";
-                case PCMK_LRM_OP_ERROR:return "Error";
-                case PCMK_LRM_OP_NOT_INSTALLED:return "Not installed";
-                case PCMK_LRM_OP_NOT_CONNECTED:return "No executor connection";
-                case PCMK_LRM_OP_INVALID:return "Cannot execute now";
-                default:return "UNKNOWN!";
-        }
-    }
-
     static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
         switch (code) {
             case PCMK_OCF_OK:

@@ -41,6 +41,13 @@ enum op_status {
     PCMK_LRM_OP_INVALID = PCMK_EXEC_INVALID,
 };
 
+//! \deprecated Use pcmk_exec_status_str() instead
+static inline const char *
+services_lrm_status_str(enum op_status status)
+{
+    return pcmk_exec_status_str(status);
+}
+
 #ifdef __cplusplus
 }
 #endif
