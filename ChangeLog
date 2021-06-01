@@ -1,3 +1,12 @@
+* Tue Jun 01 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.0-rc3
+- Changesets: 14
+- Diff:
+ 6 files changed, 85 insertions(+), 62 deletions(-)
+
+- Fixes since Pacemaker-2.1.0-rc2
+  + tools: avoid "error: OK" messages from crm_resource (regression in rc1)
+  + tools: get `crm_verify --xml-pipe/-p` working again (regression in rc1)
+
 * Wed May 19 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.0-rc2
 - Changesets: 48
 - Diff: 25 files changed, 1009 insertions(+), 502 deletions(-)
