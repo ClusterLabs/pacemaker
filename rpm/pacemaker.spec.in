@@ -22,6 +22,9 @@
 ## Where bug reports should be submitted
 ## Leave bug_url undefined to use ClusterLabs default, others define it here
 
+## What to use as the OCF resource agent root directory
+%global ocf_root %{_prefix}/lib/ocf
+
 ## Upstream pacemaker version, and its package version (specversion
 ## can be incremented to build packages reliably considered "newer"
 ## than previously built packages with the same pcmkversion)
@@ -42,8 +45,12 @@
 ## Add option to enable support for stonith/external fencing agents
 %bcond_with stonithd
 
-## Add option to enable support for storing sensitive information outside CIB
+## Add option for whether to support storing sensitive information outside CIB
+%if (0%{?fedora} && 0%{?fedora} <= 33) || (0%{?rhel} && 0%{?rhel} <= 8)
 %bcond_with cibsecrets
+%else
+%bcond_without cibsecrets
+%endif
 
 ## Add option to create binaries suitable for use with profiling tools
 %bcond_with profiling
@@ -494,6 +501,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_sbd_sync:      --with-sbd-sync-default="true"}                  \
         %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
         %{?bug_url:            --with-bug-url=%{bug_url}}                       \
+        %{?ocf_root:           --with-ocfdir=%{ocf_root}}                       \
         %{?concurrent_fencing}                                                  \
         %{?resource_stickiness}                                                 \
         %{?compat20}                                                            \
@@ -727,9 +735,9 @@ exit 0
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
-/usr/lib/ocf/resource.d/pacemaker/controld
-/usr/lib/ocf/resource.d/pacemaker/o2cb
-/usr/lib/ocf/resource.d/pacemaker/remote
+%{ocf_root}/resource.d/pacemaker/controld
+%{ocf_root}/resource.d/pacemaker/o2cb
+%{ocf_root}/resource.d/pacemaker/remote
 
 %if %{with upstart_job}
 %config(noreplace) %{_sysconfdir}/init/pacemaker.conf
@@ -776,13 +784,13 @@ exit 0
 # XXX "dirname" is not owned by any prerequisite
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
-%exclude /usr/lib/ocf/resource.d/pacemaker/controld
-%exclude /usr/lib/ocf/resource.d/pacemaker/o2cb
-%exclude /usr/lib/ocf/resource.d/pacemaker/remote
+%exclude %{ocf_root}/resource.d/pacemaker/controld
+%exclude %{ocf_root}/resource.d/pacemaker/o2cb
+%exclude %{ocf_root}/resource.d/pacemaker/remote
 
-%dir /usr/lib/ocf
-%dir /usr/lib/ocf/resource.d
-/usr/lib/ocf/resource.d/pacemaker
+%dir %{ocf_root}
+%dir %{ocf_root}/resource.d
+%{ocf_root}/resource.d/pacemaker
 
 %doc %{_mandir}/man7/*
 %exclude %{_mandir}/man7/pacemaker-controld.*

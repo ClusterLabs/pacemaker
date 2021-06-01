@@ -13,7 +13,7 @@ resource health.
 
 ## Who is Pacemaker?
 
-Pacemaker is distributed by [ClusterLabs](http://www.clusterlabs.org).
+Pacemaker is distributed by [ClusterLabs](https://www.clusterlabs.org/).
 
 Pacemaker was initially created by main architect and lead developer
 Andrew Beekhof <andrew@beekhof.net>, with the aid of
@@ -69,8 +69,8 @@ See [CONTRIBUTING.md](https://github.com/ClusterLabs/pacemaker/blob/master/CONTR
 
 ## Where can I find more information about Pacemaker?
 
-* [ClusterLabs website](http://www.clusterlabs.org/)
-* [Documentation](http://www.clusterlabs.org/doc/)
-* [Issues/Bugs](http://bugs.clusterlabs.org/)
-* Mailing lists for [users](http://oss.clusterlabs.org/mailman/listinfo/users) and [developers](http://oss.clusterlabs.org/mailman/listinfo/developers)
-* #clusterlabs IRC channel on [freenode](http://freenode.net/)
+* [ClusterLabs website](https://www.clusterlabs.org/)
+* [Documentation](https://www.clusterlabs.org/pacemaker/doc/)
+* [Issues/Bugs](https://bugs.clusterlabs.org/)
+* [Mailing lists](https://wiki.clusterlabs.org/wiki/Mailing_lists) for users and developers
+* [ClusterLabs IRC channel](https://wiki.clusterlabs.org/wiki/ClusterLabs_IRC_channel)

@@ -432,8 +432,8 @@ the CIB.
 
 http://www.linux-ha.org/wiki/STONITH
 
-http://www.clusterlabs.org/doc/crm_fencing.html
+https://www.clusterlabs.org/doc/crm_fencing.html
 
-http://www.clusterlabs.org/doc/en-US/Pacemaker/1.0/html/Pacemaker_Explained
+https://www.clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Explained/
 
 http://techthoughts.typepad.com/managing_computers/2007/10/split-brain-quo.html
