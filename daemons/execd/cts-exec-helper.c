@@ -169,8 +169,8 @@ test_exit(crm_exit_t exit_code)
              lrmd_event_type2str(event->type),                          \
              event->rsc_id,                                             \
              event->op_type ? event->op_type : "none",                  \
-             services_ocf_exitcode_str(event->rc),                              \
-             services_lrm_status_str(event->op_status));                \
+             services_ocf_exitcode_str(event->rc),                      \
+             pcmk_exec_status_str(event->op_status));                   \
     crm_info("%s", event_buf_v0);
 
 static void
@@ -196,7 +196,8 @@ read_events(lrmd_event_data_t * event)
             print_result(printf("API-CALL SUCCESSFUL for 'exec'\n"));
         } else {
             print_result(printf("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s\n",
-                                event->rc, services_lrm_status_str(event->op_status)));
+                                event->rc,
+                                pcmk_exec_status_str(event->op_status)));
             test_exit(CRM_EX_ERROR);
         }
 

@@ -349,7 +349,7 @@ upstart_mask_error(svc_action_t *op, const char *error)
         } else if(pcmk__str_eq(op->action, "start", pcmk__str_casei)) {
             crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
             op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_LRM_OP_NOT_INSTALLED;
+            op->status = PCMK_EXEC_NOT_INSTALLED;
         }
         return TRUE;
 
@@ -443,7 +443,7 @@ upstart_job_exec(svc_action_t * op)
 
         } else {
             op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_LRM_OP_NOT_INSTALLED;
+            op->status = PCMK_EXEC_NOT_INSTALLED;
         }
         goto cleanup;
     }

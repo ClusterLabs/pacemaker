@@ -122,7 +122,7 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
 
     op = lrmd_new_event(ID(cib_resource), task, interval_ms);
     op->rc = outcome;
-    op->op_status = 0;
+    op->op_status = PCMK_EXEC_DONE;
     op->params = NULL;          /* TODO: Fill me in */
     op->t_run = (unsigned int) time(NULL);
     op->t_rcchange = op->t_run;
@@ -682,7 +682,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    op = pcmk__event_from_graph_action(cib_resource, action, 0, target_outcome);
+    op = pcmk__event_from_graph_action(cib_resource, action, PCMK_EXEC_DONE,
+                                       target_outcome);
 
     out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
 

@@ -1881,18 +1881,18 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
 
     /* look up where we expected it to be? */
     desc = pcmk_strerror(pcmk_ok);
-    if (status == PCMK_LRM_OP_DONE && target_rc == rc) {
+    if ((status == PCMK_EXEC_DONE) && (target_rc == rc)) {
         crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_OCF_NOT_RUNNING) {
             notify = FALSE;
         }
 
-    } else if (status == PCMK_LRM_OP_DONE) {
+    } else if (status == PCMK_EXEC_DONE) {
         desc = services_ocf_exitcode_str(rc);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {
-        desc = services_lrm_status_str(status);
+        desc = pcmk_exec_status_str(status);
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 

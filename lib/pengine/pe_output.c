@@ -1138,7 +1138,7 @@ failed_action_default(pcmk__output_t *out, va_list args)
 
     pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
                        &status, 0);
-    lrm_status = services_lrm_status_str(status);
+    lrm_status = pcmk_exec_status_str(status);
 
     if (pcmk__str_empty(op_key)) {
         op_key = ID(xml_op);
@@ -1216,7 +1216,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         "exitreason", crm_str(reason_s),
                                         "exitcode", rc_s,
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
-                                        "status", services_lrm_status_str(status),
+                                        "status", pcmk_exec_status_str(status),
                                         NULL);
     free(rc_s);
 
@@ -1646,7 +1646,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
                    crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                    crm_element_value(xml_op, XML_LRM_ATTR_RC),
                    last_change_str ? last_change_str : "",
-                   services_lrm_status_str(status));
+                   pcmk_exec_status_str(status));
 
     g_free(node_str);
     free(last_change_str);
@@ -1673,7 +1673,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                                         "rc", crm_element_value(xml_op, XML_LRM_ATTR_RC),
-                                        "status", services_lrm_status_str(status),
+                                        "status", pcmk_exec_status_str(status),
                                         NULL);
 
     rsc = pe_find_resource(data_set->resources, op_rsc);

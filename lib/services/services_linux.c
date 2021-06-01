@@ -498,7 +498,7 @@ operation_finalize(svc_action_t * op)
 
     if (op->interval_ms) {
         if (op->cancel) {
-            op->status = PCMK_LRM_OP_CANCELLED;
+            op->status = PCMK_EXEC_CANCELLED;
             cancel_recurring_action(op);
         } else {
             recurring = 1;
@@ -594,12 +594,12 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
 
     if (signo == 0) {
         crm_debug("%s[%d] exited with status %d", op->id, op->pid, exitcode);
-        op->status = PCMK_LRM_OP_DONE;
+        op->status = PCMK_EXEC_DONE;
         op->rc = exitcode;
 
     } else if (mainloop_child_timeout(p)) {
         crm_warn("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
-        op->status = PCMK_LRM_OP_TIMEOUT;
+        op->status = PCMK_EXEC_TIMEOUT;
         op->rc = PCMK_OCF_TIMEOUT;
 
     } else if (op->cancel) {
@@ -608,13 +608,13 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
          */
         crm_info("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                  op->id, op->pid, strsignal(signo), signo);
-        op->status = PCMK_LRM_OP_CANCELLED;
+        op->status = PCMK_EXEC_CANCELLED;
         op->rc = PCMK_OCF_OK;
 
     } else {
         crm_warn("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                  op->id, op->pid, strsignal(signo), signo);
-        op->status = PCMK_LRM_OP_ERROR;
+        op->status = PCMK_EXEC_ERROR;
         op->rc = PCMK_OCF_SIGNAL;
     }
 
@@ -664,16 +664,16 @@ services__handle_exec_error(svc_action_t * op, int error)
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
             op->rc = rc_not_installed;
-            op->status = PCMK_LRM_OP_NOT_INSTALLED;
+            op->status = PCMK_EXEC_NOT_INSTALLED;
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
             op->rc = rc_insufficient_priv;
-            op->status = PCMK_LRM_OP_ERROR;
+            op->status = PCMK_EXEC_ERROR;
             break;
         default:
             op->rc = rc_exec_error;
-            op->status = PCMK_LRM_OP_ERROR;
+            op->status = PCMK_EXEC_ERROR;
     }
 }
 
@@ -831,12 +831,12 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
         op->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         if (op->timeout > 0 && timeout <= 0) {
-            op->status = PCMK_LRM_OP_TIMEOUT;
+            op->status = PCMK_EXEC_TIMEOUT;
             crm_warn("%s[%d] timed out after %dms",
                      op->id, op->pid, op->timeout);
 
         } else {
-            op->status = PCMK_LRM_OP_ERROR;
+            op->status = PCMK_EXEC_ERROR;
         }
 
         /* If only child hasn't been successfully waited for, yet.
@@ -851,14 +851,14 @@ action_synced_wait(svc_action_t *op, struct sigchld_data_s *data)
         }
 
     } else if (WIFEXITED(status)) {
-        op->status = PCMK_LRM_OP_DONE;
+        op->status = PCMK_EXEC_DONE;
         op->rc = WEXITSTATUS(status);
         crm_info("%s[%d] exited with status %d", op->id, op->pid, op->rc);
 
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
 
-        op->status = PCMK_LRM_OP_ERROR;
+        op->status = PCMK_EXEC_ERROR;
         crm_err("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                 op->id, op->pid, strsignal(signo), signo);
     }

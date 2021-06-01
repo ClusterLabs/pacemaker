@@ -357,7 +357,7 @@ process_graph_event(xmlNode *event, const char *event_node)
     }
 
     crm_element_value_int(event, XML_LRM_ATTR_OPSTATUS, &status);
-    if (status == PCMK_LRM_OP_PENDING) {
+    if (status == PCMK_EXEC_PENDING) {
         return;
     }
 
@@ -398,7 +398,7 @@ process_graph_event(xmlNode *event, const char *event_node)
              * scheduled in.
              */
 
-            if (status == PCMK_LRM_OP_CANCELLED) {
+            if (status == PCMK_EXEC_CANCELLED) {
                 confirm_cancel_action(id, get_node_id(event));
                 goto bail;
             }
@@ -464,11 +464,11 @@ process_graph_event(xmlNode *event, const char *event_node)
         uname = "unknown node";
     }
 
-    if (status == PCMK_LRM_OP_INVALID) {
+    if (status == PCMK_EXEC_INVALID) {
         // We couldn't attempt the action
         crm_info("Transition %d action %d (%s on %s): %s",
                  transition_num, action_num, id, uname,
-                 services_lrm_status_str(status));
+                 pcmk_exec_status_str(status));
 
     } else if (desc && update_failcount(event, event_node, rc, target_rc,
                                         (transition_num == -1), FALSE)) {

@@ -159,7 +159,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
     const char *type = va_arg(args, const char *);
     int rc = va_arg(args, int);
 
-    if (status == PCMK_LRM_OP_DONE) {
+    if (status == PCMK_EXEC_DONE) {
         out->info(out, "Operation %s%s%s (%s%s%s:%s) returned: '%s' (%d)",
                   action, name ? " for " : "", name ? name : "",
                   class, provider ? ":" : "", provider ? provider : "", type,
@@ -168,7 +168,7 @@ agent_status_default(pcmk__output_t *out, va_list args) {
         out->err(out, "Operation %s%s%s (%s%s%s:%s) failed: '%s' (%d)",
                  action, name ? " for " : "", name ? name : "",
                  class, provider ? ":" : "", provider ? provider : "", type,
-                 services_lrm_status_str(status), status);
+                 pcmk_exec_status_str(status), status);
     }
 
     return pcmk_rc_ok;

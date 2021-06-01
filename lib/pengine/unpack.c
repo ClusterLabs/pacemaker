@@ -2574,11 +2574,11 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
 
     if (xml && success_only) {
         int rc = PCMK_OCF_UNKNOWN_ERROR;
-        int status = PCMK_LRM_OP_ERROR;
+        int status = PCMK_EXEC_ERROR;
 
         crm_element_value_int(xml, XML_LRM_ATTR_RC, &rc);
         crm_element_value_int(xml, XML_LRM_ATTR_OPSTATUS, &status);
-        if ((rc != PCMK_OCF_OK) || (status != PCMK_LRM_OP_DONE)) {
+        if ((rc != PCMK_OCF_OK) || (status != PCMK_EXEC_DONE)) {
             return NULL;
         }
     }
@@ -2675,7 +2675,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     }
 
     if (migrate_from && from_rc == PCMK_OCF_OK
-        && from_status == PCMK_LRM_OP_DONE) {
+        && (from_status == PCMK_EXEC_DONE)) {
         /* The migrate_to and migrate_from both succeeded, so mark the migration
          * as "dangling". This will be used to schedule a stop action on the
          * source without affecting the target.
@@ -2685,7 +2685,7 @@ unpack_migrate_to_success(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
         rsc->role = RSC_ROLE_STOPPED;
         rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
 
-    } else if (migrate_from && (from_status != PCMK_LRM_OP_PENDING)) { // Failed
+    } else if (migrate_from && (from_status != PCMK_EXEC_PENDING)) { // Failed
         if (target_node && target_node->details->online) {
             pe_rsc_trace(rsc, "Marking active on %s %p %d", target, target_node,
                          target_node->details->online);
@@ -3150,14 +3150,14 @@ determine_op_status(
 {
     guint interval_ms = 0;
     bool is_probe = false;
-    int result = PCMK_LRM_OP_DONE;
+    int result = PCMK_EXEC_DONE;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *exit_reason = crm_element_value(xml_op,
                                                 XML_LRM_ATTR_EXIT_REASON);
 
     CRM_ASSERT(rsc);
-    CRM_CHECK(task != NULL, return PCMK_LRM_OP_ERROR);
+    CRM_CHECK(task != NULL, return PCMK_EXEC_ERROR);
 
     if (exit_reason == NULL) {
         exit_reason = "";
@@ -3178,12 +3178,12 @@ determine_op_status(
          * those versions or processing of saved CIB files from those versions,
          * so we do not need to care much about this case.
          */
-        result = PCMK_LRM_OP_ERROR;
+        result = PCMK_EXEC_ERROR;
         crm_warn("Expected result not found for %s on %s (corrupt or obsolete CIB?)",
                  key, node->details->uname);
 
     } else if (target_rc != rc) {
-        result = PCMK_LRM_OP_ERROR;
+        result = PCMK_EXEC_ERROR;
         pe_rsc_debug(rsc, "%s on %s: expected %d (%s), got %d (%s%s%s)",
                      key, node->details->uname,
                      target_rc, services_ocf_exitcode_str(target_rc),
@@ -3194,7 +3194,7 @@ determine_op_status(
     switch (rc) {
         case PCMK_OCF_OK:
             if (is_probe && (target_rc == PCMK_OCF_NOT_RUNNING)) {
-                result = PCMK_LRM_OP_DONE;
+                result = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc, "Probe found %s active on %s at %s",
                             rsc->id, node->details->uname,
                             last_change_str(xml_op));
@@ -3205,7 +3205,7 @@ determine_op_status(
             if (is_probe || (target_rc == rc)
                 || !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
 
-                result = PCMK_LRM_OP_DONE;
+                result = PCMK_EXEC_DONE;
                 rsc->role = RSC_ROLE_STOPPED;
 
                 /* clear any previous failure actions */
@@ -3216,7 +3216,7 @@ determine_op_status(
 
         case PCMK_OCF_RUNNING_PROMOTED:
             if (is_probe && (rc != target_rc)) {
-                result = PCMK_LRM_OP_DONE;
+                result = PCMK_EXEC_DONE;
                 pe_rsc_info(rsc,
                             "Probe found %s active and promoted on %s at %s",
                             rsc->id, node->details->uname,
@@ -3228,16 +3228,16 @@ determine_op_status(
         case PCMK_OCF_DEGRADED_PROMOTED:
         case PCMK_OCF_FAILED_PROMOTED:
             rsc->role = RSC_ROLE_PROMOTED;
-            result = PCMK_LRM_OP_ERROR;
+            result = PCMK_EXEC_ERROR;
             break;
 
         case PCMK_OCF_NOT_CONFIGURED:
-            result = PCMK_LRM_OP_ERROR_FATAL;
+            result = PCMK_EXEC_ERROR_FATAL;
             break;
 
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
             if (interval_ms > 0) {
-                result = PCMK_LRM_OP_NOTSUPPORTED;
+                result = PCMK_EXEC_NOT_SUPPORTED;
                 break;
             }
             // fall through
@@ -3256,16 +3256,16 @@ determine_op_status(
                 pe__clear_resource_flags(rsc, pe_rsc_managed);
                 pe__set_resource_flags(rsc, pe_rsc_block);
             }
-            result = PCMK_LRM_OP_ERROR_HARD;
+            result = PCMK_EXEC_ERROR_HARD;
             break;
 
         default:
-            if (result == PCMK_LRM_OP_DONE) {
+            if (result == PCMK_EXEC_DONE) {
                 crm_info("Treating unknown exit status %d from %s of %s "
                          "on %s at %s as failure",
                          rc, task, rsc->id, node->details->uname,
                          last_change_str(xml_op));
-                result = PCMK_LRM_OP_ERROR;
+                result = PCMK_EXEC_ERROR;
             }
             break;
     }
@@ -3667,7 +3667,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     int rc = 0;
     int task_id = 0;
     int target_rc = 0;
-    int status = PCMK_LRM_OP_UNKNOWN;
+    int status = PCMK_EXEC_UNKNOWN;
     guint interval_ms = 0;
     const char *task = NULL;
     const char *task_key = NULL;
@@ -3692,8 +3692,8 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
     crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return);
-    CRM_CHECK(status <= PCMK_LRM_OP_INVALID, return);
-    CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return);
+    CRM_CHECK(status <= PCMK_EXEC_INVALID, return);
+    CRM_CHECK(status >= PCMK_EXEC_PENDING, return);
 
     if (!strcmp(task, CRMD_ACTION_NOTIFY) ||
         !strcmp(task, CRMD_ACTION_METADATA)) {
@@ -3726,7 +3726,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
      * inputs to something currently possible.
      */
 
-    if ((status != PCMK_LRM_OP_NOT_INSTALLED)
+    if ((status != PCMK_EXEC_NOT_INSTALLED)
         && check_operation_expiry(rsc, node, rc, xml_op, data_set)) {
         expired = TRUE;
     }
@@ -3768,13 +3768,13 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
      * it should be treated as a failure or not, because we know the expected
      * result.
      */
-    if(status == PCMK_LRM_OP_DONE || status == PCMK_LRM_OP_ERROR) {
+    if(status == PCMK_EXEC_DONE || status == PCMK_EXEC_ERROR) {
         status = determine_op_status(rsc, rc, target_rc, node, xml_op, on_fail, data_set);
         pe_rsc_trace(rsc, "Remapped %s status to %d", task_key, status);
     }
 
     switch (status) {
-        case PCMK_LRM_OP_CANCELLED:
+        case PCMK_EXEC_CANCELLED:
             // Should never happen
             pe_err("Resource history contains cancellation '%s' "
                    "(%s of %s on %s at %s)",
@@ -3782,7 +3782,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                    last_change_str(xml_op));
             break;
 
-        case PCMK_LRM_OP_PENDING:
+        case PCMK_EXEC_PENDING:
             if (!strcmp(task, CRMD_ACTION_START)) {
                 pe__set_resource_flags(rsc, pe_rsc_start_pending);
                 set_active(rsc);
@@ -3818,14 +3818,14 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             }
             break;
 
-        case PCMK_LRM_OP_DONE:
+        case PCMK_EXEC_DONE:
             pe_rsc_trace(rsc, "%s of %s on %s completed at %s " CRM_XS " id=%s",
                          task, rsc->id, node->details->uname,
                          last_change_str(xml_op), ID(xml_op));
             update_resource_state(rsc, node, xml_op, task, rc, *last_failure, on_fail, data_set);
             break;
 
-        case PCMK_LRM_OP_NOT_INSTALLED:
+        case PCMK_EXEC_NOT_INSTALLED:
             failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
             if (failure_strategy == action_fail_ignore) {
                 crm_warn("Cannot ignore failed %s of %s on %s: "
@@ -3840,7 +3840,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
             break;
 
-        case PCMK_LRM_OP_NOT_CONNECTED:
+        case PCMK_EXEC_NOT_CONNECTED:
             if (pe__is_guest_or_remote_node(node)
                 && pcmk_is_set(node->details->remote_rsc->flags, pe_rsc_managed)) {
                 /* We should never get into a situation where a managed remote
@@ -3855,12 +3855,12 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
 
             // fall through
 
-        case PCMK_LRM_OP_ERROR:
-        case PCMK_LRM_OP_ERROR_HARD:
-        case PCMK_LRM_OP_ERROR_FATAL:
-        case PCMK_LRM_OP_TIMEOUT:
-        case PCMK_LRM_OP_NOTSUPPORTED:
-        case PCMK_LRM_OP_INVALID:
+        case PCMK_EXEC_ERROR:
+        case PCMK_EXEC_ERROR_HARD:
+        case PCMK_EXEC_ERROR_FATAL:
+        case PCMK_EXEC_TIMEOUT:
+        case PCMK_EXEC_NOT_SUPPORTED:
+        case PCMK_EXEC_INVALID:
 
             failure_strategy = get_action_on_fail(rsc, task_key, task, data_set);
             if ((failure_strategy == action_fail_ignore)
@@ -3888,7 +3888,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
             } else {
                 unpack_rsc_op_failure(rsc, node, rc, xml_op, last_failure, on_fail, data_set);
 
-                if(status == PCMK_LRM_OP_ERROR_HARD) {
+                if(status == PCMK_EXEC_ERROR_HARD) {
                     do_crm_log(rc != PCMK_OCF_NOT_INSTALLED?LOG_ERR:LOG_NOTICE,
                                "Preventing %s from restarting on %s because "
                                "of hard failure (%s%s%s)" CRM_XS " rc=%d id=%s",
@@ -3898,7 +3898,7 @@ unpack_rsc_op(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
                                rc, ID(xml_op));
                     resource_location(parent, node, -INFINITY, "hard-error", data_set);
 
-                } else if(status == PCMK_LRM_OP_ERROR_FATAL) {
+                } else if(status == PCMK_EXEC_ERROR_FATAL) {
                     crm_err("Preventing %s from restarting anywhere because "
                             "of fatal failure (%s%s%s) " CRM_XS " rc=%d id=%s",
                             parent->id, services_ocf_exitcode_str(rc),

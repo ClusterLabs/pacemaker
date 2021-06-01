@@ -639,7 +639,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
     // except without calling handle_blocked_ops()
 
     // Report operation as cancelled
-    op->status = PCMK_LRM_OP_CANCELLED;
+    op->status = PCMK_EXEC_CANCELLED;
     if (op->opaque->callback) {
         op->opaque->callback(op);
     }
@@ -859,7 +859,7 @@ handle_blocked_ops(void)
         executed_ops = g_list_append(executed_ops, op);
         res = action_exec_helper(op);
         if (res == FALSE) {
-            op->status = PCMK_LRM_OP_ERROR;
+            op->status = PCMK_EXEC_ERROR;
             /* this can cause this function to be called recursively
              * which is why we have processing_blocked_ops static variable */
             operation_finalize(op);
