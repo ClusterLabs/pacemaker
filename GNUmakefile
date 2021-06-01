@@ -291,6 +291,19 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	$(call rpmbuild-with,$(WITH),$(RPM_OPTS),--rebuild $(RPM_SRCRPM_DIR)/*.src.rpm)
 
+.PHONY: rpm-clean
+rpm-clean:
+	-if [ "$(RPMDEST)" = "subtree" ]; then		\
+		rm -rf "$(abs_builddir)/rpm/BUILD"	\
+			"$(abs_builddir)/rpm/BUILDROOT"	\
+			"$(abs_builddir)/rpm/RPMS"	\
+			"$(abs_builddir)/rpm/SPECS"	\
+			"$(abs_builddir)/rpm/SRPMS";	\
+	else						\
+		rm -f $(abs_builddir)/$(PACKAGE).spec	\
+			$(abs_builddir)/*.src.rpm;	\
+	fi
+
 .PHONY: rpmlint
 rpmlint: $(RPM_SPEC_DIR)/$(PACKAGE).spec
 	rpmlint -f rpm/rpmlintrc "$<"
@@ -451,5 +464,5 @@ gnulib-update:
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
 
-ancillary-clean: spec-clean srpm-clean mock-clean coverity-clean
+ancillary-clean: rpm-clean mock-clean coverity-clean
 	-rm -f $(TARFILE)
