@@ -23,6 +23,7 @@
 #include <crm/common/util.h>    // crm_strdup_printf()
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/results_internal.h>
 #include <crm/common/strings_internal.h>
 
 /* This says whether the current application is a Pacemaker daemon or not,
@@ -284,14 +285,6 @@ pcmk__realloc(void *ptr, size_t size)
     return new_ptr;
 }
 
-
-/* Error domains for use with g_set_error (from results.c) */
-
-GQuark pcmk__rc_error_quark(void);
-GQuark pcmk__exitc_error_quark(void);
-
-#define PCMK__RC_ERROR       pcmk__rc_error_quark()
-#define PCMK__EXITC_ERROR    pcmk__exitc_error_quark()
 
 static inline char *
 pcmk__getpid_s(void)
