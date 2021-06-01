@@ -54,7 +54,7 @@ static GOptionEntry data_entries[] = {
       &options.xml_file, "Check the configuration in the named file",
       "FILE" },
     { "xml-pipe", 'p', 0, G_OPTION_ARG_NONE,
-      &options.xml_string, "Check the configuration piped in via stdin",
+      &options.xml_stdin, "Check the configuration piped in via stdin",
       NULL },
     { "xml-text", 'X', 0, G_OPTION_ARG_STRING,
       &options.xml_string, "Check the configuration in the supplied string",
