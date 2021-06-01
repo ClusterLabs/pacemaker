@@ -224,6 +224,43 @@ attribute_list_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("override", "const char *", "const char *", "const char *")
+static int
+override_default(pcmk__output_t *out, va_list args) {
+    const char *rsc_name = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    if (rsc_name == NULL) {
+        out->list_item(out, NULL, "Overriding the cluster configuration with '%s' = '%s'",
+                       name, value);
+    } else {
+        out->list_item(out, NULL, "Overriding the cluster configuration for '%s' with '%s' = '%s'",
+                       rsc_name, name, value);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("override", "const char *", "const char *", "const char *")
+static int
+override_xml(pcmk__output_t *out, va_list args) {
+    const char *rsc_name = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "override",
+                                                   "name", name,
+                                                   "value", value,
+                                                   NULL);
+
+    if (rsc_name != NULL) {
+        crm_xml_add(node, "rsc", rsc_name);
+    }
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("property-list", "pe_resource_t *", "char *")
 static int
 property_list_default(pcmk__output_t *out, va_list args) {
@@ -617,6 +654,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "agent-status", "xml", agent_status_xml },
     { "attribute-list", "default", attribute_list_default },
     { "attribute-list", "text", attribute_list_text },
+    { "override", "default", override_default },
+    { "override", "xml", override_xml },
     { "property-list", "default", property_list_default },
     { "property-list", "text", property_list_text },
     { "resource-check-list", "default", resource_check_list_default },
