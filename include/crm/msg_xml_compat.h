@@ -7,8 +7,8 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef XML_TAGS__H
-#  define XML_TAGS__H
+#ifndef PCMK__MSG_XML_COMPAT__H
+#  define PCMK__MSG_XML_COMPAT__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,4 +39,4 @@ extern "C" {
 }
 #endif
 
-#endif
+#endif // PCMK__MSG_XML_COMPAT__H
