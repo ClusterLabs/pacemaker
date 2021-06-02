@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <errno.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
@@ -359,7 +362,7 @@ lrm_state_poke_connection(lrm_state_t * lrm_state)
 {
 
     if (!lrm_state->conn) {
-        return -1;
+        return -ENOTCONN;
     }
     return ((lrmd_t *) lrm_state->conn)->cmds->poke_connection(lrm_state->conn);
 }
