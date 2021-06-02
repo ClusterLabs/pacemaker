@@ -573,6 +573,7 @@ services_action_free(svc_action_t * op)
         free(op->opaque->args[i]);
     }
 
+    free(op->opaque->exit_reason);
     free(op->opaque);
     free(op->rsc);
     free(op->action);
@@ -1210,4 +1211,45 @@ done:
     g_list_free(standards);
     g_list_free(providers);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Set the result of an action
+ *
+ * \param[out] action        Where to set action result
+ * \param[in]  agent_status  Exit status to set
+ * \param[in]  exec_status   Execution status to set
+ * \param[in]  reason        Human-friendly description of event to set
+ */
+void
+services__set_result(svc_action_t *action, int agent_status,
+                     enum pcmk_exec_status exec_status, const char *reason)
+{
+    if (action == NULL) {
+        return;
+    }
+
+    action->rc = agent_status;
+    action->status = exec_status;
+
+    if (!pcmk__str_eq(action->opaque->exit_reason, reason,
+                      pcmk__str_none)) {
+        free(action->opaque->exit_reason);
+        action->opaque->exit_reason = (reason == NULL)? NULL : strdup(reason);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get the exit reason of an action
+ *
+ * \param[in] action  Action to check
+ *
+ * \return Action's exit reason (or NULL if none)
+ */
+const char *
+services__exit_reason(svc_action_t *action)
+{
+    return action->opaque->exit_reason;
 }
