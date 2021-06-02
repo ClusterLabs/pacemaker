@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-digests"/>
+    </start>
+
+    <define name="element-digests">
+        <attribute name="resource"> <text/> </attribute>
+        <attribute name="node"> <text/> </attribute>
+        <attribute name="task"> <text/> </attribute>
+        <attribute name="interval"> <text/> </attribute>
+        <zeroOrMore>
+            <ref name="element-digest"/>
+        </zeroOrMore>
+    </define>
+
+    <define name="element-digest">
+        <attribute name="type"> <text/> </attribute>
+        <attribute name="hash"> <text/> </attribute>
+        <optional>
+            <element name="parameters">
+                <zeroOrMore>
+                    <attribute>
+                      <anyName/>
+                      <text/>
+                    </attribute>
+                </zeroOrMore>
+            </element>
+        </optional>
+    </define>
+</grammar>
