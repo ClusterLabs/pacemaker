@@ -1062,7 +1062,9 @@ action_complete(svc_action_t * action)
                        (cmd->real_action? cmd->real_action : cmd->action),
                        cmd->result.exit_status, time_sum, timeout_left);
             pcmk__set_result(&(cmd->result), PCMK_OCF_TIMEOUT,
-                             PCMK_EXEC_TIMEOUT, NULL);
+                             PCMK_EXEC_TIMEOUT,
+                             "Investigate reason for timeout, and adjust "
+                             "configured operation timeout if necessary");
             cmd_original_times(cmd);
         }
     }
@@ -1390,9 +1392,10 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
                                      params_copy, cmd->service_flags);
 
     if (!action) {
+        // Invalid arguments (which would be a bug) or out-of-memory
         crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                         PCMK_EXEC_ERROR, NULL);
+                         PCMK_EXEC_ERROR, "Internal Pacemaker error");
         goto exec_done;
     }
 

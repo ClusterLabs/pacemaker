@@ -866,6 +866,9 @@ controld_query_executor_state(const char *node_name)
 void
 controld_rc2event(lrmd_event_data_t *event, int rc)
 {
+    /* This is called for cleanup requests from controller peers/clients, not
+     * for resource actions, so no exit reason is needed.
+     */
     switch (rc) {
         case pcmk_rc_ok:
             lrmd__set_result(event, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
@@ -1708,6 +1711,9 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
         op = construct_op(lrm_state, input->xml, rsc->id, CRMD_ACTION_DELETE);
 
+        /* These are resource clean-ups, not actions, so no exit reason is
+         * needed.
+         */
         if (cib_rc == EACCES) {
             lrmd__set_result(op, PCMK_OCF_INSUFFICIENT_PRIV, PCMK_EXEC_ERROR,
                              NULL);
@@ -2234,7 +2240,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
     gboolean stop_recurring = FALSE;
-    bool send_nack = FALSE;
+    const char *nack_reason = NULL;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(operation != NULL, return);
@@ -2293,21 +2299,22 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         && pcmk__str_eq(operation, RSC_START, pcmk__str_casei)) {
 
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
-        send_nack = TRUE;
+        nack_reason = "Not attempting start due to shutdown in progress";
 
     } else if (fsa_state != S_NOT_DC
                && fsa_state != S_POLICY_ENGINE /* Recalculating */
                && fsa_state != S_TRANSITION_ENGINE
                && !pcmk__str_eq(operation, CRMD_ACTION_STOP, pcmk__str_casei)) {
-        send_nack = TRUE;
+        nack_reason = "Controller cannot attempt actions at this time";
     }
 
-    if(send_nack) {
+    if (nack_reason != NULL) {
         crm_notice("Discarding attempt to perform action %s on %s in state %s (shutdown=%s)",
                    operation, rsc->id, fsa_state2string(fsa_state),
                    pcmk__btoa(pcmk_is_set(fsa_input_register, R_SHUTDOWN)));
 
-        lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID, NULL);
+        lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
+                         nack_reason);
         controld_ack_event_directly(NULL, NULL, rsc, op, rsc->id);
         lrmd_free_event(op);
         free(op_id);

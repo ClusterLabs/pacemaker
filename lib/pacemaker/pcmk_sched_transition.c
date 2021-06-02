@@ -122,7 +122,7 @@ create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
     xmlNode *xop = NULL;
 
     op = lrmd_new_event(ID(cib_resource), task, interval_ms);
-    lrmd__set_result(op, outcome, PCMK_EXEC_DONE, NULL);
+    lrmd__set_result(op, outcome, PCMK_EXEC_DONE, "Simulated action result");
     op->params = NULL;          /* TODO: Fill me in */
     op->t_run = (unsigned int) time(NULL);
     op->t_rcchange = op->t_run;

@@ -473,7 +473,7 @@ monitor_timeout_cb(gpointer data)
              cmd->rsc_id, (lrm_state? "" : " (no LRM state)"));
     cmd->monitor_timeout_id = 0;
     pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
-                     NULL);
+                     "Remote executor did not respond");
 
     if (lrm_state && lrm_state->remote_ra_data) {
         remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
@@ -619,7 +619,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                 crm_trace("can't reschedule start, remaining timeout too small %d",
                           cmd->remaining_timeout);
                 pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                                 PCMK_EXEC_TIMEOUT, NULL);
+                                 PCMK_EXEC_TIMEOUT,
+                                 pcmk_strerror(op->connection_rc));
             }
 
         } else {
@@ -662,7 +663,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     } else if (op->type == lrmd_event_disconnect && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         if (ra_data->active == TRUE && (cmd->cancel == FALSE)) {
             pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                             PCMK_EXEC_ERROR, NULL);
+                             PCMK_EXEC_ERROR,
+                             "Remote connection unexpectedly dropped "
+                             "during monitor");
             report_remote_ra_result(cmd);
             crm_err("Remote connection to %s unexpectedly dropped during monitor",
                     lrm_state->node_name);
@@ -797,12 +800,12 @@ handle_remote_ra_exec(gpointer user_data)
                 rc = lrm_state_poke_connection(lrm_state);
                 if (rc < 0) {
                     pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                                     PCMK_EXEC_ERROR, NULL);
+                                     PCMK_EXEC_ERROR, pcmk_strerror(rc));
                 }
             } else {
                 rc = -1;
                 pcmk__set_result(&(cmd->result), PCMK_OCF_NOT_RUNNING,
-                                 PCMK_EXEC_DONE, NULL);
+                                 PCMK_EXEC_DONE, "Remote connection inactive");
             }
 
             if (rc == 0) {
@@ -952,7 +955,7 @@ fail_all_monitor_cmds(GList * list)
         cmd = gIter->data;
 
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
-                         PCMK_EXEC_ERROR, NULL);
+                         PCMK_EXEC_ERROR, "Lost connection to remote executor");
         crm_trace("Pre-emptively failing %s %s (interval=%u, %s)",
                   cmd->action, cmd->rsc_id, cmd->interval_ms, cmd->userdata);
         report_remote_ra_result(cmd);
