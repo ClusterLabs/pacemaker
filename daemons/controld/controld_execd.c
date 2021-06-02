@@ -1441,10 +1441,12 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
  * \param[in] action     Action XML from request
  * \param[in] rc         Desired return code to use
  * \param[in] op_status  Desired operation status to use
+ * \param[in] exit_reason  Human-friendly detail, if error
  */
 static void
 synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
-                        int op_status, enum ocf_exitcode rc)
+                        int op_status, enum ocf_exitcode rc,
+                        const char *exit_reason)
 {
     lrmd_event_data_t *op = NULL;
     const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
@@ -1470,7 +1472,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
     if (pcmk__str_eq(operation, RSC_NOTIFY, pcmk__str_casei)) { // Notifications can't fail
         fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_OK, NULL);
     } else {
-        fake_op_status(lrm_state, op, op_status, rc, NULL);
+        fake_op_status(lrm_state, op, op_status, rc, exit_reason);
     }
 
     crm_info("Faking " PCMK__OP_FMT " result (%d) on %s",
@@ -1766,7 +1768,8 @@ do_lrm_invoke(long long action,
         crm_err("Failing action because local node has never had connection to remote node %s",
                 target_node);
         synthesize_lrmd_failure(NULL, input->xml, PCMK_EXEC_NOT_CONNECTED,
-                                PCMK_OCF_UNKNOWN_ERROR);
+                                PCMK_OCF_UNKNOWN_ERROR,
+                                "Local node has no connection to remote");
         return;
     }
     CRM_ASSERT(lrm_state != NULL);
@@ -1824,7 +1827,8 @@ do_lrm_invoke(long long action,
         if (rc == -ENOTCONN) {
             synthesize_lrmd_failure(lrm_state, input->xml,
                                     PCMK_EXEC_NOT_CONNECTED,
-                                    PCMK_OCF_UNKNOWN_ERROR);
+                                    PCMK_OCF_UNKNOWN_ERROR,
+                                    "Not connected to remote executor");
             return;
 
         } else if ((rc < 0) && !create_rsc) {
@@ -1844,7 +1848,8 @@ do_lrm_invoke(long long action,
             crm_err("Invalid resource definition for %s", ID(xml_rsc));
             crm_log_xml_warn(input->msg, "invalid resource");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
-                                    PCMK_OCF_NOT_CONFIGURED); // fatal error
+                                    PCMK_OCF_NOT_CONFIGURED, // fatal error
+                                    "Invalid resource definition");
             return;
 
         } else if (rc < 0) {
@@ -1854,7 +1859,8 @@ do_lrm_invoke(long long action,
                     ID(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
-                                    PCMK_OCF_INVALID_PARAM); // hard error
+                                    PCMK_OCF_INVALID_PARAM, // hard error
+                                    "Could not register resource with executor");
             return;
         }
 
