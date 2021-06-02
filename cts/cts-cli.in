@@ -8,6 +8,10 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+# Set the exit status of a command to the exit code of the last program to
+# exit non-zero.  This is bash-specific.
+set -o pipefail
+
 #
 # Note on portable usage of sed: GNU/POSIX/*BSD sed have a limited subset of
 # compatible functionality. Do not use the -i option, alternation (\|),
@@ -38,6 +42,7 @@ num_passed=0
 verbose=0
 tests="dates tools crm_mon acls validity upgrade rules"
 do_save=0
+XMLLINT_CMD=
 VALGRIND_CMD=
 VALGRIND_OPTS="
     -q
@@ -119,7 +124,9 @@ function _test_assert() {
     printf "* Running: $app - $desc\n" 1>&2
 
     printf "=#=#=#= Begin test: $desc =#=#=#=\n"
-    eval $VALGRIND_CMD $cmd 2>&1
+
+    export outfile=$(mktemp ${TMPDIR:-/tmp}/cts-cli.output.XXXXXXXXXX)
+    eval $VALGRIND_CMD $cmd 2>&1 | tee $outfile
     rc=$?
 
     if [ x$cib != x0 ]; then
@@ -127,7 +134,25 @@ function _test_assert() {
         CIB_user=root cibadmin -Q
     fi
 
-    printf "=#=#=#= End test: $desc - $(crm_error --exit $rc) ($rc) =#=#=#=\n"
+    # Do not validate if running under valgrind, even if told to do so.  Valgrind
+    # will output a lot more stuff that is not XML, so it wouldn't validate anyway.
+    if [ "$validate" = "1" ] && [ "$VALGRIND_CMD" = "" ] && [ $rc = 0 ] && [ "$XMLLINT_CMD" != "" ]; then
+        # The sed command filters out the "- validates" line that xmllint will output
+        # on success.  grep cannot be used here because "grep -v 'validates$'" will
+        # return an exit code of 1 if its input consists entirely of "- validates".
+        $XMLLINT_CMD --noout --relaxng "$PCMK_schema_directory/api/api-result.rng" "$outfile" 2>&1 | sed -n '/validates$/ !p'
+        rc=$?
+
+        if [ $rc = 0 ]; then
+            printf "=#=#=#= End test: %s - $(crm_error --exit $rc) (%d) =#=#=#=\n" "$desc" $rc
+        else
+            printf "=#=#=#= End test: %s - Failed to validate (%d) =#=#=#=\n" "$desc" $rc
+        fi
+    else
+        printf "=#=#=#= End test: %s - $(crm_error --exit $rc) (%d) =#=#=#=\n" "$desc" $rc
+    fi
+
+    rm -f "$outfile"
 
     if [ $rc -ne $target ]; then
         num_errors=$(( $num_errors + 1 ))
@@ -1717,6 +1742,12 @@ for t in $tests; do
             ;;
     esac
 done
+
+XMLLINT_CMD=$(which xmllint 2>/dev/null)
+if [ $? -ne 0 ]; then
+    XMLLINT_CMD=""
+    echo "xmllint is missing - install it to validate command output"
+fi
 
 # Check whether we're running from source directory
 SRCDIR=$(dirname $test_home)
