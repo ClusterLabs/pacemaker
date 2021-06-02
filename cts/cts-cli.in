@@ -615,16 +615,16 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Create another resource meta attribute"
-    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Show why a resource is not running"
     cmd="crm_resource -Y -r dummy"
     test_assert $CRM_EX_OK 0
 
     desc="Remove another resource meta attribute"
-    cmd="crm_resource -r dummy --meta -d target-role"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r dummy --meta -d target-role --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Create a resource attribute"
     cmd="crm_resource -r dummy -p delay -v 10s"
@@ -633,6 +633,10 @@ function test_tools() {
     desc="List the configured resources"
     cmd="crm_resource -L"
     test_assert $CRM_EX_OK
+
+    desc="List the configured resources in XML"
+    cmd="crm_resource -L --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="List IDs of instantiated resources"
     cmd="crm_resource -l"
@@ -723,16 +727,16 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     desc="Ban dummy from node2"
-    cmd="crm_resource -r dummy -B -N node2"
-    test_assert $CRM_EX_OK
+    cmd="crm_resource -r dummy -B -N node2 --output-as=xml"
+    test_assert_validate $CRM_EX_OK
 
     desc="Relocate resources due to ban"
     cmd="crm_simulate --live-check --in-place -S"
     test_assert $CRM_EX_OK
 
     desc="Move dummy to node1"
-    cmd="crm_resource -r dummy -M -N node1"
-    test_assert $CRM_EX_OK
+    cmd="crm_resource -r dummy -M -N node1 --output-as=xml"
+    test_assert_validate $CRM_EX_OK
 
     desc="Clear implicit constraints for dummy on node2"
     cmd="crm_resource -r dummy -U -N node2"
@@ -933,6 +937,22 @@ function test_tools() {
     desc="List another instance of a promotable clone resource"
     cmd="crm_resource --locate -r promotable-rsc:1"
     test_assert $CRM_EX_OK 0
+
+    desc="List a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-clone --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List the primitive of a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-rsc --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List a single instance of a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-rsc:0 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List another instance of a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-rsc:1 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_file
 
