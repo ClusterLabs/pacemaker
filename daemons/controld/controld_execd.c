@@ -1381,12 +1381,12 @@ get_fake_call_id(lrm_state_t *lrm_state, const char *rsc_id)
 
 static void
 fake_op_status(lrm_state_t *lrm_state, lrmd_event_data_t *op, int op_status,
-               enum ocf_exitcode op_exitcode)
+               enum ocf_exitcode op_exitcode, const char *exit_reason)
 {
     op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
-    lrmd__set_result(op, op_exitcode, op_status, NULL);
+    lrmd__set_result(op, op_exitcode, op_status, exit_reason);
 }
 
 static void
@@ -1468,9 +1468,9 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action,
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
 
     if (pcmk__str_eq(operation, RSC_NOTIFY, pcmk__str_casei)) { // Notifications can't fail
-        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_OK);
+        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_OK, NULL);
     } else {
-        fake_op_status(lrm_state, op, op_status, rc);
+        fake_op_status(lrm_state, op, op_status, rc, NULL);
     }
 
     crm_info("Faking " PCMK__OP_FMT " result (%d) on %s",
@@ -1522,7 +1522,6 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
      * processed as if it came from the executor.
      */
     op = construct_op(lrm_state, xml, ID(xml_rsc), "asyncmon");
-    fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR);
 
     free((char*) op->user_data);
     op->user_data = NULL;
@@ -1530,15 +1529,19 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 
     if (user_name && !pcmk__is_privileged(user_name)) {
         crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
+        fake_op_status(lrm_state, op, PCMK_EXEC_ERROR,
+                       PCMK_OCF_INSUFFICIENT_PRIV,
+                       "Unprivileged user cannot fail resources");
         controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
         lrmd_free_event(op);
         return;
     }
 
+
     if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_ok) {
         crm_info("Failing resource %s...", rsc->id);
-        lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_DONE,
-                         "Simulated failure");
+        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR,
+                       "Simulated failure");
         process_lrm_event(lrm_state, op, NULL, xml);
         op->rc = PCMK_OCF_OK; // The request to fail the resource succeeded
         lrmd_free_rsc_info(rsc);
@@ -1546,6 +1549,8 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
     } else {
         crm_info("Cannot find/create resource in order to fail it...");
         crm_log_xml_warn(xml, "bad input");
+        fake_op_status(lrm_state, op, PCMK_EXEC_ERROR, PCMK_OCF_UNKNOWN_ERROR,
+                       "Cannot fail unknown resource");
     }
 
     controld_ack_event_directly(from_host, from_sys, NULL, op, ID(xml_rsc));
@@ -2385,7 +2390,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         crm_err("Could not initiate %s action for resource %s locally: %s "
                 CRM_XS " rc=%d", operation, rsc->id, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
-                       PCMK_OCF_UNKNOWN_ERROR);
+                       PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
@@ -2394,7 +2399,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                 "%s " CRM_XS " rc=%d",
                 operation, rsc->id, lrm_state->node_name, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
-                       PCMK_OCF_UNKNOWN_ERROR);
+                       PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
     }
 
