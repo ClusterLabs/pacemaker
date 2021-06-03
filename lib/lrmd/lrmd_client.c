@@ -28,6 +28,7 @@
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>
+#include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/remote_internal.h>
@@ -1959,15 +1960,17 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
     for (const lrmd_key_value_t *param = params; param; param = param->next) {
         g_hash_table_insert(params_table, strdup(param->key), strdup(param->value));
     }
-    action = resources_action_create(type, standard, provider, type,
-                                     CRMD_ACTION_METADATA, 0,
-                                     CRMD_METADATA_CALL_TIMEOUT, params_table,
-                                     0);
+    action = services__create_resource_action(type, standard, provider, type,
+                                              CRMD_ACTION_METADATA, 0,
+                                              CRMD_METADATA_CALL_TIMEOUT,
+                                              params_table, 0);
     lrmd_key_value_freeall(params);
 
     if (action == NULL) {
-        crm_err("Unable to retrieve meta-data for %s:%s:%s",
-                standard, provider, type);
+        return -ENOMEM;
+    }
+    if (action->rc != PCMK_OCF_OK) {
+        services_action_free(action);
         return -EINVAL;
     }
 
