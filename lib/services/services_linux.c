@@ -609,7 +609,7 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     mainloop_clear_child_userdata(p);
     CRM_CHECK(op->pid == pid,
               services__set_result(op, services__generic_error(op),
-                                   PCMK_EXEC_ERROR, NULL);
+                                   PCMK_EXEC_ERROR, "Bug in mainloop handling");
               return);
 
     /* Depending on the priority the mainloop gives the stdout and stderr
@@ -628,7 +628,7 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     } else if (mainloop_child_timeout(p)) {
         crm_warn("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
         services__set_result(op, services__generic_error(op), PCMK_EXEC_TIMEOUT,
-                             NULL);
+                             "Process did not exit within specified timeout");
 
     } else if (op->cancel) {
         /* If an in-flight recurring operation was killed because it was
@@ -641,7 +641,8 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     } else {
         crm_warn("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                  op->id, op->pid, strsignal(signo), signo);
-        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR, NULL);
+        services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                             "Process interrupted by signal");
     }
 
     log_op_output(op);
@@ -772,16 +773,16 @@ services__handle_exec_error(svc_action_t * op, int error)
         case EINVAL:   /* Invalid executable format */
         case ENOEXEC:  /* Invalid executable format */
             services__set_result(op, services__not_installed_error(op),
-                                 PCMK_EXEC_NOT_INSTALLED, NULL);
+                                 PCMK_EXEC_NOT_INSTALLED, pcmk_rc_str(error));
             break;
         case EACCES:   /* permission denied (various errors) */
         case EPERM:    /* permission denied (various errors) */
             services__set_result(op, services__authorization_error(op),
-                                 PCMK_EXEC_ERROR, NULL);
+                                 PCMK_EXEC_ERROR, pcmk_rc_str(error));
             break;
         default:
             services__set_result(op, services__generic_error(op),
-                                 PCMK_EXEC_ERROR, NULL);
+                                 PCMK_EXEC_ERROR, pcmk_rc_str(error));
     }
 }
 
@@ -883,6 +884,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     time_t start = time(NULL);
     struct pollfd fds[3];
     int wait_rc = 0;
+    const char *wait_reason = NULL;
 
     fds[0].fd = op->opaque->stdout_fd;
     fds[0].events = POLLIN;
@@ -899,6 +901,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     crm_trace("Waiting for %s[%d]", op->id, op->pid);
     do {
         int poll_rc = poll(fds, 3, timeout);
+
+        wait_reason = NULL;
 
         if (poll_rc > 0) {
             if (fds[0].revents & POLLIN) {
@@ -917,9 +921,10 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
                     break;
 
                 } else if (wait_rc < 0) {
+                    wait_reason = pcmk_rc_str(errno);
                     crm_warn("Wait for completion of %s[%d] failed: %s "
                              CRM_XS " source=waitpid",
-                             op->id, op->pid, pcmk_strerror(errno));
+                             op->id, op->pid, wait_reason);
                     wait_rc = 0; // Act as if process is still running
                 }
             }
@@ -930,9 +935,9 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
             break;
 
         } else if ((poll_rc < 0) && (errno != EINTR)) {
+            wait_reason = pcmk_rc_str(errno);
             crm_err("Wait for completion of %s[%d] failed: %s "
-                    CRM_XS " source=poll",
-                    op->id, op->pid, pcmk_strerror(errno));
+                    CRM_XS " source=poll", op->id, op->pid, wait_reason);
             break;
         }
 
@@ -945,13 +950,14 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
         if ((op->timeout > 0) && (timeout <= 0)) {
             services__set_result(op, services__generic_error(op),
-                                 PCMK_EXEC_TIMEOUT, NULL);
+                                 PCMK_EXEC_TIMEOUT,
+                                 "Process did not exit within specified timeout");
             crm_warn("%s[%d] timed out after %dms",
                      op->id, op->pid, op->timeout);
 
         } else {
             services__set_result(op, services__generic_error(op),
-                                 PCMK_EXEC_ERROR, NULL);
+                                 PCMK_EXEC_ERROR, wait_reason);
         }
 
         /* If only child hasn't been successfully waited for, yet.
@@ -976,7 +982,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
         int signo = WTERMSIG(status);
 
         services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
-                             NULL);
+                             "Process interrupted by signal");
         crm_err("%s[%d] terminated with signal: %s " CRM_XS " (%d)",
                 op->id, op->pid, strsignal(signo), signo);
 
@@ -989,7 +995,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     } else {
         // Shouldn't be possible to get here
         services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
-                             NULL);
+                             "Unable to wait for child to complete");
     }
 
     finish_op_output(op, true);
@@ -1072,7 +1078,7 @@ services__execute_file(svc_action_t *op)
         close_pipe(stderr_fd);
         sigchld_cleanup(&data);
         services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
-                             NULL);
+                             "Could not manage signals for child process");
         goto done;
     }
 

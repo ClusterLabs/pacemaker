@@ -328,7 +328,7 @@ parse_status_result(const char *name, const char *state, void *userdata)
     if (pcmk__str_eq(state, "running", pcmk__str_none)) {
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
     } else {
-        services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE, NULL);
+        services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE, state);
     }
 
     if (!(op->synchronous)) {
@@ -374,7 +374,8 @@ upstart_job_metadata(const char *name)
 static void
 set_result_from_method_error(svc_action_t *op, const DBusError *error)
 {
-    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR, NULL);
+    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                         "Unable to invoke Upstart DBus method");
 
     if (strstr(error->name, UPSTART_06_API ".Error.UnknownInstance")) {
 
@@ -387,7 +388,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         }
 
         services__set_result(op, PCMK_OCF_NOT_INSTALLED,
-                             PCMK_EXEC_NOT_INSTALLED, NULL);
+                             PCMK_EXEC_NOT_INSTALLED, "Upstart job not found");
 
     } else if (pcmk__str_eq(op->action, "start", pcmk__str_casei)
                && strstr(error->name, UPSTART_06_API ".Error.AlreadyStarted")) {
@@ -492,13 +493,13 @@ services__execute_upstart(svc_action_t *op)
 
     if ((op->action == NULL) || (op->agent == NULL)) {
         services__set_result(op, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL,
-                             NULL);
+                             "Bug in action caller");
         goto cleanup;
     }
 
     if (!upstart_init()) {
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                             NULL);
+                             "No DBus connection");
         goto cleanup;
     }
 
@@ -513,7 +514,8 @@ services__execute_upstart(svc_action_t *op)
             services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
         } else {
             services__set_result(op, PCMK_OCF_NOT_INSTALLED,
-                                 PCMK_EXEC_NOT_INSTALLED, NULL);
+                                 PCMK_EXEC_NOT_INSTALLED,
+                                 "Upstart job not found");
         }
         goto cleanup;
     }
@@ -530,7 +532,8 @@ services__execute_upstart(svc_action_t *op)
         char *state = NULL;
         char *path = get_first_instance(job, op->timeout);
 
-        services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE, NULL);
+        services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE,
+                             "No Upstart job instances found");
         if (path == NULL) {
             goto cleanup;
         }
@@ -548,7 +551,7 @@ services__execute_upstart(svc_action_t *op)
 
         } else if (pending == NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 NULL);
+                                 "Could not get job state from DBus");
 
         } else { // Successfully initiated async op
             free(job);
@@ -570,13 +573,14 @@ services__execute_upstart(svc_action_t *op)
 
     } else {
         services__set_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE,
-                             PCMK_EXEC_ERROR_HARD, NULL);
+                             PCMK_EXEC_ERROR_HARD,
+                             "Action not implemented for Upstart resources");
         goto cleanup;
     }
 
     // Initialize rc/status in case called functions don't set them
     services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_DONE,
-                         NULL);
+                         "Bug in service library");
 
     crm_debug("Calling %s for %s on %s", action, crm_str(op->rsc), job);
 
@@ -604,7 +608,7 @@ services__execute_upstart(svc_action_t *op)
 
         if (pending == NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 NULL);
+                                 "Unable to send DBus message");
             goto cleanup;
 
         } else { // Successfully initiated async op

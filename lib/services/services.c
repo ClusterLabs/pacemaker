@@ -264,7 +264,7 @@ services__create_resource_action(const char *name, const char *standard,
                     "was not configured in this build");
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
                                  PCMK_EXEC_ERROR_HARD,
-                                 NULL);
+                                 "No OCF agent path configured in build");
             return op;
         }
 
@@ -933,7 +933,7 @@ execute_metadata_action(svc_action_t *op)
     if (op->agent == NULL) {
         crm_err("meta-data requested without specifying agent");
         services__set_result(op, services__generic_error(op),
-                             PCMK_EXEC_ERROR_FATAL, NULL);
+                             PCMK_EXEC_ERROR_FATAL, "Agent not specified");
         return EINVAL;
     }
 
@@ -941,7 +941,8 @@ execute_metadata_action(svc_action_t *op)
         crm_err("meta-data requested for agent %s without specifying class",
                 op->agent);
         services__set_result(op, services__generic_error(op),
-                             PCMK_EXEC_ERROR_FATAL, NULL);
+                             PCMK_EXEC_ERROR_FATAL,
+                             "Agent standard not specified");
         return EINVAL;
     }
 
@@ -952,7 +953,8 @@ execute_metadata_action(svc_action_t *op)
         crm_err("meta-data requested for %s, but could not determine class",
                 op->agent);
         services__set_result(op, services__generic_error(op),
-                             PCMK_EXEC_ERROR_HARD, NULL);
+                             PCMK_EXEC_ERROR_HARD,
+                             "Agent standard could not be determined");
         return EINVAL;
     }
 

@@ -238,7 +238,8 @@ systemd_daemon_reload(int timeout)
 static void
 set_result_from_method_error(svc_action_t *op, const DBusError *error)
 {
-    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR, NULL);
+    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                         "Unable to invoke systemd DBus method");
 
     if (strstr(error->name, "org.freedesktop.systemd1.InvalidName")
         || strstr(error->name, "org.freedesktop.systemd1.LoadFailed")
@@ -253,7 +254,7 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         }
 
         services__set_result(op, PCMK_OCF_NOT_INSTALLED,
-                             PCMK_EXEC_NOT_INSTALLED, NULL);
+                             PCMK_EXEC_NOT_INSTALLED, "systemd unit not found");
     }
 
     crm_err("DBus request for %s of systemd unit %s for resource %s failed: %s",
@@ -289,7 +290,7 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
                                      __func__, __LINE__)) {
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 NULL);
+                                 "systemd DBus method had unexpected reply");
             crm_err("Could not load systemd unit %s for %s: "
                     "DBus reply has unexpected type", op->agent, op->id);
         } else {
@@ -309,7 +310,7 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
 
         } else if (!(op->synchronous)) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 NULL);
+                                 "No DBus object found for systemd unit");
             services__finalize_async_op(op);
         }
     }
@@ -374,7 +375,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     if (!systemd_init()) {
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 NULL);
+                                 "No DBus connection");
         }
         return ENOTCONN;
     }
@@ -428,7 +429,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
     pending = systemd_send(msg, loadunit_completed, op, op->timeout);
     if (pending == NULL) {
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                             NULL);
+                             "Unable to send DBus message");
         dbus_message_unref(msg);
         return ECOMM;
     }
@@ -654,7 +655,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                                      __func__, __LINE__)) {
         crm_warn("DBus request for %s of %s succeeded but "
                  "return type was unexpected", op->action, crm_str(op->rsc));
-        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
+        services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE,
+                             "systemd DBus method had unexpected reply");
 
     } else {
         const char *path = NULL;
@@ -832,7 +834,7 @@ parse_status_result(const char *name, const char *state, void *userdata)
         services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
     } else {
-        services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE, NULL);
+        services__set_result(op, PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE, state);
     }
 
     if (!(op->synchronous)) {
@@ -869,7 +871,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
 
         } else if (pending == NULL) { // Could not get ActiveState property
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 NULL);
+                                 "Could not get unit state from DBus");
             services__finalize_async_op(op);
 
         } else {
@@ -890,7 +892,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
 
     } else {
         services__set_result(op, PCMK_OCF_UNIMPLEMENT_FEATURE, PCMK_EXEC_ERROR,
-                             NULL);
+                             "Action not implemented for systemd resources");
         if (!(op->synchronous)) {
             services__finalize_async_op(op);
         }
@@ -929,7 +931,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         dbus_message_unref(msg);
         if (pending == NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                 NULL);
+                                 "Unable to send DBus message");
             services__finalize_async_op(op);
 
         } else {
@@ -945,7 +947,8 @@ systemd_timeout_callback(gpointer p)
 
     op->opaque->timerid = 0;
     crm_warn("%s operation on systemd unit %s named '%s' timed out", op->action, op->agent, op->rsc);
-    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT, NULL);
+    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
+                         "Systemd action did not complete within specified timeout");
     services__finalize_async_op(op);
     return FALSE;
 }
@@ -973,13 +976,13 @@ services__execute_systemd(svc_action_t *op)
 
     if ((op->action == NULL) || (op->agent == NULL)) {
         services__set_result(op, PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL,
-                             NULL);
+                             "Bug in action caller");
         goto done;
     }
 
     if (!systemd_init()) {
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                             NULL);
+                             "No DBus connection");
         goto done;
     }
 
@@ -996,7 +999,8 @@ services__execute_systemd(svc_action_t *op)
     /* invoke_unit_by_name() should always override these values, which are here
      * just as a fail-safe in case there are any code paths that neglect to
      */
-    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR, NULL);
+    services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                         "Bug in service library");
 
     if (invoke_unit_by_name(op->agent, op, NULL) == pcmk_rc_ok) {
         op->opaque->timerid = g_timeout_add(op->timeout + 5000,
