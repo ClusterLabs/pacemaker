@@ -937,7 +937,7 @@ action_complete(svc_action_t * action)
 
     cmd->last_pid = action->pid;
     pcmk__set_result(&(cmd->result), action_get_uniform_rc(action),
-                     action->status, NULL);
+                     action->status, services__exit_reason(action));
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
 #ifdef PCMK__TIME_USE_CGT
@@ -1399,7 +1399,8 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 
     if (action->rc != PCMK_OCF_UNKNOWN) {
-        pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
+        pcmk__set_result(&(cmd->result), action->rc, action->status,
+                         services__exit_reason(action));
         services_action_free(action);
         goto exec_done;
     }
@@ -1414,7 +1415,8 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         return TRUE;
     }
 
-    pcmk__set_result(&(cmd->result), action->rc, action->status, NULL);
+    pcmk__set_result(&(cmd->result), action->rc, action->status,
+                     services__exit_reason(action));
     services_action_free(action);
     action = NULL;
 
