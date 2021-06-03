@@ -169,8 +169,7 @@ new_action(void)
     }
 
     // Initialize result
-    op->rc = PCMK_OCF_UNKNOWN;
-    op->status = PCMK_EXEC_UNKNOWN;
+    services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_UNKNOWN, NULL);
     return op;
 }
 
@@ -263,8 +262,9 @@ services__create_resource_action(const char *name, const char *standard,
         if (pcmk__str_empty(OCF_RA_PATH)) {
             crm_err("Cannot execute OCF actions because resource agent path "
                     "was not configured in this build");
-            op->rc = PCMK_OCF_UNKNOWN_ERROR;
-            op->status = PCMK_EXEC_ERROR_HARD;
+            services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
+                                 PCMK_EXEC_ERROR_HARD,
+                                 NULL);
             return op;
         }
 
@@ -672,7 +672,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
      */
 
     // Report operation as cancelled
-    op->status = PCMK_EXEC_CANCELLED;
+    services__set_result(op, op->rc, PCMK_EXEC_CANCELLED, NULL);
     if (op->opaque->callback) {
         op->opaque->callback(op);
     }
@@ -932,16 +932,16 @@ execute_metadata_action(svc_action_t *op)
 
     if (op->agent == NULL) {
         crm_err("meta-data requested without specifying agent");
-        op->rc = services__generic_error(op);
-        op->status = PCMK_EXEC_ERROR_FATAL;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL, NULL);
         return EINVAL;
     }
 
     if (class == NULL) {
         crm_err("meta-data requested for agent %s without specifying class",
                 op->agent);
-        op->rc = services__generic_error(op);
-        op->status = PCMK_EXEC_ERROR_FATAL;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_FATAL, NULL);
         return EINVAL;
     }
 
@@ -951,8 +951,8 @@ execute_metadata_action(svc_action_t *op)
     if (class == NULL) {
         crm_err("meta-data requested for %s, but could not determine class",
                 op->agent);
-        op->rc = services__generic_error(op);
-        op->status = PCMK_EXEC_ERROR_HARD;
+        services__set_result(op, services__generic_error(op),
+                             PCMK_EXEC_ERROR_HARD, NULL);
         return EINVAL;
     }
 
