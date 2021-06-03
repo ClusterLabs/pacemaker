@@ -590,6 +590,50 @@ log_op_output(svc_action_t *op)
     free(prefix);
 }
 
+// Truncate exit reasons at this many characters
+#define EXIT_REASON_MAX_LEN 128
+
+static void
+parse_exit_reason_from_stderr(svc_action_t *op)
+{
+    const char *reason_start = NULL;
+    const char *reason_end = NULL;
+    const int prefix_len = strlen(PCMK_OCF_REASON_PREFIX);
+
+    if ((op->stderr_data == NULL) ||
+        // Only OCF agents have exit reasons in stderr
+        !pcmk__str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_none)) {
+        return;
+    }
+
+    // Find the last occurrence of the magic string indicating an exit reason
+    for (const char *cur = strstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
+         cur != NULL; cur = strstr(cur, PCMK_OCF_REASON_PREFIX)) {
+
+        cur += prefix_len; // Skip over magic string
+        reason_start = cur;
+    }
+
+    if ((reason_start == NULL) || (reason_start[0] == '\n')
+        || (reason_start[0] == '\0')) {
+        return; // No or empty exit reason
+    }
+
+    // Exit reason goes to end of line (or end of output)
+    reason_end = strchr(reason_start, '\n');
+    if (reason_end == NULL) {
+        reason_end = reason_start + strlen(reason_start);
+    }
+
+    // Limit size of exit reason to something reasonable
+    if (reason_end > (reason_start + EXIT_REASON_MAX_LEN)) {
+        reason_end = reason_start + EXIT_REASON_MAX_LEN;
+    }
+
+    free(op->opaque->exit_reason);
+    op->opaque->exit_reason = strndup(reason_start, reason_end - reason_start);
+}
+
 /*!
  * \internal
  * \brief Process the completion of an asynchronous child process
@@ -624,6 +668,8 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     if (signo == 0) {
         crm_debug("%s[%d] exited with status %d", op->id, op->pid, exitcode);
         services__set_result(op, exitcode, PCMK_EXEC_DONE, NULL);
+        log_op_output(op);
+        parse_exit_reason_from_stderr(op);
 
     } else if (mainloop_child_timeout(p)) {
         crm_warn("%s[%d] timed out after %dms", op->id, op->pid, op->timeout);
@@ -645,7 +691,6 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
                              "Process interrupted by signal");
     }
 
-    log_op_output(op);
     services__finalize_async_op(op);
 }
 
@@ -946,6 +991,11 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     } while ((op->timeout < 0 || timeout > 0));
 
     crm_trace("Stopped waiting for %s[%d]", op->id, op->pid);
+    finish_op_output(op, true);
+    finish_op_output(op, false);
+    close_op_input(op);
+    sigchld_close(fds[2].fd);
+
     if (wait_rc <= 0) {
 
         if ((op->timeout > 0) && (timeout <= 0)) {
@@ -976,6 +1026,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
     } else if (WIFEXITED(status)) {
         services__set_result(op, WEXITSTATUS(status), PCMK_EXEC_DONE, NULL);
+        parse_exit_reason_from_stderr(op);
         crm_info("%s[%d] exited with status %d", op->id, op->pid, op->rc);
 
     } else if (WIFSIGNALED(status)) {
@@ -997,11 +1048,6 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
         services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
                              "Unable to wait for child to complete");
     }
-
-    finish_op_output(op, true);
-    finish_op_output(op, false);
-    close_op_input(op);
-    sigchld_close(fds[2].fd);
 }
 
 /*!
