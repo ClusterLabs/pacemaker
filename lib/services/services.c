@@ -147,22 +147,6 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
     return expanded_class;
 }
 
-#if SUPPORT_NAGIOS
-/*!
- * \brief Duplicate a file path, inserting a prefix if not absolute
- *
- * \param[in] filename  File path to duplicate
- * \param[in] dirname   If filename is not absolute, prefix to add
- *
- * \return Newly allocated memory with full path
- */
-static char *
-dup_file_path(const char *filename, const char *dirname)
-{
-    return (*filename == '/')? strdup(filename)
-           : crm_strdup_printf("%s/%s", dirname, filename);
-}
-#endif
 
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
@@ -271,7 +255,7 @@ services__create_resource_action(const char *name, const char *standard,
         op->opaque->args[1] = strdup(op->action);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
-        op->opaque->exec = services__lsb_agent_path(op->agent);
+        op->opaque->exec = pcmk__full_path(op->agent, LSB_ROOT_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
 
@@ -285,7 +269,7 @@ services__create_resource_action(const char *name, const char *standard,
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        op->opaque->exec = dup_file_path(op->agent, NAGIOS_PLUGIN_DIR);
+        op->opaque->exec = pcmk__full_path(op->agent, NAGIOS_PLUGIN_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
 
         if (pcmk__str_eq(op->action, "monitor", pcmk__str_casei) && (op->interval_ms == 0)) {

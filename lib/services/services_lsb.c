@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2020 the Pacemaker project contributors
+ * Copyright 2010-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -247,19 +247,12 @@ services__list_lsb_agents(void)
     return services_os_get_directory_list(LSB_ROOT_DIR, TRUE, TRUE);
 }
 
-char *
-services__lsb_agent_path(const char *agent)
-{
-    return (*agent == '/')? strdup(agent)
-        : crm_strdup_printf("%s/%s", LSB_ROOT_DIR, agent);
-}
-
 bool
 services__lsb_agent_exists(const char *agent)
 {
     bool rc = FALSE;
     struct stat st;
-    char *path = services__lsb_agent_path(agent);
+    char *path = pcmk__full_path(agent, LSB_ROOT_DIR);
 
     rc = (stat(path, &st) == 0);
     free(path);
