@@ -1765,28 +1765,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     if (services_action_sync(op)) {
         exit_code = op->rc;
 
-        if (op->status == PCMK_LRM_OP_DONE) {
-            out->info(out, "Operation %s for %s (%s:%s:%s) returned: '%s' (%d)",
-                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                      services_ocf_exitcode_str(op->rc), op->rc);
-        } else {
-            out->err(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
-                     action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                     services_lrm_status_str(op->status), op->status);
-        }
-
-        /* hide output for validate-all if not in verbose */
-        if (resource_verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei))
-            goto done;
-
-        if (op->stdout_data || op->stderr_data) {
-            out->subprocess_output(out, op->rc, op->stdout_data, op->stderr_data);
-        }
+        out->message(out, "resource-agent-action", resource_verbose, rsc_class,
+                     rsc_prov, rsc_type, rsc_name, action, override_hash, op->rc,
+                     op->status, op->stdout_data, op->stderr_data);
     } else {
         exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
     }
 
-done:
     services_action_free(op);
     /* See comment above about why we free params here. */
     g_hash_table_destroy(params);
