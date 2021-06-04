@@ -293,6 +293,126 @@ property_list_text(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
+                  "const char *", "const char *", "const char *", "GHashTable *",
+                  "int", "int", "char *", "char *")
+static int
+resource_agent_action_default(pcmk__output_t *out, va_list args) {
+    int verbose = va_arg(args, int);
+
+    const char *class = va_arg(args, const char *);
+    const char *provider = va_arg(args, const char *);
+    const char *type = va_arg(args, const char *);
+    const char *rsc_name = va_arg(args, const char *);
+    const char *action = va_arg(args, const char *);
+    GHashTable *overrides = va_arg(args, GHashTable *);
+    int rc = va_arg(args, int);
+    int status = va_arg(args, int);
+    char *stdout_data = va_arg(args, char *);
+    char *stderr_data = va_arg(args, char *);
+
+    if (overrides) {
+        GHashTableIter iter;
+        char *name = NULL;
+        char *value = NULL;
+
+        out->begin_list(out, NULL, NULL, "overrides");
+
+        g_hash_table_iter_init(&iter, overrides);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+            out->message(out, "override", rsc_name, name, value);
+        }
+
+        out->end_list(out);
+    }
+
+    out->message(out, "agent-status", status, action, rsc_name, class, provider,
+                 type, rc);
+
+    /* hide output for validate-all if not in verbose */
+    if (verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei)) {
+        return pcmk_rc_ok;
+    }
+
+    if (stdout_data || stderr_data) {
+        xmlNodePtr doc = string2xml(stdout_data);
+
+        if (doc != NULL) {
+            out->output_xml(out, "command", stdout_data);
+            xmlFreeNode(doc);
+        } else {
+            out->subprocess_output(out, rc, stdout_data, stderr_data);
+        }
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
+                  "const char *", "const char *", "const char *", "GHashTable *",
+                  "int", "int", "char *", "char *")
+static int
+resource_agent_action_xml(pcmk__output_t *out, va_list args) {
+    int verbose G_GNUC_UNUSED = va_arg(args, int);
+
+    const char *class = va_arg(args, const char *);
+    const char *provider = va_arg(args, const char *);
+    const char *type = va_arg(args, const char *);
+    const char *rsc_name = va_arg(args, const char *);
+    const char *action = va_arg(args, const char *);
+    GHashTable *overrides = va_arg(args, GHashTable *);
+    int rc = va_arg(args, int);
+    int status = va_arg(args, int);
+    char *stdout_data = va_arg(args, char *);
+    char *stderr_data = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource-agent-action",
+                                                     "action", action,
+                                                     "class", class,
+                                                     "type", type,
+                                                     NULL);
+
+    if (rsc_name) {
+        crm_xml_add(node, "rsc", rsc_name);
+    }
+
+    if (provider) {
+        crm_xml_add(node, "provider", provider);
+    }
+
+    if (overrides) {
+        GHashTableIter iter;
+        char *name = NULL;
+        char *value = NULL;
+
+        out->begin_list(out, NULL, NULL, "overrides");
+
+        g_hash_table_iter_init(&iter, overrides);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+            out->message(out, "override", rsc_name, name, value);
+        }
+
+        out->end_list(out);
+    }
+
+    out->message(out, "agent-status", status, action, rsc_name, class, provider,
+                 type, rc);
+
+    if (stdout_data || stderr_data) {
+        xmlNodePtr doc = string2xml(stdout_data);
+
+        if (doc != NULL) {
+            out->output_xml(out, "command", stdout_data);
+            xmlFreeNode(doc);
+        } else {
+            out->subprocess_output(out, rc, stdout_data, stderr_data);
+        }
+    }
+
+    pcmk__output_xml_pop_parent(out);
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("resource-check-list", "resource_checks_t *")
 static int
 resource_check_list_default(pcmk__output_t *out, va_list args) {
@@ -658,6 +778,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "override", "xml", override_xml },
     { "property-list", "default", property_list_default },
     { "property-list", "text", property_list_text },
+    { "resource-agent-action", "default", resource_agent_action_default },
+    { "resource-agent-action", "xml", resource_agent_action_xml },
     { "resource-check-list", "default", resource_check_list_default },
     { "resource-check-list", "xml", resource_check_list_xml },
     { "resource-search-list", "default", resource_search_list_default },
