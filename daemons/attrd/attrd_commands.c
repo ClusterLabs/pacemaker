@@ -43,8 +43,9 @@
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
  *                      PCMK__ATTRD_CMD_UPDATE_DELAY
  *     2       1.1.17   PCMK__ATTRD_CMD_CLEAR_FAILURE
+ *     3       2.1.1    PCMK__ATTRD_CMD_SYNC_RESPONSE indicates remote nodes
  */
-#define ATTRD_PROTOCOL_VERSION "2"
+#define ATTRD_PROTOCOL_VERSION "3"
 
 int last_cib_op_done = 0;
 GHashTable *attributes = NULL;
@@ -149,6 +150,9 @@ add_attribute_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
     crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, v->nodename);
     if (v->nodeid > 0) {
         crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, v->nodeid);
+    }
+    if (v->is_remote != 0) {
+        crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE, 1);
     }
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
     crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);
