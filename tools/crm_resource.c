@@ -1643,6 +1643,7 @@ main(int argc, char **argv)
          * saves from having to write custom messages to build the lists around all these things
          */
         switch (options.rsc_cmd) {
+            case cmd_execute_agent:
             case cmd_list_resources:
             case cmd_query_xml:
             case cmd_query_raw_xml:
