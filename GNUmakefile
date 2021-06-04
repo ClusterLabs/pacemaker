@@ -469,12 +469,16 @@ gnulib-update:
 .PHONY: coverage
 coverage: core
 	-find . -name "*.gcda" -exec rm -f \{\} \;
+	lcov --no-external --exclude='*_test.c' -c -i -d . -o pacemaker_base.info
 	$(MAKE) $(AM_MAKEFLAGS) check
-	gcovr -r . --html -o coverage.html -e '.*_test.c' -e 'replace'
+	lcov --no-external --exclude='*_test.c' -c -d . -o pacemaker_test.info
+	lcov -a pacemaker_base.info -a pacemaker_test.info -o pacemaker_total.info
+	genhtml pacemaker_total.info -o coverage -s
 
 .PHONY: coverage-clean
 coverage-clean:
-	-rm -f coverage.html
+	-rm -f pacemaker_*.info
+	-rm -rf coverage
 	-find . \( -name "*.gcno" -o -name "*.gcda" \) -exec rm -f \{\} \;
 
 ancillary-clean: rpm-clean mock-clean coverity-clean coverage-clean

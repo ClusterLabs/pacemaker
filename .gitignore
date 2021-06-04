@@ -254,8 +254,11 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /py-compile
 /test-driver
 
+# Test coverage
+/coverage
+pacemaker_*.info
+
 #Other 
-coverage.html
 coverity-*
 logs
 *.patch
