@@ -976,7 +976,8 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
-    bool remove_voter = FALSE;
+    bool gone = false;
+    bool is_remote = pcmk_is_set(peer->flags, crm_remote_node);
 
     switch (kind) {
         case crm_status_uname:
@@ -984,7 +985,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 
         case crm_status_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
-                remove_voter = TRUE;
+                gone = true;
             }
             break;
 
@@ -1000,13 +1001,13 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             } else {
                 // Remove all attribute values associated with lost nodes
                 attrd_peer_remove(peer->uname, FALSE, "loss");
-                remove_voter = TRUE;
+                gone = true;
             }
             break;
     }
 
-    // In case an election is in progress, remove any vote by the node
-    if (remove_voter) {
+    // Remove votes from cluster nodes that leave, in case election in progress
+    if (gone && !is_remote) {
         attrd_remove_voter(peer);
     }
 }
