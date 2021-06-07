@@ -972,6 +972,7 @@ attrd_election_cb(gpointer user_data)
     return FALSE;
 }
 
+#define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
@@ -981,15 +982,23 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 
     switch (kind) {
         case crm_status_uname:
+            crm_debug("%s node %s is now %s",
+                      (is_remote? "Remote" : "Cluster"),
+                      peer->uname, state_text(peer->state));
             break;
 
         case crm_status_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
+            crm_debug("Node %s is %s a peer",
+                      peer->uname, (gone? "no longer" : "now"));
             break;
 
         case crm_status_nstate:
+            crm_debug("%s node %s is now %s (was %s)",
+                      (is_remote? "Remote" : "Cluster"),
+                      peer->uname, state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
