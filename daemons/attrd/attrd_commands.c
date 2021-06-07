@@ -102,6 +102,28 @@ free_attribute(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Ensure a Pacemaker Remote node is in the correct peer cache
+ *
+ * \param[in]
+ */
+static void
+cache_remote_node(const char *node_name)
+{
+    /* If we previously assumed this node was an unseen cluster node,
+     * remove its entry from the cluster peer cache.
+     */
+    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name);
+
+    if (dup && (dup->uuid == NULL)) {
+        reap_crm_member(0, node_name);
+    }
+
+    // Ensure node is in the remote peer cache
+    CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
+}
+
 static xmlNode *
 build_attribute_xml(
     xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
@@ -709,17 +731,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
 
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
     if (is_remote) {
-        /* If we previously assumed this node was an unseen cluster node,
-         * remove its entry from the cluster peer cache.
-         */
-        crm_node_t *dup = pcmk__search_cluster_node_cache(0, host);
-
-        if (dup && (dup->uuid == NULL)) {
-            reap_crm_member(0, host);
-        }
-
-        /* Ensure this host is in the remote peer cache */
-        CRM_ASSERT(crm_remote_peer_get(host) != NULL);
+        cache_remote_node(host);
     }
 
     if (v == NULL) {
