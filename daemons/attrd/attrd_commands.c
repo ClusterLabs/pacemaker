@@ -1009,6 +1009,10 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
     // Remove votes from cluster nodes that leave, in case election in progress
     if (gone && !is_remote) {
         attrd_remove_voter(peer);
+
+    // Ensure remote nodes that come up are in the remote node cache
+    } else if (!gone && is_remote) {
+        cache_remote_node(peer->uname);
     }
 }
 
