@@ -2135,9 +2135,13 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
         crm_trace("Never broadcast '%s' replies", cmd->action);
 
     } else if (!stand_alone && pcmk__str_eq(cmd->origin, cmd->victim, pcmk__str_casei) && !pcmk__str_eq(cmd->action, "on", pcmk__str_casei)) {
-        crm_trace("Broadcast '%s' reply for %s", cmd->action, cmd->victim);
-        crm_xml_add(reply, F_SUBTYPE, "broadcast");
-        bcast = TRUE;
+        /* If the DC node is the starting point in the absence of topology and fencing the DC node, the fencing success will "Broadcast" to all nodes. */
+        /* A fencing failure replies to the DC node and escalate the fencing. */
+        if (rc == 0) {
+            crm_trace("Broadcast '%s' reply for %s", cmd->action, cmd->victim);
+            crm_xml_add(reply, F_SUBTYPE, "broadcast");
+            bcast = TRUE;
+        }
     }
 
     log_operation(cmd, rc, pid, NULL, output, (options & st_reply_opt_merged ? TRUE : FALSE));
