@@ -136,7 +136,9 @@ build_attribute_xml(
     crm_xml_add(xml, PCMK__XA_ATTR_UUID, uuid);
     crm_xml_add(xml, PCMK__XA_ATTR_USER, user);
     crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, peer);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, peerid);
+    if (peerid > 0) {
+        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, peerid);
+    }
     crm_xml_add(xml, PCMK__XA_ATTR_VALUE, value);
     crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, timeout_ms/1000);
     crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE, is_private);
@@ -937,7 +939,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     /* If this is a cluster node whose node ID we are learning, remember it */
     if ((v->nodeid == 0) && (v->is_remote == FALSE)
         && (crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID,
-                                  (int*)&v->nodeid) == 0)) {
+                                  (int*)&v->nodeid) == 0) && (v->nodeid > 0)) {
 
         crm_node_t *known_peer = crm_get_peer(v->nodeid, host);
 
