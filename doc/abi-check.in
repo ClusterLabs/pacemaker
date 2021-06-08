@@ -130,7 +130,7 @@ if [ $# -eq 2 ]; then
         -d1 abi_dumps/${PACKAGE}/${PACKAGE}_${V1}.abi.tar.gz \
         -d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
     if [ $? -ne 0 ]; then
-        exit $?
+        echo "WARNING: compliance checker exited $?"
     fi
 
     COMPAT_REPORT="compat_reports/${PACKAGE}/${V1}_to_${V2}"
