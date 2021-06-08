@@ -143,19 +143,20 @@ $(BOOK)/_build: $(STATIC_FILES) $(BOOK)/conf.py $(DEPS_$(BOOK)) $(wildcard $(src
 	done
 endif
 
+build-$(PACKAGE_SERIES).txt: all
+	$(AM_V_GEN)echo "Generated on `date --utc` from version $(TAG)" > "$@"
+
 .PHONY: books-upload
-books-upload: all
+books-upload: all build-$(PACKAGE_SERIES).txt
 if BUILD_SPHINX_DOCS
 	@echo "Uploading $(PACKAGE_SERIES) documentation set"
 	@for book in $(BOOKS); do 					\
 		echo " * $$book";					\
-		buildfile="$$book/_build/build-$(PACKAGE_SERIES).txt";	\
-		echo "Generated on `date --utc` from version $(TAG)"	\
-			> "$$buildfile";				\
-		rsync $(RSYNC_OPTS) "$$buildfile"			\
-			$(BOOK_FORMATS:%=$$book/_build/%)		\
+		rsync $(RSYNC_OPTS) $(BOOK_FORMATS:%=$$book/_build/%)	\
 			"$(BOOK_RSYNC_DEST)/$$book/";			\
 	done
+	@rsync $(RSYNC_OPTS) "$(builddir)/build-$(PACKAGE_SERIES).txt"	\
+		"$(RSYNC_DEST)"
 
 all-local:
 	@for book in $(BOOKS); do					\
