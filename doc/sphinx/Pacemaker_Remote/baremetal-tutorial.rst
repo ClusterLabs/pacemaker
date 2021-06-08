@@ -147,7 +147,7 @@ To see that it enables pacemaker_remote, run:
        Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled; vendor preset: disabled)
        Active: active (running) since Tue 2021-03-02 10:42:40 EST; 1min 23s ago
          Docs: man:pacemaker-remoted
-               https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Remote/index.html
+               https://clusterlabs.org/pacemaker/doc/
      Main PID: 1139 (pacemaker-remot)
         Tasks: 1
        Memory: 5.4M

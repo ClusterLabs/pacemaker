@@ -434,6 +434,6 @@ http://www.linux-ha.org/wiki/STONITH
 
 https://www.clusterlabs.org/doc/crm_fencing.html
 
-https://www.clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Explained/
+https://clusterlabs.org/pacemaker/doc/2.1/Pacemaker_Explained/html/
 
 http://techthoughts.typepad.com/managing_computers/2007/10/split-brain-quo.html
