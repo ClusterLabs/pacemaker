@@ -118,27 +118,26 @@ END
 }
 
 validate() {
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        VALIDATE_DIR=$(dirname "${OCF_RESKEY_state}")
+
+        if [ ! -d "$VALIDATE_DIR" ]; then
+        ocf_exit_reason "state file '$OCF_RESKEY_state' does not have a valid directory"
+        return $OCF_ERR_PERM
+        fi
+
+        if [ ! -w "$VALIDATE_DIR" ] || [ ! -x "$VALIDATE_DIR" ]; then
+        ocf_exit_reason "insufficient privileges on directory of state file '$OCF_RESKEY_state'"
+        return $OCF_ERR_PERM
+        fi
+    fi
+
     if [ "$OCF_RESKEY_active_value" = "$OCF_RESKEY_inactive_value" ]; then
         ocf_exit_reason "active value '%s' must be different from inactive value '%s'" \
             "$OCF_RESKEY_active_value" "$OCF_RESKEY_inactive_value"
         return $OCF_ERR_CONFIGURED
     fi
-
-    # Don't check host-specific issues -- validate can be run from e.g. a GUI
-    # manager host that isn't necessarily a node where the resource can run.
-    #
-    # @TODO The OCF standard should be extended so OCF_CHECK_LEVEL applies to
-    # validate, then this can be checked for higher levels.
-
-    #VALIDATE_DIR=$(dirname "${OCF_RESKEY_state}")
-    #if [ ! -d "$VALIDATE_DIR" ]; then
-    #    ocf_exit_reason "state file '$OCF_RESKEY_state' does not have a valid directory"
-    #    return $OCF_ERR_PERM
-    #fi
-    #if [ ! -w "$VALIDATE_DIR" ] || [ ! -x "$VALIDATE_DIR" ]; then
-    #    ocf_exit_reason "insufficient privileges on directory of state file '$OCF_RESKEY_state'"
-    #    return $OCF_ERR_PERM
-    #fi
 
     return $OCF_SUCCESS
 }
