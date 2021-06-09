@@ -68,7 +68,7 @@ according to the configuration parameters.
   </longdesc>
   <parameters>
 
-    <parameter name="state" unique="1">
+    <parameter name="state">
       <longdesc lang="en">
 Full path of a temporary file to store the resource state in
       </longdesc>
@@ -76,7 +76,7 @@ Full path of a temporary file to store the resource state in
       <content type="string" default="${DEFAULT_STATE_FILE}" />
     </parameter>
 
-    <parameter name="name" unique="0">
+    <parameter name="name">
       <longdesc lang="en">
 Name of node attribute to manage
       </longdesc>
@@ -84,7 +84,7 @@ Name of node attribute to manage
       <content type="string" default="${DEFAULT_ATTR_NAME}" />
     </parameter>
 
-    <parameter name="active_value" unique="0">
+    <parameter name="active_value">
       <longdesc lang="en">
 Value to use for node attribute when resource becomes active (empty string is
 discouraged, because monitor cannot distinguish it from a query error)
@@ -93,7 +93,7 @@ discouraged, because monitor cannot distinguish it from a query error)
       <content type="string" default="$DEFAULT_ACTIVE_VALUE" />
     </parameter>
 
-    <parameter name="inactive_value" unique="0">
+    <parameter name="inactive_value">
       <longdesc lang="en">
 Value to use for node attribute when resource becomes inactive
       </longdesc>
