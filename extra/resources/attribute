@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:attribute resource agent
 #
-# Copyright 2016-2019 the Pacemaker project contributors
+# Copyright 2016-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -58,8 +58,8 @@ meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="attribute" version="1.0">
-  <version>1.0</version>
+<resource-agent name="attribute" version="1.1">
+  <version>1.1</version>
   <shortdesc lang="en">Manages a node attribute</shortdesc>
   <longdesc lang="en">
 This resource agent controls a node attribute for the node it's running on.
