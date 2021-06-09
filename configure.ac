@@ -2026,6 +2026,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/cmdline/Makefile                   \
                 lib/common/tests/flags/Makefile                     \
                 lib/common/tests/operations/Makefile                \
+                lib/common/tests/results/Makefile                   \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
                 lib/common/tests/xpath/Makefile                     \
