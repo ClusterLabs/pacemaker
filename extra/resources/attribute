@@ -68,7 +68,7 @@ according to the configuration parameters.
   </longdesc>
   <parameters>
 
-    <parameter name="state">
+    <parameter name="state" unique-group="state">
       <longdesc lang="en">
 Full path of a temporary file to store the resource state in
       </longdesc>
