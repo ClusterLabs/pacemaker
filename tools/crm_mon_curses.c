@@ -187,12 +187,18 @@ curses_begin_list(pcmk__output_t *out, const char *singular_noun, const char *pl
     CRM_ASSERT(out != NULL && out->priv != NULL);
     priv = out->priv;
 
-    va_start(ap, format);
+    /* Empty formats can be used to create a new level of indentation, but without
+     * displaying some sort of list header.  In that case we need to not do any of
+     * this stuff. vw_printw will act weird if told to print a NULL.
+     */
+    if (format != NULL) {
+        va_start(ap, format);
 
-    curses_indented_vprintf(out, format, ap);
-    printw(":\n");
+        curses_indented_vprintf(out, format, ap);
+        printw(":\n");
 
-    va_end(ap);
+        va_end(ap);
+    }
 
     new_list = calloc(1, sizeof(curses_list_data_t));
     new_list->len = 0;
