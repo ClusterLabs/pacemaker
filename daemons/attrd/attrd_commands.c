@@ -572,6 +572,43 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 }
 
 /*!
+ * \internal
+ * \brief Load attributes from a peer sync response
+ *
+ * \param[in] peer      Peer that sent clear request
+ * \param[in] peer_won  Whether peer is the attribute writer
+ * \param[in] xml       Request XML
+ */
+static void
+process_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
+{
+    crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
+             peer->uname);
+
+    if (peer_won) {
+        /* Initialize the "seen" flag for all attributes to cleared, so we can
+         * detect attributes that local node has but the writer doesn't.
+         */
+        clear_attribute_value_seen();
+    }
+
+    // Process each attribute update in the sync response
+    for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
+         child = pcmk__xml_next(child)) {
+        attrd_peer_update(peer, child,
+                          crm_element_value(child, PCMK__XA_ATTR_NODE_NAME),
+                          TRUE);
+    }
+
+    if (peer_won) {
+        /* If any attributes are still not marked as seen, the writer doesn't
+         * know about them, so send all peers an update with them.
+         */
+        attrd_current_only_attribute_update(peer, xml);
+    }
+}
+
+/*!
     \internal
     \brief Broadcast private attribute for local node with protocol version
 */
@@ -596,7 +633,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     const char *op = crm_element_value(xml, PCMK__XA_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
-    bool peer_won = FALSE;
+    bool peer_won = false;
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
@@ -631,25 +668,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_casei)
                && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
-        xmlNode *child = NULL;
-
-        crm_info("Processing %s from %s", op, peer->uname);
-
-        /* Clear the seen flag for attribute processing held only in the own node. */
-        if (peer_won) {
-            clear_attribute_value_seen();
-        }
-
-        for (child = pcmk__xml_first_child(xml); child != NULL;
-             child = pcmk__xml_next(child)) {
-            host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);
-            attrd_peer_update(peer, child, host, TRUE);
-        }
-
-        if (peer_won) {
-            /* Synchronize if there is an attribute held only by own node that Writer does not have. */
-            attrd_current_only_attribute_update(peer, xml);
-        }
+        process_peer_sync_response(peer, peer_won, xml);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_casei)) {
         /* Ignore. The flush command was removed in 2.0.0 but may be
