@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -427,61 +427,6 @@ pcmk_controld_api_list_nodes(pcmk_ipc_api_t *api)
         rc = send_controller_request(api, request, true);
         free_xml(request);
     }
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Ask the controller to shut down
- *
- * \param[in] api          Controller connection
- * \param[in] node_name    Name of node whose controller should shut down
- *
- * \return Standard Pacemaker return code
- *
- * \note This capability currently does not work, so the function is considered
- *       internal. It will likely be removed.
- * \note Event callback will not get a reply.
- */
-int
-pcmk_controld_api_shutdown(pcmk_ipc_api_t *api, const char *node_name)
-{
-    xmlNode *request;
-    int rc = pcmk_rc_ok;
-
-    request = create_controller_request(api, CRM_OP_SHUTDOWN, NULL, NULL);
-    if (request == NULL) {
-        return EINVAL;
-    }
-    rc = send_controller_request(api, request, false);
-    free_xml(request);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Ask the controller to start a DC election
- *
- * \param[in] api          Controller connection
- *
- * \return Standard Pacemaker return code
- *
- * \note This capability currently does not work, so the function is considered
- *       internal. It will likely be removed.
- * \note Event callback will not get a reply.
- */
-int
-pcmk_controld_api_start_election(pcmk_ipc_api_t *api)
-{
-    xmlNode *request;
-    int rc = pcmk_rc_ok;
-
-    request = create_controller_request(api, CRM_OP_VOTE, NULL, NULL);
-    if (request == NULL) {
-        return EINVAL;
-    }
-    rc = send_controller_request(api, request, false);
-    free_xml(request);
     return rc;
 }
 
