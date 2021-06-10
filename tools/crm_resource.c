@@ -1687,14 +1687,12 @@ main(int argc, char **argv)
     }
 
     if (options.require_resource && (options.rsc_id == NULL)) {
-        rc = ENXIO;
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must supply a resource id with -r");
         goto done;
     }
     if (options.require_node && (options.host_uname == NULL)) {
-        rc = ENXIO;
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must supply a node name with -N");
