@@ -3878,7 +3878,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 2 nodes configured
-  * 5 resource instances configured
+  * 7 resource instances configured
 
               *** Resource management is DISABLED ***
   The cluster will not attempt to start, stop or recover services
@@ -3894,6 +3894,9 @@ Active Resources:
   * Resource Group: exim-group (unmanaged):
     * Public-IP	(ocf:heartbeat:IPaddr):	 Started cluster01 (unmanaged)
     * Email	(lsb:exim):	 Started cluster02 (unmanaged)
+  * Clone Set: ping-clone [ping] (unmanaged):
+    * ping	(ocf:pacemaker:ping):	 Started cluster01 (unmanaged)
+    * ping	(ocf:pacemaker:ping):	 Started cluster02 (unmanaged)
 =#=#=#= End test: Text output of active resources on unmanaged nodes - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of active resources on unmanaged nodes
 =#=#=#= Begin test: Brief text output, with unmanaged nodes =#=#=#=
@@ -3903,7 +3906,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 2 nodes configured
-  * 5 resource instances configured
+  * 7 resource instances configured
 
               *** Resource management is DISABLED ***
   The cluster will not attempt to start, stop or recover services
@@ -3919,6 +3922,9 @@ Active Resources:
   * Resource Group: exim-group (unmanaged):
     * 1/1	(lsb:exim):	Active cluster02
     * 1/1	(ocf:heartbeat:IPaddr):	Active cluster01
+  * Clone Set: ping-clone [ping] (unmanaged):
+    * ping	(ocf:pacemaker:ping):	 Started cluster01 (unmanaged)
+    * ping	(ocf:pacemaker:ping):	 Started cluster02 (unmanaged)
 =#=#=#= End test: Brief text output, with unmanaged nodes - OK (0) =#=#=#=
 * Passed: crm_mon        - Brief text output, with unmanaged nodes
 =#=#=#= Begin test: XML output of active resources on unmanaged nodes =#=#=#=
@@ -3929,12 +3935,12 @@ Active Resources:
     <last_update time=""/>
     <last_change time=""/>
     <nodes_configured number="2"/>
-    <resources_configured number="5" disabled="0" blocked="0"/>
+    <resources_configured number="7" disabled="0" blocked="0"/>
     <cluster_options stonith-enabled="true" symmetric-cluster="true" no-quorum-policy="stop" maintenance-mode="true" stop-all-resources="false"/>
   </summary>
   <nodes>
-    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="3" type="member"/>
-    <node name="cluster02" id="2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="true" resources_running="2" type="member"/>
+    <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="true" is_dc="false" resources_running="4" type="member"/>
+    <node name="cluster02" id="2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="true" resources_running="3" type="member"/>
   </nodes>
   <resources>
     <resource id="Fencing" resource_agent="stonith:fence_xvm" role="Started" active="true" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1">
@@ -3954,18 +3960,29 @@ Active Resources:
         <node name="cluster02" id="2" cached="false"/>
       </resource>
     </group>
+    <clone id="ping-clone" multi_state="false" unique="false" managed="false" disabled="false" failed="false" failure_ignored="false">
+      <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="true" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster01" id="1" cached="true"/>
+      </resource>
+      <resource id="ping" resource_agent="ocf:pacemaker:ping" role="Started" active="false" orphaned="false" blocked="false" managed="false" failed="false" failure_ignored="false" nodes_running_on="1">
+        <node name="cluster02" id="2" cached="false"/>
+      </resource>
+    </clone>
   </resources>
   <node_history>
     <node name="cluster01">
       <resource_history id="Fencing" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
         <operation_history call="3" task="monitor" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
-        <operation_history call="10" task="cancel" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
+        <operation_history call="12" task="cancel" rc="0" rc_text="ok" interval="60000ms" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="rsc1" orphan="false" migration-threshold="1000000">
         <operation_history call="2" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
       <resource_history id="Public-IP" orphan="false" migration-threshold="1000000">
+        <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
+      </resource_history>
+      <resource_history id="ping" orphan="false" migration-threshold="1000000">
         <operation_history call="1" task="start" rc="0" rc_text="ok" exec-time="0ms" queue-time="0ms"/>
       </resource_history>
     </node>
@@ -3981,7 +3998,7 @@ Cluster Summary:
   * Last updated:
   * Last change:
   * 2 nodes configured
-  * 5 resource instances configured
+  * 7 resource instances configured
 
               *** Resource management is DISABLED ***
   The cluster will not attempt to start, stop or recover services
@@ -3991,11 +4008,13 @@ Node List:
     * Resources:
       * 1	(ocf:heartbeat:IPaddr):	Active 
       * 1	(ocf:pacemaker:Dummy):	Active 
+      * 1	(ocf:pacemaker:ping):	Active 
       * 1	(stonith:fence_xvm):	Active 
   * Node cluster02: OFFLINE:
     * Resources:
       * 1	(lsb:exim):	Active 
       * 1	(ocf:pacemaker:Dummy):	Active 
+      * 1	(ocf:pacemaker:ping):	Active 
 =#=#=#= End test: Brief text output grouped by node, with unmanaged nodes - OK (0) =#=#=#=
 * Passed: crm_mon        - Brief text output grouped by node, with unmanaged nodes
 =#=#=#= Begin test: Text output of all resources with maintenance-mode enabled =#=#=#=

@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.3" epoch="1" num_updates="56" admin_epoch="1" cib-last-written="Tue May  5 12:04:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.3.0" validate-with="pacemaker-3.3" epoch="1" num_updates="59" admin_epoch="1" cib-last-written="Tue May  5 12:04:36 2020" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -30,6 +30,20 @@
         </primitive>
         <primitive id="Email" class="lsb" type="exim"/>
       </group>
+      <clone id="ping-clone">
+        <primitive class="ocf" id="ping" provider="pacemaker" type="ping">
+          <instance_attributes id="ping-instance_attributes">
+            <nvpair id="ping-instance_attributes-dampen" name="dampen" value="5s"/>
+            <nvpair id="ping-instance_attributes-host_list" name="host_list" value="192.168.122.1"/>
+            <nvpair id="ping-instance_attributes-multiplier" name="multiplier" value="1000"/>
+          </instance_attributes>
+          <operations>
+            <op id="ping-monitor-interval-10s" interval="10s" name="monitor" timeout="60s"/>
+            <op id="ping-start-interval-0s" interval="0s" name="start" timeout="60s"/>
+            <op id="ping-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+      </clone>
     </resources>
     <constraints/>
   </configuration>
@@ -40,7 +54,7 @@
           <lrm_resource id="Fencing" class="stonith" type="fence_xvm">
             <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1623265189" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
             <lrm_rsc_op id="Fencing_monitor_60000" operation_key="Fencing_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1623265189" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
-            <lrm_rsc_op id="Fencing_cancel_60000" operation_key="Fencing_cancel_60000" operation="cancel" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;10:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="10" rc-code="0" op-status="0" interval="60000" last-rc-change="1623269878" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+            <lrm_rsc_op id="Fencing_cancel_60000" operation_key="Fencing_cancel_60000" operation="cancel" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="12:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;12:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="12" rc-code="0" op-status="0" interval="60000" last-rc-change="1623270930" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
           </lrm_resource>
           <lrm_resource id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
             <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-rc-change="1623265189" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
@@ -54,6 +68,9 @@
           <lrm_resource id="Email" class="lsb" type="exim">
             <lrm_rsc_op id="Email_last_0" operation_key="Email_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-rc-change="1623269878" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
+          <lrm_resource id="ping" class="ocf" provider="pacemaker" type="ping">
+            <lrm_rsc_op id="ping_last_0" operation_key="ping_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1623270930" exec-time="0" queue-time="0" op-digest="769dd6f95f1494d416ae9dc690960e17"/>
+          </lrm_resource>
         </lrm_resources>
       </lrm>
     </node_state>
@@ -65,6 +82,9 @@
           </lrm_resource>
           <lrm_resource id="Email" class="lsb" type="exim">
             <lrm_rsc_op id="Email_last_0" operation_key="Email_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1623269525" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ping" class="ocf" provider="pacemaker" type="ping">
+            <lrm_rsc_op id="ping_last_0" operation_key="ping_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.10.2" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="0" op-status="0" interval="0" last-rc-change="1623270930" exec-time="0" queue-time="0" op-digest="769dd6f95f1494d416ae9dc690960e17"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
