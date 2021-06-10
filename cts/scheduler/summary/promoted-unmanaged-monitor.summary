@@ -4,6 +4,10 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: Fencing [FencingChild] (unmanaged):
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
     * Resource Group: group-1 (unmanaged):
       * r192.168.122.112	(ocf:heartbeat:IPaddr):	 Started pcmk-3 (unmanaged)
@@ -24,6 +28,7 @@ Current cluster status:
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-2 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Promoted pcmk-3 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-4 (unmanaged)
+      * stateful-1	(ocf:pacemaker:Stateful):	 Stopped (unmanaged)
       * Stopped: [ pcmk-1 ]
 
 Transition Summary:
@@ -46,6 +51,10 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: Fencing [FencingChild] (unmanaged):
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Stopped (unmanaged)
       * Stopped: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
     * Resource Group: group-1 (unmanaged):
       * r192.168.122.112	(ocf:heartbeat:IPaddr):	 Started pcmk-3 (unmanaged)
@@ -66,4 +75,5 @@ Revised Cluster Status:
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-2 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Promoted pcmk-3 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-4 (unmanaged)
+      * stateful-1	(ocf:pacemaker:Stateful):	 Stopped (unmanaged)
       * Stopped: [ pcmk-1 ]

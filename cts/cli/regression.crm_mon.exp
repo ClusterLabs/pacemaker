@@ -4022,6 +4022,8 @@ Full List of Resources:
   * Fencing	(stonith:fence_xvm):	 Started cluster01 (unmanaged)
   * dummy	(ocf:pacemaker:Dummy):	 Started cluster02 (unmanaged)
   * Clone Set: inactive-clone [inactive-dhcpd] (unmanaged) (disabled):
+    * inactive-dhcpd	(lsb:dhcpd):	 Stopped (disabled, unmanaged)
+    * inactive-dhcpd	(lsb:dhcpd):	 Stopped (disabled, unmanaged)
     * Stopped (disabled): [ cluster01 cluster02 ]
   * Resource Group: inactive-group (unmanaged) (disabled):
     * inactive-dummy-1	(ocf:pacemaker:Dummy):	 Stopped (disabled, unmanaged)
@@ -4038,8 +4040,17 @@ Full List of Resources:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster02 (unmanaged)
     * Resource Group: mysql-group:1 (unmanaged):
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01 (unmanaged)
+    * Resource Group: mysql-group:2 (unmanaged):
+      * mysql-proxy	(lsb:mysql-proxy):	 Stopped (unmanaged)
+    * Resource Group: mysql-group:3 (unmanaged):
+      * mysql-proxy	(lsb:mysql-proxy):	 Stopped (unmanaged)
+    * Resource Group: mysql-group:4 (unmanaged):
+      * mysql-proxy	(lsb:mysql-proxy):	 Stopped (unmanaged)
   * Clone Set: promotable-clone [promotable-rsc] (promotable) (unmanaged):
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02 (unmanaged)
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01 (unmanaged)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped (unmanaged)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped (unmanaged)
+    * promotable-rsc	(ocf:pacemaker:Stateful):	 Stopped (unmanaged)
 =#=#=#= End test: Text output of all resources with maintenance-mode enabled - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of all resources with maintenance-mode enabled
