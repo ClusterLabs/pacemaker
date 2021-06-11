@@ -54,7 +54,7 @@ install:
       libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev
       libquorum-dev libsam-dev libtotem-pg-dev libvotequorum-dev
       cluster-glue-dev resource-agents
- - test $MAINT_EXTRA -eq 0 || sudo apt-get install -qq libxml2-utils xsltproc
+      libxml2-utils xsltproc
 
 before_script:
 # some tests (e.g. cts-exec-helper) require actual system-wide credentials
