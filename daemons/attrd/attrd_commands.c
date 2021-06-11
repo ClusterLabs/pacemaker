@@ -51,10 +51,11 @@ GHashTable *attributes = NULL;
 
 void write_attribute(attribute_t *a, bool ignore_delay);
 void write_or_elect_attribute(attribute_t *a);
-void attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
+
+static void broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml);
 
 static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
@@ -604,7 +605,7 @@ process_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
         /* If any attributes are still not marked as seen, the writer doesn't
          * know about them, so send all peers an update with them.
          */
-        attrd_current_only_attribute_update(peer, xml);
+        broadcast_unseen_local_values(peer, xml);
     }
 }
 
@@ -768,40 +769,36 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
     return(v);
 }
 
-void 
-attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
+void
+broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
-    attribute_t *a;
+    attribute_t *a = NULL;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __func__);
-    gboolean build = FALSE;    
-
-    crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+    xmlNode *sync = NULL;
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            if (pcmk__str_eq(v->nodename, attrd_cluster->uname, pcmk__str_casei) && v->seen == FALSE) {
-                crm_trace("Syncing %s[%s] = %s to everyone.(from local only attributes)", a->id, v->nodename, v->current);
-
-                build = TRUE;
+            if (!(v->seen) && pcmk__str_eq(v->nodename, attrd_cluster->uname,
+                                           pcmk__str_casei)) {
+                if (sync == NULL) {
+                    sync = create_xml_node(NULL, __func__);
+                    crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+                }
                 build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
                             v->nodename, v->nodeid, v->current,  (a->timeout_ms && a->timer ? TRUE : FALSE));
-            } else {
-                crm_trace("Local attribute(%s[%s] = %s) was ignore.(another host) : [%s]", a->id, v->nodename, v->current, attrd_cluster->uname);
-                continue;
             }
         }
     }
 
-    if (build) {
-        crm_debug("Syncing values to everyone.(from local only attributes)");
+    if (sync != NULL) {
+        crm_debug("Broadcasting local-only values");
         send_attrd_message(NULL, sync);
+        free_xml(sync);
     }
-    free_xml(sync);
 }
 
 /*!
