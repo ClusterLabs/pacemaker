@@ -125,25 +125,35 @@ cache_remote_node(const char *node_name)
     CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
 }
 
+/*!
+ * \internal
+ * \brief Create an XML representation of an attribute for use in peer messages
+ *
+ * \param[in] parent       Create attribute XML as child element of this element
+ * \param[in] a            Attribute to represent
+ * \param[in] v            Attribute value to represent
+ * \param[in] force_write  If true, value should be written even if unchanged
+ *
+ * \return XML representation of attribute
+ */
 static xmlNode *
-build_attribute_xml(
-    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
-    gboolean is_private, const char *peer, uint32_t peerid, const char *value, gboolean is_force_write)
+add_attribute_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
+                        bool force_write)
 {
     xmlNode *xml = create_xml_node(parent, __func__);
 
-    crm_xml_add(xml, PCMK__XA_ATTR_NAME, name);
-    crm_xml_add(xml, PCMK__XA_ATTR_SET, set);
-    crm_xml_add(xml, PCMK__XA_ATTR_UUID, uuid);
-    crm_xml_add(xml, PCMK__XA_ATTR_USER, user);
-    crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, peer);
-    if (peerid > 0) {
-        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, peerid);
+    crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
+    crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set);
+    crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
+    crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
+    crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, v->nodename);
+    if (v->nodeid > 0) {
+        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, v->nodeid);
     }
-    crm_xml_add(xml, PCMK__XA_ATTR_VALUE, value);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, timeout_ms/1000);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE, is_private);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_FORCE, is_force_write);
+    crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE, a->is_private);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_FORCE, force_write);
 
     return xml;
 }
@@ -695,8 +705,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
             crm_debug("Syncing %s[%s] = %s to %s", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
-            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
-                                v->nodename, v->nodeid, v->current, FALSE);
+            add_attribute_value_xml(sync, a, v, false);
         }
     }
 
@@ -788,8 +797,7 @@ broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml)
                     sync = create_xml_node(NULL, __func__);
                     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
                 }
-                build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
-                            v->nodename, v->nodeid, v->current,  (a->timeout_ms && a->timer ? TRUE : FALSE));
+                add_attribute_value_xml(sync, a, v, a->timeout_ms && a->timer);
             }
         }
     }
@@ -820,9 +828,7 @@ broadcast_local_value(attribute_t *a)
     xmlNode *sync = create_xml_node(NULL, __func__);
 
     crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
-    build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms,
-                        a->user, a->is_private, v->nodename, v->nodeid,
-                        v->current, FALSE);
+    add_attribute_value_xml(sync, a, v, false);
     attrd_xml_add_writer(sync);
     send_attrd_message(NULL, sync);
     free_xml(sync);
