@@ -804,6 +804,34 @@ attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
     free_xml(sync);
 }
 
+/*!
+ * \internal
+ * \brief Override an attribute sync with a local value
+ *
+ * Broadcast the local node's value for an attribute that's different from the
+ * value provided in a peer's attribute synchronization response. This ensures a
+ * node's values for itself take precedence and all peers are kept in sync.
+ *
+ * \param[in] a          Attribute entry to override
+ *
+ * \return Local instance of attribute value
+ */
+static attribute_value_t *
+broadcast_local_value(attribute_t *a)
+{
+    attribute_value_t *v = g_hash_table_lookup(a->values, attrd_cluster->uname);
+    xmlNode *sync = create_xml_node(NULL, __func__);
+
+    crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+    build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms,
+                        a->user, a->is_private, v->nodename, v->nodeid,
+                        v->current, FALSE);
+    attrd_xml_add_writer(sync);
+    send_attrd_message(NULL, sync);
+    free_xml(sync);
+    return v;
+}
+
 void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
@@ -899,21 +927,9 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
         && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
 
-        xmlNode *sync = create_xml_node(NULL, __func__);
-
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    attr, host, v->current, value, peer->uname);
-
-        crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
-        v = g_hash_table_lookup(a->values, host);
-        build_attribute_xml(sync, attr, a->set, a->uuid, a->timeout_ms, a->user,
-                            a->is_private, v->nodename, v->nodeid, v->current, FALSE);
-
-        attrd_xml_add_writer(sync);
-
-        /* Broadcast in case any other nodes had the inconsistent value */
-        send_attrd_message(NULL, sync);
-        free_xml(sync);
+        v = broadcast_local_value(a);
 
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
         crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
