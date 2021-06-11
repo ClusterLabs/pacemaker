@@ -36,7 +36,11 @@
 
 ## Since git v2.11, the extent of abbreviation is autoscaled by default
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
+%if (0%{?fedora} >= 26) || (0%{?rhel} >= 9)
+%global commit_abbrev 9
+%else
 %global commit_abbrev 7
+%endif
 
 
 # Define conditionals so that "rpmbuild --with <feature>" and

@@ -1769,7 +1769,8 @@ dnl
 dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
 dnl    compiler and linker flags (respectively) for daemon programs
 dnl    (pacemakerd, pacemaker-attrd, pacemaker-controld, pacemaker-execd,
-dnl    cib, stonithd, pacemaker-remoted, pacemaker-schedulerd)
+dnl    pacemaker-based, pacemaker-fenced, pacemaker-remoted,
+dnl    pacemaker-schedulerd)
 dnl
 dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
 dnl    compiler and linker flags (respectively) for libraries linked

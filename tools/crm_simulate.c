@@ -823,7 +823,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "${resource}_${task}_${interval_in_ms}@${node}=${rc}\n"
                               "(memcached_monitor_20000@bart.example.com=7, for example).\n"
                               "${rc} is an OCF return code.  For more information on these\n"
-                              "return codes, refer to https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/s-ocf-return-codes.html\n\n"
+                              "return codes, refer to https://clusterlabs.org/pacemaker/doc/2.1/Pacemaker_Administration/html/agents.html#ocf-return-codes\n\n"
                               "Examples:\n\n"
                               "Pretend a recurring monitor action found memcached stopped on node\n"
                               "fred.example.com and, during recovery, that the memcached stop\n"

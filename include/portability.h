@@ -6,11 +6,16 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef PORTABILITY_H
-#  define PORTABILITY_H
+#ifndef PCMK__PORTABILITY__H
+#  define PCMK__PORTABILITY__H
 
-/* Needs to be defined before any other includes, otherwise some system
- * headers do not behave as expected! Major black magic... */
+/* This header provides replacements for required definitions and declarations
+ * that certain supported build environments don't provide
+ */
+
+/* This header *MUST* be included before any system headers, because the
+ * following definition can change the behavior of some of them.
+ */
 #  undef _GNU_SOURCE            /* in case it was defined on the command line */
 #  define _GNU_SOURCE
 
@@ -27,39 +32,38 @@
 #  ifndef HAVE_DAEMON
   /* We supply a replacement function, but need a prototype */
 int daemon(int nochdir, int noclose);
-#  endif                        /* HAVE_DAEMON */
+#  endif
 
 #  ifndef HAVE_SETENV
   /* We supply a replacement function, but need a prototype */
 int setenv(const char *name, const char *value, int why);
-#  endif                        /* HAVE_SETENV */
+#  endif
 
 #  ifndef HAVE_STRERROR
   /* We supply a replacement function, but need a prototype */
 char *strerror(int errnum);
-#  endif                        /* HAVE_STRERROR */
+#  endif
 
 #  ifndef HAVE_STRCHRNUL
   /* We supply a replacement function, but need a prototype */
 char *strchrnul(const char *s, int c_in);
-#  endif                        /* HAVE_STRCHRNUL */
+#  endif
 
 #  ifndef HAVE_ALPHASORT
 #    include <dirent.h>
-int
- alphasort(const void *dirent1, const void *dirent2);
-#  endif                        /* HAVE_ALPHASORT */
+int alphasort(const void *dirent1, const void *dirent2);
+#  endif
 
 #  ifndef HAVE_STRNLEN
 size_t strnlen(const char *s, size_t maxlen);
 #  else
-#    	define USE_GNU
+#    define USE_GNU
 #  endif
 
 #  ifndef HAVE_STRNDUP
 char *strndup(const char *str, size_t len);
 #  else
-#    	define USE_GNU
+#    define USE_GNU
 #  endif
 
 #  if SUPPORT_DBUS
@@ -104,10 +108,11 @@ typedef union
   char *str;           /**< as char* (string, object path or signature) */
   int fd;              /**< as Unix file descriptor */
 } DBusBasicValue;
-#    endif
-#  endif
+#    endif  // !defined(HAVE_DBUSBASICVALUE)
+#  endif    // !defined(SUPPORT_DBUS)
 
-/* Replacement error codes for non-linux */
+// Replacement constants for Linux-specific errno values
+
 #  include <errno.h>
 
 #  ifndef ENOTUNIQ
@@ -154,4 +159,4 @@ typedef union
 #    define EKEYREJECTED 200
 #  endif
 
-#endif                          /* PORTABILITY_H */
+#endif // PCMK__PORTABILITY__H

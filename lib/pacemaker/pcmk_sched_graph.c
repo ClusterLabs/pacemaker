@@ -288,12 +288,12 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
                 data_set);
 
         } else if (pcmk_is_set(first_flags, pe_action_runnable)) {
-            /* alright. a "first" action is considered runnable, incremente
-             * the 'runnable_before' counter */
+            // We have another runnable instance of "first"
             then->runnable_before++;
 
-            /* if the runnable before count for then exceeds the required number
-             * of "before" runnable actions... mark then as runnable */
+            /* Mark "then" as runnable if it requires a certain number of
+             * "before" instances to be runnable, and they now are.
+             */
             if (then->runnable_before >= then->required_runnable_before) {
                 if (update_action_flags(then, pe_action_runnable, __func__, __LINE__)) {
                     pe__set_graph_flags(changed, first, pe_graph_updated_then);
