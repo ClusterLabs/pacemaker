@@ -61,6 +61,7 @@ Also: GNU make
 * nmap (if not specifying an IP address base)
 * oprofile (if running CTS profiling tests)
 * dlm (to log DLM debugging info after CTS tests)
+* xmllint (to validate tool output in cts-cli)
 
 ## Simple install
 

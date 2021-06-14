@@ -8,6 +8,10 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+# Set the exit status of a command to the exit code of the last program to
+# exit non-zero.  This is bash-specific.
+set -o pipefail
+
 #
 # Note on portable usage of sed: GNU/POSIX/*BSD sed have a limited subset of
 # compatible functionality. Do not use the -i option, alternation (\|),
@@ -38,6 +42,7 @@ num_passed=0
 verbose=0
 tests="dates tools crm_mon acls validity upgrade rules"
 do_save=0
+XMLLINT_CMD=
 VALGRIND_CMD=
 VALGRIND_OPTS="
     -q
@@ -111,14 +116,17 @@ create_shadow_cib() {
     delete_shadow_resource_defaults
 }
 
-function test_assert() {
+function _test_assert() {
     target=$1; shift
+    validate=$1; shift
     cib=$1; shift
     app=`echo "$cmd" | sed 's/\ .*//'`
     printf "* Running: $app - $desc\n" 1>&2
 
     printf "=#=#=#= Begin test: $desc =#=#=#=\n"
-    eval $VALGRIND_CMD $cmd 2>&1
+
+    export outfile=$(mktemp ${TMPDIR:-/tmp}/cts-cli.output.XXXXXXXXXX)
+    eval $VALGRIND_CMD $cmd 2>&1 | tee $outfile
     rc=$?
 
     if [ x$cib != x0 ]; then
@@ -126,7 +134,25 @@ function test_assert() {
         CIB_user=root cibadmin -Q
     fi
 
-    printf "=#=#=#= End test: $desc - $(crm_error --exit $rc) ($rc) =#=#=#=\n"
+    # Do not validate if running under valgrind, even if told to do so.  Valgrind
+    # will output a lot more stuff that is not XML, so it wouldn't validate anyway.
+    if [ "$validate" = "1" ] && [ "$VALGRIND_CMD" = "" ] && [ $rc = 0 ] && [ "$XMLLINT_CMD" != "" ]; then
+        # The sed command filters out the "- validates" line that xmllint will output
+        # on success.  grep cannot be used here because "grep -v 'validates$'" will
+        # return an exit code of 1 if its input consists entirely of "- validates".
+        $XMLLINT_CMD --noout --relaxng "$PCMK_schema_directory/api/api-result.rng" "$outfile" 2>&1 | sed -n '/validates$/ !p'
+        rc=$?
+
+        if [ $rc = 0 ]; then
+            printf "=#=#=#= End test: %s - $(crm_error --exit $rc) (%d) =#=#=#=\n" "$desc" $rc
+        else
+            printf "=#=#=#= End test: %s - Failed to validate (%d) =#=#=#=\n" "$desc" $rc
+        fi
+    else
+        printf "=#=#=#= End test: %s - $(crm_error --exit $rc) (%d) =#=#=#=\n" "$desc" $rc
+    fi
+
+    rm -f "$outfile"
 
     if [ $rc -ne $target ]; then
         num_errors=$(( $num_errors + 1 ))
@@ -140,6 +166,14 @@ function test_assert() {
     fi
 }
 
+function test_assert() {
+    _test_assert $1 0 $2
+}
+
+function test_assert_validate() {
+    _test_assert $1 1 $2
+}
+
 function test_crm_mon() {
     local TMPXML
     export CIB_file="$test_home/cli/crm_mon.xml"
@@ -150,7 +184,7 @@ function test_crm_mon() {
 
     desc="XML output"
     cmd="crm_mon --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output without node section"
     cmd="crm_mon -1 --exclude=nodes"
@@ -158,7 +192,7 @@ function test_crm_mon() {
 
     desc="XML output without the node section"
     cmd="crm_mon --output-as=xml --exclude=nodes"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Text output with only the node section"
     cmd="crm_mon -1 --exclude=all --include=nodes"
@@ -195,7 +229,7 @@ function test_crm_mon() {
 
     desc="XML output grouped by node"
     cmd="crm_mon -1 --output-as=xml --group-by-node"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by node"
     cmd="crm_mon -1 --include=all --node=cluster01"
@@ -203,7 +237,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by node"
     cmd="crm_mon --output-as xml --include=all --node=cluster01"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by tag"
     cmd="crm_mon -1 --include=all --node=even-nodes"
@@ -211,7 +245,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by tag"
     cmd="crm_mon --output-as=xml --include=all --node=even-nodes"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by resource tag"
     cmd="crm_mon -1 --include=all --resource=fencing-rscs"
@@ -219,7 +253,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by resource tag"
     cmd="crm_mon --output-as=xml --include=all --resource=fencing-rscs"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output filtered by node that doesn't exist"
     cmd="crm_mon -1 --node=blah"
@@ -227,7 +261,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by node that doesn't exist"
     cmd="crm_mon --output-as=xml --node=blah"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output with inactive resources"
     cmd="crm_mon -1 -r"
@@ -247,7 +281,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by primitive resource"
     cmd="crm_mon --output-as=xml --resource=Fencing"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by group resource"
     cmd="crm_mon -1 --include=all --resource=exim-group"
@@ -255,7 +289,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by group resource"
     cmd="crm_mon --output-as=xml --resource=exim-group"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by group resource member"
     cmd="crm_mon -1 --include=all --resource=Public-IP"
@@ -263,7 +297,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by group resource member"
     cmd="crm_mon --output-as=xml --resource=Email"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by clone resource"
     cmd="crm_mon -1 --include=all --resource=ping-clone"
@@ -271,7 +305,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by clone resource"
     cmd="crm_mon --output-as=xml --resource=ping-clone"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by clone resource instance"
     cmd="crm_mon -1 --include=all --resource=ping"
@@ -279,7 +313,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by clone resource instance"
     cmd="crm_mon --output-as=xml --resource=ping"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output filtered by exact clone resource instance"
     cmd="crm_mon -1 --include=all --show-detail --resource=ping:0"
@@ -287,7 +321,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by exact clone resource instance"
     cmd="crm_mon --output-as=xml --resource=ping:1"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output filtered by resource that doesn't exist"
     cmd="crm_mon -1 --resource=blah"
@@ -295,7 +329,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by resource that doesn't exist"
     cmd="crm_mon --output-as=xml --resource=blah"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output with inactive resources, filtered by tag"
     cmd="crm_mon -1 -r --resource=inactive-rscs"
@@ -307,7 +341,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by inactive bundle resource"
     cmd="crm_mon --output-as=xml --resource=httpd-bundle"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output with inactive resources, filtered by bundled IP address resource"
     cmd="crm_mon -1 -r --resource=httpd-bundle-ip-192.168.122.131"
@@ -315,7 +349,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by bundled IP address resource"
     cmd="crm_mon --output-as=xml --resource=httpd-bundle-ip-192.168.122.132"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output with inactive resources, filtered by bundled container"
     cmd="crm_mon -1 -r --resource=httpd-bundle-docker-1"
@@ -323,7 +357,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by bundled container"
     cmd="crm_mon --output-as=xml --resource=httpd-bundle-docker-2"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output with inactive resources, filtered by bundle connection"
     cmd="crm_mon -1 -r --resource=httpd-bundle-0"
@@ -331,7 +365,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by bundle connection"
     cmd="crm_mon --output-as=xml --resource=httpd-bundle-0"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Basic text output with inactive resources, filtered by bundled primitive resource"
     cmd="crm_mon -1 -r --resource=httpd"
@@ -339,7 +373,7 @@ function test_crm_mon() {
 
     desc="XML output filtered by bundled primitive resource"
     cmd="crm_mon --output-as=xml --resource=httpd"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output, filtered by clone name in cloned group"
     cmd="crm_mon -1 --include=all --show-detail --resource=mysql-clone-group"
@@ -347,7 +381,7 @@ function test_crm_mon() {
 
     desc="XML output, filtered by clone name in cloned group"
     cmd="crm_mon --output-as=xml --resource=mysql-clone-group"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output, filtered by group name in cloned group"
     cmd="crm_mon -1 --include=all --show-detail --resource=mysql-group"
@@ -355,7 +389,7 @@ function test_crm_mon() {
 
     desc="XML output, filtered by group name in cloned group"
     cmd="crm_mon --output-as=xml --resource=mysql-group"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output, filtered by exact group instance name in cloned group"
     cmd="crm_mon -1 --include=all --show-detail --resource=mysql-group:1"
@@ -363,7 +397,7 @@ function test_crm_mon() {
 
     desc="XML output, filtered by exact group instance name in cloned group"
     cmd="crm_mon --output-as=xml --resource=mysql-group:1"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output, filtered by primitive name in cloned group"
     cmd="crm_mon -1 --include=all --show-detail --resource=mysql-proxy"
@@ -371,7 +405,7 @@ function test_crm_mon() {
 
     desc="XML output, filtered by primitive name in cloned group"
     cmd="crm_mon --output-as=xml --resource=mysql-proxy"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Complete text output, filtered by exact primitive instance name in cloned group"
     cmd="crm_mon -1 --include=all --show-detail --resource=mysql-proxy:1"
@@ -379,7 +413,7 @@ function test_crm_mon() {
 
     desc="XML output, filtered by exact primitive instance name in cloned group"
     cmd="crm_mon --output-as=xml --resource=mysql-proxy:1"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_file
 
@@ -391,7 +425,7 @@ function test_crm_mon() {
 
     desc="XML output of partially active resources"
     cmd="crm_mon -1 --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Text output of partially active resources, with inactive resources"
     cmd="crm_mon -1 -r"
@@ -415,7 +449,7 @@ function test_crm_mon() {
 
     desc="Text output of partially active resources, filtered by node"
     cmd="crm_mon -1 --output-as=xml --node=cluster01"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     unset CIB_file
 
@@ -581,16 +615,16 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Create another resource meta attribute"
-    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Show why a resource is not running"
     cmd="crm_resource -Y -r dummy"
     test_assert $CRM_EX_OK 0
 
     desc="Remove another resource meta attribute"
-    cmd="crm_resource -r dummy --meta -d target-role"
-    test_assert $CRM_EX_OK 0
+    cmd="crm_resource -r dummy --meta -d target-role --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Create a resource attribute"
     cmd="crm_resource -r dummy -p delay -v 10s"
@@ -599,6 +633,10 @@ function test_tools() {
     desc="List the configured resources"
     cmd="crm_resource -L"
     test_assert $CRM_EX_OK
+
+    desc="List the configured resources in XML"
+    cmd="crm_resource -L --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
 
     desc="List IDs of instantiated resources"
     cmd="crm_resource -l"
@@ -689,16 +727,16 @@ function test_tools() {
     test_assert $CRM_EX_OK 0
 
     desc="Ban dummy from node2"
-    cmd="crm_resource -r dummy -B -N node2"
-    test_assert $CRM_EX_OK
+    cmd="crm_resource -r dummy -B -N node2 --output-as=xml"
+    test_assert_validate $CRM_EX_OK
 
     desc="Relocate resources due to ban"
     cmd="crm_simulate --live-check --in-place -S"
     test_assert $CRM_EX_OK
 
     desc="Move dummy to node1"
-    cmd="crm_resource -r dummy -M -N node1"
-    test_assert $CRM_EX_OK
+    cmd="crm_resource -r dummy -M -N node1 --output-as=xml"
+    test_assert_validate $CRM_EX_OK
 
     desc="Clear implicit constraints for dummy on node2"
     cmd="crm_resource -r dummy -U -N node2"
@@ -833,11 +871,11 @@ function test_tools() {
 
         desc="Check locations and constraints for $rsc in XML"
         cmd="crm_resource -a -r $rsc --output-as=xml"
-        test_assert $CRM_EX_OK 0
+        test_assert_validate $CRM_EX_OK 0
 
         desc="Recursively check locations and constraints for $rsc in XML"
         cmd="crm_resource -A -r $rsc --output-as=xml"
-        test_assert $CRM_EX_OK 0
+        test_assert_validate $CRM_EX_OK 0
     done
 
     unset CIB_file
@@ -846,7 +884,7 @@ function test_tools() {
 
     desc="Show resource digests"
     cmd="crm_resource --digests -r rsc1 -N node1 --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Show resource digests with overrides"
     cmd="$cmd CRM_meta_interval=10000 CRM_meta_timeout=20000"
@@ -900,6 +938,22 @@ function test_tools() {
     cmd="crm_resource --locate -r promotable-rsc:1"
     test_assert $CRM_EX_OK 0
 
+    desc="List a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-clone --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List the primitive of a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-rsc --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List a single instance of a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-rsc:0 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
+    desc="List another instance of a promotable clone resource in XML"
+    cmd="crm_resource --locate -r promotable-rsc:1 --output-as=xml"
+    test_assert_validate $CRM_EX_OK 0
+
     unset CIB_file
 
     export CIB_file="-"
@@ -910,7 +964,7 @@ function test_tools() {
 
     desc="Check that CIB_file=\"-\" works - crm_resource"
     cmd="cat $test_home/cli/crm_resource_digests.xml | crm_resource --digests -r rsc1 -N node1 --output-as=xml"
-    test_assert $CRM_EX_OK 0
+    test_assert_validate $CRM_EX_OK 0
 
     desc="Check that CIB_file=\"-\" works - crmadmin"
     cmd="cat $test_home/cli/crmadmin-cluster-remote-guest-nodes.xml | crmadmin -N | wc -l | grep 11"
@@ -1708,6 +1762,12 @@ for t in $tests; do
             ;;
     esac
 done
+
+XMLLINT_CMD=$(which xmllint 2>/dev/null)
+if [ $? -ne 0 ]; then
+    XMLLINT_CMD=""
+    echo "xmllint is missing - install it to validate command output"
+fi
 
 # Check whether we're running from source directory
 SRCDIR=$(dirname $test_home)
