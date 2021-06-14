@@ -975,7 +975,8 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             // Print individual instance when non-probe action is pending
             print_full = TRUE;
 
-        } else if (partially_active == FALSE) {
+        } else if (partially_active == FALSE
+                   && pcmk_is_set(child_rsc->flags, pe_rsc_managed)) {
             // List stopped instances when requested (except orphans)
             if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {

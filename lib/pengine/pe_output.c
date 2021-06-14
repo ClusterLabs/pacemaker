@@ -2386,7 +2386,13 @@ resource_list(pcmk__output_t *out, va_list args)
         /* Skip resources that aren't at least partially active,
          * unless we're displaying inactive resources
          */
-        } else if (!partially_active && !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
+        /* Skip resources that aren't at least partially active, unless
+         * we're displaying inactive resources or the resource is on an
+         * unmanaged node.  The latter should be shown without having to
+         * request inactive resources.
+         */
+        } else if (pcmk_is_set(rsc->flags, pe_rsc_managed) && !partially_active &&
+                   !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
             continue;
 
         } else if (partially_active && !pe__rsc_running_on_any_node_in_list(rsc, only_node)) {

@@ -1147,7 +1147,8 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
                 pe_node_t *node = (pe_node_t *) gIter2->data;
                 GHashTable *node_table = NULL;
 
-                if (node->details->unclean == FALSE && node->details->online == FALSE) {
+                if (node->details->unclean == FALSE && node->details->online == FALSE &&
+                    pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                     continue;
                 }
 
