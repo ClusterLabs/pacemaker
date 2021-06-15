@@ -1779,6 +1779,8 @@ if [ -x "$SRCDIR/tools/crm_simulate" ]; then
         export PCMK_schema_directory="$SRCDIR/xml"
         echo "Using local schemas from: $PCMK_schema_directory"
     fi
+else
+    export PCMK_schema_directory=@CRM_SCHEMA_DIRECTORY@
 fi
 
 for t in $tests; do
