@@ -965,39 +965,18 @@ generate_resource_params(pe_resource_t *rsc, pe_node_t *node,
 
 bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 {
-    bool found = TRUE;
-    GList *hIter = NULL;
-    GList *hosts = NULL;
+    bool retval = false;
+    GList *lst = NULL;
 
-    if(rsc == NULL) {
-        return FALSE;
+    if (host != NULL) {
+        lst = g_list_prepend(lst, (gpointer) host);
+        retval = pe__rsc_running_on_any_node_in_list(rsc, lst);
+        g_list_free(lst);
+    } else {
+        retval = pe__rsc_running_on_any_node_in_list(rsc, NULL);
     }
 
-    rsc->fns->location(rsc, &hosts, TRUE);
-    for (hIter = hosts; host != NULL && hIter != NULL; hIter = hIter->next) {
-        pe_node_t *node = (pe_node_t *) hIter->data;
-
-        if(strcmp(host, node->details->uname) == 0) {
-            crm_trace("Resource %s is running on %s\n", rsc->id, host);
-            goto done;
-        } else if(strcmp(host, node->details->id) == 0) {
-            crm_trace("Resource %s is running on %s\n", rsc->id, host);
-            goto done;
-        }
-    }
-
-    if(host != NULL) {
-        crm_trace("Resource %s is not running on: %s\n", rsc->id, host);
-        found = FALSE;
-
-    } else if(host == NULL && hosts == NULL) {
-        crm_trace("Resource %s is not running\n", rsc->id);
-        found = FALSE;
-    }
-
-  done:
-    g_list_free(hosts);
-    return found;
+    return retval;
 }
 
 /*!

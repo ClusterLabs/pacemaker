@@ -2392,13 +2392,37 @@ pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
 bool
 pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list)
 {
-    for (GList *ele = rsc->running_on; ele; ele = ele->next) {
-        pe_node_t *node = (pe_node_t *) ele->data;
-        if (pcmk__str_in_list(node_list, node->details->uname)) {
+    GList *hosts = NULL;
+
+    if (rsc == NULL) {
+        return false;
+    }
+
+    rsc->fns->location(rsc, &hosts, TRUE);
+
+    for (GList *hIter = hosts; node_list != NULL && hIter != NULL; hIter = hIter->next) {
+        pe_node_t *node = (pe_node_t *) hIter->data;
+
+        if (pcmk__str_in_list(node_list, node->details->uname) ||
+            pcmk__str_in_list(node_list, node->details->id)) {
+            crm_trace("Resource %s is running on %s", rsc->id, node->details->uname);
+            g_list_free(hosts);
             return true;
         }
     }
 
+    if (hosts != NULL) {
+        /* We could have been given more than one node here, which makes
+         * logging all the nodes it's not running on more difficult.  Maybe
+         * just logging the first will cover most cases.
+         */
+        pe_node_t *node = (pe_node_t *) hosts->data;
+        crm_trace("Resource %s is not running on: %s", rsc->id, node->details->uname);
+    } else if (hosts == NULL && node_list == NULL) {
+        crm_trace("Resource %s is not running", rsc->id);
+    }
+
+    g_list_free(hosts);
     return false;
 }
 
