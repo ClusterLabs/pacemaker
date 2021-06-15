@@ -138,8 +138,28 @@ These limitations could be revisited if there is sufficient user demand.
 
 .. _fencing-attributes:
 
-Special Options for Fencing Resources
-#####################################
+Special Meta-Attributes for Fencing Resources
+#############################################
+
+The table below lists special resource meta-attributes that may be set for any
+fencing resource.
+
+.. table:: **Additional Properties of Fencing Resources**
+
+   +----------------------+---------+--------------------+----------------------------------------+
+   | Field                | Type    | Default            | Description                            |
+   +======================+=========+====================+========================================+
+   | provides             | string  |                    | .. index::                             |
+   |                      |         |                    |    single: provides                    |
+   |                      |         |                    |                                        |
+   |                      |         |                    | Any special capability provided by the |
+   |                      |         |                    | fence device. Currently, only one such |
+   |                      |         |                    | capability is meaningful:              |
+   |                      |         |                    | :ref:`unfencing <unfencing>`.          |
+   +----------------------+---------+--------------------+----------------------------------------+
+
+Special Instance Attributes for Fencing Resources
+#################################################
 
 The table below lists special instance attributes that may be set for any
 fencing resource (*not* meta-attributes, even though they are interpreted by
@@ -172,14 +192,6 @@ for ``pacemaker-fenced``.
    |                      |         |                    | replaced by the                        |
    |                      |         |                    | ``pcmk_reboot_timeout`` and            |
    |                      |         |                    | ``pcmk_off_timeout`` properties.       |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | provides             | string  |                    | .. index::                             |
-   |                      |         |                    |    single: provides                    |
-   |                      |         |                    |                                        |
-   |                      |         |                    | Any special capability provided by the |
-   |                      |         |                    | fence device. Currently, only one such |
-   |                      |         |                    | capability is meaningful:              |
-   |                      |         |                    | :ref:`unfencing <unfencing>`.          |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_host_map        | string  |                    | .. index::                             |
    |                      |         |                    |    single: pcmk_host_map               |
