@@ -2715,7 +2715,7 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
         GList *gIter = node->details->running_rsc;
         GList *all = NULL;
 
-        all = g_list_prepend(all, strdup("*"));
+        all = g_list_prepend(all, (gpointer) "*");
 
         crm_trace("\t\t===Node Attributes");
         g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
@@ -2730,6 +2730,6 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
                          pe_print_pending, rsc, all, all);
         }
 
-        g_list_free_full(all, free);
+        g_list_free(all);
     }
 }

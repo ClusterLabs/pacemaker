@@ -401,7 +401,7 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
     int rc = pcmk_rc_no_output;
     GList *all = NULL;
 
-    all = g_list_prepend(all, strdup("*"));
+    all = g_list_prepend(all, (gpointer) "*");
 
     rc = out->message(out, "node-list", data_set->nodes, all, all, show_opts);
     PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -418,7 +418,7 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
                      rc == pcmk_rc_ok);
     }
 
-    g_list_free_full(all, free);
+    g_list_free(all);
 }
 
 static char *
