@@ -904,6 +904,31 @@ xml2device_params(const char *name, xmlNode *dev)
     return params;
 }
 
+static const char *
+target_list_type(stonith_device_t * dev)
+{
+    const char *check_type = NULL;
+
+    check_type = g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK);
+
+    if (check_type == NULL) {
+
+        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST)) {
+            check_type = "static-list";
+        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
+            check_type = "static-list";
+        } else if (pcmk_is_set(dev->flags, st_device_supports_list)) {
+            check_type = "dynamic-list";
+        } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
+            check_type = "status";
+        } else {
+            check_type = "none";
+        }
+    }
+
+    return check_type;
+}
+
 static stonith_device_t *
 build_device_from_xml(xmlNode * msg)
 {
@@ -931,6 +956,12 @@ build_device_from_xml(xmlNode * msg)
     value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_MAP);
     device->aliases = build_port_aliases(value, &(device->targets));
 
+    value = target_list_type(device);
+    if (!pcmk__str_eq(value, "static-list", pcmk__str_casei) && device->targets) {
+        /* Other than "static-list", dev-> targets is unnecessary. */
+        g_list_free_full(device->targets, free);
+        device->targets = NULL;
+    }
     device->agent_metadata = get_agent_metadata(device->agent);
     if (device->agent_metadata) {
         read_action_metadata(device);
@@ -969,31 +1000,6 @@ build_device_from_xml(xmlNode * msg)
     /* TODO: Hook up priority */
 
     return device;
-}
-
-static const char *
-target_list_type(stonith_device_t * dev)
-{
-    const char *check_type = NULL;
-
-    check_type = g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK);
-
-    if (check_type == NULL) {
-
-        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST)) {
-            check_type = "static-list";
-        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
-            check_type = "static-list";
-        } else if (pcmk_is_set(dev->flags, st_device_supports_list)) {
-            check_type = "dynamic-list";
-        } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
-            check_type = "status";
-        } else {
-            check_type = "none";
-        }
-    }
-
-    return check_type;
 }
 
 static void
@@ -1099,11 +1105,18 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
 
     /* If we successfully got the targets earlier, don't disable. */
     if (rc != 0 && !dev->targets) {
-        crm_notice("Disabling port list queries for %s: %s "
+        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST) == NULL &&
+            g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP) == NULL) {
+            /*
+                If the old code is correct, it will be changed to "status" in the case of "dynamic-list" 
+                and if neither pcmk_host_list nor pcmk_host_map is specified.
+            */
+            crm_notice("Disabling port list queries for %s: %s "
                    CRM_XS " rc=%d", dev->id, output, rc);
-        /* Fall back to status */
-        g_hash_table_replace(dev->params,
+            /* Fall back to status */
+            g_hash_table_replace(dev->params,
                              strdup(PCMK_STONITH_HOST_CHECK), strdup("status"));
+        }
     } else if (!rc) {
         crm_info("Refreshing port list for %s", dev->id);
         g_list_free_full(dev->targets, free);
