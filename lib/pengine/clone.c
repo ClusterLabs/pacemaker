@@ -783,10 +783,10 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             GList *all = NULL;
 
             /* Print every resource that's a child of this clone. */
-            all = g_list_prepend(all, strdup("*"));
+            all = g_list_prepend(all, (gpointer) "*");
             out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, all);
-            g_list_free_full(all, free);
+            g_list_free(all);
         }
     }
 
@@ -1023,10 +1023,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             GList *all = NULL;
 
             /* Print every resource that's a child of this clone. */
-            all = g_list_prepend(all, strdup("*"));
+            all = g_list_prepend(all, (gpointer) "*");
             out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, all);
-            g_list_free_full(all, free);
+            g_list_free(all);
         }
     }
 
