@@ -509,6 +509,25 @@ If any cluster resource has ``requires`` set to ``unfencing``, then that
 resource will not be probed or started on a node until that node has been
 unfenced.
 
+Fencing and Quorum
+##################
+
+In general, a cluster partition may execute fencing only if the partition has
+quorum, and the ``stonith-enabled`` cluster property is set to true. However,
+there are exceptions:
+
+* The requirements apply only to fencing initiated by Pacemaker. If an
+  administrator initiates fencing using the ``stonith_admin`` command, or an
+  external application such as DLM initiates fencing using Pacemaker's C API,
+  the requirements do not apply.
+
+* A cluster partition without quorum is allowed to fence any active member of
+  that partition. As a corollary, this allows a ``no-quorum-policy`` of
+  ``suicide`` to work.
+
+* If the ``no-quorum-policy`` cluster property is set to ``ignore``, then
+  quorum is not required to execute fencing of any node.
+
 Fence Devices Dependent on Other Resources
 ##########################################
 
