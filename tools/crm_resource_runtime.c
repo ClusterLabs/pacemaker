@@ -1246,7 +1246,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
 }
 
 #define waiting_for_starts(d, r, h) ((d != NULL) || \
-                                    (resource_is_running_on((r), (h)) == FALSE))
+                                    (!resource_is_running_on((r), (h))))
 
 /*!
  * \internal
@@ -1285,7 +1285,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
     pe_working_set_t *data_set = NULL;
 
-    if(resource_is_running_on(rsc, host) == FALSE) {
+    if (!resource_is_running_on(rsc, host)) {
         const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
         if(host) {
             out->err(out, "%s is not running on %s and so cannot be restarted", id, host);
