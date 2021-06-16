@@ -1674,23 +1674,58 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
     return rc;
 }
 
+static const char *
+get_action(const char *rsc_action) {
+    const char *action = NULL;
+
+    if (pcmk__str_eq(rsc_action, "validate", pcmk__str_casei)) {
+        action = "validate-all";
+
+    } else if (pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
+        action = "monitor";
+
+    } else if (pcmk__strcase_any_of(rsc_action, "force-start", "force-stop",
+                                    "force-demote", "force-promote", NULL)) {
+        action = rsc_action+6;
+    } else {
+        action = rsc_action;
+    }
+
+    return action;
+}
+
 crm_exit_t
 cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
-                                 const char *rsc_type, const char *action,
+                                 const char *rsc_type, const char *rsc_action,
                                  GHashTable *params, GHashTable *override_hash,
                                  int timeout_ms, int resource_verbose, gboolean force,
                                  int check_level)
 {
+    const char *action = NULL;
     GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
     if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         out->err(out, "Sorry, the %s option doesn't support %s resources yet",
-                 action, rsc_class);
+                 rsc_action, rsc_class);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+    } else if (pcmk__strcase_any_of(rsc_class, PCMK_RESOURCE_CLASS_SYSTEMD,
+                PCMK_RESOURCE_CLASS_UPSTART, PCMK_RESOURCE_CLASS_NAGIOS, NULL)) {
+        out->err(out, "Sorry, the %s option doesn't support %s resources",
+                 rsc_action, rsc_class);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+    } else if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE,
+                pcmk__str_casei) && !pcmk__str_eq(
+                resources_find_service_class(rsc_name), PCMK_RESOURCE_CLASS_LSB,
+                pcmk__str_casei)) {
+        out->err(out, "Sorry, the %s option doesn't support %s resources",
+                 rsc_action, resources_find_service_class(rsc_name));
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
+
+    action = get_action(rsc_action);
 
     /* If no timeout was provided, grab the default. */
     if (timeout_ms == 0) {
@@ -1766,7 +1801,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         exit_code = op->rc;
 
         out->message(out, "resource-agent-action", resource_verbose, rsc_class,
-                     rsc_prov, rsc_type, rsc_name, action, override_hash, op->rc,
+                     rsc_prov, rsc_type, rsc_name, rsc_action, override_hash, op->rc,
                      op->status, op->stdout_data, op->stderr_data);
     } else {
         exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
@@ -1790,27 +1825,15 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
     const char *rtype = NULL;
     const char *rprov = NULL;
     const char *rclass = NULL;
-    const char *action = NULL;
     GHashTable *params = NULL;
 
-    if (pcmk__str_eq(rsc_action, "validate", pcmk__str_casei)) {
-        action = "validate-all";
-
-    } else if (pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
-        action = "monitor";
-
-    } else if (pcmk__str_eq(rsc_action, "force-stop", pcmk__str_casei)) {
-        action = rsc_action+6;
-
-    } else if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
+    if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {
-        action = rsc_action+6;
-
         if(pe_rsc_is_clone(rsc)) {
             GList *nodes = cli_resource_search(rsc, requested_name, data_set);
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
-                         action, rsc->id);
+                         rsc_action, rsc->id);
                 out->err(out, "Try setting target-role=Stopped first or specifying "
                          "the force option");
                 return CRM_EX_UNSAFE;
@@ -1818,9 +1841,6 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
             g_list_free_full(nodes, free);
         }
-
-    } else {
-        action = rsc_action;
     }
 
     if(pe_rsc_is_clone(rsc)) {
@@ -1830,6 +1850,9 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
     if(rsc->variant == pe_group) {
         out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
+        return CRM_EX_UNIMPLEMENT_FEATURE;
+    } else if (rsc->variant == pe_container || pe_rsc_is_bundled(rsc)) {
+        out->err(out, "Sorry, the %s option doesn't support bundled resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
@@ -1841,12 +1864,12 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                                       data_set);
 
     if (timeout_ms == 0) {
-        timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
+        timeout_ms = pe_get_configured_timeout(rsc, get_action(rsc_action), data_set);
     }
 
     rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
 
-    exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, action,
+    exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, rsc_action,
                                                  params, override_hash, timeout_ms,
                                                  resource_verbose, force, check_level);
     return exit_code;
