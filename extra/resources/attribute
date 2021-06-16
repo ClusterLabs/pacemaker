@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:attribute resource agent
 #
-# Copyright 2016-2019 the Pacemaker project contributors
+# Copyright 2016-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -58,8 +58,8 @@ meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="attribute" version="1.0">
-  <version>1.0</version>
+<resource-agent name="attribute" version="1.1">
+  <version>1.1</version>
   <shortdesc lang="en">Manages a node attribute</shortdesc>
   <longdesc lang="en">
 This resource agent controls a node attribute for the node it's running on.
@@ -68,7 +68,7 @@ according to the configuration parameters.
   </longdesc>
   <parameters>
 
-    <parameter name="state" unique="1">
+    <parameter name="state" unique-group="state">
       <longdesc lang="en">
 Full path of a temporary file to store the resource state in
       </longdesc>
@@ -76,7 +76,7 @@ Full path of a temporary file to store the resource state in
       <content type="string" default="${DEFAULT_STATE_FILE}" />
     </parameter>
 
-    <parameter name="name" unique="0">
+    <parameter name="name" unique-group="name">
       <longdesc lang="en">
 Name of node attribute to manage
       </longdesc>
@@ -84,7 +84,7 @@ Name of node attribute to manage
       <content type="string" default="${DEFAULT_ATTR_NAME}" />
     </parameter>
 
-    <parameter name="active_value" unique="0">
+    <parameter name="active_value">
       <longdesc lang="en">
 Value to use for node attribute when resource becomes active (empty string is
 discouraged, because monitor cannot distinguish it from a query error)
@@ -93,7 +93,7 @@ discouraged, because monitor cannot distinguish it from a query error)
       <content type="string" default="$DEFAULT_ACTIVE_VALUE" />
     </parameter>
 
-    <parameter name="inactive_value" unique="0">
+    <parameter name="inactive_value">
       <longdesc lang="en">
 Value to use for node attribute when resource becomes inactive
       </longdesc>
@@ -118,27 +118,26 @@ END
 }
 
 validate() {
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        VALIDATE_DIR=$(dirname "${OCF_RESKEY_state}")
+
+        if [ ! -d "$VALIDATE_DIR" ]; then
+        ocf_exit_reason "state file '$OCF_RESKEY_state' does not have a valid directory"
+        return $OCF_ERR_PERM
+        fi
+
+        if [ ! -w "$VALIDATE_DIR" ] || [ ! -x "$VALIDATE_DIR" ]; then
+        ocf_exit_reason "insufficient privileges on directory of state file '$OCF_RESKEY_state'"
+        return $OCF_ERR_PERM
+        fi
+    fi
+
     if [ "$OCF_RESKEY_active_value" = "$OCF_RESKEY_inactive_value" ]; then
         ocf_exit_reason "active value '%s' must be different from inactive value '%s'" \
             "$OCF_RESKEY_active_value" "$OCF_RESKEY_inactive_value"
         return $OCF_ERR_CONFIGURED
     fi
-
-    # Don't check host-specific issues -- validate can be run from e.g. a GUI
-    # manager host that isn't necessarily a node where the resource can run.
-    #
-    # @TODO The OCF standard should be extended so OCF_CHECK_LEVEL applies to
-    # validate, then this can be checked for higher levels.
-
-    #VALIDATE_DIR=$(dirname "${OCF_RESKEY_state}")
-    #if [ ! -d "$VALIDATE_DIR" ]; then
-    #    ocf_exit_reason "state file '$OCF_RESKEY_state' does not have a valid directory"
-    #    return $OCF_ERR_PERM
-    #fi
-    #if [ ! -w "$VALIDATE_DIR" ] || [ ! -x "$VALIDATE_DIR" ]; then
-    #    ocf_exit_reason "insufficient privileges on directory of state file '$OCF_RESKEY_state'"
-    #    return $OCF_ERR_PERM
-    #fi
 
     return $OCF_SUCCESS
 }
