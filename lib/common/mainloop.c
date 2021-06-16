@@ -13,6 +13,11 @@
 #  define _GNU_SOURCE
 #endif
 
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
@@ -1074,11 +1079,98 @@ child_free(mainloop_child_t *child)
     free(child);
 }
 
+#if SUPPORT_PROCFS
+static void
+close_all_fds(void)
+{
+    DIR *dirp;
+    struct dirent *dent;
+    int fd;
+
+    if ( (dirp = opendir("/proc/self/fd")) != NULL) {
+        while ((dent = readdir(dirp)) != NULL) {
+            if (dent->d_name[0] != '.') {
+                fd = atol(dent->d_name);
+                if (fd >= 0 && fd < INT_MAX && fd != dirfd(dirp))
+                    close(fd);
+            }
+        }
+        closedir(dirp);
+    }
+}
+#endif
+
+/* fork/exec an external resource agent debug script (if so configured) just prior to the
+   agent process group hierarchy being timed out.  Env-var PCMK_timedoutRA should be a path
+   to an executable programme/script.
+*/
+
+static void
+child_external_debug(mainloop_child_t *child)
+{
+    char *ep;
+    pid_t ced_pid, pid_rc;
+    int err, wstatus;
+    char pidstr[20];
+
+    if ( (ep = getenv("PCMK_timedoutRA")) != NULL) {
+
+       crm_debug("TimedoutRA_debug: PCMK_timedoutRA = %s", ep);
+
+        if ( !access(ep, X_OK) ) {
+
+            crm_debug("TimedoutRA_debug: Attempting to run debug executable %s before timing out PID %d", ep, (int)child->pid);
+
+            ced_pid = fork();
+            if ( ced_pid < 0 ) {
+                err = errno;
+
+                crm_warn("TimedoutRA_debug: Could not fork %s: %s (errno %d)", ep, pcmk_strerror(err), err);
+             } else if ( ced_pid == 0 ) {
+                // child
+#if SUPPORT_PROCFS
+                 close_all_fds();
+#else
+                int c;
+                for (c = 0; c < sysconf(_SC_OPEN_MAX); c++)
+                     close(c);
+#endif
+
+                snprintf(pidstr, 20, "%d", (int)child->pid);
+                execl(ep, ep, pidstr, (char *)NULL);
+
+            } else {
+                // parent
+                pid_rc = waitpid(ced_pid, &wstatus, 0);
+                if (pid_rc < 0 ) {
+                    err = errno;
+                    crm_warn("TimedoutRA_debug: waitpid(PID %d) error: %s (errno %d)", ced_pid, pcmk_strerror(err), err);
+
+                } else if (pid_rc != ced_pid )
+                     crm_warn("TimedoutRA_debug: waitpid(PID %d) returned pid %d", ced_pid, pid_rc);
+                else
+                     crm_debug("TimedoutRA_debug:  waitpid(PID %d) returned wstatus=%d", ced_pid, wstatus);
+
+             }
+        } else {
+            err = errno;
+            crm_warn("TimedoutRA_debug: access() check of %s returns error: %s (errno %d)", ep, pcmk_strerror(err), err);
+         }
+    }
+    else
+       crm_debug("TimedoutRA_debug: PCMK_timedoutRA is unset");
+
+}
+
+
 /* terrible function name */
 static int
 child_kill_helper(mainloop_child_t *child)
 {
     int rc;
+
+    child_external_debug(child);
+
     if (child->flags & mainloop_leave_pid_group) {
         crm_debug("Kill pid %d only. leave group intact.", child->pid);
         rc = kill(child->pid, SIGKILL);
