@@ -1104,9 +1104,6 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         /* Fall back to status */
         g_hash_table_replace(dev->params,
                              strdup(PCMK_STONITH_HOST_CHECK), strdup("status"));
-
-        g_list_free_full(dev->targets, free);
-        dev->targets = NULL;
     } else if (!rc) {
         crm_info("Refreshing port list for %s", dev->id);
         g_list_free_full(dev->targets, free);
