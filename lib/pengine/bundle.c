@@ -1492,7 +1492,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc->id);
+    print_everything = pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1614,7 +1614,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc->id);
+    print_everything = pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -1742,7 +1742,7 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc->id);
+    print_everything = pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none);
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
@@ -2044,7 +2044,7 @@ pe__bundle_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_paren
     gboolean passes = FALSE;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc))) {
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none)) {
         passes = TRUE;
     } else {
         get_bundle_variant_data(bundle_data, rsc);

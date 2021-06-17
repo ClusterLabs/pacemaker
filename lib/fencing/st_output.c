@@ -47,7 +47,7 @@ stonith__failed_history(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, hp->target)) {
+        if (!pcmk__str_in_list(only_node, hp->target, pcmk__str_none)) {
             continue;
         }
 
@@ -72,7 +72,7 @@ stonith__history(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     for (stonith_history_t *hp = history; hp; hp = hp->next) {
-        if (!pcmk__str_in_list(only_node, hp->target)) {
+        if (!pcmk__str_in_list(only_node, hp->target, pcmk__str_none)) {
             continue;
         }
 
@@ -101,7 +101,7 @@ stonith__full_history(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     for (stonith_history_t *hp = history; hp; hp = hp->next) {
-        if (!pcmk__str_in_list(only_node, hp->target)) {
+        if (!pcmk__str_in_list(only_node, hp->target, pcmk__str_none)) {
             continue;
         }
 
@@ -129,7 +129,7 @@ full_history_xml(pcmk__output_t *out, va_list args) {
 
     if (history_rc == 0) {
         for (stonith_history_t *hp = history; hp; hp = hp->next) {
-            if (!pcmk__str_in_list(only_node, hp->target)) {
+            if (!pcmk__str_in_list(only_node, hp->target, pcmk__str_none)) {
                 continue;
             }
 
@@ -218,7 +218,7 @@ stonith__pending_actions(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     for (stonith_history_t *hp = history; hp; hp = hp->next) {
-        if (!pcmk__str_in_list(only_node, hp->target)) {
+        if (!pcmk__str_in_list(only_node, hp->target, pcmk__str_none)) {
             continue;
         }
 
