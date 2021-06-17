@@ -2390,7 +2390,7 @@ pe__clear_resource_history(pe_resource_t *rsc, pe_node_t *node,
 }
 
 bool
-pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list)
+pe__rsc_running_on_any(pe_resource_t *rsc, GList *node_list)
 {
     GList *hosts = NULL;
 
@@ -2429,7 +2429,7 @@ pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list)
 bool
 pcmk__rsc_filtered_by_node(pe_resource_t *rsc, GList *only_node)
 {
-    return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any_node_in_list(rsc, only_node));
+    return (rsc->fns->active(rsc, FALSE) && !pe__rsc_running_on_any(rsc, only_node));
 }
 
 GList *

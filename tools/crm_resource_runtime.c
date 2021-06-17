@@ -970,10 +970,10 @@ bool resource_is_running_on(pe_resource_t *rsc, const char *host)
 
     if (host != NULL) {
         lst = g_list_prepend(lst, (gpointer) host);
-        retval = pe__rsc_running_on_any_node_in_list(rsc, lst);
+        retval = pe__rsc_running_on_any(rsc, lst);
         g_list_free(lst);
     } else {
-        retval = pe__rsc_running_on_any_node_in_list(rsc, NULL);
+        retval = pe__rsc_running_on_any(rsc, NULL);
     }
 
     return retval;

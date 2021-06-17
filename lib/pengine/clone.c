@@ -886,7 +886,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
 
                 node_list = g_list_prepend(node_list, (gpointer) node->details->uname);
 
-                if (!pe__rsc_running_on_any_node_in_list(rsc, node_list) &&
+                if (!pe__rsc_running_on_any(rsc, node_list) &&
                     pcmk__str_in_list(only_node, node->details->uname, true)) {
                     pcmk__add_word(&stopped_list, &stopped_list_len,
                                    node->details->uname);
@@ -1127,7 +1127,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
 
                 node_list = g_list_prepend(node_list, (gpointer) node->details->uname);
 
-                if (!pe__rsc_running_on_any_node_in_list(rsc, node_list) &&
+                if (!pe__rsc_running_on_any(rsc, node_list) &&
                     pcmk__str_in_list(only_node, node->details->uname, true)) {
                     pcmk__add_word(&stopped_list, &stopped_list_len,
                                    node->details->uname);
