@@ -882,12 +882,17 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             list = g_list_sort(list, sort_node_uname);
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pe_node_t *node = (pe_node_t *)nIter->data;
+                GList *node_list = NULL;
 
-                if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
+                node_list = g_list_prepend(node_list, (gpointer) node->details->uname);
+
+                if (!pe__rsc_running_on_any_node_in_list(rsc, node_list) &&
                     pcmk__str_in_list(only_node, node->details->uname)) {
                     pcmk__add_word(&stopped_list, &stopped_list_len,
                                    node->details->uname);
                 }
+
+                g_list_free(node_list);
             }
             g_list_free(list);
         }
@@ -1118,12 +1123,17 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             list = g_list_sort(list, sort_node_uname);
             for (nIter = list; nIter != NULL; nIter = nIter->next) {
                 pe_node_t *node = (pe_node_t *)nIter->data;
+                GList *node_list = NULL;
 
-                if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
+                node_list = g_list_prepend(node_list, (gpointer) node->details->uname);
+
+                if (!pe__rsc_running_on_any_node_in_list(rsc, node_list) &&
                     pcmk__str_in_list(only_node, node->details->uname)) {
                     pcmk__add_word(&stopped_list, &stopped_list_len,
                                    node->details->uname);
                 }
+
+                g_list_free(node_list);
             }
             g_list_free(list);
         }
