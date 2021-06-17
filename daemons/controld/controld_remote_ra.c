@@ -192,6 +192,9 @@ remote_node_up(const char *node_name)
     if (controld_shutdown_lock_enabled) {
         section = controld_section_all_unlocked;
     }
+    /* Purge node from attrd's memory */
+    update_attrd_remote_node_removed(node_name, NULL);
+
     controld_delete_node_state(node_name, section, call_opt);
 
     /* Clear node's probed attribute */
@@ -1086,7 +1089,7 @@ handle_dup:
         recurring_helper(cmd);
     }
 
-    return cmd;  
+    return cmd;
 }
 
 int
