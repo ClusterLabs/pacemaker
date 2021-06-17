@@ -2403,8 +2403,8 @@ pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list)
     for (GList *hIter = hosts; node_list != NULL && hIter != NULL; hIter = hIter->next) {
         pe_node_t *node = (pe_node_t *) hIter->data;
 
-        if (pcmk__str_in_list(node_list, node->details->uname) ||
-            pcmk__str_in_list(node_list, node->details->id)) {
+        if (pcmk__str_in_list(node_list, node->details->uname, true) ||
+            pcmk__str_in_list(node_list, node->details->id, true)) {
             crm_trace("Resource %s is running on %s", rsc->id, node->details->uname);
             g_list_free(hosts);
             return true;
@@ -2443,8 +2443,8 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
         /* I think the second condition is safe here for all callers of this
          * function.  If not, it needs to move into pe__node_text.
          */
-        if (pcmk__str_in_list(filter, rsc_printable_id(rsc)) ||
-            (rsc->parent && pcmk__str_in_list(filter, rsc_printable_id(rsc->parent)))) {
+        if (pcmk__str_in_list(filter, rsc_printable_id(rsc), false) ||
+            (rsc->parent && pcmk__str_in_list(filter, rsc_printable_id(rsc->parent), false))) {
             retval = g_list_prepend(retval, rsc);
         }
     }

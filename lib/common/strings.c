@@ -872,13 +872,14 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
  * Search \p lst for \p s, taking case into account.  As a special case,
  * if "*" is the only element of \p lst, the search is successful.
  *
- * \param[in]  lst  List to search
- * \param[in]  s    String to search for
+ * \param[in]  lst   List to search
+ * \param[in]  s     String to search for
+ * \param[in]  casei Do the comparison without considering case?
  *
  * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
  */
 gboolean
-pcmk__str_in_list(GList *lst, const gchar *s)
+pcmk__str_in_list(GList *lst, const gchar *s, bool casei)
 {
     if (lst == NULL) {
         return FALSE;
@@ -888,7 +889,8 @@ pcmk__str_in_list(GList *lst, const gchar *s)
         return TRUE;
     }
 
-    return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
+    return g_list_find_custom(lst, s, casei ? (GCompareFunc) strcasecmp
+                                            : (GCompareFunc) strcmp) != NULL;
 }
 
 static bool

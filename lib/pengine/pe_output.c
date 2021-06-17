@@ -670,8 +670,8 @@ ban_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh)) &&
-            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)))) {
+        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh), false) &&
+            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)), false)) {
             continue;
         }
 
@@ -1247,7 +1247,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
          xml_op = pcmk__xml_next(xml_op)) {
         char *rsc = NULL;
 
-        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME))) {
+        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME), true)) {
             continue;
         }
 
@@ -1256,7 +1256,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc)) {
+        if (!pcmk__str_in_list(only_rsc, rsc, false)) {
             free(rsc);
             continue;
         }
@@ -1703,7 +1703,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, true)) {
             continue;
         }
 
@@ -1802,8 +1802,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
          * For other resource types, is_filtered is okay.
          */
         if (uber_parent(rsc)->variant == pe_group) {
-            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) &&
-                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
+            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), false) &&
+                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)), false)) {
                 continue;
             }
         } else {
@@ -1864,7 +1864,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, true)) {
             continue;
         }
 
@@ -1905,7 +1905,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
         const char *node_mode = NULL;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, true)) {
             free(node_name);
             continue;
         }
@@ -2024,7 +2024,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, true)) {
             continue;
         }
 
@@ -2062,7 +2062,7 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, true)) {
             continue;
         }
 

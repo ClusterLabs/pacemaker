@@ -1338,8 +1338,8 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int show_op
 gboolean
 pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
-    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
-        pcmk__str_in_list(only_rsc, rsc->id)) {
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), false) ||
+        pcmk__str_in_list(only_rsc, rsc->id, false)) {
         return FALSE;
     } else if (check_parent) {
         pe_resource_t *up = uber_parent(rsc);
