@@ -2424,7 +2424,7 @@ resource_list(pcmk__output_t *out, va_list args)
         } else if (!partially_active && !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
             continue;
 
-        } else if (partially_active && !pe__rsc_running_on_any_node_in_list(rsc, only_node)) {
+        } else if (partially_active && !pe__rsc_running_on_any(rsc, only_node)) {
             continue;
         }
 
