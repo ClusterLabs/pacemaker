@@ -230,13 +230,14 @@ _____________
    |                   |                 | If **true**, each clone instance performs a           |
    |                   |                 | distinct function                                     |
    +-------------------+-----------------+-------------------------------------------------------+
-   | clone-max         | number of nodes | .. index::                                            |
-   |                   | in the cluster  |    single: clone; option, clone-max                   |
+   | clone-max         | 0               | .. index::                                            |
+   |                   |                 |    single: clone; option, clone-max                   |
    |                   |                 |    single: option; clone-max (clone)                  |
    |                   |                 |    single: clone-max; clone option                    |
    |                   |                 |                                                       |
    |                   |                 | The maximum number of clone instances that can        |
-   |                   |                 | be started across the entire cluster                  |
+   |                   |                 | be started across the entire cluster. If 0, the       |
+   |                   |                 | number of nodes in the cluster will be used.          |
    +-------------------+-----------------+-------------------------------------------------------+
    | clone-node-max    | 1               | .. index::                                            |
    |                   |                 |    single: clone; option, clone-node-max              |
