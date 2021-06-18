@@ -67,6 +67,9 @@
                 <ref name="node-attributes-list" />
             </optional>
             <optional>
+                <externalRef href="node-history-2.12.rng" />
+            </optional>
+            <optional>
                 <ref name="failures-list" />
             </optional>
         </element>
