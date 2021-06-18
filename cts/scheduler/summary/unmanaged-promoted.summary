@@ -5,9 +5,10 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: Fencing [FencingChild] (unmanaged):
+      * FencingChild	(stonith:fence_xvm):	 Started pcmk-3 (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Started pcmk-4 (unmanaged)
       * FencingChild	(stonith:fence_xvm):	 Started pcmk-2 (unmanaged)
       * FencingChild	(stonith:fence_xvm):	 Started pcmk-1 (unmanaged)
-      * Stopped: [ pcmk-3 pcmk-4 ]
     * Resource Group: group-1 (unmanaged):
       * r192.168.122.126	(ocf:heartbeat:IPaddr):	 Started pcmk-2 (unmanaged)
       * r192.168.122.127	(ocf:heartbeat:IPaddr):	 Started pcmk-2 (unmanaged)
@@ -19,13 +20,15 @@ Current cluster status:
     * lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started pcmk-2 (unmanaged)
     * migrator	(ocf:pacemaker:Dummy):	 Started pcmk-4 (unmanaged)
     * Clone Set: Connectivity [ping-1] (unmanaged):
+      * ping-1	(ocf:pacemaker:ping):	 Started pcmk-3 (unmanaged)
+      * ping-1	(ocf:pacemaker:ping):	 Started pcmk-4 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-2 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-1 (unmanaged)
-      * Stopped: [ pcmk-3 pcmk-4 ]
     * Clone Set: master-1 [stateful-1] (promotable) (unmanaged):
+      * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-3 (unmanaged)
+      * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-4 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Promoted pcmk-2 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-1 (unmanaged)
-      * Stopped: [ pcmk-3 pcmk-4 ]
 
 Transition Summary:
 
@@ -40,9 +43,10 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: Fencing [FencingChild] (unmanaged):
+      * FencingChild	(stonith:fence_xvm):	 Started pcmk-3 (unmanaged)
+      * FencingChild	(stonith:fence_xvm):	 Started pcmk-4 (unmanaged)
       * FencingChild	(stonith:fence_xvm):	 Started pcmk-2 (unmanaged)
       * FencingChild	(stonith:fence_xvm):	 Started pcmk-1 (unmanaged)
-      * Stopped: [ pcmk-3 pcmk-4 ]
     * Resource Group: group-1 (unmanaged):
       * r192.168.122.126	(ocf:heartbeat:IPaddr):	 Started pcmk-2 (unmanaged)
       * r192.168.122.127	(ocf:heartbeat:IPaddr):	 Started pcmk-2 (unmanaged)
@@ -54,10 +58,12 @@ Revised Cluster Status:
     * lsb-dummy	(lsb:/usr/share/pacemaker/tests/cts/LSBDummy):	 Started pcmk-2 (unmanaged)
     * migrator	(ocf:pacemaker:Dummy):	 Started pcmk-4 (unmanaged)
     * Clone Set: Connectivity [ping-1] (unmanaged):
+      * ping-1	(ocf:pacemaker:ping):	 Started pcmk-3 (unmanaged)
+      * ping-1	(ocf:pacemaker:ping):	 Started pcmk-4 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-2 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-1 (unmanaged)
-      * Stopped: [ pcmk-3 pcmk-4 ]
     * Clone Set: master-1 [stateful-1] (promotable) (unmanaged):
+      * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-3 (unmanaged)
+      * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-4 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Promoted pcmk-2 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-1 (unmanaged)
-      * Stopped: [ pcmk-3 pcmk-4 ]

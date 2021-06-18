@@ -8,6 +8,7 @@ Current cluster status:
     * container2	(ocf:heartbeat:VirtualDomain):	 Started 18node2
     * shoot1	(stonith:fence_xvm):	 Started 18node3
     * Clone Set: M-clone [M]:
+      * M	(ocf:pacemaker:Dummy):	 FAILED lxc1
       * Started: [ 18node1 18node2 18node3 lxc2 ]
     * A	(ocf:pacemaker:Dummy):	 Started 18node1
     * B	(ocf:pacemaker:Dummy):	 FAILED lxc1

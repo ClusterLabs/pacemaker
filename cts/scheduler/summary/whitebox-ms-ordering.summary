@@ -7,17 +7,18 @@ Current cluster status:
     * container1	(ocf:heartbeat:VirtualDomain):	 FAILED
     * container2	(ocf:heartbeat:VirtualDomain):	 FAILED
     * Clone Set: lxc-ms-master [lxc-ms] (promotable):
+      * lxc-ms	(ocf:pacemaker:Stateful):	 FAILED lxc2
       * Stopped: [ 18node1 18node2 18node3 ]
 
 Transition Summary:
   * Fence (reboot) lxc2 (resource: container2) 'guest is unclean'
   * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
-  * Start      container1     (     18node1 )
-  * Start      container2     (     18node1 )
-  * Recover    lxc-ms:0       ( Promoted lxc1 )
-  * Recover    lxc-ms:1       (  Unpromoted lxc2 )
-  * Start      lxc1           (     18node1 )
-  * Start      lxc2           (     18node1 )
+  * Start      container1     (         18node1 )
+  * Start      container2     (         18node1 )
+  * Recover    lxc-ms:0       (   Promoted lxc1 )
+  * Recover    lxc-ms:1       ( Unpromoted lxc2 )
+  * Start      lxc1           (         18node1 )
+  * Start      lxc2           (         18node1 )
 
 Executing Cluster Transition:
   * Resource action: container1      monitor on 18node3
