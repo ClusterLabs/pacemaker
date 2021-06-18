@@ -736,8 +736,10 @@ pe__clone_html(pcmk__output_t *out, va_list args)
             print_full = TRUE;
 
         } else if (partially_active == FALSE) {
+            if (child_rsc->role == RSC_ROLE_STARTED) {
+                print_full = TRUE;
             // List stopped instances when requested (except orphans)
-            if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
+            } else if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
                 pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
             }
@@ -981,8 +983,10 @@ pe__clone_text(pcmk__output_t *out, va_list args)
             print_full = TRUE;
 
         } else if (partially_active == FALSE) {
+            if (child_rsc->role == RSC_ROLE_STARTED) {
+                print_full = TRUE;
             // List stopped instances when requested (except orphans)
-            if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
+            } else if (!pcmk_is_set(child_rsc->flags, pe_rsc_orphan)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
                 pcmk__add_word(&stopped_list, &stopped_list_len, child_rsc->id);
             }
