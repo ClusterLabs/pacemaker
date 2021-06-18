@@ -92,6 +92,17 @@ that the cluster can use to fence nodes. As with other resource agent classes,
 this allows a layer of abstraction so that Pacemaker doesn't need any knowledge
 about specific fencing technologies -- that knowledge is isolated in the agent.
 
+Pacemaker supports two fence agent standards, both inherited from
+no-longer-active projects:
+
+* Red Hat Cluster Suite (RHCS) style: These are typically installed in
+  ``/usr/sbin`` with names starting with ``fence_``.
+
+* Linux-HA style: These typically have names starting with ``external/``.
+  Pacemaker can support these agents using the **fence_legacy** RHCS-style
+  agent as a wrapper, *if* support was enabled when Pacemaker was built, which
+  requires the ``cluster-glue`` library.
+
 When a Fence Device Can Be Used
 ###############################
 
@@ -185,13 +196,11 @@ for ``pacemaker-fenced``.
    | stonith-timeout      | time    |                    | .. index::                             |
    |                      |         |                    |    single: stonith-timeout             |
    |                      |         |                    |                                        |
-   |                      |         |                    | Older versions used this to override   |
-   |                      |         |                    | the default period to wait for a fence |
-   |                      |         |                    | action (reboot, on, or off) to         |
-   |                      |         |                    | complete for this device. It has been  |
-   |                      |         |                    | replaced by the                        |
-   |                      |         |                    | ``pcmk_reboot_timeout`` and            |
-   |                      |         |                    | ``pcmk_off_timeout`` properties.       |
+   |                      |         |                    | This is not used by Pacemaker (see the |
+   |                      |         |                    | ``pcmk_reboot_timeout``,               |
+   |                      |         |                    | ``pcmk_off_timeout``, etc. properties  |
+   |                      |         |                    | instead), but it may be used by        |
+   |                      |         |                    | Linux-HA fence agents.                 |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_host_map        | string  |                    | .. index::                             |
    |                      |         |                    |    single: pcmk_host_map               |
