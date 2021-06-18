@@ -1021,10 +1021,10 @@ ways:
    
 .. _s-resource-bundle:
 
-Bundles - Isolated Environments
-###############################
+Bundles - Containerized Resources
+#################################
 
-Pacemaker supports a special syntax for launching a
+Pacemaker supports a special syntax for launching a service inside a
 `container <https://en.wikipedia.org/wiki/Operating-system-level_virtualization>`_
 with any infrastructure it requires: the *bundle*.
    
