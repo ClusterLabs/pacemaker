@@ -226,29 +226,22 @@ for ``pacemaker-fenced``.
    |                      |         |                    | either this or ``pcmk_host_map`` must  |
    |                      |         |                    | be set.                                |
    +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_host_check      | string  | The default is     | .. index::                             |
-   |                      |         | ``static-list`` if |    single: pcmk_host_check             |
-   |                      |         | either             |                                        |
-   |                      |         | ``pcmk_host_list`` | How to determine which machines are    |
-   |                      |         | or                 | controlled by the device. Allowed      |
-   |                      |         | ``pcmk_host_map``  | values:                                |
-   |                      |         | is configured. If  |                                        |
-   |                      |         | neither of those   | * ``dynamic-list:`` query the device   |
-   |                      |         | are configured,    |   via the agent's ``list`` action      |
-   |                      |         | the default is     | * ``static-list:`` check the           |
-   |                      |         | ``dynamic-list``   |   ``pcmk_host_list`` or                |
-   |                      |         | if the fence       |   ``pcmk_host_map`` attribute          |
-   |                      |         | device supports    | * ``status:`` query the device via the |
-   |                      |         | the list action,   |   "status" command                     |
-   |                      |         | or ``status`` if   | * ``none:`` assume the device can      |
-   |                      |         | the fence device   |   fence any node                       |
-   |                      |         | supports the       |                                        |
-   |                      |         | status action but  |                                        |
-   |                      |         | not the list       |                                        |
-   |                      |         | action. If none of |                                        |
-   |                      |         | those conditions   |                                        |
-   |                      |         | apply, the default |                                        |
-   |                      |         | is ``none``.       |                                        |
+   | pcmk_host_check      | string  | Value appropriate  | .. index::                             |
+   |                      |         | to other           |    single: pcmk_host_check             |
+   |                      |         | parameters (see    |                                        |
+   |                      |         | "Default Check     | The method Pacemaker should use to     |
+   |                      |         | Type" below)       | determine which nodes can be targeted  |
+   |                      |         |                    | by this device. Allowed values:        |
+   |                      |         |                    |                                        |
+   |                      |         |                    | * ``static-list:`` targets are listed  |
+   |                      |         |                    |   in the ``pcmk_host_list`` or         |
+   |                      |         |                    |   ``pcmk_host_map`` attribute          |
+   |                      |         |                    | * ``dynamic-list:`` query the device   |
+   |                      |         |                    |   via the agent's ``list`` action      |
+   |                      |         |                    | * ``status:`` query the device via the |
+   |                      |         |                    |   agent's ``status`` action            |
+   |                      |         |                    | * ``none:`` assume the device can      |
+   |                      |         |                    |   fence any node                       |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_delay_max       | time    | 0s                 | .. index::                             |
    |                      |         |                    |    single: pcmk_delay_max              |
@@ -494,6 +487,21 @@ for ``pacemaker-fenced``.
    |                      |         |                    | option to alter the number of times    |
    |                      |         |                    | Pacemaker retries before giving up.    |
    +----------------------+---------+--------------------+----------------------------------------+
+
+Default Check Type
+##################
+
+If the user does not explicitly configure ``pcmk_host_check`` for a fence
+device, a default value appropriate to other configured parameters will be
+used:
+
+* If either ``pcmk_host_list`` or ``pcmk_host_map`` is configured,
+  ``static-list`` will be used;
+* otherwise, if the fence device supports the ``list`` action, and the first
+  attempt at using ``list`` succeeds, ``dynamic-list`` will be used;
+* otherwise, if the fence device supports the ``status`` action, ``status``
+  will be used;
+* otherwise, ``none`` will be used.
 
 .. index::
    single: unfencing
