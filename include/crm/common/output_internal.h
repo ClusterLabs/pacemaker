@@ -27,7 +27,7 @@ extern "C" {
 #  include <glib.h>
 #  include <crm/common/results.h>
 
-#  define PCMK__API_VERSION "2.11"
+#  define PCMK__API_VERSION "2.12"
 
 #if defined(PCMK__WITH_ATTRIBUTE_OUTPUT_ARGS)
 #  define PCMK__OUTPUT_ARGS(ARGS...) __attribute__((output_args(ARGS)))

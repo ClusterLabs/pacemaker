@@ -409,11 +409,14 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
                       FALSE, all, all, FALSE);
 
     if (options.show_attrs) {
-        out->message(out, "node-attribute-list", data_set,
-                     0, rc == pcmk_rc_ok, all, all);
+        rc = out->message(out, "node-attribute-list", data_set,
+                          0, rc == pcmk_rc_ok, all, all);
     }
 
     if (options.show_failcounts) {
+        rc = out->message(out, "node-summary", data_set, all, all,
+                          0, show_opts, rc == pcmk_rc_ok);
+
         out->message(out, "failed-action-list", data_set, all, all,
                      rc == pcmk_rc_ok);
     }

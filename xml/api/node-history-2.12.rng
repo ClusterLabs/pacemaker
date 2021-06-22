@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="node-history-list" />
+    </start>
+
+    <define name="node-history-list">
+        <element name="node_history">
+            <zeroOrMore>
+                <ref name="element-node-history" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-node-history">
+        <element name="node">
+            <attribute name="name"> <text /> </attribute>
+            <zeroOrMore>
+                <ref name="element-resource-history" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-resource-history">
+        <element name="resource_history">
+            <attribute name="id"> <text /> </attribute>
+            <attribute name="orphan"> <data type="boolean" /> </attribute>
+            <optional>
+                <group>
+                    <attribute name="migration-threshold"> <data type="nonNegativeInteger" /> </attribute>
+                    <optional>
+                        <attribute name="fail-count"> <text /> </attribute>
+                    </optional>
+                    <optional>
+                        <attribute name="last-failure"> <text /> </attribute>
+                    </optional>
+                </group>
+            </optional>
+            <zeroOrMore>
+                <ref name="element-operation-history" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-operation-history">
+        <element name="operation_history">
+            <attribute name="call"> <text /> </attribute>
+            <attribute name="task"> <text /> </attribute>
+            <optional>
+                <attribute name="interval"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="last-rc-change"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="last-run"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="exec-time"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="queue-time"> <text /> </attribute>
+            </optional>
+            <attribute name="rc"> <data type="integer" /> </attribute>
+            <attribute name="rc_text"> <text /> </attribute>
+        </element>
+    </define>
+</grammar>
