@@ -1,7 +1,7 @@
 """ Main classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -310,28 +310,11 @@ class ClusterManager(UserDict):
         '''Return list of errors which are 'normal' for a specific test instance'''
         return self.__instance_errorstoignore
 
-    def errorstoignore(self):
-        '''Return list of errors which are 'normal' and should be ignored'''
-        return []
-
     def log(self, args):
         self.logger.log(args)
 
     def debug(self, args):
         self.logger.debug(args)
-
-    def prepare(self):
-        '''Finish the Initialization process. Prepare to test...'''
-
-        print(repr(self)+"prepare")
-        for node in self.Env["nodes"]:
-            if self.StataCM(node):
-                self.ShouldBeStatus[node] = "up"
-            else:
-                self.ShouldBeStatus[node] = "down"
-
-            if self.Env["experimental-tests"]:
-                self.unisolate_node(node)
 
     def upcount(self):
         '''How many nodes are up?'''
@@ -344,9 +327,6 @@ class ClusterManager(UserDict):
     def install_support(self, command="install"):
         for node in self.Env["nodes"]:
             self.rsh(node, CTSvars.CRM_DAEMON_DIR + "/cts-support " + command)
-
-    def install_config(self, node):
-        return None
 
     def prepare_fencing_watcher(self, name):
         # If we don't have quorum now but get it as a result of starting this node,
@@ -559,13 +539,6 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node] = "down"
         return 1
 
-    def cluster_stable(self, timeout = None):
-        time.sleep(self.Env["StableTime"])
-        return 1
-
-    def node_stable(self, node):
-        return 1
-
     def RereadCM(self, node):
 
         '''Force the cluster manager on a given node to reread its config
@@ -578,32 +551,6 @@ class ClusterManager(UserDict):
             self.logger.log ("Could not force %s on node %s to reread its config"
             %        (self["Name"], node))
         return None
-
-    def StataCM(self, node):
-
-        '''Report the status of the cluster manager on a given node'''
-
-        out=self.rsh(node, self.templates["StatusCmd"] % node, 1)
-        ret= (str.find(out, 'stopped') == -1)
-
-        try:
-            if ret:
-                if self.ShouldBeStatus[node] == "down":
-                    self.logger.log(
-                    "Node status for %s is %s but we think it should be %s"
-                    %        (node, "up", self.ShouldBeStatus[node]))
-            else:
-                if self.ShouldBeStatus[node] == "up":
-                    self.logger.log(
-                    "Node status for %s is %s but we think it should be %s"
-                    %        (node, "down", self.ShouldBeStatus[node]))
-        except KeyError:        pass
-
-        if ret:
-            self.ShouldBeStatus[node] = "up"
-        else:
-            self.ShouldBeStatus[node] = "down"
-        return ret
 
     def startall(self, nodelist=None, verbose=False, quick=False):
 
@@ -748,17 +695,6 @@ class ClusterManager(UserDict):
         else:
             self.logger.log("Could not restore the communication between the nodes from node: %s" % node)
         return None
-
-    def HasQuorum(self, node_list):
-        "Return TRUE if the cluster currently has quorum"
-        # If we are auditing a partition, then one side will
-        #   have quorum and the other not.
-        # So the caller needs to tell us which we are checking
-        # If no value for node_list is specified... assume all nodes
-        raise ValueError("Abstract Class member (HasQuorum)")
-
-    def Components(self):
-        raise ValueError("Abstract Class member (Components)")
 
     def oprofileStart(self, node=None):
         if not node:
