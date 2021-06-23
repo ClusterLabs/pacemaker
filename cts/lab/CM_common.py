@@ -9,7 +9,7 @@ easier.
 __copyright__ = """Original Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright 2004 International Business Machines
 
-with later changes copyright 2004-2020 the Pacemaker project contributors.
+with later changes copyright 2004-2021 the Pacemaker project contributors.
 The version control history for this file may have further details.
 """
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
@@ -20,6 +20,7 @@ from cts.CTS      import *
 from cts.CIB      import *
 from cts.CTStests import AuditResource
 from cts.watcher  import LogWatcher
+from cts.ClusterManager import ClusterManager
 
 class crm_common(ClusterManager):
     def __init__(self, Environment, randseed=None, name=None):

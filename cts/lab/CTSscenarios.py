@@ -1,10 +1,14 @@
 """ Test scenario classes for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2000-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-from cts.CTS import *
+import os
+import re
+import sys
+import time
+
 from cts.CTStests import CTSTest
 from cts.CTSaudits import ClusterAudit
 from cts.watcher  import LogWatcher
