@@ -2703,7 +2703,7 @@ handle_request(pcmk__client_t *client, uint32_t id, uint32_t flags,
         xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, request, LOG_TRACE);
 
         crm_notice("Received forwarded fencing request from "
-                   "%s%s to fence (%s) peer %s",
+                   "%s %s to fence (%s) peer %s",
                    ((client == NULL)? "peer" : "client"),
                    ((client == NULL)? remote_peer : pcmk__client_name(client)),
                    crm_element_value(dev, F_STONITH_ACTION),
