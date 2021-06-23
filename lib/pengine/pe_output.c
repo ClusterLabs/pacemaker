@@ -1023,6 +1023,8 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     pe_working_set_t *data_set = va_arg(args, pe_working_set_t *);
 
     const char *no_quorum_policy = NULL;
+    char *stonith_timeout_str = pcmk__itoa(data_set->stonith_timeout);
+    char *priority_fencing_delay_str = pcmk__itoa(data_set->priority_fencing_delay * 1000);
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
@@ -1052,7 +1054,12 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                  "no-quorum-policy", no_quorum_policy,
                                  "maintenance-mode", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)),
                                  "stop-all-resources", pcmk__btoa(pcmk_is_set(data_set->flags, pe_flag_stop_everything)),
+                                 "stonith-timeout-ms", stonith_timeout_str,
+                                 "priority-fencing-delay-ms", priority_fencing_delay_str,
                                  NULL);
+    free(stonith_timeout_str);
+    free(priority_fencing_delay_str);
+
     return pcmk_rc_ok;
 }
 
