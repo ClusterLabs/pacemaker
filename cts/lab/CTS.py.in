@@ -628,9 +628,10 @@ class ClusterManager(UserDict):
         watchpats = [ ]
         watchpats.append(self.templates["Pat:DC_IDLE"])
         for node in nodelist:
-            watchpats.append(self.templates["Pat:Local_started"] % node)
             watchpats.append(self.templates["Pat:InfraUp"] % node)
             watchpats.append(self.templates["Pat:PacemakerUp"] % node)
+            watchpats.append(self.templates["Pat:Local_started"] % node)
+            watchpats.append(self.templates["Pat:They_up"] % (nodelist[0], node))
 
         #   Start all the nodes - at about the same time...
         watch = LogWatcher(self.Env["LogFileName"], watchpats, "fast-start", self.Env["DeadTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
