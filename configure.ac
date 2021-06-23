@@ -1990,7 +1990,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
                 cts/lab/Makefile                                    \
-                cts/lab/CTS.py                                      \
                 cts/lab/CTSvars.py                                  \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \

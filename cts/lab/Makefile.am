@@ -22,6 +22,7 @@ ctslib_PYTHON		= __init__.py		\
 			  cib_xml.py		\
 			  CM_common.py		\
 			  CM_corosync.py	\
+			  CTS.py		\
 			  CTSaudits.py		\
 			  CTSscenarios.py	\
 			  CTStests.py		\
@@ -30,8 +31,7 @@ ctslib_PYTHON		= __init__.py		\
 			  patterns.py		\
 			  remote.py		\
 			  watcher.py
-nodist_ctslib_PYTHON	= CTS.py		\
-			  CTSvars.py
+nodist_ctslib_PYTHON	= CTSvars.py
 
 ctsdir			= $(datadir)/$(PACKAGE)/tests/cts
 cts_SCRIPTS		= CTSlab.py		\
