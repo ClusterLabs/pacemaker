@@ -242,19 +242,11 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             }
 
         } else {
-            /* If anyone in the group is starting, then
-             *  pe_order_implies_then will cause _everyone_ in the group
-             *  to be sent a start action
-             * But this is safe since starting something that is already
-             *  started is required to be "safe"
-             */
-            int flags = pe_order_none;
-
-            order_start_start(rsc, child_rsc, flags);
+            order_start_start(rsc, child_rsc, pe_order_none);
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
-                new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
+                new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
+                              pe_order_none, data_set);
             }
-
         }
 
         /* Look for partially active groups
