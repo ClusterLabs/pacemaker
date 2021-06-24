@@ -18,6 +18,32 @@
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>
 
+/*!
+ * \internal
+ * \brief Expand a group's colocations to its members
+ *
+ * \param[in,out] rsc  Group resource
+ */
+static void
+expand_group_colocations(pe_resource_t *rsc)
+{
+    group_variant_data_t *group_data = NULL;
+    pe_resource_t *member = NULL;
+
+    get_group_variant_data(group_data, rsc);
+
+    // Treat "group with R" colocations as "first member with R"
+    member = group_data->first_child;
+    member->rsc_cons = g_list_concat(member->rsc_cons, rsc->rsc_cons);
+    rsc->rsc_cons = NULL;
+
+    // Treat "R with group" colocations as "R with last member"
+    member = group_data->last_child;
+    member->rsc_cons_lhs = g_list_concat(member->rsc_cons_lhs,
+                                         rsc->rsc_cons_lhs);
+    rsc->rsc_cons_lhs = NULL;
+}
+
 pe_node_t *
 pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      pe_working_set_t *data_set)
@@ -46,13 +72,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     rsc->role = group_data->first_child->role;
 
-    group_data->first_child->rsc_cons =
-        g_list_concat(group_data->first_child->rsc_cons, rsc->rsc_cons);
-    rsc->rsc_cons = NULL;
-
-    group_data->last_child->rsc_cons_lhs =
-        g_list_concat(group_data->last_child->rsc_cons_lhs, rsc->rsc_cons_lhs);
-    rsc->rsc_cons_lhs = NULL;
+    expand_group_colocations(rsc);
 
     pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, data_set);
