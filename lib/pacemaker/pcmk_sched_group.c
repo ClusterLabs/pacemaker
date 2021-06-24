@@ -29,12 +29,46 @@ expand_group_colocations(pe_resource_t *rsc)
 {
     group_variant_data_t *group_data = NULL;
     pe_resource_t *member = NULL;
+    bool any_unmanaged = false;
 
     get_group_variant_data(group_data, rsc);
 
     // Treat "group with R" colocations as "first member with R"
     member = group_data->first_child;
     member->rsc_cons = g_list_concat(member->rsc_cons, rsc->rsc_cons);
+
+
+    /* The above works for the whole group because each group member is
+     * colocated with the previous one.
+     *
+     * However, there is a special case when a group has a mandatory colocation
+     * with a resource that can't start. In that case, update_colo_start_chain()
+     * will ensure that dependent resources in mandatory colocations (i.e. the
+     * first member for groups) can't start either. But if any group member is
+     * unmanaged and already started, the internal group colocations are no
+     * longer sufficient to make that apply to later members.
+     *
+     * To handle that case, add mandatory colocations to each member after the
+     * first.
+     */
+    any_unmanaged = !pcmk_is_set(member->flags, pe_rsc_managed);
+    for (GList *item = rsc->children->next; item != NULL; item = item->next) {
+        member = item->data;
+        if (any_unmanaged) {
+            for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
+                 cons_iter = cons_iter->next) {
+
+                pcmk__colocation_t *constraint = (pcmk__colocation_t *) cons_iter->data;
+
+                if (constraint->score == INFINITY) {
+                    member->rsc_cons = g_list_prepend(member->rsc_cons, constraint);
+                }
+            }
+        } else if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
+            any_unmanaged = true;
+        }
+    }
+
     rsc->rsc_cons = NULL;
 
     // Treat "R with group" colocations as "R with last member"
