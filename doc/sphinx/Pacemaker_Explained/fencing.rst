@@ -596,6 +596,17 @@ For all of the above timeouts, the fencer will generally multiply the
 configured value by 1.2 to get an actual value to use, to account for time
 needed by the fencer's own processing.
 
+Separate from the fencer's timeouts, some fence agents have internal timeouts
+for individual steps of their fencing process. These agents often have
+parameters to configure these timeouts, such as ``login-timeout``,
+``shell-timeout``, or ``power-timeout``. Many such agents also have a
+``disable-timeout`` parameter to ignore their internal timeouts and just let
+Pacemaker handle the timeout. This causes a difference in retry behavior.
+If ``disable-timeout`` is not set, and the agent hits one of its internal
+timeouts, it will report that as a failure to Pacemaker, which can then retry.
+If ``disable-timeout`` is set, and Pacemaker hits a timeout for the agent, then
+there will be no time remaining, and no retry will be done.
+
 Fence Devices Dependent on Other Resources
 ##########################################
 
