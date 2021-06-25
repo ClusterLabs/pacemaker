@@ -1,0 +1,4 @@
+ digraph "g" {
+"prmDummy1_monitor_10000 rh80-test01" [ style=bold color="green" fontcolor="black"]
+"prmDummy3_monitor_0 rh80-test01" [ style=bold color="green" fontcolor="black"]
+}

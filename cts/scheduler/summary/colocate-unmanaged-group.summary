@@ -1,0 +1,31 @@
+Using the original execution date of: 2020-02-26 05:50:16Z
+Current cluster status:
+  * Node List:
+    * Online: [ rh80-test01 rh80-test02 ]
+
+  * Full List of Resources:
+    * Clone Set: prmStateful-clone [prmStateful] (promotable):
+      * Stopped: [ rh80-test01 rh80-test02 ]
+    * Resource Group: grpTest:
+      * prmDummy1	(ocf:heartbeat:Dummy):	 Started rh80-test01 (unmanaged)
+      * prmDummy2	(ocf:heartbeat:Dummy):	 Stopped
+      * prmDummy3	(ocf:heartbeat:Dummy):	 Stopped
+
+Transition Summary:
+
+Executing Cluster Transition:
+  * Resource action: prmDummy1       monitor=10000 on rh80-test01
+  * Resource action: prmDummy3       monitor on rh80-test01
+Using the original execution date of: 2020-02-26 05:50:16Z
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ rh80-test01 rh80-test02 ]
+
+  * Full List of Resources:
+    * Clone Set: prmStateful-clone [prmStateful] (promotable):
+      * Stopped: [ rh80-test01 rh80-test02 ]
+    * Resource Group: grpTest:
+      * prmDummy1	(ocf:heartbeat:Dummy):	 Started rh80-test01 (unmanaged)
+      * prmDummy2	(ocf:heartbeat:Dummy):	 Stopped
+      * prmDummy3	(ocf:heartbeat:Dummy):	 Stopped
