@@ -2179,7 +2179,9 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         if (pcmk_is_set(filter, pe_action_optional)
             && !pcmk_is_set(flags /* Should be then_flags? */, pe_action_optional)) {
             // Needs pcmk_is_set(first_flags, pe_action_optional) too?
-            pe_rsc_trace(first->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
+            pe_rsc_trace(first->rsc,
+                         "Unset optional on %s because %s implies first",
+                         first->uuid, then->uuid);
             pe_action_implies(first, then, pe_action_optional);
         }
 
@@ -2205,7 +2207,9 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                 pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s", first->uuid, then->uuid);
                 pe_action_implies(first, then, pe_action_migrate_runnable);
             }
-            pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
+            pe_rsc_trace(then->rsc,
+                         "Unset optional on %s because %s (promoted) implies first",
+                         first->uuid, then->uuid);
         }
     }
 
@@ -2248,13 +2252,13 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (pcmk_is_set(type, pe_order_implies_then)
         && pcmk_is_set(filter, pe_action_optional)
         && pcmk_is_set(then->flags, pe_action_optional)
-        && !pcmk_is_set(flags, pe_action_optional)) {
+        && !pcmk_is_set(flags, pe_action_optional)
+        && !pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
 
-        /* in this case, treat migrate_runnable as if first is optional */
-        if (!pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
-           pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", then->uuid, first->uuid);
-           pe_action_implies(then, first, pe_action_optional);
-        }
+        pe_rsc_trace(then->rsc,
+                     "Unset optional on %s because %s implies 'then'",
+                     then->uuid, first->uuid);
+        pe_action_implies(then, first, pe_action_optional);
     }
 
     if (pcmk_is_set(type, pe_order_restart)) {
