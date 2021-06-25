@@ -477,7 +477,6 @@ create_pseudo_resource_op(pe_resource_t * rsc, const char *task, bool optional, 
     pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
                                         task, NULL, optional, TRUE, data_set);
     update_action_flags(action, pe_action_pseudo, __func__, __LINE__);
-    update_action_flags(action, pe_action_runnable, __func__, __LINE__);
     if(runnable) {
         update_action_flags(action, pe_action_runnable, __func__, __LINE__);
     }
