@@ -537,6 +537,57 @@ there are exceptions:
 * If the ``no-quorum-policy`` cluster property is set to ``ignore``, then
   quorum is not required to execute fencing of any node.
 
+Fencing Timeouts
+################
+
+Fencing timeouts are complicated, since a single fencing operation can involve
+many steps, each of which may have a separate timeout.
+
+Fencing may be initiated in one of several ways:
+
+* An administrator may initiate fencing using the ``stonith_admin`` tool,
+  which has a ``--timeout`` option (defaulting to 2 minutes) that will be used
+  as the fence operation timeout.
+
+* An external application such as DLM may initiate fencing using the Pacemaker
+  C API. The application will specify the fence operation timeout in this case,
+  which might or might not be configurable by the user.
+
+* The cluster may initiate fencing itself. In this case, the
+  ``stonith-timeout`` cluster property (defaulting to 1 minute) will be used as
+  the fence operation timeout.
+
+However fencing is initiated, the initiator contacts Pacemaker's fencer
+(``pacemaker-fenced``) to request fencing. This connection and request has its
+own timeout, separate from the fencing operation timeout, but usually happens
+very quickly.
+
+The fencer will contact all fencers in the cluster to ask what devices they
+have available to fence the target node. The fence operation timeout will be
+used as the timeout for each of these queries.
+
+Once a fencing device has been selected, the fencer will check whether any
+action-specific timeout has been configured for the device, to use instead of
+the fence operation timeout. For example, if ``stonith-timeout`` is 60 seconds,
+but the fencing device has ``pcmk_reboot_timeout`` configured as 90 seconds,
+then a timeout of 90 seconds will be used for reboot actions using that device.
+
+A device may have retries configured, in which case the timeout applies across
+all attempts. For example, if a device has ``pcmk_reboot_retries`` configured
+as 2, and the first reboot attempt fails, the second attempt will only have
+whatever time is remaining in the action timeout after subtracting how much
+time the first attempt used. This means that if the first attempt fails due to
+using the entire timeout, no further attempts will be made. There is currently
+no way to configure a per-attempt timeout.
+
+If more than one device is required to fence a target, whether due to failure
+of the first device or a fencing topology with multiple devices configured for
+the target, each device will have its own separate action timeout.
+
+For all of the above timeouts, the fencer will generally multiply the
+configured value by 1.2 to get an actual value to use, to account for time
+needed by the fencer's own processing.
+
 Fence Devices Dependent on Other Resources
 ##########################################
 
