@@ -461,8 +461,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
          * actions to be considered runnable before allowing the pseudo action
          * to be runnable. */ 
         unordered_action->required_runnable_before = min_required_before;
-        update_action_flags(unordered_action, pe_action_requires_any,
-                            __func__, __LINE__);
+        pe__set_action_flags(unordered_action, pe_action_requires_any);
 
         for (rIter = rsc_first->children; id && rIter; rIter = rIter->next) {
             pe_resource_t *child = rIter->data;
@@ -1908,8 +1907,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
 
         free(task);
-        update_action_flags(unordered_action, pe_action_requires_any,
-                            __func__, __LINE__);
+        pe__set_action_flags(unordered_action, pe_action_requires_any);
 
         for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
              xml_rsc = pcmk__xe_next(xml_rsc)) {
