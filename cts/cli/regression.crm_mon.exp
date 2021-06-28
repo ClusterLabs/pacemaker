@@ -636,12 +636,6 @@ Active Resources:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster02
     * Resource Group: mysql-group:1:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01
-    * Resource Group: mysql-group:2:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:3:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:4:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
   * Clone Set: promotable-clone [promotable-rsc] (promotable):
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Promoted cluster02
     * promotable-rsc	(ocf:pacemaker:Stateful):	 Unpromoted cluster01
@@ -2990,12 +2984,6 @@ Active Resources:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster02
     * Resource Group: mysql-group:1:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01
-    * Resource Group: mysql-group:2:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:3:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:4:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
 
 Node Attributes:
   * Node: cluster01 (1):
@@ -3082,12 +3070,6 @@ Active Resources:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster02
     * Resource Group: mysql-group:1:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01
-    * Resource Group: mysql-group:2:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:3:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:4:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
 
 Node Attributes:
   * Node: cluster01 (1):
@@ -3284,12 +3266,6 @@ Active Resources:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster02
     * Resource Group: mysql-group:1:
       * mysql-proxy	(lsb:mysql-proxy):	 Started cluster01
-    * Resource Group: mysql-group:2:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:3:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
-    * Resource Group: mysql-group:4:
-      * mysql-proxy	(lsb:mysql-proxy):	 Stopped
 
 Node Attributes:
   * Node: cluster01 (1):
@@ -3489,7 +3465,6 @@ Active Resources:
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
   * Resource Group: partially-active-group:
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
-    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
 =#=#=#= Begin test: XML output of partially active resources =#=#=#=
@@ -3702,6 +3677,79 @@ Operations:
       * (1) start
 =#=#=#= End test: Complete brief text output, with inactive resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Complete brief text output, with inactive resources
+=#=#=#= Begin test: Text output of partially active group =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 13 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+
+Active Resources:
+  * Resource Group: partially-active-group:
+    * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
+=#=#=#= End test: Text output of partially active group - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of partially active group
+=#=#=#= Begin test: Text output of partially active group, with inactive resources =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 13 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+
+Full List of Resources:
+  * Resource Group: partially-active-group:
+    * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
+    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+=#=#=#= End test: Text output of partially active group, with inactive resources - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of partially active group, with inactive resources
+=#=#=#= Begin test: Text output of active member of partially active group =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 13 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+
+Active Resources:
+  * Resource Group: partially-active-group:
+    * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
+=#=#=#= End test: Text output of active member of partially active group - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of active member of partially active group
+=#=#=#= Begin test: Text output of inactive member of partially active group =#=#=#=
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: cluster02 (version) - partition with quorum
+  * Last updated:
+  * Last change:
+  * 4 nodes configured
+  * 13 resource instances configured (1 DISABLED)
+
+Node List:
+  * Online: [ cluster01 cluster02 ]
+  * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
+
+Active Resources:
+  * Resource Group: partially-active-group:
+    * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
+=#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
+* Passed: crm_mon        - Text output of inactive member of partially active group
 =#=#=#= Begin test: Complete brief text output grouped by node, with inactive resources =#=#=#=
 Cluster Summary:
   * Stack: corosync
