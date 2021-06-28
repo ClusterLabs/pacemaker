@@ -284,8 +284,6 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             }
 
         } else if (last_rsc != NULL) {
-            child_rsc->restart_type = pe_restart_restart;
-
             order_start_start(last_rsc, child_rsc, start);
             order_stop_stop(child_rsc, last_rsc, pe_order_optional | pe_order_restart);
 
