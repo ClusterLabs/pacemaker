@@ -55,6 +55,6 @@ Revised Cluster Status:
     * ip_float_right	(ocf:heartbeat:IPaddr2):	 Started sambuca.linbit
     * Clone Set: ms_drbd_float [drbd_float] (promotable):
       * Promoted: [ sambuca.linbit ]
-    * Resource Group: nfsexport:
+    * Resource Group: nfsexport (partially active):
       * ip_nfs	(ocf:heartbeat:IPaddr2):	 Started sambuca.linbit
       * fs_float	(ocf:heartbeat:Filesystem):	 Stopped

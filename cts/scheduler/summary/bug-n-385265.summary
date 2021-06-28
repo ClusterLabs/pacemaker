@@ -20,6 +20,6 @@ Revised Cluster Status:
     * Online: [ ih01 ih02 ]
 
   * Full List of Resources:
-    * Resource Group: group_common:
+    * Resource Group: group_common (partially active):
       * resource_ip_common	(ocf:heartbeat:IPaddr2):	 Started ih02
       * resource_idvscommon	(ocf:dfs:idvs):	 Stopped

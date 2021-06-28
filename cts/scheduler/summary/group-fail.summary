@@ -3,7 +3,7 @@ Current cluster status:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * Resource Group: group1:
+    * Resource Group: group1 (partially active):
       * rsc1	(ocf:heartbeat:apache):	 Stopped
       * rsc2	(ocf:heartbeat:apache):	 Started node1
       * rsc3	(ocf:heartbeat:apache):	 Stopped

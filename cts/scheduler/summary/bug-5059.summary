@@ -6,10 +6,10 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms_stateful [g_stateful] (promotable):
-      * Resource Group: g_stateful:0:
+      * Resource Group: g_stateful:0 (partially active):
         * p_stateful1	(ocf:pacemaker:Stateful):	 Unpromoted gluster01.h
         * p_stateful2	(ocf:pacemaker:Stateful):	 Stopped
-      * Resource Group: g_stateful:1:
+      * Resource Group: g_stateful:1 (partially active):
         * p_stateful1	(ocf:pacemaker:Stateful):	 Unpromoted gluster02.h
         * p_stateful2	(ocf:pacemaker:Stateful):	 Stopped
       * Stopped: [ gluster03.h gluster04.h ]

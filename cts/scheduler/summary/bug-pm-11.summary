@@ -4,10 +4,10 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms-sf [group] (promotable) (unique):
-      * Resource Group: group:0:
+      * Resource Group: group:0 (partially active):
         * stateful-1:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
-      * Resource Group: group:1:
+      * Resource Group: group:1 (partially active):
         * stateful-1:1	(ocf:heartbeat:Stateful):	 Promoted node-a
         * stateful-2:1	(ocf:heartbeat:Stateful):	 Stopped
 

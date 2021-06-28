@@ -137,7 +137,7 @@ Revised Cluster Status:
       * rsc6a1	(ocf:pacemaker:Dummy):	 Stopped
       * rsc6a2	(ocf:pacemaker:Dummy):	 Stopped
     * rsc6a	(ocf:pacemaker:Dummy):	 Started rhel7-2
-    * Resource Group: group7a:
+    * Resource Group: group7a (partially active):
       * rsc7a1	(ocf:pacemaker:Dummy):	 Started rhel7-3
       * rsc7a2	(ocf:pacemaker:Dummy):	 Stopped
     * Clone Set: rsc8a-clone [rsc8a]:

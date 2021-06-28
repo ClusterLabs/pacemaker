@@ -3463,7 +3463,7 @@ Active Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
 =#=#=#= End test: Text output of partially active resources - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active resources
@@ -3608,7 +3608,7 @@ Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Text output of partially active resources, with inactive resources - OK (0) =#=#=#=
@@ -3634,7 +3634,7 @@ Full List of Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * 1/2	(ocf:pacemaker:Dummy):	Active cluster02
 
 Node Attributes:
@@ -3691,7 +3691,7 @@ Node List:
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Active Resources:
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
 =#=#=#= End test: Text output of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of partially active group
@@ -3709,7 +3709,7 @@ Node List:
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Full List of Resources:
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
     * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Text output of partially active group, with inactive resources - OK (0) =#=#=#=
@@ -3728,7 +3728,7 @@ Node List:
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Active Resources:
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * dummy-1	(ocf:pacemaker:Dummy):	 Started cluster02
 =#=#=#= End test: Text output of active member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of active member of partially active group
@@ -3746,7 +3746,7 @@ Node List:
   * GuestOnline: [ httpd-bundle-0@cluster02 httpd-bundle-1@cluster01 ]
 
 Active Resources:
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * dummy-2	(ocf:pacemaker:Dummy):	 Stopped (disabled)
 =#=#=#= End test: Text output of inactive member of partially active group - OK (0) =#=#=#=
 * Passed: crm_mon        - Text output of inactive member of partially active group
@@ -3784,7 +3784,7 @@ Inactive Resources:
   * Container bundle set: httpd-bundle [pcmk:http]:
     * httpd-bundle-0 (192.168.122.131)	(ocf:heartbeat:apache):	 Started cluster02
     * httpd-bundle-1 (192.168.122.132)	(ocf:heartbeat:apache):	 Stopped cluster01
-  * Resource Group: partially-active-group:
+  * Resource Group: partially-active-group (partially active):
     * 1/2	(ocf:pacemaker:Dummy):	Active cluster02
 
 Node Attributes:

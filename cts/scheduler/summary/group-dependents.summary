@@ -3,7 +3,7 @@ Current cluster status:
     * Online: [ asttest1 asttest2 ]
 
   * Full List of Resources:
-    * Resource Group: voip:
+    * Resource Group: voip (partially active):
       * mysqld	(lsb:mysql):	 Started asttest1
       * dahdi	(lsb:dahdi):	 Started asttest1
       * fonulator	(lsb:fonulator):	 Stopped

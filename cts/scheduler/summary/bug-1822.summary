@@ -4,7 +4,7 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms-sf [ms-sf_group] (promotable) (unique):
-      * Resource Group: ms-sf_group:0:
+      * Resource Group: ms-sf_group:0 (partially active):
         * master_slave_Stateful:0	(ocf:heartbeat:Dummy-statful):	 Unpromoted process2b
         * master_slave_procdctl:0	(ocf:heartbeat:procdctl):	 Stopped
       * Resource Group: ms-sf_group:1:
@@ -36,7 +36,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * Clone Set: ms-sf [ms-sf_group] (promotable) (unique):
-      * Resource Group: ms-sf_group:0:
+      * Resource Group: ms-sf_group:0 (partially active):
         * master_slave_Stateful:0	(ocf:heartbeat:Dummy-statful):	 Unpromoted process2b
         * master_slave_procdctl:0	(ocf:heartbeat:procdctl):	 Stopped
       * Resource Group: ms-sf_group:1:

@@ -59,22 +59,22 @@ Revised Cluster Status:
   * Full List of Resources:
     * sbd_stonith	(stonith:external/sbd):	 Started qa-suse-2
     * Clone Set: c-o2stage [o2stage]:
-      * Resource Group: o2stage:0:
+      * Resource Group: o2stage:0 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started qa-suse-1
         * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-1
         * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)
         * cmirror	(ocf:lvm2:cmirrord):	 Stopped
-      * Resource Group: o2stage:1:
+      * Resource Group: o2stage:1 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started qa-suse-4
         * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-4
         * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)
         * cmirror	(ocf:lvm2:cmirrord):	 Stopped
-      * Resource Group: o2stage:2:
+      * Resource Group: o2stage:2 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started qa-suse-3
         * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-3
         * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)
         * cmirror	(ocf:lvm2:cmirrord):	 Stopped
-      * Resource Group: o2stage:3:
+      * Resource Group: o2stage:3 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started qa-suse-2
         * clvm	(ocf:lvm2:clvmd):	 Started qa-suse-2
         * o2cb	(ocf:ocfs2:o2cb):	 Stopped (disabled)

@@ -21,6 +21,6 @@ Revised Cluster Status:
     * Online: [ bl460g6a bl460g6b ]
 
   * Full List of Resources:
-    * Resource Group: dummy-g:
+    * Resource Group: dummy-g (partially active):
       * dummy01	(ocf:heartbeat:Dummy):	 FAILED bl460g6a (blocked)
       * dummy02	(ocf:heartbeat:Dummy-stop-NG):	 Stopped

@@ -300,7 +300,7 @@ Revised Cluster Status:
     * CronAmbientTemperature	(ocf:heartbeat:symlink):	 Started hypatia-corosync.nevis.columbia.edu
     * StonithHypatia	(stonith:fence_nut):	 Started orestes-corosync.nevis.columbia.edu
     * StonithOrestes	(stonith:fence_nut):	 Started hypatia-corosync.nevis.columbia.edu
-    * Resource Group: DhcpGroup:
+    * Resource Group: DhcpGroup (partially active):
       * SymlinkDhcpdConf	(ocf:heartbeat:symlink):	 Started orestes-corosync.nevis.columbia.edu
       * SymlinkSysconfigDhcpd	(ocf:heartbeat:symlink):	 Started orestes-corosync.nevis.columbia.edu
       * SymlinkDhcpdLeases	(ocf:heartbeat:symlink):	 Started orestes-corosync.nevis.columbia.edu

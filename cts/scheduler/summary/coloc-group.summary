@@ -33,7 +33,7 @@ Revised Cluster Status:
 
   * Full List of Resources:
     * rsc1	(ocf:heartbeat:apache):	 Started node2
-    * Resource Group: group1:
+    * Resource Group: group1 (partially active):
       * rsc2	(ocf:heartbeat:apache):	 Started node2
       * rsc3	(ocf:heartbeat:apache):	 Stopped
       * rsc4	(ocf:heartbeat:apache):	 Stopped

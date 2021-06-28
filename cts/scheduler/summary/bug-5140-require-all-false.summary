@@ -9,7 +9,7 @@ Current cluster status:
   * Full List of Resources:
     * fencing	(stonith:external/sbd):	 Stopped
     * Clone Set: baseclone [basegrp]:
-      * Resource Group: basegrp:0:
+      * Resource Group: basegrp:0 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started hex-2
         * clvmd	(ocf:lvm2:clvmd):	 Started hex-2
         * o2cb	(ocf:ocfs2:o2cb):	 Started hex-2

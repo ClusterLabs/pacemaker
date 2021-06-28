@@ -5,7 +5,7 @@ Current cluster status:
     * Online: [ yingying.site ]
 
   * Full List of Resources:
-    * Resource Group: group1:
+    * Resource Group: group1 (partially active):
       * rsc1	(ocf:pacemaker:Dummy):	 Stopped
       * rsc2	(ocf:pacemaker:Dummy):	 Started yingying.site
       * rsc3	(ocf:pacemaker:Dummy):	 Started yingying.site

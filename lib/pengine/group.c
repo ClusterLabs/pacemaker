@@ -279,6 +279,9 @@ pe__group_default(pcmk__output_t *out, va_list args)
 
     int rc = pcmk_rc_no_output;
 
+    gboolean active = rsc->fns->active(rsc, TRUE);
+    gboolean partially_active = rsc->fns->active(rsc, FALSE);
+
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
     }
@@ -287,7 +290,8 @@ pe__group_default(pcmk__output_t *out, va_list args)
         GList *rscs = pe__filter_rsc_list(rsc->children, only_rsc);
 
         if (rscs != NULL) {
-            out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s", rsc->id,
+            out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s%s", rsc->id,
+                            !active && partially_active ? " (partially active)" : "",
                             pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
                             pe__resource_is_disabled(rsc) ? " (disabled)" : "");
 
@@ -305,7 +309,8 @@ pe__group_default(pcmk__output_t *out, va_list args)
                 continue;
             }
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s%s", rsc->id,
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s%s%s", rsc->id,
+                                     !active && partially_active ? " (partially active)" : "",
                                      pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
                                      pe__resource_is_disabled(rsc) ? " (disabled)" : "");
 

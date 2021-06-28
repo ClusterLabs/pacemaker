@@ -4,7 +4,7 @@ Current cluster status:
 
   * Full List of Resources:
     * Clone Set: ms-sf [group] (promotable) (unique):
-      * Resource Group: group:0:
+      * Resource Group: group:0 (partially active):
         * stateful-1:0	(ocf:heartbeat:Stateful):	 FAILED dl380g5b
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
       * Resource Group: group:1:

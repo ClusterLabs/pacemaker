@@ -41,7 +41,7 @@ Current cluster status:
       * Started: [ s01-0 s01-1 ]
     * Clone Set: cl-dhcpd [dhcpd] (disabled):
       * Stopped (disabled): [ s01-0 s01-1 ]
-    * Resource Group: http-server:
+    * Resource Group: http-server (partially active):
       * vip-233	(ocf:heartbeat:IPaddr2):	 Started s01-0
       * nginx	(lsb:nginx):	 Stopped (disabled)
     * Clone Set: ms-drbd-s01-logs [drbd-s01-logs] (promotable):
@@ -150,7 +150,7 @@ Revised Cluster Status:
       * Started: [ s01-0 s01-1 ]
     * Clone Set: cl-dhcpd [dhcpd] (disabled):
       * Stopped (disabled): [ s01-0 s01-1 ]
-    * Resource Group: http-server:
+    * Resource Group: http-server (partially active):
       * vip-233	(ocf:heartbeat:IPaddr2):	 Started s01-0
       * nginx	(lsb:nginx):	 Stopped (disabled)
     * Clone Set: ms-drbd-s01-logs [drbd-s01-logs] (promotable):
