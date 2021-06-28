@@ -2175,10 +2175,13 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
     }
 
-    if (type & pe_order_implies_first) {
+    if (pcmk_is_set(type, pe_order_implies_first)
+        && !pcmk_is_set(then_flags, pe_action_optional)) {
+        // Then is required, and implies first should be, too
+
         if (pcmk_is_set(filter, pe_action_optional)
-            && !pcmk_is_set(flags /* Should be then_flags? */, pe_action_optional)) {
-            // Needs pcmk_is_set(first_flags, pe_action_optional) too?
+            && !pcmk_is_set(flags, pe_action_optional)
+            && pcmk_is_set(first_flags, pe_action_optional)) {
             pe_rsc_trace(first->rsc,
                          "Unset optional on %s because %s implies first",
                          first->uuid, then->uuid);
@@ -2186,8 +2189,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
 
         if (pcmk_is_set(flags, pe_action_migrate_runnable) &&
-            !pcmk_is_set(then->flags, pe_action_migrate_runnable) &&
-            !pcmk_is_set(then->flags, pe_action_optional)) {
+            !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
 
             pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s",
                          first->uuid, then->uuid);
