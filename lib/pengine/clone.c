@@ -28,6 +28,17 @@
 #define UNPROMOTED_INSTANCES RSC_ROLE_UNPROMOTED_S
 #endif
 
+static void
+clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_data_t *clone_data)
+{
+    PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]%s%s%s%s",
+                             rsc->id, ID(clone_data->xml_obj_child),
+                             pcmk_is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
+                             pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
+                             pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
+                             pe__resource_is_disabled(rsc) ? " (disabled)" : "");
+}
+
 void
 pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                pe_working_set_t *data_set)
@@ -696,14 +707,6 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
                        (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
 
-    out->begin_list(out, NULL, NULL, "Clone Set: %s [%s]%s%s%s%s",
-                    rsc->id, ID(clone_data->xml_obj_child),
-                    pcmk_is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
-                    pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                    pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                    pe__resource_is_disabled(rsc) ? " (disabled)" : "");
-    rc = pcmk_rc_ok;
-
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -782,6 +785,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         if (print_full) {
             GList *all = NULL;
 
+            clone_header(out, &rc, rsc, clone_data);
+
             /* Print every resource that's a child of this clone. */
             all = g_list_prepend(all, (gpointer) "*");
             out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
@@ -792,7 +797,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
         free(stopped_list);
-        out->end_list(out);
+        PCMK__OUTPUT_LIST_FOOTER(out, rc);
         return pcmk_rc_ok;
     }
 
@@ -810,6 +815,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
+        clone_header(out, &rc, rsc, clone_data);
+
         out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]", list_text);
         g_list_free(promoted_list);
         free(list_text);
@@ -831,6 +838,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     }
 
     if (list_text != NULL) {
+        clone_header(out, &rc, rsc, clone_data);
+
         if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
@@ -893,14 +902,15 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         }
 
         if (stopped_list != NULL) {
+            clone_header(out, &rc, rsc, clone_data);
+
             out->list_item(out, NULL, "%s: [ %s ]", state, stopped_list);
             free(stopped_list);
             stopped_list_len = 0;
         }
     }
 
-    out->end_list(out);
-
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
     return rc;
 }
 
