@@ -31,12 +31,34 @@
 static void
 clone_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, clone_variant_data_t *clone_data)
 {
-    PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]%s%s%s%s",
-                             rsc->id, ID(clone_data->xml_obj_child),
-                             pcmk_is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
-                             pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
-                             pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                             pe__resource_is_disabled(rsc) ? " (disabled)" : "");
+    char *attrs = NULL;
+    size_t len = 0;
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_promotable)) {
+        pcmk__add_separated_word(&attrs, &len, "promotable", ", ");
+    }
+
+    if (pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        pcmk__add_separated_word(&attrs, &len, "unique", ", ");
+    }
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pcmk__add_separated_word(&attrs, &len, "unmanaged", ", ");
+    }
+
+    if (pe__resource_is_disabled(rsc)) {
+        pcmk__add_separated_word(&attrs, &len, "disabled", ", ");
+    }
+
+    if (attrs) {
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s] (%s)",
+                                 rsc->id, ID(clone_data->xml_obj_child),
+                                 attrs);
+        free(attrs);
+    } else {
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Clone Set: %s [%s]",
+                                 rsc->id, ID(clone_data->xml_obj_child))
+    }
 }
 
 void

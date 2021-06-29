@@ -19,9 +19,9 @@ Current cluster status:
     * fs-xfs-1	(ocf:heartbeat:Filesystem):	 Stopped
     * Clone Set: fs2 [fs-ocfs-2]:
       * Stopped: [ hex-1 hex-2 hex-3 ]
-    * Clone Set: ms-r0 [drbd-r0] (promotable) (disabled):
+    * Clone Set: ms-r0 [drbd-r0] (promotable, disabled):
       * Stopped (disabled): [ hex-1 hex-2 hex-3 ]
-    * Clone Set: ms-r1 [drbd-r1] (promotable) (disabled):
+    * Clone Set: ms-r1 [drbd-r1] (promotable, disabled):
       * Stopped (disabled): [ hex-1 hex-2 hex-3 ]
     * Resource Group: md0-group:
       * md0	(ocf:heartbeat:Raid1):	 Stopped
@@ -64,9 +64,9 @@ Revised Cluster Status:
     * fs-xfs-1	(ocf:heartbeat:Filesystem):	 Stopped
     * Clone Set: fs2 [fs-ocfs-2]:
       * Stopped: [ hex-1 hex-2 hex-3 ]
-    * Clone Set: ms-r0 [drbd-r0] (promotable) (disabled):
+    * Clone Set: ms-r0 [drbd-r0] (promotable, disabled):
       * Stopped (disabled): [ hex-1 hex-2 hex-3 ]
-    * Clone Set: ms-r1 [drbd-r1] (promotable) (disabled):
+    * Clone Set: ms-r1 [drbd-r1] (promotable, disabled):
       * Stopped (disabled): [ hex-1 hex-2 hex-3 ]
     * Resource Group: md0-group:
       * md0	(ocf:heartbeat:Raid1):	 Stopped

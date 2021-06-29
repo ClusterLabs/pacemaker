@@ -20,7 +20,7 @@ Current cluster status:
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-3 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-4 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-1 (unmanaged)
-    * Clone Set: master-1 [stateful-1] (promotable) (unmanaged):
+    * Clone Set: master-1 [stateful-1] (promotable, unmanaged):
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-2 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Promoted pcmk-3 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-4 (unmanaged)
@@ -62,7 +62,7 @@ Revised Cluster Status:
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-3 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-4 (unmanaged)
       * ping-1	(ocf:pacemaker:ping):	 Started pcmk-1 (unmanaged)
-    * Clone Set: master-1 [stateful-1] (promotable) (unmanaged):
+    * Clone Set: master-1 [stateful-1] (promotable, unmanaged):
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-2 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Promoted pcmk-3 (unmanaged)
       * stateful-1	(ocf:pacemaker:Stateful):	 Unpromoted pcmk-4 (unmanaged)

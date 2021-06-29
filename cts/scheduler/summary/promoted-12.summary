@@ -6,7 +6,7 @@ Current cluster status:
     * Clone Set: ms-drbd0 [drbd0] (promotable):
       * Promoted: [ sel3 ]
       * Unpromoted: [ sel4 ]
-    * Clone Set: ms-sf [sf] (promotable) (unique):
+    * Clone Set: ms-sf [sf] (promotable, unique):
       * sf:0	(ocf:heartbeat:Stateful):	 Unpromoted sel3
       * sf:1	(ocf:heartbeat:Stateful):	 Unpromoted sel4
     * fs0	(ocf:heartbeat:Filesystem):	 Started sel3
@@ -27,7 +27,7 @@ Revised Cluster Status:
     * Clone Set: ms-drbd0 [drbd0] (promotable):
       * Promoted: [ sel3 ]
       * Unpromoted: [ sel4 ]
-    * Clone Set: ms-sf [sf] (promotable) (unique):
+    * Clone Set: ms-sf [sf] (promotable, unique):
       * sf:0	(ocf:heartbeat:Stateful):	 Promoted sel3
       * sf:1	(ocf:heartbeat:Stateful):	 Unpromoted sel4
     * fs0	(ocf:heartbeat:Filesystem):	 Started sel3

@@ -20,6 +20,33 @@
 #define VARIANT_GROUP 1
 #include "./variant.h"
 
+static void
+group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, bool partially_active)
+{
+    char *attrs = NULL;
+    size_t len = 0;
+
+    if (partially_active) {
+        pcmk__add_separated_word(&attrs, &len, "partially active", ", ");
+    }
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pcmk__add_separated_word(&attrs, &len, "unmanaged", ", ");
+    }
+
+    if (pe__resource_is_disabled(rsc)) {
+        pcmk__add_separated_word(&attrs, &len, "disabled", ", ");
+    }
+
+    if (attrs) {
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)",
+                                 rsc->id, attrs);
+        free(attrs);
+    } else {
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s", rsc->id);
+    }
+}
+
 static bool
 skip_child_rsc(pe_resource_t *rsc, pe_resource_t *child, GList *only_rsc,
                unsigned int show_opts)
@@ -290,11 +317,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
         GList *rscs = pe__filter_rsc_list(rsc->children, only_rsc);
 
         if (rscs != NULL) {
-            out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s%s", rsc->id,
-                            !active && partially_active ? " (partially active)" : "",
-                            pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                            pe__resource_is_disabled(rsc) ? " (disabled)" : "");
-
+            group_header(out, &rc, rsc, !active && partially_active);
             pe__rscs_brief_output(out, rscs, show_opts | pcmk_show_inactive_rscs);
 
             rc = pcmk_rc_ok;
@@ -309,11 +332,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
                 continue;
             }
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s%s%s", rsc->id,
-                                     !active && partially_active ? " (partially active)" : "",
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                                     pe__resource_is_disabled(rsc) ? " (disabled)" : "");
-
+            group_header(out, &rc, rsc, !active && partially_active);
             out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, only_rsc);
         }
