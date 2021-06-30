@@ -61,6 +61,7 @@ class BasePatterns(object):
             "Pat:We_stopped"    : "%s\W.*OVERRIDE THIS PATTERN",
             "Pat:They_stopped"  : "%s\W.*LOST:.* %s ",
             "Pat:They_dead"     : "node %s.*: is dead",
+            "Pat:They_up"       : "%s %s\W.*OVERRIDE THIS PATTERN",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
             "Pat:Fencing_start"   : r"Requesting peer fencing .* targeting %s",
@@ -130,6 +131,7 @@ class crm_corosync(BasePatterns):
             "Pat:We_stopped"   : "%s\W.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
             "Pat:They_dead"    : "pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_up"      : "\W%s\W.*pacemaker-controld.*Node %s state is now member",
 
             "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
             # "with signal 9" == pcmk_child_exit(), "$" == check_active_before_startup_processes()
