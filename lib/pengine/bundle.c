@@ -1656,7 +1656,7 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             pcmk__output_xml_create_parent(out, "li", NULL);
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
-                snprintf(buffer, LINE_MAX, " Replica[%d]", replica->offset);
+                snprintf(buffer, LINE_MAX, "Replica[%d]", replica->offset);
                 xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
             }
             pcmk__output_create_xml_node(out, "br", NULL);
