@@ -509,6 +509,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?concurrent_fencing}                                                  \
         %{?resource_stickiness}                                                 \
         %{?compat20}                                                            \
+        --disable-static                                                        \
         --with-initdir=%{_initrddir}                                            \
         --with-runstatedir=%{_rundir}                                           \
         --localstatedir=%{_var}                                                 \
@@ -551,8 +552,7 @@ install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mo
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 %endif
 
-# Don't package static libs
-find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
+# Don't package libtool archives
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
 # For now, don't package the servicelog-related binaries built only for
