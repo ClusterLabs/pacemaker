@@ -149,14 +149,6 @@
 %define gnutls_priorities %{?pcmk_gnutls_priorities}%{!?pcmk_gnutls_priorities:@SYSTEM}
 %endif
 
-%if !%{defined _rundir}
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?suse_version} >= 1200
-%define _rundir /run
-%else
-%define _rundir /var/run
-%endif
-%endif
-
 %if 0%{?fedora} > 22 || 0%{?rhel} > 7
 %global supports_recommends 1
 %endif
