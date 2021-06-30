@@ -1643,10 +1643,6 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
              */
             unsigned int new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            if (rc == pcmk_rc_no_output) {
-                pcmk__output_create_xml_node(out, "br", NULL);
-            }
-
             PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s",
                                      (bundle_data->nreplicas > 1)? " set" : "",
                                      rsc->id, bundle_data->image,
