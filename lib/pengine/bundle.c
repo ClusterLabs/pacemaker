@@ -1603,7 +1603,6 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     pe__bundle_variant_data_t *bundle_data = NULL;
-    char buffer[LINE_MAX];
     int rc = pcmk_rc_no_output;
     gboolean print_everything = TRUE;
 
@@ -1649,14 +1648,9 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                                      pcmk_is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                                      pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 
-            pcmk__output_xml_create_parent(out, "li", NULL);
-
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
-                snprintf(buffer, LINE_MAX, "Replica[%d]", replica->offset);
-                xmlNodeSetContent(pcmk__output_xml_peek_parent(out), (pcmkXmlStr) buffer);
+                out->begin_list(out, NULL, NULL, "Replica[%d]", replica->offset);
             }
-            pcmk__output_create_xml_node(out, "br", NULL);
-            out->begin_list(out, NULL, NULL, NULL);
 
             if (print_ip) {
                 out->message(out, crm_map_element_name(replica->ip->xml),
@@ -1678,7 +1672,9 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                              new_show_opts, replica->remote, only_node, only_rsc);
             }
 
-            out->end_list(out);
+            if (pcmk__list_of_multiple(bundle_data->replicas)) {
+                out->end_list(out);
+            }
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
@@ -1691,8 +1687,6 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
             pe__bundle_replica_output_html(out, replica, pe__current_node(replica->container),
                                            show_opts);
         }
-
-        pcmk__output_xml_pop_parent(out);
     }
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
