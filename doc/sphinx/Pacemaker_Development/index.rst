@@ -23,6 +23,7 @@ Table of Contents
    python
    c
    components
+   helpers
    evolution
    hacking
 
