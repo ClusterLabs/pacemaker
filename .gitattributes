@@ -1,5 +1,5 @@
 /configure.ac	export-subst
+/devel/scratch.c	export-ignore
 /.*	export-ignore
 /maint/*.sh	export-ignore
 /maint/*.cc	export-ignore
-/scratch.c	export-ignore
