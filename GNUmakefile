@@ -420,12 +420,26 @@ changelog:
 
 INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
 			  lib/gnu/*
+INDENT_PACEMAKER_STYLE	= --linux-style					\
+			  --blank-lines-after-declarations		\
+			  --break-before-boolean-operator		\
+			  --case-indentation4				\
+			  --case-brace-indentation4			\
+			  --continuation-indentation4			\
+			  --honour-newlines				\
+			  --indent-label2				\
+			  --indent-level4				\
+			  --line-length100				\
+			  --no-tabs					\
+			  --preprocessor-indentation2			\
+			  --procnames-start-lines			\
+			  --tab-size8
 
 indent:
 	VERSION_CONTROL=none					\
 		find . -name "*.[ch]"				\
 		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
-		-exec ./p-indent \{\} \;
+		-exec indent $(INDENT_PACEMAKER_STYLE) \{\} \;
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
