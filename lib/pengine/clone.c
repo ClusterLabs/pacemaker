@@ -801,7 +801,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -822,7 +822,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -884,7 +884,7 @@ pe__clone_html(pcmk__output_t *out, va_list args)
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
-                    pcmk__str_in_list(only_node, node->details->uname, pcmk__str_none)) {
+                    pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
                     pcmk__add_word(&stopped_list, &stopped_list_len,
                                    node->details->uname);
                 }
@@ -1041,7 +1041,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1062,7 +1062,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1120,7 +1120,7 @@ pe__clone_text(pcmk__output_t *out, va_list args)
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
-                    pcmk__str_in_list(only_node, node->details->uname, pcmk__str_none)) {
+                    pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
                     pcmk__add_word(&stopped_list, &stopped_list_len,
                                    node->details->uname);
                 }

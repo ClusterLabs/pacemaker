@@ -1254,7 +1254,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
          xml_op = pcmk__xml_next(xml_op)) {
         char *rsc = NULL;
 
-        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME), pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME), pcmk__str_casei)) {
             continue;
         }
 
@@ -1738,7 +1738,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1899,7 +1899,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1940,7 +1940,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
         const char *node_mode = NULL;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             free(node_name);
             continue;
         }
@@ -2059,7 +2059,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -2097,7 +2097,7 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_none)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 

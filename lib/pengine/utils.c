@@ -2394,7 +2394,7 @@ pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list)
 {
     for (GList *ele = rsc->running_on; ele; ele = ele->next) {
         pe_node_t *node = (pe_node_t *) ele->data;
-        if (pcmk__str_in_list(node_list, node->details->uname, pcmk__str_none)) {
+        if (pcmk__str_in_list(node_list, node->details->uname, pcmk__str_casei)) {
             return true;
         }
     }
