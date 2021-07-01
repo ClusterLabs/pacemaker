@@ -437,7 +437,7 @@ INDENT_PACEMAKER_STYLE	= --linux-style					\
 
 indent:
 	VERSION_CONTROL=none					\
-		find . -name "*.[ch]"				\
+		find . -type f -name "*.[ch]"			\
 		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
 		-exec indent $(INDENT_PACEMAKER_STYLE) \{\} \;
 
