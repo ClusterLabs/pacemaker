@@ -421,7 +421,8 @@ changelog:
 DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
 
 indent:
-	find . -name "*.[ch]" -exec ./p-indent \{\} \;
+	VERSION_CONTROL=none					\
+		find . -name "*.[ch]" -exec ./p-indent \{\} \;
 	git co HEAD $(DO_NOT_INDENT)
 
 rel-tags: tags
