@@ -425,19 +425,37 @@ changelog:
 
 INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
 			  lib/gnu/*
-INDENT_PACEMAKER_STYLE	= --linux-style					\
-			  --blank-lines-after-declarations		\
+INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
+			  --blank-lines-after-procedures		\
+			  --braces-after-func-def-line			\
+			  --braces-on-if-line				\
+			  --braces-on-struct-decl-line			\
 			  --break-before-boolean-operator		\
-			  --case-indentation4				\
 			  --case-brace-indentation4			\
+			  --case-indentation4				\
+			  --comment-indentation0			\
 			  --continuation-indentation4			\
+			  --continue-at-parentheses			\
+			  --cuddle-do-while				\
+			  --cuddle-else					\
+			  --declaration-comment-column0			\
+			  --declaration-indentation1			\
+			  --else-endif-column0				\
 			  --honour-newlines				\
-			  --indent-label2				\
+			  --indent-label0				\
 			  --indent-level4				\
-			  --line-length100				\
+			  --line-comments-indentation0			\
+			  --line-length80				\
+			  --no-blank-lines-after-commas			\
+			  --no-comment-delimiters-on-blank-lines	\
+			  --no-space-after-function-call-names		\
+			  --no-space-after-parentheses			\
 			  --no-tabs					\
 			  --preprocessor-indentation2			\
 			  --procnames-start-lines			\
+			  --space-after-cast				\
+			  --start-left-side-of-comments			\
+			  --swallow-optional-blank-lines		\
 			  --tab-size8
 
 indent:
