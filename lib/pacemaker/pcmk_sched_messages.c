@@ -35,7 +35,7 @@ log_resource_details(pe_working_set_t *data_set)
      * messages expects such a list, due to the `crm_mon --node=` feature.  Here,
      * we just make it a list of all the nodes.
      */
-    all = g_list_prepend(all, strdup("*"));
+    all = g_list_prepend(all, (gpointer) "*");
 
     for (GList *item = data_set->resources; item != NULL; item = item->next) {
         pe_resource_t *rsc = (pe_resource_t *) item->data;
@@ -47,7 +47,7 @@ log_resource_details(pe_working_set_t *data_set)
         }
     }
 
-    g_list_free_full(all, free);
+    g_list_free(all);
 }
 
 /*!

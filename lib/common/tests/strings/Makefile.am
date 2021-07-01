@@ -1,5 +1,5 @@
 #
-# Copyright 2020 the Pacemaker project contributors
+# Copyright 2020-2021 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,6 +25,7 @@ test_programs =	pcmk__add_word_test		\
 		pcmk__parse_ll_range_test	\
 		pcmk__scan_double_test		\
 		pcmk__str_any_of_test		\
+		pcmk__str_in_list_test		\
 		pcmk__strcmp_test
 
 # If any extra data needs to be added to the source distribution, add it to the

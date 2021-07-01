@@ -201,8 +201,8 @@ pe__group_xml(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
+    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
+                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -234,7 +234,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
 PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
-pe__group_html(pcmk__output_t *out, va_list args)
+pe__group_default(pcmk__output_t *out, va_list args)
 {
     unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
@@ -248,8 +248,8 @@ pe__group_html(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
+    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
+                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
 
     if (pcmk_is_set(show_opts, pcmk_show_brief)) {
         GList *rscs = pe__filter_rsc_list(rsc->children, only_rsc);
@@ -283,61 +283,6 @@ pe__group_html(pcmk__output_t *out, va_list args)
     }
 
 	PCMK__OUTPUT_LIST_FOOTER(out, rc);
-
-    return rc;
-}
-
-PCMK__OUTPUT_ARGS("group", "unsigned int", "pe_resource_t *", "GList *", "GList *")
-int
-pe__group_text(pcmk__output_t *out, va_list args)
-{
-    unsigned int show_opts = va_arg(args, unsigned int);
-    pe_resource_t *rsc = va_arg(args, pe_resource_t *);
-    GList *only_node = va_arg(args, GList *);
-    GList *only_rsc = va_arg(args, GList *);
-
-    int rc = pcmk_rc_no_output;
-    gboolean print_everything = TRUE;
-
-    if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
-        return rc;
-    }
-
-    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id));
-
-    if (pcmk_is_set(show_opts, pcmk_show_brief)) {
-        GList *rscs = pe__filter_rsc_list(rsc->children, only_rsc);
-
-        if (rscs != NULL) {
-            out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s", rsc->id,
-                            pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                            pe__resource_is_disabled(rsc) ? " (disabled)" : "");
-
-            pe__rscs_brief_output(out, rscs, show_opts | pcmk_show_inactive_rscs);
-
-            rc = pcmk_rc_ok;
-            g_list_free(rscs);
-        }
-
-    } else {
-        for (GList *gIter = rsc->children; gIter; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
-                continue;
-            }
-
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s%s", rsc->id,
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                                     pe__resource_is_disabled(rsc) ? " (disabled)" : "");
-
-            out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
-                         child_rsc, only_node, only_rsc);
-         }
-    }
-
-    PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
     return rc;
 }
@@ -387,11 +332,11 @@ pe__group_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
 {
     gboolean passes = FALSE;
 
-    if (check_parent && pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
+    if (check_parent && pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)), pcmk__str_none)) {
         passes = TRUE;
-    } else if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc))) {
+    } else if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none)) {
         passes = TRUE;
-    } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id)) {
+    } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none)) {
         passes = TRUE;
     } else {
         for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {

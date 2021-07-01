@@ -118,14 +118,14 @@ cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded
     unsigned int show_opts = pcmk_show_pending;
     GList *all = NULL;
 
-    all = g_list_prepend(all, strdup("*"));
+    all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
     out->message(out, crm_map_element_name(rsc->xml), show_opts, rsc, all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
-    g_list_free_full(all, free);
+    g_list_free(all);
     return pcmk_rc_ok;
 }
 

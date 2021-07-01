@@ -258,11 +258,9 @@ pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
 }
 
 int pe__clone_xml(pcmk__output_t *out, va_list args);
-int pe__clone_html(pcmk__output_t *out, va_list args);
-int pe__clone_text(pcmk__output_t *out, va_list args);
+int pe__clone_default(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
-int pe__group_html(pcmk__output_t *out, va_list args);
-int pe__group_text(pcmk__output_t *out, va_list args);
+int pe__group_default(pcmk__output_t *out, va_list args);
 int pe__bundle_xml(pcmk__output_t *out, va_list args);
 int pe__bundle_html(pcmk__output_t *out, va_list args);
 int pe__bundle_text(pcmk__output_t *out, va_list args);
@@ -571,7 +569,7 @@ GList *pe__unames_with_tag(pe_working_set_t *data_set, const char *tag_name);
 bool pe__rsc_has_tag(pe_working_set_t *data_set, const char *rsc, const char *tag);
 bool pe__uname_has_tag(pe_working_set_t *data_set, const char *node, const char *tag);
 
-bool pe__rsc_running_on_any_node_in_list(pe_resource_t *rsc, GList *node_list);
+bool pe__rsc_running_on_any(pe_resource_t *rsc, GList *node_list);
 GList *pe__filter_rsc_list(GList *rscs, GList *filter);
 GList * pe__build_node_name_list(pe_working_set_t *data_set, const char *s);
 GList * pe__build_rsc_list(pe_working_set_t *data_set, const char *s);

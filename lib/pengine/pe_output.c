@@ -670,8 +670,8 @@ ban_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh)) &&
-            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)))) {
+        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh), pcmk__str_none) &&
+            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)), pcmk__str_none)) {
             continue;
         }
 
@@ -1254,7 +1254,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
          xml_op = pcmk__xml_next(xml_op)) {
         char *rsc = NULL;
 
-        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME))) {
+        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME), pcmk__str_casei)) {
             continue;
         }
 
@@ -1263,7 +1263,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc)) {
+        if (!pcmk__str_in_list(only_rsc, rsc, pcmk__str_none)) {
             free(rsc);
             continue;
         }
@@ -1738,7 +1738,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1837,8 +1837,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
          * For other resource types, is_filtered is okay.
          */
         if (uber_parent(rsc)->variant == pe_group) {
-            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) &&
-                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)))) {
+            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) &&
+                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)), pcmk__str_none)) {
                 continue;
             }
         } else {
@@ -1899,7 +1899,7 @@ node_list_html(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -1940,7 +1940,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
         const char *node_mode = NULL;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             free(node_name);
             continue;
         }
@@ -2059,7 +2059,7 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -2097,7 +2097,7 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname)) {
+        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
             continue;
         }
 
@@ -2424,7 +2424,7 @@ resource_list(pcmk__output_t *out, va_list args)
         } else if (!partially_active && !pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
             continue;
 
-        } else if (partially_active && !pe__rsc_running_on_any_node_in_list(rsc, only_node)) {
+        } else if (partially_active && !pe__rsc_running_on_any(rsc, only_node)) {
             continue;
         }
 
@@ -2659,9 +2659,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "bundle", "default", pe__bundle_text },
     { "bundle", "xml",  pe__bundle_xml },
     { "bundle", "html",  pe__bundle_html },
-    { "clone", "default", pe__clone_text },
+    { "clone", "default", pe__clone_default },
     { "clone", "xml",  pe__clone_xml },
-    { "clone", "html",  pe__clone_html },
     { "cluster-counts", "default", cluster_counts_text },
     { "cluster-counts", "html", cluster_counts_html },
     { "cluster-counts", "xml", cluster_counts_xml },
@@ -2683,9 +2682,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "failed-action", "default", failed_action_text },
     { "failed-action", "xml", failed_action_xml },
     { "failed-action-list", "default", failed_action_list },
-    { "group", "default",  pe__group_text },
+    { "group", "default",  pe__group_default},
     { "group", "xml",  pe__group_xml },
-    { "group", "html",  pe__group_html },
     { "maint-mode", "text", cluster_maint_mode_text },
     { "node", "default", node_text },
     { "node", "html", node_html },
@@ -2750,7 +2748,7 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
         GList *gIter = node->details->running_rsc;
         GList *all = NULL;
 
-        all = g_list_prepend(all, strdup("*"));
+        all = g_list_prepend(all, (gpointer) "*");
 
         crm_trace("\t\t===Node Attributes");
         g_hash_table_foreach(node->details->attrs, print_str_str, pe_mutable);
@@ -2765,6 +2763,6 @@ pe__output_node(pe_node_t *node, gboolean details, pcmk__output_t *out)
                          pe_print_pending, rsc, all, all);
         }
 
-        g_list_free_full(all, free);
+        g_list_free(all);
     }
 }
