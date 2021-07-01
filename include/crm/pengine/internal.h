@@ -258,11 +258,9 @@ pe__rsc_bool_str(pe_resource_t *rsc, uint64_t rsc_flag)
 }
 
 int pe__clone_xml(pcmk__output_t *out, va_list args);
-int pe__clone_html(pcmk__output_t *out, va_list args);
-int pe__clone_text(pcmk__output_t *out, va_list args);
+int pe__clone_default(pcmk__output_t *out, va_list args);
 int pe__group_xml(pcmk__output_t *out, va_list args);
-int pe__group_html(pcmk__output_t *out, va_list args);
-int pe__group_text(pcmk__output_t *out, va_list args);
+int pe__group_default(pcmk__output_t *out, va_list args);
 int pe__bundle_xml(pcmk__output_t *out, va_list args);
 int pe__bundle_html(pcmk__output_t *out, va_list args);
 int pe__bundle_text(pcmk__output_t *out, va_list args);
