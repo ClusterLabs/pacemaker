@@ -418,12 +418,14 @@ changelog:
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 
-DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
+INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
+			  lib/gnu/*
 
 indent:
 	VERSION_CONTROL=none					\
-		find . -name "*.[ch]" -exec ./p-indent \{\} \;
-	git co HEAD $(DO_NOT_INDENT)
+		find . -name "*.[ch]"				\
+		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
+		-exec ./p-indent \{\} \;
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
