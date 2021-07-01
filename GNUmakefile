@@ -66,6 +66,11 @@ LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | he
 endif
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
+# indent target: Limit indent to these directories
+INDENT_DIRS	?= .
+
+# indent target: Extra options to pass to indent
+INDENT_OPTS	?=
 
 # This Makefile can create 2 types of distributions:
 #
@@ -437,9 +442,9 @@ INDENT_PACEMAKER_STYLE	= --linux-style					\
 
 indent:
 	VERSION_CONTROL=none					\
-		find . -type f -name "*.[ch]"			\
+		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
 		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
-		-exec indent $(INDENT_PACEMAKER_STYLE) \{\} \;
+		-exec indent $(INDENT_PACEMAKER_STYLE) $(INDENT_OPTS) \{\} \;
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
