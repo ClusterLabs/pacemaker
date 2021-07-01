@@ -1278,6 +1278,28 @@ failed_action_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
+static void
+status_node(pe_node_t *node, xmlNodePtr parent)
+{
+    if (node->details->standby_onfail && node->details->online) {
+        pcmk_create_html_node(parent, "span", NULL, "standby", " standby (on-fail)");
+    } else if (node->details->standby && node->details->online) {
+        char *s = crm_strdup_printf(" standby%s", node->details->running_rsc ? " (with active resources)" : "");
+        pcmk_create_html_node(parent, "span", NULL, " standby", s);
+        free(s);
+    } else if (node->details->standby) {
+        pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE (standby)");
+    } else if (node->details->maintenance && node->details->online) {
+        pcmk_create_html_node(parent, "span", NULL, "maint", " maintenance");
+    } else if (node->details->maintenance) {
+        pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE (maintenance)");
+    } else if (node->details->online) {
+        pcmk_create_html_node(parent, "span", NULL, "online", " online");
+    } else {
+        pcmk_create_html_node(parent, "span", NULL, "offline", " OFFLINE");
+    }
+}
+
 PCMK__OUTPUT_ARGS("node", "pe_node_t *", "unsigned int", "gboolean", "const char *",
                   "GList *", "GList *")
 static int
@@ -1290,56 +1312,62 @@ node_html(pcmk__output_t *out, va_list args) {
     GList *only_rsc = va_arg(args, GList *);
 
     char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
-    char *buf = crm_strdup_printf("Node: %s", node_name);
 
     if (full) {
-        xmlNodePtr item_node = pcmk__output_create_xml_node(out, "li", NULL);
+        xmlNodePtr item_node;
 
-        pcmk_create_html_node(item_node, "span", NULL, NULL, buf);
-
-        if (node->details->standby_onfail && node->details->online) {
-            pcmk_create_html_node(item_node, "span", NULL, "standby", " standby (on-fail)");
-        } else if (node->details->standby && node->details->online) {
-            char *s = crm_strdup_printf(" standby%s", node->details->running_rsc ? " (with active resources)" : "");
-            pcmk_create_html_node(item_node, "span", NULL, " standby", s);
-            free(s);
-        } else if (node->details->standby) {
-            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE (standby)");
-        } else if (node->details->maintenance && node->details->online) {
-            pcmk_create_html_node(item_node, "span", NULL, "maint", " maintenance");
-        } else if (node->details->maintenance) {
-            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE (maintenance)");
-        } else if (node->details->online) {
-            pcmk_create_html_node(item_node, "span", NULL, "online", " online");
-        } else {
-            pcmk_create_html_node(item_node, "span", NULL, "offline", " OFFLINE");
-        }
         if (pcmk_all_flags_set(show_opts, pcmk_show_brief | pcmk_show_rscs_by_node)) {
             GList *rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
 
+            out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+            item_node = pcmk__output_xml_create_parent(out, "li", NULL);
+            pcmk_create_html_node(item_node, "span", NULL, NULL, "Status:");
+            status_node(node, item_node);
+
             if (rscs != NULL) {
                 unsigned int new_show_opts = (show_opts | pcmk_show_rsc_only) & ~pcmk_show_inactive_rscs;
-                out->begin_list(out, NULL, NULL, NULL);
+                out->begin_list(out, NULL, NULL, "Resources");
                 pe__rscs_brief_output(out, rscs, new_show_opts);
                 out->end_list(out);
             }
 
+            pcmk__output_xml_pop_parent(out);
+            out->end_list(out);
+
         } else if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             GList *lpc2 = NULL;
+            int rc = pcmk_rc_no_output;
 
-            out->begin_list(out, NULL, NULL, NULL);
+            out->begin_list(out, NULL, NULL, "Node: %s", node_name);
+            item_node = pcmk__output_xml_create_parent(out, "li", NULL);
+            pcmk_create_html_node(item_node, "span", NULL, NULL, "Status:");
+            status_node(node, item_node);
+
             for (lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) lpc2->data;
+                PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resources");
+
                 out->message(out, crm_map_element_name(rsc->xml), show_opts | pcmk_show_rsc_only,
                              rsc, only_node, only_rsc);
             }
+
+            PCMK__OUTPUT_LIST_FOOTER(out, rc);
+            pcmk__output_xml_pop_parent(out);
             out->end_list(out);
+
+        } else {
+            char *buf = crm_strdup_printf("Node: %s", node_name);
+
+            item_node = pcmk__output_create_xml_node(out, "li", NULL);
+            pcmk_create_html_node(item_node, "span", NULL, NULL, buf);
+            status_node(node, item_node);
+
+            free(buf);
         }
     } else {
-        out->begin_list(out, NULL, NULL, "%s", buf);
+        out->begin_list(out, NULL, NULL, "Node: %s", node_name);
     }
 
-    free(buf);
     free(node_name);
     return pcmk_rc_ok;
 }
