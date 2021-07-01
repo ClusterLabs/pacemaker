@@ -842,7 +842,7 @@ if test x"${XSLTPROC}" != x""; then
                    | sed -n 's|^file://||p;q')
     if test x"${MANPAGE_XSLT}" = x""; then
         DIRS=$(find "${datadir}" -name $(basename $(dirname ${DOCBOOK_XSL_PATH})) \
-               -type d | LC_ALL=C sort)
+               -type d 2>/dev/null | LC_ALL=C sort)
         XSLT=$(basename ${DOCBOOK_XSL_PATH})
         for d in ${DIRS}
         do
