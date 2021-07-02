@@ -66,6 +66,11 @@ LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | he
 endif
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
+# indent target: Limit indent to these directories
+INDENT_DIRS	?= .
+
+# indent target: Extra options to pass to indent
+INDENT_OPTS	?=
 
 # This Makefile can create 2 types of distributions:
 #
@@ -418,11 +423,46 @@ changelog:
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 
-DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
+INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
+			  lib/gnu/*
+INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
+			  --blank-lines-after-procedures		\
+			  --braces-after-func-def-line			\
+			  --braces-on-if-line				\
+			  --braces-on-struct-decl-line			\
+			  --break-before-boolean-operator		\
+			  --case-brace-indentation4			\
+			  --case-indentation4				\
+			  --comment-indentation0			\
+			  --continuation-indentation4			\
+			  --continue-at-parentheses			\
+			  --cuddle-do-while				\
+			  --cuddle-else					\
+			  --declaration-comment-column0			\
+			  --declaration-indentation1			\
+			  --else-endif-column0				\
+			  --honour-newlines				\
+			  --indent-label0				\
+			  --indent-level4				\
+			  --line-comments-indentation0			\
+			  --line-length80				\
+			  --no-blank-lines-after-commas			\
+			  --no-comment-delimiters-on-blank-lines	\
+			  --no-space-after-function-call-names		\
+			  --no-space-after-parentheses			\
+			  --no-tabs					\
+			  --preprocessor-indentation2			\
+			  --procnames-start-lines			\
+			  --space-after-cast				\
+			  --start-left-side-of-comments			\
+			  --swallow-optional-blank-lines		\
+			  --tab-size8
 
 indent:
-	find . -name "*.[ch]" -exec ./p-indent \{\} \;
-	git co HEAD $(DO_NOT_INDENT)
+	VERSION_CONTROL=none					\
+		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
+		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
+		-exec indent $(INDENT_PACEMAKER_STYLE) $(INDENT_OPTS) \{\} \;
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;

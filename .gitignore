@@ -117,6 +117,7 @@ include/crm_config.h
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /daemons/schedulerd/pacemaker-schedulerd.xml
+/devel/scratch
 /doc/.ABI-build
 /doc/HTML
 /doc/abi_dumps
@@ -132,7 +133,6 @@ include/crm_config.h
 /maint/testcc_helper.cc
 /maint/testcc_*_h
 /maint/mocked/based
-scratch
 /tools/attrd_updater
 /tools/cibadmin
 /tools/crmadmin
@@ -253,6 +253,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /pacemaker-*.spec
 /pengine
 /py-compile
+/scratch
 /test-driver
 
 # Test coverage

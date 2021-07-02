@@ -63,11 +63,6 @@ doc_DATA = README.markdown COPYING
 licensedir              = $(docdir)/licenses/
 dist_license_DATA	= $(wildcard licenses/*)
 
-# Scratch file for ad-hoc testing
-EXTRA_PROGRAMS		= scratch
-nodist_scratch_SOURCES	= scratch.c
-scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
-
 # Directories that should be created on install and removed on uninstall
 ## owned by root:haclient, mode 0750
 ROOT_DIRS	= $(PACEMAKER_CONFIG_DIR)
@@ -132,7 +127,7 @@ PACKAGE         ?= pacemaker
 # clean-local target can clean up files created by GNUmakefile targets.
 # If this file is used alone, the variable will be undefined.
 clean-local: $(EXTRA_CLEAN_TARGETS)
-	-rm -f scratch $(builddir)/$(PACKAGE)-*.tar.gz
+	-rm -f $(builddir)/$(PACKAGE)-*.tar.gz
 
 distclean-local:
 	-rm -rf libltdl autom4te.cache
