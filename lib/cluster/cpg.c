@@ -120,7 +120,7 @@ get_local_nodeid(cpg_handle_t handle)
     int retries = 0;
     static uint32_t local_nodeid = 0;
     cpg_handle_t local_handle = handle;
-    cpg_callbacks_t cb = { };
+    cpg_model_v1_data_t cpg_model_info = {CPG_MODEL_V1, NULL, NULL, NULL, 0};
     int fd = -1;
     uid_t found_uid = 0;
     gid_t found_gid = 0;
@@ -133,7 +133,7 @@ get_local_nodeid(cpg_handle_t handle)
 
     if(handle == 0) {
         crm_trace("Creating connection");
-        cs_repeat(rc, retries, 5, cpg_initialize(&local_handle, &cb));
+        cs_repeat(rc, retries, 5, cpg_model_initialize(&local_handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
         if (rc != CS_OK) {
             crm_err("Could not connect to the CPG API: %s (%d)",
                     cs_strerror(rc), rc);
@@ -787,11 +787,12 @@ cluster_connect_cpg(crm_cluster_t *cluster)
         .destroy = cluster->destroy,
     };
 
-    cpg_callbacks_t cpg_callbacks = {
-        .cpg_deliver_fn = cluster->cpg.cpg_deliver_fn,
-        .cpg_confchg_fn = cluster->cpg.cpg_confchg_fn,
-        /* .cpg_deliver_fn = pcmk_cpg_deliver, */
-        /* .cpg_confchg_fn = pcmk_cpg_membership, */
+    cpg_model_v1_data_t cpg_model_info = {
+	    .model = CPG_MODEL_V1,
+	    .cpg_deliver_fn = cluster->cpg.cpg_deliver_fn,
+	    .cpg_confchg_fn = cluster->cpg.cpg_confchg_fn,
+	    .cpg_totem_confchg_fn = NULL,
+	    .flags = 0,
     };
 
     cpg_evicted = false;
@@ -803,7 +804,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     cluster->group.value[127] = 0;
     cluster->group.length = 1 + QB_MIN(127, strlen(cluster->group.value));
 
-    cs_repeat(rc, retries, 30, cpg_initialize(&handle, &cpg_callbacks));
+    cs_repeat(rc, retries, 30, cpg_model_initialize(&handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
     if (rc != CS_OK) {
         crm_err("Could not connect to the CPG API: %s (%d)",
                 cs_strerror(rc), rc);
