@@ -521,6 +521,35 @@ new_action(char *key, const char *task, pe_resource_t *rsc, pe_node_t *node,
 }
 
 /*!
+ * \internal
+ * \brief Evaluate node attribute values for an action
+ *
+ * \param[in] action    Action to unpack attributes for
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
+{
+    if (!pcmk_is_set(action->flags, pe_action_have_node_attrs)
+        && (action->op_entry != NULL)) {
+
+        pe_rule_eval_data_t rule_data = {
+            .node_hash = action->node->details->attrs,
+            .role = RSC_ROLE_UNKNOWN,
+            .now = data_set->now,
+            .match_data = NULL,
+            .rsc_data = NULL,
+            .op_data = NULL
+        };
+
+        pe__set_action_flags(action, pe_action_have_node_attrs);
+        pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
+                                   &rule_data, action->extra, NULL,
+                                   FALSE, data_set);
+    }
+}
+
+/*!
  * \brief Create or update an action object
  *
  * \param[in] rsc          Resource that action is for (if any)
@@ -574,21 +603,8 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
             warn_level = LOG_WARNING;
         }
 
-        if (!pcmk_is_set(action->flags, pe_action_have_node_attrs)
-            && action->node != NULL && action->op_entry != NULL) {
-            pe_rule_eval_data_t rule_data = {
-                .node_hash = action->node->details->attrs,
-                .role = RSC_ROLE_UNKNOWN,
-                .now = data_set->now,
-                .match_data = NULL,
-                .rsc_data = NULL,
-                .op_data = NULL
-            };
-
-            pe__set_action_flags(action, pe_action_have_node_attrs);
-            pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
-                                       &rule_data, action->extra, NULL,
-                                       FALSE, data_set);
+        if (action->node != NULL) {
+            unpack_action_node_attributes(action, data_set);
         }
 
         // Make the action optional if its resource is unmanaged
