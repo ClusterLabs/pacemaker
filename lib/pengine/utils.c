@@ -448,6 +448,79 @@ find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
 }
 
 /*!
+ * \internal
+ * \brief Create a new action object
+ *
+ * \param[in] key        Action key
+ * \param[in] task       Action name
+ * \param[in] rsc        Resource that action is for (if any)
+ * \param[in] node       Node that action is on (if any)
+ * \param[in] optional   Whether action should be considered optional
+ * \param[in] for_graph  Whether action should be recorded in transition graph
+ * \param[in] data_set   Cluster working set
+ *
+ * \return Newly allocated action
+ * \note This function takes ownership of \p key. It is the caller's
+ *       responsibility to free the return value with pe_free_action().
+ */
+static pe_action_t *
+new_action(char *key, const char *task, pe_resource_t *rsc, pe_node_t *node,
+           bool optional, bool for_graph, pe_working_set_t *data_set)
+{
+    pe_action_t *action = calloc(1, sizeof(pe_action_t));
+
+    CRM_ASSERT(action != NULL);
+
+    action->rsc = rsc;
+    action->task = strdup(task); CRM_ASSERT(action->task != NULL);
+    action->uuid = key;
+    action->extra = pcmk__strkey_table(free, free);
+    action->meta = pcmk__strkey_table(free, free);
+
+    if (node) {
+        action->node = pe__copy_node(node);
+    }
+
+    if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+        // Resource history deletion for a node can be done on the DC
+        pe__set_action_flags(action, pe_action_dc);
+    }
+
+    pe__set_action_flags(action, pe_action_runnable);
+    if (optional) {
+        pe__set_action_flags(action, pe_action_optional);
+    } else {
+        pe__clear_action_flags(action, pe_action_optional);
+    }
+
+    if (rsc != NULL) {
+        guint interval_ms = 0;
+
+        action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
+        parse_op_key(key, NULL, NULL, &interval_ms);
+        unpack_operation(action, action->op_entry, rsc->container, data_set,
+                         interval_ms);
+    }
+
+    if (for_graph) {
+        pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
+                     (optional? "optional" : "required"),
+                     data_set->action_id, key, task,
+                     ((rsc == NULL)? "no resource" : rsc->id),
+                     ((node == NULL)? "no node" : node->details->uname));
+        action->id = data_set->action_id++;
+
+        data_set->actions = g_list_prepend(data_set->actions, action);
+        if (rsc == NULL) {
+            g_hash_table_insert(data_set->singletons, action->uuid, action);
+        } else {
+            rsc->actions = g_list_prepend(rsc->actions, action);
+        }
+    }
+    return action;
+}
+
+/*!
  * \brief Create or update an action object
  *
  * \param[in] rsc          Resource that action is for (if any)
@@ -482,62 +555,10 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
     }
 
     if (action == NULL) {
-        if (save_action) {
-            pe_rsc_trace(rsc, "Creating action %d (%s): %s for %s (%s) on %s",
-                         data_set->action_id,
-                         (optional? "optional" : "required"),
-                         task, (rsc? rsc->id : "no resource"), key,
-                         (on_node? on_node->details->uname : "no node"));
-        }
-
-        action = calloc(1, sizeof(pe_action_t));
-        if (save_action) {
-            action->id = data_set->action_id++;
-        } else {
-            action->id = 0;
-        }
-        action->rsc = rsc;
-        action->task = strdup(task);
-        if (on_node) {
-            action->node = pe__copy_node(on_node);
-        }
-        action->uuid = strdup(key);
-
-        if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
-            // Resource history deletion for a node can be done on the DC
-            pe__set_action_flags(action, pe_action_dc);
-        }
-
-        pe__set_action_flags(action, pe_action_runnable);
-        if (optional) {
-            pe__set_action_flags(action, pe_action_optional);
-        } else {
-            pe__clear_action_flags(action, pe_action_optional);
-        }
-
-        action->extra = pcmk__strkey_table(free, free);
-        action->meta = pcmk__strkey_table(free, free);
-
-        if (save_action) {
-            data_set->actions = g_list_prepend(data_set->actions, action);
-            if(rsc == NULL) {
-                g_hash_table_insert(data_set->singletons, action->uuid, action);
-            }
-        }
-
-        if (rsc != NULL) {
-            guint interval_ms = 0;
-
-            action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
-            parse_op_key(key, NULL, NULL, &interval_ms);
-
-            unpack_operation(action, action->op_entry, rsc->container, data_set,
-                             interval_ms);
-
-            if (save_action) {
-                rsc->actions = g_list_prepend(rsc->actions, action);
-            }
-        }
+        action = new_action(key, task, rsc, on_node, optional, save_action,
+                            data_set);
+    } else {
+        free(key);
     }
 
     if (!optional && pcmk_is_set(action->flags, pe_action_optional)) {
@@ -677,7 +698,6 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
         }
     }
 
-    free(key);
     return action;
 }
 
