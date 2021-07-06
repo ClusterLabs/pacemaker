@@ -411,6 +411,24 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     return policy;
 }
 
+static void
+add_singleton(pe_working_set_t *data_set, pe_action_t *action)
+{
+    if (data_set->singletons == NULL) {
+        data_set->singletons = pcmk__strkey_table(NULL, NULL);
+    }
+    g_hash_table_insert(data_set->singletons, action->uuid, action);
+}
+
+static pe_action_t *
+lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
+{
+    if (data_set->singletons == NULL) {
+        return NULL;
+    }
+    return g_hash_table_lookup(data_set->singletons, action_uuid);
+}
+
 /*!
  * \internal
  * \brief Find an existing action that matches arguments
@@ -512,7 +530,7 @@ new_action(char *key, const char *task, pe_resource_t *rsc, pe_node_t *node,
 
         data_set->actions = g_list_prepend(data_set->actions, action);
         if (rsc == NULL) {
-            g_hash_table_insert(data_set->singletons, action->uuid, action);
+            add_singleton(data_set, action);
         } else {
             rsc->actions = g_list_prepend(rsc->actions, action);
         }
@@ -722,10 +740,6 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
     pe_action_t *action = NULL;
 
     CRM_ASSERT((key != NULL) && (task != NULL) && (data_set != NULL));
-
-    if(data_set->singletons == NULL) {
-        data_set->singletons = pcmk__strkey_table(NULL, NULL);
-    }
 
     if (save_action) {
         action = find_existing_action(key, rsc, on_node, data_set);
@@ -1956,16 +1970,12 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
 pe_action_t *
 get_pseudo_op(const char *name, pe_working_set_t * data_set)
 {
-    pe_action_t *op = NULL;
+    pe_action_t *op = lookup_singleton(data_set, name);
 
-    if(data_set->singletons) {
-        op = g_hash_table_lookup(data_set->singletons, name);
-    }
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
-
     return op;
 }
 
@@ -2153,10 +2163,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
 
     op_key = crm_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
 
-    if(data_set->singletons) {
-        stonith_op = g_hash_table_lookup(data_set->singletons, op_key);
-    }
-
+    stonith_op = lookup_singleton(data_set, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, CRM_OP_FENCE, node, TRUE, TRUE, data_set);
 
