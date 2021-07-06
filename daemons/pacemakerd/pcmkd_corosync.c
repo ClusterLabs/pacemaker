@@ -256,7 +256,7 @@ mcp_read_config(void)
 
     // There can be only one possibility
     do {
-        rc = cmap_initialize(&local_handle);
+        rc = cmap_initialize_map(&local_handle, CMAP_MAP_ICMAP);
         if (rc != CS_OK) {
             retries++;
             crm_info("Could not connect to Corosync CMAP: %s (retrying in %ds) "
