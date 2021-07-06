@@ -24,6 +24,7 @@ void update_stonith_max_attempts(const char* value);
 void controld_trigger_fencer_connect(void);
 void controld_disconnect_fencer(bool destroy);
 gboolean te_fence_node(crm_graph_t *graph, crm_action_t *action);
+bool controld_verify_stonith_watchdog_timeout(const char *value);
 
 // stonith cleanup list
 void add_stonith_cleanup(const char *target);

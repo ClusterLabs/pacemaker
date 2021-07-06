@@ -55,6 +55,7 @@ enum stonith_call_options {
     st_opt_timeout_updates = 0x00002000,
     /*! Only report back if operation is a success in callback */
     st_opt_report_only_success = 0x00004000,
+    st_opt_check_watchdog  = 0x00008000,
     /* used where ever apropriate - e.g. cleanup of history */
     st_opt_cleanup         = 0x000080000,
     /* used where ever apropriate - e.g. send out a history query to all nodes */
@@ -75,7 +76,8 @@ enum op_state
 enum stonith_namespace {
     st_namespace_invalid,
     st_namespace_any,
-    st_namespace_internal,  // Implemented internally by Pacemaker
+    st_namespace_internal, // Previously implemented
+                           // internally by Pacemaker
 
     /* Neither of these projects are active any longer, but the fence agent
      * interfaces they created are still in use and supported by Pacemaker.

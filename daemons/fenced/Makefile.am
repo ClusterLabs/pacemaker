@@ -15,7 +15,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-fenced cts-fence-helper
 
-sbin_SCRIPTS	= fence_legacy
+sbin_SCRIPTS	= fence_legacy fence_watchdog
 
 noinst_HEADERS	= pacemaker-fenced.h
 

@@ -137,9 +137,6 @@ stonith_text2namespace(const char *namespace_s)
                || !strcmp(namespace_s, "stonith-ng")) {
         return st_namespace_rhcs;
 
-    } else if (!strcmp(namespace_s, "internal")) {
-        return st_namespace_internal;
-
     } else if (!strcmp(namespace_s, "heartbeat")) {
         return st_namespace_lha;
     }
@@ -159,7 +156,6 @@ stonith_namespace2text(enum stonith_namespace st_namespace)
     switch (st_namespace) {
         case st_namespace_any:      return "any";
         case st_namespace_rhcs:     return "stonith-ng";
-        case st_namespace_internal: return "internal";
         case st_namespace_lha:      return "heartbeat";
         default:                    break;
     }
@@ -177,10 +173,6 @@ stonith_namespace2text(enum stonith_namespace st_namespace)
 enum stonith_namespace
 stonith_get_namespace(const char *agent, const char *namespace_s)
 {
-    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_casei)) {
-        return st_namespace_internal;
-    }
-
     if (stonith__agent_is_rhcs(agent)) {
         return st_namespace_rhcs;
     }
@@ -193,6 +185,67 @@ stonith_get_namespace(const char *agent, const char *namespace_s)
 
     crm_err("Unknown fence agent: %s", agent);
     return st_namespace_invalid;
+}
+
+gboolean
+watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
+{
+    gboolean rv = FALSE;
+    stonith_t *stonith_api = st?st:stonith_api_new();
+    char *list = NULL;
+
+    if(stonith_api) {
+        if (stonith_api->state == stonith_disconnected) {
+            int rc = stonith_api->cmds->connect(stonith_api, "stonith-api", NULL);
+
+            if (rc != pcmk_ok) {
+                crm_err("Failed connecting to Stonith-API for watchdog-fencing-query.");
+            }
+        }
+
+        if (stonith_api->state != stonith_disconnected) {
+            /* caveat!!!
+             * this might fail when when stonithd is just updating the device-list
+             * probably something we should fix as well for other api-calls */
+            int rc = stonith_api->cmds->list(stonith_api, st_opt_sync_call, STONITH_WATCHDOG_ID, &list, 0);
+            if ((rc != pcmk_ok) || (list == NULL)) {
+                /* due to the race described above it can happen that
+                 * we drop in here - so as not to make remote nodes
+                 * panic on that answer
+                 */
+                crm_warn("watchdog-fencing-query failed");
+            } else if (list[0] == '\0') {
+                crm_warn("watchdog-fencing-query returned an empty list - any node");
+                rv = TRUE;
+            } else {
+                GList *targets = stonith__parse_targets(list);
+                rv = pcmk__str_in_list(targets, node);
+                g_list_free_full(targets, free);
+            }
+            free(list);
+            if (!st) {
+                /* if we're provided the api we still might have done the
+                 * connection - but let's assume the caller won't bother
+                 */
+                stonith_api->cmds->disconnect(stonith_api);
+            }
+        }
+
+        if (!st) {
+            stonith_api_delete(stonith_api);
+        }
+    } else {
+        crm_err("Stonith-API for watchdog-fencing-query couldn't be created.");
+    }
+    crm_trace("Pacemaker assumes node %s %sto do watchdog-fencing.",
+              node, rv?"":"not ");
+    return rv;
+}
+
+gboolean
+watchdog_fencing_enabled_for_node(const char *node)
+{
+    return watchdog_fencing_enabled_for_node_api(NULL, node);
 }
 
 static void

@@ -164,7 +164,8 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define STONITH_OP_LEVEL_ADD       "st_level_add"
 #  define STONITH_OP_LEVEL_DEL       "st_level_remove"
 
-#  define STONITH_WATCHDOG_AGENT  "#watchdog"
+#  define STONITH_WATCHDOG_AGENT  "fence_watchdog"
+#  define STONITH_WATCHDOG_ID     "watchdog"
 
 #  ifdef HAVE_STONITH_STONITH_H
 // utilities from st_lha.c
@@ -210,5 +211,8 @@ stonith__op_state_pending(enum op_state state)
 {
     return state != st_failed && state != st_done;
 }
+
+gboolean watchdog_fencing_enabled_for_node(const char *node);
+gboolean watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node);
 
 #endif
