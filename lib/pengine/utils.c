@@ -561,7 +561,7 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
         free(key);
     }
 
-    if (!optional && pcmk_is_set(action->flags, pe_action_optional)) {
+    if (!optional) {
         pe__clear_action_flags(action, pe_action_optional);
     }
 
