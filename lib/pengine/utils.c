@@ -413,6 +413,41 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
 
 /*!
  * \internal
+ * \brief Find an existing action that matches arguments
+ *
+ * \param[in] key        Action key to match
+ * \param[in] rsc        Resource to match (if any)
+ * \param[in] node       Node to match (if any)
+ * \param[in] data_set   Cluster working set
+ *
+ * \return Existing action that matches arguments (or NULL if none)
+ */
+static pe_action_t *
+find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
+                     pe_working_set_t *data_set)
+{
+    GList *matches = NULL;
+    pe_action_t *action = NULL;
+
+    /* When rsc is NULL, it would be quicker to check data_set->singletons,
+     * but checking all data_set->actions takes the node into account.
+     */
+    matches = find_actions(((rsc == NULL)? data_set->actions : rsc->actions),
+                           key, node);
+    if (matches == NULL) {
+        return NULL;
+    }
+    CRM_LOG_ASSERT(!pcmk__list_of_multiple(matches));
+
+    action = matches->data;
+    pe_rsc_trace(rsc, "Found existing action %d (%s for %s on %s)",
+                 action->id, key, ((rsc == NULL)? "no resource" : rsc->id),
+                 ((node == NULL)? "no node" : node->details->uname));
+    g_list_free(matches);
+    return action;
+}
+
+/*!
  * \brief Create or update an action object
  *
  * \param[in] rsc          Resource that action is for (if any)
@@ -435,38 +470,15 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
               pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
-    GList *possible_matches = NULL;
 
     CRM_ASSERT((key != NULL) && (task != NULL) && (data_set != NULL));
-
-    if (save_action && rsc != NULL) {
-        possible_matches = find_actions(rsc->actions, key, on_node);
-    } else if(save_action) {
-#if 0
-        action = g_hash_table_lookup(data_set->singletons, key);
-#else
-        /* More expensive but takes 'node' into account */
-        possible_matches = find_actions(data_set->actions, key, on_node);
-#endif
-    }
 
     if(data_set->singletons == NULL) {
         data_set->singletons = pcmk__strkey_table(NULL, NULL);
     }
 
-    if (possible_matches != NULL) {
-        if (pcmk__list_of_multiple(possible_matches)) {
-            pe_warn("Action %s for %s on %s exists %d times",
-                    task, rsc ? rsc->id : "<NULL>",
-                    on_node ? on_node->details->uname : "<NULL>", g_list_length(possible_matches));
-        }
-
-        action = g_list_nth_data(possible_matches, 0);
-        pe_rsc_trace(rsc, "Found action %d: %s for %s (%s) on %s",
-                     action->id, task, (rsc? rsc->id : "no resource"),
-                     action->uuid,
-                     (on_node? on_node->details->uname : "no node"));
-        g_list_free(possible_matches);
+    if (save_action) {
+        action = find_existing_action(key, rsc, on_node, data_set);
     }
 
     if (action == NULL) {
