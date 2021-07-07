@@ -673,6 +673,31 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
 }
 
 /*!
+ * \internal
+ * \brief Update a resource object's flags for a new action on it
+ *
+ * \param[in] rsc        Resource that action is for (if any)
+ * \param[in] action     New action
+ */
+static void
+update_resource_flags_for_action(pe_resource_t *rsc, pe_action_t *action)
+{
+    /* @COMPAT pe_rsc_starting and pe_rsc_stopping are not actually used
+     * within Pacemaker, and should be deprecated and eventually removed
+     */
+    if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+        pe__set_resource_flags(rsc, pe_rsc_stopping);
+
+    } else if (pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)) {
+        if (pcmk_is_set(action->flags, pe_action_runnable)) {
+            pe__set_resource_flags(rsc, pe_rsc_starting);
+        } else {
+            pe__clear_resource_flags(rsc, pe_rsc_starting);
+        }
+    }
+}
+
+/*!
  * \brief Create or update an action object
  *
  * \param[in] rsc          Resource that action is for (if any)
@@ -716,8 +741,6 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
     update_action_optional(action, optional);
 
     if (rsc != NULL) {
-        enum action_tasks a_task = text2task(action->task);
-
         if (action->node != NULL) {
             unpack_action_node_attributes(action, data_set);
         }
@@ -725,19 +748,7 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
         update_resource_action_runnable(action, save_action, data_set);
 
         if (save_action) {
-            switch (a_task) {
-                case stop_rsc:
-                    pe__set_resource_flags(rsc, pe_rsc_stopping);
-                    break;
-                case start_rsc:
-                    pe__clear_resource_flags(rsc, pe_rsc_starting);
-                    if (pcmk_is_set(action->flags, pe_action_runnable)) {
-                        pe__set_resource_flags(rsc, pe_rsc_starting);
-                    }
-                    break;
-                default:
-                    break;
-            }
+            update_resource_flags_for_action(rsc, action);
         }
     }
 
