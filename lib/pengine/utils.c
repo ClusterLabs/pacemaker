@@ -411,16 +411,33 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     return policy;
 }
 
+/*!
+ * \internal
+ * \brief Create or update an action object
+ *
+ * \param[in] rsc          Resource that action is for (if any)
+ * \param[in] key          Action key (must be non-NULL)
+ * \param[in] task         Action name (must be non-NULL)
+ * \param[in] on_node      Node that action is on (if any)
+ * \param[in] optional     Whether action should be considered optional
+ * \param[in] save_action  Whether action should be recorded in transition graph
+ * \param[in] data_set     Cluster working set
+ *
+ * \return Action object corresponding to arguments
+ * \note This function takes ownership of (and might free) \p key. If
+ *       \p save_action is true, \p data_set will own the returned action,
+ *       otherwise it is the caller's responsibility to free the return value
+ *       with pe_free_action().
+ */
 pe_action_t *
-custom_action(pe_resource_t * rsc, char *key, const char *task,
-              pe_node_t * on_node, gboolean optional, gboolean save_action,
-              pe_working_set_t * data_set)
+custom_action(pe_resource_t *rsc, char *key, const char *task,
+              pe_node_t *on_node, gboolean optional, gboolean save_action,
+              pe_working_set_t *data_set)
 {
     pe_action_t *action = NULL;
     GList *possible_matches = NULL;
 
-    CRM_CHECK(key != NULL, return NULL);
-    CRM_CHECK(task != NULL, free(key); return NULL);
+    CRM_ASSERT((key != NULL) && (task != NULL) && (data_set != NULL));
 
     if (save_action && rsc != NULL) {
         possible_matches = find_actions(rsc->actions, key, on_node);
