@@ -1583,7 +1583,6 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
-            crm_trace("%s does not match action %s", key, action->uuid);
             continue;
 
         } else if (on_node == NULL) {
@@ -1600,11 +1599,6 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
         } else if (on_node->details == action->node->details) {
             crm_trace("Action %s on %s matches", key, on_node->details->uname);
             result = g_list_prepend(result, action);
-
-        } else {
-            crm_trace("Action %s on node %s does not match requested node %s",
-                      key, action->node->details->uname,
-                      on_node->details->uname);
         }
     }
 
@@ -1619,27 +1613,18 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
     CRM_CHECK(key != NULL, return NULL);
 
     if (on_node == NULL) {
-        crm_trace("Not searching for action %s because node not specified",
-                  key);
         return NULL;
     }
 
     for (GList *gIter = input; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (action->node == NULL) {
-            crm_trace("Skipping comparison of %s vs action %s without node",
-                      key, action->uuid);
+        if ((action->node != NULL)
+            && pcmk__str_eq(key, action->uuid, pcmk__str_casei)
+            && pcmk__str_eq(on_node->details->id, action->node->details->id,
+                            pcmk__str_casei)) {
 
-        } else if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
-            crm_trace("Desired action %s doesn't match %s", key, action->uuid);
-
-        } else if (!pcmk__str_eq(on_node->details->id, action->node->details->id, pcmk__str_casei)) {
-            crm_trace("Action %s desired node ID %s doesn't match %s",
-                      key, on_node->details->id, action->node->details->id);
-
-        } else {
-            crm_trace("Action %s matches", key);
+            crm_trace("Action %s on %s matches", key, on_node->details->uname);
             result = g_list_prepend(result, action);
         }
     }
