@@ -458,9 +458,6 @@ find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
     CRM_LOG_ASSERT(!pcmk__list_of_multiple(matches));
 
     action = matches->data;
-    pe_rsc_trace(rsc, "Found existing action %d (%s for %s on %s)",
-                 action->id, key, ((rsc == NULL)? "no resource" : rsc->id),
-                 ((node == NULL)? "no node" : node->details->uname));
     g_list_free(matches);
     return action;
 }
