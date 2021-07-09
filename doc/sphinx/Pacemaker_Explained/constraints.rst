@@ -534,7 +534,7 @@ _____________________
    |                |                | Whether to consider the location preferences of        |
    |                |                | ``rsc`` when ``with-rsc`` is already active. Allowed   |
    |                |                | values: ``true``, ``false``. For details, see          |
-   |                |                | :ref:`s-coloc-influence`.                              |
+   |                |                | :ref:`s-coloc-influence`. *(since 2.1.0)*              |
    +----------------+----------------+--------------------------------------------------------+
 
 Mandatory Placement

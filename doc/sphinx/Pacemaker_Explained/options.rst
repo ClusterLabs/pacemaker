@@ -222,7 +222,8 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         | "correct" value will depend on the speed and       |
    |                           |         | load of your network and cluster nodes. If zero,   |
    |                           |         | the cluster will impose a dynamically calculated   |
-   |                           |         | limit only when any node has high load.            |
+   |                           |         | limit only when any node has high load. If -1, the |
+   |                           |         | cluster will not impose any limit.                 |
    +---------------------------+---------+----------------------------------------------------+
    | migration-limit           | -1      | .. index::                                         |
    |                           |         |    pair: cluster option; migration-limit           |
@@ -360,8 +361,13 @@ values, by running the ``man pacemaker-schedulerd`` and
    | concurrent-fencing        | false   | .. index::                                         |
    |                           |         |    pair: cluster option; concurrent-fencing        |
    |                           |         |                                                    |
-   |                           |         | Whether the cluster is allowed to initiate multiple|
-   |                           |         | fence actions concurrently                         |
+   |                           |         | Whether the cluster is allowed to initiate         |
+   |                           |         | multiple fence actions concurrently. Fence actions |
+   |                           |         | initiated externally, such as via the              |
+   |                           |         | ``stonith_admin`` tool or an application such as   |
+   |                           |         | DLM, or by the fencer itself such as recurring     |
+   |                           |         | device monitors and ``status`` and ``list``        |
+   |                           |         | commands, are not limited by this option.          |
    +---------------------------+---------+----------------------------------------------------+
    | fence-reaction            | stop    | .. index::                                         |
    |                           |         |    pair: cluster option; fence-reaction            |
@@ -434,21 +440,22 @@ values, by running the ``man pacemaker-schedulerd`` and
    |                           |         |                                                    |
    |                           |         | The number of scheduler inputs resulting in errors |
    |                           |         | to save. Used when reporting problems. A value of  |
-   |                           |         | -1 means unlimited (report all).                   |
+   |                           |         | -1 means unlimited (report all), and 0 means none. |
    +---------------------------+---------+----------------------------------------------------+
-   | pe-warn-series-max        | -1      | .. index::                                         |
+   | pe-warn-series-max        | 5000    | .. index::                                         |
    |                           |         |    pair: cluster option; pe-warn-series-max        |
    |                           |         |                                                    |
    |                           |         | The number of scheduler inputs resulting in        |
    |                           |         | warnings to save. Used when reporting problems. A  |
-   |                           |         | value of -1 means unlimited (report all).          |
+   |                           |         | value of -1 means unlimited (report all), and 0    |
+   |                           |         | means none.                                        |
    +---------------------------+---------+----------------------------------------------------+
-   | pe-input-series-max       | -1      | .. index::                                         |
+   | pe-input-series-max       | 4000    | .. index::                                         |
    |                           |         |    pair: cluster option; pe-input-series-max       |
    |                           |         |                                                    |
    |                           |         | The number of "normal" scheduler inputs to save.   |
    |                           |         | Used when reporting problems. A value of -1 means  |
-   |                           |         | unlimited (report all).                            |
+   |                           |         | unlimited (report all), and 0 means none.          |
    +---------------------------+---------+----------------------------------------------------+
    | enable-acl                | false   | .. index::                                         |
    |                           |         |    pair: cluster option; enable-acl                |
