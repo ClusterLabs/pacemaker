@@ -278,9 +278,15 @@ for ``pacemaker-fenced``.
    |                      |         |                    |                                        |
    |                      |         |                    | The maximum number of actions that can |
    |                      |         |                    | be performed in parallel on this       |
-   |                      |         |                    | device, if the cluster option          |
-   |                      |         |                    | ``concurrent-fencing`` is ``true``. A  |
-   |                      |         |                    | value of -1 means unlimited.           |
+   |                      |         |                    | device. A value of -1 means unlimited. |
+   |                      |         |                    | Node fencing actions initiated by the  |
+   |                      |         |                    | cluster (as opposed to an administrator|
+   |                      |         |                    | running the ``stonith_admin`` tool or  |
+   |                      |         |                    | the fencer running recurring device    |
+   |                      |         |                    | monitors and ``status`` and ``list``   |
+   |                      |         |                    | commands) are additionally subject to  |
+   |                      |         |                    | the ``concurrent-fencing`` cluster     |
+   |                      |         |                    | property.                              |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_host_argument   | string  | ``port`` otherwise | .. index::                             |
    |                      |         | ``plug`` if        |    single: pcmk_host_argument          |

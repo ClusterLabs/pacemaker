@@ -361,8 +361,13 @@ values, by running the ``man pacemaker-schedulerd`` and
    | concurrent-fencing        | false   | .. index::                                         |
    |                           |         |    pair: cluster option; concurrent-fencing        |
    |                           |         |                                                    |
-   |                           |         | Whether the cluster is allowed to initiate multiple|
-   |                           |         | fence actions concurrently                         |
+   |                           |         | Whether the cluster is allowed to initiate         |
+   |                           |         | multiple fence actions concurrently. Fence actions |
+   |                           |         | initiated externally, such as via the              |
+   |                           |         | ``stonith_admin`` tool or an application such as   |
+   |                           |         | DLM, or by the fencer itself such as recurring     |
+   |                           |         | device monitors and ``status`` and ``list``        |
+   |                           |         | commands, are not limited by this option.          |
    +---------------------------+---------+----------------------------------------------------+
    | fence-reaction            | stop    | .. index::                                         |
    |                           |         |    pair: cluster option; fence-reaction            |
