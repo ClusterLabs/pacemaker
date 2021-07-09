@@ -204,9 +204,6 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
                      first->uuid, then->uuid, node->details->uname);
     }
 
-    pe__clear_raw_action_flags(first_flags, "first action update",
-                               pe_action_pseudo);
-
     if (type & pe_order_implies_then) {
         if (then->rsc) {
             changed |= then->rsc->cmds->update_actions(first, then, node,
