@@ -185,7 +185,7 @@ native_choose_node(pe_resource_t * rsc, pe_node_t * prefer, pe_working_set_t * d
     }
 
     if (multiple > 1) {
-        static char score[33];
+        static char score[PCMK__SCORE_MAX_LEN + 1];
         int log_level = (chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO;
 
         score2char_stack(chosen->weight, score, sizeof(score));

@@ -1,0 +1,37 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="18" operation="stop" operation_key="SAS_PROD_FENCE_stop_0" on_node="node1" on_node_uuid="1">
+        <primitive id="SAS_PROD_FENCE" class="stonith" type="fence_vmware_soap"/>
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  ipaddr="1.2.3.4" login="fenceuser" login_timeout="60" passwd="****" pcmk_host_map="node1:node1;node2:node2;node3:node3;node4:node4;node5:node5;node6:node6;node7:node7;node8:node8;node9:node9" pcmk_monitor_timeout="120" power_timeout="200" power_wait="90" retry_on="1" shell_timeout="120" ssl_insecure="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="17" operation="start" operation_key="SAS_PROD_FENCE_start_0" on_node="node1" on_node_uuid="1">
+        <primitive id="SAS_PROD_FENCE" class="stonith" type="fence_vmware_soap"/>
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  ipaddr="1.2.3.4" login="fenceuser" login_timeout="60" passwd="****" pcmk_host_map="node1:node1;node2:node2;node3:node3;node4:node4;node5:node5;node6:node6;node7:node7;node8:node8;node9:node9" pcmk_monitor_timeout="120" power_timeout="200" power_wait="90" retry_on="1" shell_timeout="120" ssl_insecure="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="SAS_PROD_FENCE_stop_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="SAS_PROD_FENCE_monitor_60000" on_node="node1" on_node_uuid="1">
+        <primitive id="SAS_PROD_FENCE" class="stonith" type="fence_vmware_soap"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="120000"  ipaddr="1.2.3.4" login="fenceuser" login_timeout="60" passwd="****" pcmk_host_map="node1:node1;node2:node2;node3:node3;node4:node4;node5:node5;node6:node6;node7:node7;node8:node8;node9:node9" pcmk_monitor_timeout="120" power_timeout="200" power_wait="90" retry_on="1" shell_timeout="120" ssl_insecure="1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="start" operation_key="SAS_PROD_FENCE_start_0" on_node="node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

@@ -1,0 +1,10 @@
+ digraph "g" {
+"stateful-clone_running_0" [ style=bold color="green" fontcolor="orange"]
+"stateful-clone_start_0" -> "stateful-clone_running_0" [ style = bold]
+"stateful-clone_start_0" -> "stateful:2_start_0 node1" [ style = bold]
+"stateful-clone_start_0" [ style=bold color="green" fontcolor="orange"]
+"stateful:2_monitor_11000 node1" [ style=bold color="green" fontcolor="black"]
+"stateful:2_start_0 node1" -> "stateful-clone_running_0" [ style = bold]
+"stateful:2_start_0 node1" -> "stateful:2_monitor_11000 node1" [ style = bold]
+"stateful:2_start_0 node1" [ style=bold color="green" fontcolor="black"]
+}

@@ -472,7 +472,6 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
                   int limit, pe_working_set_t *data_set)
 {
     pe_node_t *chosen = NULL;
-    GHashTable *backup = NULL;
 
     CRM_ASSERT(rsc);
     pe_rsc_trace(rsc, "Checking allocation of %s (preferring %s, using %s parent colocations)",
@@ -504,19 +503,12 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
 
     can_run_instance(rsc, NULL, limit);
 
-    backup = pcmk__copy_node_table(rsc->allowed_nodes);
     pe_rsc_trace(rsc, "Allocating instance %s", rsc->id);
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
-    if (chosen && prefer && (chosen->details != prefer->details)) {
-        crm_info("Not pre-allocating %s to %s because %s is better",
-                 rsc->id, prefer->details->uname, chosen->details->uname);
-        g_hash_table_destroy(rsc->allowed_nodes);
-        rsc->allowed_nodes = backup;
-        native_deallocate(rsc);
-        chosen = NULL;
-        backup = NULL;
-    }
-    if (chosen) {
+
+    if ((chosen != NULL)
+        && ((prefer == NULL) || (chosen->details == prefer->details))) {
+
         pe_node_t *local_node = parent_node_instance(rsc, chosen);
 
         if (local_node) {
@@ -530,9 +522,6 @@ allocate_instance(pe_resource_t *rsc, pe_node_t *prefer, gboolean all_coloc,
         }
     }
 
-    if(backup) {
-        g_hash_table_destroy(backup);
-    }
     return chosen;
 }
 
@@ -563,7 +552,6 @@ append_parent_colocation(pe_resource_t * rsc, pe_resource_t * child, gboolean al
         }
     }
 }
-
 
 void
 distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
@@ -605,6 +593,8 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
         pe_resource_t *child = (pe_resource_t *) gIter->data;
         pe_node_t *child_node = NULL;
         pe_node_t *local_node = NULL;
+        GHashTable *orig_allowed = NULL;
+        int reserved = 0;
 
         if ((child->running_on == NULL)
             || !pcmk_is_set(child->flags, pe_rsc_provisional)
@@ -634,11 +624,69 @@ distribute_children(pe_resource_t *rsc, GList *children, GList *nodes,
             continue;
         }
 
-        if (allocate_instance(child, child_node, all_coloc, per_host_max,
-                              data_set)) {
-            pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
-                         child_node->details->uname);
-            allocated++;
+        /* child->allowed_nodes is used as a working table that may
+         * accumulate temporary -INFINITY weights. Save the original
+         * weights in case we need to roll back.
+         */
+        orig_allowed = pcmk__copy_node_table(child->allowed_nodes);
+
+        while (allocated + reserved < max) {
+            GHashTable *backup = NULL;
+            pe_node_t *chosen = NULL;
+
+            backup = pcmk__copy_node_table(child->allowed_nodes);
+            chosen = allocate_instance(child, child_node, all_coloc,
+                                       per_host_max, data_set);
+
+            /* Give up */
+            if (chosen == NULL) {
+                pe_rsc_trace(rsc, "Couldn't pre-allocate %s anywhere - rolling "
+                             "back weights", child->id);
+                g_hash_table_destroy(backup);
+                break;
+            }
+
+            /* Success */
+            if (chosen->details == child_node->details) {
+                pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,
+                             child_node->details->uname);
+                g_hash_table_destroy(backup);
+                g_hash_table_destroy(orig_allowed);
+                orig_allowed = NULL;
+                allocated++;
+                break;
+            }
+
+            /* Not where we wanted; try again if we can */
+            crm_info("Not pre-allocating %s to %s because %s is better",
+                     rsc->id, child_node->details->uname,
+                     chosen->details->uname);
+
+            /* Make chosen temporarily unavailable. native_deallocate()
+             * frees the node, so make a copy.
+             */
+            chosen = pe__copy_node(chosen);
+            chosen->weight = -INFINITY;
+            native_deallocate(child);
+
+            /* Only chosen keeps the new -INFINITY weight */
+            g_hash_table_destroy(child->allowed_nodes);
+            child->allowed_nodes = backup;
+            g_hash_table_replace(child->allowed_nodes,
+                                 (gpointer) chosen->details->id, chosen);
+
+            /* Reserve one instance for chosen */
+            reserved++;
+            if (allocated + reserved < max) {
+                crm_info("Trying again with %s excluded",
+                         chosen->details->uname);
+            }
+        }
+
+        /* Couldn't allocate or reached max */
+        if (orig_allowed != NULL) {
+            g_hash_table_destroy(child->allowed_nodes);
+            child->allowed_nodes = orig_allowed;
         }
     }
 

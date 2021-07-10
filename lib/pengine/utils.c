@@ -234,7 +234,9 @@ pe__output_node_weights(pe_resource_t *rsc, const char *comment,
                         GHashTable *nodes, pe_working_set_t *data_set)
 {
     pcmk__output_t *out = data_set->priv;
-    char score[128]; // Stack-allocated since this is called frequently
+
+    // Stack-allocated since this is called frequently
+    char score[PCMK__SCORE_MAX_LEN + 1];
 
     // Sort the nodes so the output is consistent for regression tests
     GList *list = g_list_sort(g_hash_table_get_values(nodes), sort_node_uname);
@@ -265,7 +267,9 @@ pe__log_node_weights(const char *file, const char *function, int line,
 {
     GHashTableIter iter;
     pe_node_t *node = NULL;
-    char score[128]; // Stack-allocated since this is called frequently
+
+    // Stack-allocated since this is called frequently
+    char score[PCMK__SCORE_MAX_LEN + 1];
 
     // Don't waste time if we're not tracing at this point
     pcmk__log_else(LOG_TRACE, return);

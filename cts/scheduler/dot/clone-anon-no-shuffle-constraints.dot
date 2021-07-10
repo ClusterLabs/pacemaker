@@ -1,0 +1,7 @@
+ digraph "g" {
+"SAS_PROD_FENCE_monitor_60000 node1" [ style=bold color="green" fontcolor="black"]
+"SAS_PROD_FENCE_start_0 node1" -> "SAS_PROD_FENCE_monitor_60000 node1" [ style = bold]
+"SAS_PROD_FENCE_start_0 node1" [ style=bold color="green" fontcolor="black"]
+"SAS_PROD_FENCE_stop_0 node1" -> "SAS_PROD_FENCE_start_0 node1" [ style = bold]
+"SAS_PROD_FENCE_stop_0 node1" [ style=bold color="green" fontcolor="black"]
+}

@@ -1,0 +1,276 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-3.6" epoch="406" num_updates="0" admin_epoch="0" cib-last-written="Sun Nov 29 21:20:20 2020" update-origin="node1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="5">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.23-1.el7-9acf116022"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="SASProd_cluster"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1">
+        <instance_attributes id="nodes-1"/>
+      </node>
+      <node id="2" uname="node2">
+        <instance_attributes id="nodes-2"/>
+      </node>
+      <node id="3" uname="node3">
+        <instance_attributes id="nodes-3"/>
+      </node>
+      <node id="4" uname="node4">
+        <instance_attributes id="nodes-4"/>
+      </node>
+      <node id="5" uname="node5">
+        <instance_attributes id="nodes-5"/>
+      </node>
+      <node id="6" uname="node6">
+        <instance_attributes id="nodes-6"/>
+      </node>
+      <node id="7" uname="node7">
+        <instance_attributes id="nodes-7"/>
+      </node>
+      <node id="8" uname="node8">
+        <instance_attributes id="nodes-8"/>
+      </node>
+      <node id="9" uname="node9">
+        <instance_attributes id="nodes-9"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="SAS_PROD_FENCE" type="fence_vmware_soap">
+        <meta_attributes id="SAS_PROD_FENCE-meta_attributes"/>
+        <instance_attributes id="SAS_PROD_FENCE-instance_attributes">
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-ipaddr" name="ipaddr" value="1.2.3.4"/>
+	  <nvpair id="SAS_PROD_FENCE-instance_attributes-login" name="login" value="fenceuser"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-passwd" name="passwd" value="****"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-pcmk_host_map" name="pcmk_host_map" value="node1:node1;node2:node2;node3:node3;node4:node4;node5:node5;node6:node6;node7:node7;node8:node8;node9:node9"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-ssl_insecure" name="ssl_insecure" value="1"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-login_timeout" name="login_timeout" value="60"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-power_timeout" name="power_timeout" value="200"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-power_wait" name="power_wait" value="90"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-retry_on" name="retry_on" value="1"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-shell_timeout" name="shell_timeout" value="120"/>
+          <nvpair id="SAS_PROD_FENCE-instance_attributes-pcmk_monitor_timeout" name="pcmk_monitor_timeout" value="120"/>
+        </instance_attributes>
+        <operations>
+          <op id="SAS_PROD_FENCE-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="clvmd-clone">
+        <primitive class="ocf" id="clvmd" provider="heartbeat" type="clvm">
+          <meta_attributes id="clvmd-meta_attributes"/>
+          <operations>
+            <op id="clvmd-monitor-interval-30s" interval="30s" name="monitor" on-fail="fence"/>
+            <op id="clvmd-start-interval-0s" interval="0s" name="start" timeout="90s"/>
+            <op id="clvmd-stop-interval-0s" interval="0s" name="stop" timeout="90s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="clvmd-clone-meta_attributes">
+          <nvpair id="clvmd-clone-meta_attributes-interleave" name="interleave" value="true"/>
+          <nvpair id="clvmd-clone-meta_attributes-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="SASHOME-clone">
+        <primitive class="ocf" id="SASHOME" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="SASHOME-instance_attributes">
+            <nvpair id="SASHOME-instance_attributes-device" name="device" value="/dev/vg_NBISGFSSASHOME/SASHOME"/>
+            <nvpair id="SASHOME-instance_attributes-directory" name="directory" value="/SASHome"/>
+            <nvpair id="SASHOME-instance_attributes-fstype" name="fstype" value="gfs2"/>
+            <nvpair id="SASHOME-instance_attributes-options" name="options" value="noatime"/>
+          </instance_attributes>
+          <operations>
+            <op id="SASHOME-monitor-interval-10s" interval="10s" name="monitor" on-fail="fence"/>
+            <op id="SASHOME-notify-interval-0s" interval="0s" name="notify" timeout="60s"/>
+            <op id="SASHOME-start-interval-0s" interval="0s" name="start" timeout="60s"/>
+            <op id="SASHOME-stop-interval-0s" interval="0s" name="stop" timeout="300"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="SASHOME-clone-meta_attributes">
+          <nvpair id="SASHOME-clone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="location-SASHOME-clone-pa3310-INFINITY" node="pa3310" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-pa3311-INFINITY" node="pa3311" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-pa3314-INFINITY" node="pa3314" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-pa3316-INFINITY" node="pa3316" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-pa3317-INFINITY" node="pa3317" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node-INFINITY" node="node" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_order first="clvmd-clone" first-action="start" id="order-clvmd-clone-SASHOME-clone-mandatory" then="SASHOME-clone" then-action="start"/>
+      <rsc_colocation id="colocation-SASHOME-clone-clvmd-clone-INFINITY" rsc="SASHOME-clone" score="INFINITY" with-rsc="clvmd-clone"/>
+      <rsc_location id="location-SASHOME-clone-node5--INFINITY" node="node5" rsc="SASHOME-clone" score="-INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node1-INFINITY" node="node1" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node2-INFINITY" node="node2" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node3-INFINITY" node="node3" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node6-INFINITY" node="node6" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node8-INFINITY" node="node8" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node9-INFINITY" node="node9" rsc="SASHOME-clone" score="INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node4--INFINITY" node="node4" rsc="SASHOME-clone" score="-INFINITY"/>
+      <rsc_location id="location-SASHOME-clone-node7--INFINITY" node="node7" rsc="SASHOME-clone" score="-INFINITY"/>
+    </constraints>
+    <op_defaults>
+      <meta_attributes id="op_defaults-options">
+        <nvpair id="op_defaults-options-timeout" name="timeout" value="120s"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status>
+    <node_state id="8" uname="node8" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="8">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="73:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;73:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node8" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="3" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="37:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;37:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node8" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1606702544" last-rc-change="1606702544" exec-time="2272" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="38:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;38:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node8" call-id="64" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702546" exec-time="22" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="134:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;134:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node8" call-id="1872" rc-code="0" op-status="0" interval="0" last-run="1606753222" last-rc-change="1606753222" exec-time="2966" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_monitor_10000" operation_key="SASHOME_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="135:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;135:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node8" call-id="1873" rc-code="0" op-status="0" interval="10000" last-rc-change="1606753225" exec-time="40" queue-time="0" op-digest="76b136f2ee04823423662c9de5c8331c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="9" uname="node9" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="9">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="85:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;85:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node9" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="2" queue-time="1" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="39:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;39:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node9" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1606702546" last-rc-change="1606702546" exec-time="2343" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="40:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;40:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node9" call-id="64" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702549" exec-time="28" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="137:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;137:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node9" call-id="1868" rc-code="0" op-status="0" interval="0" last-run="1606753222" last-rc-change="1606753222" exec-time="5140" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_monitor_10000" operation_key="SASHOME_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="138:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;138:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node9" call-id="1873" rc-code="0" op-status="0" interval="10000" last-rc-change="1606753227" exec-time="53" queue-time="0" op-digest="76b136f2ee04823423662c9de5c8331c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="83:5:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;83:5:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node1" call-id="83" rc-code="0" op-status="0" interval="0" last-run="1606702820" last-rc-change="1606702820" exec-time="8525" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+            <lrm_rsc_op id="SAS_PROD_FENCE_monitor_60000" operation_key="SAS_PROD_FENCE_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="84:5:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;84:5:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node1" call-id="113" rc-code="0" op-status="0" interval="60000" last-rc-change="1606702828" exec-time="7671" queue-time="0" op-digest="0e068086391faa587b47225325813856" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="23:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;23:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node1" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1606702528" last-rc-change="1606702528" exec-time="2274" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="24:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;24:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node1" call-id="64" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702530" exec-time="23" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="142:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;142:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node1" call-id="1868" rc-code="0" op-status="0" interval="0" last-run="1606753222" last-rc-change="1606753222" exec-time="2503" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_monitor_10000" operation_key="SASHOME_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="143:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;143:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node1" call-id="1871" rc-code="0" op-status="0" interval="10000" last-rc-change="1606753224" exec-time="45" queue-time="0" op-digest="76b136f2ee04823423662c9de5c8331c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="13:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;13:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="2" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="25:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;25:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node2" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1606702530" last-rc-change="1606702530" exec-time="2164" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="26:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;26:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node2" call-id="64" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702532" exec-time="24" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="47:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;47:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node2" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1606702549" last-rc-change="1606702549" exec-time="12888" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_monitor_10000" operation_key="SASHOME_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="48:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;48:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node2" call-id="76" rc-code="0" op-status="0" interval="10000" last-rc-change="1606702561" exec-time="50" queue-time="0" op-digest="76b136f2ee04823423662c9de5c8331c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="node4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="25:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;25:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node4" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="1" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="29:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;29:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node4" call-id="64" rc-code="0" op-status="0" interval="0" last-run="1606702534" last-rc-change="1606702534" exec-time="2220" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="30:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;30:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node4" call-id="65" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702537" exec-time="21" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="53:2:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;53:2:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node4" call-id="61" rc-code="0" op-status="0" interval="0" last-run="1606702481" last-rc-change="1606702481" exec-time="124" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_last_failure_0" operation_key="SASHOME_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;28:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node4" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="49" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="node5" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_failure_0" operation_key="SASHOME_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="40:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;40:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node5" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="47" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="54:2:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;54:2:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node5" call-id="61" rc-code="0" op-status="0" interval="0" last-run="1606702481" last-rc-change="1606702481" exec-time="130" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="31:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;31:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node5" call-id="64" rc-code="0" op-status="0" interval="0" last-run="1606702537" last-rc-change="1606702537" exec-time="2515" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="32:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;32:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node5" call-id="65" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702539" exec-time="22" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="37:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;37:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node5" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="2" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="6" uname="node6" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="6">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="49:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;49:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node6" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="2" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="33:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;33:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node6" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1606702539" last-rc-change="1606702539" exec-time="2358" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="34:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;34:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node6" call-id="64" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702542" exec-time="23" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="131:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;131:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node6" call-id="1869" rc-code="0" op-status="0" interval="0" last-run="1606753222" last-rc-change="1606753222" exec-time="3965" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_monitor_10000" operation_key="SASHOME_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="132:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;132:60:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node6" call-id="1873" rc-code="0" op-status="0" interval="10000" last-rc-change="1606753226" exec-time="39" queue-time="0" op-digest="76b136f2ee04823423662c9de5c8331c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="7" uname="node7" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="7">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="61:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;61:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node7" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="2" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="35:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;35:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node7" call-id="64" rc-code="0" op-status="0" interval="0" last-run="1606702542" last-rc-change="1606702542" exec-time="2401" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="36:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;36:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node7" call-id="65" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702544" exec-time="24" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="55:2:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;55:2:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node7" call-id="61" rc-code="0" op-status="0" interval="0" last-run="1606702480" last-rc-change="1606702480" exec-time="115" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_last_failure_0" operation_key="SASHOME_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="64:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;64:0:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node7" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1606702388" last-rc-change="1606702388" exec-time="51" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="node3" crmd="online" crm-debug-origin="do_update_resource" in_ccm="true" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="SAS_PROD_FENCE" type="fence_vmware_soap" class="stonith">
+            <lrm_rsc_op id="SAS_PROD_FENCE_last_0" operation_key="SAS_PROD_FENCE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="9:2:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:7;9:2:7:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node3" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1606702481" last-rc-change="1606702481" exec-time="2" queue-time="0" op-digest="19eb8d52b89dc0acfb978c5a10d38af2" op-secure-params=" password  passwd " op-secure-digest="d4c080b23affcb277a04a13281d7d617"/>
+          </lrm_resource>
+          <lrm_resource id="clvmd" type="clvm" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clvmd_last_0" operation_key="clvmd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="27:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;27:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node3" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1606702532" last-rc-change="1606702532" exec-time="2220" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clvmd_monitor_30000" operation_key="clvmd_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="28:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;28:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node3" call-id="64" rc-code="0" op-status="0" interval="30000" last-rc-change="1606702534" exec-time="21" queue-time="0" op-digest="0e121d086272acfe9236910e5fe2e8cd"/>
+          </lrm_resource>
+          <lrm_resource id="SASHOME" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="SASHOME_last_0" operation_key="SASHOME_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="49:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;49:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node3" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1606702549" last-rc-change="1606702549" exec-time="12469" queue-time="0" op-digest="43b4349ab5613b138dd3029a02e6b386"/>
+            <lrm_rsc_op id="SASHOME_monitor_10000" operation_key="SASHOME_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="50:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" transition-magic="0:0;50:4:0:90e0c960-9b1a-4fd6-a41e-5dcaa05b17c7" exit-reason="" on_node="node3" call-id="77" rc-code="0" op-status="0" interval="10000" last-rc-change="1606702561" exec-time="44" queue-time="0" op-digest="76b136f2ee04823423662c9de5c8331c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

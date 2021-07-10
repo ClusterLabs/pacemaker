@@ -1,0 +1,33 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 ]
+    * RemoteOnline: [ node3-rem ]
+
+  * Full List of Resources:
+    * xvm	(stonith:fence_xvm):	 Started node2
+    * xvm_rem	(stonith:fence_xvm):	 Started node1
+    * node3-rem	(ocf:pacemaker:remote):	 Started node1
+    * Clone Set: dummy-clone [dummy]:
+      * Started: [ node2 node3-rem ]
+      * Stopped: [ node1 ]
+
+Transition Summary:
+  * Start      dummy:2     ( node1 )
+
+Executing Cluster Transition:
+  * Pseudo action:   dummy-clone_start_0
+  * Resource action: dummy           start on node1
+  * Pseudo action:   dummy-clone_running_0
+  * Resource action: dummy           monitor=10000 on node1
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 ]
+    * RemoteOnline: [ node3-rem ]
+
+  * Full List of Resources:
+    * xvm	(stonith:fence_xvm):	 Started node2
+    * xvm_rem	(stonith:fence_xvm):	 Started node1
+    * node3-rem	(ocf:pacemaker:remote):	 Started node1
+    * Clone Set: dummy-clone [dummy]:
+      * Started: [ node1 node2 node3-rem ]

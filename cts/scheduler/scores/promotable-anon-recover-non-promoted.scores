@@ -1,0 +1,34 @@
+
+pcmk__clone_allocate: stateful-clone allocation score on node1: 0
+pcmk__clone_allocate: stateful-clone allocation score on node2: 0
+pcmk__clone_allocate: stateful-clone allocation score on node3-rem: 0
+pcmk__clone_allocate: stateful:0 allocation score on node1: 5
+pcmk__clone_allocate: stateful:0 allocation score on node2: 11
+pcmk__clone_allocate: stateful:0 allocation score on node3-rem: 0
+pcmk__clone_allocate: stateful:1 allocation score on node1: 5
+pcmk__clone_allocate: stateful:1 allocation score on node2: 0
+pcmk__clone_allocate: stateful:1 allocation score on node3-rem: 6
+pcmk__clone_allocate: stateful:2 allocation score on node1: 5
+pcmk__clone_allocate: stateful:2 allocation score on node2: 10
+pcmk__clone_allocate: stateful:2 allocation score on node3-rem: 5
+pcmk__native_allocate: node3-rem allocation score on node1: 0
+pcmk__native_allocate: node3-rem allocation score on node2: 0
+pcmk__native_allocate: node3-rem allocation score on node3-rem: -INFINITY
+pcmk__native_allocate: stateful:0 allocation score on node1: 5
+pcmk__native_allocate: stateful:0 allocation score on node2: 11
+pcmk__native_allocate: stateful:0 allocation score on node3-rem: 0
+pcmk__native_allocate: stateful:1 allocation score on node1: 5
+pcmk__native_allocate: stateful:1 allocation score on node2: -INFINITY
+pcmk__native_allocate: stateful:1 allocation score on node3-rem: 6
+pcmk__native_allocate: stateful:2 allocation score on node1: 5
+pcmk__native_allocate: stateful:2 allocation score on node2: -INFINITY
+pcmk__native_allocate: stateful:2 allocation score on node3-rem: -INFINITY
+pcmk__native_allocate: xvm allocation score on node1: 0
+pcmk__native_allocate: xvm allocation score on node2: 0
+pcmk__native_allocate: xvm allocation score on node3-rem: -INFINITY
+pcmk__native_allocate: xvm_rem allocation score on node1: 0
+pcmk__native_allocate: xvm_rem allocation score on node2: 0
+pcmk__native_allocate: xvm_rem allocation score on node3-rem: -INFINITY
+stateful:0 promotion score on node2: 10
+stateful:1 promotion score on node3-rem: 5
+stateful:2 promotion score on node1: 5
