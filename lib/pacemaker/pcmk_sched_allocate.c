@@ -1783,7 +1783,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
 
     type = order->type;
     rh_action = order->rh_action;
-    crm_trace("Processing RH of ordering constraint %d", order->id);
+    crm_trace("Applying ordering constraint %d (then: %s)", order->id, rsc->id);
 
     if (rh_action != NULL) {
         rh_actions = g_list_prepend(NULL, rh_action);
@@ -1793,11 +1793,9 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
     }
 
     if (rh_actions == NULL) {
-        pe_rsc_trace(rsc, "No RH-Side (%s/%s) found for constraint..."
-                     " ignoring", rsc->id, order->rh_action_task);
-        if (lh_action) {
-            pe_rsc_trace(rsc, "LH-Side was: %s", lh_action->uuid);
-        }
+        pe_rsc_trace(rsc,
+                     "Ignoring constraint %d: then (%s for %s) not found",
+                     order->id, order->rh_action_task, rsc->id);
         return;
     }
 
@@ -1836,8 +1834,9 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
     pe_action_t *lh_action = order->lh_action;
     pe_resource_t *rh_rsc = order->rh_rsc;
 
-    crm_trace("Processing LH of ordering constraint %d", order->id);
     CRM_ASSERT(lh_rsc != NULL);
+    pe_rsc_trace(lh_rsc, "Applying ordering constraint %d (first: %s)",
+                 order->id, lh_rsc->id);
 
     if (lh_action != NULL) {
         lh_actions = g_list_prepend(NULL, lh_action);
@@ -1846,7 +1845,12 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
         lh_actions = find_actions_by_task(lh_rsc->actions, lh_rsc, order->lh_action_task);
     }
 
-    if (lh_actions == NULL && lh_rsc != rh_rsc) {
+    if ((lh_actions == NULL) && (lh_rsc == rh_rsc)) {
+        pe_rsc_trace(lh_rsc,
+                     "Ignoring constraint %d: first (%s for %s) not found",
+                     order->id, order->lh_action_task, lh_rsc->id);
+
+    } else if (lh_actions == NULL) {
         char *key = NULL;
         char *op_type = NULL;
         guint interval_ms = 0;
@@ -1856,18 +1860,21 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && pcmk__str_eq(op_type, RSC_STOP, pcmk__str_casei)) {
             free(key);
-            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
-                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+            pe_rsc_trace(lh_rsc,
+                         "Ignoring constraint %d: first (%s for %s) not found",
+                         order->id, order->lh_action_task, lh_rsc->id);
 
         } else if ((lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_UNPROMOTED)
                    && pcmk__str_eq(op_type, RSC_DEMOTE, pcmk__str_casei)) {
             free(key);
-            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
-                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+            pe_rsc_trace(lh_rsc,
+                         "Ignoring constraint %d: first (%s for %s) not found",
+                         order->id, order->lh_action_task, lh_rsc->id);
 
         } else {
-            pe_rsc_trace(lh_rsc, "No LH-Side (%s/%s) found for constraint %d with %s - creating",
-                         lh_rsc->id, order->lh_action_task, order->id, order->rh_action_task);
+            pe_rsc_trace(lh_rsc,
+                         "Creating first (%s for %s) for constraint %d ",
+                         order->lh_action_task, lh_rsc->id, order->id);
             lh_action = custom_action(lh_rsc, key, op_type, NULL, TRUE, TRUE, data_set);
             lh_actions = g_list_prepend(NULL, lh_action);
         }
@@ -2798,21 +2805,18 @@ stage7(pe_working_set_t * data_set)
         pe__ordering_t *order = gIter->data;
         pe_resource_t *rsc = order->lh_rsc;
 
-        crm_trace("Applying ordering constraint: %d", order->id);
-
         if (rsc != NULL) {
-            crm_trace("rsc_action-to-*");
             rsc_order_first(rsc, order, data_set);
             continue;
         }
 
         rsc = order->rh_rsc;
         if (rsc != NULL) {
-            crm_trace("action-to-rsc_action");
             rsc_order_then(order->lh_action, rsc, order);
 
         } else {
-            crm_trace("action-to-action");
+            crm_trace("Applying ordering constraint %d (non-resource actions)",
+                      order->id);
             order_actions(order->lh_action, order->rh_action, order->type);
         }
     }

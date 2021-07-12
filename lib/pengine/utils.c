@@ -1918,7 +1918,8 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
         return FALSE;
     }
 
-    crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
+    crm_trace("Creating action wrappers for ordering: %s then %s",
+              lh_action->uuid, rh_action->uuid);
 
     /* Ensure we never create a dependency on ourselves... it's happened */
     CRM_ASSERT(lh_action != rh_action);

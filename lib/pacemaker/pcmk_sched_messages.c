@@ -105,8 +105,7 @@ pcmk__schedule_actions(pe_working_set_t *data_set, xmlNode *xml_input,
     crm_trace("Processing fencing and shutdown cases");
     stage6(data_set);
 
-    crm_trace("Applying ordering constraints");
-    stage7(data_set);
+    stage7(data_set); // Ordering constraints
 
     crm_trace("Create transition graph");
     stage8(data_set);
