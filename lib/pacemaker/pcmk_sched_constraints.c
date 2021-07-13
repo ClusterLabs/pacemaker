@@ -332,72 +332,34 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
-
-    id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
-
-    action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
-    action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
-
-    instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
-    instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
-
-    if (action_first == NULL) {
-        action_first = RSC_START;
-    }
-    if (action_then == NULL) {
-        action_then = action_first;
-    }
-
     if (id_first == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without "
                          XML_ORDER_ATTR_FIRST, id);
         return FALSE;
     }
+
+    id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
     if (id_then == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without "
                          XML_ORDER_ATTR_THEN, id);
         return FALSE;
     }
 
-    rsc_then = pe_find_constraint_resource(data_set->resources, id_then);
     rsc_first = pe_find_constraint_resource(data_set->resources, id_first);
-
-    if (rsc_then == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_then);
-        return FALSE;
-
-    } else if (rsc_first == NULL) {
+    if (rsc_first == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, id_first);
         return FALSE;
-
-    } else if (instance_then && pe_rsc_is_clone(rsc_then) == FALSE) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, id_then, instance_then);
-        return FALSE;
-
-    } else if (instance_first && pe_rsc_is_clone(rsc_first) == FALSE) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, id_first, instance_first);
-        return FALSE;
     }
-
-    if (instance_then) {
-        rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
-        if (rsc_then == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              id, id_then, instance_then);
+    instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
+    if (instance_first != NULL) {
+        if (!pe_rsc_is_clone(rsc_first)) {
+            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                             "is not a clone but instance '%s' was requested",
+                             id, id_first, instance_first);
             return FALSE;
         }
-    }
-
-    if (instance_first) {
         rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
         if (rsc_first == NULL) {
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
@@ -407,18 +369,52 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
-    cons_weight = pe_order_optional;
+    rsc_then = pe_find_constraint_resource(data_set->resources, id_then);
+    if (rsc_then == NULL) {
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", id, id_then);
+        return FALSE;
+    }
+    instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
+    if (instance_then != NULL) {
+        if (!pe_rsc_is_clone(rsc_then)) {
+            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                             "is not a clone but instance '%s' was requested",
+                             id, id_then, instance_then);
+            return FALSE;
+        }
+        rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
+        if (rsc_then == NULL) {
+            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
+                              "does not have an instance '%s'",
+                              id, id_then, instance_then);
+            return FALSE;
+        }
+    }
+
+    action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
+    if (action_first == NULL) {
+        action_first = RSC_START;
+    }
+
+    action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
+    if (action_then == NULL) {
+        action_then = action_first;
+    }
+
     kind = get_ordering_type(xml_obj);
 
-    if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+    if ((kind == pe_order_kind_optional)
+        && (rsc_then->restart_type == pe_restart_restart)) {
         pe__set_order_flags(cons_weight, pe_order_implies_then);
     }
 
-    if (invert_bool == FALSE) {
-        pe__set_order_flags(cons_weight, get_asymmetrical_flags(kind));
-    } else {
+    invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
+    if (invert_bool) {
         pe__set_order_flags(cons_weight,
                               get_flags(id, kind, action_first, action_then, FALSE));
+    } else {
+        pe__set_order_flags(cons_weight, get_asymmetrical_flags(kind));
     }
 
     if (pe_rsc_is_clone(rsc_first)) {
@@ -449,7 +445,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     /* If there is a minimum number of instances that must be runnable before
      * the 'then' action is runnable, we use a pseudo action as an intermediate step
      * start min number of clones -> pseudo action is runnable -> dependency runnable. */
-    if (min_required_before) {
+    if (min_required_before > 0) {
         GList *rIter = NULL;
         char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
         pe_action_t *unordered_action = get_pseudo_op(task, data_set);
@@ -457,7 +453,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
         /* require the pseudo action to have "min_required_before" number of
          * actions to be considered runnable before allowing the pseudo action
-         * to be runnable. */ 
+         * to be runnable. */
         unordered_action->required_runnable_before = min_required_before;
         pe__set_action_flags(unordered_action, pe_action_requires_any);
 
@@ -471,7 +467,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
 
         /* order the "then" dependency to occur after the pseudo action only if
-         * the pseudo action is runnable */ 
+         * the pseudo action is runnable */
         custom_action_order(NULL, NULL, unordered_action, rsc_then,
                             pcmk__op_key(rsc_then->id, action_then, 0),
                             NULL, cons_weight|pe_order_runnable_left, data_set);
@@ -480,7 +476,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                       cons_weight, data_set);
     }
 
-    if (invert_bool == FALSE) {
+    if (!invert_bool) {
         return TRUE;
     }
 
@@ -493,7 +489,8 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     cons_weight = pe_order_optional;
-    if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+    if ((kind == pe_order_kind_optional)
+        && (rsc_then->restart_type == pe_restart_restart)) {
         pe__set_order_flags(cons_weight, pe_order_implies_first);
     }
 
