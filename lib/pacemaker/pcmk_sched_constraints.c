@@ -459,6 +459,56 @@ get_minimum_first_instances(pe_resource_t *rsc, xmlNode *xml)
 
 /*!
  * \internal
+ * \brief Create orderings for a constraint with clone-min > 0
+ *
+ * \param[in] id            Ordering ID
+ * \param[in] rsc_first     'First' resource in ordering (a clone)
+ * \param[in] action_first  'First' action in ordering
+ * \param[in] rsc_then      'Then' resource in ordering
+ * \param[in] action_then   'Then' action in ordering
+ * \param[in] flags         Ordering flags
+ * \param[in] clone_min     Minimum required instances of 'first'
+ * \param[in] data_set      Cluster working set
+ */
+static void
+clone_min_ordering(const char *id,
+                   pe_resource_t *rsc_first, const char *action_first,
+                   pe_resource_t *rsc_then, const char *action_then,
+                   enum pe_ordering flags, int clone_min,
+                   pe_working_set_t *data_set)
+{
+    // Create a pseudo-action for when the minimum instances are active
+    char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
+    pe_action_t *clone_min_met = get_pseudo_op(task, data_set);
+
+    free(task);
+
+    /* Require the pseudo-action to have the required number of actions to be
+     * considered runnable before allowing the pseudo-action to be runnable.
+     */
+    clone_min_met->required_runnable_before = clone_min;
+    pe__set_action_flags(clone_min_met, pe_action_requires_any);
+
+    // Order the actions for each clone instance before the pseudo-action
+    for (GList *rIter = rsc_first->children; rIter != NULL;
+         rIter = rIter->next) {
+
+        pe_resource_t *child = rIter->data;
+
+        custom_action_order(child, pcmk__op_key(child->id, action_first, 0),
+                            NULL, NULL, NULL, clone_min_met,
+                            pe_order_one_or_more|pe_order_implies_then_printed,
+                            data_set);
+    }
+
+    // Order "then" action after the pseudo-action (if runnable)
+    custom_action_order(NULL, NULL, clone_min_met, rsc_then,
+                        pcmk__op_key(rsc_then->id, action_then, 0),
+                        NULL, flags|pe_order_runnable_left, data_set);
+}
+
+/*!
+ * \internal
  * \brief Update ordering flags for restart-type=restart
  *
  * \param[in]  rsc    'Then' resource in ordering
@@ -538,31 +588,8 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
      */
     min_required_before = get_minimum_first_instances(rsc_first, xml_obj);
     if (min_required_before > 0) {
-        GList *rIter = NULL;
-        char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
-        pe_action_t *unordered_action = get_pseudo_op(task, data_set);
-        free(task);
-
-        /* require the pseudo action to have "min_required_before" number of
-         * actions to be considered runnable before allowing the pseudo action
-         * to be runnable. */
-        unordered_action->required_runnable_before = min_required_before;
-        pe__set_action_flags(unordered_action, pe_action_requires_any);
-
-        for (rIter = rsc_first->children; id && rIter; rIter = rIter->next) {
-            pe_resource_t *child = rIter->data;
-            /* order each clone instance before the pseudo action */
-            custom_action_order(child, pcmk__op_key(child->id, action_first, 0),
-                                NULL, NULL, NULL, unordered_action,
-                                pe_order_one_or_more|pe_order_implies_then_printed,
-                                data_set);
-        }
-
-        /* order the "then" dependency to occur after the pseudo action only if
-         * the pseudo action is runnable */
-        custom_action_order(NULL, NULL, unordered_action, rsc_then,
-                            pcmk__op_key(rsc_then->id, action_then, 0),
-                            NULL, cons_weight|pe_order_runnable_left, data_set);
+        clone_min_ordering(id, rsc_first, action_first, rsc_then, action_then,
+                           cons_weight, min_required_before, data_set);
     } else {
         new_rsc_order(rsc_first, action_first, rsc_then, action_then,
                       cons_weight, data_set);
