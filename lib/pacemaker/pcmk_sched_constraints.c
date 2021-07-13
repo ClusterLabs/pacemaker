@@ -527,6 +527,39 @@ clone_min_ordering(const char *id,
         }                                                       \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Create new ordering for inverse of symmetric constraint
+ *
+ * \param[in] id            Ordering ID (for logging only)
+ * \param[in] kind          Ordering kind
+ * \param[in] rsc_first     'First' resource in ordering (a clone)
+ * \param[in] action_first  'First' action in ordering
+ * \param[in] rsc_then      'Then' resource in ordering
+ * \param[in] action_then   'Then' action in ordering
+ * \param[in] data_set      Cluster working set
+ */
+static void
+inverse_ordering(const char *id, enum pe_order_kind kind,
+                 pe_resource_t *rsc_first, const char *action_first,
+                 pe_resource_t *rsc_then, const char *action_then,
+                 pe_working_set_t *data_set)
+{
+    action_then = invert_action(action_then);
+    action_first = invert_action(action_first);
+    if ((action_then == NULL) || (action_first == NULL)) {
+        pcmk__config_err("Cannot invert constraint '%s' "
+                         "(please specify inverse manually)", id);
+    } else {
+        enum pe_ordering flags = ordering_flags_for_kind(kind, action_first,
+                                                         ordering_symmetric_inverse);
+
+        handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
+        new_rsc_order(rsc_then, action_then, rsc_first, action_first, flags,
+                      data_set);
+    }
+}
+
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
@@ -595,25 +628,10 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                       cons_weight, data_set);
     }
 
-    if (symmetry == ordering_asymmetric) {
-        return TRUE;
+    if (symmetry == ordering_symmetric) {
+        inverse_ordering(id, kind, rsc_first, action_first,
+                         rsc_then, action_then, data_set);
     }
-
-    action_then = invert_action(action_then);
-    action_first = invert_action(action_first);
-    if (action_then == NULL || action_first == NULL) {
-        pcmk__config_err("Cannot invert constraint '%s' "
-                         "(please specify inverse manually)", id);
-        return TRUE;
-    }
-
-    cons_weight = ordering_flags_for_kind(kind, action_first,
-                                          ordering_symmetric_inverse);
-    handle_restart_type(rsc_then, kind, pe_order_implies_first, cons_weight);
-
-    new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight,
-                  data_set);
-
     return TRUE;
 }
 
