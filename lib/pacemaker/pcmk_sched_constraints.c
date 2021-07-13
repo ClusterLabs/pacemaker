@@ -267,44 +267,54 @@ valid_resource_or_tag(pe_working_set_t * data_set, const char * id,
     return rc;
 }
 
-static gboolean
-order_is_symmetrical(xmlNode * xml_obj,
-                     enum pe_order_kind parent_kind, const char * parent_symmetrical_s)
+/*!
+ * \internal
+ * \brief Get ordering symmetry from XML
+ *
+ * \param[in] xml_obj               Ordering XML
+ * \param[in] parent_kind           Default ordering kind
+ * \param[in] parent_symmetrical_s  Parent element's symmetrical setting, if any
+ *
+ * \retval ordering_symmetric   Ordering is symmetric
+ * \retval ordering_asymmetric  Ordering is asymmetric
+ */
+static enum ordering_symmetry
+get_ordering_symmetry(xmlNode *xml_obj, enum pe_order_kind parent_kind,
+                      const char *parent_symmetrical_s)
 {
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *kind_s = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
-    const char *score_s = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-    const char *symmetrical_s = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-    enum pe_order_kind kind = parent_kind;
+    const char *symmetrical_s = NULL;
+    enum pe_order_kind kind = parent_kind; // Default to parent's kind
 
-    if (kind_s || score_s) {
+    // Check ordering XML for explicit kind
+    if ((crm_element_value(xml_obj, XML_ORDER_ATTR_KIND) != NULL)
+        || (crm_element_value(xml_obj, XML_RULE_ATTR_SCORE) != NULL)) {
         kind = get_ordering_type(xml_obj);
     }
 
+    // Check ordering XML (and parent) for explicit symmetrical setting
+    symmetrical_s = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     if (symmetrical_s == NULL) {
         symmetrical_s = parent_symmetrical_s;
     }
-
-    if (symmetrical_s) {
-        gboolean symmetrical = crm_is_true(symmetrical_s);
-
-        if (symmetrical && kind == pe_order_kind_serialize) {
-            pcmk__config_warn("Ignoring " XML_CONS_ATTR_SYMMETRICAL
-                              " for '%s' because not valid with "
-                              XML_ORDER_ATTR_KIND " of 'Serialize'", id);
-            return FALSE;
+    if (symmetrical_s != NULL) {
+        if (crm_is_true(symmetrical_s)) {
+            if (kind == pe_order_kind_serialize) {
+                pcmk__config_warn("Ignoring " XML_CONS_ATTR_SYMMETRICAL
+                                  " for '%s' because not valid with "
+                                  XML_ORDER_ATTR_KIND " of 'Serialize'",
+                                  ID(xml_obj));
+            } else {
+                return ordering_symmetric;
+            }
         }
-
-        return symmetrical;
-
-    } else {
-        if (kind == pe_order_kind_serialize) {
-            return FALSE;
-
-        } else {
-            return TRUE;
-        }
+        return ordering_asymmetric;
     }
+
+    // Use default symmetry
+    if (kind == pe_order_kind_serialize) {
+        return ordering_asymmetric;
+    }
+    return ordering_symmetric;
 }
 
 /*!
@@ -431,7 +441,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     pe_resource_t *rsc_then = NULL;
     pe_resource_t *rsc_first = NULL;
-    gboolean invert_bool = TRUE;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
     enum pe_ordering cons_weight = pe_order_none;
@@ -476,8 +485,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     kind = get_ordering_type(xml_obj);
 
-    invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
-    symmetry = invert_bool? ordering_symmetric : ordering_asymmetric;
+    symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
     cons_weight = ordering_flags_for_kind(kind, action_first, symmetry);
 
     handle_restart_type(rsc_then, kind, pe_order_implies_then, cons_weight);
@@ -541,7 +549,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                       cons_weight, data_set);
     }
 
-    if (!invert_bool) {
+    if (symmetry == ordering_asymmetric) {
         return TRUE;
     }
 
@@ -1709,7 +1717,6 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
     gboolean sequential = FALSE;
     enum pe_ordering flags = pe_order_optional;
     enum ordering_symmetry symmetry;
-    gboolean symmetrical = TRUE;
 
     char *key = NULL;
     const char *id = ID(set);
@@ -1736,8 +1743,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
 
     sequential = crm_is_true(sequential_s);
 
-    symmetrical = order_is_symmetrical(set, parent_kind, parent_symmetrical_s);
-    symmetry = symmetrical? ordering_symmetric : ordering_asymmetric;
+    symmetry = get_ordering_symmetry(set, parent_kind, parent_symmetrical_s);
     flags = ordering_flags_for_kind(local_kind, action, symmetry);
 
     for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
@@ -1812,7 +1818,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
         free(key);
     }
 
-    if (symmetrical == FALSE) {
+    if (symmetry == ordering_asymmetric) {
         goto done;
     }
 
@@ -1852,7 +1858,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
 
 static gboolean
 order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kind kind,
-               pe_working_set_t * data_set, gboolean invert, gboolean symmetrical)
+               pe_working_set_t *data_set, enum ordering_symmetry symmetry)
 {
 
     xmlNode *xml_rsc = NULL;
@@ -1871,7 +1877,6 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     gboolean require_all = require_all_s ? crm_is_true(require_all_s) : TRUE;
 
     enum pe_ordering flags = pe_order_none;
-    enum ordering_symmetry symmetry;
 
     if (action_1 == NULL) {
         action_1 = RSC_START;
@@ -1881,7 +1886,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         action_2 = RSC_START;
     };
 
-    if (invert) {
+    if (symmetry == ordering_symmetric_inverse) {
         action_1 = invert_action(action_1);
         action_2 = invert_action(action_2);
     }
@@ -1894,11 +1899,6 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         require_all = TRUE;
     }
 
-    if (symmetrical) {
-        symmetry = invert? ordering_symmetric_inverse : ordering_symmetric;
-    } else {
-        symmetry = ordering_asymmetric;
-    }
     // @TODO is action_2 correct here?
     flags = ordering_flags_for_kind(kind, action_2, symmetry);
 
@@ -1946,56 +1946,60 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     }
 
     if (crm_is_true(sequential_1)) {
-        if (invert == FALSE) {
-            /* get the last one */
-            const char *rid = NULL;
-
-            for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    rid = ID(xml_rsc);
-                }
-            }
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, rid);
-
-        } else {
+        if (symmetry == ordering_symmetric_inverse) {
             /* get the first one */
             for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
                  xml_rsc = pcmk__xe_next(xml_rsc)) {
 
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                     EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
                     break;
                 }
             }
+
+        } else {
+            /* get the last one */
+            const char *rid = NULL;
+
+            for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
+                 xml_rsc = pcmk__xe_next(xml_rsc)) {
+
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                    rid = ID(xml_rsc);
+                }
+            }
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, rid);
         }
     }
 
     if (crm_is_true(sequential_2)) {
-        if (invert == FALSE) {
-            /* get the first one */
-            for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-                    break;
-                }
-            }
-
-        } else {
+        if (symmetry == ordering_symmetric_inverse) {
             /* get the last one */
             const char *rid = NULL;
 
             for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
                  xml_rsc = pcmk__xe_next(xml_rsc)) {
 
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                     rid = ID(xml_rsc);
                 }
             }
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, rid);
+
+        } else {
+            /* get the first one */
+            for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
+                 xml_rsc = pcmk__xe_next(xml_rsc)) {
+
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                    EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
+                    break;
+                }
+            }
         }
     }
 
@@ -2192,7 +2196,7 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
-    gboolean invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
+    enum ordering_symmetry symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
     gboolean rc = TRUE;
 
     rc = unpack_order_tags(xml_obj, &expanded_xml, data_set);
@@ -2214,26 +2218,17 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                                  &set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
                 return FALSE;
 
-            } else if (         /* never called -- Now call it for supporting clones in resource sets */
-                          last) {
-                if (order_rsc_sets(id, last, set, kind, data_set, FALSE, invert_bool) == FALSE) {
+            } else if (last != NULL) {
+                if (!order_rsc_sets(id, last, set, kind, data_set, symmetry)) {
                     return FALSE;
                 }
-
-                if (invert_bool
-                    && order_rsc_sets(id, set, last, kind, data_set, TRUE, invert_bool) == FALSE) {
+                if ((symmetry == ordering_symmetric)
+                    && !order_rsc_sets(id, set, last, kind, data_set,
+                                       ordering_symmetric_inverse)) {
                     return FALSE;
                 }
-
             }
             last = set;
-            /*
-               last_rsc = rsc;
-               last_end = set_end;
-               last_begin = set_begin;
-               last_inv_end = set_inv_end;
-               last_inv_begin = set_inv_begin;
-             */
         }
     }
 
