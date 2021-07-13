@@ -354,6 +354,26 @@ get_ordering_resource(xmlNode *xml, const char *resource_attr,
     return rsc;
 }
 
+/*!
+ * \internal
+ * \brief Update ordering flags for restart-type=restart
+ *
+ * \param[in]  rsc    'Then' resource in ordering
+ * \param[in]  kind   Ordering kind
+ * \param[in]  flag   Ordering flag to set (when applicable)
+ * \param[out] flags  Ordering flag set to update
+ *
+ * \compat The restart-type resource meta-attribute is deprecated. Eventually,
+ *         it will be removed, and pe_restart_ignore will be the only behavior,
+ *         at which time this can just be removed entirely.
+ */
+#define handle_restart_type(rsc, kind, flag, flags) do {        \
+        if (((kind) == pe_order_kind_optional)                  \
+            && ((rsc)->restart_type == pe_restart_restart)) {   \
+            pe__set_order_flags((flags), (flag));               \
+        }                                                       \
+    } while (0)
+
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
@@ -402,11 +422,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     kind = get_ordering_type(xml_obj);
-
-    if ((kind == pe_order_kind_optional)
-        && (rsc_then->restart_type == pe_restart_restart)) {
-        pe__set_order_flags(cons_weight, pe_order_implies_then);
-    }
+    handle_restart_type(rsc_then, kind, pe_order_implies_then, cons_weight);
 
     invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
     if (invert_bool) {
@@ -488,10 +504,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     cons_weight = pe_order_optional;
-    if ((kind == pe_order_kind_optional)
-        && (rsc_then->restart_type == pe_restart_restart)) {
-        pe__set_order_flags(cons_weight, pe_order_implies_first);
-    }
+    handle_restart_type(rsc_then, kind, pe_order_implies_first, cons_weight);
 
     pe__set_order_flags(cons_weight,
                           get_flags(id, kind, action_first, action_then, TRUE));
