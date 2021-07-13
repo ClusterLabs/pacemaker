@@ -418,6 +418,47 @@ get_ordering_resource(xmlNode *xml, const char *resource_attr,
 
 /*!
  * \internal
+ * \brief Determine minimum number of 'first' instances required in ordering
+ *
+ * \param[in] rsc  'First' resource in ordering
+ * \param[in] xml  Ordering XML
+ *
+ * \return Minimum 'first' instances required (or 0 if not applicable)
+ */
+static int
+get_minimum_first_instances(pe_resource_t *rsc, xmlNode *xml)
+{
+    if (pe_rsc_is_clone(rsc)) {
+        const char *clone_min = NULL;
+
+        clone_min = g_hash_table_lookup(rsc->meta,
+                                        XML_RSC_ATTR_INCARNATION_MIN);
+        if (clone_min != NULL) {
+            int clone_min_int = 0;
+
+            pcmk__scan_min_int(clone_min, &clone_min_int, 0);
+            return clone_min_int;
+        }
+
+        /* @COMPAT 1.1.13:
+         * require-all=false is deprecated equivalent of clone-min=1
+         */
+        clone_min = crm_element_value(xml, "require-all");
+        if (clone_min != NULL) {
+            pe_warn_once(pe_wo_require_all,
+                         "Support for require-all in ordering constraints "
+                         "is deprecated and will be removed in a future release"
+                         " (use clone-min clone meta-attribute instead)");
+            if (!crm_is_true(clone_min)) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*!
+ * \internal
  * \brief Update ordering flags for restart-type=restart
  *
  * \param[in]  rsc    'Then' resource in ordering
@@ -490,34 +531,12 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     handle_restart_type(rsc_then, kind, pe_order_implies_then, cons_weight);
 
-    if (pe_rsc_is_clone(rsc_first)) {
-        /* If clone-min is set, require at least that number of instances to be
-         * runnable before allowing dependencies to be runnable.
-         */
-        const char *min_clones_s = g_hash_table_lookup(rsc_first->meta,
-                                                       XML_RSC_ATTR_INCARNATION_MIN);
-
-        // @COMPAT 1.1.13: deprecated
-        const char *require_all_s = crm_element_value(xml_obj, "require-all");
-
-        if (min_clones_s) {
-            pcmk__scan_min_int(min_clones_s, &min_required_before, 0);
-
-        } else if (require_all_s) {
-            pe_warn_once(pe_wo_require_all,
-                        "Support for require-all in ordering constraints "
-                        "is deprecated and will be removed in a future release"
-                        " (use clone-min clone meta-attribute instead)");
-            if (crm_is_true(require_all_s) == FALSE) {
-                // require-all=false is deprecated equivalent of clone-min=1
-                min_required_before = 1;
-            }
-        }
-    }
-
     /* If there is a minimum number of instances that must be runnable before
-     * the 'then' action is runnable, we use a pseudo action as an intermediate step
-     * start min number of clones -> pseudo action is runnable -> dependency runnable. */
+     * the 'then' action is runnable, we use a pseudo-action for convenience:
+     * minimum number of clone instances have runnable actions ->
+     * pseudo-action is runnable -> dependency is runnable.
+     */
+    min_required_before = get_minimum_first_instances(rsc_first, xml_obj);
     if (min_required_before > 0) {
         GList *rIter = NULL;
         char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
