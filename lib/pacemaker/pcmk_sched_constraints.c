@@ -304,6 +304,56 @@ order_is_symmetrical(xmlNode * xml_obj,
     }
 }
 
+/*!
+ * \internal
+ * \brief Find resource corresponding to ID specified in ordering
+ *
+ * \param[in] xml            Ordering XML
+ * \param[in] resource_attr  XML attribute name for resource ID
+ * \param[in] instance_attr  XML attribute name for instance number
+ * \param[in] data_set       Cluster working set
+ *
+ * \return Resource corresponding to \p id, or NULL if none
+ */
+static pe_resource_t *
+get_ordering_resource(xmlNode *xml, const char *resource_attr,
+                      const char *instance_attr, pe_working_set_t *data_set)
+{
+    pe_resource_t *rsc = NULL;
+    const char *rsc_id = crm_element_value(xml, resource_attr);
+    const char *instance_id = crm_element_value(xml, instance_attr);
+
+    if (rsc_id == NULL) {
+        pcmk__config_err("Ignoring constraint '%s' without %s",
+                         ID(xml), resource_attr);
+        return NULL;
+    }
+
+    rsc = pe_find_constraint_resource(data_set->resources, rsc_id);
+    if (rsc == NULL) {
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", ID(xml), rsc_id);
+        return NULL;
+    }
+
+    if (instance_id != NULL) {
+        if (!pe_rsc_is_clone(rsc)) {
+            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                             "is not a clone but instance '%s' was requested",
+                             ID(xml), rsc_id, instance_id);
+            return NULL;
+        }
+        rsc = find_clone_instance(rsc, instance_id, data_set);
+        if (rsc == NULL) {
+            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                             "does not have an instance '%s'",
+                             "'%s'", ID(xml), rsc_id, instance_id);
+            return NULL;
+        }
+    }
+    return rsc;
+}
+
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
@@ -314,13 +364,8 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     enum pe_order_kind kind = pe_order_kind_mandatory;
     enum pe_ordering cons_weight = pe_order_optional;
 
-    const char *id_first = NULL;
-    const char *id_then = NULL;
     const char *action_then = NULL;
     const char *action_first = NULL;
-    const char *instance_then = NULL;
-    const char *instance_first = NULL;
-
     const char *id = NULL;
 
     CRM_CHECK(xml_obj != NULL, return FALSE);
@@ -332,64 +377,18 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
-    if (id_first == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' without "
-                         XML_ORDER_ATTR_FIRST, id);
-        return FALSE;
-    }
-
-    id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
-    if (id_then == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' without "
-                         XML_ORDER_ATTR_THEN, id);
-        return FALSE;
-    }
-
-    rsc_first = pe_find_constraint_resource(data_set->resources, id_first);
+    rsc_first = get_ordering_resource(xml_obj, XML_ORDER_ATTR_FIRST,
+                                      XML_ORDER_ATTR_FIRST_INSTANCE,
+                                      data_set);
     if (rsc_first == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_first);
         return FALSE;
-    }
-    instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
-    if (instance_first != NULL) {
-        if (!pe_rsc_is_clone(rsc_first)) {
-            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                             "is not a clone but instance '%s' was requested",
-                             id, id_first, instance_first);
-            return FALSE;
-        }
-        rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
-        if (rsc_first == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              "'%s'", id, id_first, instance_first);
-            return FALSE;
-        }
     }
 
-    rsc_then = pe_find_constraint_resource(data_set->resources, id_then);
+    rsc_then = get_ordering_resource(xml_obj, XML_ORDER_ATTR_THEN,
+                                     XML_ORDER_ATTR_THEN_INSTANCE,
+                                     data_set);
     if (rsc_then == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_then);
         return FALSE;
-    }
-    instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
-    if (instance_then != NULL) {
-        if (!pe_rsc_is_clone(rsc_then)) {
-            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                             "is not a clone but instance '%s' was requested",
-                             id, id_then, instance_then);
-            return FALSE;
-        }
-        rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
-        if (rsc_then == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              id, id_then, instance_then);
-            return FALSE;
-        }
     }
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
