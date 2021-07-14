@@ -108,11 +108,14 @@ Frequently Asked Questions
 ----
 
 :Q: How can I test my changes?
-:A: Most importantly, Pacemaker has regression tests for most major components;
-    these will automatically be run for any pull requests submitted through
-    GitHub. Additionally, Pacemaker's Cluster Test Suite (CTS) can be used to set
-    up a test cluster and run a wide variety of complex tests. This document will
-    have more detail on testing in the future.
+:A: The source repository has some unit tests for simple functions, though this
+    is a recent effort without much coverage yet. Pacemaker's Cluster Test
+    Suite (CTS) has regression tests for most major components; these will
+    automatically be run for any pull requests submitted through GitHub, and
+    are sufficient for most changes. Additionally, CTS has a lab component that
+    can be used to set up a test cluster and run a wide variety of complex
+    tests, for testing major changes. See cts/README.md in the source
+    repository for details.
 
 ----
 
