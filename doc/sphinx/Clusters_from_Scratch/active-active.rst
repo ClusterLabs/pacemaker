@@ -7,8 +7,8 @@ Convert Storage to Active/Active
 The primary requirement for an Active/Active cluster is that the data
 required for your services is available, simultaneously, on both
 machines. Pacemaker makes no requirement on how this is achieved; you
-could use a SAN if you had one available, but since DRBD supports
-multiple Primaries, we can continue to use it here.
+could use a Storage Area Network (SAN) if you had one available, but
+since DRBD supports multiple Primaries, we can continue to use it here.
 
 .. index::
    single: GFS2
@@ -22,18 +22,21 @@ The only hitch is that we need to use a cluster-aware filesystem. The
 one we used earlier with DRBD, xfs, is not one of those. Both OCFS2
 and GFS2 are supported; here, we will use GFS2.
 
-On both nodes, install the GFS2 command-line utilities and the
-Distributed Lock Manager (DLM) required by cluster filesystems:
+On both nodes, install the GFS2 command-line utilities required by
+cluster filesystems:
 
 .. code-block:: none
 
-    # yum install -y gfs2-utils dlm
+    # yum install -y gfs2-utils
 
-.. NOTE::
+Additionally, install Distributed Lock Manager (DLM) on both nodes.
+To do so, download the RPM from the `CentOS composes artifacts tree <https://composes.centos.org/latest-CentOS-Stream-8/compose/ResilientStorage/x86_64/os/Packages/>`_,
+onto your nodes and then run the following
+command:
 
-    Because of `an open CentOS bug <https://bugs.centos.org/view.php?id=16939>`_,
-    installing dlm is not trivial. This chapter will be updated once the bug
-    is resolved.
+.. code-block:: none
+
+    # rpm -i dlm-4.1.0-1.el8.x86_64.rpm
 
 Configure the Cluster for the DLM
 #################################
@@ -93,38 +96,29 @@ Activate our new configuration, and see how the cluster responds:
     Cluster name: mycluster
     Cluster Summary:
       * Stack: corosync
-      * Current DC: pcmk-1 (version 2.0.5-4.el8-ba59be7122) - partition with quorum
-      * Last updated: Wed Feb  3 09:29:21 2021
-      * Last change:  Wed Feb  3 09:29:17 2021 by root via cibadmin on pcmk-1
+      * Current DC: pcmk-2 (version 2.1.0-3.el8-7c3f660707) - partition with quorum
+      * Last updated: Wed Jul 13 10:57:20 2021
+      * Last change:  Wed Jul 13 10:57:15 2021 by root via cibadmin on pcmk-1
       * 2 nodes configured
       * 7 resource instances configured
-    
+
     Node List:
       * Online: [ pcmk-1 pcmk-2 ]
-    
+
     Full List of Resources:
-      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-2
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
       * Clone Set: WebData-clone [WebData] (promotable):
-        * Masters: [ pcmk-2 ]
-        * Slaves: [ pcmk-1 ]
-      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-2
+        * Masters: [ pcmk-1 ]
+        * Slaves: [ pcmk-2 ]
+      * WebFS	(ocf::heartbeat:Filesystem):	 Started pcmk-1
       * Clone Set: dlm-clone [dlm]:
-        * Stopped: [ pcmk-1 pcmk-2 ]
-    
-    Failed Resource Actions:
-      * dlm_monitor_0 on pcmk-2 'not installed' (5): call=40, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=26ms
-      * dlm_monitor_0 on pcmk-1 'not installed' (5): call=43, status='complete', exitreason='Setup problem: couldn't find command: dlm_controld', last-rc-change='2021-02-03 09:29:18 -05:00', queued=0ms, exec=30ms
+        * Started: [ pcmk-1 pcmk-2 ]
 
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
       pcsd: active/enabled
-
-.. NOTE::
-
-    Once the aforementioned CentOS bug is resolved, there won't be any failed
-    resource actions.
 
 Create and Populate GFS2 Filesystem
 ###################################
@@ -138,14 +132,14 @@ are not only stopped, but stopped in the correct order.
 
     [root@pcmk-1 ~]# pcs resource disable WebFS
     [root@pcmk-1 ~]# pcs resource
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     WebSite	(ocf::heartbeat:apache):	Stopped
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-1 ]
-         Slaves: [ pcmk-2 ]
-     WebFS	(ocf::heartbeat:Filesystem):	Stopped (disabled)
-     Clone Set: dlm-clone [dlm]
-         Started: [ pcmk-1 pcmk-2 ]
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf::heartbeat:apache):	 Stopped
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-1 ]
+        * Slaves: [ pcmk-2 ]
+      * WebFS	(ocf::heartbeat:Filesystem):	 Stopped (disabled)
+      * Clone Set: dlm-clone [dlm]:
+        * Started: [ pcmk-1 pcmk-2 ]
 
 You can see that both Apache and WebFS have been stopped, and that **pcmk-1**
 is currently running the promoted instance for the DRBD device.
@@ -168,7 +162,7 @@ Now we can create a new GFS2 filesystem on the DRBD device.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
+    [root@pcmk-2 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
     It appears to contain an existing filesystem (xfs)
     This will destroy any data on /dev/drbd1
     Are you sure you want to proceed? [y/n] y
@@ -180,12 +174,13 @@ Now we can create a new GFS2 filesystem on the DRBD device.
     Device:                    /dev/drbd1
     Block size:                4096
     Device size:               0.50 GB (131059 blocks)
-    Filesystem size:           0.50 GB (131056 blocks)
+    Filesystem size:           0.50 GB (131055 blocks)
     Journals:                  2
-    Resource groups:           3
+    Journal size:              8MB
+    Resource groups:           4
     Locking protocol:          "lock_dlm"
     Lock table:                "mycluster:web"
-    UUID:                      0bcbffab-cada-4105-94d1-be8a26669ee0
+    UUID:                      19712677-7206-4660-a079-5d17341dd720
 
 The ``mkfs.gfs2`` command required a number of additional parameters:
 
@@ -224,28 +219,26 @@ With the WebFS resource stopped, let's update the configuration.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs resource show WebFS
+    [root@pcmk-1 ~]# pcs resource config WebFS
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
-      Meta Attrs: target-role=Stopped 
-      Operations: monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
-                  notify interval=0s timeout=60 (WebFS-notify-interval-0s)
-                  start interval=0s timeout=60 (WebFS-start-interval-0s)
-                  stop interval=0s timeout=60 (WebFS-stop-interval-0s)
+       Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
+       Meta Attrs: target-role=Stopped
+       Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
+                   start interval=0s timeout=60s (WebFS-start-interval-0s)
+                   stop interval=0s timeout=60s (WebFS-stop-interval-0s)
 
 The fstype option needs to be updated to **gfs2** instead of **xfs**.
 
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
-    [root@pcmk-1 ~]# pcs resource show WebFS
+    [root@pcmk-1 ~]# pcs resource config WebFS
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2
-      Meta Attrs: target-role=Stopped 
-      Operations: monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
-                  notify interval=0s timeout=60 (WebFS-notify-interval-0s)
-                  start interval=0s timeout=60 (WebFS-start-interval-0s)
-                  stop interval=0s timeout=60 (WebFS-stop-interval-0s)
+       Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2
+       Meta Attrs: target-role=Stopped
+       Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
+                   start interval=0s timeout=60s (WebFS-start-interval-0s)
+                   stop interval=0s timeout=60s (WebFS-stop-interval-0s)
 
 GFS2 requires that DLM be running, so we also need to set up new colocation
 and ordering constraints for it:
@@ -274,17 +267,19 @@ Notice how pcs automatically updates the relevant constraints again.
     [root@pcmk-1 ~]# pcs cluster cib active_cfg
     [root@pcmk-1 ~]# pcs -f active_cfg resource clone WebFS
     [root@pcmk-1 ~]# pcs -f active_cfg constraint
+    [root@pcmk-1 ~]# pcs -f active_cfg constraint
     Location Constraints:
+      Resource: WebSite
+        Enabled on:
+          Node: pcmk-1 (score:50)
     Ordering Constraints:
       start ClusterIP then start WebSite (kind:Mandatory)
-      promote WebDataClone then start WebFS-clone (kind:Mandatory)
+      promote WebData-clone then start WebFS-clone (kind:Mandatory)
       start WebFS-clone then start WebSite (kind:Mandatory)
-      start dlm-clone then start WebFS-clone (kind:Mandatory)
     Colocation Constraints:
       WebSite with ClusterIP (score:INFINITY)
-      WebFS-clone with WebDataClone (score:INFINITY) (with-rsc-role:Master)
+      WebFS-clone with WebData-clone (score:INFINITY) (with-rsc-role:Master)
       WebSite with WebFS-clone (score:INFINITY)
-      WebFS-clone with dlm-clone (score:INFINITY)
     Ticket Constraints:
 
 Tell the cluster that it is now allowed to promote both instances to be DRBD
@@ -292,7 +287,7 @@ Primary.
 
 .. code-block:: none
 
-    [root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone promoted-max=2
+    [root@pcmk-1 ~]# pcs -f active_cfg resource update WebData-clone promoted-max=2
 
 Finally, load our configuration to the cluster, and re-enable the WebFS resource
 (which we disabled earlier).
@@ -308,14 +303,15 @@ After all the processes are started, the status should look similar to this.
 .. code-block:: none
 
     [root@pcmk-1 ~]# pcs resource
-     Master/Slave Set: WebDataClone [WebData]
-         Masters: [ pcmk-1 pcmk-2 ]
-     Clone Set: dlm-clone [dlm]
-         Started: [ pcmk-1 pcmk-2 ]
-     ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
-     Clone Set: WebFS-clone [WebFS]
-         Started: [ pcmk-1 pcmk-2 ]
-     WebSite	(ocf::heartbeat:apache):	Started pcmk-1
+    [root@pcmk-1 ~]# pcs resource
+      * ClusterIP	(ocf::heartbeat:IPaddr2):	 Started pcmk-1
+      * WebSite	(ocf::heartbeat:apache):	 Started pcmk-1
+      * Clone Set: WebData-clone [WebData] (promotable):
+        * Masters: [ pcmk-1 pcmk-2 ]
+      * Clone Set: dlm-clone [dlm]:
+        * Started: [ pcmk-1 pcmk-2 ]
+      * Clone Set: WebFS-clone [WebFS]:
+        * Started: [ pcmk-1 pcmk-2 ]
 
 Test Failover
 #############
