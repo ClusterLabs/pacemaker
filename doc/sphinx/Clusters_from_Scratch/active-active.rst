@@ -22,12 +22,21 @@ The only hitch is that we need to use a cluster-aware filesystem. The
 one we used earlier with DRBD, xfs, is not one of those. Both OCFS2
 and GFS2 are supported; here, we will use GFS2.
 
-On both nodes, install the GFS2 command-line utilities and the
-Distributed Lock Manager (DLM) required by cluster filesystems:
+On both nodes, install the GFS2 command-line utilities required by
+cluster filesystems:
 
 .. code-block:: none
 
-    # yum install -y gfs2-utils dlm
+    # yum install -y gfs2-utils
+
+Additionally, install Distributed Lock Manager (DLM) on both nodes.
+To do so, download the RPM from the `CentOS composes artifacts tree <https://composes.centos.org/latest-CentOS-Stream-8/compose/ResilientStorage/x86_64/os/Packages/>`_,
+onto your nodes and then run the following
+command:
+
+.. code-block:: none
+
+    # rpm -i dlm-4.1.0-1.el8.x86_64.rpm
 
 Configure the Cluster for the DLM
 #################################
