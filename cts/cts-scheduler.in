@@ -110,6 +110,7 @@ TESTS = [
         [ "probe-2", "Correctly re-probe cloned groups" ],
         [ "probe-3", "Probe (pending node)" ],
         [ "probe-4", "Probe (pending node + stopped resource)" ],
+        [ "probe-pending-node", "Probe (pending node + unmanaged resource)" ],
         [ "standby", "Standby" ],
         [ "comments", "Comments" ],
     ],
