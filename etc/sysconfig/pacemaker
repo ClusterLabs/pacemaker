@@ -58,6 +58,15 @@
 # as for PCMK_debug above.
 # PCMK_blackbox=no
 
+# Debug a RA (resource agent) that is about to be terminated due to timeout.
+# This should point to an executable or script that you wish to run just before the
+# RA hierarchy spawned from pacemaker-execd is killed. The script should run in as short a time
+# as possible because its execution will block pacemaker-execd whilst it runs. It
+# only runs prior to a timeout.  You will need to restart the cluster to enable this the first time.
+# Simply rename the script or make it non-executable if you don't need it to run any more, no
+# need to reconfigure here or restart pacemaker once it has been initially enabled.
+# PCMK_timedoutRA=/root/debugRA.sh
+
 #==#==# Advanced use only
 
 # By default, nodes will join the cluster in an online state when they first
