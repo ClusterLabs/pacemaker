@@ -636,41 +636,46 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 }
 
-static void
-expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Replace any resource tags with equivalent resource_ref entries
+ *
+ * If a given constraint has resource sets, check each set for resource_ref
+ * entries that list tags rather than resource IDs, and replace any found with
+ * resource_ref entries for the corresponding resource IDs.
+ *
+ * \param[in]  xml_obj       Constraint XML
+ * \param[in]  data_set      Cluster working set
+ *
+ * \return Equivalent XML with resource tags replaced (or NULL if none)
+ * \note It is the caller's responsibility to free the result with free_xml().
+ */
+static xmlNode *
+expand_tags_in_sets(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *new_xml = NULL;
-    xmlNode *set = NULL;
-    gboolean any_refs = FALSE;
-    const char *cons_id = NULL;
-
-    *expanded_xml = NULL;
-
-    CRM_CHECK(xml_obj != NULL, return);
+    bool any_refs = false;
 
     new_xml = copy_xml(xml_obj);
-    cons_id = ID(new_xml);
 
-    for (set = first_named_child(new_xml, XML_CONS_TAG_RSC_SET); set != NULL;
-         set = crm_next_same_xml(set)) {
+    for (xmlNode *set = first_named_child(new_xml, XML_CONS_TAG_RSC_SET);
+         set != NULL; set = crm_next_same_xml(set)) {
 
-        xmlNode *xml_rsc = NULL;
         GList *tag_refs = NULL;
         GList *gIter = NULL;
 
-        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+        for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
              xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             pe_resource_t *rsc = NULL;
             pe_tag_t *tag = NULL;
-            const char *id = ID(xml_rsc);
 
-            if (valid_resource_or_tag(data_set, id, &rsc, &tag) == FALSE) {
+            if (!valid_resource_or_tag(data_set, ID(xml_rsc), &rsc, &tag)) {
                 pcmk__config_err("Ignoring resource sets for constraint '%s' "
                                  "because '%s' is not a valid resource or tag",
-                                 cons_id, id);
+                                 ID(xml_obj), ID(xml_rsc));
                 free_xml(new_xml);
-                return;
+                return NULL;
 
             } else if (rsc) {
                 continue;
@@ -713,7 +718,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
                     last_ref = new_rsc_ref;
                 }
 
-                any_refs = TRUE;
+                any_refs = true;
 
                 /* Freeing the resource_ref now would break the XML child
                  * iteration, so just remember it for freeing later.
@@ -740,11 +745,11 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
         g_list_free(tag_refs);
     }
 
-    if (any_refs) {
-        *expanded_xml = new_xml;
-    } else {
+    if (!any_refs) {
         free_xml(new_xml);
+        new_xml = NULL;
     }
+    return new_xml;
 }
 
 static gboolean
@@ -999,10 +1004,7 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     pe_tag_t *tag_lh = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
-
-    *expanded_xml = NULL;
 
     CRM_CHECK(xml_obj != NULL, return FALSE);
 
@@ -1013,12 +1015,10 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
         return FALSE;
     }
 
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_location...");
-        *expanded_xml = new_xml;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
         return TRUE;
     }
 
@@ -1039,11 +1039,13 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "rsc" into a resource_set under the rsc_location constraint. */
-    if (tag_to_set(new_xml, &rsc_set_lh, XML_LOC_ATTR_SOURCE, FALSE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_lh, XML_LOC_ATTR_SOURCE, FALSE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -1052,14 +1054,14 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
             /* A "rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_lh, "role", state_lh);
-            xml_remove_prop(new_xml, XML_RULE_ATTR_ROLE);
+            xml_remove_prop(*expanded_xml, XML_RULE_ATTR_ROLE);
         }
-        crm_log_xml_trace(new_xml, "Expanded rsc_location...");
-        *expanded_xml = new_xml;
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
 
     } else {
         /* No sets */
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
     return TRUE;
@@ -2039,19 +2041,14 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     pe_tag_t *tag_first = NULL;
     pe_tag_t *tag_then = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_first = NULL;
     xmlNode *rsc_set_then = NULL;
     gboolean any_sets = FALSE;
 
-    *expanded_xml = NULL;
-
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates/tags. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_order...");
-        *expanded_xml = new_xml;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
         return pcmk_rc_ok;
     }
 
@@ -2081,11 +2078,13 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
     action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "first" into a resource_set under the order constraint. */
-    if (tag_to_set(new_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
     }
 
@@ -2094,14 +2093,16 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             /* A "first-action" is specified.
                Move it into the converted resource_set as an "action" attribute. */
             crm_xml_add(rsc_set_first, "action", action_first);
-            xml_remove_prop(new_xml, XML_ORDER_ATTR_FIRST_ACTION);
+            xml_remove_prop(*expanded_xml, XML_ORDER_ATTR_FIRST_ACTION);
         }
         any_sets = TRUE;
     }
 
     /* Convert the template/tag reference in "then" into a resource_set under the order constraint. */
-    if (tag_to_set(new_xml, &rsc_set_then, XML_ORDER_ATTR_THEN, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return pcmk_rc_schema_validation;
     }
 
@@ -2110,16 +2111,16 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             /* A "then-action" is specified.
                Move it into the converted resource_set as an "action" attribute. */
             crm_xml_add(rsc_set_then, "action", action_then);
-            xml_remove_prop(new_xml, XML_ORDER_ATTR_THEN_ACTION);
+            xml_remove_prop(*expanded_xml, XML_ORDER_ATTR_THEN_ACTION);
         }
         any_sets = TRUE;
     }
 
     if (any_sets) {
-        crm_log_xml_trace(new_xml, "Expanded rsc_order...");
-        *expanded_xml = new_xml;
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
     } else {
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
     return pcmk_rc_ok;
@@ -2506,7 +2507,6 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     pe_tag_t *tag_lh = NULL;
     pe_tag_t *tag_rh = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
     xmlNode *rsc_set_rh = NULL;
     gboolean any_sets = FALSE;
@@ -2522,12 +2522,10 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
         return FALSE;
     }
 
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates/tags. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_colocation...");
-        *expanded_xml = new_xml;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
         return TRUE;
     }
 
@@ -2564,11 +2562,13 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "rsc" into a resource_set under the colocation constraint. */
-    if (tag_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -2577,14 +2577,16 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
             /* A "rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_lh, "role", state_lh);
-            xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
         any_sets = TRUE;
     }
 
     /* Convert the template/tag reference in "with-rsc" into a resource_set under the colocation constraint. */
-    if (tag_to_set(new_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -2593,16 +2595,16 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
             /* A "with-rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_rh, "role", state_rh);
-            xml_remove_prop(new_xml, XML_COLOC_ATTR_TARGET_ROLE);
+            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_TARGET_ROLE);
         }
         any_sets = TRUE;
     }
 
     if (any_sets) {
-        crm_log_xml_trace(new_xml, "Expanded rsc_colocation...");
-        *expanded_xml = new_xml;
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
     } else {
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
     return TRUE;
@@ -2864,10 +2866,7 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     pe_resource_t *rsc_lh = NULL;
     pe_tag_t *tag_lh = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
-
-    *expanded_xml = NULL;
 
     CRM_CHECK(xml_obj != NULL, return FALSE);
 
@@ -2878,12 +2877,10 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
         return FALSE;
     }
 
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates/tags. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_ticket...");
-        *expanded_xml = new_xml;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_ticket");
         return TRUE;
     }
 
@@ -2904,11 +2901,13 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "rsc" into a resource_set under the rsc_ticket constraint. */
-    if (tag_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, FALSE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, FALSE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -2917,12 +2916,11 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
             /* A "rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_lh, "role", state_lh);
-            xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
-        crm_log_xml_trace(new_xml, "Expanded rsc_ticket...");
-        *expanded_xml = new_xml;
     } else {
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
     return TRUE;
