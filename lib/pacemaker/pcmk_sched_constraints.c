@@ -2135,8 +2135,6 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 static void
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
-    gboolean any_sets = FALSE;
-
     pe_resource_t *rsc = NULL;
 
     xmlNode *set = NULL;
@@ -2164,7 +2162,6 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
-        any_sets = TRUE;
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || !unpack_order_set(set, kind, &rsc, invert, data_set)) {
@@ -2193,7 +2190,7 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     // If the constraint has no resource sets, unpack it as a simple ordering
-    if (any_sets == FALSE) {
+    if (last == NULL) {
         unpack_simple_rsc_order(xml_obj, data_set);
     }
 }
@@ -2617,7 +2614,6 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     int score_i = 0;
     xmlNode *set = NULL;
     xmlNode *last = NULL;
-    gboolean any_sets = FALSE;
 
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
@@ -2642,7 +2638,6 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
-        any_sets = TRUE;
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || !unpack_colocation_set(set, score_i, id, influence_s, data_set)
@@ -2661,7 +2656,7 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
         xml_obj = orig_xml;
     }
 
-    if (!any_sets) {
+    if (last == NULL) {
         unpack_simple_colocation(xml_obj, id, influence_s, data_set);
     }
 }
@@ -2871,7 +2866,6 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
 
     xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
-    gboolean any_sets = FALSE;
 
     *expanded_xml = NULL;
 
@@ -2925,10 +2919,6 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
             crm_xml_add(rsc_set_lh, "role", state_lh);
             xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
-        any_sets = TRUE;
-    }
-
-    if (any_sets) {
         crm_log_xml_trace(new_xml, "Expanded rsc_ticket...");
         *expanded_xml = new_xml;
     } else {
