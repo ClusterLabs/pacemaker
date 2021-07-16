@@ -32,9 +32,9 @@ void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           const char *state_lh, const char *state_rh,
                           bool influence, pe_working_set_t *data_set);
 
-extern gboolean rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
-                               const char *state_lh, const char *loss_policy,
-                               pe_working_set_t * data_set);
+void rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
+                    const char *state_lh, const char *loss_policy,
+                    pe_working_set_t * data_set);
 
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 GList *pcmk__copy_node_list(const GList *list, bool reset);

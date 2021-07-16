@@ -560,7 +560,7 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
     }
 }
 
-static gboolean
+static void
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     pe_resource_t *rsc_then = NULL;
@@ -574,27 +574,27 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *action_first = NULL;
     const char *id = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return);
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return;
     }
 
     rsc_first = get_ordering_resource(xml_obj, XML_ORDER_ATTR_FIRST,
                                       XML_ORDER_ATTR_FIRST_INSTANCE,
                                       data_set);
     if (rsc_first == NULL) {
-        return FALSE;
+        return;
     }
 
     rsc_then = get_ordering_resource(xml_obj, XML_ORDER_ATTR_THEN,
                                      XML_ORDER_ATTR_THEN_INSTANCE,
                                      data_set);
     if (rsc_then == NULL) {
-        return FALSE;
+        return;
     }
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
@@ -632,10 +632,9 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         inverse_ordering(id, kind, rsc_first, action_first,
                          rsc_then, action_then, data_set);
     }
-    return TRUE;
 }
 
-static gboolean
+static void
 expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
 {
     xmlNode *new_xml = NULL;
@@ -645,7 +644,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
 
     *expanded_xml = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return);
 
     new_xml = copy_xml(xml_obj);
     cons_id = ID(new_xml);
@@ -669,7 +668,7 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
                                  "because '%s' is not a valid resource or tag",
                                  cons_id, id);
                 free_xml(new_xml);
-                return FALSE;
+                return;
 
             } else if (rsc) {
                 continue;
@@ -744,8 +743,6 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
     } else {
         free_xml(new_xml);
     }
-
-    return TRUE;
 }
 
 static gboolean
@@ -2124,7 +2121,7 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
     return TRUE;
 }
 
-gboolean
+void
 unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     gboolean any_sets = FALSE;
@@ -2150,7 +2147,7 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         xml_obj = expanded_xml;
 
     } else if (rc == FALSE) {
-        return FALSE;
+        return;
     }
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
@@ -2160,16 +2157,16 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || !unpack_order_set(set, kind, &rsc, invert, data_set)) {
-            return FALSE;
+            return;
 
         } else if (last != NULL) {
             if (!order_rsc_sets(id, last, set, kind, data_set, symmetry)) {
-                return FALSE;
+                return;
             }
             if ((symmetry == ordering_symmetric)
                 && !order_rsc_sets(id, set, last, kind, data_set,
                                    ordering_symmetric_inverse)) {
-                return FALSE;
+                return;
             }
         }
         last = set;
@@ -2181,10 +2178,8 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (any_sets == FALSE) {
-        return unpack_simple_rsc_order(xml_obj, data_set);
+        unpack_simple_rsc_order(xml_obj, data_set);
     }
-
-    return TRUE;
 }
 
 /*!
@@ -2654,7 +2649,7 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 }
 
-gboolean
+void
 rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
                const char *state_lh, const char *loss_policy, pe_working_set_t * data_set)
 {
@@ -2663,12 +2658,12 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
     if (rsc_lh == NULL) {
         pcmk__config_err("Ignoring ticket '%s' because resource "
                          "does not exist", id);
-        return FALSE;
+        return;
     }
 
     new_rsc_ticket = calloc(1, sizeof(rsc_ticket_t));
     if (new_rsc_ticket == NULL) {
-        return FALSE;
+        return;
     }
 
     if (pcmk__str_eq(state_lh, RSC_ROLE_STARTED_S, pcmk__str_null_matches | pcmk__str_casei)) {
@@ -2739,8 +2734,6 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
     if (new_rsc_ticket->ticket->granted == FALSE || new_rsc_ticket->ticket->standby) {
         rsc_ticket_constraint(rsc_lh, new_rsc_ticket, data_set);
     }
-
-    return TRUE;
 }
 
 static gboolean
@@ -2776,7 +2769,7 @@ unpack_rsc_ticket_set(xmlNode * set, pe_ticket_t * ticket, const char *loss_poli
     return TRUE;
 }
 
-static gboolean
+static void
 unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     const char *id = NULL;
@@ -2793,19 +2786,19 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     pe_resource_t *rsc_lh = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return;
     }
 
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket specified",
                          id);
-        return FALSE;
+        return;
     } else {
         ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
     }
@@ -2813,12 +2806,12 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (ticket == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because ticket '%s' "
                          "does not exist", id, ticket_str);
-        return FALSE;
+        return;
     }
 
     if (id_lh == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without resource", id);
-        return FALSE;
+        return;
     } else {
         rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     }
@@ -2826,13 +2819,13 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (rsc_lh == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, id_lh);
-        return FALSE;
+        return;
 
     } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
                          id, id_lh, instance_lh);
-        return FALSE;
+        return;
     }
 
     if (instance_lh) {
@@ -2841,12 +2834,11 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
                               "'%s'", id, id_lh, instance_lh);
-            return FALSE;
+            return;
         }
     }
 
     rsc_ticket_new(id, rsc_lh, ticket, state_lh, loss_policy, data_set);
-    return TRUE;
 }
 
 static gboolean
@@ -2928,7 +2920,7 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     return TRUE;
 }
 
-gboolean
+void
 unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     xmlNode *set = NULL;
@@ -2945,13 +2937,13 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     gboolean rc = TRUE;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return;
     }
 
     if (data_set->tickets == NULL) {
@@ -2960,7 +2952,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
-        return FALSE;
+        return;
     } else {
         ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
     }
@@ -2968,7 +2960,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (ticket == NULL) {
         ticket = ticket_new(ticket_str, data_set);
         if (ticket == NULL) {
-            return FALSE;
+            return;
         }
     }
 
@@ -2978,7 +2970,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         xml_obj = expanded_xml;
 
     } else if (rc == FALSE) {
-        return FALSE;
+        return;
     }
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
@@ -2988,7 +2980,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || !unpack_rsc_ticket_set(set, ticket, loss_policy, data_set)) {
-            return FALSE;
+            return;
         }
     }
 
@@ -2998,8 +2990,6 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (any_sets == FALSE) {
-        return unpack_simple_rsc_ticket(xml_obj, data_set);
+        unpack_simple_rsc_ticket(xml_obj, data_set);
     }
-
-    return TRUE;
 }
