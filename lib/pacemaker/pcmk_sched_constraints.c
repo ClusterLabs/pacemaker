@@ -1121,7 +1121,8 @@ unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 
         any_sets = TRUE;
         set = expand_idref(set, data_set->input);
-        if (unpack_location_set(xml_obj, set, data_set) == FALSE) {
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_location_set(xml_obj, set, data_set)) {
             if (expanded_xml) {
                 free_xml(expanded_xml);
             }
@@ -1189,6 +1190,10 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     pe__location_t *location_rule = NULL;
 
     rule_xml = expand_idref(rule_xml, data_set->input);
+    if (rule_xml == NULL) {
+        return NULL;
+    }
+
     rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
     boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
     role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
@@ -2153,7 +2158,8 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
         any_sets = TRUE;
         set = expand_idref(set, data_set->input);
-        if (!unpack_order_set(set, kind, &rsc, invert, data_set)) {
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_order_set(set, kind, &rsc, invert, data_set)) {
             return FALSE;
 
         } else if (last != NULL) {
@@ -2627,8 +2633,8 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 
         any_sets = TRUE;
         set = expand_idref(set, data_set->input);
-        if (!unpack_colocation_set(set, score_i, id, influence_s,
-                                   data_set)) {
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_colocation_set(set, score_i, id, influence_s, data_set)) {
             return;
         }
         if ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
@@ -2980,7 +2986,8 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
         any_sets = TRUE;
         set = expand_idref(set, data_set->input);
-        if (unpack_rsc_ticket_set(set, ticket, loss_policy, data_set) == FALSE) {
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_rsc_ticket_set(set, ticket, loss_policy, data_set)) {
             return FALSE;
         }
     }
