@@ -600,19 +600,26 @@ custom_action(resource_t * rsc, char *key, const char *task,
                                        action->extra, NULL, FALSE, data_set->now);
         }
 
+        // Make the action optional if its resource is unmanaged
+        if (!is_set(action->flags, pe_action_pseudo)
+            && (action->node != NULL)
+            && !is_set(action->rsc->flags, pe_rsc_managed)
+            && (g_hash_table_lookup(action->meta,
+                                    XML_LRM_ATTR_INTERVAL) == NULL)) {
+                pe_rsc_debug(rsc, "%s on %s is optional (%s is unmanaged)",
+                             action->uuid, action->node->details->uname,
+                             action->rsc->id);
+                pe_set_action_bit(action, pe_action_optional);
+                // We shouldn't clear runnable here because ... something
+        }
+
+        // Make the action runnable or unrunnable as appropriate
         if (is_set(action->flags, pe_action_pseudo)) {
             /* leave untouched */
 
         } else if (action->node == NULL) {
             pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
             pe_clear_action_bit(action, pe_action_runnable);
-
-        } else if (is_not_set(rsc->flags, pe_rsc_managed)
-                   && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
-            crm_debug("Action %s (unmanaged)", action->uuid);
-            pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
-            pe_set_action_bit(action, pe_action_optional);
-/*   			action->runnable = FALSE; */
 
         } else if (action->node->details->online == FALSE
                    && (!is_container_remote_node(action->node) || action->node->details->remote_requires_reset)) {
