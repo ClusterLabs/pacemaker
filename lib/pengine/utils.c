@@ -541,6 +541,20 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
                                        FALSE, data_set);
         }
 
+        // Make the action optional if its resource is unmanaged
+        if (!pcmk_is_set(action->flags, pe_action_pseudo)
+            && (action->node != NULL)
+            && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+            && (g_hash_table_lookup(action->meta,
+                                    XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
+                pe_rsc_debug(rsc, "%s on %s is optional (%s is unmanaged)",
+                             action->uuid, action->node->details->uname,
+                             action->rsc->id);
+                pe__set_action_flags(action, pe_action_optional);
+                // We shouldn't clear runnable here because ... something
+        }
+
+        // Make the action runnable or unrunnable as appropriate
         if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             /* leave untouched */
 
@@ -548,14 +562,6 @@ custom_action(pe_resource_t * rsc, char *key, const char *task,
             pe_rsc_trace(rsc, "%s is unrunnable (unallocated)",
                          action->uuid);
             pe__clear_action_flags(action, pe_action_runnable);
-
-        } else if (!pcmk_is_set(rsc->flags, pe_rsc_managed)
-                   && g_hash_table_lookup(action->meta,
-                                          XML_LRM_ATTR_INTERVAL_MS) == NULL) {
-            pe_rsc_debug(rsc, "%s on %s is optional (%s is unmanaged)",
-                         action->uuid, action->node->details->uname, rsc->id);
-            pe__set_action_flags(action, pe_action_optional);
-            //pe__clear_action_flags(action, pe_action_runnable);
 
         } else if (!pcmk_is_set(action->flags, pe_action_dc)
                    && !(action->node->details->online)
