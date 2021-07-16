@@ -2014,10 +2014,21 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     return TRUE;
 }
 
-static gboolean
-unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief If an ordering constraint uses resource tags, expand them
+ *
+ * \param[in]  xml_obj       Ordering constraint XML
+ * \param[out] expanded_xml  Equivalent XML with tags expanded
+ * \param[in]  data_set      Cluster working set
+ *
+ * \return Standard Pacemaker return code (specifically, pcmk_rc_ok on success,
+ *         and pcmk_rc_schema_validation on invalid configuration)
+ */
+static int
+unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
+                  pe_working_set_t *data_set)
 {
-    const char *id = NULL;
     const char *id_first = NULL;
     const char *id_then = NULL;
     const char *action_first = NULL;
@@ -2035,45 +2046,36 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
 
     *expanded_xml = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
-
-    id = ID(xml_obj);
-    if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
-                         crm_element_name(xml_obj));
-        return FALSE;
-    }
-
     /* Attempt to expand any template/tag references in possible resource sets. */
     expand_tags_in_sets(xml_obj, &new_xml, data_set);
     if (new_xml) {
         /* There are resource sets referencing templates/tags. Return with the expanded XML. */
         crm_log_xml_trace(new_xml, "Expanded rsc_order...");
         *expanded_xml = new_xml;
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
     id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
     if (id_first == NULL || id_then == NULL) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (valid_resource_or_tag(data_set, id_first, &rsc_first, &tag_first) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_first);
-        return FALSE;
+                         "valid resource or tag", ID(xml_obj), id_first);
+        return pcmk_rc_schema_validation;
     }
 
     if (valid_resource_or_tag(data_set, id_then, &rsc_then, &tag_then) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_then);
-        return FALSE;
+                         "valid resource or tag", ID(xml_obj), id_then);
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_first && rsc_then) {
         /* Neither side references any template/tag. */
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
@@ -2084,7 +2086,7 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
     /* Convert the template/tag reference in "first" into a resource_set under the order constraint. */
     if (tag_to_set(new_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST, TRUE, data_set) == FALSE) {
         free_xml(new_xml);
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_first) {
@@ -2100,7 +2102,7 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
     /* Convert the template/tag reference in "then" into a resource_set under the order constraint. */
     if (tag_to_set(new_xml, &rsc_set_then, XML_ORDER_ATTR_THEN, TRUE, data_set) == FALSE) {
         free_xml(new_xml);
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_then) {
@@ -2120,7 +2122,7 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
         free_xml(new_xml);
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -2141,15 +2143,13 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
     enum ordering_symmetry symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
-    gboolean rc = TRUE;
 
-    rc = unpack_order_tags(xml_obj, &expanded_xml, data_set);
+    if (unpack_order_tags(xml_obj, &expanded_xml, data_set) != pcmk_rc_ok) {
+        return;
+    }
     if (expanded_xml) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
-
-    } else if (rc == FALSE) {
-        return;
     }
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
