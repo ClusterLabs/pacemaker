@@ -1,0 +1,55 @@
+Using the original execution date of: 2021-06-11 13:55:24Z
+
+              *** Resource management is DISABLED ***
+  The cluster will not attempt to start, stop or recover services
+
+Current cluster status:
+  * Node List:
+    * Node gcdoubwap02: pending
+    * Online: [ gcdoubwap01 ]
+
+  * Full List of Resources:
+    * stonith_gcdoubwap01	(stonith:fence_gce):	 Stopped (unmanaged)
+    * stonith_gcdoubwap02	(stonith:fence_gce):	 Stopped (unmanaged)
+    * Clone Set: fs_UC5_SAPMNT-clone [fs_UC5_SAPMNT] (unmanaged):
+      * Stopped: [ gcdoubwap01 gcdoubwap02 ]
+    * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (unmanaged):
+      * Stopped: [ gcdoubwap01 gcdoubwap02 ]
+    * Resource Group: grp_UC5_ascs (unmanaged):
+      * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
+      * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (unmanaged)
+      * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
+      * rsc_sap_UC5_ASCS11	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)
+    * Resource Group: grp_UC5_ers (unmanaged):
+      * rsc_vip_init_ers	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
+      * rsc_vip_gcp_ers	(ocf:heartbeat:gcp-vpc-move-vip):	 Stopped (unmanaged)
+      * fs_UC5_ers	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
+      * rsc_sap_UC5_ERS12	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)
+
+Transition Summary:
+
+Executing Cluster Transition:
+Using the original execution date of: 2021-06-11 13:55:24Z
+
+Revised Cluster Status:
+  * Node List:
+    * Node gcdoubwap02: pending
+    * Online: [ gcdoubwap01 ]
+
+  * Full List of Resources:
+    * stonith_gcdoubwap01	(stonith:fence_gce):	 Stopped (unmanaged)
+    * stonith_gcdoubwap02	(stonith:fence_gce):	 Stopped (unmanaged)
+    * Clone Set: fs_UC5_SAPMNT-clone [fs_UC5_SAPMNT] (unmanaged):
+      * Stopped: [ gcdoubwap01 gcdoubwap02 ]
+    * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (unmanaged):
+      * Stopped: [ gcdoubwap01 gcdoubwap02 ]
+    * Resource Group: grp_UC5_ascs (unmanaged):
+      * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
+      * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (unmanaged)
+      * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
+      * rsc_sap_UC5_ASCS11	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)
+    * Resource Group: grp_UC5_ers (unmanaged):
+      * rsc_vip_init_ers	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
+      * rsc_vip_gcp_ers	(ocf:heartbeat:gcp-vpc-move-vip):	 Stopped (unmanaged)
+      * fs_UC5_ers	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
+      * rsc_sap_UC5_ERS12	(ocf:heartbeat:SAPInstance):	 Stopped (unmanaged)

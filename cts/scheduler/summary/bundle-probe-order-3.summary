@@ -12,6 +12,7 @@ Current cluster status:
 Transition Summary:
 
 Executing Cluster Transition:
+  * Resource action: galera-bundle-docker-0 monitor=60000 on centos2
   * Resource action: galera-bundle-0 monitor on centos3
   * Resource action: galera-bundle-0 monitor on centos2
   * Resource action: galera-bundle-0 monitor on centos1
