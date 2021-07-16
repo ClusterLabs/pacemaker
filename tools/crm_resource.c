@@ -660,20 +660,11 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
-        if (!args->quiet) {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
-                        "Standard %s does not support parameters\n", optarg);
-        }
-        return FALSE;
-
-    } else {
-        if (options.v_class != NULL) {
-            free(options.v_class);
-        }
-
-        options.v_class = strdup(optarg);
+    if (options.v_class != NULL) {
+        free(options.v_class);
     }
+
+    options.v_class = strdup(optarg);
 
     options.cmdline_config = TRUE;
     options.require_resource = FALSE;
@@ -1422,7 +1413,7 @@ validate_cmdline_config(void)
     } else if (options.rsc_cmd != cmd_execute_agent) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "--class, --agent, and --provider can only be used with "
-                    "--validate");
+                    "--validate and --force-*");
 
     // Not all of --class, --agent, and --provider need to be given.  Not all
     // classes support the concept of a provider.  Check that what we were given
@@ -1841,7 +1832,7 @@ main(int argc, char **argv)
             if (options.cmdline_config) {
                 exit_code = cli_resource_execute_from_params(out, NULL,
                     options.v_class, options.v_provider, options.v_agent,
-                    "validate-all", options.cmdline_params,
+                    options.operation, options.cmdline_params,
                     options.override_params, options.timeout_ms,
                     args->verbosity, options.force, options.check_level);
             } else {
