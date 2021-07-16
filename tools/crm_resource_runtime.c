@@ -1791,8 +1791,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            out->info(out, "Overriding the cluster configuration for '%s' with '%s' = '%s'",
-                      rsc_name, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }
