@@ -2125,6 +2125,13 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Unpack ordering constraint XML
+ *
+ * \param[in]     xml_obj   Ordering constraint XML to unpack
+ * \param[in,out] data_set  Cluster working set
+ */
 static void
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
@@ -2144,14 +2151,16 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     enum ordering_symmetry symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
 
+    // Expand any resource tags in the constraint XML
     if (unpack_order_tags(xml_obj, &expanded_xml, data_set) != pcmk_rc_ok) {
         return;
     }
-    if (expanded_xml) {
+    if (expanded_xml != NULL) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
     }
 
+    // If the constraint has resource sets, unpack them
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
@@ -2159,17 +2168,21 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || !unpack_order_set(set, kind, &rsc, invert, data_set)) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
+            }
             return;
+        }
 
-        } else if (last != NULL) {
-            if (!order_rsc_sets(id, last, set, kind, data_set, symmetry)) {
-                return;
+        if ((last != NULL)
+            && (!order_rsc_sets(id, last, set, kind, data_set, symmetry)
+                || ((symmetry == ordering_symmetric)
+                    && !order_rsc_sets(id, set, last, kind, data_set,
+                                       ordering_symmetric_inverse)))) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
             }
-            if ((symmetry == ordering_symmetric)
-                && !order_rsc_sets(id, set, last, kind, data_set,
-                                   ordering_symmetric_inverse)) {
-                return;
-            }
+            return;
         }
         last = set;
     }
@@ -2179,6 +2192,7 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
         xml_obj = orig_xml;
     }
 
+    // If the constraint has no resource sets, unpack it as a simple ordering
     if (any_sets == FALSE) {
         unpack_simple_rsc_order(xml_obj, data_set);
     }
@@ -2631,11 +2645,12 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
         any_sets = TRUE;
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
-            || !unpack_colocation_set(set, score_i, id, influence_s, data_set)) {
-            return;
-        }
-        if ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
-                                                 influence_s, data_set)) {
+            || !unpack_colocation_set(set, score_i, id, influence_s, data_set)
+            || ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
+                                                     influence_s, data_set))) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
+            }
             return;
         }
         last = set;
@@ -2983,6 +2998,9 @@ unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || !unpack_rsc_ticket_set(set, ticket, loss_policy, data_set)) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
+            }
             return;
         }
     }
