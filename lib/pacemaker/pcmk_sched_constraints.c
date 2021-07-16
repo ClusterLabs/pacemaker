@@ -54,6 +54,8 @@ static pe__location_t *generate_location_rule(pe_resource_t *rsc,
                                               pe_re_match_data_t *match_data);
 static void unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 static void unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
+static void unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set);
+static void unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 static bool
 evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
@@ -2121,8 +2123,8 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
     return TRUE;
 }
 
-void
-unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     gboolean any_sets = FALSE;
 
@@ -2649,9 +2651,10 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 }
 
-void
-rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
-               const char *state_lh, const char *loss_policy, pe_working_set_t * data_set)
+static void
+rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
+               const char *state_lh, const char *loss_policy,
+               pe_working_set_t *data_set)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
 
@@ -2920,8 +2923,8 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     return TRUE;
 }
 
-void
-unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *set = NULL;
     gboolean any_sets = FALSE;
