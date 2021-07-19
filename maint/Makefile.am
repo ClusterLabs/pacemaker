@@ -17,7 +17,8 @@ TESTCC_TARGETS          = testcc_common_acl_h testcc_common_ipc_h \
     testcc_pengine_rules_h testcc_common_logging_h
 CLEANFILES		= $(TESTCC_TARGETS) testcc_helper.cc
 
-EXTRA_SCRIPTS		= bumplibs.sh
+noinst_SCRIPTS		= bumplibs
+
 EXTRA_PROGRAMS		= $(TESTCC_TARGETS)
 EXTRA_DIST		= README
 

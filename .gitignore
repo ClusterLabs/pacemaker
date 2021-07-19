@@ -85,6 +85,7 @@ ylwrap
 include/config.h
 include/config.h.in
 include/crm_config.h
+/maint/bumplibs
 /tools/cibsecret
 /tools/crm_error
 /tools/crm_failcount

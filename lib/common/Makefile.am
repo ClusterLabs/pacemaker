@@ -44,7 +44,7 @@ if BUILD_PROFILING
 libcrmcommon_la_LIBADD	+= -lm
 endif
 
-# Use += rather than backlashed continuation lines for parsing by bumplibs.sh
+# Use += rather than backlashed continuation lines for parsing by bumplibs
 libcrmcommon_la_SOURCES	=
 libcrmcommon_la_SOURCES	+= acl.c
 libcrmcommon_la_SOURCES	+= agents.c
