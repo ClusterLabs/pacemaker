@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 the Pacemaker project contributors
+ * Copyright 2020-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,6 +86,26 @@ long_arg(void) {
     g_strfreev(processed);
 }
 
+static void
+negative_score(void) {
+    const char *argv[] = { "-v", "-1000", NULL };
+    const gchar *expected[] = { "-v", "-1000", NULL };
+
+    gchar **processed = pcmk__cmdline_preproc((char **) argv, "v");
+    LISTS_EQ(processed, expected);
+    g_strfreev(processed);
+}
+
+static void
+negative_score_2(void) {
+    const char *argv[] = { "-1i3", NULL };
+    const gchar *expected[] = { "-1", "-i", "-3", NULL };
+
+    gchar **processed = pcmk__cmdline_preproc((char **) argv, NULL);
+    LISTS_EQ(processed, expected);
+    g_strfreev(processed);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -98,5 +118,7 @@ main(int argc, char **argv)
     g_test_add_func("/common/cmdline/preproc/special_args", special_args);
     g_test_add_func("/common/cmdline/preproc/special_arg_at_end", special_arg_at_end);
     g_test_add_func("/common/cmdline/preproc/long_arg", long_arg);
+    g_test_add_func("/common/cmdline/preproc/negative_score", negative_score);
+    g_test_add_func("/common/cmdline/preproc/negative_score_2", negative_score_2);
     return g_test_run();
 }
