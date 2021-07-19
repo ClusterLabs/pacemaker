@@ -22,6 +22,7 @@ Table of Contents
    general
    python
    c
+   components
    evolution
    hacking
 
