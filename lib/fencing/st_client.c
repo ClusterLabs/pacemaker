@@ -2697,7 +2697,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 
 // Deprecated functions kept only for backward API compatibility
 
-#include <crm/fencing/compat.h>
+const char *get_stonith_provider(const char *agent, const char *provider);
 
 const char *
 get_stonith_provider(const char *agent, const char *provider)
