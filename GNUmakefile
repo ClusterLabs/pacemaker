@@ -467,7 +467,6 @@ indent:
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
-CLANG_analyzer = $(shell which scan-build)
 CLANG_checkers = 
 
 # Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
@@ -484,8 +483,12 @@ cppcheck:
 	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) replace lib daemons tools
 
 clang:
-	test -e $(CLANG_analyzer)
-	scan-build $(CLANG_checkers:%=-enable-checker %) $(MAKE) $(AM_MAKEFLAGS) clean all
+	OUT=$$(scan-build $(CLANG_checkers:%=-enable-checker %)		\
+		$(MAKE) $(AM_MAKEFLAGS) CFLAGS="-std=c99 $(CFLAGS)"	\
+		clean all 2>&1);					\
+	REPORT=$$(echo "$$OUT"						\
+		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
+	[ -z "$$REPORT" ] && echo "$$OUT" || scan-view "$$REPORT"
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
