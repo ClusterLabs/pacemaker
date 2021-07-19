@@ -242,7 +242,7 @@ static GOptionEntry deprecated_entries[] = {
       NULL, NULL
     },
 
-    { "get-value", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, value_cb,
+    { "get-value", 0, G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, value_cb,
       NULL, NULL
     },
 
