@@ -180,7 +180,7 @@ set_format_string(int method, const char *daemon)
 static bool
 logfile_disabled(const char *filename)
 {
-    return pcmk__str_eq(filename, "none", pcmk__str_casei|pcmk__str_null_matches)
+    return pcmk__str_eq(filename, "none", pcmk__str_casei)
            || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
 }
 
@@ -318,7 +318,10 @@ pcmk__add_logfile(const char *filename)
     static bool have_logfile = false;
 
     // Use default if caller didn't specify (and we don't already have one)
-    if ((filename == NULL) && !have_logfile) {
+    if (filename == NULL) {
+        if (have_logfile) {
+            return pcmk_rc_ok;
+        }
         filename = DEFAULT_LOG_FILE;
     }
 
