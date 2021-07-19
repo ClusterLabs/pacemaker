@@ -656,6 +656,11 @@ expand_tags_in_sets(xmlNode *xml_obj, pe_working_set_t *data_set)
     xmlNode *new_xml = NULL;
     bool any_refs = false;
 
+    // Short-circuit if there are no sets
+    if (first_named_child(xml_obj, XML_CONS_TAG_RSC_SET) == NULL) {
+        return NULL;
+    }
+
     new_xml = copy_xml(xml_obj);
 
     for (xmlNode *set = first_named_child(new_xml, XML_CONS_TAG_RSC_SET);
