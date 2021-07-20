@@ -146,6 +146,7 @@ gchar **
 pcmk__cmdline_preproc(char **argv, const char *special) {
     GPtrArray *arr = NULL;
     bool saw_dash_dash = false;
+    bool copy_option = false;
 
     if (argv == NULL) {
         return NULL;
@@ -172,6 +173,12 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
 
         if (saw_dash_dash == true) {
             g_ptr_array_add(arr, g_strdup(argv[i]));
+            continue;
+        }
+
+        if (copy_option == true) {
+            g_ptr_array_add(arr, g_strdup(argv[i]));
+            copy_option = false;
             continue;
         }
 
@@ -239,6 +246,7 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
                      */
                     } else {
                         g_ptr_array_add(arr, g_strdup_printf("-%c", *ch));
+                        copy_option = true;
                         ch++;
                     }
 
