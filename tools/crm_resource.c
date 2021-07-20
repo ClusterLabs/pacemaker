@@ -1530,7 +1530,7 @@ main(int argc, char **argv)
      */
 
     args = pcmk__new_common_args(SUMMARY);
-    processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
+    processed_args = pcmk__cmdline_preproc(argv, "GHINSTdginpstuvx");
     context = build_arg_context(args, &output_group);
 
     pcmk__register_formats(output_group, formats);
