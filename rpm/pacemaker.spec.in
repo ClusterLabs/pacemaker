@@ -277,18 +277,34 @@ Requires:      libqb >= 0.17.0
 BuildRequires: libqb-devel >= 0.17.0
 
 # Required basic build tools
-BuildRequires: coreutils findutils grep sed
-BuildRequires: autoconf automake gcc make pkgconfig
-BuildRequires: libtool %{?pkgname_libtool_devel}
+BuildRequires: autoconf
+BuildRequires: automake
+BuildRequires: coreutils
+BuildRequires: findutils
+BuildRequires: gcc
+BuildRequires: grep
+BuildRequires: libtool
+%if %{defined pkgname_libtool_devel}
+BuildRequires: %{?pkgname_libtool_devel}
+%endif
+BuildRequires: make
+BuildRequires: pkgconfig
+BuildRequires: sed
 
 # Required for core functionality
 BuildRequires: pkgconfig(glib-2.0) >= 2.42
-BuildRequires: libxml2-devel libxslt-devel libuuid-devel
+BuildRequires: libxml2-devel
+BuildRequires: libxslt-devel
+BuildRequires: libuuid-devel
 BuildRequires: %{pkgname_bzip2_devel}
 
 # Enables optional functionality
-BuildRequires: ncurses-devel %{pkgname_docbook_xsl}
-BuildRequires: help2man %{pkgname_gnutls_devel} pam-devel pkgconfig(dbus-1)
+BuildRequires: pkgconfig(dbus-1)
+BuildRequires: %{pkgname_docbook_xsl}
+BuildRequires: %{pkgname_gnutls_devel}
+BuildRequires: help2man
+BuildRequires: ncurses-devel
+BuildRequires: pam-devel
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
@@ -302,7 +318,9 @@ BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
 %if %{with doc}
-BuildRequires: asciidoc inkscape %{python_name}-sphinx
+BuildRequires: asciidoc
+BuildRequires: inkscape
+BuildRequires: %{python_name}-sphinx
 %endif
 
 Provides:      pcmk-cluster-manager = %{version}-%{release}
@@ -411,11 +429,16 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
-Requires:      %{?pkgname_libtool_devel_arch} libuuid-devel%{?_isa}
-Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
-Requires:      %{pkgname_bzip2_devel}%{?_isa} glib2-devel%{?_isa}
-Requires:      libqb-devel%{?_isa}
+Requires:      %{pkgname_bzip2_devel}%{?_isa}
 Requires:      corosync-devel >= 2.0.0
+Requires:      glib2-devel%{?_isa}
+Requires:      libqb-devel%{?_isa}
+%if %{defined pkgname_libtool_devel_arch}
+Requires:      %{?pkgname_libtool_devel_arch}
+%endif
+Requires:      libuuid-devel%{?_isa}
+Requires:      libxml2-devel%{?_isa}
+Requires:      libxslt-devel%{?_isa}
 
 %description -n %{pkgname_pcmk_libs}-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
