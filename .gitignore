@@ -1,53 +1,50 @@
-# Common
-\#*
-.\#*
-GPATH
-GRTAGS
-GTAGS
-TAGS
-Makefile
-Makefile.in
-.deps
-.dirstamp
-.libs
-*.pc
-*.pyc
+# Common conventions for files that should be ignored
+*~
 *.bz2
+*.diff
+*.orig
+*.patch
+*.rej
+*.sed
+*.swp
 *.tar.gz
 *.tgz
+\#*
+.\#*
+logs
+
+# libtool artifacts
 *.la
 *.lo
-*.o
-*~
-*.gcda
-*.gcno
-
-# Autobuild
-aclocal.m4
-autoconf
-autoheader
-autom4te.cache/
-automake
-build.counter
-/confdefs.h
-config.log
-config.status
-configure
-/conftest*
-include/stamp-*
+.libs
+libltdl
 libtool
 libtool.m4
 ltdl.m4
-libltdl
 /m4/argz.m4
 /m4/ltargz.m4
 /m4/ltoptions.m4
 /m4/ltsugar.m4
 /m4/ltversion.m4
 /m4/lt~obsolete.m4
-ylwrap
 
-# Configure targets
+# autotools artifacts
+.deps
+.dirstamp
+Makefile
+Makefile.in
+aclocal.m4
+autoconf
+autoheader
+autom4te.cache/
+automake
+/confdefs.h
+config.log
+config.status
+configure
+/conftest*
+
+# configure targets
 /cts/benchmark/clubench
 /cts/cts-cli
 /cts/cts-coverage
@@ -82,9 +79,9 @@ ylwrap
 /extra/resources/SysInfo
 /extra/resources/ifspeed
 /extra/resources/o2cb
-include/config.h
-include/config.h.in
-include/crm_config.h
+/include/config.h
+/include/config.h.in
+/include/crm_config.h
 /maint/bumplibs
 /tools/cibsecret
 /tools/crm_error
@@ -99,13 +96,10 @@ include/crm_config.h
 /tools/report.collector
 /tools/report.common
 
-# Build targets
-*.7
-*.7.xml
-*.7.html
-*.8
-*.8.xml
-*.8.html
+# Compiled targets and intermediary files
+*.o
+*.pc
+*.pyc
 /daemons/attrd/pacemaker-attrd
 /daemons/based/pacemaker-based
 /daemons/controld/pacemaker-controld
@@ -114,26 +108,12 @@ include/crm_config.h
 /daemons/execd/pacemaker-remoted
 /daemons/fenced/cts-fence-helper
 /daemons/fenced/pacemaker-fenced
-/daemons/fenced/pacemaker-fenced.xml
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
-/daemons/schedulerd/pacemaker-schedulerd.xml
 /devel/scratch
-/doc/.ABI-build
-/doc/HTML
-/doc/abi_dumps
-/doc/abi-check
-/doc/api/*
-/doc/compat_reports
-/doc/crm_fencing.html
-/doc/sphinx/*/_build
-/doc/sphinx/*/conf.py
-/doc/sphinx/build-2.1.txt
-/doc/sphinx/shared/images/*.png
 /lib/common/md5.c
-/maint/testcc_helper.cc
-/maint/testcc_*_h
-/maint/mocked/based
+/lib/gnu/libgnu.a
+/lib/gnu/stdalign.h
 /tools/attrd_updater
 /tools/cibadmin
 /tools/crmadmin
@@ -148,25 +128,48 @@ include/crm_config.h
 /tools/crm_verify
 /tools/iso8601
 /tools/stonith_admin
-xml/crm.dtd
-xml/crm_mon.rng
-xml/pacemaker*.rng
-xml/versions.rng
-xml/api/api-result*.rng
-lib/gnu/libgnu.a
-lib/gnu/stdalign.h
+
+# Generated XML schema files
+/xml/crm_mon.rng
+/xml/pacemaker*.rng
+/xml/versions.rng
+/xml/api/api-result*.rng
+
+# Working directories for make dist and make export
+/pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
+
+# Documentation build targets and intermediary files
+*.7
+*.7.xml
+*.7.html
+*.8
+*.8.xml
+*.8.html
+GPATH
+GRTAGS
+GTAGS
+TAGS
+/daemons/fenced/pacemaker-fenced.xml
+/daemons/schedulerd/pacemaker-schedulerd.xml
+/doc/.ABI-build
+/doc/HTML
+/doc/abi_dumps
+/doc/abi-check
+/doc/api/
+/doc/compat_reports
+/doc/crm_fencing.html
+/doc/sphinx/*/_build
+/doc/sphinx/*/conf.py
+/doc/sphinx/build-2.1.txt
+/doc/sphinx/shared/images/*.png
+
+# Test artifacts (from unit tests, regression tests, static analysis, etc.)
 *.coverity
-
-# Packager artifacts
-*.rpm
-/mock
-/pacemaker.spec
-/rpm/[A-Z]*
-
-# make dist/export working directory
-pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
-
-# Test detritus
+*.gcda
+*.gcno
+coverity-*
+pacemaker_*.info
+/coverage
 /cts/.regression.failed.diff
 /cts/scheduler/*.ref
 /cts/scheduler/*.up
@@ -184,8 +187,18 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /xml/assets/diffview.js
 /xml/assets/xmlcatalog
 
-# Release maintenance detritus
+# Packaging artifacts
+*.rpm
+build.counter
+/mock
+/pacemaker.spec
+/rpm/[A-Z]*
+
+# Project maintainer artifacts
 /maint/gnulib
+/maint/mocked/based
+/maint/testcc_helper.cc
+/maint/testcc_*_h
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /.ABI-build
@@ -232,6 +245,7 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /doc/shared/en-US/images/Policy-Engine-*.png
 /extra/logrotate/pacemaker
 /fencing
+/include/stamp-*
 /install-sh
 /lib/common/tests/flags/pcmk__clear_flags_as
 /lib/common/tests/flags/pcmk__set_flags_as
@@ -256,17 +270,5 @@ pacemaker-[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]
 /py-compile
 /scratch
 /test-driver
-
-# Test coverage
-/coverage
-pacemaker_*.info
-
-#Other 
-coverity-*
-logs
-*.patch
-*.diff
-*.sed
-*.orig
-*.rej
-*.swp
+/xml/crm.dtd
+ylwrap
