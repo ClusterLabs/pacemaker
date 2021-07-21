@@ -180,7 +180,7 @@ set_format_string(int method, const char *daemon)
 static bool
 logfile_disabled(const char *filename)
 {
-    return pcmk__str_eq(filename, "none", pcmk__str_casei|pcmk__str_null_matches)
+    return pcmk__str_eq(filename, "none", pcmk__str_casei)
            || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
 }
 
@@ -318,7 +318,10 @@ pcmk__add_logfile(const char *filename)
     static bool have_logfile = false;
 
     // Use default if caller didn't specify (and we don't already have one)
-    if ((filename == NULL) && !have_logfile) {
+    if (filename == NULL) {
+        if (have_logfile) {
+            return pcmk_rc_ok;
+        }
         filename = DEFAULT_LOG_FILE;
     }
 
@@ -708,30 +711,30 @@ crm_priority2int(const char *name)
 
 
 static void
-crm_identity(const char *entity, int argc, char **argv) 
+set_identity(const char *entity, int argc, char **argv)
 {
-    if(crm_system_name != NULL) {
-        /* Nothing to do */
+    if (crm_system_name != NULL) {
+        return; // Already set, don't overwrite
+    }
 
-    } else if (entity) {
-        free(crm_system_name);
+    if (entity != NULL) {
         crm_system_name = strdup(entity);
 
-    } else if (argc > 0 && argv != NULL) {
+    } else if ((argc > 0) && (argv != NULL)) {
         char *mutable = strdup(argv[0]);
         char *modified = basename(mutable);
 
         if (strstr(modified, "lt-") == modified) {
             modified += 3;
         }
-
-        free(crm_system_name);
         crm_system_name = strdup(modified);
         free(mutable);
 
-    } else if (crm_system_name == NULL) {
+    } else {
         crm_system_name = strdup("Unknown");
     }
+
+    CRM_ASSERT(crm_system_name != NULL);
 
     setenv("PCMK_service", crm_system_name, 1);
 }
@@ -763,8 +766,10 @@ crm_log_preinit(const char *entity, int argc, char **argv)
         /* and for good measure... - this enum is a bit field (!) */
         g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
 
-        /* Who do we log as */
-        crm_identity(entity, argc, argv);
+        /* Set crm_system_name, which is used as the logging name. It may also
+         * be used for other purposes such as an IPC client name.
+         */
+        set_identity(entity, argc, argv);
 
         qb_facility = qb_log_facility2int("local0");
         qb_log_init(crm_system_name, qb_facility, LOG_ERR);

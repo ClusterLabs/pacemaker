@@ -20,6 +20,12 @@ extern "C" {
  * \ingroup fencing
  */
 
+/* IMPORTANT: DLM source code includes this file directly, without having access
+ * to other Pacemaker headers on its include path, so this file should *not*
+ * include any other Pacemaker headers. (DLM might be updated to avoid the
+ * issue, but we should still follow this guideline for a long time after.)
+ */
+
 #  include <dlfcn.h>
 #  include <errno.h>
 #  include <stdbool.h>  // bool
@@ -559,7 +565,14 @@ bool stonith_agent_exists(const char *agent, int timeout);
 const char *stonith_action_str(const char *action);
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/fencing/compat.h>
+/* Normally we'd put this section in a separate file (crm/fencing/compat.h), but
+ * we can't do that for the reason noted at the top of this file. That does mean
+ * we have to duplicate these declarations where they're implemented.
+ */
+
+//! \deprecated Use stonith_get_namespace() instead
+const char *get_stonith_provider(const char *agent, const char *provider);
+
 #endif
 
 #ifdef __cplusplus
