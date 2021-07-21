@@ -550,6 +550,34 @@ unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
 }
 
 /*!
+ * \internal
+ * \brief Update an action's optional flag
+ *
+ * \param[in] action    Action to update
+ * \param[in] optional  Requested optional status
+ */
+static void
+update_action_optional(pe_action_t *action, gboolean optional)
+{
+    // Force a non-recurring action to be optional if its resource is unmanaged
+    if ((action->rsc != NULL) && (action->node != NULL)
+        && !pcmk_is_set(action->flags, pe_action_pseudo)
+        && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+        && (g_hash_table_lookup(action->meta,
+                                XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
+            pe_rsc_debug(action->rsc, "%s on %s is optional (%s is unmanaged)",
+                         action->uuid, action->node->details->uname,
+                         action->rsc->id);
+            pe__set_action_flags(action, pe_action_optional);
+            // We shouldn't clear runnable here because ... something
+
+    // Otherwise require the action if requested
+    } else if (!optional) {
+        pe__clear_action_flags(action, pe_action_optional);
+    }
+}
+
+/*!
  * \brief Create or update an action object
  *
  * \param[in] rsc          Resource that action is for (if any)
@@ -590,9 +618,7 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
         free(key);
     }
 
-    if (!optional) {
-        pe__clear_action_flags(action, pe_action_optional);
-    }
+    update_action_optional(action, optional);
 
     if (rsc != NULL) {
         enum action_tasks a_task = text2task(action->task);
@@ -605,19 +631,6 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
 
         if (action->node != NULL) {
             unpack_action_node_attributes(action, data_set);
-        }
-
-        // Make the action optional if its resource is unmanaged
-        if (!pcmk_is_set(action->flags, pe_action_pseudo)
-            && (action->node != NULL)
-            && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
-            && (g_hash_table_lookup(action->meta,
-                                    XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
-                pe_rsc_debug(rsc, "%s on %s is optional (%s is unmanaged)",
-                             action->uuid, action->node->details->uname,
-                             action->rsc->id);
-                pe__set_action_flags(action, pe_action_optional);
-                // We shouldn't clear runnable here because ... something
         }
 
         // Make the action runnable or unrunnable as appropriate
