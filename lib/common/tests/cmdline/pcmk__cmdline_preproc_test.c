@@ -106,6 +106,36 @@ negative_score_2(void) {
     g_strfreev(processed);
 }
 
+static void
+string_arg_with_dash(void) {
+    const char *argv[] = { "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
+    const gchar *expected[] = { "-n", "crm_mon_options", "-v", "--opt1 --opt2", NULL };
+
+    gchar **processed = pcmk__cmdline_preproc((char **) argv, "v");
+    LISTS_EQ(processed, expected);
+    g_strfreev(processed);
+}
+
+static void
+string_arg_with_dash_2(void) {
+    const char *argv[] = { "-n", "crm_mon_options", "-v", "-1i3", NULL };
+    const gchar *expected[] = { "-n", "crm_mon_options", "-v", "-1i3", NULL };
+
+    gchar **processed = pcmk__cmdline_preproc((char **) argv, "v");
+    LISTS_EQ(processed, expected);
+    g_strfreev(processed);
+}
+
+static void
+string_arg_with_dash_3(void) {
+    const char *argv[] = { "-abc", "-1i3", NULL };
+    const gchar *expected[] = { "-a", "-b", "-c", "-1i3", NULL };
+
+    gchar **processed = pcmk__cmdline_preproc((char **) argv, "c");
+    LISTS_EQ(processed, expected);
+    g_strfreev(processed);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -120,5 +150,8 @@ main(int argc, char **argv)
     g_test_add_func("/common/cmdline/preproc/long_arg", long_arg);
     g_test_add_func("/common/cmdline/preproc/negative_score", negative_score);
     g_test_add_func("/common/cmdline/preproc/negative_score_2", negative_score_2);
+    g_test_add_func("/common/cmdline/preproc/string_arg_with_dash", string_arg_with_dash);
+    g_test_add_func("/common/cmdline/preproc/string_arg_with_dash_2", string_arg_with_dash_2);
+    g_test_add_func("/common/cmdline/preproc/string_arg_with_dash_3", string_arg_with_dash_3);
     return g_test_run();
 }

@@ -239,7 +239,7 @@ main(int argc, char **argv)
 
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     GOptionContext *context = build_arg_context(args);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "nopNO");
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "drX");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
