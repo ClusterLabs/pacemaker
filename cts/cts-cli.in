@@ -1860,7 +1860,11 @@ if [ $num_errors -ne 0 ]; then
     echo "$num_errors tests failed; see output in:"
     for t in $tests; do
         eval TMPFILE="\$TMPFILE_$t"
-        echo "    $TMPFILE"
+        if [[ $(diff -w $test_home/cli/regression.$t.exp "$TMPFILE") ]]; then
+          rm -f "$TMPFILE"
+        else
+          echo "    $TMPFILE"
+        fi
     done
     exit $CRM_EX_ERROR
 
@@ -1868,7 +1872,11 @@ elif [ $failed -eq 1 ]; then
     echo "$num_passed tests passed but output was unexpected; see output in:"
     for t in $tests; do
         eval TMPFILE="\$TMPFILE_$t"
-        echo "    $TMPFILE"
+        if [[ $(diff -w $test_home/cli/regression.$t.exp "$TMPFILE") ]]; then
+          rm -f "$TMPFILE"
+        else
+          echo "    $TMPFILE"
+        fi
     done
     exit $CRM_EX_DIGEST
 
