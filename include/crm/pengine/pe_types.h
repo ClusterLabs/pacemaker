@@ -300,7 +300,9 @@ enum pe_action_flags {
 
     pe_action_dumped = 0x00100,
     pe_action_processed = 0x00200,
-    pe_action_clear = 0x00400,
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    pe_action_clear = 0x00400, //! \deprecated Unused
+#endif
     pe_action_dangle = 0x00800,
 
     /* This action requires one or more of its dependencies to be runnable.

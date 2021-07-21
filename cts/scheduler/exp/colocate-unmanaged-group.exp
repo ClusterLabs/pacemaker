@@ -1,0 +1,20 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="28" operation="monitor" operation_key="prmDummy1_monitor_10000" on_node="rh80-test01" on_node_uuid="1">
+        <primitive id="prmDummy1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="rh80-test01" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="1" operation="monitor" operation_key="prmDummy3_monitor_0" on_node="rh80-test01" on_node_uuid="1">
+        <primitive id="prmDummy3" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="rh80-test01" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
