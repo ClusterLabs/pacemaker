@@ -1856,27 +1856,28 @@ for t in $tests; do
     grep -e '^\* \(Passed\|Failed\)' "$TMPFILE"
 done
 
+function print_or_remove_file {
+  eval TMPFILE="\$TMPFILE_$t"
+  if [[ $(diff -w $test_home/cli/regression.$t.exp "$TMPFILE") ]]; then
+    rm -f "$TMPFILE"
+  else
+    echo "    $TMPFILE"
+  fi
+}
+
 if [ $num_errors -ne 0 ]; then
-    echo "$num_errors tests failed; see output in:"
+    if [ $failed -ne 0 ]; then
+      echo "$num_errors tests failed; see output in:"
+    fi
     for t in $tests; do
-        eval TMPFILE="\$TMPFILE_$t"
-        if [[ $(diff -w $test_home/cli/regression.$t.exp "$TMPFILE") ]]; then
-          rm -f "$TMPFILE"
-        else
-          echo "    $TMPFILE"
-        fi
+      print_or_remove_file
     done
     exit $CRM_EX_ERROR
 
 elif [ $failed -eq 1 ]; then
     echo "$num_passed tests passed but output was unexpected; see output in:"
     for t in $tests; do
-        eval TMPFILE="\$TMPFILE_$t"
-        if [[ $(diff -w $test_home/cli/regression.$t.exp "$TMPFILE") ]]; then
-          rm -f "$TMPFILE"
-        else
-          echo "    $TMPFILE"
-        fi
+      print_or_remove_file
     done
     exit $CRM_EX_DIGEST
 
