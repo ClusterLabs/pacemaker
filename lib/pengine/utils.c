@@ -578,6 +578,101 @@ update_action_optional(pe_action_t *action, gboolean optional)
 }
 
 /*!
+ * \internal
+ * \brief Update a resource action's runnable flag
+ *
+ * \param[in] action     Action to update
+ * \param[in] for_graph  Whether action should be recorded in transition graph
+ * \param[in] data_set   Cluster working set
+ *
+ * \note This may also schedule fencing if a stop is unrunnable.
+ */
+static void
+update_resource_action_runnable(pe_action_t *action, bool for_graph,
+                                pe_working_set_t *data_set)
+{
+    if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        return;
+    }
+
+    if (action->node == NULL) {
+        pe_rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
+                     action->uuid);
+        pe__clear_action_flags(action, pe_action_runnable);
+
+    } else if (!pcmk_is_set(action->flags, pe_action_dc)
+               && !(action->node->details->online)
+               && (!pe__is_guest_node(action->node)
+                   || action->node->details->remote_requires_reset)) {
+        pe__clear_action_flags(action, pe_action_runnable);
+        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
+                   "%s on %s is unrunnable (node is offline)",
+                   action->uuid, action->node->details->uname);
+        if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+            && for_graph
+            && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
+            && !(action->node->details->unclean)) {
+            pe_fence_node(data_set, action->node, "stop is unrunnable", false);
+        }
+
+    } else if (!pcmk_is_set(action->flags, pe_action_dc)
+               && action->node->details->pending) {
+        pe__clear_action_flags(action, pe_action_runnable);
+        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
+                   "Action %s on %s is unrunnable (node is pending)",
+                   action->uuid, action->node->details->uname);
+
+    } else if (action->needs == rsc_req_nothing) {
+        pe_action_set_reason(action, NULL, TRUE);
+        if (pe__is_guest_node(action->node)
+            && !pe_can_fence(data_set, action->node)) {
+            /* An action that requires nothing usually does not require any
+             * fencing in order to be runnable. However, there is an exception:
+             * such an action cannot be completed if it is on a guest node whose
+             * host is unclean and cannot be fenced.
+             */
+            pe_rsc_debug(action->rsc, "%s on %s is unrunnable "
+                         "(node's host cannot be fenced)",
+                         action->uuid, action->node->details->uname);
+            pe__clear_action_flags(action, pe_action_runnable);
+        } else {
+            pe_rsc_trace(action->rsc,
+                         "%s on %s does not require fencing or quorum",
+                         action->uuid, action->node->details->uname);
+            pe__set_action_flags(action, pe_action_runnable);
+        }
+
+    } else {
+        switch (effective_quorum_policy(action->rsc, data_set)) {
+            case no_quorum_stop:
+                pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
+                             action->uuid, action->node->details->uname);
+                pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
+                                          "no quorum", pe_action_runnable,
+                                          true);
+                break;
+
+            case no_quorum_freeze:
+                if (!action->rsc->fns->active(action->rsc, TRUE)
+                    || (action->rsc->next_role > action->rsc->role)) {
+                    pe_rsc_debug(action->rsc,
+                                 "%s on %s is unrunnable (no quorum)",
+                                 action->uuid, action->node->details->uname);
+                    pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
+                                              "quorum freeze",
+                                              pe_action_runnable, true);
+                }
+                break;
+
+            default:
+                //pe_action_set_reason(action, NULL, TRUE);
+                pe__set_action_flags(action, pe_action_runnable);
+                break;
+        }
+    }
+}
+
+/*!
  * \brief Create or update an action object
  *
  * \param[in] rsc          Resource that action is for (if any)
@@ -622,93 +717,12 @@ custom_action(pe_resource_t *rsc, char *key, const char *task,
 
     if (rsc != NULL) {
         enum action_tasks a_task = text2task(action->task);
-        enum pe_quorum_policy quorum_policy = effective_quorum_policy(rsc, data_set);
-        int warn_level = LOG_TRACE;
-
-        if (save_action) {
-            warn_level = LOG_WARNING;
-        }
 
         if (action->node != NULL) {
             unpack_action_node_attributes(action, data_set);
         }
 
-        // Make the action runnable or unrunnable as appropriate
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
-            /* leave untouched */
-
-        } else if (action->node == NULL) {
-            pe_rsc_trace(rsc, "%s is unrunnable (unallocated)",
-                         action->uuid);
-            pe__clear_action_flags(action, pe_action_runnable);
-
-        } else if (!pcmk_is_set(action->flags, pe_action_dc)
-                   && !(action->node->details->online)
-                   && (!pe__is_guest_node(action->node)
-                       || action->node->details->remote_requires_reset)) {
-            pe__clear_action_flags(action, pe_action_runnable);
-            do_crm_log(warn_level,
-                       "%s on %s is unrunnable (node is offline)",
-                       action->uuid, action->node->details->uname);
-            if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
-                && save_action && a_task == stop_rsc
-                && action->node->details->unclean == FALSE) {
-                pe_fence_node(data_set, action->node, "resource actions are unrunnable", FALSE);
-            }
-
-        } else if (!pcmk_is_set(action->flags, pe_action_dc)
-                   && action->node->details->pending) {
-            pe__clear_action_flags(action, pe_action_runnable);
-            do_crm_log(warn_level,
-                       "Action %s on %s is unrunnable (node is pending)",
-                       action->uuid, action->node->details->uname);
-
-        } else if (action->needs == rsc_req_nothing) {
-            pe_action_set_reason(action, NULL, TRUE);
-            if (pe__is_guest_node(action->node)
-                && !pe_can_fence(data_set, action->node)) {
-                /* An action that requires nothing usually does not require any
-                 * fencing in order to be runnable. However, there is an
-                 * exception: an action cannot be completed if it is on a guest
-                 * node whose host is unclean and cannot be fenced.
-                 */
-                pe_rsc_debug(rsc, "%s on %s is unrunnable "
-                             "(node's host cannot be fenced)",
-                             action->uuid, action->node->details->uname);
-                pe__clear_action_flags(action, pe_action_runnable);
-            } else {
-                pe_rsc_trace(rsc, "%s on %s does not require fencing or quorum",
-                             action->uuid, action->node->details->uname);
-                pe__set_action_flags(action, pe_action_runnable);
-            }
-#if 0
-            /*
-             * No point checking this
-             * - if we don't have quorum we can't stonith anyway
-             */
-        } else if (action->needs == rsc_req_stonith) {
-            crm_trace("Action %s requires only stonith", action->uuid);
-            action->runnable = TRUE;
-#endif
-        } else if (quorum_policy == no_quorum_stop) {
-            pe_rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
-                         action->uuid, action->node->details->uname);
-            pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                      "no quorum", pe_action_runnable, TRUE);
-
-        } else if (quorum_policy == no_quorum_freeze) {
-            if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
-                pe_rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
-                             action->uuid, action->node->details->uname);
-                pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                          "quorum freeze", pe_action_runnable,
-                                          TRUE);
-            }
-
-        } else {
-            //pe_action_set_reason(action, NULL, TRUE);
-            pe__set_action_flags(action, pe_action_runnable);
-        }
+        update_resource_action_runnable(action, save_action, data_set);
 
         if (save_action) {
             switch (a_task) {
