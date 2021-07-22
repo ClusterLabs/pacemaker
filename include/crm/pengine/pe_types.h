@@ -543,6 +543,7 @@ enum pe_ordering {
 
     pe_order_implies_first_printed = 0x10000,   /* Like ..implies_first but only ensures 'first' is printed, not mandatory */
     pe_order_implies_then_printed  = 0x20000,   /* Like ..implies_then but only ensures 'then' is printed, not mandatory */
+    pe_order_managed_then          = 0x40000,   // First is unrunnable if then is required but unmanaged
 
     pe_order_asymmetrical          = 0x100000,  /* Indicates asymmetrical one way ordering constraint. */
     pe_order_load                  = 0x200000,  /* Only relevant if... */

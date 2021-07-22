@@ -405,6 +405,20 @@ update_action_for_ordering_flags(pe_action_t *first, pe_action_t *then,
                      (changed? "changed" : "unchanged"));
     }
 
+    if (pcmk_is_set(order->type, pe_order_managed_then)) {
+        if (then->rsc != NULL) {
+            changed |= then->rsc->cmds->update_ordered_actions(first, then,
+                                                               node,
+                                                               first_flags,
+                                                               pe_action_runnable,
+                                                               pe_order_managed_then,
+                                                               data_set);
+        }
+        pe_rsc_trace(then->rsc, "%s then %s: %s after pe_order_managed_then",
+                     first->uuid, then->uuid,
+                     (changed? "changed" : "unchanged"));
+    }
+
     if (pcmk_is_set(order->type, pe_order_optional)) {
         if (then->rsc != NULL) {
             changed |= then->rsc->cmds->update_ordered_actions(first, then,
@@ -906,6 +920,15 @@ pcmk__update_ordered_actions(pe_action_t *first, pe_action_t *then,
         && !pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
 
         clear_action_flag_because(then, pe_action_optional, first);
+    }
+
+    if (pcmk_is_set(type, pe_order_managed_then)
+        && (then->rsc != NULL) && pcmk_is_set(filter, pe_action_runnable)
+        && !pcmk_is_set(then->flags, pe_action_optional)
+        && !pcmk_is_set(then->rsc->flags, pe_rsc_managed)
+        && pcmk_is_set(flags, pe_action_runnable)) {
+
+        clear_action_flag_because(first, pe_action_runnable, then);
     }
 
     if (pcmk_is_set(type, pe_order_restart)) {
