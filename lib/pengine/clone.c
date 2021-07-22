@@ -649,6 +649,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     GList *gIter = rsc->children;
+    GList *all = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
     gboolean print_everything = TRUE;
@@ -659,6 +660,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
     print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
                        (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
+
+    all = g_list_prepend(all, (gpointer) "*");
 
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
@@ -687,13 +690,14 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         }
 
         out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
-                     child_rsc, only_node, only_rsc);
+                     child_rsc, only_node, all);
     }
 
     if (printed_header) {
         pcmk__output_xml_pop_parent(out);
     }
 
+    g_list_free(all);
     return rc;
 }
 

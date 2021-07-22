@@ -3022,7 +3022,27 @@ Operations:
     <node name="httpd-bundle-2" id="httpd-bundle-2" online="false" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" shutdown="false" expected_up="false" is_dc="false" resources_running="0" type="remote" id_as_resource="httpd-bundle-docker-2"/>
   </nodes>
   <resources>
-    <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false"/>
+    <clone id="mysql-clone-group" multi_state="false" unique="false" managed="true" disabled="false" failed="false" failure_ignored="false">
+      <group id="mysql-group:0" number_resources="1" managed="true" disabled="false">
+        <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster02" id="2" cached="true"/>
+        </resource>
+      </group>
+      <group id="mysql-group:1" number_resources="1" managed="true" disabled="false">
+        <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Started" active="true" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="1">
+          <node name="cluster01" id="1" cached="true"/>
+        </resource>
+      </group>
+      <group id="mysql-group:2" number_resources="1" managed="true" disabled="false">
+        <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </group>
+      <group id="mysql-group:3" number_resources="1" managed="true" disabled="false">
+        <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </group>
+      <group id="mysql-group:4" number_resources="1" managed="true" disabled="false">
+        <resource id="mysql-proxy" resource_agent="lsb:mysql-proxy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+      </group>
+    </clone>
   </resources>
   <node_attributes>
     <node name="cluster01">
