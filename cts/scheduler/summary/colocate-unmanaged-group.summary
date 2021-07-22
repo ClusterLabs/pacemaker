@@ -6,7 +6,7 @@ Current cluster status:
   * Full List of Resources:
     * Clone Set: prmStateful-clone [prmStateful] (promotable):
       * Stopped: [ rh80-test01 rh80-test02 ]
-    * Resource Group: grpTest:
+    * Resource Group: grpTest (partially active):
       * prmDummy1	(ocf:heartbeat:Dummy):	 Started rh80-test01 (unmanaged)
       * prmDummy2	(ocf:heartbeat:Dummy):	 Stopped
       * prmDummy3	(ocf:heartbeat:Dummy):	 Stopped
@@ -25,7 +25,7 @@ Revised Cluster Status:
   * Full List of Resources:
     * Clone Set: prmStateful-clone [prmStateful] (promotable):
       * Stopped: [ rh80-test01 rh80-test02 ]
-    * Resource Group: grpTest:
+    * Resource Group: grpTest (partially active):
       * prmDummy1	(ocf:heartbeat:Dummy):	 Started rh80-test01 (unmanaged)
       * prmDummy2	(ocf:heartbeat:Dummy):	 Stopped
       * prmDummy3	(ocf:heartbeat:Dummy):	 Stopped

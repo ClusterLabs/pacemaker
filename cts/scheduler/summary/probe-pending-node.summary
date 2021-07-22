@@ -15,7 +15,7 @@ Current cluster status:
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
     * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (unmanaged):
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
-    * Resource Group: grp_UC5_ascs (unmanaged):
+    * Resource Group: grp_UC5_ascs (partially active, unmanaged):
       * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
       * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (unmanaged)
       * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)
@@ -43,7 +43,7 @@ Revised Cluster Status:
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
     * Clone Set: fs_UC5_SYS-clone [fs_UC5_SYS] (unmanaged):
       * Stopped: [ gcdoubwap01 gcdoubwap02 ]
-    * Resource Group: grp_UC5_ascs (unmanaged):
+    * Resource Group: grp_UC5_ascs (partially active, unmanaged):
       * rsc_vip_int_ascs	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
       * rsc_vip_gcp_ascs	(ocf:heartbeat:gcp-vpc-move-vip):	 Started gcdoubwap01 (unmanaged)
       * fs_UC5_ascs	(ocf:heartbeat:Filesystem):	 Stopped (unmanaged)

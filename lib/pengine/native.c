@@ -1341,7 +1341,7 @@ pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_paren
     if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
         pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none)) {
         return FALSE;
-    } else if (check_parent) {
+    } else if (check_parent && rsc->parent && rsc->parent->variant != pe_native) {
         pe_resource_t *up = uber_parent(rsc);
 
         if (pe_rsc_is_bundled(rsc)) {
