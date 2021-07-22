@@ -6,7 +6,7 @@ Current cluster status:
     * OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
   * Full List of Resources:
-    * Resource Group: Web_Group:
+    * Resource Group: Web_Group (partially active):
       * Apache_IP	(ocf:heartbeat:IPaddr):	 Started heartbeat.ds9
       * resource_IP2	(ocf:heartbeat:IPaddr):	 Stopped (disabled)
       * resource_dummyweb	(ocf:heartbeat:Dummy):	 Stopped
@@ -35,7 +35,7 @@ Revised Cluster Status:
     * OFFLINE: [ defiant.ds9 warbird.ds9 ]
 
   * Full List of Resources:
-    * Resource Group: Web_Group:
+    * Resource Group: Web_Group (partially active):
       * Apache_IP	(ocf:heartbeat:IPaddr):	 Started heartbeat.ds9
       * resource_IP2	(ocf:heartbeat:IPaddr):	 Stopped (disabled)
       * resource_dummyweb	(ocf:heartbeat:Dummy):	 Stopped

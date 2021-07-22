@@ -21,7 +21,7 @@ Current cluster status:
       * Promoted: [ rhel7-1 ]
       * Unpromoted: [ rhel7-2 rhel7-4 rhel7-5 ]
       * Stopped: [ rhel7-3 ]
-    * Resource Group: group-1:
+    * Resource Group: group-1 (partially active):
       * r192.168.122.207	(ocf:heartbeat:IPaddr2):	 Started rhel7-1
       * petulant	(service:pacemaker-cts-dummyd@10):	 FAILED rhel7-1
       * r192.168.122.208	(ocf:heartbeat:IPaddr2):	 Stopped

@@ -20,6 +20,73 @@
 #define VARIANT_GROUP 1
 #include "./variant.h"
 
+static void
+group_header(pcmk__output_t *out, int *rc, pe_resource_t *rsc, bool partially_active)
+{
+    char *attrs = NULL;
+    size_t len = 0;
+
+    if (partially_active) {
+        pcmk__add_separated_word(&attrs, &len, "partially active", ", ");
+    }
+
+    if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
+        pcmk__add_separated_word(&attrs, &len, "unmanaged", ", ");
+    }
+
+    if (pe__resource_is_disabled(rsc)) {
+        pcmk__add_separated_word(&attrs, &len, "disabled", ", ");
+    }
+
+    if (attrs) {
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s (%s)",
+                                 rsc->id, attrs);
+        free(attrs);
+    } else {
+        PCMK__OUTPUT_LIST_HEADER(out, FALSE, *rc, "Resource Group: %s", rsc->id);
+    }
+}
+
+static bool
+skip_child_rsc(pe_resource_t *rsc, pe_resource_t *child, GList *only_rsc,
+               unsigned int show_opts)
+{
+    bool star_list = pcmk__list_of_1(only_rsc) &&
+                     pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
+    bool child_filtered = child->fns->is_filtered(child, only_rsc, FALSE);
+
+    /* If the resource is in only_rsc by name (so, ignoring "*") then allow
+     * it regardless if if it's active or not.
+     */
+    if (!star_list && !child_filtered) {
+        return false;
+
+    } else if (!child_filtered) {
+        /* Allow it if the resource is active, or if we were asked to display
+         * inactive resources.
+         */
+        if (child->fns->active(child, FALSE) ||
+            pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
+            return false;
+        }
+
+    /* Check if the parent was asked for. */
+    } else {
+        gboolean check_parent = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
+                                (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
+
+        /* But only return the child resource if it is either active or
+         * we are displaying inactive resources.
+         */
+        if (check_parent && (child->fns->active(child, FALSE) ||
+                             pcmk_is_set(show_opts, pcmk_show_inactive_rscs))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 gboolean
 group_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -194,20 +261,16 @@ pe__group_xml(pcmk__output_t *out, va_list args)
     char *count = pcmk__itoa(g_list_length(gIter));
 
     int rc = pcmk_rc_no_output;
-    gboolean print_everything = TRUE;
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         free(count);
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
-
     for (; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-        if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
+        if (skip_child_rsc(rsc, child_rsc, only_rsc, show_opts)) {
             continue;
         }
 
@@ -242,23 +305,19 @@ pe__group_default(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     int rc = pcmk_rc_no_output;
-    gboolean print_everything = TRUE;
+
+    gboolean active = rsc->fns->active(rsc, TRUE);
+    gboolean partially_active = rsc->fns->active(rsc, FALSE);
 
     if (rsc->fns->is_filtered(rsc, only_rsc, TRUE)) {
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
-
     if (pcmk_is_set(show_opts, pcmk_show_brief)) {
         GList *rscs = pe__filter_rsc_list(rsc->children, only_rsc);
 
         if (rscs != NULL) {
-            out->begin_list(out, NULL, NULL, "Resource Group: %s%s%s", rsc->id,
-                            pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                            pe__resource_is_disabled(rsc) ? " (disabled)" : "");
-
+            group_header(out, &rc, rsc, !active && partially_active);
             pe__rscs_brief_output(out, rscs, show_opts | pcmk_show_inactive_rscs);
 
             rc = pcmk_rc_ok;
@@ -269,14 +328,11 @@ pe__group_default(pcmk__output_t *out, va_list args)
         for (GList *gIter = rsc->children; gIter; gIter = gIter->next) {
             pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
 
-            if (child_rsc->fns->is_filtered(child_rsc, only_rsc, print_everything)) {
+            if (skip_child_rsc(rsc, child_rsc, only_rsc, show_opts)) {
                 continue;
             }
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Resource Group: %s%s%s", rsc->id,
-                                     pcmk_is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)",
-                                     pe__resource_is_disabled(rsc) ? " (disabled)" : "");
-
+            group_header(out, &rc, rsc, !active && partially_active);
             out->message(out, crm_map_element_name(child_rsc->xml), show_opts,
                          child_rsc, only_node, only_rsc);
         }

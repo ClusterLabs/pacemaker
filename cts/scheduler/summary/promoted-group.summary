@@ -5,7 +5,7 @@ Current cluster status:
   * Full List of Resources:
     * Resource Group: test:
       * resource_1	(ocf:heartbeat:IPaddr):	 Started rh44-1
-    * Clone Set: ms-sf [grp_ms_sf] (promotable) (unique):
+    * Clone Set: ms-sf [grp_ms_sf] (promotable, unique):
       * Resource Group: grp_ms_sf:0:
         * master_slave_Stateful:0	(ocf:heartbeat:Stateful):	 Unpromoted rh44-2
       * Resource Group: grp_ms_sf:1:
@@ -30,7 +30,7 @@ Revised Cluster Status:
   * Full List of Resources:
     * Resource Group: test:
       * resource_1	(ocf:heartbeat:IPaddr):	 Started rh44-1
-    * Clone Set: ms-sf [grp_ms_sf] (promotable) (unique):
+    * Clone Set: ms-sf [grp_ms_sf] (promotable, unique):
       * Resource Group: grp_ms_sf:0:
         * master_slave_Stateful:0	(ocf:heartbeat:Stateful):	 Unpromoted rh44-2
       * Resource Group: grp_ms_sf:1:

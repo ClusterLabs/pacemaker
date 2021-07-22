@@ -3,7 +3,7 @@ Current cluster status:
     * Online: [ pcmk-1 pcmk-2 ]
 
   * Full List of Resources:
-    * Resource Group: group-1:
+    * Resource Group: group-1 (partially active):
       * r192.168.122.113	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
       * r192.168.122.114	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
       * r192.168.122.115	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
@@ -21,7 +21,7 @@ Revised Cluster Status:
     * Online: [ pcmk-1 pcmk-2 ]
 
   * Full List of Resources:
-    * Resource Group: group-1:
+    * Resource Group: group-1 (partially active):
       * r192.168.122.113	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
       * r192.168.122.114	(ocf:heartbeat:IPaddr2):	 Stopped (unmanaged)
       * r192.168.122.115	(ocf:heartbeat:IPaddr2):	 Stopped

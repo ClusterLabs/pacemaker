@@ -23,7 +23,7 @@ Current cluster status:
       * Resource Group: grpStonith3:0:
         * prmStonith3-1	(stonith:external/stonith-helper):	 Started srv02 (UNCLEAN)
         * prmStonith3-3	(stonith:external/ssh):	 Started srv02 (UNCLEAN)
-      * Resource Group: grpStonith3:1:
+      * Resource Group: grpStonith3:1 (partially active):
         * prmStonith3-1	(stonith:external/stonith-helper):	 Started srv01
         * prmStonith3-3	(stonith:external/ssh):	 Stopped
       * Started: [ srv04 ]

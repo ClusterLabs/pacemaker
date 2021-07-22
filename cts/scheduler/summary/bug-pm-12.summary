@@ -3,7 +3,7 @@ Current cluster status:
     * Online: [ node-a node-b ]
 
   * Full List of Resources:
-    * Clone Set: ms-sf [group] (promotable) (unique):
+    * Clone Set: ms-sf [group] (promotable, unique):
       * Resource Group: group:0:
         * stateful-1:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
@@ -48,7 +48,7 @@ Revised Cluster Status:
     * Online: [ node-a node-b ]
 
   * Full List of Resources:
-    * Clone Set: ms-sf [group] (promotable) (unique):
+    * Clone Set: ms-sf [group] (promotable, unique):
       * Resource Group: group:0:
         * stateful-1:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Unpromoted node-b

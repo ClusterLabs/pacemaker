@@ -5,7 +5,7 @@ Current cluster status:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * Clone Set: ms1 [rsc1] (promotable) (disabled):
+    * Clone Set: ms1 [rsc1] (promotable, disabled):
       * Promoted: [ node1 ]
       * Unpromoted: [ node2 ]
     * Clone Set: ms2 [rsc2] (promotable):
@@ -30,7 +30,7 @@ Revised Cluster Status:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * Clone Set: ms1 [rsc1] (promotable) (disabled):
+    * Clone Set: ms1 [rsc1] (promotable, disabled):
       * Stopped (disabled): [ node1 node2 ]
     * Clone Set: ms2 [rsc2] (promotable):
       * Promoted: [ node2 ]

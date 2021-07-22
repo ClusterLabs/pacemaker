@@ -439,6 +439,22 @@ function test_crm_mon() {
 
     # XML does not have a brief output option
 
+    desc="Text output of partially active group"
+    cmd="crm_mon -1 --resource=partially-active-group"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output of partially active group, with inactive resources"
+    cmd="crm_mon -1 --resource=partially-active-group -r"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output of active member of partially active group"
+    cmd="crm_mon -1 --resource=dummy-1"
+    test_assert $CRM_EX_OK 0
+
+    desc="Text output of inactive member of partially active group"
+    cmd="crm_mon -1 --resource=dummy-2"
+    test_assert $CRM_EX_OK 0
+
     desc="Complete brief text output grouped by node, with inactive resources"
     cmd="crm_mon -1 -r --include=all --group-by-node --brief"
     test_assert $CRM_EX_OK 0

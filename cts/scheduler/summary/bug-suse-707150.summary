@@ -8,7 +8,7 @@ Current cluster status:
   * Full List of Resources:
     * vm-00	(ocf:heartbeat:Xen):	 Stopped (disabled)
     * Clone Set: base-clone [base-group]:
-      * Resource Group: base-group:0:
+      * Resource Group: base-group:0 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started hex-0
         * o2cb	(ocf:ocfs2:o2cb):	 Stopped
         * clvm	(ocf:lvm2:clvmd):	 Stopped
@@ -55,14 +55,14 @@ Revised Cluster Status:
   * Full List of Resources:
     * vm-00	(ocf:heartbeat:Xen):	 Stopped (disabled)
     * Clone Set: base-clone [base-group]:
-      * Resource Group: base-group:0:
+      * Resource Group: base-group:0 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started hex-0
         * o2cb	(ocf:ocfs2:o2cb):	 Started hex-0
         * clvm	(ocf:lvm2:clvmd):	 Started hex-0
         * cmirrord	(ocf:lvm2:cmirrord):	 Started hex-0
         * vg1	(ocf:heartbeat:LVM):	 Stopped (disabled)
         * ocfs2-1	(ocf:heartbeat:Filesystem):	 Stopped
-      * Resource Group: base-group:1:
+      * Resource Group: base-group:1 (partially active):
         * dlm	(ocf:pacemaker:controld):	 Started hex-9
         * o2cb	(ocf:ocfs2:o2cb):	 Started hex-9
         * clvm	(ocf:lvm2:clvmd):	 Started hex-9

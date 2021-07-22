@@ -3,7 +3,7 @@ Current cluster status:
     * Online: [ node1 node2 ]
 
   * Full List of Resources:
-    * Resource Group: container-group:
+    * Resource Group: container-group (partially active):
       * container1	(ocf:pacemaker:Dummy):	 Started node1
       * rsc1	(ocf:pacemaker:Dummy):	 FAILED (failure ignored)
       * rsc2	(ocf:pacemaker:Dummy):	 Stopped

@@ -5,7 +5,7 @@ Current cluster status:
     * Online: [ rh72-02 ]
 
   * Full List of Resources:
-    * Resource Group: grpDummy:
+    * Resource Group: grpDummy (partially active):
       * prmDummy1	(ocf:pacemaker:Dummy1):	 Started rh72-01
       * prmDummy2	(ocf:pacemaker:Dummy2):	 Stopped
 
