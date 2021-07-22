@@ -411,244 +411,361 @@ effective_quorum_policy(pe_resource_t *rsc, pe_working_set_t *data_set)
     return policy;
 }
 
-pe_action_t *
-custom_action(pe_resource_t * rsc, char *key, const char *task,
-              pe_node_t * on_node, gboolean optional, gboolean save_action,
-              pe_working_set_t * data_set)
+static void
+add_singleton(pe_working_set_t *data_set, pe_action_t *action)
 {
-    pe_action_t *action = NULL;
-    GList *possible_matches = NULL;
-
-    CRM_CHECK(key != NULL, return NULL);
-    CRM_CHECK(task != NULL, free(key); return NULL);
-
-    if (save_action && rsc != NULL) {
-        possible_matches = find_actions(rsc->actions, key, on_node);
-    } else if(save_action) {
-#if 0
-        action = g_hash_table_lookup(data_set->singletons, key);
-#else
-        /* More expensive but takes 'node' into account */
-        possible_matches = find_actions(data_set->actions, key, on_node);
-#endif
-    }
-
-    if(data_set->singletons == NULL) {
+    if (data_set->singletons == NULL) {
         data_set->singletons = pcmk__strkey_table(NULL, NULL);
     }
+    g_hash_table_insert(data_set->singletons, action->uuid, action);
+}
 
-    if (possible_matches != NULL) {
-        if (pcmk__list_of_multiple(possible_matches)) {
-            pe_warn("Action %s for %s on %s exists %d times",
-                    task, rsc ? rsc->id : "<NULL>",
-                    on_node ? on_node->details->uname : "<NULL>", g_list_length(possible_matches));
-        }
+static pe_action_t *
+lookup_singleton(pe_working_set_t *data_set, const char *action_uuid)
+{
+    if (data_set->singletons == NULL) {
+        return NULL;
+    }
+    return g_hash_table_lookup(data_set->singletons, action_uuid);
+}
 
-        action = g_list_nth_data(possible_matches, 0);
-        pe_rsc_trace(rsc, "Found action %d: %s for %s (%s) on %s",
-                     action->id, task, (rsc? rsc->id : "no resource"),
-                     action->uuid,
-                     (on_node? on_node->details->uname : "no node"));
-        g_list_free(possible_matches);
+/*!
+ * \internal
+ * \brief Find an existing action that matches arguments
+ *
+ * \param[in] key        Action key to match
+ * \param[in] rsc        Resource to match (if any)
+ * \param[in] node       Node to match (if any)
+ * \param[in] data_set   Cluster working set
+ *
+ * \return Existing action that matches arguments (or NULL if none)
+ */
+static pe_action_t *
+find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
+                     pe_working_set_t *data_set)
+{
+    GList *matches = NULL;
+    pe_action_t *action = NULL;
+
+    /* When rsc is NULL, it would be quicker to check data_set->singletons,
+     * but checking all data_set->actions takes the node into account.
+     */
+    matches = find_actions(((rsc == NULL)? data_set->actions : rsc->actions),
+                           key, node);
+    if (matches == NULL) {
+        return NULL;
+    }
+    CRM_LOG_ASSERT(!pcmk__list_of_multiple(matches));
+
+    action = matches->data;
+    pe_rsc_trace(rsc, "Found existing action %d (%s for %s on %s)",
+                 action->id, key, ((rsc == NULL)? "no resource" : rsc->id),
+                 ((node == NULL)? "no node" : node->details->uname));
+    g_list_free(matches);
+    return action;
+}
+
+/*!
+ * \internal
+ * \brief Create a new action object
+ *
+ * \param[in] key        Action key
+ * \param[in] task       Action name
+ * \param[in] rsc        Resource that action is for (if any)
+ * \param[in] node       Node that action is on (if any)
+ * \param[in] optional   Whether action should be considered optional
+ * \param[in] for_graph  Whether action should be recorded in transition graph
+ * \param[in] data_set   Cluster working set
+ *
+ * \return Newly allocated action
+ * \note This function takes ownership of \p key. It is the caller's
+ *       responsibility to free the return value with pe_free_action().
+ */
+static pe_action_t *
+new_action(char *key, const char *task, pe_resource_t *rsc, pe_node_t *node,
+           bool optional, bool for_graph, pe_working_set_t *data_set)
+{
+    pe_action_t *action = calloc(1, sizeof(pe_action_t));
+
+    CRM_ASSERT(action != NULL);
+
+    action->rsc = rsc;
+    action->task = strdup(task); CRM_ASSERT(action->task != NULL);
+    action->uuid = key;
+    action->extra = pcmk__strkey_table(free, free);
+    action->meta = pcmk__strkey_table(free, free);
+
+    if (node) {
+        action->node = pe__copy_node(node);
     }
 
-    if (action == NULL) {
-        if (save_action) {
-            pe_rsc_trace(rsc, "Creating action %d (%s): %s for %s (%s) on %s",
-                         data_set->action_id,
-                         (optional? "optional" : "required"),
-                         task, (rsc? rsc->id : "no resource"), key,
-                         (on_node? on_node->details->uname : "no node"));
-        }
-
-        action = calloc(1, sizeof(pe_action_t));
-        if (save_action) {
-            action->id = data_set->action_id++;
-        } else {
-            action->id = 0;
-        }
-        action->rsc = rsc;
-        action->task = strdup(task);
-        if (on_node) {
-            action->node = pe__copy_node(on_node);
-        }
-        action->uuid = strdup(key);
-
-        if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
-            // Resource history deletion for a node can be done on the DC
-            pe__set_action_flags(action, pe_action_dc);
-        }
-
-        pe__set_action_flags(action, pe_action_runnable);
-        if (optional) {
-            pe__set_action_flags(action, pe_action_optional);
-        } else {
-            pe__clear_action_flags(action, pe_action_optional);
-        }
-
-        action->extra = pcmk__strkey_table(free, free);
-        action->meta = pcmk__strkey_table(free, free);
-
-        if (save_action) {
-            data_set->actions = g_list_prepend(data_set->actions, action);
-            if(rsc == NULL) {
-                g_hash_table_insert(data_set->singletons, action->uuid, action);
-            }
-        }
-
-        if (rsc != NULL) {
-            guint interval_ms = 0;
-
-            action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
-            parse_op_key(key, NULL, NULL, &interval_ms);
-
-            unpack_operation(action, action->op_entry, rsc->container, data_set,
-                             interval_ms);
-
-            if (save_action) {
-                rsc->actions = g_list_prepend(rsc->actions, action);
-            }
-        }
+    if (pcmk__str_eq(task, CRM_OP_LRM_DELETE, pcmk__str_casei)) {
+        // Resource history deletion for a node can be done on the DC
+        pe__set_action_flags(action, pe_action_dc);
     }
 
-    if (!optional && pcmk_is_set(action->flags, pe_action_optional)) {
+    pe__set_action_flags(action, pe_action_runnable);
+    if (optional) {
+        pe__set_action_flags(action, pe_action_optional);
+    } else {
         pe__clear_action_flags(action, pe_action_optional);
     }
 
     if (rsc != NULL) {
-        enum action_tasks a_task = text2task(action->task);
-        enum pe_quorum_policy quorum_policy = effective_quorum_policy(rsc, data_set);
-        int warn_level = LOG_TRACE;
+        guint interval_ms = 0;
 
-        if (save_action) {
-            warn_level = LOG_WARNING;
-        }
+        action->op_entry = find_rsc_op_entry_helper(rsc, key, TRUE);
+        parse_op_key(key, NULL, NULL, &interval_ms);
+        unpack_operation(action, action->op_entry, rsc->container, data_set,
+                         interval_ms);
+    }
 
-        if (!pcmk_is_set(action->flags, pe_action_have_node_attrs)
-            && action->node != NULL && action->op_entry != NULL) {
-            pe_rule_eval_data_t rule_data = {
-                .node_hash = action->node->details->attrs,
-                .role = RSC_ROLE_UNKNOWN,
-                .now = data_set->now,
-                .match_data = NULL,
-                .rsc_data = NULL,
-                .op_data = NULL
-            };
+    if (for_graph) {
+        pe_rsc_trace(rsc, "Created %s action %d (%s): %s for %s on %s",
+                     (optional? "optional" : "required"),
+                     data_set->action_id, key, task,
+                     ((rsc == NULL)? "no resource" : rsc->id),
+                     ((node == NULL)? "no node" : node->details->uname));
+        action->id = data_set->action_id++;
 
-            pe__set_action_flags(action, pe_action_have_node_attrs);
-            pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
-                                       &rule_data, action->extra, NULL,
-                                       FALSE, data_set);
-        }
-
-        // Make the action optional if its resource is unmanaged
-        if (!pcmk_is_set(action->flags, pe_action_pseudo)
-            && (action->node != NULL)
-            && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
-            && (g_hash_table_lookup(action->meta,
-                                    XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
-                pe_rsc_debug(rsc, "%s on %s is optional (%s is unmanaged)",
-                             action->uuid, action->node->details->uname,
-                             action->rsc->id);
-                pe__set_action_flags(action, pe_action_optional);
-                // We shouldn't clear runnable here because ... something
-        }
-
-        // Make the action runnable or unrunnable as appropriate
-        if (pcmk_is_set(action->flags, pe_action_pseudo)) {
-            /* leave untouched */
-
-        } else if (action->node == NULL) {
-            pe_rsc_trace(rsc, "%s is unrunnable (unallocated)",
-                         action->uuid);
-            pe__clear_action_flags(action, pe_action_runnable);
-
-        } else if (!pcmk_is_set(action->flags, pe_action_dc)
-                   && !(action->node->details->online)
-                   && (!pe__is_guest_node(action->node)
-                       || action->node->details->remote_requires_reset)) {
-            pe__clear_action_flags(action, pe_action_runnable);
-            do_crm_log(warn_level,
-                       "%s on %s is unrunnable (node is offline)",
-                       action->uuid, action->node->details->uname);
-            if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
-                && save_action && a_task == stop_rsc
-                && action->node->details->unclean == FALSE) {
-                pe_fence_node(data_set, action->node, "resource actions are unrunnable", FALSE);
-            }
-
-        } else if (!pcmk_is_set(action->flags, pe_action_dc)
-                   && action->node->details->pending) {
-            pe__clear_action_flags(action, pe_action_runnable);
-            do_crm_log(warn_level,
-                       "Action %s on %s is unrunnable (node is pending)",
-                       action->uuid, action->node->details->uname);
-
-        } else if (action->needs == rsc_req_nothing) {
-            pe_action_set_reason(action, NULL, TRUE);
-            if (pe__is_guest_node(action->node)
-                && !pe_can_fence(data_set, action->node)) {
-                /* An action that requires nothing usually does not require any
-                 * fencing in order to be runnable. However, there is an
-                 * exception: an action cannot be completed if it is on a guest
-                 * node whose host is unclean and cannot be fenced.
-                 */
-                pe_rsc_debug(rsc, "%s on %s is unrunnable "
-                             "(node's host cannot be fenced)",
-                             action->uuid, action->node->details->uname);
-                pe__clear_action_flags(action, pe_action_runnable);
-            } else {
-                pe_rsc_trace(rsc, "%s on %s does not require fencing or quorum",
-                             action->uuid, action->node->details->uname);
-                pe__set_action_flags(action, pe_action_runnable);
-            }
-#if 0
-            /*
-             * No point checking this
-             * - if we don't have quorum we can't stonith anyway
-             */
-        } else if (action->needs == rsc_req_stonith) {
-            crm_trace("Action %s requires only stonith", action->uuid);
-            action->runnable = TRUE;
-#endif
-        } else if (quorum_policy == no_quorum_stop) {
-            pe_rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
-                         action->uuid, action->node->details->uname);
-            pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                      "no quorum", pe_action_runnable, TRUE);
-
-        } else if (quorum_policy == no_quorum_freeze) {
-            if (rsc->fns->active(rsc, TRUE) == FALSE || rsc->next_role > rsc->role) {
-                pe_rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
-                             action->uuid, action->node->details->uname);
-                pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                          "quorum freeze", pe_action_runnable,
-                                          TRUE);
-            }
-
+        data_set->actions = g_list_prepend(data_set->actions, action);
+        if (rsc == NULL) {
+            add_singleton(data_set, action);
         } else {
-            //pe_action_set_reason(action, NULL, TRUE);
+            rsc->actions = g_list_prepend(rsc->actions, action);
+        }
+    }
+    return action;
+}
+
+/*!
+ * \internal
+ * \brief Evaluate node attribute values for an action
+ *
+ * \param[in] action    Action to unpack attributes for
+ * \param[in] data_set  Cluster working set
+ */
+static void
+unpack_action_node_attributes(pe_action_t *action, pe_working_set_t *data_set)
+{
+    if (!pcmk_is_set(action->flags, pe_action_have_node_attrs)
+        && (action->op_entry != NULL)) {
+
+        pe_rule_eval_data_t rule_data = {
+            .node_hash = action->node->details->attrs,
+            .role = RSC_ROLE_UNKNOWN,
+            .now = data_set->now,
+            .match_data = NULL,
+            .rsc_data = NULL,
+            .op_data = NULL
+        };
+
+        pe__set_action_flags(action, pe_action_have_node_attrs);
+        pe__unpack_dataset_nvpairs(action->op_entry, XML_TAG_ATTR_SETS,
+                                   &rule_data, action->extra, NULL,
+                                   FALSE, data_set);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update an action's optional flag
+ *
+ * \param[in] action    Action to update
+ * \param[in] optional  Requested optional status
+ */
+static void
+update_action_optional(pe_action_t *action, gboolean optional)
+{
+    // Force a non-recurring action to be optional if its resource is unmanaged
+    if ((action->rsc != NULL) && (action->node != NULL)
+        && !pcmk_is_set(action->flags, pe_action_pseudo)
+        && !pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+        && (g_hash_table_lookup(action->meta,
+                                XML_LRM_ATTR_INTERVAL_MS) == NULL)) {
+            pe_rsc_debug(action->rsc, "%s on %s is optional (%s is unmanaged)",
+                         action->uuid, action->node->details->uname,
+                         action->rsc->id);
+            pe__set_action_flags(action, pe_action_optional);
+            // We shouldn't clear runnable here because ... something
+
+    // Otherwise require the action if requested
+    } else if (!optional) {
+        pe__clear_action_flags(action, pe_action_optional);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update a resource action's runnable flag
+ *
+ * \param[in] action     Action to update
+ * \param[in] for_graph  Whether action should be recorded in transition graph
+ * \param[in] data_set   Cluster working set
+ *
+ * \note This may also schedule fencing if a stop is unrunnable.
+ */
+static void
+update_resource_action_runnable(pe_action_t *action, bool for_graph,
+                                pe_working_set_t *data_set)
+{
+    if (pcmk_is_set(action->flags, pe_action_pseudo)) {
+        return;
+    }
+
+    if (action->node == NULL) {
+        pe_rsc_trace(action->rsc, "%s is unrunnable (unallocated)",
+                     action->uuid);
+        pe__clear_action_flags(action, pe_action_runnable);
+
+    } else if (!pcmk_is_set(action->flags, pe_action_dc)
+               && !(action->node->details->online)
+               && (!pe__is_guest_node(action->node)
+                   || action->node->details->remote_requires_reset)) {
+        pe__clear_action_flags(action, pe_action_runnable);
+        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
+                   "%s on %s is unrunnable (node is offline)",
+                   action->uuid, action->node->details->uname);
+        if (pcmk_is_set(action->rsc->flags, pe_rsc_managed)
+            && for_graph
+            && pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)
+            && !(action->node->details->unclean)) {
+            pe_fence_node(data_set, action->node, "stop is unrunnable", false);
+        }
+
+    } else if (!pcmk_is_set(action->flags, pe_action_dc)
+               && action->node->details->pending) {
+        pe__clear_action_flags(action, pe_action_runnable);
+        do_crm_log((for_graph? LOG_WARNING: LOG_TRACE),
+                   "Action %s on %s is unrunnable (node is pending)",
+                   action->uuid, action->node->details->uname);
+
+    } else if (action->needs == rsc_req_nothing) {
+        pe_action_set_reason(action, NULL, TRUE);
+        if (pe__is_guest_node(action->node)
+            && !pe_can_fence(data_set, action->node)) {
+            /* An action that requires nothing usually does not require any
+             * fencing in order to be runnable. However, there is an exception:
+             * such an action cannot be completed if it is on a guest node whose
+             * host is unclean and cannot be fenced.
+             */
+            pe_rsc_debug(action->rsc, "%s on %s is unrunnable "
+                         "(node's host cannot be fenced)",
+                         action->uuid, action->node->details->uname);
+            pe__clear_action_flags(action, pe_action_runnable);
+        } else {
+            pe_rsc_trace(action->rsc,
+                         "%s on %s does not require fencing or quorum",
+                         action->uuid, action->node->details->uname);
             pe__set_action_flags(action, pe_action_runnable);
         }
 
+    } else {
+        switch (effective_quorum_policy(action->rsc, data_set)) {
+            case no_quorum_stop:
+                pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
+                             action->uuid, action->node->details->uname);
+                pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
+                                          "no quorum", pe_action_runnable,
+                                          true);
+                break;
+
+            case no_quorum_freeze:
+                if (!action->rsc->fns->active(action->rsc, TRUE)
+                    || (action->rsc->next_role > action->rsc->role)) {
+                    pe_rsc_debug(action->rsc,
+                                 "%s on %s is unrunnable (no quorum)",
+                                 action->uuid, action->node->details->uname);
+                    pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
+                                              "quorum freeze",
+                                              pe_action_runnable, true);
+                }
+                break;
+
+            default:
+                //pe_action_set_reason(action, NULL, TRUE);
+                pe__set_action_flags(action, pe_action_runnable);
+                break;
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Update a resource object's flags for a new action on it
+ *
+ * \param[in] rsc        Resource that action is for (if any)
+ * \param[in] action     New action
+ */
+static void
+update_resource_flags_for_action(pe_resource_t *rsc, pe_action_t *action)
+{
+    /* @COMPAT pe_rsc_starting and pe_rsc_stopping are not actually used
+     * within Pacemaker, and should be deprecated and eventually removed
+     */
+    if (pcmk__str_eq(action->task, CRMD_ACTION_STOP, pcmk__str_casei)) {
+        pe__set_resource_flags(rsc, pe_rsc_stopping);
+
+    } else if (pcmk__str_eq(action->task, CRMD_ACTION_START, pcmk__str_casei)) {
+        if (pcmk_is_set(action->flags, pe_action_runnable)) {
+            pe__set_resource_flags(rsc, pe_rsc_starting);
+        } else {
+            pe__clear_resource_flags(rsc, pe_rsc_starting);
+        }
+    }
+}
+
+/*!
+ * \brief Create or update an action object
+ *
+ * \param[in] rsc          Resource that action is for (if any)
+ * \param[in] key          Action key (must be non-NULL)
+ * \param[in] task         Action name (must be non-NULL)
+ * \param[in] on_node      Node that action is on (if any)
+ * \param[in] optional     Whether action should be considered optional
+ * \param[in] save_action  Whether action should be recorded in transition graph
+ * \param[in] data_set     Cluster working set
+ *
+ * \return Action object corresponding to arguments
+ * \note This function takes ownership of (and might free) \p key. If
+ *       \p save_action is true, \p data_set will own the returned action,
+ *       otherwise it is the caller's responsibility to free the return value
+ *       with pe_free_action().
+ */
+pe_action_t *
+custom_action(pe_resource_t *rsc, char *key, const char *task,
+              pe_node_t *on_node, gboolean optional, gboolean save_action,
+              pe_working_set_t *data_set)
+{
+    pe_action_t *action = NULL;
+
+    CRM_ASSERT((key != NULL) && (task != NULL) && (data_set != NULL));
+
+    if (save_action) {
+        action = find_existing_action(key, rsc, on_node, data_set);
+    }
+
+    if (action == NULL) {
+        action = new_action(key, task, rsc, on_node, optional, save_action,
+                            data_set);
+    } else {
+        free(key);
+    }
+
+    update_action_optional(action, optional);
+
+    if (rsc != NULL) {
+        if (action->node != NULL) {
+            unpack_action_node_attributes(action, data_set);
+        }
+
+        update_resource_action_runnable(action, save_action, data_set);
+
         if (save_action) {
-            switch (a_task) {
-                case stop_rsc:
-                    pe__set_resource_flags(rsc, pe_rsc_stopping);
-                    break;
-                case start_rsc:
-                    pe__clear_resource_flags(rsc, pe_rsc_starting);
-                    if (pcmk_is_set(action->flags, pe_action_runnable)) {
-                        pe__set_resource_flags(rsc, pe_rsc_starting);
-                    }
-                    break;
-                default:
-                    break;
-            }
+            update_resource_flags_for_action(rsc, action);
         }
     }
 
-    free(key);
     return action;
 }
 
@@ -1853,16 +1970,12 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
 pe_action_t *
 get_pseudo_op(const char *name, pe_working_set_t * data_set)
 {
-    pe_action_t *op = NULL;
+    pe_action_t *op = lookup_singleton(data_set, name);
 
-    if(data_set->singletons) {
-        op = g_hash_table_lookup(data_set->singletons, name);
-    }
     if (op == NULL) {
         op = custom_action(NULL, strdup(name), name, NULL, TRUE, TRUE, data_set);
         pe__set_action_flags(op, pe_action_pseudo|pe_action_runnable);
     }
-
     return op;
 }
 
@@ -2050,10 +2163,7 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
 
     op_key = crm_strdup_printf("%s-%s-%s", CRM_OP_FENCE, node->details->uname, op);
 
-    if(data_set->singletons) {
-        stonith_op = g_hash_table_lookup(data_set->singletons, op_key);
-    }
-
+    stonith_op = lookup_singleton(data_set, op_key);
     if(stonith_op == NULL) {
         stonith_op = custom_action(NULL, op_key, CRM_OP_FENCE, node, TRUE, TRUE, data_set);
 
