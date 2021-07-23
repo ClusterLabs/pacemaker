@@ -2055,7 +2055,15 @@ is_primitive_action(pe_action_t *action)
     return action && action->rsc && (action->rsc->variant == pe_native);
 }
 
-#define pe_action_implies(action, reason, flag) do {                        \
+/*!
+ * \internal
+ * \brief Clear a single action flag and set reason text
+ *
+ * \param[in] action  Action whose flag should be cleared
+ * \param[in] flag    Action flag that should be cleared
+ * \param[in] reason  Action that is the reason why flag is being cleared
+ */
+#define clear_action_flag_because(action, flag, reason) do {                \
         if (pcmk_is_set((action)->flags, (flag))) {                         \
             pe__clear_action_flags(action, flag);                           \
             if ((action)->rsc != (reason)->rsc) {                           \
@@ -2114,23 +2122,23 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
 
     // Make 'first' required if it is runnable
     if (pcmk_is_set(first->flags, pe_action_runnable)) {
-        pe_action_implies(first, then, pe_action_optional);
+        clear_action_flag_because(first, pe_action_optional, then);
     }
 
     // Make 'first' required if 'then' is required
     if (!pcmk_is_set(then->flags, pe_action_optional)) {
-        pe_action_implies(first, then, pe_action_optional);
+        clear_action_flag_because(first, pe_action_optional, then);
     }
 
     // Make 'first' unmigratable if 'then' is unmigratable
     if (!pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-        pe_action_implies(first, then, pe_action_migrate_runnable);
+        clear_action_flag_because(first, pe_action_migrate_runnable, then);
     }
 
     // Make 'then' unrunnable if 'first' is required but unrunnable
     if (!pcmk_is_set(first->flags, pe_action_optional)
         && !pcmk_is_set(first->flags, pe_action_runnable)) {
-        pe_action_implies(then, first, pe_action_runnable);
+        clear_action_flag_because(then, pe_action_runnable, first);
     }
 }
 
@@ -2167,8 +2175,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
-            pe_action_implies(then, first, pe_action_optional);
-            pe_action_implies(then, first, pe_action_runnable);
+            clear_action_flag_because(then, pe_action_optional, first);
+            clear_action_flag_because(then, pe_action_runnable, first);
         } else {
             /* ignore... then is allowed to start/stop if it wants to. */
         }
@@ -2181,12 +2189,12 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         if (pcmk_is_set(filter, pe_action_optional)
             && !pcmk_is_set(flags, pe_action_optional)
             && pcmk_is_set(first_flags, pe_action_optional)) {
-            pe_action_implies(first, then, pe_action_optional);
+            clear_action_flag_because(first, pe_action_optional, then);
         }
 
         if (pcmk_is_set(flags, pe_action_migrate_runnable) &&
             !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-            pe_action_implies(first, then, pe_action_migrate_runnable);
+            clear_action_flag_because(first, pe_action_migrate_runnable, then);
         }
     }
 
@@ -2195,11 +2203,12 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
             ((then->flags & pe_action_optional) == FALSE) &&
             (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
 
-            pe_action_implies(first, then, pe_action_optional);
+            clear_action_flag_because(first, pe_action_optional, then);
 
             if (pcmk_is_set(first->flags, pe_action_migrate_runnable) &&
                 !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-                pe_action_implies(first, then, pe_action_migrate_runnable);
+                clear_action_flag_because(first, pe_action_migrate_runnable,
+                                          then);
             }
         }
     }
@@ -2209,11 +2218,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if (((then->flags & pe_action_migrate_runnable) == FALSE) ||
             ((then->flags & pe_action_runnable) == FALSE)) {
-            pe_action_implies(first, then, pe_action_runnable);
+            clear_action_flag_because(first, pe_action_runnable, then);
         }
 
         if ((then->flags & pe_action_optional) == 0) {
-            pe_action_implies(first, then, pe_action_optional);
+            clear_action_flag_because(first, pe_action_optional, then);
         }
     }
 
@@ -2221,7 +2230,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         && pcmk_is_set(filter, pe_action_optional)) {
 
         if ((first->flags & pe_action_runnable) == FALSE) {
-            pe_action_implies(then, first, pe_action_migrate_runnable);
+            clear_action_flag_because(then, pe_action_migrate_runnable, first);
             pe__clear_action_flags(then, pe_action_pseudo);
         }
     }
@@ -2231,8 +2240,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         && pcmk_is_set(then->flags, pe_action_runnable)
         && !pcmk_is_set(flags, pe_action_runnable)) {
 
-        pe_action_implies(then, first, pe_action_runnable);
-        pe_action_implies(then, first, pe_action_migrate_runnable);
+        clear_action_flag_because(then, pe_action_runnable, first);
+        clear_action_flag_because(then, pe_action_migrate_runnable, first);
     }
 
     if (pcmk_is_set(type, pe_order_implies_then)
@@ -2241,7 +2250,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         && !pcmk_is_set(flags, pe_action_optional)
         && !pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
 
-        pe_action_implies(then, first, pe_action_optional);
+        clear_action_flag_because(then, pe_action_optional, first);
     }
 
     if (pcmk_is_set(type, pe_order_restart)) {
