@@ -8,5 +8,5 @@ If you find Pacemaker useful and wish to support the project, you can:
 * Contribute documentation, bug fixes, or features to the code base.
 
 If you would like to contribute code base changes, please read
-[Pacemaker Development](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Development/index.html)
+[Pacemaker Development](https://clusterlabs.org/pacemaker/doc/2.1/Pacemaker_Development/html/)
 for detailed information about pull requests and policies.

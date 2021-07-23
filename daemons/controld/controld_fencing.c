@@ -757,15 +757,30 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
             if (pcmk__str_eq("on", op, pcmk__str_casei)) {
                 const char *value = NULL;
                 char *now = pcmk__ttoa(time(NULL));
+                gboolean is_remote_node = FALSE;
 
-                update_attrd(target, CRM_ATTR_UNFENCED, now, NULL, FALSE);
+                /* This check is not 100% reliable, since this node is not
+                 * guaranteed to have the remote node cached. However, it
+                 * doesn't have to be reliable, since the attribute manager can
+                 * learn a node's "remoteness" by other means sooner or later.
+                 * This allows it to learn more quickly if this node does have
+                 * the information.
+                 */
+                if (g_hash_table_lookup(crm_remote_peer_cache, uuid) != NULL) {
+                    is_remote_node = TRUE;
+                }
+
+                update_attrd(target, CRM_ATTR_UNFENCED, now, NULL,
+                             is_remote_node);
                 free(now);
 
                 value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_ALL);
-                update_attrd(target, CRM_ATTR_DIGESTS_ALL, value, NULL, FALSE);
+                update_attrd(target, CRM_ATTR_DIGESTS_ALL, value, NULL,
+                             is_remote_node);
 
                 value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_SECURE);
-                update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL, FALSE);
+                update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL,
+                             is_remote_node);
 
             } else if (action->sent_update == FALSE) {
                 send_stonith_update(action, target, uuid);

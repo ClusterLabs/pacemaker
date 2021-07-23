@@ -945,7 +945,7 @@ clone_create_pseudo_actions(
     started->priority = INFINITY;
 
     if (child_active || child_starting) {
-        update_action_flags(started, pe_action_runnable, __func__, __LINE__);
+        pe__set_action_flags(started, pe_action_runnable);
     }
 
     if (start_notify != NULL && *start_notify == NULL) {
@@ -957,8 +957,7 @@ clone_create_pseudo_actions(
     stopped = create_pseudo_resource_op(rsc, RSC_STOPPED, !child_stopping, TRUE, data_set);
     stopped->priority = INFINITY;
     if (allow_dependent_migrations) {
-        update_action_flags(stop, pe_action_migrate_runnable, __func__,
-                            __LINE__);
+        pe__set_action_flags(stop, pe_action_migrate_runnable);
     }
 
     if (stop_notify != NULL && *stop_notify == NULL) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2019 the Pacemaker project contributors
+ * Copyright 2006-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 /**
  * \file
  * \brief Fake header file that contains doxygen documentation.
- * \author Andrew Beekhof <andrew@beekhof.net>
+ * \author the Pacemaker project contributors
  *
  * The purpose of this file is to provide a file that can be used to create
  * doxygen pages.  It should contain _only_ comment blocks.
@@ -25,14 +25,14 @@
  * \defgroup lrmd Executor API
  * \defgroup pengine Scheduler API
  * \defgroup fencing Fencing API
- * \defgroup pacemaker Pacemaker High Level API
+ * \defgroup pacemaker Pacemaker High-Level API
  */
 
 /**
  * \mainpage
  * Welcome to the developer documentation for The Pacemaker Project!  For more
  * information about Pacemaker, please visit the
- * <a href="https://clusterlabs.org/">project web site</a>.
+ * <a href="https://clusterlabs.org/pacemaker/">project web site</a>.
  *
  * Here are some pointers on where to go from here.
  *
@@ -46,7 +46,8 @@
  *  - \ref pacemaker
  *
  * Contributing to the Pacemaker Project:
- * - <a href="https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Development/">Pacemaker Development</a>
+ * - <a
+ *   href="https://clusterlabs.org/pacemaker/doc/2.1/Pacemaker_Development/html/">Pacemaker Development</a>
  */
 
 #endif                          /* DOXYGEN__H */

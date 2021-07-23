@@ -23,6 +23,7 @@
 #include <crm/cib.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
+#include <crm/common/output.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
@@ -394,31 +395,33 @@ get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
 }
 
 static void
-print_cluster_status(pe_working_set_t * data_set, unsigned int print_opts)
+print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
 {
     pcmk__output_t *out = data_set->priv;
     int rc = pcmk_rc_no_output;
     GList *all = NULL;
 
-    all = g_list_prepend(all, strdup("*"));
+    all = g_list_prepend(all, (gpointer) "*");
 
-    rc = out->message(out, "node-list", data_set->nodes, all, all, print_opts,
-                      FALSE, FALSE, FALSE);
+    rc = out->message(out, "node-list", data_set->nodes, all, all, show_opts);
     PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
-    rc = out->message(out, "resource-list", data_set, print_opts, FALSE, TRUE,
-                      FALSE, FALSE, all, all, FALSE);
+    rc = out->message(out, "resource-list", data_set, show_opts | pcmk_show_inactive_rscs,
+                      FALSE, all, all, FALSE);
 
     if (options.show_attrs) {
-        out->message(out, "node-attribute-list", data_set,
-                     0, rc == pcmk_rc_ok, FALSE, FALSE, FALSE, all, all);
+        rc = out->message(out, "node-attribute-list", data_set,
+                          0, rc == pcmk_rc_ok, all, all);
     }
 
     if (options.show_failcounts) {
+        rc = out->message(out, "node-summary", data_set, all, all,
+                          0, show_opts, rc == pcmk_rc_ok);
+
         out->message(out, "failed-action-list", data_set, all, all,
                      rc == pcmk_rc_ok);
     }
 
-    g_list_free_full(all, free);
+    g_list_free(all);
 }
 
 static char *
@@ -823,7 +826,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                               "${resource}_${task}_${interval_in_ms}@${node}=${rc}\n"
                               "(memcached_monitor_20000@bart.example.com=7, for example).\n"
                               "${rc} is an OCF return code.  For more information on these\n"
-                              "return codes, refer to https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/s-ocf-return-codes.html\n\n"
+                              "return codes, refer to https://clusterlabs.org/pacemaker/doc/2.1/Pacemaker_Administration/html/agents.html#ocf-return-codes\n\n"
                               "Examples:\n\n"
                               "Pretend a recurring monitor action found memcached stopped on node\n"
                               "fred.example.com and, during recovery, that the memcached stop\n"
@@ -862,7 +865,7 @@ main(int argc, char **argv)
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "bdefgiqrtuwxDFGINO");
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "bdefgiqrtuwxDFGINOP");
     GOptionContext *context = build_arg_context(args, &output_group);
 
     /* This must come before g_option_context_parse_strv. */
@@ -970,7 +973,7 @@ main(int argc, char **argv)
     cluster_status(data_set);
 
     if (!out->is_quiet(out)) {
-        unsigned int opts = options.print_pending ? pe_print_pending : 0;
+        unsigned int show_opts = options.print_pending ? pcmk_show_pending : 0;
 
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             printed = out->message(out, "maint-mode", data_set->flags);
@@ -989,7 +992,7 @@ main(int argc, char **argv)
          * only has the first word capitalized for compatibility with pcs.
          */
         out->begin_list(out, NULL, NULL, "Current cluster status");
-        print_cluster_status(data_set, opts);
+        print_cluster_status(data_set, show_opts);
         out->end_list(out);
         printed = pcmk_rc_ok;
     }

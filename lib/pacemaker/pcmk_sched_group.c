@@ -18,6 +18,66 @@
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>
 
+/*!
+ * \internal
+ * \brief Expand a group's colocations to its members
+ *
+ * \param[in,out] rsc  Group resource
+ */
+static void
+expand_group_colocations(pe_resource_t *rsc)
+{
+    group_variant_data_t *group_data = NULL;
+    pe_resource_t *member = NULL;
+    bool any_unmanaged = false;
+
+    get_group_variant_data(group_data, rsc);
+
+    // Treat "group with R" colocations as "first member with R"
+    member = group_data->first_child;
+    member->rsc_cons = g_list_concat(member->rsc_cons, rsc->rsc_cons);
+
+
+    /* The above works for the whole group because each group member is
+     * colocated with the previous one.
+     *
+     * However, there is a special case when a group has a mandatory colocation
+     * with a resource that can't start. In that case, update_colo_start_chain()
+     * will ensure that dependent resources in mandatory colocations (i.e. the
+     * first member for groups) can't start either. But if any group member is
+     * unmanaged and already started, the internal group colocations are no
+     * longer sufficient to make that apply to later members.
+     *
+     * To handle that case, add mandatory colocations to each member after the
+     * first.
+     */
+    any_unmanaged = !pcmk_is_set(member->flags, pe_rsc_managed);
+    for (GList *item = rsc->children->next; item != NULL; item = item->next) {
+        member = item->data;
+        if (any_unmanaged) {
+            for (GList *cons_iter = rsc->rsc_cons; cons_iter != NULL;
+                 cons_iter = cons_iter->next) {
+
+                pcmk__colocation_t *constraint = (pcmk__colocation_t *) cons_iter->data;
+
+                if (constraint->score == INFINITY) {
+                    member->rsc_cons = g_list_prepend(member->rsc_cons, constraint);
+                }
+            }
+        } else if (!pcmk_is_set(member->flags, pe_rsc_managed)) {
+            any_unmanaged = true;
+        }
+    }
+
+    rsc->rsc_cons = NULL;
+
+    // Treat "R with group" colocations as "R with last member"
+    member = group_data->last_child;
+    member->rsc_cons_lhs = g_list_concat(member->rsc_cons_lhs,
+                                         rsc->rsc_cons_lhs);
+    rsc->rsc_cons_lhs = NULL;
+}
+
 pe_node_t *
 pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                      pe_working_set_t *data_set)
@@ -46,13 +106,7 @@ pcmk__group_allocate(pe_resource_t *rsc, pe_node_t *prefer,
     pe__set_resource_flags(rsc, pe_rsc_allocating);
     rsc->role = group_data->first_child->role;
 
-    group_data->first_child->rsc_cons =
-        g_list_concat(group_data->first_child->rsc_cons, rsc->rsc_cons);
-    rsc->rsc_cons = NULL;
-
-    group_data->last_child->rsc_cons_lhs =
-        g_list_concat(group_data->last_child->rsc_cons_lhs, rsc->rsc_cons_lhs);
-    rsc->rsc_cons_lhs = NULL;
+    expand_group_colocations(rsc);
 
     pe__show_node_weights(!pcmk_is_set(data_set->flags, pe_flag_show_scores),
                           rsc, __func__, rsc->allowed_nodes, data_set);
@@ -230,8 +284,6 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             }
 
         } else if (last_rsc != NULL) {
-            child_rsc->restart_type = pe_restart_restart;
-
             order_start_start(last_rsc, child_rsc, start);
             order_stop_stop(child_rsc, last_rsc, pe_order_optional | pe_order_restart);
 
@@ -242,19 +294,11 @@ group_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             }
 
         } else {
-            /* If anyone in the group is starting, then
-             *  pe_order_implies_then will cause _everyone_ in the group
-             *  to be sent a start action
-             * But this is safe since starting something that is already
-             *  started is required to be "safe"
-             */
-            int flags = pe_order_none;
-
-            order_start_start(rsc, child_rsc, flags);
+            order_start_start(rsc, child_rsc, pe_order_none);
             if (pcmk_is_set(top->flags, pe_rsc_promotable)) {
-                new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
+                new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
+                              pe_order_none, data_set);
             }
-
         }
 
         /* Look for partially active groups

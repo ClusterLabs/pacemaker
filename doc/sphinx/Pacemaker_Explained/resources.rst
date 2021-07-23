@@ -337,7 +337,7 @@ behave and can be easily set using the ``--meta`` option of the
    |                            |                                  | as well as the implicit colocation constraints       |
    |                            |                                  | created if this resource is in a :ref:`group         |
    |                            |                                  | <group-resources>`. For details, see                 |
-   |                            |                                  | :ref:`s-coloc-influence`.                            |
+   |                            |                                  | :ref:`s-coloc-influence`. *(since 2.1.0)*            |
    +----------------------------+----------------------------------+------------------------------------------------------+
    | target-role                | Started                          | .. index::                                           |
    |                            |                                  |    single: target-role; resource option              |

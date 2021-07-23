@@ -43,18 +43,20 @@
  *     1       1.1.15   PCMK__ATTRD_CMD_UPDATE_BOTH,
  *                      PCMK__ATTRD_CMD_UPDATE_DELAY
  *     2       1.1.17   PCMK__ATTRD_CMD_CLEAR_FAILURE
+ *     3       2.1.1    PCMK__ATTRD_CMD_SYNC_RESPONSE indicates remote nodes
  */
-#define ATTRD_PROTOCOL_VERSION "2"
+#define ATTRD_PROTOCOL_VERSION "3"
 
 int last_cib_op_done = 0;
 GHashTable *attributes = NULL;
 
 void write_attribute(attribute_t *a, bool ignore_delay);
 void write_or_elect_attribute(attribute_t *a);
-void attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
+
+static void broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml);
 
 static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
@@ -102,23 +104,60 @@ free_attribute(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Ensure a Pacemaker Remote node is in the correct peer cache
+ *
+ * \param[in]
+ */
+static void
+cache_remote_node(const char *node_name)
+{
+    /* If we previously assumed this node was an unseen cluster node,
+     * remove its entry from the cluster peer cache.
+     */
+    crm_node_t *dup = pcmk__search_cluster_node_cache(0, node_name);
+
+    if (dup && (dup->uuid == NULL)) {
+        reap_crm_member(0, node_name);
+    }
+
+    // Ensure node is in the remote peer cache
+    CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
+}
+
+/*!
+ * \internal
+ * \brief Create an XML representation of an attribute for use in peer messages
+ *
+ * \param[in] parent       Create attribute XML as child element of this element
+ * \param[in] a            Attribute to represent
+ * \param[in] v            Attribute value to represent
+ * \param[in] force_write  If true, value should be written even if unchanged
+ *
+ * \return XML representation of attribute
+ */
 static xmlNode *
-build_attribute_xml(
-    xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
-    gboolean is_private, const char *peer, uint32_t peerid, const char *value, gboolean is_force_write)
+add_attribute_value_xml(xmlNode *parent, attribute_t *a, attribute_value_t *v,
+                        bool force_write)
 {
     xmlNode *xml = create_xml_node(parent, __func__);
 
-    crm_xml_add(xml, PCMK__XA_ATTR_NAME, name);
-    crm_xml_add(xml, PCMK__XA_ATTR_SET, set);
-    crm_xml_add(xml, PCMK__XA_ATTR_UUID, uuid);
-    crm_xml_add(xml, PCMK__XA_ATTR_USER, user);
-    crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, peer);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, peerid);
-    crm_xml_add(xml, PCMK__XA_ATTR_VALUE, value);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, timeout_ms/1000);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE, is_private);
-    crm_xml_add_int(xml, PCMK__XA_ATTR_FORCE, is_force_write);
+    crm_xml_add(xml, PCMK__XA_ATTR_NAME, a->id);
+    crm_xml_add(xml, PCMK__XA_ATTR_SET, a->set);
+    crm_xml_add(xml, PCMK__XA_ATTR_UUID, a->uuid);
+    crm_xml_add(xml, PCMK__XA_ATTR_USER, a->user);
+    crm_xml_add(xml, PCMK__XA_ATTR_NODE_NAME, v->nodename);
+    if (v->nodeid > 0) {
+        crm_xml_add_int(xml, PCMK__XA_ATTR_NODE_ID, v->nodeid);
+    }
+    if (v->is_remote != 0) {
+        crm_xml_add_int(xml, PCMK__XA_ATTR_IS_REMOTE, 1);
+    }
+    crm_xml_add(xml, PCMK__XA_ATTR_VALUE, v->current);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_DAMPENING, a->timeout_ms / 1000);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_IS_PRIVATE, a->is_private);
+    crm_xml_add_int(xml, PCMK__XA_ATTR_FORCE, force_write);
 
     return xml;
 }
@@ -548,6 +587,43 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
 }
 
 /*!
+ * \internal
+ * \brief Load attributes from a peer sync response
+ *
+ * \param[in] peer      Peer that sent clear request
+ * \param[in] peer_won  Whether peer is the attribute writer
+ * \param[in] xml       Request XML
+ */
+static void
+process_peer_sync_response(crm_node_t *peer, bool peer_won, xmlNode *xml)
+{
+    crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
+             peer->uname);
+
+    if (peer_won) {
+        /* Initialize the "seen" flag for all attributes to cleared, so we can
+         * detect attributes that local node has but the writer doesn't.
+         */
+        clear_attribute_value_seen();
+    }
+
+    // Process each attribute update in the sync response
+    for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
+         child = pcmk__xml_next(child)) {
+        attrd_peer_update(peer, child,
+                          crm_element_value(child, PCMK__XA_ATTR_NODE_NAME),
+                          TRUE);
+    }
+
+    if (peer_won) {
+        /* If any attributes are still not marked as seen, the writer doesn't
+         * know about them, so send all peers an update with them.
+         */
+        broadcast_unseen_local_values(peer, xml);
+    }
+}
+
+/*!
     \internal
     \brief Broadcast private attribute for local node with protocol version
 */
@@ -572,7 +648,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     const char *op = crm_element_value(xml, PCMK__XA_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
     const char *host = crm_element_value(xml, PCMK__XA_ATTR_NODE_NAME);
-    bool peer_won = FALSE;
+    bool peer_won = false;
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
@@ -607,25 +683,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_SYNC_RESPONSE, pcmk__str_casei)
                && !pcmk__str_eq(peer->uname, attrd_cluster->uname, pcmk__str_casei)) {
-        xmlNode *child = NULL;
-
-        crm_info("Processing %s from %s", op, peer->uname);
-
-        /* Clear the seen flag for attribute processing held only in the own node. */
-        if (peer_won) {
-            clear_attribute_value_seen();
-        }
-
-        for (child = pcmk__xml_first_child(xml); child != NULL;
-             child = pcmk__xml_next(child)) {
-            host = crm_element_value(child, PCMK__XA_ATTR_NODE_NAME);
-            attrd_peer_update(peer, child, host, TRUE);
-        }
-
-        if (peer_won) {
-            /* Synchronize if there is an attribute held only by own node that Writer does not have. */
-            attrd_current_only_attribute_update(peer, xml);
-        }
+        process_peer_sync_response(peer, peer_won, xml);
 
     } else if (pcmk__str_eq(op, PCMK__ATTRD_CMD_FLUSH, pcmk__str_casei)) {
         /* Ignore. The flush command was removed in 2.0.0 but may be
@@ -651,8 +709,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
             crm_debug("Syncing %s[%s] = %s to %s", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
-            build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
-                                v->nodename, v->nodeid, v->current, FALSE);
+            add_attribute_value_xml(sync, a, v, false);
         }
     }
 
@@ -709,17 +766,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
 
     crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
     if (is_remote) {
-        /* If we previously assumed this node was an unseen cluster node,
-         * remove its entry from the cluster peer cache.
-         */
-        crm_node_t *dup = pcmk__search_cluster_node_cache(0, host);
-
-        if (dup && (dup->uuid == NULL)) {
-            reap_crm_member(0, host);
-        }
-
-        /* Ensure this host is in the remote peer cache */
-        CRM_ASSERT(crm_remote_peer_get(host) != NULL);
+        cache_remote_node(host);
     }
 
     if (v == NULL) {
@@ -735,40 +782,61 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
     return(v);
 }
 
-void 
-attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
+void
+broadcast_unseen_local_values(crm_node_t *peer, xmlNode *xml)
 {
     GHashTableIter aIter;
     GHashTableIter vIter;
-    attribute_t *a;
+    attribute_t *a = NULL;
     attribute_value_t *v = NULL;
-    xmlNode *sync = create_xml_node(NULL, __func__);
-    gboolean build = FALSE;    
-
-    crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+    xmlNode *sync = NULL;
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            if (pcmk__str_eq(v->nodename, attrd_cluster->uname, pcmk__str_casei) && v->seen == FALSE) {
-                crm_trace("Syncing %s[%s] = %s to everyone.(from local only attributes)", a->id, v->nodename, v->current);
-
-                build = TRUE;
-                build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
-                            v->nodename, v->nodeid, v->current,  (a->timeout_ms && a->timer ? TRUE : FALSE));
-            } else {
-                crm_trace("Local attribute(%s[%s] = %s) was ignore.(another host) : [%s]", a->id, v->nodename, v->current, attrd_cluster->uname);
-                continue;
+            if (!(v->seen) && pcmk__str_eq(v->nodename, attrd_cluster->uname,
+                                           pcmk__str_casei)) {
+                if (sync == NULL) {
+                    sync = create_xml_node(NULL, __func__);
+                    crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+                }
+                add_attribute_value_xml(sync, a, v, a->timeout_ms && a->timer);
             }
         }
     }
 
-    if (build) {
-        crm_debug("Syncing values to everyone.(from local only attributes)");
+    if (sync != NULL) {
+        crm_debug("Broadcasting local-only values");
         send_attrd_message(NULL, sync);
+        free_xml(sync);
     }
+}
+
+/*!
+ * \internal
+ * \brief Override an attribute sync with a local value
+ *
+ * Broadcast the local node's value for an attribute that's different from the
+ * value provided in a peer's attribute synchronization response. This ensures a
+ * node's values for itself take precedence and all peers are kept in sync.
+ *
+ * \param[in] a          Attribute entry to override
+ *
+ * \return Local instance of attribute value
+ */
+static attribute_value_t *
+broadcast_local_value(attribute_t *a)
+{
+    attribute_value_t *v = g_hash_table_lookup(a->values, attrd_cluster->uname);
+    xmlNode *sync = create_xml_node(NULL, __func__);
+
+    crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+    add_attribute_value_xml(sync, a, v, false);
+    attrd_xml_add_writer(sync);
+    send_attrd_message(NULL, sync);
     free_xml(sync);
+    return v;
 }
 
 void
@@ -866,21 +934,9 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     if (filter && !pcmk__str_eq(v->current, value, pcmk__str_casei)
         && pcmk__str_eq(host, attrd_cluster->uname, pcmk__str_casei)) {
 
-        xmlNode *sync = create_xml_node(NULL, __func__);
-
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
                    attr, host, v->current, value, peer->uname);
-
-        crm_xml_add(sync, PCMK__XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
-        v = g_hash_table_lookup(a->values, host);
-        build_attribute_xml(sync, attr, a->set, a->uuid, a->timeout_ms, a->user,
-                            a->is_private, v->nodename, v->nodeid, v->current, FALSE);
-
-        attrd_xml_add_writer(sync);
-
-        /* Broadcast in case any other nodes had the inconsistent value */
-        send_attrd_message(NULL, sync);
-        free_xml(sync);
+        v = broadcast_local_value(a);
 
     } else if (!pcmk__str_eq(v->current, value, pcmk__str_casei)) {
         crm_notice("Setting %s[%s]: %s -> %s " CRM_XS " from %s",
@@ -925,7 +981,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     /* If this is a cluster node whose node ID we are learning, remember it */
     if ((v->nodeid == 0) && (v->is_remote == FALSE)
         && (crm_element_value_int(xml, PCMK__XA_ATTR_NODE_ID,
-                                  (int*)&v->nodeid) == 0)) {
+                                  (int*)&v->nodeid) == 0) && (v->nodeid > 0)) {
 
         crm_node_t *known_peer = crm_get_peer(v->nodeid, host);
 
@@ -960,23 +1016,33 @@ attrd_election_cb(gpointer user_data)
     return FALSE;
 }
 
+#define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
-    bool remove_voter = FALSE;
+    bool gone = false;
+    bool is_remote = pcmk_is_set(peer->flags, crm_remote_node);
 
     switch (kind) {
         case crm_status_uname:
+            crm_debug("%s node %s is now %s",
+                      (is_remote? "Remote" : "Cluster"),
+                      peer->uname, state_text(peer->state));
             break;
 
         case crm_status_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
-                remove_voter = TRUE;
+                gone = true;
             }
+            crm_debug("Node %s is %s a peer",
+                      peer->uname, (gone? "no longer" : "now"));
             break;
 
         case crm_status_nstate:
+            crm_debug("%s node %s is now %s (was %s)",
+                      (is_remote? "Remote" : "Cluster"),
+                      peer->uname, state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
@@ -988,14 +1054,18 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             } else {
                 // Remove all attribute values associated with lost nodes
                 attrd_peer_remove(peer->uname, FALSE, "loss");
-                remove_voter = TRUE;
+                gone = true;
             }
             break;
     }
 
-    // In case an election is in progress, remove any vote by the node
-    if (remove_voter) {
+    // Remove votes from cluster nodes that leave, in case election in progress
+    if (gone && !is_remote) {
         attrd_remove_voter(peer);
+
+    // Ensure remote nodes that come up are in the remote node cache
+    } else if (!gone && is_remote) {
+        cache_remote_node(peer->uname);
     }
 }
 

@@ -13,7 +13,7 @@ The example cluster will use:
 
 * |CFS_DISTRO| |CFS_DISTRO_VER| as the host operating system
 * Corosync to provide messaging and membership services,
-* Pacemaker 2 [#]_
+* Pacemaker 2
 * DRBD as a cost-effective alternative to shared storage,
 * GFS2 as the cluster filesystem (in active/active mode)
 
@@ -47,6 +47,3 @@ Index
 
 * :ref:`genindex`
 * :ref:`search`
-
-.. [#] While this guide is part of the document set for Pacemaker 2.0, it
-       demonstrates the version available in the standard |CFS_DISTRO| repositories

@@ -30,7 +30,7 @@ libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libpe_status_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
-# Use += rather than backlashed continuation lines for parsing by bumplibs.sh
+# Use += rather than backlashed continuation lines for parsing by bumplibs
 libpe_status_la_SOURCES	=
 libpe_status_la_SOURCES	+= bundle.c
 libpe_status_la_SOURCES	+= clone.c

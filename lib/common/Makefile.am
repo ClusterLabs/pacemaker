@@ -35,7 +35,16 @@ libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libcrmcommon_la_LIBADD	= @LIBADD_DL@
 
-# Use += rather than backlashed continuation lines for parsing by bumplibs.sh
+# If configured with --with-profiling or --with-coverage, BUILD_PROFILING will
+# be set and -fno-builtin will be added to the CFLAGS.  However, libcrmcommon
+# uses the fabs() function which is normally supplied by gcc as one of its
+# builtins.  Therefore we need to explicitly link against libm here or the
+# tests won't link.
+if BUILD_PROFILING
+libcrmcommon_la_LIBADD	+= -lm
+endif
+
+# Use += rather than backlashed continuation lines for parsing by bumplibs
 libcrmcommon_la_SOURCES	=
 libcrmcommon_la_SOURCES	+= acl.c
 libcrmcommon_la_SOURCES	+= agents.c

@@ -11,6 +11,7 @@
 
 #include <crm_resource.h>
 #include <crm/common/lists_internal.h>
+#include <crm/common/output.h>
 
 #define cons_string(x) x?x:"NA"
 void
@@ -114,17 +115,17 @@ int
 cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
     pcmk__output_t *out = data_set->priv;
-    unsigned int opts = pe_print_pending;
+    unsigned int show_opts = pcmk_show_pending;
     GList *all = NULL;
 
-    all = g_list_prepend(all, strdup("*"));
+    all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, crm_map_element_name(rsc->xml), opts, rsc, all, all);
+    out->message(out, crm_map_element_name(rsc->xml), show_opts, rsc, all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
-    g_list_free_full(all, free);
+    g_list_free(all);
     return pcmk_rc_ok;
 }
 
@@ -151,6 +152,57 @@ attribute_list_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
+                  "const char *", "const char *", "int")
+static int
+agent_status_default(pcmk__output_t *out, va_list args) {
+    int status = va_arg(args, int);
+    const char *action = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *class = va_arg(args, const char *);
+    const char *provider = va_arg(args, const char *);
+    const char *type = va_arg(args, const char *);
+    int rc = va_arg(args, int);
+
+    if (status == PCMK_LRM_OP_DONE) {
+        out->info(out, "Operation %s%s%s (%s%s%s:%s) returned: '%s' (%d)",
+                  action, name ? " for " : "", name ? name : "",
+                  class, provider ? ":" : "", provider ? provider : "", type,
+                  services_ocf_exitcode_str(rc), rc);
+    } else {
+        out->err(out, "Operation %s%s%s (%s%s%s:%s) failed: '%s' (%d)",
+                 action, name ? " for " : "", name ? name : "",
+                 class, provider ? ":" : "", provider ? provider : "", type,
+                 services_lrm_status_str(status), status);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("agent-status", "int", "const char *", "const char *", "const char *",
+                  "const char *", "const char *", "int")
+static int
+agent_status_xml(pcmk__output_t *out, va_list args) {
+    int status G_GNUC_UNUSED = va_arg(args, int);
+    const char *action G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *name G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *class G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *provider G_GNUC_UNUSED = va_arg(args, const char *);
+    const char *type G_GNUC_UNUSED = va_arg(args, const char *);
+    int rc = va_arg(args, int);
+
+    char *status_str = pcmk__itoa(rc);
+
+    pcmk__output_create_xml_node(out, "agent-status",
+                                 "code", status_str,
+                                 "message", services_ocf_exitcode_str(rc),
+                                 NULL);
+
+    free(status_str);
+
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("attribute-list", "pe_resource_t *", "char *", "GHashTable *")
 static int
 attribute_list_text(pcmk__output_t *out, va_list args) {
@@ -167,6 +219,43 @@ attribute_list_text(pcmk__output_t *out, va_list args) {
         pcmk__formatted_printf(out, "%s\n", value);
     } else {
         out->err(out, "Attribute '%s' not found for '%s'", attr, rsc->id);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("override", "const char *", "const char *", "const char *")
+static int
+override_default(pcmk__output_t *out, va_list args) {
+    const char *rsc_name = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    if (rsc_name == NULL) {
+        out->list_item(out, NULL, "Overriding the cluster configuration with '%s' = '%s'",
+                       name, value);
+    } else {
+        out->list_item(out, NULL, "Overriding the cluster configuration for '%s' with '%s' = '%s'",
+                       rsc_name, name, value);
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("override", "const char *", "const char *", "const char *")
+static int
+override_xml(pcmk__output_t *out, va_list args) {
+    const char *rsc_name = va_arg(args, const char *);
+    const char *name = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
+
+    xmlNodePtr node = pcmk__output_create_xml_node(out, "override",
+                                                   "name", name,
+                                                   "value", value,
+                                                   NULL);
+
+    if (rsc_name != NULL) {
+        crm_xml_add(node, "rsc", rsc_name);
     }
 
     return pcmk_rc_ok;
@@ -201,6 +290,126 @@ property_list_text(pcmk__output_t *out, va_list args) {
         pcmk__formatted_printf(out, "%s\n", value);
     }
 
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
+                  "const char *", "const char *", "const char *", "GHashTable *",
+                  "int", "int", "char *", "char *")
+static int
+resource_agent_action_default(pcmk__output_t *out, va_list args) {
+    int verbose = va_arg(args, int);
+
+    const char *class = va_arg(args, const char *);
+    const char *provider = va_arg(args, const char *);
+    const char *type = va_arg(args, const char *);
+    const char *rsc_name = va_arg(args, const char *);
+    const char *action = va_arg(args, const char *);
+    GHashTable *overrides = va_arg(args, GHashTable *);
+    int rc = va_arg(args, int);
+    int status = va_arg(args, int);
+    char *stdout_data = va_arg(args, char *);
+    char *stderr_data = va_arg(args, char *);
+
+    if (overrides) {
+        GHashTableIter iter;
+        char *name = NULL;
+        char *value = NULL;
+
+        out->begin_list(out, NULL, NULL, "overrides");
+
+        g_hash_table_iter_init(&iter, overrides);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+            out->message(out, "override", rsc_name, name, value);
+        }
+
+        out->end_list(out);
+    }
+
+    out->message(out, "agent-status", status, action, rsc_name, class, provider,
+                 type, rc);
+
+    /* hide output for validate-all if not in verbose */
+    if (verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei)) {
+        return pcmk_rc_ok;
+    }
+
+    if (stdout_data || stderr_data) {
+        xmlNodePtr doc = string2xml(stdout_data);
+
+        if (doc != NULL) {
+            out->output_xml(out, "command", stdout_data);
+            xmlFreeNode(doc);
+        } else {
+            out->subprocess_output(out, rc, stdout_data, stderr_data);
+        }
+    }
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
+                  "const char *", "const char *", "const char *", "GHashTable *",
+                  "int", "int", "char *", "char *")
+static int
+resource_agent_action_xml(pcmk__output_t *out, va_list args) {
+    int verbose G_GNUC_UNUSED = va_arg(args, int);
+
+    const char *class = va_arg(args, const char *);
+    const char *provider = va_arg(args, const char *);
+    const char *type = va_arg(args, const char *);
+    const char *rsc_name = va_arg(args, const char *);
+    const char *action = va_arg(args, const char *);
+    GHashTable *overrides = va_arg(args, GHashTable *);
+    int rc = va_arg(args, int);
+    int status = va_arg(args, int);
+    char *stdout_data = va_arg(args, char *);
+    char *stderr_data = va_arg(args, char *);
+
+    xmlNodePtr node = pcmk__output_xml_create_parent(out, "resource-agent-action",
+                                                     "action", action,
+                                                     "class", class,
+                                                     "type", type,
+                                                     NULL);
+
+    if (rsc_name) {
+        crm_xml_add(node, "rsc", rsc_name);
+    }
+
+    if (provider) {
+        crm_xml_add(node, "provider", provider);
+    }
+
+    if (overrides) {
+        GHashTableIter iter;
+        char *name = NULL;
+        char *value = NULL;
+
+        out->begin_list(out, NULL, NULL, "overrides");
+
+        g_hash_table_iter_init(&iter, overrides);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+            out->message(out, "override", rsc_name, name, value);
+        }
+
+        out->end_list(out);
+    }
+
+    out->message(out, "agent-status", status, action, rsc_name, class, provider,
+                 type, rc);
+
+    if (stdout_data || stderr_data) {
+        xmlNodePtr doc = string2xml(stdout_data);
+
+        if (doc != NULL) {
+            out->output_xml(out, "command", stdout_data);
+            xmlFreeNode(doc);
+        } else {
+            out->subprocess_output(out, rc, stdout_data, stderr_data);
+        }
+    }
+
+    pcmk__output_xml_pop_parent(out);
     return pcmk_rc_ok;
 }
 
@@ -561,10 +770,16 @@ resource_names(pcmk__output_t *out, va_list args) {
 }
 
 static pcmk__message_entry_t fmt_functions[] = {
+    { "agent-status", "default", agent_status_default },
+    { "agent-status", "xml", agent_status_xml },
     { "attribute-list", "default", attribute_list_default },
     { "attribute-list", "text", attribute_list_text },
+    { "override", "default", override_default },
+    { "override", "xml", override_xml },
     { "property-list", "default", property_list_default },
     { "property-list", "text", property_list_text },
+    { "resource-agent-action", "default", resource_agent_action_default },
+    { "resource-agent-action", "xml", resource_agent_action_xml },
     { "resource-check-list", "default", resource_check_list_default },
     { "resource-check-list", "xml", resource_check_list_xml },
     { "resource-search-list", "default", resource_search_list_default },

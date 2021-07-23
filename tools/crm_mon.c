@@ -34,6 +34,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/output.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -56,6 +57,7 @@
  */
 
 static unsigned int show;
+static unsigned int show_opts = pcmk_show_pending;
 
 /*
  * Definitions indicating how to output
@@ -83,7 +85,10 @@ static gchar **processed_args = NULL;
 static time_t last_refresh = 0;
 volatile crm_trigger_t *refresh_trigger = NULL;
 
+static gboolean fence_history = FALSE;
+static gboolean has_warnings = FALSE;
 static gboolean on_remote_node = FALSE;
+static gboolean use_cib_native = FALSE;
 
 int interactive_fence_level = 0;
 
@@ -111,19 +116,22 @@ static pcmk__supported_format_t formats[] = {
 struct {
     guint reconnect_ms;
     gboolean daemonize;
+    gboolean fence_connect;
+    gboolean one_shot;
+    gboolean print_pending;
     gboolean show_bans;
+    gboolean watch_fencing;
     char *pid_file;
     char *external_agent;
     char *external_recipient;
     char *neg_location_prefix;
     char *only_node;
     char *only_rsc;
-    unsigned int mon_ops;
     GSList *user_includes_excludes;
     GSList *includes_excludes;
 } options = {
-    .reconnect_ms = RECONNECT_MSECS,
-    .mon_ops = mon_op_default
+    .fence_connect = TRUE,
+    .reconnect_ms = RECONNECT_MSECS
 };
 
 static void clean_up_cib_connection(void);
@@ -142,9 +150,9 @@ static void refresh_after_event(gboolean data_updated, gboolean enforce);
 static unsigned int
 all_includes(mon_output_format_t fmt) {
     if (fmt == mon_output_monitor || fmt == mon_output_plain || fmt == mon_output_console) {
-        return ~mon_show_options;
+        return ~pcmk_section_options;
     } else {
-        return mon_show_all;
+        return pcmk_section_all;
     }
 }
 
@@ -154,8 +162,8 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_monitor:
         case mon_output_plain:
         case mon_output_console:
-            return mon_show_stack | mon_show_dc | mon_show_times | mon_show_counts |
-                   mon_show_nodes | mon_show_resources | mon_show_failures;
+            return pcmk_section_stack | pcmk_section_dc | pcmk_section_times | pcmk_section_counts |
+                   pcmk_section_nodes | pcmk_section_resources | pcmk_section_failures;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
@@ -163,8 +171,8 @@ default_includes(mon_output_format_t fmt) {
 
         case mon_output_html:
         case mon_output_cgi:
-            return mon_show_summary | mon_show_nodes | mon_show_resources |
-                   mon_show_failures;
+            return pcmk_section_summary | pcmk_section_nodes | pcmk_section_resources |
+                   pcmk_section_failures;
 
         default:
             return 0;
@@ -175,24 +183,24 @@ struct {
     const char *name;
     unsigned int bit;
 } sections[] = {
-    { "attributes", mon_show_attributes },
-    { "bans", mon_show_bans },
-    { "counts", mon_show_counts },
-    { "dc", mon_show_dc },
-    { "failcounts", mon_show_failcounts },
-    { "failures", mon_show_failures },
-    { "fencing", mon_show_fencing_all },
-    { "fencing-failed", mon_show_fence_failed },
-    { "fencing-pending", mon_show_fence_pending },
-    { "fencing-succeeded", mon_show_fence_worked },
-    { "nodes", mon_show_nodes },
-    { "operations", mon_show_operations },
-    { "options", mon_show_options },
-    { "resources", mon_show_resources },
-    { "stack", mon_show_stack },
-    { "summary", mon_show_summary },
-    { "tickets", mon_show_tickets },
-    { "times", mon_show_times },
+    { "attributes", pcmk_section_attributes },
+    { "bans", pcmk_section_bans },
+    { "counts", pcmk_section_counts },
+    { "dc", pcmk_section_dc },
+    { "failcounts", pcmk_section_failcounts },
+    { "failures", pcmk_section_failures },
+    { "fencing", pcmk_section_fencing_all },
+    { "fencing-failed", pcmk_section_fence_failed },
+    { "fencing-pending", pcmk_section_fence_pending },
+    { "fencing-succeeded", pcmk_section_fence_worked },
+    { "nodes", pcmk_section_nodes },
+    { "operations", pcmk_section_operations },
+    { "options", pcmk_section_options },
+    { "resources", pcmk_section_resources },
+    { "stack", pcmk_section_stack },
+    { "summary", pcmk_section_summary },
+    { "tickets", pcmk_section_tickets },
+    { "times", pcmk_section_times },
     { NULL }
 };
 
@@ -249,7 +257,7 @@ apply_include(const gchar *includes, GError **error) {
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);
         } else if (pcmk__starts_with(*s, "bans")) {
-            show |= mon_show_bans;
+            show |= pcmk_section_bans;
             if (options.neg_location_prefix != NULL) {
                 free(options.neg_location_prefix);
                 options.neg_location_prefix = NULL;
@@ -336,7 +344,7 @@ as_cgi_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 
     args->output_ty = strdup("html");
     output_format = mon_output_cgi;
-    options.mon_ops |= mon_op_one_shot;
+    options.one_shot = TRUE;
     return TRUE;
 }
 
@@ -369,7 +377,7 @@ as_simple_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 
     args->output_ty = strdup("text");
     output_format = mon_output_monitor;
-    options.mon_ops |= mon_op_one_shot;
+    options.one_shot = TRUE;
     return TRUE;
 }
 
@@ -394,19 +402,23 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
     switch (interactive_fence_level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
+            options.fence_connect = TRUE;
+            fence_history = TRUE;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 2:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            options.fence_connect = TRUE;
+            fence_history = TRUE;
             return include_exclude_cb("--include", "fencing", data, err);
 
         case 1:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
+            options.fence_connect = TRUE;
+            fence_history = TRUE;
             return include_exclude_cb("--include", "fencing-failed,fencing-pending", data, err);
 
         case 0:
-            options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
+            options.fence_connect = FALSE;
+            fence_history = FALSE;
             return include_exclude_cb("--exclude", "fencing", data, err);
 
         default:
@@ -417,7 +429,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 static gboolean
 group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_group_by_node;
+    show_opts |= pcmk_show_rscs_by_node;
     return TRUE;
 }
 
@@ -428,7 +440,7 @@ hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_inactive_resources;
+    show_opts |= pcmk_show_inactive_rscs;
     return TRUE;
 }
 
@@ -439,32 +451,20 @@ no_curses_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 }
 
 static gboolean
-one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_one_shot;
-    return TRUE;
-}
-
-static gboolean
 print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_brief;
+    show_opts |= pcmk_show_brief;
     return TRUE;
 }
 
 static gboolean
-print_clone_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_clone_detail;
-    return TRUE;
-}
-
-static gboolean
-print_pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_pending;
+print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+    show_opts |= pcmk_show_details;
     return TRUE;
 }
 
 static gboolean
 print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_print_timing;
+    show_opts |= pcmk_show_timing;
     return include_exclude_cb("--include", "operations", data, err);
 }
 
@@ -517,13 +517,7 @@ show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 static gboolean
 use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     setenv("CIB_file", optarg, 1);
-    options.mon_ops |= mon_op_one_shot;
-    return TRUE;
-}
-
-static gboolean
-watch_fencing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    options.mon_ops |= mon_op_watch_fencing;
+    options.one_shot = TRUE;
     return TRUE;
 }
 
@@ -535,7 +529,7 @@ static GOptionEntry addl_entries[] = {
       "Update frequency (default is 5 seconds)",
       "TIMESPEC" },
 
-    { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, one_shot_cb,
+    { "one-shot", '1', 0, G_OPTION_ARG_NONE, &options.one_shot,
       "Display the cluster status once on the console and exit",
       NULL },
 
@@ -556,7 +550,7 @@ static GOptionEntry addl_entries[] = {
       "A recipient for your program (assuming you want the program to send something to someone).",
       "RCPT" },
 
-    { "watch-fencing", 'W', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, watch_fencing_cb,
+    { "watch-fencing", 'W', 0, G_OPTION_ARG_NONE, &options.watch_fencing,
       "Listen for fencing events. For use with --external-agent.",
       NULL },
 
@@ -631,7 +625,7 @@ static GOptionEntry display_entries[] = {
       "Hide all headers",
       NULL },
 
-    { "show-detail", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_clone_detail_cb,
+    { "show-detail", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_detail_cb,
       "Show more details (node IDs, individual clone instances)",
       NULL },
 
@@ -639,7 +633,7 @@ static GOptionEntry display_entries[] = {
       "Brief output",
       NULL },
 
-    { "pending", 'j', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, print_pending_cb,
+    { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
@@ -674,47 +668,6 @@ static GOptionEntry deprecated_entries[] = {
     { NULL }
 };
 /* *INDENT-ON* */
-
-/*!
- * \internal
- * \brief Return resource display options corresponding to command-line choices
- *
- * \return Bitmask of pe_print_options suitable for resource print functions
- */
-static unsigned int
-get_resource_display_options(unsigned int mon_ops)
-{
-    int print_opts = 0;
-
-    if (pcmk_is_set(mon_ops, mon_op_print_pending)) {
-        print_opts |= pe_print_pending;
-    }
-    if (pcmk_is_set(mon_ops, mon_op_print_clone_detail)) {
-        print_opts |= pe_print_clone_details|pe_print_implicit;
-    }
-    if (!pcmk_is_set(mon_ops, mon_op_inactive_resources)) {
-        print_opts |= pe_print_clone_active;
-    }
-    if (pcmk_is_set(mon_ops, mon_op_print_brief)) {
-        print_opts |= pe_print_brief;
-    }
-    return print_opts;
-}
-
-static void
-blank_screen(void)
-{
-#if CURSES_ENABLED
-    int lpc = 0;
-
-    for (lpc = 0; lpc < LINES; lpc++) {
-        move(lpc, 0);
-        clrtoeol();
-    }
-    move(0, 0);
-    refresh();
-#endif
-}
 
 /* Reconnect to the CIB and fencing agent after reconnect_ms has passed.  This sounds
  * like it would be more broadly useful, but only ever happens after a disconnect via
@@ -820,19 +773,18 @@ fencing_connect(void)
 {
     int rc = pcmk_ok;
 
-    if (pcmk_is_set(options.mon_ops, mon_op_fence_connect) && (st == NULL)) {
+    if (options.fence_connect && st == NULL) {
         st = stonith_api_new();
     }
 
-    if (!pcmk_is_set(options.mon_ops, mon_op_fence_connect) ||
-        st == NULL || st->state != stonith_disconnected) {
+    if (!options.fence_connect || st == NULL || st->state != stonith_disconnected) {
         return rc;
     }
 
     rc = st->cmds->connect(st, crm_system_name, NULL);
     if (rc == pcmk_ok) {
         crm_trace("Setting up stonith callbacks");
-        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
+        if (options.watch_fencing) {
             st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
                                             mon_st_callback_event);
             st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_event);
@@ -918,24 +870,28 @@ set_fencing_options(int level)
 {
     switch (level) {
         case 3:
-            options.mon_ops |= mon_op_fence_full_history | mon_op_fence_history | mon_op_fence_connect;
-            show |= mon_show_fencing_all;
+            options.fence_connect = TRUE;
+            fence_history = TRUE;
+            show |= pcmk_section_fencing_all;
             break;
 
         case 2:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
-            show |= mon_show_fencing_all;
+            options.fence_connect = TRUE;
+            fence_history = TRUE;
+            show |= pcmk_section_fencing_all;
             break;
 
         case 1:
-            options.mon_ops |= mon_op_fence_history | mon_op_fence_connect;
-            show |= mon_show_fence_failed | mon_show_fence_pending;
+            options.fence_connect = TRUE;
+            fence_history = TRUE;
+            show |= pcmk_section_fence_failed | pcmk_section_fence_pending;
             break;
 
         default:
             interactive_fence_level = 0;
-            options.mon_ops &= ~(mon_op_fence_history | mon_op_fence_connect);
-            show &= ~mon_show_fencing_all;
+            options.fence_connect = FALSE;
+            fence_history = FALSE;
+            show &= ~pcmk_section_fencing_all;
             break;
     }
 }
@@ -991,7 +947,7 @@ pacemakerd_status(void)
     pcmk_ipc_api_t *pacemakerd_api = NULL;
     enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
 
-    if (!pcmk_is_set(options.mon_ops, mon_op_cib_native)) {
+    if (!use_cib_native) {
         /* we don't need fully functional pacemakerd otherwise */
         return rc;
     }
@@ -1132,57 +1088,53 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 set_fencing_options(interactive_fence_level);
                 break;
             case 'c':
-                show ^= mon_show_tickets;
+                show ^= pcmk_section_tickets;
                 break;
             case 'f':
-                show ^= mon_show_failcounts;
+                show ^= pcmk_section_failcounts;
                 break;
             case 'n':
-                options.mon_ops ^= mon_op_group_by_node;
+                show_opts ^= pcmk_show_rscs_by_node;
                 break;
             case 'o':
-                show ^= mon_show_operations;
-                if (!pcmk_is_set(show, mon_show_operations)) {
-                    options.mon_ops &= ~mon_op_print_timing;
+                show ^= pcmk_section_operations;
+                if (!pcmk_is_set(show, pcmk_section_operations)) {
+                    show_opts &= ~pcmk_show_timing;
                 }
                 break;
             case 'r':
-                options.mon_ops ^= mon_op_inactive_resources;
+                show_opts ^= pcmk_show_inactive_rscs;
                 break;
             case 'R':
-                options.mon_ops ^= mon_op_print_clone_detail;
+                show_opts ^= pcmk_show_details;
                 break;
             case 't':
-                options.mon_ops ^= mon_op_print_timing;
-                if (pcmk_is_set(options.mon_ops, mon_op_print_timing)) {
-                    show |= mon_show_operations;
+                show_opts ^= pcmk_show_timing;
+                if (pcmk_is_set(show_opts, pcmk_show_timing)) {
+                    show |= pcmk_section_operations;
                 }
                 break;
             case 'A':
-                show ^= mon_show_attributes;
+                show ^= pcmk_section_attributes;
                 break;
             case 'L':
-                show ^= mon_show_bans;
+                show ^= pcmk_section_bans;
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (pcmk_any_flags_set(show,
-                                       mon_show_stack
-                                       |mon_show_dc
-                                       |mon_show_times
-                                       |mon_show_counts)) {
-                    show &= ~mon_show_summary;
+                if (pcmk_any_flags_set(show, pcmk_section_summary)) {
+                    show &= ~pcmk_section_summary;
                 } else {
-                    show |= mon_show_summary;
+                    show |= pcmk_section_summary;
                 }
                 /* Regardless, we don't show options in console mode. */
-                show &= ~mon_show_options;
+                show &= ~pcmk_section_options;
                 break;
             case 'b':
-                options.mon_ops ^= mon_op_print_brief;
+                show_opts ^= pcmk_show_brief;
                 break;
             case 'j':
-                options.mon_ops ^= mon_op_print_pending;
+                show_opts ^= pcmk_show_pending;
                 break;
             case '?':
                 config_mode = TRUE;
@@ -1198,18 +1150,18 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         blank_screen();
 
         curses_formatted_printf(out, "%s", "Display option change mode\n");
-        print_option_help(out, 'c', pcmk_is_set(show, mon_show_tickets));
-        print_option_help(out, 'f', pcmk_is_set(show, mon_show_failcounts));
-        print_option_help(out, 'n', pcmk_is_set(options.mon_ops, mon_op_group_by_node));
-        print_option_help(out, 'o', pcmk_is_set(show, mon_show_operations));
-        print_option_help(out, 'r', pcmk_is_set(options.mon_ops, mon_op_inactive_resources));
-        print_option_help(out, 't', pcmk_is_set(options.mon_ops, mon_op_print_timing));
-        print_option_help(out, 'A', pcmk_is_set(show, mon_show_attributes));
-        print_option_help(out, 'L', pcmk_is_set(show,mon_show_bans));
-        print_option_help(out, 'D', !pcmk_is_set(show, mon_show_summary));
-        print_option_help(out, 'R', pcmk_is_set(options.mon_ops, mon_op_print_clone_detail));
-        print_option_help(out, 'b', pcmk_is_set(options.mon_ops, mon_op_print_brief));
-        print_option_help(out, 'j', pcmk_is_set(options.mon_ops, mon_op_print_pending));
+        print_option_help(out, 'c', pcmk_is_set(show, pcmk_section_tickets));
+        print_option_help(out, 'f', pcmk_is_set(show, pcmk_section_failcounts));
+        print_option_help(out, 'n', pcmk_is_set(show_opts, pcmk_show_rscs_by_node));
+        print_option_help(out, 'o', pcmk_is_set(show, pcmk_section_operations));
+        print_option_help(out, 'r', pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
+        print_option_help(out, 't', pcmk_is_set(show_opts, pcmk_show_timing));
+        print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
+        print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
+        print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
+        print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details));
+        print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
+        print_option_help(out, 'j', pcmk_is_set(show_opts, pcmk_show_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
         curses_formatted_printf(out, "%s", "\nToggle fields via field letter, type any other key to return\n");
     }
@@ -1363,7 +1315,7 @@ reconcile_output_format(pcmk__common_args_t *args) {
 
         args->output_ty = strdup("xml");
         output_format = mon_output_xml;
-    } else if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+    } else if (options.one_shot) {
         if (args->output_ty != NULL) {
             free(args->output_ty);
         }
@@ -1451,7 +1403,7 @@ main(int argc, char **argv)
 
     if (pcmk__ends_with_ext(argv[0], ".cgi")) {
         output_format = mon_output_cgi;
-        options.mon_ops |= mon_op_one_shot;
+        options.one_shot = TRUE;
     }
 
     processed_args = pcmk__cmdline_preproc(argv, "ehimpxEILU");
@@ -1482,9 +1434,9 @@ main(int argc, char **argv)
             include_exclude_cb("--exclude", "times", NULL, NULL);
         }
 
-        if (pcmk_is_set(options.mon_ops, mon_op_watch_fencing)) {
+        if (options.watch_fencing) {
             fence_history_cb("--fence-history", "0", NULL, NULL);
-            options.mon_ops |= mon_op_fence_connect;
+            options.fence_connect = TRUE;
         }
 
         /* create the cib-object early to be able to do further
@@ -1499,7 +1451,7 @@ main(int argc, char **argv)
 
                 case cib_native:
                     /* cib & fencing - everything available */
-                    options.mon_ops |= mon_op_cib_native;
+                    use_cib_native = TRUE;
                     break;
 
                 case cib_file:
@@ -1510,7 +1462,7 @@ main(int argc, char **argv)
                      * As we don't expect cib-updates coming
                      * in enforce one-shot. */
                     fence_history_cb("--fence-history", "0", NULL, NULL);
-                    options.mon_ops |= mon_op_one_shot;
+                    options.one_shot = TRUE;
                     break;
 
                 case cib_remote:
@@ -1527,7 +1479,7 @@ main(int argc, char **argv)
             }
         }
 
-        if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+        if (options.one_shot) {
             if (output_format == mon_output_console) {
                 output_format = mon_output_plain;
             }
@@ -1564,7 +1516,7 @@ main(int argc, char **argv)
 #if CURSES_ENABLED
             crm_enable_stderr(FALSE);
 #else
-            options.mon_ops |= mon_op_one_shot;
+            options.one_shot = TRUE;
             output_format = mon_output_plain;
             printf("Defaulting to one-shot mode\n");
             printf("You need to have curses available at compile time to enable console mode\n");
@@ -1615,16 +1567,17 @@ main(int argc, char **argv)
     /* Sync up the initial value of interactive_fence_level with whatever was set with
      * --include/--exclude= options.
      */
-    if (pcmk_is_set(show, mon_show_fencing_all)) {
+    if (pcmk_all_flags_set(show, pcmk_section_fencing_all)) {
         interactive_fence_level = 3;
-    } else if (pcmk_is_set(show, mon_show_fence_worked)) {
+    } else if (pcmk_is_set(show, pcmk_section_fence_worked)) {
         interactive_fence_level = 2;
-    } else if (pcmk_any_flags_set(show, mon_show_fence_failed | mon_show_fence_pending)) {
+    } else if (pcmk_any_flags_set(show, pcmk_section_fence_failed | pcmk_section_fence_pending)) {
         interactive_fence_level = 1;
     } else {
         interactive_fence_level = 0;
     }
 
+    pcmk__register_lib_messages(out);
     crm_mon_register_messages(out);
     pe__register_messages(out);
     stonith__register_messages(out);
@@ -1649,10 +1602,10 @@ main(int argc, char **argv)
     }
 
     if (output_format == mon_output_xml || output_format == mon_output_legacy_xml) {
-        options.mon_ops |= mon_op_print_timing | mon_op_inactive_resources;
+        show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
 
         if (!options.daemonize) {
-            options.mon_ops |= mon_op_one_shot;
+            options.one_shot = TRUE;
         }
     }
 
@@ -1666,7 +1619,7 @@ main(int argc, char **argv)
 
     cib__set_output(cib, out);
 
-    if (pcmk_is_set(options.mon_ops, mon_op_one_shot)) {
+    if (options.one_shot) {
         one_shot();
     }
 
@@ -1740,8 +1693,7 @@ main(int argc, char **argv)
  *       should conform to https://www.monitoring-plugins.org/doc/guidelines.html
  */
 static void
-print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
-                    unsigned int mon_ops)
+print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set)
 {
     GList *gIter = NULL;
     int nodes_online = 0;
@@ -1753,7 +1705,7 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
     gboolean offline = FALSE;
 
     if (data_set->dc_node == NULL) {
-        mon_ops |= mon_op_has_warnings;
+        has_warnings = TRUE;
         no_dc = TRUE;
     }
 
@@ -1771,12 +1723,12 @@ print_simple_status(pcmk__output_t *out, pe_working_set_t * data_set,
             /* coverity[leaked_storage] False positive */
             pcmk__add_word(&offline_nodes, &offline_nodes_len, s);
             free(s);
-            mon_ops |= mon_op_has_warnings;
+            has_warnings = TRUE;
             offline = TRUE;
         }
     }
 
-    if (pcmk_is_set(mon_ops, mon_op_has_warnings)) {
+    if (has_warnings) {
         out->info(out, "CLUSTER WARN: %s%s%s",
                   no_dc ? "No DC" : "",
                   no_dc && offline ? ", " : "",
@@ -2152,13 +2104,13 @@ get_fencing_history(stonith_history_t **stonith_history)
 {
     int rc = 0;
 
-    while (pcmk_is_set(options.mon_ops, mon_op_fence_history)) {
+    while (fence_history) {
         if (st != NULL) {
             rc = st->cmds->history(st, st_opt_sync_call, NULL, stonith_history, 120);
 
             if (rc == 0) {
                 *stonith_history = stonith__sort_history(*stonith_history);
-                if (!pcmk_is_set(options.mon_ops, mon_op_fence_full_history)
+                if (!pcmk_all_flags_set(show, pcmk_section_fencing_all)
                     && (output_format != mon_output_xml)) {
 
                     *stonith_history = pcmk__reduce_fence_history(*stonith_history);
@@ -2208,7 +2160,7 @@ mon_refresh_display(gpointer user_data)
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
-    if (pcmk_is_set(show, mon_show_bans) || pcmk_is_set(show, mon_show_tickets)) {
+    if (pcmk_is_set(show, pcmk_section_bans) || pcmk_is_set(show, pcmk_section_tickets)) {
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
                                                    mon_data_set->input);
         unpack_constraints(cib_constraints, mon_data_set);
@@ -2224,54 +2176,31 @@ mon_refresh_display(gpointer user_data)
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(mon_data_set, crm_errno2exit(history_rc),
-                                  stonith_history, options.mon_ops,
-                                  get_resource_display_options(options.mon_ops),
-                                  show, options.neg_location_prefix,
-                                  unames, resources) != 0) {
+            if (out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
+                             stonith_history, fence_history, show, show_opts,
+                             options.neg_location_prefix, unames, resources) != 0) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_CANTCREAT, "Critical: Unable to output html file");
                 clean_up(CRM_EX_CANTCREAT);
                 return 0;
             }
             break;
 
-        case mon_output_legacy_xml:
-        case mon_output_xml:
-            print_xml_status(mon_data_set, crm_errno2exit(history_rc),
-                             stonith_history, options.mon_ops,
-                             get_resource_display_options(options.mon_ops), show,
-                             options.neg_location_prefix, unames, resources);
-            break;
-
         case mon_output_monitor:
-            print_simple_status(out, mon_data_set, options.mon_ops);
-            if (pcmk_is_set(options.mon_ops, mon_op_has_warnings)) {
+            print_simple_status(out, mon_data_set);
+            if (has_warnings) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
             }
             break;
 
-        case mon_output_console:
-            /* If curses is not enabled, this will just fall through to the plain
-             * text case.
-             */
-#if CURSES_ENABLED
-            blank_screen();
-            print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, get_resource_display_options(options.mon_ops),
-                         show, options.neg_location_prefix, unames, resources);
-            refresh();
-            break;
-#endif
-
-        case mon_output_plain:
-            print_status(mon_data_set, crm_errno2exit(history_rc), stonith_history,
-                         options.mon_ops, get_resource_display_options(options.mon_ops),
-                         show, options.neg_location_prefix, unames, resources);
-            break;
-
         case mon_output_unset:
         case mon_output_none:
+            break;
+
+        default:
+            out->message(out, "cluster-status", mon_data_set, crm_errno2exit(history_rc),
+                         stonith_history, fence_history, show, show_opts,
+                         options.neg_location_prefix, unames, resources);
             break;
     }
 

@@ -13,6 +13,7 @@
 #include <crm/lrmd_internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/lists_internal.h>
+#include <crm/common/output.h>
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
@@ -99,6 +100,7 @@ struct {
     int timeout_ms;               // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
     gchar *xml_file;              // Value of (deprecated) --xml-file
+    int check_level;              // Optional value of --validate or --force-check
 
     // Resource configuration specified via command-line arguments
     gboolean cmdline_config;      // Resource configuration was via arguments
@@ -112,6 +114,7 @@ struct {
     GHashTable *override_params;  // Resource parameter values that override config
 } options = {
     .attr_set_type = XML_TAG_ATTR_SETS,
+    .check_level = -1,
     .cib_options = cib_sync_call,
     .require_cib = TRUE,
     .require_dataset = TRUE,
@@ -401,14 +404,15 @@ static GOptionEntry query_entries[] = {
 };
 
 static GOptionEntry command_entries[] = {
-    { "validate", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+    { "validate", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       validate_or_force_cb,
       "Validate resource configuration by calling agent's validate-all\n"
       INDENT "action. The configuration may be specified either by giving an\n"
       INDENT "existing resource name with -r, or by specifying --class,\n"
       INDENT "--agent, and --provider arguments, along with any number of\n"
-      INDENT "--option arguments.",
-      NULL },
+      INDENT "--option arguments. An optional LEVEL argument can be given\n"
+      INDENT "to control the level of checking performed.",
+      "LEVEL" },
     { "cleanup", 'C', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, cleanup_refresh_cb,
       "If resource has any past failures, clear its history and fail\n"
       INDENT "count. Optionally filtered by --resource, --node, --operation\n"
@@ -545,11 +549,12 @@ static GOptionEntry advanced_entries[] = {
       INDENT "the cluster believes the resource is a clone instance already\n"
       INDENT "running on the local node.",
       NULL },
-    { "force-check", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+    { "force-check", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       validate_or_force_cb,
       "(Advanced) Bypass the cluster and check the state of a resource on\n"
-      INDENT "the local node",
-      NULL },
+      INDENT "the local node. An optional LEVEL argument can be given\n"
+      INDENT "to control the level of checking performed.",
+      "LEVEL" },
 
     { NULL }
 };
@@ -655,20 +660,11 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
 gboolean
 class_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (!(pcmk_get_ra_caps(optarg) & pcmk_ra_cap_params)) {
-        if (!args->quiet) {
-            g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
-                        "Standard %s does not support parameters\n", optarg);
-        }
-        return FALSE;
-
-    } else {
-        if (options.v_class != NULL) {
-            free(options.v_class);
-        }
-
-        options.v_class = strdup(optarg);
+    if (options.v_class != NULL) {
+        free(options.v_class);
     }
+
+    options.v_class = strdup(optarg);
 
     options.cmdline_config = TRUE;
     options.require_resource = FALSE;
@@ -909,6 +905,15 @@ validate_or_force_cb(const gchar *option_name, const gchar *optarg,
     if (options.override_params == NULL) {
         options.override_params = pcmk__strkey_table(free, free);
     }
+
+    if (optarg != NULL) {
+        if (pcmk__scan_min_int(optarg, &options.check_level, 0) != pcmk_rc_ok) {
+            g_set_error(error, G_OPTION_ERROR, CRM_EX_INVALID_PARAM,
+                        "Invalid check level setting: %s", optarg);
+            return FALSE;
+        }
+    }
+
     return TRUE;
 }
 
@@ -1408,7 +1413,7 @@ validate_cmdline_config(void)
     } else if (options.rsc_cmd != cmd_execute_agent) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                     "--class, --agent, and --provider can only be used with "
-                    "--validate");
+                    "--validate and --force-*");
 
     // Not all of --class, --agent, and --provider need to be given.  Not all
     // classes support the concept of a provider.  Check that what we were given
@@ -1525,7 +1530,7 @@ main(int argc, char **argv)
      */
 
     args = pcmk__new_common_args(SUMMARY);
-    processed_args = pcmk__cmdline_preproc(argv, "GINSTdginpstuv");
+    processed_args = pcmk__cmdline_preproc(argv, "GHINSTdginpstuvx");
     context = build_arg_context(args, &output_group);
 
     pcmk__register_formats(output_group, formats);
@@ -1629,6 +1634,7 @@ main(int argc, char **argv)
          * saves from having to write custom messages to build the lists around all these things
          */
         switch (options.rsc_cmd) {
+            case cmd_execute_agent:
             case cmd_list_resources:
             case cmd_query_xml:
             case cmd_query_raw_xml:
@@ -1672,14 +1678,12 @@ main(int argc, char **argv)
     }
 
     if (options.require_resource && (options.rsc_id == NULL)) {
-        rc = ENXIO;
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must supply a resource id with -r");
         goto done;
     }
     if (options.require_node && (options.host_uname == NULL)) {
-        rc = ENXIO;
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must supply a node name with -N");
@@ -1772,11 +1776,11 @@ main(int argc, char **argv)
     switch (options.rsc_cmd) {
         case cmd_list_resources: {
             GList *all = NULL;
-            all = g_list_prepend(all, strdup("*"));
+            all = g_list_prepend(all, (gpointer) "*");
             rc = out->message(out, "resource-list", data_set,
-                              pe_print_rsconly | pe_print_pending,
-                              FALSE, TRUE, FALSE, TRUE, all, all, FALSE);
-            g_list_free_full(all, free);
+                              pcmk_show_inactive_rscs | pcmk_show_rsc_only | pcmk_show_pending,
+                              TRUE, all, all, FALSE);
+            g_list_free(all);
 
             if (rc == pcmk_rc_no_output) {
                 rc = ENXIO;
@@ -1826,16 +1830,16 @@ main(int argc, char **argv)
 
         case cmd_execute_agent:
             if (options.cmdline_config) {
-                exit_code = cli_resource_execute_from_params(out, "test",
+                exit_code = cli_resource_execute_from_params(out, NULL,
                     options.v_class, options.v_provider, options.v_agent,
-                    "validate-all", options.cmdline_params,
+                    options.operation, options.cmdline_params,
                     options.override_params, options.timeout_ms,
-                    args->verbosity, options.force);
+                    args->verbosity, options.force, options.check_level);
             } else {
                 exit_code = cli_resource_execute(rsc, options.rsc_id,
                     options.operation, options.override_params,
                     options.timeout_ms, cib_conn, data_set,
-                    args->verbosity, options.force);
+                    args->verbosity, options.force, options.check_level);
             }
             goto done;
 

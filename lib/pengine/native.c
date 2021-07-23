@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/output.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
@@ -434,11 +435,11 @@ native_displayable_role(pe_resource_t *rsc)
 }
 
 static const char *
-native_displayable_state(pe_resource_t *rsc, long options)
+native_displayable_state(pe_resource_t *rsc, bool print_pending)
 {
     const char *rsc_state = NULL;
 
-    if (options & pe_print_pending) {
+    if (print_pending) {
         rsc_state = native_pending_state(rsc);
     }
     if (rsc_state == NULL) {
@@ -452,7 +453,7 @@ native_print_xml(pe_resource_t * rsc, const char *pre_text, long options, void *
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    const char *rsc_state = native_displayable_state(rsc, options);
+    const char *rsc_state = native_displayable_state(rsc, pcmk_is_set(options, pe_print_pending));
     const char *target_role = NULL;
 
     /* resource information. */
@@ -533,7 +534,7 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  * \param[in] rsc          Resource to describe
  * \param[in] name         Desired identifier for the resource
  * \param[in] node         If not NULL, node that resource is "on"
- * \param[in] options      Bitmask of pe_print_*
+ * \param[in] show_opts    Bitmask of pcmk_show_opt_e.
  * \param[in] target_role  Resource's target role
  * \param[in] show_nodes   Whether to display nodes when multiply active
  *
@@ -542,7 +543,7 @@ add_output_node(GString *s, const char *node, bool have_nodes)
  */
 gchar *
 pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node,
-                           long options, const char *target_role, bool show_nodes)
+                           unsigned long show_opts, const char *target_role, bool show_nodes)
 {
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *provider = NULL;
@@ -566,7 +567,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     if ((node == NULL) && (rsc->lock_node != NULL)) {
         node = rsc->lock_node;
     }
-    if (pcmk_is_set(options, pe_print_rsconly)
+    if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
         || pcmk__list_of_multiple(rsc->running_on)) {
         node = NULL;
     }
@@ -595,7 +596,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
             g_string_append(outstr, " FAILED");
         }
     } else {
-        g_string_append_printf(outstr, " %s", native_displayable_state(rsc, options));
+        g_string_append_printf(outstr, " %s", native_displayable_state(rsc, pcmk_is_set(show_opts, pcmk_show_pending)));
     }
     if (node) {
         g_string_append_printf(outstr, " %s", node->details->uname);
@@ -608,7 +609,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     if (node && (node == rsc->lock_node)) {
         have_flags = add_output_flag(outstr, "LOCKED", have_flags);
     }
-    if (pcmk_is_set(options, pe_print_pending)) {
+    if (pcmk_is_set(show_opts, pcmk_show_pending)) {
         const char *pending_task = native_pending_task(rsc);
 
         if (pending_task) {
@@ -644,7 +645,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
     }
 
     // User-supplied description
-    if (pcmk_is_set(options, pe_print_rsconly)
+    if (pcmk_is_set(show_opts, pcmk_show_rsc_only)
         || pcmk__list_of_multiple(rsc->running_on)) {
         const char *desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
 
@@ -653,7 +654,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
         }
     }
 
-    if (show_nodes && !pcmk_is_set(options, pe_print_rsconly)
+    if (show_nodes && !pcmk_is_set(show_opts, pcmk_show_rsc_only)
         && pcmk__list_of_multiple(rsc->running_on)) {
         bool have_nodes = false;
 
@@ -674,7 +675,7 @@ pcmk__native_output_string(pe_resource_t *rsc, const char *name, pe_node_t *node
 
 int
 pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, long options)
+                       const char *name, pe_node_t *node, unsigned int show_opts)
 {
     const char *kind = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *target_role = NULL;
@@ -689,7 +690,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
-            && !pcmk_is_set(options, pe_print_implicit)) {
+            && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
 
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
@@ -717,7 +718,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
     }
 
     {
-        gchar *s = pcmk__native_output_string(rsc, name, node, options,
+        gchar *s = pcmk__native_output_string(rsc, name, node, show_opts,
                                               target_role, true);
 
         list_node = pcmk__output_create_html_node(out, "li", NULL, NULL, NULL);
@@ -730,7 +731,7 @@ pe__common_output_html(pcmk__output_t *out, pe_resource_t * rsc,
 
 int
 pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
-                       const char *name, pe_node_t *node, long options)
+                       const char *name, pe_node_t *node, unsigned int show_opts)
 {
     const char *target_role = NULL;
 
@@ -740,7 +741,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
 
         if (crm_is_true(is_internal)
-            && !pcmk_is_set(options, pe_print_implicit)) {
+            && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
 
             crm_trace("skipping print of internal resource %s", rsc->id);
             return pcmk_rc_no_output;
@@ -749,7 +750,7 @@ pe__common_output_text(pcmk__output_t *out, pe_resource_t * rsc,
     }
 
     {
-        gchar *s = pcmk__native_output_string(rsc, name, node, options,
+        gchar *s = pcmk__native_output_string(rsc, name, node, show_opts,
                                               target_role, true);
 
         out->list_item(out, NULL, "%s", s);
@@ -899,16 +900,15 @@ PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GL
 int
 pe__resource_xml(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
 
+    bool print_pending = pcmk_is_set(show_opts, pcmk_show_pending);
     const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
     const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-    const char *rsc_state = native_displayable_state(rsc, options);
-
-    long is_print_pending = options & pe_print_pending;
+    const char *rsc_state = native_displayable_state(rsc, print_pending);
 
     char ra_name[LINE_MAX];
     char *nodes_running_on = NULL;
@@ -946,7 +946,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
              "failed", pe__rsc_bool_str(rsc, pe_rsc_failed),
              "failure_ignored", pe__rsc_bool_str(rsc, pe_rsc_failure_ignored),
              "nodes_running_on", nodes_running_on,
-             "pending", (is_print_pending? native_pending_task(rsc) : NULL));
+             "pending", (print_pending? native_pending_task(rsc) : NULL));
     free(priority);
     free(nodes_running_on);
 
@@ -974,7 +974,7 @@ PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GL
 int
 pe__resource_html(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -991,14 +991,14 @@ pe__resource_html(pcmk__output_t *out, va_list args)
         // This is set only if a non-probe action is pending on this node
         node = rsc->pending_node;
     }
-    return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, options);
+    return pe__common_output_html(out, rsc, rsc_printable_id(rsc), node, show_opts);
 }
 
 PCMK__OUTPUT_ARGS("primitive", "unsigned int", "pe_resource_t *", "GList *", "GList *")
 int
 pe__resource_text(pcmk__output_t *out, va_list args)
 {
-    unsigned int options = va_arg(args, unsigned int);
+    unsigned int show_opts = va_arg(args, unsigned int);
     pe_resource_t *rsc = va_arg(args, pe_resource_t *);
     GList *only_node G_GNUC_UNUSED = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
@@ -1015,7 +1015,7 @@ pe__resource_text(pcmk__output_t *out, va_list args)
         // This is set only if a non-probe action is pending on this node
         node = rsc->pending_node;
     }
-    return pe__common_output_text(out, rsc, rsc_printable_id(rsc), node, options);
+    return pe__common_output_text(out, rsc, rsc_printable_id(rsc), node, show_opts);
 }
 
 void
@@ -1259,7 +1259,7 @@ print_rscs_brief(GList *rsc_list, const char *pre_text, long options,
 }
 
 int
-pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboolean print_all)
+pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int show_opts)
 {
     GHashTable *rsc_table = pcmk__strkey_table(free, free);
     GHashTable *active_table = pcmk__strkey_table(free, destroy_node_table);
@@ -1294,11 +1294,11 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboole
                 active_counter_all += *active_counter;
             }
 
-            if (options & pe_print_rsconly) {
+            if (pcmk_is_set(show_opts, pcmk_show_rsc_only)) {
                 node_name = NULL;
             }
 
-            if (print_all) {
+            if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
                 out->list_item(out, NULL, "%d/%d\t(%s):\tActive %s",
                                *active_counter,
                                rsc_counter ? *rsc_counter : 0, type,
@@ -1312,7 +1312,7 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboole
             rc = pcmk_rc_ok;
         }
 
-        if (print_all && active_counter_all == 0) {
+        if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs) && active_counter_all == 0) {
             out->list_item(out, NULL, "%d/%d\t(%s):\tActive",
                            active_counter_all,
                            rsc_counter ? *rsc_counter : 0, type);
@@ -1338,8 +1338,8 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, long options, gboole
 gboolean
 pe__native_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent)
 {
-    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc)) ||
-        pcmk__str_in_list(only_rsc, rsc->id)) {
+    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
+        pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none)) {
         return FALSE;
     } else if (check_parent) {
         pe_resource_t *up = uber_parent(rsc);

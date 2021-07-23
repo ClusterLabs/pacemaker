@@ -24,7 +24,7 @@
 : ${OCF_RESKEY_dampen:="5s"}
 : ${OCF_RESKEY_attempts:="3"}
 : ${OCF_RESKEY_multiplier:="1"}
-: ${OCF_RESKEY_debug:="false"}
+: ${OCF_RESKEY_debug:="0"}
 : ${OCF_RESKEY_failure_score:="0"}
 : ${OCF_RESKEY_use_fping:="1"}
 : ${OCF_RESKEY_host_list:=""}
@@ -37,8 +37,8 @@ meta_data() {
      cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="ping" version="1.0">
-<version>1.0</version>
+<resource-agent name="ping" version="1.1">
+<version>1.1</version>
 
 <longdesc lang="en">
 Every time the monitor action is run, this resource agent records (in the CIB) the current number of nodes the host can connect to using the system fping (preferred) or ping tool.
@@ -47,13 +47,13 @@ Every time the monitor action is run, this resource agent records (in the CIB) t
 
 <parameters>
 
-<parameter name="pidfile" unique="0">
+<parameter name="pidfile" unique-group="pidfile">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
 <content type="string" default="${HA_VARRUN%%/}/ping-${OCF_RESOURCE_INSTANCE}" />
 </parameter>
 
-<parameter name="dampen" unique="0">
+<parameter name="dampen" reloadable="1">
 <longdesc lang="en">
 The time to wait (dampening) further changes occur
 </longdesc>
@@ -61,7 +61,7 @@ The time to wait (dampening) further changes occur
 <content type="integer" default="5s"/>
 </parameter>
 
-<parameter name="name" unique="0">
+<parameter name="name" unique-group="name">
 <longdesc lang="en">
 The name of the attributes to set.  This is the name to be used in the constraints.
 </longdesc>
@@ -69,7 +69,7 @@ The name of the attributes to set.  This is the name to be used in the constrain
 <content type="string" default="pingd"/>
 </parameter>
 
-<parameter name="multiplier" unique="0">
+<parameter name="multiplier">
 <longdesc lang="en">
 The number by which to multiply the number of connected ping nodes by
 </longdesc>
@@ -77,7 +77,7 @@ The number by which to multiply the number of connected ping nodes by
 <content type="integer" default="1"/>
 </parameter>
 
-<parameter name="host_list" unique="0" required="1">
+<parameter name="host_list" required="1">
 <longdesc lang="en">
 A space separated list of ping nodes to count.
 </longdesc>
@@ -85,7 +85,7 @@ A space separated list of ping nodes to count.
 <content type="string" default=""/>
 </parameter>
 
-<parameter name="attempts" unique="0">
+<parameter name="attempts" reloadable="1">
 <longdesc lang="en">
 Number of ping attempts, per host, before declaring it dead
 </longdesc>
@@ -93,7 +93,7 @@ Number of ping attempts, per host, before declaring it dead
 <content type="integer" default="3"/>
 </parameter>
 
-<parameter name="timeout" unique="0">
+<parameter name="timeout" reloadable="1">
 <longdesc lang="en">
 How long, in seconds, to wait before declaring a ping lost
 </longdesc>
@@ -101,7 +101,7 @@ How long, in seconds, to wait before declaring a ping lost
 <content type="integer" default="2"/>
 </parameter>
 
-<parameter name="options" unique="0">
+<parameter name="options">
 <longdesc lang="en">
 A catch all for any other options that need to be passed to ping.
 </longdesc>
@@ -109,7 +109,7 @@ A catch all for any other options that need to be passed to ping.
 <content type="string" default=""/>
 </parameter>
 
-<parameter name="failure_score" unique="0">
+<parameter name="failure_score">
 <longdesc lang="en">
 Resource is failed if the score is less than failure_score.
 Default never fails.
@@ -118,7 +118,7 @@ Default never fails.
 <content type="integer" default=""/>
 </parameter>
 
-<parameter name="use_fping" unique="0">
+<parameter name="use_fping">
 <longdesc lang="en">
 Use fping rather than ping, if found. If set to 0, fping
 will not be used even if present.
@@ -127,7 +127,7 @@ will not be used even if present.
 <content type="boolean" default="1"/>
 </parameter>
 
-<parameter name="debug" unique="0">
+<parameter name="debug" reloadable="1">
 <longdesc lang="en">
 Enables to use default attrd_updater verbose logging on every call.
 </longdesc>
@@ -143,6 +143,7 @@ Enables to use default attrd_updater verbose logging on every call.
 <action name="monitor" depth="0"  timeout="60s" interval="10s"/>
 <action name="meta-data"  timeout="5s" />
 <action name="validate-all"  timeout="30s" />
+<action name="reload-agent"  timeout="20s" />
 </actions>
 </resource-agent>
 END
@@ -152,14 +153,14 @@ END
 
 ping_conditional_log() {
     level="$1"; shift
-    if [ "${OCF_RESKEY_debug}" = "true" ]; then
+    if [ $OCF_RESKEY_debug -gt 0 ]; then
         ocf_log "$level" "$*"
     fi
 }
 
 ping_usage() {
     cat <<END
-usage: $0 {start|stop|monitor|validate-all|meta-data}
+usage: $0 {start|stop|monitor|validate-all|reload-agent|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
@@ -178,7 +179,7 @@ ping_stop() {
 
     rm -f "${OCF_RESKEY_pidfile}"
 
-    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen" $attrd_options
+    attrd_updater -D -n "$OCF_RESKEY_name" -d "$OCF_RESKEY_dampen"
 
     return $OCF_SUCCESS
 }
@@ -195,14 +196,22 @@ ping_monitor() {
 }
 
 ping_validate() {
-    # Is the state directory writable?
-    state_dir=$(dirname "$OCF_RESKEY_pidfile")
-    touch "$state_dir/$$"
-    if [ $? -ne 0 ]; then
-        ocf_log err "Invalid location for 'state': $state_dir is not writable"
-        return $OCF_ERR_ARGS
+    # Host-specific checks
+    if [ "$OCF_CHECK_LEVEL" = "10" ]; then
+        
+        # Is the state directory writable?
+        state_dir=$(dirname "$OCF_RESKEY_pidfile")
+        touch "$state_dir/$$"
+        if [ $? -ne 0 ]; then
+            ocf_log err "Invalid location for 'state': $state_dir is not writable"
+            return $OCF_ERR_ARGS
+        fi
+        rm "$state_dir/$$"
+
+        # Does the ping binary exist?
+        check_binary ping
+
     fi
-    rm "$state_dir/$$"
 
 # Pidfile better be an absolute path
     case "$OCF_RESKEY_pidfile" in
@@ -225,11 +234,13 @@ ping_validate() {
         fi
     fi
 
-    check_binary ping
-
     return $OCF_SUCCESS
 }
 
+ping_reload_agent() {
+    # No action required
+    :;
+}
 
 fping_check() {
     p_exe=fping
@@ -244,19 +255,22 @@ fping_check() {
     timeout=$(expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts)
 
     cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
-    output=$($cmd 2>&1); rc=$?
-    active=$(echo "$output" | grep "is alive" | wc -l)
+    fping_output=$($cmd 2>&1); rc=$?
+    active=$(echo "$fping_output" | grep "is alive" | wc -l)
 
     case $rc in
         0)
+            if [ $OCF_RESKEY_debug -gt 1 ]; then
+                ping_conditional_log info "$fping_output"
+            fi
             ;;
         1)
-            for h in $(echo "$output" | grep "is unreachable" | awk '{print $1}'); do
-                ping_conditional_log warn "$h is inactive"
+            for h in $(echo "$fping_output" | grep "is unreachable" | awk '{print $1}'); do
+                ping_conditional_log warn "$h is inactive: $fping_output"
             done
             ;;
         *)
-            ocf_log err "Unexpected result for '$cmd' $rc: $(echo "$output" | tr '\n' ';')"
+            ocf_log err "Unexpected result for '$cmd' $rc: $(echo "$fping_output" | tr '\n' ';')"
             ;;
     esac
 
@@ -279,12 +293,17 @@ ping_check() {
             *:*) p_exe=ping6
         esac
 
-        p_out=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
+        ping_output=$($p_exe $p_args $OCF_RESKEY_options $host 2>&1); rc=$?
 
         case $rc in
-            0) active=$(expr $active + 1);;
-            1) ping_conditional_log warn "$host is inactive: $p_out";;
-            *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
+            0)
+                active=$(expr $active + 1)
+                if [ $OCF_RESKEY_debug -gt 1 ]; then
+                    ping_conditional_log info "$ping_output"
+                fi
+                ;;
+            1) ping_conditional_log warn "$host is inactive: $ping_output";;
+            *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $ping_output";;
         esac
     done
     return $active
@@ -302,9 +321,9 @@ ping_update() {
 
     score=$(expr $active \* $OCF_RESKEY_multiplier)
     if [ "$__OCF_ACTION" = "start" ] ; then
-        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen" $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -B "$score" -d "$OCF_RESKEY_dampen"
     else
-        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen" $attrd_options
+        attrd_updater -n "$OCF_RESKEY_name" -v "$score" -d "$OCF_RESKEY_dampen"
     fi
     rc=$?
     case $rc in
@@ -388,18 +407,14 @@ fi
 
 # Check the debug option
 case "${OCF_RESKEY_debug}" in
-    true|True|TRUE|1)    OCF_RESKEY_debug=true;;
-    false|False|FALSE|0) OCF_RESKEY_debug=false;;
+    true|True|TRUE|1)    OCF_RESKEY_debug=1;;
+    false|False|FALSE|0) OCF_RESKEY_debug=0;;
+    verbose|Verbose|VERBOSE|2) OCF_RESKEY_debug=2;;
     *)
-        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
+        ocf_log warn "Value for 'debug' is incorrect. Please specify 'true', 'false', or 'verbose', not: ${OCF_RESKEY_debug}"
         OCF_RESKEY_debug=false
         ;;
 esac
-
-attrd_options='-q'
-if [ "${OCF_RESKEY_debug}" = "true" ]; then
-    attrd_options=''
-fi
 
 case "$__OCF_ACTION" in
 meta-data)      meta_data
@@ -409,6 +424,7 @@ start)          ping_start;;
 stop)           ping_stop;;
 monitor)        ping_monitor;;
 validate-all)   ping_validate;;
+reload-agent)         ping_reload_agent;;
 usage|help)     ping_usage
                 exit $OCF_SUCCESS
                 ;;

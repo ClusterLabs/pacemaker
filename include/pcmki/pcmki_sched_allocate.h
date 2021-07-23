@@ -170,7 +170,6 @@ enum pe_graph_flags pcmk__multi_update_actions(pe_action_t *first,
                                                enum pe_ordering type,
                                                pe_working_set_t *data_set);
 
-gboolean update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char *source, int line);
 gboolean update_action(pe_action_t *action, pe_working_set_t *data_set);
 void complex_set_cmds(pe_resource_t * rsc);
 void pcmk__log_transition_summary(const char *filename);

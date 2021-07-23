@@ -66,6 +66,11 @@ LAST_RELEASE	?= $(shell git tag -l | grep Pacemaker | sort -Vr | grep -v rc | he
 endif
 NEXT_RELEASE	?= $(shell echo $(LAST_RELEASE) | awk -F. '/[0-9]+\./{$$3+=1;OFS=".";print $$1,$$2,$$3}')
 
+# indent target: Limit indent to these directories
+INDENT_DIRS	?= .
+
+# indent target: Extra options to pass to indent
+INDENT_OPTS	?=
 
 # This Makefile can create 2 types of distributions:
 #
@@ -418,16 +423,50 @@ changelog:
 	@printf "\n">> ChangeLog
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 
-DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
+INDENT_IGNORE_PATHS	= daemons/controld/controld_fsa.h	\
+			  lib/gnu/*
+INDENT_PACEMAKER_STYLE	= --blank-lines-after-declarations		\
+			  --blank-lines-after-procedures		\
+			  --braces-after-func-def-line			\
+			  --braces-on-if-line				\
+			  --braces-on-struct-decl-line			\
+			  --break-before-boolean-operator		\
+			  --case-brace-indentation4			\
+			  --case-indentation4				\
+			  --comment-indentation0			\
+			  --continuation-indentation4			\
+			  --continue-at-parentheses			\
+			  --cuddle-do-while				\
+			  --cuddle-else					\
+			  --declaration-comment-column0			\
+			  --declaration-indentation1			\
+			  --else-endif-column0				\
+			  --honour-newlines				\
+			  --indent-label0				\
+			  --indent-level4				\
+			  --line-comments-indentation0			\
+			  --line-length80				\
+			  --no-blank-lines-after-commas			\
+			  --no-comment-delimiters-on-blank-lines	\
+			  --no-space-after-function-call-names		\
+			  --no-space-after-parentheses			\
+			  --no-tabs					\
+			  --preprocessor-indentation2			\
+			  --procnames-start-lines			\
+			  --space-after-cast				\
+			  --start-left-side-of-comments			\
+			  --swallow-optional-blank-lines		\
+			  --tab-size8
 
 indent:
-	find . -name "*.[ch]" -exec ./p-indent \{\} \;
-	git co HEAD $(DO_NOT_INDENT)
+	VERSION_CONTROL=none					\
+		find $(INDENT_DIRS) -type f -name "*.[ch]"	\
+		$(INDENT_IGNORE_PATHS:%= ! -path '%')		\
+		-exec indent $(INDENT_PACEMAKER_STYLE) $(INDENT_OPTS) \{\} \;
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
 
-CLANG_analyzer = $(shell which scan-build)
 CLANG_checkers = 
 
 # Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
@@ -444,8 +483,12 @@ cppcheck:
 	cppcheck $(CPPCHECK_ARGS) $(BASE_CPPCHECK_ARGS) replace lib daemons tools
 
 clang:
-	test -e $(CLANG_analyzer)
-	scan-build $(CLANG_checkers:%=-enable-checker %) $(MAKE) $(AM_MAKEFLAGS) clean all
+	OUT=$$(scan-build $(CLANG_checkers:%=-enable-checker %)		\
+		$(MAKE) $(AM_MAKEFLAGS) CFLAGS="-std=c99 $(CFLAGS)"	\
+		clean all 2>&1);					\
+	REPORT=$$(echo "$$OUT"						\
+		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
+	[ -z "$$REPORT" ] && echo "$$OUT" || scan-view "$$REPORT"
 
 # V3	= scandir unsetenv alphasort xalloc
 # V2	= setenv strerror strchrnul strndup
@@ -464,5 +507,22 @@ gnulib-update:
 	  --source-base=lib/gnu --lgpl=2 --no-vc-files --no-conditional-dependencies \
 	  $(GNU_MODS_AVOID:%=--avoid %) --import $(GNU_MODS)
 
-ancillary-clean: rpm-clean mock-clean coverity-clean
+## Coverage/profiling
+
+.PHONY: coverage
+coverage: core
+	-find . -name "*.gcda" -exec rm -f \{\} \;
+	lcov --no-external --exclude='*_test.c' -c -i -d . -o pacemaker_base.info
+	$(MAKE) $(AM_MAKEFLAGS) check
+	lcov --no-external --exclude='*_test.c' -c -d . -o pacemaker_test.info
+	lcov -a pacemaker_base.info -a pacemaker_test.info -o pacemaker_total.info
+	genhtml pacemaker_total.info -o coverage -s
+
+.PHONY: coverage-clean
+coverage-clean:
+	-rm -f pacemaker_*.info
+	-rm -rf coverage
+	-find . \( -name "*.gcno" -o -name "*.gcda" \) -exec rm -f \{\} \;
+
+ancillary-clean: rpm-clean mock-clean coverity-clean coverage-clean
 	-rm -f $(TARFILE)

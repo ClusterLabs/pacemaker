@@ -842,7 +842,7 @@ if test x"${XSLTPROC}" != x""; then
                    | sed -n 's|^file://||p;q')
     if test x"${MANPAGE_XSLT}" = x""; then
         DIRS=$(find "${datadir}" -name $(basename $(dirname ${DOCBOOK_XSL_PATH})) \
-               -type d | LC_ALL=C sort)
+               -type d 2>/dev/null | LC_ALL=C sort)
         XSLT=$(basename ${DOCBOOK_XSL_PATH})
         for d in ${DIRS}
         do
@@ -1225,6 +1225,7 @@ AS_IF([test $with_profiling -ne $DISABLED],
       ]
 )
 AC_DEFINE_UNQUOTED([SUPPORT_PROFILING], [$with_profiling], [Support profiling])
+AM_CONDITIONAL([BUILD_PROFILING], [test "$with_profiling" = "$REQUIRED"])
 
 dnl ========================================================================
 dnl    Cluster infrastructure - LibQB
@@ -1768,7 +1769,8 @@ dnl
 dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
 dnl    compiler and linker flags (respectively) for daemon programs
 dnl    (pacemakerd, pacemaker-attrd, pacemaker-controld, pacemaker-execd,
-dnl    cib, stonithd, pacemaker-remoted, pacemaker-schedulerd)
+dnl    pacemaker-based, pacemaker-fenced, pacemaker-remoted,
+dnl    pacemaker-schedulerd)
 dnl
 dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
 dnl    compiler and linker flags (respectively) for libraries linked
@@ -1976,6 +1978,7 @@ CONFIG_FILES_EXEC([cts/cts-cli],
                   [extra/resources/SysInfo],
                   [extra/resources/ifspeed],
                   [extra/resources/o2cb],
+                  [maint/bumplibs],
                   [tools/crm_failcount],
                   [tools/crm_master],
                   [tools/crm_report],
@@ -1988,7 +1991,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/Makefile                                        \
                 cts/benchmark/Makefile                              \
                 cts/lab/Makefile                                    \
-                cts/lab/CTS.py                                      \
                 cts/lab/CTSvars.py                                  \
                 cts/scheduler/Makefile                              \
                 cts/scheduler/dot/Makefile                          \
@@ -2047,6 +2049,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/cmdline/Makefile                   \
                 lib/common/tests/flags/Makefile                     \
                 lib/common/tests/operations/Makefile                \
+                lib/common/tests/results/Makefile                   \
                 lib/common/tests/strings/Makefile                   \
                 lib/common/tests/utils/Makefile                     \
                 lib/common/tests/xpath/Makefile                     \

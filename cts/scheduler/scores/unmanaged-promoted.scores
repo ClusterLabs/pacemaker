@@ -120,11 +120,11 @@ pcmk__native_allocate: r192.168.122.126 allocation score on pcmk-2: -INFINITY
 pcmk__native_allocate: r192.168.122.126 allocation score on pcmk-3: -INFINITY
 pcmk__native_allocate: r192.168.122.126 allocation score on pcmk-4: -INFINITY
 pcmk__native_allocate: r192.168.122.127 allocation score on pcmk-1: -INFINITY
-pcmk__native_allocate: r192.168.122.127 allocation score on pcmk-2: INFINITY
+pcmk__native_allocate: r192.168.122.127 allocation score on pcmk-2: -INFINITY
 pcmk__native_allocate: r192.168.122.127 allocation score on pcmk-3: -INFINITY
 pcmk__native_allocate: r192.168.122.127 allocation score on pcmk-4: -INFINITY
 pcmk__native_allocate: r192.168.122.128 allocation score on pcmk-1: -INFINITY
-pcmk__native_allocate: r192.168.122.128 allocation score on pcmk-2: INFINITY
+pcmk__native_allocate: r192.168.122.128 allocation score on pcmk-2: -INFINITY
 pcmk__native_allocate: r192.168.122.128 allocation score on pcmk-3: -INFINITY
 pcmk__native_allocate: r192.168.122.128 allocation score on pcmk-4: -INFINITY
 pcmk__native_allocate: rsc_pcmk-1 allocation score on pcmk-1: INFINITY

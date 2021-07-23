@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -95,6 +95,17 @@ pcmk__cs_err_str(int error)
 }
 
 #  if SUPPORT_COROSYNC
+
+#if 0
+/* This is the new way to do it, but we still support all Corosync 2 versions,
+ * and this isn't always available. A better alternative here would be to check
+ * for support in the configure script and enable this conditionally.
+ */
+#define pcmk__init_cmap(handle) cmap_initialize_map((handle), CMAP_MAP_ICMAP)
+#else
+#define pcmk__init_cmap(handle) cmap_initialize(handle)
+#endif
+
 char *pcmk__corosync_cluster_name(void);
 bool pcmk__corosync_add_nodes(xmlNode *xml_parent);
 #  endif

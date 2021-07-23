@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm-simulate"/>
+    </start>
+
+    <define name="element-crm-simulate">
+        <choice>
+            <ref name="timings-list" />
+            <group>
+                <ref name="cluster-status" />
+                <optional>
+                    <ref name="modifications-list" />
+                </optional>
+                <optional>
+                    <ref name="allocations-utilizations-list" />
+                </optional>
+                <optional>
+                    <ref name="action-list" />
+                </optional>
+                <optional>
+                    <ref name="cluster-injected-actions-list" />
+                    <ref name="revised-cluster-status" />
+                </optional>
+            </group>
+        </choice>
+    </define>
+
+    <define name="allocations-utilizations-list">
+        <choice>
+            <element name="allocations">
+                <zeroOrMore>
+                    <choice>
+                        <ref name="element-allocation" />
+                        <ref name="element-promotion" />
+                    </choice>
+                </zeroOrMore>
+            </element>
+            <element name="utilizations">
+                <zeroOrMore>
+                    <choice>
+                        <ref name="element-capacity" />
+                        <ref name="element-utilization" />
+                    </choice>
+                </zeroOrMore>
+            </element>
+            <element name="allocations_utilizations">
+                <zeroOrMore>
+                    <choice>
+                        <ref name="element-allocation" />
+                        <ref name="element-promotion" />
+                        <ref name="element-capacity" />
+                        <ref name="element-utilization" />
+                    </choice>
+                </zeroOrMore>
+            </element>
+        </choice>
+    </define>
+
+    <define name="cluster-status">
+        <element name="cluster_status">
+            <ref name="nodes-list" />
+            <ref name="resources-list" />
+            <optional>
+                <ref name="node-attributes-list" />
+            </optional>
+            <optional>
+                <externalRef href="node-history-2.12.rng" />
+            </optional>
+            <optional>
+                <ref name="failures-list" />
+            </optional>
+        </element>
+    </define>
+
+    <define name="modifications-list">
+        <element name="modifications">
+            <optional>
+                <attribute name="quorum"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="watchdog"> <text /> </attribute>
+            </optional>
+            <zeroOrMore>
+                <ref name="element-inject-modify-node" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-inject-modify-ticket" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-inject-spec" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-inject-attr" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="revised-cluster-status">
+        <element name="revised_cluster_status">
+            <ref name="nodes-list" />
+            <ref name="resources-list" />
+            <optional>
+                <ref name="node-attributes-list" />
+            </optional>
+            <optional>
+                <ref name="failures-list" />
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-inject-attr">
+        <element name="inject_attr">
+            <attribute name="cib_node"> <text /> </attribute>
+            <attribute name="name"> <text /> </attribute>
+            <attribute name="node_path"> <text /> </attribute>
+            <attribute name="value"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-inject-modify-node">
+        <element name="modify_node">
+            <attribute name="action"> <text /> </attribute>
+            <attribute name="node"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-inject-spec">
+        <element name="inject_spec">
+            <attribute name="spec"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-inject-modify-ticket">
+        <element name="modify_ticket">
+            <attribute name="action"> <text /> </attribute>
+            <attribute name="ticket"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="cluster-injected-actions-list">
+        <element name="transition">
+            <zeroOrMore>
+                <ref name="element-injected-actions" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="node-attributes-list">
+        <element name="node_attributes">
+            <zeroOrMore>
+                <externalRef href="node-attrs-2.8.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="failures-list">
+        <element name="failures">
+            <zeroOrMore>
+                <externalRef href="failure-2.8.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="nodes-list">
+        <element name="nodes">
+            <zeroOrMore>
+                <externalRef href="nodes-2.8.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="resources-list">
+        <element name="resources">
+            <zeroOrMore>
+                <externalRef href="resources-2.4.rng" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="timings-list">
+        <element name="timings">
+            <zeroOrMore>
+                <ref name="element-timing" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="action-list">
+        <element name="actions">
+            <zeroOrMore>
+                <ref name="element-node-action" />
+            </zeroOrMore>
+            <zeroOrMore>
+                <ref name="element-rsc-action" />
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-allocation">
+        <element name="node_weight">
+            <attribute name="function"> <text /> </attribute>
+            <attribute name="node"> <text /> </attribute>
+            <externalRef href="../score.rng" />
+            <optional>
+                <attribute name="id"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-capacity">
+        <element name="capacity">
+            <attribute name="comment"> <text /> </attribute>
+            <attribute name="node"> <text /> </attribute>
+            <zeroOrMore>
+                <element>
+                    <anyName />
+                    <text />
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <define name="element-inject-cluster-action">
+        <element name="cluster_action">
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="task"> <text /> </attribute>
+            <optional>
+                <attribute name="id"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-injected-actions">
+        <choice>
+            <ref name="element-inject-cluster-action" />
+            <ref name="element-inject-fencing-action" />
+            <ref name="element-inject-pseudo-action" />
+            <ref name="element-inject-rsc-action" />
+        </choice>
+    </define>
+
+    <define name="element-inject-fencing-action">
+        <element name="fencing_action">
+            <attribute name="op"> <text /> </attribute>
+            <attribute name="target"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-node-action">
+        <element name="node_action">
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="reason"> <text /> </attribute>
+            <attribute name="task"> <text /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-promotion">
+        <element name="promotion_score">
+            <attribute name="id"> <text /> </attribute>
+            <externalRef href="../score.rng" />
+            <optional>
+                <attribute name="node"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-inject-pseudo-action">
+        <element name="pseudo_action">
+            <attribute name="task"> <text /> </attribute>
+            <optional>
+                <attribute name="node"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-inject-rsc-action">
+        <element name="rsc_action">
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="op"> <text /> </attribute>
+            <attribute name="resource"> <text /> </attribute>
+            <optional>
+                <attribute name="interval"> <data type="integer" /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-timing">
+        <element name="timing">
+            <attribute name="file"> <text /> </attribute>
+            <attribute name="duration"> <data type="double" /> </attribute>
+        </element>
+    </define>
+
+    <define name="element-rsc-action">
+        <element name="rsc_action">
+            <attribute name="action"> <text /> </attribute>
+            <attribute name="resource"> <text /> </attribute>
+            <optional>
+                <attribute name="blocked"> <data type="boolean" /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="dest"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="next-role"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="node"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="reason"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="role"> <text /> </attribute>
+            </optional>
+            <optional>
+                <attribute name="source"> <text /> </attribute>
+            </optional>
+        </element>
+    </define>
+
+    <define name="element-utilization">
+        <element name="utilization">
+            <attribute name="function"> <text /> </attribute>
+            <attribute name="node"> <text /> </attribute>
+            <attribute name="resource"> <text /> </attribute>
+            <zeroOrMore>
+                <element>
+                    <anyName />
+                    <text />
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+</grammar>

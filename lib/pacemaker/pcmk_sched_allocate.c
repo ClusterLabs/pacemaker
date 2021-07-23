@@ -118,34 +118,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      }
 };
 
-gboolean
-update_action_flags(pe_action_t * action, enum pe_action_flags flags, const char *source, int line)
-{
-    static unsigned long calls = 0;
-    gboolean changed = FALSE;
-    gboolean clear = pcmk_is_set(flags, pe_action_clear);
-    enum pe_action_flags last = action->flags;
-
-    if (clear) {
-        pe__clear_action_flags_as(source, line, action, flags);
-    } else {
-        pe__set_action_flags_as(source, line, action, flags);
-    }
-
-    if (last != action->flags) {
-        calls++;
-        changed = TRUE;
-        /* Useful for tracking down _who_ changed a specific flag */
-        /* CRM_ASSERT(calls != 534); */
-        pe__clear_raw_action_flags(flags, "action update", pe_action_clear);
-        crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x, %lu, %s)",
-                  action->uuid, action->node ? action->node->details->uname : "[none]",
-                  clear ? "un-" : "", flags, last, action->flags, calls, source);
-    }
-
-    return changed;
-}
-
 static gboolean
 check_rsc_parameters(pe_resource_t * rsc, pe_node_t * node, xmlNode * rsc_entry,
                      gboolean active_here, pe_working_set_t * data_set)
@@ -1560,8 +1532,7 @@ fence_guest(pe_node_t *node, pe_working_set_t *data_set)
      * against, and the controller can always detect it.
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", FALSE, data_set);
-    update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
-                        __func__, __LINE__);
+    pe__set_action_flags(stonith_op, pe_action_pseudo|pe_action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
      * it is restarted, so we always order pseudo-fencing after stop, not start
@@ -1846,8 +1817,7 @@ rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
             order_actions(lh_action, rh_action_iter, type);
 
         } else if (type & pe_order_implies_then) {
-            update_action_flags(rh_action_iter, pe_action_runnable | pe_action_clear,
-                                __func__, __LINE__);
+            pe__clear_action_flags(rh_action_iter, pe_action_runnable);
             crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
         } else {
             crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);

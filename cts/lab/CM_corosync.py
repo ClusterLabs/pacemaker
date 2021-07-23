@@ -1,21 +1,21 @@
 """ Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)
 """
 
-__copyright__ = "Copyright 2007-2020 the Pacemaker project contributors"
+__copyright__ = "Copyright 2007-2021 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from cts.CTSvars import *
-from cts.CM_common  import crm_common
+from cts.ClusterManager import ClusterManager
 from cts.CTS     import Process
 from cts.patterns    import PatternSelector
 
-class crm_corosync(crm_common):
+class crm_corosync(ClusterManager):
     '''
     Corosync version 2 cluster manager class
     '''
     def __init__(self, Environment, randseed=None, name=None):
         if not name: name="crm-corosync"
-        crm_common.__init__(self, Environment, randseed=randseed, name=name)
+        ClusterManager.__init__(self, Environment, randseed=randseed)
 
         self.fullcomplist = {}
         self.templates = PatternSelector(self.name)

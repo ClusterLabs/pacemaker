@@ -1246,7 +1246,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
 }
 
 #define waiting_for_starts(d, r, h) ((d != NULL) || \
-                                    (resource_is_running_on((r), (h)) == FALSE))
+                                    (!resource_is_running_on((r), (h))))
 
 /*!
  * \internal
@@ -1285,7 +1285,7 @@ cli_resource_restart(pcmk__output_t *out, pe_resource_t *rsc, const char *host,
 
     pe_working_set_t *data_set = NULL;
 
-    if(resource_is_running_on(rsc, host) == FALSE) {
+    if (!resource_is_running_on(rsc, host)) {
         const char *id = rsc->clone_name?rsc->clone_name:rsc->id;
         if(host) {
             out->err(out, "%s is not running on %s and so cannot be restarted", id, host);
@@ -1674,22 +1674,58 @@ wait_till_stable(pcmk__output_t *out, int timeout_ms, cib_t * cib)
     return rc;
 }
 
+static const char *
+get_action(const char *rsc_action) {
+    const char *action = NULL;
+
+    if (pcmk__str_eq(rsc_action, "validate", pcmk__str_casei)) {
+        action = "validate-all";
+
+    } else if (pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
+        action = "monitor";
+
+    } else if (pcmk__strcase_any_of(rsc_action, "force-start", "force-stop",
+                                    "force-demote", "force-promote", NULL)) {
+        action = rsc_action+6;
+    } else {
+        action = rsc_action;
+    }
+
+    return action;
+}
+
 crm_exit_t
 cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
-                                 const char *rsc_type, const char *action,
+                                 const char *rsc_type, const char *rsc_action,
                                  GHashTable *params, GHashTable *override_hash,
-                                 int timeout_ms, int resource_verbose, gboolean force)
+                                 int timeout_ms, int resource_verbose, gboolean force,
+                                 int check_level)
 {
+    const char *action = NULL;
     GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
     if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         out->err(out, "Sorry, the %s option doesn't support %s resources yet",
-                 action, rsc_class);
+                 rsc_action, rsc_class);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+    } else if (pcmk__strcase_any_of(rsc_class, PCMK_RESOURCE_CLASS_SYSTEMD,
+                PCMK_RESOURCE_CLASS_UPSTART, PCMK_RESOURCE_CLASS_NAGIOS, NULL)) {
+        out->err(out, "Sorry, the %s option doesn't support %s resources",
+                 rsc_action, rsc_class);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
+    } else if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE,
+                pcmk__str_casei) && !pcmk__str_eq(
+                resources_find_service_class(rsc_name), PCMK_RESOURCE_CLASS_LSB,
+                pcmk__str_casei)) {
+        out->err(out, "Sorry, the %s option doesn't support %s resources",
+                 rsc_action, resources_find_service_class(rsc_name));
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
+
+    action = get_action(rsc_action);
 
     /* If no timeout was provided, grab the default. */
     if (timeout_ms == 0) {
@@ -1703,6 +1739,12 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
+    if (check_level >= 0) {
+        char *level = crm_strdup_printf("%d", check_level);
+        setenv("OCF_CHECK_LEVEL", level, 1);
+        free(level);
+    }
+
     /* resources_action_create frees the params hash table it's passed, but we
      * may need to reuse it in a second call to resources_action_create.  Thus
      * we'll make a copy here so that gets freed and the original remains for
@@ -1710,14 +1752,14 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
      */
     params_copy = pcmk__str_table_dup(params);
 
-    op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
-                                 timeout_ms, params_copy, 0);
+    op = resources_action_create(rsc_name ? rsc_name : "test", rsc_class, rsc_prov,
+                                 rsc_type, action, 0, timeout_ms, params_copy, 0);
     if (op == NULL) {
         /* Re-run with stderr enabled so we can display a sane error message */
         crm_enable_stderr(TRUE);
         params_copy = pcmk__str_table_dup(params);
-        op = resources_action_create(rsc_name, rsc_class, rsc_prov, rsc_type, action, 0,
-                                     timeout_ms, params_copy, 0);
+        op = resources_action_create(rsc_name ? rsc_name : "test", rsc_class, rsc_prov,
+                                     rsc_type, action, 0, timeout_ms, params_copy, 0);
 
         /* Callers of cli_resource_execute expect that the params hash table will
          * be freed.  That function uses this one, so for that reason and for
@@ -1749,8 +1791,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 
         g_hash_table_iter_init(&iter, override_hash);
         while (g_hash_table_iter_next(&iter, (gpointer *) & name, (gpointer *) & value)) {
-            out->info(out, "Overriding the cluster configuration for '%s' with '%s' = '%s'",
-                      rsc_name, name, value);
             g_hash_table_replace(op->params, strdup(name), strdup(value));
         }
     }
@@ -1758,28 +1798,13 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     if (services_action_sync(op)) {
         exit_code = op->rc;
 
-        if (op->status == PCMK_LRM_OP_DONE) {
-            out->info(out, "Operation %s for %s (%s:%s:%s) returned: '%s' (%d)",
-                      action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                      services_ocf_exitcode_str(op->rc), op->rc);
-        } else {
-            out->err(out, "Operation %s for %s (%s:%s:%s) failed: '%s' (%d)",
-                     action, rsc_name, rsc_class, rsc_prov ? rsc_prov : "", rsc_type,
-                     services_lrm_status_str(op->status), op->status);
-        }
-
-        /* hide output for validate-all if not in verbose */
-        if (resource_verbose == 0 && pcmk__str_eq(action, "validate-all", pcmk__str_casei))
-            goto done;
-
-        if (op->stdout_data || op->stderr_data) {
-            out->subprocess_output(out, op->rc, op->stdout_data, op->stderr_data);
-        }
+        out->message(out, "resource-agent-action", resource_verbose, rsc_class,
+                     rsc_prov, rsc_type, rsc_name, rsc_action, override_hash, op->rc,
+                     op->status, op->stdout_data, op->stderr_data);
     } else {
         exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
     }
 
-done:
     services_action_free(op);
     /* See comment above about why we free params here. */
     g_hash_table_destroy(params);
@@ -1790,7 +1815,7 @@ crm_exit_t
 cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
                      int timeout_ms, cib_t * cib, pe_working_set_t *data_set,
-                     int resource_verbose, gboolean force)
+                     int resource_verbose, gboolean force, int check_level)
 {
     pcmk__output_t *out = data_set->priv;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -1798,27 +1823,15 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
     const char *rtype = NULL;
     const char *rprov = NULL;
     const char *rclass = NULL;
-    const char *action = NULL;
     GHashTable *params = NULL;
 
-    if (pcmk__str_eq(rsc_action, "validate", pcmk__str_casei)) {
-        action = "validate-all";
-
-    } else if (pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
-        action = "monitor";
-
-    } else if (pcmk__str_eq(rsc_action, "force-stop", pcmk__str_casei)) {
-        action = rsc_action+6;
-
-    } else if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
+    if (pcmk__strcase_any_of(rsc_action, "force-start", "force-demote",
                                     "force-promote", NULL)) {
-        action = rsc_action+6;
-
         if(pe_rsc_is_clone(rsc)) {
             GList *nodes = cli_resource_search(rsc, requested_name, data_set);
             if(nodes != NULL && force == FALSE) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
-                         action, rsc->id);
+                         rsc_action, rsc->id);
                 out->err(out, "Try setting target-role=Stopped first or specifying "
                          "the force option");
                 return CRM_EX_UNSAFE;
@@ -1826,9 +1839,6 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
             g_list_free_full(nodes, free);
         }
-
-    } else {
-        action = rsc_action;
     }
 
     if(pe_rsc_is_clone(rsc)) {
@@ -1838,6 +1848,9 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
 
     if(rsc->variant == pe_group) {
         out->err(out, "Sorry, the %s option doesn't support group resources", rsc_action);
+        return CRM_EX_UNIMPLEMENT_FEATURE;
+    } else if (rsc->variant == pe_container || pe_rsc_is_bundled(rsc)) {
+        out->err(out, "Sorry, the %s option doesn't support bundled resources", rsc_action);
         return CRM_EX_UNIMPLEMENT_FEATURE;
     }
 
@@ -1849,14 +1862,14 @@ cli_resource_execute(pe_resource_t *rsc, const char *requested_name,
                                       data_set);
 
     if (timeout_ms == 0) {
-        timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
+        timeout_ms = pe_get_configured_timeout(rsc, get_action(rsc_action), data_set);
     }
 
     rid = pe_rsc_is_anon_clone(rsc->parent)? requested_name : rsc->id;
 
-    exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, action,
+    exit_code = cli_resource_execute_from_params(out, rid, rclass, rprov, rtype, rsc_action,
                                                  params, override_hash, timeout_ms,
-                                                 resource_verbose, force);
+                                                 resource_verbose, force, check_level);
     return exit_code;
 }
 

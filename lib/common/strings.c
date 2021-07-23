@@ -872,14 +872,30 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
  * Search \p lst for \p s, taking case into account.  As a special case,
  * if "*" is the only element of \p lst, the search is successful.
  *
- * \param[in]  lst  List to search
- * \param[in]  s    String to search for
+ * Behavior can be changed with various flags:
+ *
+ * - pcmk__str_casei - By default, comparisons are done taking case into
+ *                     account.  This flag makes comparisons case-insensitive.
+ * - pcmk__str_null_matches - If the input string is NULL, return TRUE.
+ *
+ * \note The special "*" matching rule takes precedence over flags.  In
+ *       particular, "*" will match a NULL input string even without
+ *       pcmk__str_null_matches being specified.
+ *
+ * \note No matter what input string or flags are provided, an empty
+ *       list will always return FALSE.
+ *
+ * \param[in]  lst   List to search
+ * \param[in]  s     String to search for
+ * \param[in]  flags A bitfield of pcmk__str_flags to modify operation
  *
  * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
  */
 gboolean
-pcmk__str_in_list(GList *lst, const gchar *s)
+pcmk__str_in_list(GList *lst, const gchar *s, uint32_t flags)
 {
+    GCompareFunc fn;
+
     if (lst == NULL) {
         return FALSE;
     }
@@ -888,7 +904,17 @@ pcmk__str_in_list(GList *lst, const gchar *s)
         return TRUE;
     }
 
-    return g_list_find_custom(lst, s, (GCompareFunc) strcmp) != NULL;
+    if (s == NULL) {
+        return pcmk_is_set(flags, pcmk__str_null_matches);
+    }
+
+    if (pcmk_is_set(flags, pcmk__str_casei)) {
+        fn = (GCompareFunc) strcasecmp;
+    } else {
+        fn = (GCompareFunc) strcmp;
+    }
+
+    return g_list_find_custom(lst, s, fn) != NULL;
 }
 
 static bool

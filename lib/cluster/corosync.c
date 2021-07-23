@@ -121,7 +121,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         retries = 0;
         crm_trace("Initializing CMAP connection");
         do {
-            rc = cmap_initialize(&local_handle);
+            rc = pcmk__init_cmap(&local_handle);
             if (rc != CS_OK) {
                 retries++;
                 crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
@@ -330,10 +330,6 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
     }
 }
 
-quorum_callbacks_t quorum_callbacks = {
-    .quorum_notify_fn = quorum_notification_cb,
-};
-
 /*!
  * \internal
  * \brief Connect to Corosync quorum service
@@ -361,7 +357,27 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
 
     crm_debug("Configuring Pacemaker to obtain quorum from Corosync");
 
-    rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks, &quorum_type);
+    {
+#if 0
+        // New way but not supported by all Corosync 2 versions
+        quorum_model_v0_data_t quorum_model_data = {
+            .model = QUORUM_MODEL_V0,
+            .quorum_notify_fn = quorum_notification_cb,
+        };
+
+        rc = quorum_model_initialize(&pcmk_quorum_handle, QUORUM_MODEL_V0,
+                                     (quorum_model_data_t *) &quorum_model_data,
+                                     &quorum_type, NULL);
+#else
+        quorum_callbacks_t quorum_callbacks = {
+            .quorum_notify_fn = quorum_notification_cb,
+        };
+
+        rc = quorum_initialize(&pcmk_quorum_handle, &quorum_callbacks,
+                               &quorum_type);
+#endif
+    }
+
     if (rc != CS_OK) {
         crm_err("Could not connect to the Quorum API: %s (%d)",
                 cs_strerror(rc), rc);
@@ -482,7 +498,7 @@ pcmk__corosync_detect(void)
     int rc = CS_OK;
     cmap_handle_t handle;
 
-    rc = cmap_initialize(&handle);
+    rc = pcmk__init_cmap(&handle);
 
     switch(rc) {
         case CS_OK:
@@ -554,7 +570,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
     int rv;
 
     do {
-        rc = cmap_initialize(&cmap_handle);
+        rc = pcmk__init_cmap(&cmap_handle);
         if (rc != CS_OK) {
             retries++;
             crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
@@ -663,7 +679,7 @@ pcmk__corosync_cluster_name(void)
     pid_t found_pid = 0;
     int rv;
 
-    rc = cmap_initialize(&handle);
+    rc = pcmk__init_cmap(&handle);
     if (rc != CS_OK) {
         crm_info("Failed to initialize the cmap API: %s (%d)",
                  cs_strerror(rc), rc);
@@ -733,7 +749,7 @@ pcmk__corosync_has_nodelist(void)
 
     // Connect to CMAP
     do {
-        cs_rc = cmap_initialize(&cmap_handle);
+        cs_rc = pcmk__init_cmap(&cmap_handle);
         if (cs_rc != CS_OK) {
             retries++;
             crm_debug("CMAP connection failed: %s (rc=%d, retrying in %ds)",

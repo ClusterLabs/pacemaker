@@ -15,8 +15,8 @@ functionality of these tools more easily understood.
       
 Users may be interested in other parts of the
 `Pacemaker documentation set <https://www.clusterlabs.org/pacemaker/doc/>`_,
-such as 'Clusters from Scratch', a step-by-step guide to setting up an
-example cluster, and 'Pacemaker Administration', a guide to maintaining a
+such as *Clusters from Scratch*, a step-by-step guide to setting up an
+example cluster, and *Pacemaker Administration*, a guide to maintaining a
 cluster.
 
 .. include:: ../shared/pacemaker-intro.rst

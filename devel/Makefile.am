@@ -65,3 +65,11 @@ cocci-test:
 	for f in coccinelle/test/*.c; do \
 		coccinelle/test/testrunner.sh $$f; \
 	done
+
+# Scratch file for ad-hoc testing
+EXTRA_PROGRAMS		= scratch
+nodist_scratch_SOURCES	= scratch.c
+scratch_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
+
+clean-local:
+	-rm -f $(EXTRA_PROGRAMS)

@@ -242,7 +242,7 @@ static GOptionEntry deprecated_entries[] = {
       NULL, NULL
     },
 
-    { "get-value", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, value_cb,
+    { "get-value", 0, G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, value_cb,
       NULL, NULL
     },
 
@@ -312,7 +312,7 @@ main(int argc, char **argv)
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "DGNPdilnpstv");
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "NPUdilnpstv");
     GOptionContext *context = build_arg_context(args, &output_group);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {

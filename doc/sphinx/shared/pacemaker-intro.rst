@@ -94,7 +94,7 @@ Pacemaker itself is composed of multiple daemons that work together:
    :alt: Pacemaker software components
    :align: center
 
-The Pacemaker master process (pacemakerd) spawns all the other daemons, and
+Pacemaker's main process (pacemakerd) spawns all the other daemons, and
 respawns them if they unexpectedly exit.
 
 The *Cluster Information Base* (CIB) is an
@@ -124,7 +124,7 @@ consistent view of the cluster membership and orchestrating all the other
 components.
 
 Pacemaker centralizes cluster decision-making by electing one of the controller
-instances as the 'Designated Controller' ('DC'). Should the elected DC process
+instances as the *Designated Controller* (*DC*). Should the elected DC process
 (or the node it is on) fail, a new one is quickly established. The DC responds
 to cluster events by taking a current snapshot of the CIB, feeding it to the
 scheduler, then asking the executors (either directly on the local node, or via

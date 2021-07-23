@@ -868,7 +868,9 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= End test: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Remove a resource meta attribute
 =#=#=#= Begin test: Create another resource meta attribute =#=#=#=
-Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Stopped
+<pacemaker-result api-version="X" request="crm_resource -r dummy --meta -p target-role -v Stopped --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
 =#=#=#= End test: Create another resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Create another resource meta attribute
 =#=#=#= Begin test: Show why a resource is not running =#=#=#=
@@ -877,7 +879,9 @@ Configuration specifies 'dummy' should remain stopped
 =#=#=#= End test: Show why a resource is not running - OK (0) =#=#=#=
 * Passed: crm_resource   - Show why a resource is not running
 =#=#=#= Begin test: Remove another resource meta attribute =#=#=#=
-Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
+<pacemaker-result api-version="X" request="crm_resource -r dummy --meta -d target-role --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
 =#=#=#= End test: Remove another resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Remove another resource meta attribute
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
@@ -961,6 +965,15 @@ Full List of Resources:
 </cib>
 =#=#=#= End test: List the configured resources - OK (0) =#=#=#=
 * Passed: crm_resource   - List the configured resources
+=#=#=#= Begin test: List the configured resources in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -L --output-as=xml">
+  <resources>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+  </resources>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List the configured resources in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - List the configured resources in XML
 =#=#=#= Begin test: List IDs of instantiated resources =#=#=#=
 dummy
 =#=#=#= End test: List IDs of instantiated resources - OK (0) =#=#=#=
@@ -2010,9 +2023,9 @@ Locations:
 =#=#=#= End test: Show constraints on a resource - OK (0) =#=#=#=
 * Passed: crm_resource   - Show constraints on a resource
 =#=#=#= Begin test: Ban dummy from node2 =#=#=#=
-WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score of -INFINITY for resource dummy on node2.
-	This will prevent dummy from running on node2 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
-	This will be the case even if node2 is the last node in the cluster
+<pacemaker-result api-version="X" request="crm_resource -r dummy -B -N node2 --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
 =#=#=#= Current cib after: Ban dummy from node2 =#=#=#=
 <cib epoch="25" num_updates="0" admin_epoch="0">
   <configuration>
@@ -2199,6 +2212,9 @@ Revised Cluster Status:
 =#=#=#= End test: Relocate resources due to ban - OK (0) =#=#=#=
 * Passed: crm_simulate   - Relocate resources due to ban
 =#=#=#= Begin test: Move dummy to node1 =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource -r dummy -M -N node1 --output-as=xml">
+  <status code="0" message="OK"/>
+</pacemaker-result>
 =#=#=#= Current cib after: Move dummy to node1 =#=#=#=
 <cib epoch="27" num_updates="0" admin_epoch="0">
   <configuration>
@@ -4097,6 +4113,44 @@ resource promotable-rsc:0 is running on: cluster02 Promoted
 resource promotable-rsc:1 is running on: cluster01
 =#=#=#= End test: List another instance of a promotable clone resource - OK (0) =#=#=#=
 * Passed: crm_resource   - List another instance of a promotable clone resource
+=#=#=#= Begin test: List a promotable clone resource in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --locate -r promotable-clone --output-as=xml">
+  <nodes resource="promotable-clone">
+    <node>cluster01</node>
+    <node state="promoted">cluster02</node>
+  </nodes>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List a promotable clone resource in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - List a promotable clone resource in XML
+=#=#=#= Begin test: List the primitive of a promotable clone resource in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --locate -r promotable-rsc --output-as=xml">
+  <nodes resource="promotable-rsc">
+    <node>cluster01</node>
+    <node state="promoted">cluster02</node>
+  </nodes>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List the primitive of a promotable clone resource in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - List the primitive of a promotable clone resource in XML
+=#=#=#= Begin test: List a single instance of a promotable clone resource in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --locate -r promotable-rsc:0 --output-as=xml">
+  <nodes resource="promotable-rsc:0">
+    <node state="promoted">cluster02</node>
+  </nodes>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List a single instance of a promotable clone resource in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - List a single instance of a promotable clone resource in XML
+=#=#=#= Begin test: List another instance of a promotable clone resource in XML =#=#=#=
+<pacemaker-result api-version="X" request="crm_resource --locate -r promotable-rsc:1 --output-as=xml">
+  <nodes resource="promotable-rsc:1">
+    <node>cluster01</node>
+  </nodes>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: List another instance of a promotable clone resource in XML - OK (0) =#=#=#=
+* Passed: crm_resource   - List another instance of a promotable clone resource in XML
 =#=#=#= Begin test: Check that CIB_file="-" works - crm_mon =#=#=#=
 Cluster Summary:
   * Stack: corosync

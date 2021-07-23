@@ -103,7 +103,7 @@ the necessary processes are running:
         2 ?        S      0:00 [kthreadd]
     ...lots of processes...
     17121 ?        SLsl   0:01 /usr/sbin/corosync -f
-    17133 ?        Ss     0:00 /usr/sbin/pacemakerd -f
+    17133 ?        Ss     0:00 /usr/sbin/pacemakerd
     17134 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-based
     17135 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-fenced
     17136 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-execd

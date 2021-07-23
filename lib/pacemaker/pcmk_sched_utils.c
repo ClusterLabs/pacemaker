@@ -314,12 +314,10 @@ native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
 
             crm_debug("Processing %s", op->uuid);
             if(pcmk__str_eq(RSC_STOP, op->task, pcmk__str_casei)) {
-                update_action_flags(op, pe_action_optional | pe_action_clear,
-                                    __func__, __LINE__);
+                pe__clear_action_flags(op, pe_action_optional);
 
             } else if(pcmk__str_eq(RSC_START, op->task, pcmk__str_casei)) {
-                update_action_flags(op, pe_action_runnable | pe_action_clear,
-                                    __func__, __LINE__);
+                pe__clear_action_flags(op, pe_action_runnable);
                 //pe__set_resource_flags(rsc, pe_rsc_block);
 
             } else if (interval_ms_s && !pcmk__str_eq(interval_ms_s, "0", pcmk__str_casei)) {
@@ -328,8 +326,7 @@ native_assign_node(pe_resource_t *rsc, pe_node_t *chosen, gboolean force)
 
                 } else {
                     /* Normal monitor operation, cancel it */
-                    update_action_flags(op, pe_action_runnable | pe_action_clear,
-                                        __func__, __LINE__);
+                    pe__clear_action_flags(op, pe_action_runnable);
                 }
             }
         }
@@ -476,10 +473,10 @@ create_pseudo_resource_op(pe_resource_t * rsc, const char *task, bool optional, 
 {
     pe_action_t *action = custom_action(rsc, pcmk__op_key(rsc->id, task, 0),
                                         task, NULL, optional, TRUE, data_set);
-    update_action_flags(action, pe_action_pseudo, __func__, __LINE__);
-    update_action_flags(action, pe_action_runnable, __func__, __LINE__);
+
+    pe__set_action_flags(action, pe_action_pseudo);
     if(runnable) {
-        update_action_flags(action, pe_action_runnable, __func__, __LINE__);
+        pe__set_action_flags(action, pe_action_runnable);
     }
     return action;
 }

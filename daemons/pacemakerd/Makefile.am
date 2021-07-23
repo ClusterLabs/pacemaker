@@ -15,6 +15,8 @@ if BUILD_SYSTEMD
 systemdsystemunit_DATA	= pacemaker.service
 endif
 
+EXTRA_DIST 	= pacemakerd.8.inc
+
 ## SOURCES
 
 noinst_HEADERS		= pacemakerd.h
@@ -28,5 +30,7 @@ pacemakerd_SOURCES	= pacemakerd.c
 if BUILD_CS_SUPPORT
 pacemakerd_SOURCES	+= pcmkd_corosync.c
 endif
+pacemakerd_SOURCES	+= pcmkd_messages.c
+pacemakerd_SOURCES	+= pcmkd_subdaemons.c
 
 CLEANFILES = $(man8_MANS)

@@ -844,14 +844,12 @@ RecurringOp(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
     if ((start == NULL) || !pcmk_is_set(start->flags, pe_action_runnable)) {
         pe_rsc_debug(rsc, "%s\t   %s (cancelled : start un-runnable)",
                      node_uname, mon->uuid);
-        update_action_flags(mon, pe_action_runnable | pe_action_clear,
-                            __func__, __LINE__);
+        pe__clear_action_flags(mon, pe_action_runnable);
 
     } else if (node == NULL || node->details->online == FALSE || node->details->unclean) {
         pe_rsc_debug(rsc, "%s\t   %s (cancelled : no node available)",
                      node_uname, mon->uuid);
-        update_action_flags(mon, pe_action_runnable | pe_action_clear,
-                            __func__, __LINE__);
+        pe__clear_action_flags(mon, pe_action_runnable);
 
     } else if (!pcmk_is_set(mon->flags, pe_action_optional)) {
         pe_rsc_info(rsc, " Start recurring %s (%us) for %s on %s",
@@ -1056,8 +1054,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             if (!pcmk_is_set(stop->flags, pe_action_runnable)) {
                 crm_debug("%s\t   %s (cancelled : stop un-runnable)",
                           crm_str(stop_node_uname), stopped_mon->uuid);
-                update_action_flags(stopped_mon, pe_action_runnable | pe_action_clear,
-                                    __func__, __LINE__);
+                pe__clear_action_flags(stopped_mon, pe_action_runnable);
             }
 
             if (pcmk_is_set(rsc->flags, pe_rsc_managed)) {
@@ -1076,8 +1073,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
             && !pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             pe_rsc_trace(rsc, "Marking %s optional on %s due to unmanaged",
                          key, crm_str(stop_node_uname));
-            update_action_flags(stopped_mon, pe_action_optional, __func__,
-                                __LINE__);
+            pe__set_action_flags(stopped_mon, pe_action_optional);
         }
 
         if (pcmk_is_set(stopped_mon->flags, pe_action_optional)) {
@@ -1087,8 +1083,7 @@ RecurringOp_Stopped(pe_resource_t * rsc, pe_action_t * start, pe_node_t * node,
         if (stop_node->details->online == FALSE || stop_node->details->unclean) {
             pe_rsc_debug(rsc, "%s\t   %s (cancelled : no node available)",
                          crm_str(stop_node_uname), stopped_mon->uuid);
-            update_action_flags(stopped_mon, pe_action_runnable | pe_action_clear,
-                                __func__, __LINE__);
+            pe__clear_action_flags(stopped_mon, pe_action_runnable);
         }
 
         if (pcmk_is_set(stopped_mon->flags, pe_action_runnable)
@@ -1147,7 +1142,7 @@ handle_migration_actions(pe_resource_t * rsc, pe_node_t *current, pe_node_t *cho
         pe__set_action_flags(stop, pe_action_migrate_runnable);
 
         // This is easier than trying to delete it from the graph
-        update_action_flags(start, pe_action_pseudo, __func__, __LINE__);
+        pe__set_action_flags(start, pe_action_pseudo);
 
         /* order probes before migrations */
         if (partial) {
@@ -1593,8 +1588,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
             if (load_stopped->node == NULL) {
                 load_stopped->node = pe__copy_node(current);
-                update_action_flags(load_stopped, pe_action_optional | pe_action_clear,
-                                    __func__, __LINE__);
+                pe__clear_action_flags(load_stopped, pe_action_optional);
             }
 
             custom_action_order(rsc, stop_key(rsc), NULL,
@@ -1609,8 +1603,7 @@ native_internal_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
 
             if (load_stopped->node == NULL) {
                 load_stopped->node = pe__copy_node(next);
-                update_action_flags(load_stopped, pe_action_optional | pe_action_clear,
-                                    __func__, __LINE__);
+                pe__clear_action_flags(load_stopped, pe_action_optional);
             }
 
             custom_action_order(NULL, strdup(load_stopped_task), load_stopped,
@@ -2175,17 +2168,21 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         }
     }
 
-    if (type & pe_order_implies_first) {
+    if (pcmk_is_set(type, pe_order_implies_first)
+        && !pcmk_is_set(then_flags, pe_action_optional)) {
+        // Then is required, and implies first should be, too
+
         if (pcmk_is_set(filter, pe_action_optional)
-            && !pcmk_is_set(flags /* Should be then_flags? */, pe_action_optional)) {
-            // Needs pcmk_is_set(first_flags, pe_action_optional) too?
-            pe_rsc_trace(first->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
+            && !pcmk_is_set(flags, pe_action_optional)
+            && pcmk_is_set(first_flags, pe_action_optional)) {
+            pe_rsc_trace(first->rsc,
+                         "Unset optional on %s because %s implies first",
+                         first->uuid, then->uuid);
             pe_action_implies(first, then, pe_action_optional);
         }
 
         if (pcmk_is_set(flags, pe_action_migrate_runnable) &&
-            !pcmk_is_set(then->flags, pe_action_migrate_runnable) &&
-            !pcmk_is_set(then->flags, pe_action_optional)) {
+            !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
 
             pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s",
                          first->uuid, then->uuid);
@@ -2205,7 +2202,9 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
                 pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s", first->uuid, then->uuid);
                 pe_action_implies(first, then, pe_action_migrate_runnable);
             }
-            pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", first->uuid, then->uuid);
+            pe_rsc_trace(then->rsc,
+                         "Unset optional on %s because %s (promoted) implies first",
+                         first->uuid, then->uuid);
         }
     }
 
@@ -2248,13 +2247,13 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (pcmk_is_set(type, pe_order_implies_then)
         && pcmk_is_set(filter, pe_action_optional)
         && pcmk_is_set(then->flags, pe_action_optional)
-        && !pcmk_is_set(flags, pe_action_optional)) {
+        && !pcmk_is_set(flags, pe_action_optional)
+        && !pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
 
-        /* in this case, treat migrate_runnable as if first is optional */
-        if (!pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
-           pe_rsc_trace(then->rsc, "Unset optional on %s because of %s", then->uuid, first->uuid);
-           pe_action_implies(then, first, pe_action_optional);
-        }
+        pe_rsc_trace(then->rsc,
+                     "Unset optional on %s because %s implies 'then'",
+                     then->uuid, first->uuid);
+        pe_action_implies(then, first, pe_action_optional);
     }
 
     if (pcmk_is_set(type, pe_order_restart)) {
@@ -2455,8 +2454,7 @@ StopRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_set
         }
 
         if (!pcmk_is_set(rsc->flags, pe_rsc_managed)) {
-            update_action_flags(stop, pe_action_runnable | pe_action_clear,
-                                __func__, __LINE__);
+            pe__clear_action_flags(stop, pe_action_runnable);
         }
 
         if (pcmk_is_set(data_set->flags, pe_flag_remove_after_stop)) {
@@ -2521,8 +2519,7 @@ StartRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_se
     order_after_unfencing(rsc, next, start, pe_order_implies_then, data_set);
 
     if (pcmk_is_set(start->flags, pe_action_runnable) && !optional) {
-        update_action_flags(start, pe_action_optional | pe_action_clear,
-                            __func__, __LINE__);
+        pe__clear_action_flags(start, pe_action_optional);
     }
 
 
@@ -2563,8 +2560,7 @@ PromoteRsc(pe_resource_t * rsc, pe_node_t * next, gboolean optional, pe_working_
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         pe_action_t *promote = (pe_action_t *) gIter->data;
 
-        update_action_flags(promote, pe_action_runnable | pe_action_clear,
-                            __func__, __LINE__);
+        pe__clear_action_flags(promote, pe_action_runnable);
     }
 
     g_list_free(action_list);
@@ -2808,8 +2804,7 @@ native_create_probe(pe_resource_t * rsc, pe_node_t * node, pe_action_t * complet
 
     key = pcmk__op_key(rsc->id, RSC_STATUS, 0);
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
-    update_action_flags(probe, pe_action_optional | pe_action_clear, __func__,
-                        __LINE__);
+    pe__clear_action_flags(probe, pe_action_optional);
 
     order_after_unfencing(rsc, node, probe, pe_order_optional, data_set);
 
@@ -2983,12 +2978,10 @@ native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_workin
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         // The stop would never complete, so convert it into a pseudo-action.
-        update_action_flags(action, pe_action_pseudo|pe_action_runnable,
-                            __func__, __LINE__);
+        pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
 
         if (order_implicit) {
-            update_action_flags(action, pe_action_implied_by_stonith,
-                                __func__, __LINE__);
+            pe__set_action_flags(action, pe_action_implied_by_stonith);
 
             /* Order the stonith before the parent stop (if any).
              *
@@ -3097,8 +3090,7 @@ native_stop_constraints(pe_resource_t * rsc, pe_action_t * stonith_op, pe_workin
             /* The demote would never complete and is now implied by the
              * fencing, so convert it into a pseudo-action.
              */
-            update_action_flags(action, pe_action_pseudo|pe_action_runnable,
-                                __func__, __LINE__);
+            pe__set_action_flags(action, pe_action_pseudo|pe_action_runnable);
 
             if (pe_rsc_is_bundled(rsc)) {
                 /* Do nothing, let the recovery be ordered after the parent's implied stop */

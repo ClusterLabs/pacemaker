@@ -2614,10 +2614,10 @@ update_xml_child(xmlNode * child, xmlNode * to_update)
     CRM_CHECK(child != NULL, return FALSE);
     CRM_CHECK(to_update != NULL, return FALSE);
 
-    if (!pcmk__str_eq(crm_element_name(to_update), crm_element_name(child), pcmk__str_casei)) {
+    if (!pcmk__str_eq(crm_element_name(to_update), crm_element_name(child), pcmk__str_none)) {
         can_update = FALSE;
 
-    } else if (!pcmk__str_eq(ID(to_update), ID(child), pcmk__str_casei)) {
+    } else if (!pcmk__str_eq(ID(to_update), ID(child), pcmk__str_none)) {
         can_update = FALSE;
 
     } else if (can_update) {

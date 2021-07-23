@@ -92,6 +92,17 @@ that the cluster can use to fence nodes. As with other resource agent classes,
 this allows a layer of abstraction so that Pacemaker doesn't need any knowledge
 about specific fencing technologies -- that knowledge is isolated in the agent.
 
+Pacemaker supports two fence agent standards, both inherited from
+no-longer-active projects:
+
+* Red Hat Cluster Suite (RHCS) style: These are typically installed in
+  ``/usr/sbin`` with names starting with ``fence_``.
+
+* Linux-HA style: These typically have names starting with ``external/``.
+  Pacemaker can support these agents using the **fence_legacy** RHCS-style
+  agent as a wrapper, *if* support was enabled when Pacemaker was built, which
+  requires the ``cluster-glue`` library.
+
 When a Fence Device Can Be Used
 ###############################
 
@@ -138,8 +149,28 @@ These limitations could be revisited if there is sufficient user demand.
 
 .. _fencing-attributes:
 
-Special Options for Fencing Resources
-#####################################
+Special Meta-Attributes for Fencing Resources
+#############################################
+
+The table below lists special resource meta-attributes that may be set for any
+fencing resource.
+
+.. table:: **Additional Properties of Fencing Resources**
+
+   +----------------------+---------+--------------------+----------------------------------------+
+   | Field                | Type    | Default            | Description                            |
+   +======================+=========+====================+========================================+
+   | provides             | string  |                    | .. index::                             |
+   |                      |         |                    |    single: provides                    |
+   |                      |         |                    |                                        |
+   |                      |         |                    | Any special capability provided by the |
+   |                      |         |                    | fence device. Currently, only one such |
+   |                      |         |                    | capability is meaningful:              |
+   |                      |         |                    | :ref:`unfencing <unfencing>`.          |
+   +----------------------+---------+--------------------+----------------------------------------+
+
+Special Instance Attributes for Fencing Resources
+#################################################
 
 The table below lists special instance attributes that may be set for any
 fencing resource (*not* meta-attributes, even though they are interpreted by
@@ -165,21 +196,11 @@ for ``pacemaker-fenced``.
    | stonith-timeout      | time    |                    | .. index::                             |
    |                      |         |                    |    single: stonith-timeout             |
    |                      |         |                    |                                        |
-   |                      |         |                    | Older versions used this to override   |
-   |                      |         |                    | the default period to wait for a fence |
-   |                      |         |                    | action (reboot, on, or off) to         |
-   |                      |         |                    | complete for this device. It has been  |
-   |                      |         |                    | replaced by the                        |
-   |                      |         |                    | ``pcmk_reboot_timeout`` and            |
-   |                      |         |                    | ``pcmk_off_timeout`` properties.       |
-   +----------------------+---------+--------------------+----------------------------------------+
-   | provides             | string  |                    | .. index::                             |
-   |                      |         |                    |    single: provides                    |
-   |                      |         |                    |                                        |
-   |                      |         |                    | Any special capability provided by the |
-   |                      |         |                    | fence device. Currently, only one such |
-   |                      |         |                    | capability is meaningful:              |
-   |                      |         |                    | :ref:`unfencing <unfencing>`.          |
+   |                      |         |                    | This is not used by Pacemaker (see the |
+   |                      |         |                    | ``pcmk_reboot_timeout``,               |
+   |                      |         |                    | ``pcmk_off_timeout``, etc. properties  |
+   |                      |         |                    | instead), but it may be used by        |
+   |                      |         |                    | Linux-HA fence agents.                 |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_host_map        | string  |                    | .. index::                             |
    |                      |         |                    |    single: pcmk_host_map               |
@@ -205,29 +226,22 @@ for ``pacemaker-fenced``.
    |                      |         |                    | either this or ``pcmk_host_map`` must  |
    |                      |         |                    | be set.                                |
    +----------------------+---------+--------------------+----------------------------------------+
-   | pcmk_host_check      | string  | The default is     | .. index::                             |
-   |                      |         | ``static-list`` if |    single: pcmk_host_check             |
-   |                      |         | either             |                                        |
-   |                      |         | ``pcmk_host_list`` | How to determine which machines are    |
-   |                      |         | or                 | controlled by the device. Allowed      |
-   |                      |         | ``pcmk_host_map``  | values:                                |
-   |                      |         | is configured. If  |                                        |
-   |                      |         | neither of those   | * ``dynamic-list:`` query the device   |
-   |                      |         | are configured,    |   via the agent's ``list`` action      |
-   |                      |         | the default is     | * ``static-list:`` check the           |
-   |                      |         | ``dynamic-list``   |   ``pcmk_host_list`` or                |
-   |                      |         | if the fence       |   ``pcmk_host_map`` attribute          |
-   |                      |         | device supports    | * ``status:`` query the device via the |
-   |                      |         | the list action,   |   "status" command                     |
-   |                      |         | or ``status`` if   | * ``none:`` assume the device can      |
-   |                      |         | the fence device   |   fence any node                       |
-   |                      |         | supports the       |                                        |
-   |                      |         | status action but  |                                        |
-   |                      |         | not the list       |                                        |
-   |                      |         | action. If none of |                                        |
-   |                      |         | those conditions   |                                        |
-   |                      |         | apply, the default |                                        |
-   |                      |         | is ``none``.       |                                        |
+   | pcmk_host_check      | string  | Value appropriate  | .. index::                             |
+   |                      |         | to other           |    single: pcmk_host_check             |
+   |                      |         | parameters (see    |                                        |
+   |                      |         | "Default Check     | The method Pacemaker should use to     |
+   |                      |         | Type" below)       | determine which nodes can be targeted  |
+   |                      |         |                    | by this device. Allowed values:        |
+   |                      |         |                    |                                        |
+   |                      |         |                    | * ``static-list:`` targets are listed  |
+   |                      |         |                    |   in the ``pcmk_host_list`` or         |
+   |                      |         |                    |   ``pcmk_host_map`` attribute          |
+   |                      |         |                    | * ``dynamic-list:`` query the device   |
+   |                      |         |                    |   via the agent's ``list`` action      |
+   |                      |         |                    | * ``status:`` query the device via the |
+   |                      |         |                    |   agent's ``status`` action            |
+   |                      |         |                    | * ``none:`` assume the device can      |
+   |                      |         |                    |   fence any node                       |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_delay_max       | time    | 0s                 | .. index::                             |
    |                      |         |                    |    single: pcmk_delay_max              |
@@ -264,9 +278,15 @@ for ``pacemaker-fenced``.
    |                      |         |                    |                                        |
    |                      |         |                    | The maximum number of actions that can |
    |                      |         |                    | be performed in parallel on this       |
-   |                      |         |                    | device, if the cluster option          |
-   |                      |         |                    | ``concurrent-fencing`` is ``true``. A  |
-   |                      |         |                    | value of -1 means unlimited.           |
+   |                      |         |                    | device. A value of -1 means unlimited. |
+   |                      |         |                    | Node fencing actions initiated by the  |
+   |                      |         |                    | cluster (as opposed to an administrator|
+   |                      |         |                    | running the ``stonith_admin`` tool or  |
+   |                      |         |                    | the fencer running recurring device    |
+   |                      |         |                    | monitors and ``status`` and ``list``   |
+   |                      |         |                    | commands) are additionally subject to  |
+   |                      |         |                    | the ``concurrent-fencing`` cluster     |
+   |                      |         |                    | property.                              |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_host_argument   | string  | ``port`` otherwise | .. index::                             |
    |                      |         | ``plug`` if        |    single: pcmk_host_argument          |
@@ -474,6 +494,21 @@ for ``pacemaker-fenced``.
    |                      |         |                    | Pacemaker retries before giving up.    |
    +----------------------+---------+--------------------+----------------------------------------+
 
+Default Check Type
+##################
+
+If the user does not explicitly configure ``pcmk_host_check`` for a fence
+device, a default value appropriate to other configured parameters will be
+used:
+
+* If either ``pcmk_host_list`` or ``pcmk_host_map`` is configured,
+  ``static-list`` will be used;
+* otherwise, if the fence device supports the ``list`` action, and the first
+  attempt at using ``list`` succeeds, ``dynamic-list`` will be used;
+* otherwise, if the fence device supports the ``status`` action, ``status``
+  will be used;
+* otherwise, ``none`` will be used.
+
 .. index::
    single: unfencing
    single: fencing; unfencing
@@ -496,6 +531,87 @@ command.
 If any cluster resource has ``requires`` set to ``unfencing``, then that
 resource will not be probed or started on a node until that node has been
 unfenced.
+
+Fencing and Quorum
+##################
+
+In general, a cluster partition may execute fencing only if the partition has
+quorum, and the ``stonith-enabled`` cluster property is set to true. However,
+there are exceptions:
+
+* The requirements apply only to fencing initiated by Pacemaker. If an
+  administrator initiates fencing using the ``stonith_admin`` command, or an
+  external application such as DLM initiates fencing using Pacemaker's C API,
+  the requirements do not apply.
+
+* A cluster partition without quorum is allowed to fence any active member of
+  that partition. As a corollary, this allows a ``no-quorum-policy`` of
+  ``suicide`` to work.
+
+* If the ``no-quorum-policy`` cluster property is set to ``ignore``, then
+  quorum is not required to execute fencing of any node.
+
+Fencing Timeouts
+################
+
+Fencing timeouts are complicated, since a single fencing operation can involve
+many steps, each of which may have a separate timeout.
+
+Fencing may be initiated in one of several ways:
+
+* An administrator may initiate fencing using the ``stonith_admin`` tool,
+  which has a ``--timeout`` option (defaulting to 2 minutes) that will be used
+  as the fence operation timeout.
+
+* An external application such as DLM may initiate fencing using the Pacemaker
+  C API. The application will specify the fence operation timeout in this case,
+  which might or might not be configurable by the user.
+
+* The cluster may initiate fencing itself. In this case, the
+  ``stonith-timeout`` cluster property (defaulting to 1 minute) will be used as
+  the fence operation timeout.
+
+However fencing is initiated, the initiator contacts Pacemaker's fencer
+(``pacemaker-fenced``) to request fencing. This connection and request has its
+own timeout, separate from the fencing operation timeout, but usually happens
+very quickly.
+
+The fencer will contact all fencers in the cluster to ask what devices they
+have available to fence the target node. The fence operation timeout will be
+used as the timeout for each of these queries.
+
+Once a fencing device has been selected, the fencer will check whether any
+action-specific timeout has been configured for the device, to use instead of
+the fence operation timeout. For example, if ``stonith-timeout`` is 60 seconds,
+but the fencing device has ``pcmk_reboot_timeout`` configured as 90 seconds,
+then a timeout of 90 seconds will be used for reboot actions using that device.
+
+A device may have retries configured, in which case the timeout applies across
+all attempts. For example, if a device has ``pcmk_reboot_retries`` configured
+as 2, and the first reboot attempt fails, the second attempt will only have
+whatever time is remaining in the action timeout after subtracting how much
+time the first attempt used. This means that if the first attempt fails due to
+using the entire timeout, no further attempts will be made. There is currently
+no way to configure a per-attempt timeout.
+
+If more than one device is required to fence a target, whether due to failure
+of the first device or a fencing topology with multiple devices configured for
+the target, each device will have its own separate action timeout.
+
+For all of the above timeouts, the fencer will generally multiply the
+configured value by 1.2 to get an actual value to use, to account for time
+needed by the fencer's own processing.
+
+Separate from the fencer's timeouts, some fence agents have internal timeouts
+for individual steps of their fencing process. These agents often have
+parameters to configure these timeouts, such as ``login-timeout``,
+``shell-timeout``, or ``power-timeout``. Many such agents also have a
+``disable-timeout`` parameter to ignore their internal timeouts and just let
+Pacemaker handle the timeout. This causes a difference in retry behavior.
+If ``disable-timeout`` is not set, and the agent hits one of its internal
+timeouts, it will report that as a failure to Pacemaker, which can then retry.
+If ``disable-timeout`` is set, and Pacemaker hits a timeout for the agent, then
+there will be no time remaining, and no retry will be done.
 
 Fence Devices Dependent on Other Resources
 ##########################################

@@ -349,7 +349,7 @@ main(int argc, char **argv)
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "adehilorstvBCDFHQRTU");
+    gchar **processed_args = pcmk__cmdline_preproc(argv, "adehilorstvyBCDFHQRTU");
     GOptionContext *context = build_arg_context(args, &output_group);
 
     pcmk__register_formats(output_group, formats);

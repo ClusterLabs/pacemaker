@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <ctype.h>
 #include <glib.h>
 
 #include <crm/crm.h>
@@ -145,6 +146,7 @@ gchar **
 pcmk__cmdline_preproc(char **argv, const char *special) {
     GPtrArray *arr = NULL;
     bool saw_dash_dash = false;
+    bool copy_option = false;
 
     if (argv == NULL) {
         return NULL;
@@ -174,6 +176,12 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
             continue;
         }
 
+        if (copy_option == true) {
+            g_ptr_array_add(arr, g_strdup(argv[i]));
+            copy_option = false;
+            continue;
+        }
+
         /* This is just a dash by itself.  That could indicate stdin/stdout, or
          * it could be user error.  Copy it over and let glib figure it out.
          */
@@ -188,6 +196,34 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
         if (g_str_has_prefix(argv[i], "-") && !g_str_has_prefix(argv[i], "--")) {
             /* Skip over leading dash */
             char *ch = argv[i]+1;
+
+            /* This looks like the start of a number, which means it is a negative
+             * number.  It's probably the argument to the preceeding option, but
+             * we can't know that here.  Copy it over and let whatever handles
+             * arguments next figure it out.
+             */
+            if (*ch != '\0' && *ch >= '1' && *ch <= '9') {
+                bool is_numeric = true;
+
+                while (*ch != '\0') {
+                    if (!isdigit(*ch)) {
+                        is_numeric = false;
+                        break;
+                    }
+
+                    ch++;
+                }
+
+                if (is_numeric) {
+                    g_ptr_array_add(arr, g_strdup_printf("%s", argv[i]));
+                    continue;
+                } else {
+                    /* This argument wasn't entirely numeric.  Reset ch to the
+                     * beginning so we can process it one character at a time.
+                     */
+                    ch = argv[i]+1;
+                }
+            }
 
             while (*ch != '\0') {
                 /* This is a special short argument that takes an option.  getopt
@@ -210,6 +246,7 @@ pcmk__cmdline_preproc(char **argv, const char *special) {
                      */
                     } else {
                         g_ptr_array_add(arr, g_strdup_printf("-%c", *ch));
+                        copy_option = true;
                         ch++;
                     }
 
