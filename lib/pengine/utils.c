@@ -2314,51 +2314,45 @@ void pe_action_set_flag_reason(const char *function, long line,
                                pe_action_t *action, pe_action_t *reason, const char *text,
                                enum pe_action_flags flags, bool overwrite)
 {
-    bool unset = FALSE;
     bool update = FALSE;
     const char *change = NULL;
 
-    if (pcmk_is_set(flags, pe_action_runnable)) {
-        unset = TRUE;
-        change = "unrunnable";
-    } else if (pcmk_is_set(flags, pe_action_optional)) {
-        unset = TRUE;
-        change = "required";
-    } else if (pcmk_is_set(flags, pe_action_migrate_runnable)) {
-        unset = TRUE;
-        overwrite = TRUE;
-        change = "unrunnable";
-    } else if (pcmk_is_set(flags, pe_action_dangle)) {
-        change = "dangling";
-    } else if (pcmk_is_set(flags, pe_action_requires_any)) {
-        change = "required";
-    } else {
-        crm_err("Unknown flag change to %x by %s: 0x%s",
-                flags, action->uuid, (reason? reason->uuid : "0"));
+    switch (flags) {
+        case pe_action_runnable:
+            change = "unrunnable";
+            break;
+
+        case pe_action_optional:
+            change = "required";
+            break;
+
+        case pe_action_migrate_runnable:
+            overwrite = TRUE;
+            change = "unrunnable";
+            break;
+
+        default:
+            // Bug: caller passed unsupported flag
+            CRM_CHECK(change != NULL, change = "");
+            break;
     }
 
-    if(unset) {
-        if (pcmk_is_set(action->flags, flags)) {
-            pe__clear_action_flags_as(function, line, action, flags);
-            update = TRUE;
-        }
-
-    } else {
-        if (!pcmk_is_set(action->flags, flags)) {
-            pe__set_action_flags_as(function, line, action, flags);
-            update = TRUE;
-        }
+    if (pcmk_is_set(action->flags, flags)) {
+        pe__clear_action_flags_as(function, line, action, flags);
+        update = TRUE;
     }
 
-    if((change && update) || text) {
+    if (update || (text != NULL)) {
         char *reason_text = NULL;
+
         if(reason == NULL) {
             pe_action_set_reason(action, text, overwrite);
 
         } else if(reason->rsc == NULL) {
-            reason_text = crm_strdup_printf("%s %s%c %s", change, reason->task, text?':':0, text?text:"");
+            reason_text = crm_strdup_printf("%s %s", change, reason->task);
         } else {
-            reason_text = crm_strdup_printf("%s %s %s%c %s", change, reason->rsc->id, reason->task, text?':':0, text?text:"NA");
+            reason_text = crm_strdup_printf("%s %s %s", change, reason->rsc->id,
+                                            reason->task);
         }
 
         if(reason_text && action->rsc != reason->rsc) {
