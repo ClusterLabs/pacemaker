@@ -2344,24 +2344,6 @@ pe__action2reason(pe_action_t *action, enum pe_action_flags flag)
                              action->task);
 }
 
-void pe_action_set_flag_reason(const char *function, long line,
-                               pe_action_t *action, pe_action_t *reason, const char *text,
-                               enum pe_action_flags flags, bool overwrite)
-{
-    if (flags == pe_action_migrate_runnable) {
-        overwrite = TRUE;
-    }
-    if (pcmk_is_set(action->flags, flags)) {
-        pe__clear_action_flags_as(function, line, action, flags);
-        if (action->rsc != reason->rsc) {
-            char *reason_text = pe__action2reason(reason, flags);
-
-            pe_action_set_reason(action, reason_text, overwrite);
-            free(reason_text);
-        }
-    }
- }
-
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
 {
     if (action->reason != NULL && overwrite) {

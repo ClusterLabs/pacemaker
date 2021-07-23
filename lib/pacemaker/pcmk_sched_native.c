@@ -2055,6 +2055,18 @@ is_primitive_action(pe_action_t *action)
     return action && action->rsc && (action->rsc->variant == pe_native);
 }
 
+#define pe_action_implies(action, reason, flag) do {                        \
+        if (pcmk_is_set((action)->flags, (flag))) {                         \
+            pe__clear_action_flags(action, flag);                           \
+            if ((action)->rsc != (reason)->rsc) {                           \
+                char *reason_text = pe__action2reason((reason), (flag));    \
+                pe_action_set_reason((action), reason_text,                 \
+                                   ((flag) == pe_action_migrate_runnable)); \
+                free(reason_text);                                          \
+            }                                                               \
+        }                                                                   \
+    } while (0)
+
 /*!
  * \internal
  * \brief Set action bits appropriately when pe_restart_order is used

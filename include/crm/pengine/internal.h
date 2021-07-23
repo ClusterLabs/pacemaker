@@ -501,11 +501,6 @@ void trigger_unfencing(
 
 char *pe__action2reason(pe_action_t *action, enum pe_action_flags flag);
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
-void pe_action_set_flag_reason(const char *function, long line, pe_action_t *action, pe_action_t *reason, const char *text, enum pe_action_flags flags, bool overwrite);
-
-#define pe_action_implies(action, reason, flag)     \
-    pe_action_set_flag_reason(__func__, __LINE__, action, reason, NULL, \
-                              flag, FALSE)
 
 void pe__set_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
 void pe__clear_resource_flags_recursive(pe_resource_t *rsc, uint64_t flags);
