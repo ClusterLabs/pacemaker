@@ -2310,31 +2310,48 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Create an action reason string based on the action itself
+ *
+ * \param[in] action  Action to create reason string for
+ * \param[in] flag    Action flag that was cleared
+ *
+ * \return Newly allocated string suitable for use as action reason
+ * \note It is the caller's responsibility to free() the result.
+ */
+char *
+pe__action2reason(pe_action_t *action, enum pe_action_flags flag)
+{
+    const char *change = NULL;
+
+    switch (flag) {
+        case pe_action_runnable:
+        case pe_action_migrate_runnable:
+            change = "unrunnable";
+            break;
+        case pe_action_optional:
+            change = "required";
+            break;
+        default:
+            // Bug: caller passed unsupported flag
+            CRM_CHECK(change != NULL, change = "");
+            break;
+    }
+    return crm_strdup_printf("%s%s%s %s", change,
+                             (action->rsc == NULL)? "" : " ",
+                             (action->rsc == NULL)? "" : action->rsc->id,
+                             action->task);
+}
+
 void pe_action_set_flag_reason(const char *function, long line,
                                pe_action_t *action, pe_action_t *reason, const char *text,
                                enum pe_action_flags flags, bool overwrite)
 {
     bool update = FALSE;
-    const char *change = NULL;
 
-    switch (flags) {
-        case pe_action_runnable:
-            change = "unrunnable";
-            break;
-
-        case pe_action_optional:
-            change = "required";
-            break;
-
-        case pe_action_migrate_runnable:
-            overwrite = TRUE;
-            change = "unrunnable";
-            break;
-
-        default:
-            // Bug: caller passed unsupported flag
-            CRM_CHECK(change != NULL, change = "");
-            break;
+    if (flags == pe_action_migrate_runnable) {
+        overwrite = TRUE;
     }
 
     if (pcmk_is_set(action->flags, flags)) {
@@ -2343,22 +2360,15 @@ void pe_action_set_flag_reason(const char *function, long line,
     }
 
     if (update || (text != NULL)) {
-        char *reason_text = NULL;
-
         if(reason == NULL) {
             pe_action_set_reason(action, text, overwrite);
 
-        } else if(reason->rsc == NULL) {
-            reason_text = crm_strdup_printf("%s %s", change, reason->task);
-        } else {
-            reason_text = crm_strdup_printf("%s %s %s", change, reason->rsc->id,
-                                            reason->task);
-        }
+        } else if (action->rsc != reason->rsc) {
+            char *reason_text = pe__action2reason(reason, flags);
 
-        if(reason_text && action->rsc != reason->rsc) {
             pe_action_set_reason(action, reason_text, overwrite);
+            free(reason_text);
         }
-        free(reason_text);
     }
  }
 

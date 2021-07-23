@@ -499,6 +499,7 @@ pe_action_t *pe_fence_op(pe_node_t * node, const char *op, bool optional, const 
 void trigger_unfencing(
     pe_resource_t * rsc, pe_node_t *node, const char *reason, pe_action_t *dependency, pe_working_set_t * data_set);
 
+char *pe__action2reason(pe_action_t *action, enum pe_action_flags flag);
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
 void pe_action_set_flag_reason(const char *function, long line, pe_action_t *action, pe_action_t *reason, const char *text, enum pe_action_flags flags, bool overwrite);
 
