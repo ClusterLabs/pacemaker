@@ -269,10 +269,8 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
         did_change = TRUE;
         key = pcmk__op_key(rsc->id, task, interval_ms);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
-        required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
-        pe_action_set_flag_reason(__func__, __LINE__, required, NULL,
-                                  "resource definition change", pe_action_optional, TRUE);
-
+        required = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+        pe_action_set_reason(required, "resource definition change", true);
         trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
 
     } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
@@ -311,9 +309,9 @@ check_action_definition(pe_resource_t * rsc, pe_node_t * active_node, xmlNode * 
             /* Re-send the start/demote/promote op
              * Recurring ops will be detected independently
              */
-            required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
-            pe_action_set_flag_reason(__func__, __LINE__, required, NULL,
-                                      "resource definition change", pe_action_optional, TRUE);
+            required = custom_action(rsc, key, task, NULL, FALSE, TRUE,
+                                     data_set);
+            pe_action_set_reason(required, "resource definition change", true);
         }
     }
 

@@ -662,9 +662,8 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
             case no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
                              action->uuid, action->node->details->uname);
-                pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                          "no quorum", pe_action_runnable,
-                                          true);
+                pe__clear_action_flags(action, pe_action_runnable);
+                pe_action_set_reason(action, "no quorum", true);
                 break;
 
             case no_quorum_freeze:
@@ -673,9 +672,8 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                     pe_rsc_debug(action->rsc,
                                  "%s on %s is unrunnable (no quorum)",
                                  action->uuid, action->node->details->uname);
-                    pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                              "quorum freeze",
-                                              pe_action_runnable, true);
+                    pe__clear_action_flags(action, pe_action_runnable);
+                    pe_action_set_reason(action, "quorum freeze", true);
                 }
                 break;
 
@@ -2230,7 +2228,9 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
     }
 
     if(optional == FALSE && pe_can_fence(data_set, node)) {
-        pe_action_required(stonith_op, NULL, reason);
+        pe__clear_action_flags(stonith_op, pe_action_optional);
+        pe_action_set_reason(stonith_op, reason, false);
+
     } else if(reason && stonith_op->reason == NULL) {
         stonith_op->reason = strdup(reason);
     }
@@ -2348,22 +2348,12 @@ void pe_action_set_flag_reason(const char *function, long line,
                                pe_action_t *action, pe_action_t *reason, const char *text,
                                enum pe_action_flags flags, bool overwrite)
 {
-    bool update = FALSE;
-
     if (flags == pe_action_migrate_runnable) {
         overwrite = TRUE;
     }
-
     if (pcmk_is_set(action->flags, flags)) {
         pe__clear_action_flags_as(function, line, action, flags);
-        update = TRUE;
-    }
-
-    if (update || (text != NULL)) {
-        if(reason == NULL) {
-            pe_action_set_reason(action, text, overwrite);
-
-        } else if (action->rsc != reason->rsc) {
+        if (action->rsc != reason->rsc) {
             char *reason_text = pe__action2reason(reason, flags);
 
             pe_action_set_reason(action, reason_text, overwrite);

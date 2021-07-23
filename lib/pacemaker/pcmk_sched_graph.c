@@ -421,8 +421,8 @@ mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
             continue;
         }
         if (pcmk_is_set(action->flags, pe_action_runnable)) {
-            pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                      reason_text, pe_action_runnable, FALSE);
+            pe__clear_action_flags(action, pe_action_runnable);
+            pe_action_set_reason(action, reason_text, false);
             update_colo_start_chain(action, data_set);
             update_action(action, data_set);
         }
