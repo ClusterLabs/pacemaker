@@ -3,7 +3,7 @@ Current cluster status:
     * Online: [ dl380g5a dl380g5b ]
 
   * Full List of Resources:
-    * Clone Set: ms-sf [group] (promotable) (unique):
+    * Clone Set: ms-sf [group] (promotable, unique):
       * Resource Group: group:0:
         * stateful-1:0	(ocf:heartbeat:Stateful):	 FAILED dl380g5b
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
@@ -55,7 +55,7 @@ Revised Cluster Status:
     * Online: [ dl380g5a dl380g5b ]
 
   * Full List of Resources:
-    * Clone Set: ms-sf [group] (promotable) (unique):
+    * Clone Set: ms-sf [group] (promotable, unique):
       * Resource Group: group:0:
         * stateful-1:0	(ocf:heartbeat:Stateful):	 Stopped
         * stateful-2:0	(ocf:heartbeat:Stateful):	 Stopped
