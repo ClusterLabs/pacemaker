@@ -1813,7 +1813,14 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&device)) {
         check_type = target_list_type(device);
         if (pcmk__strcase_any_of(check_type, "status", "dynamic-list", NULL)) {
-            devices_needing_async_query++;
+            char buffer[64] = { 0, };
+            const char *value = NULL;
+
+            snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", pcmk__str_eq(check_type, "status", pcmk__str_casei)? "status" : "list"); 
+            value = g_hash_table_lookup(device->params, buffer);
+            if (!value) {
+                devices_needing_async_query++;
+            }
         }
     }
 
