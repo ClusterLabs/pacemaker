@@ -354,7 +354,7 @@ native_active(pe_resource_t * rsc, gboolean all)
             pe_rsc_trace(rsc, "Resource %s: node %s is unclean",
                          rsc->id, a_node->details->uname);
             return TRUE;
-        } else if (a_node->details->online == FALSE) {
+        } else if (a_node->details->online == FALSE && pcmk_is_set(rsc->flags, pe_rsc_managed)) {
             pe_rsc_trace(rsc, "Resource %s: node %s is offline",
                          rsc->id, a_node->details->uname);
         } else {
@@ -1147,7 +1147,8 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
                 pe_node_t *node = (pe_node_t *) gIter2->data;
                 GHashTable *node_table = NULL;
 
-                if (node->details->unclean == FALSE && node->details->online == FALSE) {
+                if (node->details->unclean == FALSE && node->details->online == FALSE &&
+                    pcmk_is_set(rsc->flags, pe_rsc_managed)) {
                     continue;
                 }
 
