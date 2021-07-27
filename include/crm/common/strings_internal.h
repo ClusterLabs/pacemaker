@@ -25,7 +25,8 @@ enum pcmk__str_flags {
     pcmk__str_none          = 0,
     pcmk__str_casei         = 1 << 0,
     pcmk__str_null_matches  = 1 << 1,
-    pcmk__str_regex         = 1 << 2
+    pcmk__str_regex         = 1 << 2,
+    pcmk__str_star_matches  = 1 << 3,
 };
 
 int pcmk__scan_double(const char *text, double *result,

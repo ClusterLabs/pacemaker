@@ -1107,6 +1107,8 @@ pcmk__numeric_strcasecmp(const char *s1, const char *s2)
  *                     This can be combined with pcmk__str_regex.
  * - pcmk__str_null_matches - If one string is NULL and the other is not,
  *                            still return 0.
+ * - pcmk__str_star_matches - If one string is "*" and the other is not, still
+ *                            return 0.
  *
  * \param[in] s1    First string to compare
  * \param[in] s2    Second string to compare, or a regular expression to
@@ -1177,6 +1179,16 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
         return -1;
     } else if (s2 == NULL) {
         return 1;
+    }
+
+    /* If this flag is set, return 0 if either (or both) of the input strings
+     * are "*".  If neither one is, we need to continue and compare them
+     * normally.
+     */
+    if (pcmk_is_set(flags, pcmk__str_star_matches)) {
+        if (strcmp(s1, "*") == 0 || strcmp(s2, "*") == 0) {
+            return 0;
+        }
     }
 
     if (pcmk_is_set(flags, pcmk__str_casei)) {
