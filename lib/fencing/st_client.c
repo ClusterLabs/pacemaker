@@ -2539,7 +2539,7 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
             pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
             pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
             pcmk__str_eq(event->delegate, prev_hp->delegate, pcmk__str_casei) &&
-            (event->completed < prev_hp->completed)) {
+            (event->completed <= prev_hp->completed)) {
             ret = TRUE;
             break;
         }
@@ -2565,7 +2565,7 @@ stonith__sort_history(stonith_history_t *history)
         tmp = hp->next;
         if ((hp->state == st_done) || (hp->state == st_failed)) {
             /* sort into new */
-            if ((!new) || (hp->completed > new->completed)) {
+            if ((!new) || (hp->completed >= new->completed)) {
                 hp->next = new;
                 new = hp;
             } else {
