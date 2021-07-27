@@ -12,7 +12,7 @@ Current cluster status:
     * rsc_c001n06	(ocf:heartbeat:IPaddr):	 Started c001n06
     * rsc_c001n07	(ocf:heartbeat:IPaddr):	 Started c001n07
     * rsc_c001n08	(ocf:heartbeat:IPaddr):	 Started c001n08
-    * Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged):
+    * Clone Set: DoFencing [child_DoFencing] (unique, unmanaged):
       * child_DoFencing:0	(stonith:ssh):	 Stopped (unmanaged)
       * child_DoFencing:1	(stonith:ssh):	 Stopped (unmanaged)
       * child_DoFencing:2	(stonith:ssh):	 Stopped (unmanaged)
@@ -155,7 +155,7 @@ Revised Cluster Status:
     * rsc_c001n06	(ocf:heartbeat:IPaddr):	 Started c001n06
     * rsc_c001n07	(ocf:heartbeat:IPaddr):	 Started c001n07
     * rsc_c001n08	(ocf:heartbeat:IPaddr):	 Started c001n08
-    * Clone Set: DoFencing [child_DoFencing] (unique) (unmanaged):
+    * Clone Set: DoFencing [child_DoFencing] (unique, unmanaged):
       * child_DoFencing:0	(stonith:ssh):	 Stopped (unmanaged)
       * child_DoFencing:1	(stonith:ssh):	 Stopped (unmanaged)
       * child_DoFencing:2	(stonith:ssh):	 Stopped (unmanaged)

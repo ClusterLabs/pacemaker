@@ -28,7 +28,7 @@ SUBDIRS = tests
 
 noinst_HEADERS		= crmcommon_private.h
 
-libcrmcommon_la_LDFLAGS	= -version-info 40:0:6
+libcrmcommon_la_LDFLAGS	= -version-info 41:0:7
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
