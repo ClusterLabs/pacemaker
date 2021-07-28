@@ -292,7 +292,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
         rc = pcmk_legacy2rc(rc);
     }
 
-    free(fragment);
+    free_xml(fragment);
     return rc;
 }
 
