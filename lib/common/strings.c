@@ -895,24 +895,23 @@ pcmk__str_in_list(GList *lst, const gchar *s, uint32_t flags)
 }
 
 static bool
-str_any_of(bool casei, const char *s, va_list args)
+str_any_of(const char *s, va_list args, uint32_t flags)
 {
-    bool rc = false;
+    if (s == NULL) {
+        return pcmk_is_set(flags, pcmk__str_null_matches);
+    }
 
-    if (s != NULL) {
-        while (1) {
-            const char *ele = va_arg(args, const char *);
+    while (1) {
+        const char *ele = va_arg(args, const char *);
 
-            if (ele == NULL) {
-                break;
-            } else if (pcmk__str_eq(s, ele,
-                                    casei? pcmk__str_casei : pcmk__str_none)) {
-                rc = true;
-                break;
-            }
+        if (ele == NULL) {
+            break;
+        } else if (pcmk__str_eq(s, ele, flags)) {
+            return true;
         }
     }
-    return rc;
+
+    return false;
 }
 
 /*!
@@ -935,7 +934,7 @@ pcmk__strcase_any_of(const char *s, ...)
     bool rc;
 
     va_start(ap, s);
-    rc = str_any_of(true, s, ap);
+    rc = str_any_of(s, ap, pcmk__str_casei);
     va_end(ap);
     return rc;
 }
@@ -959,7 +958,7 @@ pcmk__str_any_of(const char *s, ...)
     bool rc;
 
     va_start(ap, s);
-    rc = str_any_of(false, s, ap);
+    rc = str_any_of(s, ap, pcmk__str_none);
     va_end(ap);
     return rc;
 }
