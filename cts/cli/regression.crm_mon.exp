@@ -4020,8 +4020,8 @@ Node List:
   * OFFLINE: [ cluster02 ]
 
 Active Resources:
-  * 1	(ocf:pacemaker:Dummy):	Active cluster02
   * 1	(ocf:pacemaker:Dummy):	Active cluster01
+  * 1	(ocf:pacemaker:Dummy):	Active cluster02
   * 1	(stonith:fence_xvm):	Active cluster01
 =#=#=#= End test: Brief text output of active unmanaged resource on offline node - OK (0) =#=#=#=
 * Passed: crm_mon        - Brief text output of active unmanaged resource on offline node
