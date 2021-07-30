@@ -69,7 +69,7 @@ static void stonith_send_reply(xmlNode * reply, int call_options, const char *re
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
 
-static xmlNode * get_agent_metadata(const char *agent);
+static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(stonith_device_t *device);
 
 typedef struct async_command_s {
@@ -323,19 +323,26 @@ fork_cb(GPid pid, gpointer user_data)
 static int
 get_agent_metadata_cb(gpointer data) {
     stonith_device_t *device = data;
+    guint period_ms;
 
-    device->agent_metadata = get_agent_metadata(device->agent);
-    if (device->agent_metadata) {
-        read_action_metadata(device);
-        stonith__device_parameter_flags(&(device->flags), device->id,
+    switch (get_agent_metadata(device->agent, &device->agent_metadata)) {
+        case pcmk_rc_ok:
+            if (device->agent_metadata) {
+                read_action_metadata(device);
+                stonith__device_parameter_flags(&(device->flags), device->id,
                                         device->agent_metadata);
-        return G_SOURCE_REMOVE;
-    } else {
-        guint period_ms = pcmk__mainloop_timer_get_period(device->timer);
-        if (period_ms < 160 * 1000) {
-            mainloop_timer_set_period(device->timer, 2 * period_ms);
-        }
-        return G_SOURCE_CONTINUE;
+            }
+            return G_SOURCE_REMOVE;
+
+        case EAGAIN:
+            period_ms = pcmk__mainloop_timer_get_period(device->timer);
+            if (period_ms < 160 * 1000) {
+                mainloop_timer_set_period(device->timer, 2 * period_ms);
+            }
+            return G_SOURCE_CONTINUE;
+
+        default:
+            return G_SOURCE_REMOVE;
     }
 }
 
@@ -700,38 +707,41 @@ init_metadata_cache(void) {
     }
 }
 
-static xmlNode *
-get_agent_metadata(const char *agent)
+int
+get_agent_metadata(const char *agent, xmlNode ** metadata)
 {
-    xmlNode *xml = NULL;
     char *buffer = NULL;
 
+    if (metadata == NULL) {
+        return EINVAL;
+    }
+    *metadata = NULL;
+    if (pcmk__str_eq(agent, STONITH_WATCHDOG_AGENT, pcmk__str_none)) {
+        return pcmk_rc_ok;
+    }
     init_metadata_cache();
     buffer = g_hash_table_lookup(metadata_cache, agent);
-    if(pcmk__str_eq(agent, STONITH_WATCHDOG_AGENT, pcmk__str_casei)) {
-        return NULL;
-
-    } else if(buffer == NULL) {
+    if (buffer == NULL) {
         stonith_t *st = stonith_api_new();
         int rc;
 
         if (st == NULL) {
             crm_warn("Could not get agent meta-data: "
                      "API memory allocation failed");
-            return NULL;
+            return EAGAIN;
         }
-        rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
+        rc = st->cmds->metadata(st, st_opt_sync_call, agent,
+                                NULL, &buffer, 10);
         stonith_api_delete(st);
         if (rc || !buffer) {
             crm_err("Could not retrieve metadata for fencing agent %s", agent);
-            return NULL;
+            return EAGAIN;
         }
         g_hash_table_replace(metadata_cache, strdup(agent), buffer);
     }
 
-    xml = string2xml(buffer);
-
-    return xml;
+    *metadata = string2xml(buffer);
+    return pcmk_rc_ok;
 }
 
 static gboolean
@@ -962,19 +972,27 @@ build_device_from_xml(xmlNode * msg)
         g_list_free_full(device->targets, free);
         device->targets = NULL;
     }
-    device->agent_metadata = get_agent_metadata(device->agent);
-    if (device->agent_metadata) {
-        read_action_metadata(device);
-        stonith__device_parameter_flags(&(device->flags), device->id,
-                                        device->agent_metadata);
-    } else {
-        if (device->timer == NULL) {
-            device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
+    switch (get_agent_metadata(device->agent, &device->agent_metadata)) {
+        case pcmk_rc_ok:
+            if (device->agent_metadata) {
+                read_action_metadata(device);
+                stonith__device_parameter_flags(&(device->flags), device->id,
+                                                device->agent_metadata);
+            }
+            break;
+
+        case EAGAIN:
+            if (device->timer == NULL) {
+                device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
                                            TRUE, get_agent_metadata_cb, device);
-        }
-        if (!mainloop_timer_running(device->timer)) {
-            mainloop_timer_start(device->timer);
-        }
+            }
+            if (!mainloop_timer_running(device->timer)) {
+                mainloop_timer_start(device->timer);
+            }
+            break;
+
+        default:
+            break;
     }
 
     value = g_hash_table_lookup(device->params, "nodeid");
