@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 
 #include <pacemaker-controld.h>
@@ -884,6 +885,19 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
                                          "tengine_stonith_callback", tengine_stonith_callback);
 
     return TRUE;
+}
+
+bool
+controld_verify_stonith_watchdog_timeout(const char *value)
+{
+    gboolean rv = TRUE;
+
+    if (stonith_api && (stonith_api->state != stonith_disconnected) &&
+        stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
+                                                       fsa_our_uname)) {
+        rv = pcmk__valid_sbd_timeout(value);
+    }
+    return rv;
 }
 
 /* end stonith API client functions */

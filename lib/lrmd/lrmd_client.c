@@ -34,6 +34,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/fencing/internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
@@ -934,7 +935,10 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     crm_xml_add(data, F_LRMD_ORIGIN, __func__);
 
     value = g_hash_table_lookup(hash, "stonith-watchdog-timeout");
-    crm_xml_add(data, F_LRMD_WATCHDOG, value);
+    if ((value) &&
+        (stonith__watchdog_fencing_enabled_for_node(native->remote_nodename))) {
+       crm_xml_add(data, F_LRMD_WATCHDOG, value);
+    }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
                            (native->type == pcmk__client_ipc));

@@ -195,6 +195,67 @@ stonith_get_namespace(const char *agent, const char *namespace_s)
     return st_namespace_invalid;
 }
 
+gboolean
+stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
+{
+    gboolean rv = FALSE;
+    stonith_t *stonith_api = st?st:stonith_api_new();
+    char *list = NULL;
+
+    if(stonith_api) {
+        if (stonith_api->state == stonith_disconnected) {
+            int rc = stonith_api->cmds->connect(stonith_api, "stonith-api", NULL);
+
+            if (rc != pcmk_ok) {
+                crm_err("Failed connecting to Stonith-API for watchdog-fencing-query.");
+            }
+        }
+
+        if (stonith_api->state != stonith_disconnected) {
+            /* caveat!!!
+             * this might fail when when stonithd is just updating the device-list
+             * probably something we should fix as well for other api-calls */
+            int rc = stonith_api->cmds->list(stonith_api, st_opt_sync_call, STONITH_WATCHDOG_ID, &list, 0);
+            if ((rc != pcmk_ok) || (list == NULL)) {
+                /* due to the race described above it can happen that
+                 * we drop in here - so as not to make remote nodes
+                 * panic on that answer
+                 */
+                crm_warn("watchdog-fencing-query failed");
+            } else if (list[0] == '\0') {
+                crm_warn("watchdog-fencing-query returned an empty list - any node");
+                rv = TRUE;
+            } else {
+                GList *targets = stonith__parse_targets(list);
+                rv = pcmk__str_in_list(targets, node, pcmk__str_casei);
+                g_list_free_full(targets, free);
+            }
+            free(list);
+            if (!st) {
+                /* if we're provided the api we still might have done the
+                 * connection - but let's assume the caller won't bother
+                 */
+                stonith_api->cmds->disconnect(stonith_api);
+            }
+        }
+
+        if (!st) {
+            stonith_api_delete(stonith_api);
+        }
+    } else {
+        crm_err("Stonith-API for watchdog-fencing-query couldn't be created.");
+    }
+    crm_trace("Pacemaker assumes node %s %sto do watchdog-fencing.",
+              node, rv?"":"not ");
+    return rv;
+}
+
+gboolean
+stonith__watchdog_fencing_enabled_for_node(const char *node)
+{
+    return stonith__watchdog_fencing_enabled_for_node_api(NULL, node);
+}
+
 static void
 log_action(stonith_action_t *action, pid_t pid)
 {
