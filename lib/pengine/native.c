@@ -1279,14 +1279,26 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int show_op
         char *type = (char *) gIter->data;
         int *rsc_counter = g_hash_table_lookup(rsc_table, type);
 
-        GHashTableIter hash_iter2;
-        char *node_name = NULL;
-        GHashTable *node_table = NULL;
+        GList *sorted_nodes = NULL;
         int active_counter_all = 0;
 
-        g_hash_table_iter_init(&hash_iter2, active_table);
-        while (g_hash_table_iter_next(&hash_iter2, (gpointer *)&node_name, (gpointer *)&node_table)) {
-            int *active_counter = g_hash_table_lookup(node_table, type);
+        /* Also make a list of the active_table keys so it can be sorted.  If there's
+         * more than one instance of a type of resource running, we need the nodes to
+         * be sorted to make sure output order stays consistent between systems.
+         */
+        sorted_nodes = g_hash_table_get_keys(active_table);
+        sorted_nodes = g_list_sort(sorted_nodes, (GCompareFunc) pcmk__numeric_strcasecmp);
+
+        for (GList *gIter2 = sorted_nodes; gIter2; gIter2 = gIter2->next) {
+            char *node_name = (char *) gIter2->data;
+            GHashTable *node_table = g_hash_table_lookup(active_table, node_name);
+            int *active_counter = NULL;
+
+            if (node_table == NULL) {
+                continue;
+            }
+
+            active_counter = g_hash_table_lookup(node_table, type);
 
             if (active_counter == NULL || *active_counter == 0) {
                 continue;
@@ -1318,6 +1330,10 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int show_op
                            active_counter_all,
                            rsc_counter ? *rsc_counter : 0, type);
             rc = pcmk_rc_ok;
+        }
+
+        if (sorted_nodes) {
+            g_list_free(sorted_nodes);
         }
     }
 
