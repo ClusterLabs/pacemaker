@@ -2057,6 +2057,26 @@ is_primitive_action(pe_action_t *action)
 
 /*!
  * \internal
+ * \brief Clear a single action flag and set reason text
+ *
+ * \param[in] action  Action whose flag should be cleared
+ * \param[in] flag    Action flag that should be cleared
+ * \param[in] reason  Action that is the reason why flag is being cleared
+ */
+#define clear_action_flag_because(action, flag, reason) do {                \
+        if (pcmk_is_set((action)->flags, (flag))) {                         \
+            pe__clear_action_flags(action, flag);                           \
+            if ((action)->rsc != (reason)->rsc) {                           \
+                char *reason_text = pe__action2reason((reason), (flag));    \
+                pe_action_set_reason((action), reason_text,                 \
+                                   ((flag) == pe_action_migrate_runnable)); \
+                free(reason_text);                                          \
+            }                                                               \
+        }                                                                   \
+    } while (0)
+
+/*!
+ * \internal
  * \brief Set action bits appropriately when pe_restart_order is used
  *
  * \param[in] first   'First' action in an ordering with pe_restart_order
@@ -2102,23 +2122,23 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
 
     // Make 'first' required if it is runnable
     if (pcmk_is_set(first->flags, pe_action_runnable)) {
-        pe_action_implies(first, then, pe_action_optional);
+        clear_action_flag_because(first, pe_action_optional, then);
     }
 
     // Make 'first' required if 'then' is required
     if (!pcmk_is_set(then->flags, pe_action_optional)) {
-        pe_action_implies(first, then, pe_action_optional);
+        clear_action_flag_because(first, pe_action_optional, then);
     }
 
     // Make 'first' unmigratable if 'then' is unmigratable
     if (!pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-        pe_action_implies(first, then, pe_action_migrate_runnable);
+        clear_action_flag_because(first, pe_action_migrate_runnable, then);
     }
 
     // Make 'then' unrunnable if 'first' is required but unrunnable
     if (!pcmk_is_set(first->flags, pe_action_optional)
         && !pcmk_is_set(first->flags, pe_action_runnable)) {
-        pe_action_implies(then, first, pe_action_runnable);
+        clear_action_flag_because(then, pe_action_runnable, first);
     }
 }
 
@@ -2131,10 +2151,6 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
-
-    crm_trace(   "Testing %s on %s (0x%.6x) with %s 0x%.6x",
-                 first->uuid, first->node ? first->node->details->uname : "[none]",
-                 first->flags, then->uuid, then->flags);
 
     if (type & pe_order_asymmetrical) {
         pe_resource_t *then_rsc = then->rsc;
@@ -2159,10 +2175,8 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
-            pe_action_implies(then, first, pe_action_optional);
-            pe_action_implies(then, first, pe_action_runnable);
-
-            pe_rsc_trace(then->rsc, "Unset optional and runnable on %s", then->uuid);
+            clear_action_flag_because(then, pe_action_optional, first);
+            clear_action_flag_because(then, pe_action_runnable, first);
         } else {
             /* ignore... then is allowed to start/stop if it wants to. */
         }
@@ -2175,18 +2189,12 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         if (pcmk_is_set(filter, pe_action_optional)
             && !pcmk_is_set(flags, pe_action_optional)
             && pcmk_is_set(first_flags, pe_action_optional)) {
-            pe_rsc_trace(first->rsc,
-                         "Unset optional on %s because %s implies first",
-                         first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_optional);
+            clear_action_flag_because(first, pe_action_optional, then);
         }
 
         if (pcmk_is_set(flags, pe_action_migrate_runnable) &&
             !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-
-            pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s",
-                         first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_migrate_runnable);
+            clear_action_flag_because(first, pe_action_migrate_runnable, then);
         }
     }
 
@@ -2194,17 +2202,14 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         if ((filter & pe_action_optional) &&
             ((then->flags & pe_action_optional) == FALSE) &&
             (then->rsc != NULL) && (then->rsc->role == RSC_ROLE_PROMOTED)) {
-            pe_action_implies(first, then, pe_action_optional);
+
+            clear_action_flag_because(first, pe_action_optional, then);
 
             if (pcmk_is_set(first->flags, pe_action_migrate_runnable) &&
                 !pcmk_is_set(then->flags, pe_action_migrate_runnable)) {
-
-                pe_rsc_trace(first->rsc, "Unset migrate runnable on %s because of %s", first->uuid, then->uuid);
-                pe_action_implies(first, then, pe_action_migrate_runnable);
+                clear_action_flag_because(first, pe_action_migrate_runnable,
+                                          then);
             }
-            pe_rsc_trace(then->rsc,
-                         "Unset optional on %s because %s (promoted) implies first",
-                         first->uuid, then->uuid);
         }
     }
 
@@ -2213,14 +2218,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if (((then->flags & pe_action_migrate_runnable) == FALSE) ||
             ((then->flags & pe_action_runnable) == FALSE)) {
-
-            pe_rsc_trace(then->rsc, "Unset runnable on %s because %s is neither runnable or migratable", first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_runnable);
+            clear_action_flag_because(first, pe_action_runnable, then);
         }
 
         if ((then->flags & pe_action_optional) == 0) {
-            pe_rsc_trace(then->rsc, "Unset optional on %s because %s is not optional", first->uuid, then->uuid);
-            pe_action_implies(first, then, pe_action_optional);
+            clear_action_flag_because(first, pe_action_optional, then);
         }
     }
 
@@ -2228,20 +2230,18 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         && pcmk_is_set(filter, pe_action_optional)) {
 
         if ((first->flags & pe_action_runnable) == FALSE) {
-            pe_action_implies(then, first, pe_action_migrate_runnable);
+            clear_action_flag_because(then, pe_action_migrate_runnable, first);
             pe__clear_action_flags(then, pe_action_pseudo);
-            pe_rsc_trace(then->rsc, "Unset pseudo on %s because %s is not runnable", then->uuid, first->uuid);
         }
-
     }
 
     if (pcmk_is_set(type, pe_order_runnable_left)
         && pcmk_is_set(filter, pe_action_runnable)
         && pcmk_is_set(then->flags, pe_action_runnable)
         && !pcmk_is_set(flags, pe_action_runnable)) {
-        pe_rsc_trace(then->rsc, "Unset runnable on %s because of %s", then->uuid, first->uuid);
-        pe_action_implies(then, first, pe_action_runnable);
-        pe_action_implies(then, first, pe_action_migrate_runnable);
+
+        clear_action_flag_because(then, pe_action_runnable, first);
+        clear_action_flag_because(then, pe_action_migrate_runnable, first);
     }
 
     if (pcmk_is_set(type, pe_order_implies_then)
@@ -2250,10 +2250,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
         && !pcmk_is_set(flags, pe_action_optional)
         && !pcmk_is_set(first->flags, pe_action_migrate_runnable)) {
 
-        pe_rsc_trace(then->rsc,
-                     "Unset optional on %s because %s implies 'then'",
-                     then->uuid, first->uuid);
-        pe_action_implies(then, first, pe_action_optional);
+        clear_action_flag_because(then, pe_action_optional, first);
     }
 
     if (pcmk_is_set(type, pe_order_restart)) {
@@ -2263,9 +2260,11 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (then_flags != then->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_then);
         pe_rsc_trace(then->rsc,
-                     "Then: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
-                     then->uuid, then->node ? then->node->details->uname : "[none]", then->flags,
-                     then_flags, first->uuid, first->flags);
+                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
+                     "because of 'first' %s (0x%.6x)",
+                     then->uuid,
+                     then->node? then->node->details->uname : "no node",
+                     then->flags, then_flags, first->uuid, first->flags);
 
         if(then->rsc && then->rsc->parent) {
             /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
@@ -2276,8 +2275,10 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
     if (first_flags != first->flags) {
         pe__set_graph_flags(changed, first, pe_graph_updated_first);
         pe_rsc_trace(first->rsc,
-                     "First: Flags for %s on %s are now  0x%.6x (was 0x%.6x) because of %s 0x%.6x",
-                     first->uuid, first->node ? first->node->details->uname : "[none]",
+                     "%s on %s: flags are now 0x%.6x (was 0x%.6x) "
+                     "because of 'then' %s (0x%.6x)",
+                     first->uuid,
+                     first->node? first->node->details->uname : "no node",
                      first->flags, first_flags, then->uuid, then->flags);
     }
 

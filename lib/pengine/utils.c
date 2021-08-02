@@ -458,9 +458,6 @@ find_existing_action(const char *key, pe_resource_t *rsc, pe_node_t *node,
     CRM_LOG_ASSERT(!pcmk__list_of_multiple(matches));
 
     action = matches->data;
-    pe_rsc_trace(rsc, "Found existing action %d (%s for %s on %s)",
-                 action->id, key, ((rsc == NULL)? "no resource" : rsc->id),
-                 ((node == NULL)? "no node" : node->details->uname));
     g_list_free(matches);
     return action;
 }
@@ -665,9 +662,8 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
             case no_quorum_stop:
                 pe_rsc_debug(action->rsc, "%s on %s is unrunnable (no quorum)",
                              action->uuid, action->node->details->uname);
-                pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                          "no quorum", pe_action_runnable,
-                                          true);
+                pe__clear_action_flags(action, pe_action_runnable);
+                pe_action_set_reason(action, "no quorum", true);
                 break;
 
             case no_quorum_freeze:
@@ -676,9 +672,8 @@ update_resource_action_runnable(pe_action_t *action, bool for_graph,
                     pe_rsc_debug(action->rsc,
                                  "%s on %s is unrunnable (no quorum)",
                                  action->uuid, action->node->details->uname);
-                    pe_action_set_flag_reason(__func__, __LINE__, action, NULL,
-                                              "quorum freeze",
-                                              pe_action_runnable, true);
+                    pe__clear_action_flags(action, pe_action_runnable);
+                    pe_action_set_reason(action, "quorum freeze", true);
                 }
                 break;
 
@@ -1583,7 +1578,6 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
         pe_action_t *action = (pe_action_t *) gIter->data;
 
         if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
-            crm_trace("%s does not match action %s", key, action->uuid);
             continue;
 
         } else if (on_node == NULL) {
@@ -1600,11 +1594,6 @@ find_actions(GList *input, const char *key, const pe_node_t *on_node)
         } else if (on_node->details == action->node->details) {
             crm_trace("Action %s on %s matches", key, on_node->details->uname);
             result = g_list_prepend(result, action);
-
-        } else {
-            crm_trace("Action %s on node %s does not match requested node %s",
-                      key, action->node->details->uname,
-                      on_node->details->uname);
         }
     }
 
@@ -1619,27 +1608,18 @@ find_actions_exact(GList *input, const char *key, const pe_node_t *on_node)
     CRM_CHECK(key != NULL, return NULL);
 
     if (on_node == NULL) {
-        crm_trace("Not searching for action %s because node not specified",
-                  key);
         return NULL;
     }
 
     for (GList *gIter = input; gIter != NULL; gIter = gIter->next) {
         pe_action_t *action = (pe_action_t *) gIter->data;
 
-        if (action->node == NULL) {
-            crm_trace("Skipping comparison of %s vs action %s without node",
-                      key, action->uuid);
+        if ((action->node != NULL)
+            && pcmk__str_eq(key, action->uuid, pcmk__str_casei)
+            && pcmk__str_eq(on_node->details->id, action->node->details->id,
+                            pcmk__str_casei)) {
 
-        } else if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
-            crm_trace("Desired action %s doesn't match %s", key, action->uuid);
-
-        } else if (!pcmk__str_eq(on_node->details->id, action->node->details->id, pcmk__str_casei)) {
-            crm_trace("Action %s desired node ID %s doesn't match %s",
-                      key, on_node->details->id, action->node->details->id);
-
-        } else {
-            crm_trace("Action %s matches", key);
+            crm_trace("Action %s on %s matches", key, on_node->details->uname);
             result = g_list_prepend(result, action);
         }
     }
@@ -1936,7 +1916,8 @@ order_actions(pe_action_t * lh_action, pe_action_t * rh_action, enum pe_ordering
         return FALSE;
     }
 
-    crm_trace("Ordering Action %s before %s", lh_action->uuid, rh_action->uuid);
+    crm_trace("Creating action wrappers for ordering: %s then %s",
+              lh_action->uuid, rh_action->uuid);
 
     /* Ensure we never create a dependency on ourselves... it's happened */
     CRM_ASSERT(lh_action != rh_action);
@@ -2247,7 +2228,9 @@ pe_fence_op(pe_node_t * node, const char *op, bool optional, const char *reason,
     }
 
     if(optional == FALSE && pe_can_fence(data_set, node)) {
-        pe_action_required(stonith_op, NULL, reason);
+        pe__clear_action_flags(stonith_op, pe_action_optional);
+        pe_action_set_reason(stonith_op, reason, false);
+
     } else if(reason && stonith_op->reason == NULL) {
         stonith_op->reason = strdup(reason);
     }
@@ -2327,63 +2310,39 @@ add_tag_ref(GHashTable * tags, const char * tag_name,  const char * obj_ref)
     return TRUE;
 }
 
-void pe_action_set_flag_reason(const char *function, long line,
-                               pe_action_t *action, pe_action_t *reason, const char *text,
-                               enum pe_action_flags flags, bool overwrite)
+/*!
+ * \internal
+ * \brief Create an action reason string based on the action itself
+ *
+ * \param[in] action  Action to create reason string for
+ * \param[in] flag    Action flag that was cleared
+ *
+ * \return Newly allocated string suitable for use as action reason
+ * \note It is the caller's responsibility to free() the result.
+ */
+char *
+pe__action2reason(pe_action_t *action, enum pe_action_flags flag)
 {
-    bool unset = FALSE;
-    bool update = FALSE;
     const char *change = NULL;
 
-    if (pcmk_is_set(flags, pe_action_runnable)) {
-        unset = TRUE;
-        change = "unrunnable";
-    } else if (pcmk_is_set(flags, pe_action_optional)) {
-        unset = TRUE;
-        change = "required";
-    } else if (pcmk_is_set(flags, pe_action_migrate_runnable)) {
-        unset = TRUE;
-        overwrite = TRUE;
-        change = "unrunnable";
-    } else if (pcmk_is_set(flags, pe_action_dangle)) {
-        change = "dangling";
-    } else if (pcmk_is_set(flags, pe_action_requires_any)) {
-        change = "required";
-    } else {
-        crm_err("Unknown flag change to %x by %s: 0x%s",
-                flags, action->uuid, (reason? reason->uuid : "0"));
+    switch (flag) {
+        case pe_action_runnable:
+        case pe_action_migrate_runnable:
+            change = "unrunnable";
+            break;
+        case pe_action_optional:
+            change = "required";
+            break;
+        default:
+            // Bug: caller passed unsupported flag
+            CRM_CHECK(change != NULL, change = "");
+            break;
     }
-
-    if(unset) {
-        if (pcmk_is_set(action->flags, flags)) {
-            pe__clear_action_flags_as(function, line, action, flags);
-            update = TRUE;
-        }
-
-    } else {
-        if (!pcmk_is_set(action->flags, flags)) {
-            pe__set_action_flags_as(function, line, action, flags);
-            update = TRUE;
-        }
-    }
-
-    if((change && update) || text) {
-        char *reason_text = NULL;
-        if(reason == NULL) {
-            pe_action_set_reason(action, text, overwrite);
-
-        } else if(reason->rsc == NULL) {
-            reason_text = crm_strdup_printf("%s %s%c %s", change, reason->task, text?':':0, text?text:"");
-        } else {
-            reason_text = crm_strdup_printf("%s %s %s%c %s", change, reason->rsc->id, reason->task, text?':':0, text?text:"NA");
-        }
-
-        if(reason_text && action->rsc != reason->rsc) {
-            pe_action_set_reason(action, reason_text, overwrite);
-        }
-        free(reason_text);
-    }
- }
+    return crm_strdup_printf("%s%s%s %s", change,
+                             (action->rsc == NULL)? "" : " ",
+                             (action->rsc == NULL)? "" : action->rsc->id,
+                             action->task);
+}
 
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
 {

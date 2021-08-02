@@ -85,7 +85,7 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
             continue;
         }
 
-        crm_trace("Processing constraint %s %s", tag, id);
+        crm_trace("Unpacking %s constraint '%s'", tag, id);
 
         lifetime = first_named_child(xml_obj, "lifetime");
         if (lifetime) {
@@ -307,7 +307,6 @@ order_is_symmetrical(xmlNode * xml_obj,
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
-    int order_id = 0;
     pe_resource_t *rsc_then = NULL;
     pe_resource_t *rsc_first = NULL;
     gboolean invert_bool = TRUE;
@@ -412,7 +411,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     kind = get_ordering_type(xml_obj);
 
     if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-        crm_trace("Upgrade : recovery - implies right");
         pe__set_order_flags(cons_weight, pe_order_implies_then);
     }
 
@@ -474,16 +472,13 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
         /* order the "then" dependency to occur after the pseudo action only if
          * the pseudo action is runnable */ 
-        order_id = custom_action_order(NULL, NULL, unordered_action, rsc_then,
-                                       pcmk__op_key(rsc_then->id, action_then, 0),
-                                       NULL, cons_weight|pe_order_runnable_left,
-                                       data_set);
+        custom_action_order(NULL, NULL, unordered_action, rsc_then,
+                            pcmk__op_key(rsc_then->id, action_then, 0),
+                            NULL, cons_weight|pe_order_runnable_left, data_set);
     } else {
-        order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
+        new_rsc_order(rsc_first, action_first, rsc_then, action_then,
+                      cons_weight, data_set);
     }
-
-    pe_rsc_trace(rsc_first, "order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
-                 order_id, id, rsc_first->id, action_first, rsc_then->id, action_then, cons_weight);
 
     if (invert_bool == FALSE) {
         return TRUE;
@@ -499,17 +494,14 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     cons_weight = pe_order_optional;
     if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-        crm_trace("Upgrade : recovery - implies left");
         pe__set_order_flags(cons_weight, pe_order_implies_first);
     }
 
     pe__set_order_flags(cons_weight,
                           get_flags(id, kind, action_first, action_then, TRUE));
 
-    order_id = new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
-
-    pe_rsc_trace(rsc_then, "order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
-                 order_id, id, rsc_then->id, action_then, rsc_first->id, action_first, cons_weight);
+    new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight,
+                  data_set);
 
     return TRUE;
 }
@@ -1605,10 +1597,6 @@ custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * 
 
     order = calloc(1, sizeof(pe__ordering_t));
 
-    crm_trace("Creating[%d] %s %s %s - %s %s %s", data_set->order_id,
-              lh_rsc?lh_rsc->id:"NA", lh_action_task?lh_action_task:"NA", lh_action?lh_action->uuid:"NA",
-              rh_rsc?rh_rsc->id:"NA", rh_action_task?rh_action_task:"NA", rh_action?rh_action->uuid:"NA");
-
     /* CRM_ASSERT(data_set->order_id != 291); */
 
     order->id = data_set->order_id++;
@@ -1636,6 +1624,11 @@ custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * 
         order->rh_rsc = rh_action->rsc;
     }
 
+    pe_rsc_trace(lh_rsc, "Created ordering %d for %s then %s",
+                 (data_set->order_id - 1),
+                 ((lh_action_task == NULL)? "?" : lh_action_task),
+                 ((rh_action_task == NULL)? "?" : rh_action_task));
+
     data_set->ordering_constraints = g_list_prepend(data_set->ordering_constraints, order);
     handle_migration_ordering(order, data_set);
 
@@ -1659,17 +1652,16 @@ enum pe_ordering
 get_flags(const char *id, enum pe_order_kind kind,
           const char *action_first, const char *action_then, gboolean invert)
 {
-    enum pe_ordering flags = pe_order_optional;
+    enum pe_ordering flags = pe_order_none; // so we trace-log all flags
+
+    pe__set_order_flags(flags, pe_order_optional);
 
     if (invert && kind == pe_order_kind_mandatory) {
-        crm_trace("Upgrade %s: implies left", id);
         pe__set_order_flags(flags, pe_order_implies_first);
 
     } else if (kind == pe_order_kind_mandatory) {
-        crm_trace("Upgrade %s: implies right", id);
         pe__set_order_flags(flags, pe_order_implies_then);
         if (pcmk__strcase_any_of(action_first, RSC_START, RSC_PROMOTE, NULL)) {
-            crm_trace("Upgrade %s: runnable", id);
             pe__set_order_flags(flags, pe_order_runnable_left);
         }
 
