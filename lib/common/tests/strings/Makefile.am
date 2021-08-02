@@ -26,6 +26,7 @@ test_programs =	crm_is_true_test 	\
 		pcmk__char_in_any_str_test	\
 		pcmk__parse_ll_range_test	\
 		pcmk__scan_double_test		\
+		pcmk__starts_with_test 		\
 		pcmk__str_any_of_test		\
 		pcmk__str_in_list_test		\
 		pcmk__strcmp_test
