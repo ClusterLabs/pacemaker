@@ -24,6 +24,7 @@ test_programs =	crm_is_true_test 	\
 		pcmk__add_word_test		\
 		pcmk__btoa_test			\
 		pcmk__char_in_any_str_test	\
+		pcmk__ends_with_test 		\
 		pcmk__parse_ll_range_test	\
 		pcmk__scan_double_test		\
 		pcmk__starts_with_test 		\
