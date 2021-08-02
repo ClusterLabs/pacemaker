@@ -19,7 +19,8 @@ include $(top_srcdir)/mk/glib-tap.mk
 # https://developer.gnome.org/glib/unstable/glib-Testing.html
 #
 # Add "_test" to the end of all test program names to simplify .gitignore.
-test_programs =	crm_str_to_boolean_test 	\
+test_programs =	crm_is_true_test 	\
+		crm_str_to_boolean_test 	\
 		pcmk__add_word_test		\
 		pcmk__btoa_test			\
 		pcmk__char_in_any_str_test	\
