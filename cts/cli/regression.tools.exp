@@ -335,7 +335,6 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ node1 ]
-
 =#=#=#= Current cib after: Create node1 and bring it online =#=#=#=
 <cib epoch="9" num_updates="2" admin_epoch="0">
   <configuration>

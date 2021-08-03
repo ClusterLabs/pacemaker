@@ -1475,9 +1475,8 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
                               section_opts, show_opts));
 
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
-        PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
         CHECK_RC(rc, out->message(out, "node-list", data_set->nodes, unames,
-                                  resources, show_opts));
+                                  resources, show_opts, rc == pcmk_rc_ok));
     }
 
     /* Print resources section, if needed */
@@ -1591,7 +1590,8 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
 
     /*** NODES ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
-        out->message(out, "node-list", data_set->nodes, unames, resources, show_opts);
+        out->message(out, "node-list", data_set->nodes, unames, resources,
+                     show_opts, FALSE);
     }
 
     /* Print resources section, if needed */
@@ -1666,7 +1666,8 @@ cluster_status_html(pcmk__output_t *out, va_list args)
 
     /*** NODE LIST ***/
     if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
-        out->message(out, "node-list", data_set->nodes, unames, resources, show_opts);
+        out->message(out, "node-list", data_set->nodes, unames, resources,
+                     show_opts, FALSE);
     }
 
     /* Print resources section, if needed */

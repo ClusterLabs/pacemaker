@@ -403,10 +403,9 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
 
     all = g_list_prepend(all, (gpointer) "*");
 
-    rc = out->message(out, "node-list", data_set->nodes, all, all, show_opts);
-    PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
+    rc = out->message(out, "node-list", data_set->nodes, all, all, show_opts, FALSE);
     rc = out->message(out, "resource-list", data_set, show_opts | pcmk_show_inactive_rscs,
-                      FALSE, all, all, FALSE);
+                      FALSE, all, all, rc == pcmk_rc_ok);
 
     if (options.show_attrs) {
         rc = out->message(out, "node-attribute-list", data_set,
