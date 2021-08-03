@@ -932,6 +932,15 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             out->list_item(out, NULL, "%s: [ %s ]", state, stopped_list);
             free(stopped_list);
             stopped_list_len = 0;
+
+        /* If there are no instances of this clone (perhaps because there are no
+         * nodes configured), simply output the clone header by itself.  This can
+         * come up in PCS testing.
+         */
+        } else if (active_instances == 0) {
+            clone_header(out, &rc, rsc, clone_data);
+            PCMK__OUTPUT_LIST_FOOTER(out, rc);
+            return rc;
         }
     }
 
