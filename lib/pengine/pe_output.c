@@ -1886,13 +1886,14 @@ node_history_list(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean")
 static int
 node_list_html(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
+    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
 
     int rc = pcmk_rc_no_output;
 
@@ -1912,13 +1913,14 @@ node_list_html(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean")
 static int
 node_list_text(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
+    gboolean print_spacer = va_arg(args, gboolean);
 
     /* space-separated lists of node names */
     char *online_nodes = NULL;
@@ -1945,7 +1947,7 @@ node_list_text(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Node List");
+        PCMK__OUTPUT_LIST_HEADER(out, print_spacer == TRUE, rc, "Node List");
 
         /* Get node mode */
         if (node->details->unclean) {
@@ -2047,13 +2049,14 @@ node_list_text(pcmk__output_t *out, va_list args) {
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int")
+PCMK__OUTPUT_ARGS("node-list", "GList *", "GList *", "GList *", "unsigned int", "gboolean")
 static int
 node_list_xml(pcmk__output_t *out, va_list args) {
     GList *nodes = va_arg(args, GList *);
     GList *only_node = va_arg(args, GList *);
     GList *only_rsc = va_arg(args, GList *);
     unsigned int show_opts = va_arg(args, unsigned int);
+    gboolean print_spacer G_GNUC_UNUSED = va_arg(args, gboolean);
 
     out->begin_list(out, NULL, NULL, "nodes");
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
