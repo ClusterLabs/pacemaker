@@ -548,8 +548,8 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
     action_then = invert_action(action_then);
     action_first = invert_action(action_first);
     if ((action_then == NULL) || (action_first == NULL)) {
-        pcmk__config_err("Cannot invert constraint '%s' "
-                         "(please specify inverse manually)", id);
+        pcmk__config_warn("Cannot invert constraint '%s' "
+                          "(please specify inverse manually)", id);
     } else {
         enum pe_ordering flags = ordering_flags_for_kind(kind, action_first,
                                                          ordering_symmetric_inverse);
