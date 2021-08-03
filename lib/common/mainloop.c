@@ -1488,6 +1488,7 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/mainloop_compat.h>
 
@@ -1497,4 +1498,5 @@ crm_signal(int sig, void (*dispatch) (int sig))
     return crm_signal_handler(sig, dispatch) != SIG_ERR;
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

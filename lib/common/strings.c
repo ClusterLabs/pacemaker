@@ -1187,6 +1187,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
 
@@ -1312,4 +1313,5 @@ pcmk_numeric_strcasecmp(const char *s1, const char *s2)
     return pcmk__numeric_strcasecmp(s1, s2);
 }
 
+// LCOV_EXCL_END
 // End deprecated API

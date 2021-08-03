@@ -1061,6 +1061,7 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/logging_compat.h>
 
@@ -1077,4 +1078,5 @@ crm_add_logfile(const char *filename)
     return pcmk__add_logfile(filename) == pcmk_rc_ok;
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API
