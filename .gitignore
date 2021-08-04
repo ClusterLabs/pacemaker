@@ -68,6 +68,7 @@ configure
 /daemons/execd/pacemaker_remote
 /daemons/execd/pacemaker_remote.service
 /daemons/fenced/fence_legacy
+/daemons/fenced/fence_watchdog
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
 /daemons/pacemakerd/pacemaker.upstart

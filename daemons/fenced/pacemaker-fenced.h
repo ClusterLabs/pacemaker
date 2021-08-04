@@ -260,14 +260,15 @@ bool fencing_peer_active(crm_node_t *peer);
 
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 
-gboolean string_in_list(GList *list, const char *item);
-
 gboolean node_has_attr(const char *node, const char *name, const char *value);
+
+gboolean node_does_watchdog_fencing(const char *node);
 
 extern char *stonith_our_uname;
 extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long stonith_watchdog_timeout_ms;
+extern GList *stonith_watchdog_targets;
 
 extern GHashTable *stonith_remote_op_list;

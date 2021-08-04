@@ -744,6 +744,7 @@ exit 0
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/fence_legacy.*
+%doc %{_mandir}/man8/fence_watchdog.*
 %doc %{_mandir}/man8/pacemakerd.*
 
 %doc %{_datadir}/pacemaker/alerts
@@ -796,6 +797,7 @@ exit 0
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
 %{_sbindir}/crm_ticket
+%{_sbindir}/fence_watchdog
 %{_sbindir}/stonith_admin
 # "dirname" is owned by -schemas, which is a prerequisite
 %{_datadir}/pacemaker/report.collector
@@ -822,6 +824,7 @@ exit 0
 %exclude %{_mandir}/man8/crm_attribute.*
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_legacy.*
+%exclude %{_mandir}/man8/fence_watchdog.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker-remoted.*
 

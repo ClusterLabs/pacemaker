@@ -615,7 +615,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
     },
     {
         "stonith-watchdog-timeout", NULL, "time", NULL,
-        "0", pcmk__valid_sbd_timeout,
+        "0", controld_verify_stonith_watchdog_timeout,
         "How long to wait before we can assume nodes are safely down "
             "when watchdog-based self-fencing via SBD is in use",
         "If nonzero, along with `have-watchdog=true` automatically set by the "

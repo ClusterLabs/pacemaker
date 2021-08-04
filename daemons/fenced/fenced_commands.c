@@ -69,7 +69,7 @@ static void stonith_send_reply(xmlNode * reply, int call_options, const char *re
 static void search_devices_record_result(struct device_search_s *search, const char *device,
                                          gboolean can_fence);
 
-static xmlNode * get_agent_metadata(const char *agent);
+static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(stonith_device_t *device);
 
 typedef struct async_command_s {
@@ -323,19 +323,26 @@ fork_cb(GPid pid, gpointer user_data)
 static int
 get_agent_metadata_cb(gpointer data) {
     stonith_device_t *device = data;
+    guint period_ms;
 
-    device->agent_metadata = get_agent_metadata(device->agent);
-    if (device->agent_metadata) {
-        read_action_metadata(device);
-        stonith__device_parameter_flags(&(device->flags), device->id,
+    switch (get_agent_metadata(device->agent, &device->agent_metadata)) {
+        case pcmk_rc_ok:
+            if (device->agent_metadata) {
+                read_action_metadata(device);
+                stonith__device_parameter_flags(&(device->flags), device->id,
                                         device->agent_metadata);
-        return G_SOURCE_REMOVE;
-    } else {
-        guint period_ms = pcmk__mainloop_timer_get_period(device->timer);
-        if (period_ms < 160 * 1000) {
-            mainloop_timer_set_period(device->timer, 2 * period_ms);
-        }
-        return G_SOURCE_CONTINUE;
+            }
+            return G_SOURCE_REMOVE;
+
+        case EAGAIN:
+            period_ms = pcmk__mainloop_timer_get_period(device->timer);
+            if (period_ms < 160 * 1000) {
+                mainloop_timer_set_period(device->timer, 2 * period_ms);
+            }
+            return G_SOURCE_CONTINUE;
+
+        default:
+            return G_SOURCE_REMOVE;
     }
 }
 
@@ -390,15 +397,13 @@ stonith_device_execute(stonith_device_t * device)
         return TRUE;
     }
 
-    if(pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT, pcmk__str_casei)) {
-        if(pcmk__str_eq(cmd->action, "reboot", pcmk__str_casei)) {
-            pcmk__panic(__func__);
-            goto done;
-
-        } else if(pcmk__str_eq(cmd->action, "off", pcmk__str_casei)) {
-            pcmk__panic(__func__);
-            goto done;
-
+    if (pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
+                         STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
+        if (pcmk__strcase_any_of(cmd->action, "reboot", "off", NULL)) {
+            if (node_does_watchdog_fencing(stonith_our_uname)) {
+                pcmk__panic(__func__);
+                goto done;
+            }
         } else {
             crm_info("Faking success for %s watchdog operation", cmd->action);
             cmd->done_cb(0, 0, NULL, cmd);
@@ -700,38 +705,41 @@ init_metadata_cache(void) {
     }
 }
 
-static xmlNode *
-get_agent_metadata(const char *agent)
+int
+get_agent_metadata(const char *agent, xmlNode ** metadata)
 {
-    xmlNode *xml = NULL;
     char *buffer = NULL;
 
+    if (metadata == NULL) {
+        return EINVAL;
+    }
+    *metadata = NULL;
+    if (pcmk__str_eq(agent, STONITH_WATCHDOG_AGENT_INTERNAL, pcmk__str_none)) {
+        return pcmk_rc_ok;
+    }
     init_metadata_cache();
     buffer = g_hash_table_lookup(metadata_cache, agent);
-    if(pcmk__str_eq(agent, STONITH_WATCHDOG_AGENT, pcmk__str_casei)) {
-        return NULL;
-
-    } else if(buffer == NULL) {
+    if (buffer == NULL) {
         stonith_t *st = stonith_api_new();
         int rc;
 
         if (st == NULL) {
             crm_warn("Could not get agent meta-data: "
                      "API memory allocation failed");
-            return NULL;
+            return EAGAIN;
         }
-        rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
+        rc = st->cmds->metadata(st, st_opt_sync_call, agent,
+                                NULL, &buffer, 10);
         stonith_api_delete(st);
         if (rc || !buffer) {
             crm_err("Could not retrieve metadata for fencing agent %s", agent);
-            return NULL;
+            return EAGAIN;
         }
         g_hash_table_replace(metadata_cache, strdup(agent), buffer);
     }
 
-    xml = string2xml(buffer);
-
-    return xml;
+    *metadata = string2xml(buffer);
+    return pcmk_rc_ok;
 }
 
 static gboolean
@@ -962,19 +970,27 @@ build_device_from_xml(xmlNode * msg)
         g_list_free_full(device->targets, free);
         device->targets = NULL;
     }
-    device->agent_metadata = get_agent_metadata(device->agent);
-    if (device->agent_metadata) {
-        read_action_metadata(device);
-        stonith__device_parameter_flags(&(device->flags), device->id,
-                                        device->agent_metadata);
-    } else {
-        if (device->timer == NULL) {
-            device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
+    switch (get_agent_metadata(device->agent, &device->agent_metadata)) {
+        case pcmk_rc_ok:
+            if (device->agent_metadata) {
+                read_action_metadata(device);
+                stonith__device_parameter_flags(&(device->flags), device->id,
+                                                device->agent_metadata);
+            }
+            break;
+
+        case EAGAIN:
+            if (device->timer == NULL) {
+                device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
                                            TRUE, get_agent_metadata_cb, device);
-        }
-        if (!mainloop_timer_running(device->timer)) {
-            mainloop_timer_start(device->timer);
-        }
+            }
+            if (!mainloop_timer_running(device->timer)) {
+                mainloop_timer_start(device->timer);
+            }
+            break;
+
+        default:
+            break;
     }
 
     value = g_hash_table_lookup(device->params, "nodeid");
@@ -1030,24 +1046,6 @@ schedule_internal_command(const char *origin,
     cmd->done_cb = done_cb; /* cmd, not internal_user_data, is passed to 'done_cb' as the userdata */
 
     schedule_stonith_command(cmd, device);
-}
-
-gboolean
-string_in_list(GList *list, const char *item)
-{
-    int lpc = 0;
-    int max = g_list_length(list);
-
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *value = g_list_nth_data(list, lpc);
-
-        if (pcmk__str_eq(item, value, pcmk__str_casei)) {
-            return TRUE;
-        } else {
-            crm_trace("%d: '%s' != '%s'", lpc, item, value);
-        }
-    }
-    return FALSE;
 }
 
 static void
@@ -1126,7 +1124,7 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         if (!alias) {
             alias = search->host;
         }
-        if (string_in_list(dev->targets, alias)) {
+        if (pcmk__str_in_list(dev->targets, alias, pcmk__str_casei)) {
             can_fence = TRUE;
         }
     }
@@ -1197,8 +1195,61 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
     stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
     guint ndevices = 0;
+    int rv = pcmk_ok;
 
     CRM_CHECK(device != NULL, return -ENOMEM);
+
+    /* do we have a watchdog-device? */
+    if (pcmk__str_eq(device->id, STONITH_WATCHDOG_ID, pcmk__str_none) ||
+        pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
+                     STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) do {
+        if (stonith_watchdog_timeout_ms <= 0) {
+            crm_err("Ignoring watchdog fence device without "
+                    "stonith-watchdog-timeout set.");
+            rv = -ENODEV;
+            /* fall through to cleanup & return */
+        } else if (!pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
+                                 STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
+            crm_err("Ignoring watchdog fence device with unknown "
+                    "agent '%s' unequal '" STONITH_WATCHDOG_AGENT "'.",
+                    device->agent?device->agent:"");
+            rv = -ENODEV;
+            /* fall through to cleanup & return */
+        } else if (!pcmk__str_eq(device->id, STONITH_WATCHDOG_ID,
+                                 pcmk__str_none)) {
+            crm_err("Ignoring watchdog fence device "
+                    "named %s !='"STONITH_WATCHDOG_ID"'.",
+                    device->id?device->id:"");
+            rv = -ENODEV;
+            /* fall through to cleanup & return */
+        } else {
+            if (pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT,
+                             pcmk__str_none)) {
+                /* this either has an empty list or the targets
+                   configured for watchdog-fencing
+                 */
+                g_list_free_full(stonith_watchdog_targets, free);
+                stonith_watchdog_targets = device->targets;
+                device->targets = NULL;
+            }
+            if (node_does_watchdog_fencing(stonith_our_uname)) {
+                g_list_free_full(device->targets, free);
+                device->targets = stonith__parse_targets(stonith_our_uname);
+                g_hash_table_replace(device->params,
+                                     strdup(PCMK_STONITH_HOST_LIST),
+                                     strdup(stonith_our_uname));
+                /* proceed as with any other stonith-device */
+                break;
+            }
+
+            crm_debug("Skip registration of watchdog fence device on node not in host-list.");
+            /* cleanup and fall through to more cleanup and return */
+            device->targets = NULL;
+            stonith_device_remove(device->id, from_cib);
+        }
+        free_device(device);
+        return rv;
+    } while (0);
 
     dup = device_has_duplicate(device);
     if (dup) {
@@ -1580,6 +1631,39 @@ stonith_level_remove(xmlNode *msg, char **desc)
  *       (CIB registration is not sufficient), because monitor should not be
  *       possible unless the device is "started" (API registered).
  */
+
+static char *
+list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
+{
+    int max = g_list_length(list);
+    size_t delim_len = delim?strlen(delim):0;
+    size_t alloc_size = 1 + (max?((max-1+(terminate_with_delim?1:0))*delim_len):0);
+    char *rv;
+    GList *gIter;
+
+    for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        const char *value = (const char *) gIter->data;
+
+        alloc_size += strlen(value);
+    }
+    rv = calloc(alloc_size, sizeof(char));
+    if (rv) {
+        char *pos = rv;
+        const char *lead_delim = "";
+
+        for (gIter = list; gIter != NULL; gIter = gIter->next) {
+            const char *value = (const char *) gIter->data;
+
+            pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
+            lead_delim = delim;
+        }
+        if (max && terminate_with_delim) {
+            sprintf(pos, "%s", delim);
+        }
+    }
+    return rv;
+}
+
 static int
 stonith_device_action(xmlNode * msg, char **output)
 {
@@ -1595,6 +1679,19 @@ stonith_device_action(xmlNode * msg, char **output)
                  (id? id : "not specified"),
                  (action? action : "not specified"));
         return -EPROTO;
+    }
+
+    if (pcmk__str_eq(id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
+        if (stonith_watchdog_timeout_ms <= 0) {
+            return -ENODEV;
+        } else {
+            if (pcmk__str_eq(action, "list", pcmk__str_casei)) {
+                *output = list_to_string(stonith_watchdog_targets, "\n", TRUE);
+                return pcmk_ok;
+            } else if (pcmk__str_eq(action, "monitor", pcmk__str_casei)) {
+                return pcmk_ok;
+            }
+        }
     }
 
     device = g_hash_table_lookup(device_list, id);
@@ -1724,7 +1821,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
          * Only use if all hosts on which the device can be active can always fence all listed hosts
          */
 
-        if (string_in_list(dev->targets, host)) {
+        if (pcmk__str_in_list(dev->targets, host, pcmk__str_casei)) {
             can = TRUE;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
                    && g_hash_table_lookup(dev->aliases, host)) {
@@ -1745,7 +1842,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
             return;
         }
 
-        if (string_in_list(dev->targets, alias)) {
+        if (pcmk__str_in_list(dev->targets, alias, pcmk__str_casei)) {
             can = TRUE;
         }
 
