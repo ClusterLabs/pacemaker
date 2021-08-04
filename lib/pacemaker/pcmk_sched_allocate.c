@@ -1827,7 +1827,6 @@ static void
 rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
                 pe_working_set_t *data_set)
 {
-    GList *gIter = NULL;
     GList *lh_actions = NULL;
     pe_action_t *lh_action = order->lh_action;
     pe_resource_t *rh_rsc = order->rh_rsc;
@@ -1880,18 +1879,22 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
         free(op_type);
     }
 
-    gIter = lh_actions;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *lh_action_iter = (pe_action_t *) gIter->data;
-
-        if (rh_rsc == NULL && order->rh_action) {
-            rh_rsc = order->rh_action->rsc;
+    if (rh_rsc == NULL) {
+        if (order->rh_action == NULL) {
+            pe_rsc_trace(lh_rsc, "Ignoring constraint %d: then not found",
+                         order->id);
+            return;
         }
-        if (rh_rsc) {
-            rsc_order_then(lh_action_iter, rh_rsc, order);
+        rh_rsc = order->rh_action->rsc;
+    }
+    for (GList *gIter = lh_actions; gIter != NULL; gIter = gIter->next) {
+        lh_action = (pe_action_t *) gIter->data;
 
-        } else if (order->rh_action) {
-            order_actions(lh_action_iter, order->rh_action, order->type);
+        if (rh_rsc == NULL) {
+            order_actions(lh_action, order->rh_action, order->type);
+
+        } else {
+            rsc_order_then(lh_action, rh_rsc, order);
         }
     }
 

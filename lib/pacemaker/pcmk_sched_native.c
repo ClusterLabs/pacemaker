@@ -2103,13 +2103,13 @@ handle_restart_ordering(pe_action_t *first, pe_action_t *then,
         reason = "restart";
     }
 
-    /* ... if 'then' is unrunnable start of managed resource (if a resource
+    /* ... if 'then' is unrunnable action on same resource (if a resource
      * should restart but can't start, we still want to stop)
      */
     if (pcmk_is_set(filter, pe_action_runnable)
         && !pcmk_is_set(then->flags, pe_action_runnable)
         && pcmk_is_set(then->rsc->flags, pe_rsc_managed)
-        && pcmk__str_eq(then->task, RSC_START, pcmk__str_casei)) {
+        && (first->rsc == then->rsc)) {
         reason = "stop";
     }
 

@@ -204,9 +204,6 @@ graph_update_action(pe_action_t * first, pe_action_t * then, pe_node_t * node,
                      first->uuid, then->uuid, node->details->uname);
     }
 
-    pe__clear_raw_action_flags(first_flags, "first action update",
-                               pe_action_pseudo);
-
     if (type & pe_order_implies_then) {
         if (then->rsc) {
             changed |= then->rsc->cmds->update_actions(first, then, node,
@@ -1474,6 +1471,22 @@ sort_action_id(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
+ * \brief Check whether an ordering's flags can change an action
+ *
+ * \param[in] ordering  Ordering to check
+ *
+ * \return true if ordering has flags that can change an action, false otherwise
+ */
+static bool
+ordering_can_change_actions(pe_action_wrapper_t *ordering)
+{
+    return pcmk_any_flags_set(ordering->type, ~(pe_order_implies_first_printed
+                                                |pe_order_implies_then_printed
+                                                |pe_order_optional));
+}
+
+/*!
+ * \internal
  * \brief Check whether an action input should be in the transition graph
  *
  * \param[in]     action  Action to check
@@ -1486,15 +1499,9 @@ sort_action_id(gconstpointer a, gconstpointer b)
 static bool
 check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
 {
-    int type = input->type;
-
     if (input->state == pe_link_dumped) {
         return true;
     }
-
-    pe__clear_order_flags(type, pe_order_implies_first_printed
-                                |pe_order_implies_then_printed
-                                |pe_order_optional);
 
     if (input->type == pe_order_none) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
@@ -1504,7 +1511,7 @@ check_dump_input(pe_action_t *action, pe_action_wrapper_t *input)
         return false;
 
     } else if (!pcmk_is_set(input->action->flags, pe_action_runnable)
-               && (type == pe_order_none)
+               && !ordering_can_change_actions(input)
                && !pcmk__str_eq(input->action->uuid, CRM_OP_PROBED, pcmk__str_casei)) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional and input unrunnable",

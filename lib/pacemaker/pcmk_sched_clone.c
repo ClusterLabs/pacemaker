@@ -804,51 +804,24 @@ clone_update_pseudo_status(pe_resource_t * rsc, gboolean * stopping, gboolean * 
 }
 
 static pe_action_t *
-find_rsc_action(pe_resource_t *rsc, const char *task, gboolean active_only,
-                GList **list)
+find_rsc_action(pe_resource_t *rsc, const char *task)
 {
     pe_action_t *match = NULL;
-    GList *possible = NULL;
-    GList *active = NULL;
+    GList *actions = pe__resource_actions(rsc, NULL, task, FALSE);
 
-    possible = pe__resource_actions(rsc, NULL, task, FALSE);
+    for (GList *item = actions; item != NULL; item = item->next) {
+        pe_action_t *op = (pe_action_t *) item->data;
 
-    if (active_only) {
-        GList *gIter = possible;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_action_t *op = (pe_action_t *) gIter->data;
-
-            if (!pcmk_is_set(op->flags, pe_action_optional)) {
-                active = g_list_prepend(active, op);
+        if (!pcmk_is_set(op->flags, pe_action_optional)) {
+            if (match != NULL) {
+                // More than one match, don't return any
+                match = NULL;
+                break;
             }
+            match = op;
         }
-
-        if (active && pcmk__list_of_1(active)) {
-            match = g_list_nth_data(active, 0);
-        }
-
-        if (list) {
-            *list = active;
-            active = NULL;
-        }
-
-    } else if (possible && pcmk__list_of_1(possible)) {
-        match = g_list_nth_data(possible, 0);
-
     }
-    if (list) {
-        *list = possible;
-        possible = NULL;
-    }
-
-    if (possible) {
-        g_list_free(possible);
-    }
-    if (active) {
-        g_list_free(active);
-    }
-
+    g_list_free(actions);
     return match;
 }
 
@@ -860,7 +833,6 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     pe_action_t *last_stop = NULL;
     pe_action_t *last_start = NULL;
     GList *gIter = NULL;
-    gboolean active_only = TRUE;        /* change to false to get the old behavior */
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -874,7 +846,7 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         pe_resource_t *child = (pe_resource_t *) gIter->data;
 
-        stop = find_rsc_action(child, RSC_STOP, active_only, NULL);
+        stop = find_rsc_action(child, RSC_STOP);
         if (stop) {
             if (last_stop) {
                 /* child/child relative stop */
@@ -883,7 +855,7 @@ child_ordering_constraints(pe_resource_t * rsc, pe_working_set_t * data_set)
             last_stop = stop;
         }
 
-        start = find_rsc_action(child, RSC_START, active_only, NULL);
+        start = find_rsc_action(child, RSC_START);
         if (start) {
             if (last_start) {
                 /* child/child relative start */

@@ -32,6 +32,12 @@ enum pe_order_kind {
     pe_order_kind_serialize,
 };
 
+enum ordering_symmetry {
+    ordering_asymmetric,        // the only relation in an asymmetric ordering
+    ordering_symmetric,         // the normal relation in a symmetric ordering
+    ordering_symmetric_inverse, // the inverse relation in a symmetric ordering
+};
+
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {				\
 	__rsc = pe_find_constraint_resource(data_set->resources, __name);		\
 	if(__rsc == NULL) {						\
@@ -40,9 +46,6 @@ enum pe_order_kind {
 	}								\
     } while(0)
 
-enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
-                           const char *action_first, const char *action_then, gboolean invert);
-enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
 static pe__location_t *generate_location_rule(pe_resource_t *rsc,
                                               xmlNode *rule_xml,
                                               const char *discovery,
@@ -264,63 +267,278 @@ valid_resource_or_tag(pe_working_set_t * data_set, const char * id,
     return rc;
 }
 
-static gboolean
-order_is_symmetrical(xmlNode * xml_obj,
-                     enum pe_order_kind parent_kind, const char * parent_symmetrical_s)
+/*!
+ * \internal
+ * \brief Get ordering symmetry from XML
+ *
+ * \param[in] xml_obj               Ordering XML
+ * \param[in] parent_kind           Default ordering kind
+ * \param[in] parent_symmetrical_s  Parent element's symmetrical setting, if any
+ *
+ * \retval ordering_symmetric   Ordering is symmetric
+ * \retval ordering_asymmetric  Ordering is asymmetric
+ */
+static enum ordering_symmetry
+get_ordering_symmetry(xmlNode *xml_obj, enum pe_order_kind parent_kind,
+                      const char *parent_symmetrical_s)
 {
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *kind_s = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
-    const char *score_s = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-    const char *symmetrical_s = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-    enum pe_order_kind kind = parent_kind;
+    const char *symmetrical_s = NULL;
+    enum pe_order_kind kind = parent_kind; // Default to parent's kind
 
-    if (kind_s || score_s) {
+    // Check ordering XML for explicit kind
+    if ((crm_element_value(xml_obj, XML_ORDER_ATTR_KIND) != NULL)
+        || (crm_element_value(xml_obj, XML_RULE_ATTR_SCORE) != NULL)) {
         kind = get_ordering_type(xml_obj);
     }
 
+    // Check ordering XML (and parent) for explicit symmetrical setting
+    symmetrical_s = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     if (symmetrical_s == NULL) {
         symmetrical_s = parent_symmetrical_s;
     }
-
-    if (symmetrical_s) {
-        gboolean symmetrical = crm_is_true(symmetrical_s);
-
-        if (symmetrical && kind == pe_order_kind_serialize) {
-            pcmk__config_warn("Ignoring " XML_CONS_ATTR_SYMMETRICAL
-                              " for '%s' because not valid with "
-                              XML_ORDER_ATTR_KIND " of 'Serialize'", id);
-            return FALSE;
+    if (symmetrical_s != NULL) {
+        if (crm_is_true(symmetrical_s)) {
+            if (kind == pe_order_kind_serialize) {
+                pcmk__config_warn("Ignoring " XML_CONS_ATTR_SYMMETRICAL
+                                  " for '%s' because not valid with "
+                                  XML_ORDER_ATTR_KIND " of 'Serialize'",
+                                  ID(xml_obj));
+            } else {
+                return ordering_symmetric;
+            }
         }
+        return ordering_asymmetric;
+    }
 
-        return symmetrical;
+    // Use default symmetry
+    if (kind == pe_order_kind_serialize) {
+        return ordering_asymmetric;
+    }
+    return ordering_symmetric;
+}
 
-    } else {
-        if (kind == pe_order_kind_serialize) {
-            return FALSE;
+/*!
+ * \internal
+ * \brief Get ordering flags appropriate to ordering kind
+ *
+ * \param[in] kind      Ordering kind
+ * \param[in] first     Action name for 'first' action
+ * \param[in] symmetry  This ordering's symmetry role
+ *
+ * \return Minimal ordering flags appropriate to \p kind
+ */
+static enum pe_ordering
+ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
+                        enum ordering_symmetry symmetry)
+{
+    enum pe_ordering flags = pe_order_none; // so we trace-log all flags set
 
-        } else {
-            return TRUE;
+    pe__set_order_flags(flags, pe_order_optional);
+
+    switch (kind) {
+        case pe_order_kind_optional:
+            break;
+
+        case pe_order_kind_serialize:
+            pe__set_order_flags(flags, pe_order_serialize_only);
+            break;
+
+        case pe_order_kind_mandatory:
+            switch (symmetry) {
+                case ordering_asymmetric:
+                    pe__set_order_flags(flags, pe_order_asymmetrical);
+                    break;
+
+                case ordering_symmetric:
+                    pe__set_order_flags(flags, pe_order_implies_then);
+                    if (pcmk__strcase_any_of(first, RSC_START, RSC_PROMOTE,
+                                             NULL)) {
+                        pe__set_order_flags(flags, pe_order_runnable_left);
+                    }
+                    break;
+
+                case ordering_symmetric_inverse:
+                    pe__set_order_flags(flags, pe_order_implies_first);
+                    break;
+            }
+            break;
+    }
+    return flags;
+}
+
+/*!
+ * \internal
+ * \brief Find resource corresponding to ID specified in ordering
+ *
+ * \param[in] xml            Ordering XML
+ * \param[in] resource_attr  XML attribute name for resource ID
+ * \param[in] instance_attr  XML attribute name for instance number
+ * \param[in] data_set       Cluster working set
+ *
+ * \return Resource corresponding to \p id, or NULL if none
+ */
+static pe_resource_t *
+get_ordering_resource(xmlNode *xml, const char *resource_attr,
+                      const char *instance_attr, pe_working_set_t *data_set)
+{
+    pe_resource_t *rsc = NULL;
+    const char *rsc_id = crm_element_value(xml, resource_attr);
+    const char *instance_id = crm_element_value(xml, instance_attr);
+
+    if (rsc_id == NULL) {
+        pcmk__config_err("Ignoring constraint '%s' without %s",
+                         ID(xml), resource_attr);
+        return NULL;
+    }
+
+    rsc = pe_find_constraint_resource(data_set->resources, rsc_id);
+    if (rsc == NULL) {
+        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                         "does not exist", ID(xml), rsc_id);
+        return NULL;
+    }
+
+    if (instance_id != NULL) {
+        if (!pe_rsc_is_clone(rsc)) {
+            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                             "is not a clone but instance '%s' was requested",
+                             ID(xml), rsc_id, instance_id);
+            return NULL;
+        }
+        rsc = find_clone_instance(rsc, instance_id, data_set);
+        if (rsc == NULL) {
+            pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
+                             "does not have an instance '%s'",
+                             "'%s'", ID(xml), rsc_id, instance_id);
+            return NULL;
         }
     }
+    return rsc;
 }
+
+/*!
+ * \internal
+ * \brief Determine minimum number of 'first' instances required in ordering
+ *
+ * \param[in] rsc  'First' resource in ordering
+ * \param[in] xml  Ordering XML
+ *
+ * \return Minimum 'first' instances required (or 0 if not applicable)
+ */
+static int
+get_minimum_first_instances(pe_resource_t *rsc, xmlNode *xml)
+{
+    if (pe_rsc_is_clone(rsc)) {
+        const char *clone_min = NULL;
+
+        clone_min = g_hash_table_lookup(rsc->meta,
+                                        XML_RSC_ATTR_INCARNATION_MIN);
+        if (clone_min != NULL) {
+            int clone_min_int = 0;
+
+            pcmk__scan_min_int(clone_min, &clone_min_int, 0);
+            return clone_min_int;
+        }
+
+        /* @COMPAT 1.1.13:
+         * require-all=false is deprecated equivalent of clone-min=1
+         */
+        clone_min = crm_element_value(xml, "require-all");
+        if (clone_min != NULL) {
+            pe_warn_once(pe_wo_require_all,
+                         "Support for require-all in ordering constraints "
+                         "is deprecated and will be removed in a future release"
+                         " (use clone-min clone meta-attribute instead)");
+            if (!crm_is_true(clone_min)) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Create orderings for a constraint with clone-min > 0
+ *
+ * \param[in] id            Ordering ID
+ * \param[in] rsc_first     'First' resource in ordering (a clone)
+ * \param[in] action_first  'First' action in ordering
+ * \param[in] rsc_then      'Then' resource in ordering
+ * \param[in] action_then   'Then' action in ordering
+ * \param[in] flags         Ordering flags
+ * \param[in] clone_min     Minimum required instances of 'first'
+ * \param[in] data_set      Cluster working set
+ */
+static void
+clone_min_ordering(const char *id,
+                   pe_resource_t *rsc_first, const char *action_first,
+                   pe_resource_t *rsc_then, const char *action_then,
+                   enum pe_ordering flags, int clone_min,
+                   pe_working_set_t *data_set)
+{
+    // Create a pseudo-action for when the minimum instances are active
+    char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
+    pe_action_t *clone_min_met = get_pseudo_op(task, data_set);
+
+    free(task);
+
+    /* Require the pseudo-action to have the required number of actions to be
+     * considered runnable before allowing the pseudo-action to be runnable.
+     */
+    clone_min_met->required_runnable_before = clone_min;
+    pe__set_action_flags(clone_min_met, pe_action_requires_any);
+
+    // Order the actions for each clone instance before the pseudo-action
+    for (GList *rIter = rsc_first->children; rIter != NULL;
+         rIter = rIter->next) {
+
+        pe_resource_t *child = rIter->data;
+
+        custom_action_order(child, pcmk__op_key(child->id, action_first, 0),
+                            NULL, NULL, NULL, clone_min_met,
+                            pe_order_one_or_more|pe_order_implies_then_printed,
+                            data_set);
+    }
+
+    // Order "then" action after the pseudo-action (if runnable)
+    custom_action_order(NULL, NULL, clone_min_met, rsc_then,
+                        pcmk__op_key(rsc_then->id, action_then, 0),
+                        NULL, flags|pe_order_runnable_left, data_set);
+}
+
+/*!
+ * \internal
+ * \brief Update ordering flags for restart-type=restart
+ *
+ * \param[in]  rsc    'Then' resource in ordering
+ * \param[in]  kind   Ordering kind
+ * \param[in]  flag   Ordering flag to set (when applicable)
+ * \param[out] flags  Ordering flag set to update
+ *
+ * \compat The restart-type resource meta-attribute is deprecated. Eventually,
+ *         it will be removed, and pe_restart_ignore will be the only behavior,
+ *         at which time this can just be removed entirely.
+ */
+#define handle_restart_type(rsc, kind, flag, flags) do {        \
+        if (((kind) == pe_order_kind_optional)                  \
+            && ((rsc)->restart_type == pe_restart_restart)) {   \
+            pe__set_order_flags((flags), (flag));               \
+        }                                                       \
+    } while (0)
 
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     pe_resource_t *rsc_then = NULL;
     pe_resource_t *rsc_first = NULL;
-    gboolean invert_bool = TRUE;
     int min_required_before = 0;
     enum pe_order_kind kind = pe_order_kind_mandatory;
-    enum pe_ordering cons_weight = pe_order_optional;
+    enum pe_ordering cons_weight = pe_order_none;
+    enum ordering_symmetry symmetry;
 
-    const char *id_first = NULL;
-    const char *id_then = NULL;
     const char *action_then = NULL;
     const char *action_first = NULL;
-    const char *instance_then = NULL;
-    const char *instance_first = NULL;
-
     const char *id = NULL;
 
     CRM_CHECK(xml_obj != NULL, return FALSE);
@@ -332,155 +550,52 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
+    rsc_first = get_ordering_resource(xml_obj, XML_ORDER_ATTR_FIRST,
+                                      XML_ORDER_ATTR_FIRST_INSTANCE,
+                                      data_set);
+    if (rsc_first == NULL) {
+        return FALSE;
+    }
 
-    id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
-    id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
+    rsc_then = get_ordering_resource(xml_obj, XML_ORDER_ATTR_THEN,
+                                     XML_ORDER_ATTR_THEN_INSTANCE,
+                                     data_set);
+    if (rsc_then == NULL) {
+        return FALSE;
+    }
 
-    action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
-
-    instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
-    instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
-
     if (action_first == NULL) {
         action_first = RSC_START;
     }
+
+    action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
     if (action_then == NULL) {
         action_then = action_first;
     }
 
-    if (id_first == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' without "
-                         XML_ORDER_ATTR_FIRST, id);
-        return FALSE;
-    }
-    if (id_then == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' without "
-                         XML_ORDER_ATTR_THEN, id);
-        return FALSE;
-    }
-
-    rsc_then = pe_find_constraint_resource(data_set->resources, id_then);
-    rsc_first = pe_find_constraint_resource(data_set->resources, id_first);
-
-    if (rsc_then == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_then);
-        return FALSE;
-
-    } else if (rsc_first == NULL) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "does not exist", id, id_first);
-        return FALSE;
-
-    } else if (instance_then && pe_rsc_is_clone(rsc_then) == FALSE) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, id_then, instance_then);
-        return FALSE;
-
-    } else if (instance_first && pe_rsc_is_clone(rsc_first) == FALSE) {
-        pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
-                         "is not a clone but instance '%s' was requested",
-                         id, id_first, instance_first);
-        return FALSE;
-    }
-
-    if (instance_then) {
-        rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
-        if (rsc_then == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              id, id_then, instance_then);
-            return FALSE;
-        }
-    }
-
-    if (instance_first) {
-        rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
-        if (rsc_first == NULL) {
-            pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
-                              "does not have an instance '%s'",
-                              "'%s'", id, id_first, instance_first);
-            return FALSE;
-        }
-    }
-
-    cons_weight = pe_order_optional;
     kind = get_ordering_type(xml_obj);
 
-    if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-        pe__set_order_flags(cons_weight, pe_order_implies_then);
-    }
+    symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
+    cons_weight = ordering_flags_for_kind(kind, action_first, symmetry);
 
-    if (invert_bool == FALSE) {
-        pe__set_order_flags(cons_weight, get_asymmetrical_flags(kind));
-    } else {
-        pe__set_order_flags(cons_weight,
-                              get_flags(id, kind, action_first, action_then, FALSE));
-    }
-
-    if (pe_rsc_is_clone(rsc_first)) {
-        /* If clone-min is set, require at least that number of instances to be
-         * runnable before allowing dependencies to be runnable.
-         */
-        const char *min_clones_s = g_hash_table_lookup(rsc_first->meta,
-                                                       XML_RSC_ATTR_INCARNATION_MIN);
-
-        // @COMPAT 1.1.13: deprecated
-        const char *require_all_s = crm_element_value(xml_obj, "require-all");
-
-        if (min_clones_s) {
-            pcmk__scan_min_int(min_clones_s, &min_required_before, 0);
-
-        } else if (require_all_s) {
-            pe_warn_once(pe_wo_require_all,
-                        "Support for require-all in ordering constraints "
-                        "is deprecated and will be removed in a future release"
-                        " (use clone-min clone meta-attribute instead)");
-            if (crm_is_true(require_all_s) == FALSE) {
-                // require-all=false is deprecated equivalent of clone-min=1
-                min_required_before = 1;
-            }
-        }
-    }
+    handle_restart_type(rsc_then, kind, pe_order_implies_then, cons_weight);
 
     /* If there is a minimum number of instances that must be runnable before
-     * the 'then' action is runnable, we use a pseudo action as an intermediate step
-     * start min number of clones -> pseudo action is runnable -> dependency runnable. */
-    if (min_required_before) {
-        GList *rIter = NULL;
-        char *task = crm_strdup_printf(CRM_OP_RELAXED_CLONE ":%s", id);
-        pe_action_t *unordered_action = get_pseudo_op(task, data_set);
-        free(task);
-
-        /* require the pseudo action to have "min_required_before" number of
-         * actions to be considered runnable before allowing the pseudo action
-         * to be runnable. */ 
-        unordered_action->required_runnable_before = min_required_before;
-        pe__set_action_flags(unordered_action, pe_action_requires_any);
-
-        for (rIter = rsc_first->children; id && rIter; rIter = rIter->next) {
-            pe_resource_t *child = rIter->data;
-            /* order each clone instance before the pseudo action */
-            custom_action_order(child, pcmk__op_key(child->id, action_first, 0),
-                                NULL, NULL, NULL, unordered_action,
-                                pe_order_one_or_more|pe_order_implies_then_printed,
-                                data_set);
-        }
-
-        /* order the "then" dependency to occur after the pseudo action only if
-         * the pseudo action is runnable */ 
-        custom_action_order(NULL, NULL, unordered_action, rsc_then,
-                            pcmk__op_key(rsc_then->id, action_then, 0),
-                            NULL, cons_weight|pe_order_runnable_left, data_set);
+     * the 'then' action is runnable, we use a pseudo-action for convenience:
+     * minimum number of clone instances have runnable actions ->
+     * pseudo-action is runnable -> dependency is runnable.
+     */
+    min_required_before = get_minimum_first_instances(rsc_first, xml_obj);
+    if (min_required_before > 0) {
+        clone_min_ordering(id, rsc_first, action_first, rsc_then, action_then,
+                           cons_weight, min_required_before, data_set);
     } else {
         new_rsc_order(rsc_first, action_first, rsc_then, action_then,
                       cons_weight, data_set);
     }
 
-    if (invert_bool == FALSE) {
+    if (symmetry == ordering_asymmetric) {
         return TRUE;
     }
 
@@ -492,13 +607,9 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         return TRUE;
     }
 
-    cons_weight = pe_order_optional;
-    if (kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-        pe__set_order_flags(cons_weight, pe_order_implies_first);
-    }
-
-    pe__set_order_flags(cons_weight,
-                          get_flags(id, kind, action_first, action_then, TRUE));
+    cons_weight = ordering_flags_for_kind(kind, action_first,
+                                          ordering_symmetric_inverse);
+    handle_restart_type(rsc_then, kind, pe_order_implies_first, cons_weight);
 
     new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight,
                   data_set);
@@ -1635,43 +1746,6 @@ custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * 
     return order->id;
 }
 
-enum pe_ordering
-get_asymmetrical_flags(enum pe_order_kind kind)
-{
-    enum pe_ordering flags = pe_order_optional;
-
-    if (kind == pe_order_kind_mandatory) {
-        pe__set_order_flags(flags, pe_order_asymmetrical);
-    } else if (kind == pe_order_kind_serialize) {
-        pe__set_order_flags(flags, pe_order_serialize_only);
-    }
-    return flags;
-}
-
-enum pe_ordering
-get_flags(const char *id, enum pe_order_kind kind,
-          const char *action_first, const char *action_then, gboolean invert)
-{
-    enum pe_ordering flags = pe_order_none; // so we trace-log all flags
-
-    pe__set_order_flags(flags, pe_order_optional);
-
-    if (invert && kind == pe_order_kind_mandatory) {
-        pe__set_order_flags(flags, pe_order_implies_first);
-
-    } else if (kind == pe_order_kind_mandatory) {
-        pe__set_order_flags(flags, pe_order_implies_then);
-        if (pcmk__strcase_any_of(action_first, RSC_START, RSC_PROMOTE, NULL)) {
-            pe__set_order_flags(flags, pe_order_runnable_left);
-        }
-
-    } else if (kind == pe_order_kind_serialize) {
-        pe__set_order_flags(flags, pe_order_serialize_only);
-    }
-
-    return flags;
-}
-
 static gboolean
 unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t ** rsc,
                  pe_action_t ** begin, pe_action_t ** end, pe_action_t ** inv_begin,
@@ -1688,7 +1762,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
     int local_kind = parent_kind;
     gboolean sequential = FALSE;
     enum pe_ordering flags = pe_order_optional;
-    gboolean symmetrical = TRUE;
+    enum ordering_symmetry symmetry;
 
     char *key = NULL;
     const char *id = ID(set);
@@ -1715,12 +1789,8 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
 
     sequential = crm_is_true(sequential_s);
 
-    symmetrical = order_is_symmetrical(set, parent_kind, parent_symmetrical_s);
-    if (symmetrical) {
-        flags = get_flags(id, local_kind, action, action, FALSE);
-    } else {
-        flags = get_asymmetrical_flags(local_kind);
-    }
+    symmetry = get_ordering_symmetry(set, parent_kind, parent_symmetrical_s);
+    flags = ordering_flags_for_kind(local_kind, action, symmetry);
 
     for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
          xml_rsc = pcmk__xe_next(xml_rsc)) {
@@ -1794,27 +1864,15 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
         free(key);
     }
 
-    if (symmetrical == FALSE) {
+    if (symmetry == ordering_asymmetric) {
         goto done;
     }
 
     last = NULL;
     action = invert_action(action);
 
-    /*
-       pseudo_id = crm_strdup_printf("%s-%s", id, action);
-       end_id    = crm_strdup_printf("%s-%s", pseudo_id, "end");
-       begin_id  = crm_strdup_printf("%s-%s", pseudo_id, "begin");
-
-       *inv_end = get_pseudo_op(end_id, data_set);
-       *inv_begin = get_pseudo_op(begin_id, data_set);
-
-       free(pseudo_id);
-       free(begin_id);
-       free(end_id);
-     */
-
-    flags = get_flags(id, local_kind, action, action, TRUE);
+    flags = ordering_flags_for_kind(local_kind, action,
+                                    ordering_symmetric_inverse);
 
     set_iter = resources;
     while (set_iter != NULL) {
@@ -1846,7 +1904,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
 
 static gboolean
 order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kind kind,
-               pe_working_set_t * data_set, gboolean invert, gboolean symmetrical)
+               pe_working_set_t *data_set, enum ordering_symmetry symmetry)
 {
 
     xmlNode *xml_rsc = NULL;
@@ -1874,7 +1932,7 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         action_2 = RSC_START;
     };
 
-    if (invert) {
+    if (symmetry == ordering_symmetric_inverse) {
         action_1 = invert_action(action_1);
         action_2 = invert_action(action_2);
     }
@@ -1887,11 +1945,8 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         require_all = TRUE;
     }
 
-    if (symmetrical == FALSE) {
-        flags = get_asymmetrical_flags(kind);
-    } else {
-        flags = get_flags(id, kind, action_2, action_1, invert);
-    }
+    // @TODO is action_2 correct here?
+    flags = ordering_flags_for_kind(kind, action_2, symmetry);
 
     /* If we have an un-ordered set1, whether it is sequential or not is irrelevant in regards to set2. */
     if (!require_all) {
@@ -1937,56 +1992,60 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     }
 
     if (crm_is_true(sequential_1)) {
-        if (invert == FALSE) {
-            /* get the last one */
-            const char *rid = NULL;
-
-            for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    rid = ID(xml_rsc);
-                }
-            }
-            EXPAND_CONSTRAINT_IDREF(id, rsc_1, rid);
-
-        } else {
+        if (symmetry == ordering_symmetric_inverse) {
             /* get the first one */
             for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
                  xml_rsc = pcmk__xe_next(xml_rsc)) {
 
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                     EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
                     break;
                 }
             }
+
+        } else {
+            /* get the last one */
+            const char *rid = NULL;
+
+            for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
+                 xml_rsc = pcmk__xe_next(xml_rsc)) {
+
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                    rid = ID(xml_rsc);
+                }
+            }
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, rid);
         }
     }
 
     if (crm_is_true(sequential_2)) {
-        if (invert == FALSE) {
-            /* get the first one */
-            for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-                    break;
-                }
-            }
-
-        } else {
+        if (symmetry == ordering_symmetric_inverse) {
             /* get the last one */
             const char *rid = NULL;
 
             for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
                  xml_rsc = pcmk__xe_next(xml_rsc)) {
 
-                if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
                     rid = ID(xml_rsc);
                 }
             }
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, rid);
+
+        } else {
+            /* get the first one */
+            for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
+                 xml_rsc = pcmk__xe_next(xml_rsc)) {
+
+                if (pcmk__str_eq((const char *)xml_rsc->name,
+                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
+                    EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
+                    break;
+                }
+            }
         }
     }
 
@@ -2183,7 +2242,7 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
-    gboolean invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
+    enum ordering_symmetry symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
     gboolean rc = TRUE;
 
     rc = unpack_order_tags(xml_obj, &expanded_xml, data_set);
@@ -2205,62 +2264,17 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                                  &set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
                 return FALSE;
 
-                /* Expand orders in order_rsc_sets() instead of via pseudo actions. */
-                /*
-                   } else if(last) {
-                   const char *set_action = crm_element_value(set, "action");
-                   const char *last_action = crm_element_value(last, "action");
-                   enum pe_ordering flags = get_flags(id, kind, last_action, set_action, FALSE);
-
-                   if(!set_action) { set_action = RSC_START; }
-                   if(!last_action) { last_action = RSC_START; }
-
-                   if(rsc == NULL && last_rsc == NULL) {
-                   order_actions(last_end, set_begin, flags);
-                   } else {
-                   custom_action_order(
-                   last_rsc, null_or_opkey(last_rsc, last_action), last_end,
-                   rsc, null_or_opkey(rsc, set_action), set_begin,
-                   flags, data_set);
-                   }
-
-                   if(crm_is_true(invert)) {
-                   set_action = invert_action(set_action);
-                   last_action = invert_action(last_action);
-
-                   flags = get_flags(id, kind, last_action, set_action, TRUE);
-                   if(rsc == NULL && last_rsc == NULL) {
-                   order_actions(last_inv_begin, set_inv_end, flags);
-
-                   } else {
-                   custom_action_order(
-                   last_rsc, null_or_opkey(last_rsc, last_action), last_inv_begin,
-                   rsc, null_or_opkey(rsc, set_action), set_inv_end,
-                   flags, data_set);
-                   }
-                   }
-                 */
-
-            } else if (         /* never called -- Now call it for supporting clones in resource sets */
-                          last) {
-                if (order_rsc_sets(id, last, set, kind, data_set, FALSE, invert_bool) == FALSE) {
+            } else if (last != NULL) {
+                if (!order_rsc_sets(id, last, set, kind, data_set, symmetry)) {
                     return FALSE;
                 }
-
-                if (invert_bool
-                    && order_rsc_sets(id, set, last, kind, data_set, TRUE, invert_bool) == FALSE) {
+                if ((symmetry == ordering_symmetric)
+                    && !order_rsc_sets(id, set, last, kind, data_set,
+                                       ordering_symmetric_inverse)) {
                     return FALSE;
                 }
-
             }
             last = set;
-            /*
-               last_rsc = rsc;
-               last_end = set_end;
-               last_begin = set_begin;
-               last_inv_end = set_inv_end;
-               last_inv_begin = set_inv_begin;
-             */
         }
     }
 
