@@ -223,7 +223,6 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                  */
                 crm_warn("watchdog-fencing-query failed");
             } else if (list[0] == '\0') {
-                crm_warn("watchdog-fencing-query returned an empty list - any node");
                 rv = TRUE;
             } else {
                 GList *targets = stonith__parse_targets(list);
