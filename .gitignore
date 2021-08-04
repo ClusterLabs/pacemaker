@@ -170,7 +170,6 @@ TAGS
 coverity-*
 pacemaker_*.info
 /coverage
-/cts/.regression.failed.diff
 /cts/scheduler/*.ref
 /cts/scheduler/*.up
 /cts/scheduler/*.up.err
@@ -208,6 +207,7 @@ build.counter
 /abi-check
 /compat_reports
 /compile
+/cts/.regression.failed.diff
 /attrd
 /cib
 /config.guess
