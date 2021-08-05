@@ -876,14 +876,14 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
  * \note No matter what input string or flags are provided, an empty
  *       list will always return FALSE.
  *
- * \param[in]  lst   List to search
  * \param[in]  s     String to search for
+ * \param[in]  lst   List to search
  * \param[in]  flags A bitfield of pcmk__str_flags to modify operation
  *
  * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
  */
 gboolean
-pcmk__str_in_list(GList *lst, const gchar *s, uint32_t flags)
+pcmk__str_in_list(const gchar *s, GList *lst, uint32_t flags)
 {
     for (GList *ele = lst; ele != NULL; ele = ele->next) {
         if (pcmk__str_eq(s, ele->data, flags)) {

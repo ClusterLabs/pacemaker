@@ -17,8 +17,8 @@ static void
 empty_input_list(void) {
     g_assert_false(pcmk__str_in_list(NULL, NULL, pcmk__str_none));
     g_assert_false(pcmk__str_in_list(NULL, NULL, pcmk__str_null_matches));
-    g_assert_false(pcmk__str_in_list(NULL, "xxx", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(NULL, "", pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("xxx", NULL, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("", NULL, pcmk__str_none));
 }
 
 static void
@@ -27,10 +27,10 @@ empty_string(void) {
 
     list = g_list_prepend(list, (gpointer) "xxx");
 
-    g_assert_false(pcmk__str_in_list(list, NULL, pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, NULL, pcmk__str_null_matches));
-    g_assert_false(pcmk__str_in_list(list, "", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "", pcmk__str_null_matches));
+    g_assert_false(pcmk__str_in_list(NULL, list, pcmk__str_none));
+    g_assert_true(pcmk__str_in_list(NULL, list, pcmk__str_null_matches));
+    g_assert_false(pcmk__str_in_list("", list, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("", list, pcmk__str_null_matches));
 
     g_list_free(list);
 }
@@ -42,10 +42,10 @@ star_matches(void) {
     list = g_list_prepend(list, (gpointer) "*");
     list = g_list_append(list, (gpointer) "more");
 
-    g_assert_true(pcmk__str_in_list(list, "xxx", pcmk__str_star_matches));
-    g_assert_true(pcmk__str_in_list(list, "yyy", pcmk__str_star_matches));
-    g_assert_true(pcmk__str_in_list(list, "XXX", pcmk__str_star_matches|pcmk__str_casei));
-    g_assert_true(pcmk__str_in_list(list, "", pcmk__str_star_matches));
+    g_assert_true(pcmk__str_in_list("xxx", list, pcmk__str_star_matches));
+    g_assert_true(pcmk__str_in_list("yyy", list, pcmk__str_star_matches));
+    g_assert_true(pcmk__str_in_list("XXX", list, pcmk__str_star_matches|pcmk__str_casei));
+    g_assert_true(pcmk__str_in_list("", list, pcmk__str_star_matches));
 
     g_list_free(list);
 }
@@ -56,11 +56,11 @@ star_doesnt_match(void) {
 
     list = g_list_prepend(list, (gpointer) "*");
 
-    g_assert_false(pcmk__str_in_list(list, "xxx", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "yyy", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "XXX", pcmk__str_casei));
-    g_assert_false(pcmk__str_in_list(list, "", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, NULL, pcmk__str_star_matches));
+    g_assert_false(pcmk__str_in_list("xxx", list, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("yyy", list, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("XXX", list, pcmk__str_casei));
+    g_assert_false(pcmk__str_in_list("", list, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list(NULL, list, pcmk__str_star_matches));
 
     g_list_free(list);
 }
@@ -73,12 +73,12 @@ in_list(void) {
     list = g_list_prepend(list, (gpointer) "yyy");
     list = g_list_prepend(list, (gpointer) "zzz");
 
-    g_assert_true(pcmk__str_in_list(list, "xxx", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "XXX", pcmk__str_casei));
-    g_assert_true(pcmk__str_in_list(list, "yyy", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "YYY", pcmk__str_casei));
-    g_assert_true(pcmk__str_in_list(list, "zzz", pcmk__str_none));
-    g_assert_true(pcmk__str_in_list(list, "ZZZ", pcmk__str_casei));
+    g_assert_true(pcmk__str_in_list("xxx", list, pcmk__str_none));
+    g_assert_true(pcmk__str_in_list("XXX", list, pcmk__str_casei));
+    g_assert_true(pcmk__str_in_list("yyy", list, pcmk__str_none));
+    g_assert_true(pcmk__str_in_list("YYY", list, pcmk__str_casei));
+    g_assert_true(pcmk__str_in_list("zzz", list, pcmk__str_none));
+    g_assert_true(pcmk__str_in_list("ZZZ", list, pcmk__str_casei));
 
     g_list_free(list);
 }
@@ -90,10 +90,10 @@ not_in_list(void) {
     list = g_list_prepend(list, (gpointer) "xxx");
     list = g_list_prepend(list, (gpointer) "yyy");
 
-    g_assert_false(pcmk__str_in_list(list, "xx", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "XXX", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "zzz", pcmk__str_none));
-    g_assert_false(pcmk__str_in_list(list, "zzz", pcmk__str_casei));
+    g_assert_false(pcmk__str_in_list("xx", list, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("XXX", list, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("zzz", list, pcmk__str_none));
+    g_assert_false(pcmk__str_in_list("zzz", list, pcmk__str_casei));
 
     g_list_free(list);
 }
