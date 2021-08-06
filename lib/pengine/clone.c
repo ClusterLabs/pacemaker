@@ -839,12 +839,12 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         pcmk__add_word(&list_text, &list_text_len, host->details->uname);
         active_instances++;
     }
+    g_list_free(promoted_list);
 
     if (list_text != NULL) {
         clone_header(out, &rc, rsc, clone_data);
 
         out->list_item(out, NULL, PROMOTED_INSTANCES ": [ %s ]", list_text);
-        g_list_free(promoted_list);
         free(list_text);
         list_text = NULL;
         list_text_len = 0;
@@ -862,6 +862,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         pcmk__add_word(&list_text, &list_text_len, host->details->uname);
         active_instances++;
     }
+    g_list_free(started_list);
 
     if (list_text != NULL) {
         clone_header(out, &rc, rsc, clone_data);
@@ -881,8 +882,6 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         } else {
             out->list_item(out, NULL, "Started: [ %s ]", list_text);
         }
-
-        g_list_free(started_list);
         free(list_text);
         list_text = NULL;
         list_text_len = 0;
@@ -933,6 +932,15 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             out->list_item(out, NULL, "%s: [ %s ]", state, stopped_list);
             free(stopped_list);
             stopped_list_len = 0;
+
+        /* If there are no instances of this clone (perhaps because there are no
+         * nodes configured), simply output the clone header by itself.  This can
+         * come up in PCS testing.
+         */
+        } else if (active_instances == 0) {
+            clone_header(out, &rc, rsc, clone_data);
+            PCMK__OUTPUT_LIST_FOOTER(out, rc);
+            return rc;
         }
     }
 

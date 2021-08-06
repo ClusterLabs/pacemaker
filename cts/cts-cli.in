@@ -469,6 +469,24 @@ function test_crm_mon() {
 
     unset CIB_file
 
+    export CIB_file="$test_home/cli/crm_mon-unmanaged.xml"
+
+    desc="Text output of active unmanaged resource on offline node"
+    cmd="crm_mon -1"
+    test_assert $CRM_EX_OK 0
+
+    desc="XML output of active unmanaged resource on offline node"
+    cmd="crm_mon -1 --output-as=xml"
+    test_assert $CRM_EX_OK 0
+
+    desc="Brief text output of active unmanaged resource on offline node"
+    cmd="crm_mon -1 --brief"
+    test_assert $CRM_EX_OK 0
+
+    desc="Brief text output of active unmanaged resource on offline node, grouped by node"
+    cmd="crm_mon -1 --brief --group-by-node"
+    test_assert $CRM_EX_OK 0
+
     export CIB_file=$(mktemp ${TMPDIR:-/tmp}/cts-cli.crm_mon.xml.XXXXXXXXXX)
     sed -e '/maintenance-mode/ s/false/true/' "$test_home/cli/crm_mon.xml" > $CIB_file
 

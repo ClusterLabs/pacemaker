@@ -1081,6 +1081,8 @@ clear_constraints(pcmk__output_t *out, xmlNodePtr *cib_xml_copy)
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         "Could not get modified CIB: %s\n", pcmk_strerror(rc));
             g_list_free(before);
+            free_xml(*cib_xml_copy);
+            *cib_xml_copy = NULL;
             return rc;
         }
 
@@ -1232,29 +1234,34 @@ populate_working_set(xmlNodePtr *cib_xml_copy)
 
     if (options.xml_file != NULL) {
         *cib_xml_copy = filename2xml(options.xml_file);
+        if (*cib_xml_copy == NULL) {
+            rc = pcmk_rc_cib_corrupt;
+        }
     } else {
         rc = cib_conn->cmds->query(cib_conn, NULL, cib_xml_copy, cib_scope_local | cib_sync_call);
         rc = pcmk_legacy2rc(rc);
     }
 
-    if(rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    /* Populate the working set instance */
-    data_set = pe_new_working_set();
-    if (data_set == NULL) {
-        rc = ENOMEM;
-        return rc;
-    }
-
-    pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
-    data_set->priv = out;
-    rc = update_working_set_xml(data_set, cib_xml_copy);
     if (rc == pcmk_rc_ok) {
-        cluster_status(data_set);
+        data_set = pe_new_working_set();
+        if (data_set == NULL) {
+            rc = ENOMEM;
+        } else {
+            pe__set_working_set_flags(data_set,
+                                      pe_flag_no_counts|pe_flag_no_compat);
+            data_set->priv = out;
+            rc = update_working_set_xml(data_set, cib_xml_copy);
+        }
     }
-    return rc;
+
+    if (rc != pcmk_rc_ok) {
+        free_xml(*cib_xml_copy);
+        *cib_xml_copy = NULL;
+        return rc;
+    }
+
+    cluster_status(data_set);
+    return pcmk_rc_ok;
 }
 
 static int

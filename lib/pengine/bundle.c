@@ -1497,7 +1497,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
          gIter = gIter->next) {
         pe__bundle_replica_t *replica = gIter->data;
-        char *id = pcmk__itoa(replica->offset);
+        char *id = NULL;
         gboolean print_ip, print_child, print_ctnr, print_remote;
 
         CRM_ASSERT(replica);
@@ -1531,6 +1531,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
             CRM_ASSERT(rc == pcmk_rc_ok);
         }
 
+        id = pcmk__itoa(replica->offset);
         rc = pe__name_and_nvpairs_xml(out, true, "replica", 1, "id", id);
         free(id);
         CRM_ASSERT(rc == pcmk_rc_ok);
