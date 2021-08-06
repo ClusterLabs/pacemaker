@@ -2978,6 +2978,7 @@ pcmk__xe_set_props(xmlNodePtr node, ...)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/xml_compat.h>
 
@@ -2988,4 +2989,5 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
                           ((id == NULL)? id : XML_ATTR_ID), id);
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

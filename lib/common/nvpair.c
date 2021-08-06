@@ -955,6 +955,7 @@ xml2list(xmlNode *parent)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
 
@@ -977,4 +978,5 @@ pcmk_format_named_time(const char *name, time_t epoch_time)
     return pcmk__format_named_time(name, epoch_time);
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

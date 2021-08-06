@@ -1644,6 +1644,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right,
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/xml_compat.h>
 
@@ -1737,4 +1738,5 @@ apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml)
     return result;
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

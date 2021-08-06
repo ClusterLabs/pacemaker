@@ -616,6 +616,7 @@ pcmk__close_fds_in_child(bool all)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
 
@@ -630,4 +631,5 @@ crm_build_path(const char *path_c, mode_t mode)
     }
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

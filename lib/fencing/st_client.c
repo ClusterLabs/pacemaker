@@ -2756,6 +2756,7 @@ stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 const char *get_stonith_provider(const char *agent, const char *provider);
 
@@ -2765,4 +2766,5 @@ get_stonith_provider(const char *agent, const char *provider)
     return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
 
+// LCOV_EXCL_STOP
 // End deprecated API

@@ -353,8 +353,9 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 /*!
  * \brief Parse a time+units string and return milliseconds equivalent
  *
- * \param[in] input  String with a number and units (optionally with whitespace
- *                   before and/or after the number)
+ * \param[in] input  String with a number and optional unit (optionally
+ *                   with whitespace before and/or after the number).  If
+ *                   missing, the unit defaults to seconds.
  *
  * \return Milliseconds corresponding to string expression, or
  *         PCMK__PARSE_INT_DEFAULT on error
@@ -1186,6 +1187,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 }
 
 // Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
 
 #include <crm/common/util_compat.h>
 
@@ -1311,4 +1313,5 @@ pcmk_numeric_strcasecmp(const char *s1, const char *s2)
     return pcmk__numeric_strcasecmp(s1, s2);
 }
 
+// LCOV_EXCL_END
 // End deprecated API
