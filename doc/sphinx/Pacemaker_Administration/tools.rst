@@ -386,14 +386,14 @@ Visualizing the action sequence
 _______________________________
 
 Another handy feature is the ability to generate a visual graph of the actions
-needed, using the ``--dot-file`` option. This relies on the separate
+needed, using the ``--save-dotfile`` option. This relies on the separate
 Graphviz [#]_ project.
 
 .. topic:: Generate a visual graph of cluster actions from a saved CIB
 
    .. code-block:: none
 
-      # crm_simulate --simulate --xml-file $FILENAME --dot-file $FILENAME.dot
+      # crm_simulate --simulate --xml-file $FILENAME --save-dotfile $FILENAME.dot
       # dot $FILENAME.dot -Tsvg > $FILENAME.svg
 
 ``$FILENAME.dot`` will contain a GraphViz representation of the cluster's
