@@ -440,6 +440,7 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
     }
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
+        cib_delete(the_cib);
         return pcmk_legacy2rc(rc);
     }
 
@@ -488,6 +489,7 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
         free_xml(xml_node);
     }
     the_cib->cmds->signoff(the_cib);
+    cib_delete(the_cib);
     return pcmk_legacy2rc(rc);
 }
 

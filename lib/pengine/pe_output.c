@@ -1410,6 +1410,8 @@ node_text(pcmk__output_t *out, va_list args) {
 
                     out->end_list(out);
                     out->end_list(out);
+
+                    g_list_free(rscs);
                 }
 
             } else {
@@ -1739,6 +1741,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
         }
 
         if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+            g_list_free(attr_list);
             continue;
         }
 

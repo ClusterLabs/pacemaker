@@ -323,8 +323,8 @@ main(int argc, char **argv)
             exit_code = pcmk_rc2exitc(rc);
             goto done;
         } else {
-            crm_err("Could not request shutdown of existing "
-                    "Pacemaker instance: %s", strerror(errno));
+            out->err(out, "Could not request shutdown "
+                     "of existing Pacemaker instance: %s", pcmk_rc_str(rc));
             pcmk_free_ipc_api(old_instance);
             exit_code = CRM_EX_DISCONNECT;
             goto done;

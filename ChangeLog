@@ -1,7 +1,17 @@
+* Fri Aug 06 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1-rc2
+- Changesets: 10
+- Diff: 10 files changed, 122 insertions(+), 66 deletions(-)
+
+- Fixes since Pacemaker-2.1.1-rc1
+  + fencer: avoid repeated attempts to get (nonexistent) meta-data for
+            watchdog device (regression in 2.1.0)
+  + tools: avoid crm_mon memory leaks when filtering by resource or node
+  + tools: crm_mon should show active unmanaged resources on offline nodes
+           without requiring -r/--inactive
+
 * Mon Jul 26 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1-rc1
 - Changesets: 209
-- Diff:
- 93 files changed, 4673 insertions(+), 3323 deletions(-)
+- Diff: 93 files changed, 4673 insertions(+), 3323 deletions(-)
 
 - Features added since Pacemaker-2.1.0
   + enhanced support for OCF Resource Agent API 1.1 standard
@@ -41,8 +51,7 @@
 
 * Tue Jun 08 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.0
 - Changesets: 849
-- Diff:
- 327 files changed, 22089 insertions(+), 12633 deletions(-)
+- Diff: 327 files changed, 22089 insertions(+), 12633 deletions(-)
 
 - Features added since Pacemaker-2.0.5
   + support for OCF Resource Agent API 1.1 standard
