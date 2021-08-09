@@ -1315,15 +1315,14 @@ write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
 
 // Replace a portion of a dynamically allocated string (reallocating memory)
 static char *
-replace_text(char *text, int start, int *length, const char *replace)
+replace_text(char *text, int start, size_t *length, const char *replace)
 {
-    int lpc;
-    int offset = strlen(replace) - 1;   /* We have space for 1 char already */
+    size_t offset = strlen(replace) - 1; // We have space for 1 char already
 
     *length += offset;
     text = pcmk__realloc(text, *length);
 
-    for (lpc = (*length) - 1; lpc > (start + offset); lpc--) {
+    for (size_t lpc = (*length) - 1; lpc > (start + offset); lpc--) {
         text[lpc] = text[lpc - offset];
     }
 
@@ -1342,8 +1341,7 @@ replace_text(char *text, int start, int *length, const char *replace)
 char *
 crm_xml_escape(const char *text)
 {
-    int index;
-    int length = 1 + strlen(text);
+    size_t length = 1 + strlen(text);
     char *copy = strdup(text);
 
     /*
@@ -1361,7 +1359,7 @@ crm_xml_escape(const char *text)
      * when necessary.
      */
 
-    for (index = 0; index < length; index++) {
+    for (size_t index = 0; index < length; index++) {
         switch (copy[index]) {
             case 0:
                 break;
