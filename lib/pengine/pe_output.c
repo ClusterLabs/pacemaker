@@ -670,8 +670,8 @@ ban_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc_printable_id(location->rsc_lh), pcmk__str_none) &&
-            !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(location->rsc_lh)), pcmk__str_none)) {
+        if (!pcmk__str_in_list(rsc_printable_id(location->rsc_lh), only_rsc, pcmk__str_star_matches) &&
+            !pcmk__str_in_list(rsc_printable_id(uber_parent(location->rsc_lh)), only_rsc, pcmk__str_star_matches)) {
             continue;
         }
 
@@ -1254,7 +1254,8 @@ failed_action_list(pcmk__output_t *out, va_list args) {
          xml_op = pcmk__xml_next(xml_op)) {
         char *rsc = NULL;
 
-        if (!pcmk__str_in_list(only_node, crm_element_value(xml_op, XML_ATTR_UNAME), pcmk__str_casei)) {
+        if (!pcmk__str_in_list(crm_element_value(xml_op, XML_ATTR_UNAME), only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -1263,7 +1264,7 @@ failed_action_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_rsc, rsc, pcmk__str_none)) {
+        if (!pcmk__str_in_list(rsc, only_rsc, pcmk__str_star_matches)) {
             free(rsc);
             continue;
         }
@@ -1740,7 +1741,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node, pcmk__str_star_matches|pcmk__str_casei)) {
             g_list_free(attr_list);
             continue;
         }
@@ -1840,8 +1841,8 @@ node_history_list(pcmk__output_t *out, va_list args) {
          * For other resource types, is_filtered is okay.
          */
         if (uber_parent(rsc)->variant == pe_group) {
-            if (!pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) &&
-                !pcmk__str_in_list(only_rsc, rsc_printable_id(uber_parent(rsc)), pcmk__str_none)) {
+            if (!pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) &&
+                !pcmk__str_in_list(rsc_printable_id(uber_parent(rsc)), only_rsc, pcmk__str_star_matches)) {
                 continue;
             }
         } else {
@@ -1903,7 +1904,8 @@ node_list_html(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -1945,7 +1947,8 @@ node_list_text(pcmk__output_t *out, va_list args) {
         const char *node_mode = NULL;
         char *node_name = pe__node_display_name(node, pcmk_is_set(show_opts, pcmk_show_node_id));
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             free(node_name);
             continue;
         }
@@ -2065,7 +2068,8 @@ node_list_xml(pcmk__output_t *out, va_list args) {
     for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
         pe_node_t *node = (pe_node_t *) gIter->data;
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -2103,7 +2107,8 @@ node_summary(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        if (!pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(node->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 

@@ -226,7 +226,7 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                 rv = TRUE;
             } else {
                 GList *targets = stonith__parse_targets(list);
-                rv = pcmk__str_in_list(targets, node, pcmk__str_casei);
+                rv = pcmk__str_in_list(node, targets, pcmk__str_casei);
                 g_list_free_full(targets, free);
             }
             free(list);

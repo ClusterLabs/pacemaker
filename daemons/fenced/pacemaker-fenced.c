@@ -1012,7 +1012,7 @@ gboolean
 node_does_watchdog_fencing(const char *node)
 {
     return ((stonith_watchdog_targets == NULL) ||
-            pcmk__str_in_list(stonith_watchdog_targets, node, pcmk__str_casei));
+            pcmk__str_in_list(node, stonith_watchdog_targets, pcmk__str_casei));
 }
 
 

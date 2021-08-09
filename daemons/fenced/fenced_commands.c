@@ -1124,7 +1124,7 @@ dynamic_list_search_cb(GPid pid, int rc, const char *output, gpointer user_data)
         if (!alias) {
             alias = search->host;
         }
-        if (pcmk__str_in_list(dev->targets, alias, pcmk__str_casei)) {
+        if (pcmk__str_in_list(alias, dev->targets, pcmk__str_casei)) {
             can_fence = TRUE;
         }
     }
@@ -1821,7 +1821,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
          * Only use if all hosts on which the device can be active can always fence all listed hosts
          */
 
-        if (pcmk__str_in_list(dev->targets, host, pcmk__str_casei)) {
+        if (pcmk__str_in_list(host, dev->targets, pcmk__str_casei)) {
             can = TRUE;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
                    && g_hash_table_lookup(dev->aliases, host)) {
@@ -1842,7 +1842,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
             return;
         }
 
-        if (pcmk__str_in_list(dev->targets, alias, pcmk__str_casei)) {
+        if (pcmk__str_in_list(alias, dev->targets, pcmk__str_casei)) {
             can = TRUE;
         }
 

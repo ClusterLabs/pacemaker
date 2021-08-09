@@ -25,7 +25,8 @@ enum pcmk__str_flags {
     pcmk__str_none          = 0,
     pcmk__str_casei         = 1 << 0,
     pcmk__str_null_matches  = 1 << 1,
-    pcmk__str_regex         = 1 << 2
+    pcmk__str_regex         = 1 << 2,
+    pcmk__str_star_matches  = 1 << 3,
 };
 
 int pcmk__scan_double(const char *text, double *result,
@@ -117,7 +118,7 @@ pcmk__intkey_table_remove(GHashTable *hash_table, int key)
     return g_hash_table_remove(hash_table, GINT_TO_POINTER(key));
 }
 
-gboolean pcmk__str_in_list(GList *lst, const gchar *s, uint32_t flags);
+gboolean pcmk__str_in_list(const gchar *s, GList *lst, uint32_t flags);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;

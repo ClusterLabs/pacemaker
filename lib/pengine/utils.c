@@ -2469,7 +2469,8 @@ pe__rsc_running_on_any(pe_resource_t *rsc, GList *node_list)
 {
     for (GList *ele = rsc->running_on; ele; ele = ele->next) {
         pe_node_t *node = (pe_node_t *) ele->data;
-        if (pcmk__str_in_list(node_list, node->details->uname, pcmk__str_casei)) {
+        if (pcmk__str_in_list(node->details->uname, node_list,
+                              pcmk__str_star_matches|pcmk__str_casei)) {
             return true;
         }
     }
@@ -2494,8 +2495,8 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
         /* I think the second condition is safe here for all callers of this
          * function.  If not, it needs to move into pe__node_text.
          */
-        if (pcmk__str_in_list(filter, rsc_printable_id(rsc), pcmk__str_none) ||
-            (rsc->parent && pcmk__str_in_list(filter, rsc_printable_id(rsc->parent), pcmk__str_none))) {
+        if (pcmk__str_in_list(rsc_printable_id(rsc), filter, pcmk__str_star_matches) ||
+            (rsc->parent && pcmk__str_in_list(rsc_printable_id(rsc->parent), filter, pcmk__str_star_matches))) {
             retval = g_list_prepend(retval, rsc);
         }
     }

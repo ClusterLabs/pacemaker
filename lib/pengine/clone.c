@@ -658,8 +658,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
+    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
+                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
     all = g_list_prepend(all, (gpointer) "*");
 
@@ -730,8 +730,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(only_rsc, rsc->id, pcmk__str_none));
+    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
+                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
@@ -832,7 +832,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     for (gIter = promoted_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(host->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -855,7 +856,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     for (gIter = started_list; gIter; gIter = gIter->next) {
         pe_node_t *host = gIter->data;
 
-        if (!pcmk__str_in_list(only_node, host->details->uname, pcmk__str_casei)) {
+        if (!pcmk__str_in_list(host->details->uname, only_node,
+                               pcmk__str_star_matches|pcmk__str_casei)) {
             continue;
         }
 
@@ -918,7 +920,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 pe_node_t *node = (pe_node_t *)nIter->data;
 
                 if (pe_find_node(rsc->running_on, node->details->uname) == NULL &&
-                    pcmk__str_in_list(only_node, node->details->uname, pcmk__str_casei)) {
+                    pcmk__str_in_list(node->details->uname, only_node,
+                                      pcmk__str_star_matches|pcmk__str_casei)) {
                     pcmk__add_word(&stopped_list, &stopped_list_len,
                                    node->details->uname);
                 }
@@ -1029,11 +1032,11 @@ pe__clone_is_filtered(pe_resource_t *rsc, GList *only_rsc, gboolean check_parent
     gboolean passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
 
-    if (pcmk__str_in_list(only_rsc, rsc_printable_id(rsc), pcmk__str_none)) {
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
         passes = TRUE;
     } else {
         get_clone_variant_data(clone_data, rsc);
-        passes = pcmk__str_in_list(only_rsc, ID(clone_data->xml_obj_child), pcmk__str_none);
+        passes = pcmk__str_in_list(ID(clone_data->xml_obj_child), only_rsc, pcmk__str_star_matches);
 
         if (!passes) {
             for (GList *gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
