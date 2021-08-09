@@ -1331,11 +1331,18 @@ replace_text(char *text, int start, int *length, const char *replace)
     return text;
 }
 
+/*!
+ * \brief Replace special characters with their XML escape sequences
+ *
+ * \param[in] text  Text to escape
+ *
+ * \return Newly allocated string equivalent to \p text but with special
+ *         characters replaced with XML escape sequences
+ */
 char *
 crm_xml_escape(const char *text)
 {
     int index;
-    int changes = 0;
     int length = 1 + strlen(text);
     char *copy = strdup(text);
 
@@ -1360,58 +1367,38 @@ crm_xml_escape(const char *text)
                 break;
             case '<':
                 copy = replace_text(copy, index, &length, "&lt;");
-                changes++;
                 break;
             case '>':
                 copy = replace_text(copy, index, &length, "&gt;");
-                changes++;
                 break;
             case '"':
                 copy = replace_text(copy, index, &length, "&quot;");
-                changes++;
                 break;
             case '\'':
                 copy = replace_text(copy, index, &length, "&apos;");
-                changes++;
                 break;
             case '&':
                 copy = replace_text(copy, index, &length, "&amp;");
-                changes++;
                 break;
             case '\t':
                 /* Might as well just expand to a few spaces... */
                 copy = replace_text(copy, index, &length, "    ");
-                changes++;
                 break;
             case '\n':
-                /* crm_trace("Convert: \\%.3o", copy[index]); */
                 copy = replace_text(copy, index, &length, "\\n");
-                changes++;
                 break;
             case '\r':
                 copy = replace_text(copy, index, &length, "\\r");
-                changes++;
                 break;
-                /* For debugging...
-            case '\\':
-                crm_trace("Passthrough: \\%c", copy[index+1]);
-                break;
-                */
             default:
                 /* Check for and replace non-printing characters with their octal equivalent */
                 if(copy[index] < ' ' || copy[index] > '~') {
                     char *replace = crm_strdup_printf("\\%.3o", copy[index]);
 
-                    /* crm_trace("Convert to octal: \\%.3o", copy[index]); */
                     copy = replace_text(copy, index, &length, replace);
                     free(replace);
-                    changes++;
                 }
         }
-    }
-
-    if (changes) {
-        crm_trace("Dumped '%s'", copy);
     }
     return copy;
 }
