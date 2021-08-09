@@ -1336,13 +1336,14 @@ replace_text(char *text, int start, size_t *length, const char *replace)
  * \param[in] text  Text to escape
  *
  * \return Newly allocated string equivalent to \p text but with special
- *         characters replaced with XML escape sequences
+ *         characters replaced with XML escape sequences (or NULL if \p text
+ *         is NULL)
  */
 char *
 crm_xml_escape(const char *text)
 {
-    size_t length = 1 + strlen(text);
-    char *copy = strdup(text);
+    size_t length;
+    char *copy;
 
     /*
      * When xmlCtxtReadDoc() parses &lt; and friends in a
@@ -1359,6 +1360,13 @@ crm_xml_escape(const char *text)
      * when necessary.
      */
 
+    if (text == NULL) {
+        return NULL;
+    }
+
+    length = 1 + strlen(text);
+    copy = strdup(text);
+    CRM_ASSERT(copy != NULL);
     for (size_t index = 0; index < length; index++) {
         switch (copy[index]) {
             case 0:
@@ -1420,7 +1428,8 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
 
     p_name = (const char *)attr->name;
     p_value = crm_xml_escape((const char *)attr->children->content);
-    buffer_print(*buffer, *max, *offset, " %s=\"%s\"", p_name, p_value);
+    buffer_print(*buffer, *max, *offset, " %s=\"%s\"",
+                 p_name, crm_str(p_value));
     free(p_value);
 }
 
@@ -1477,7 +1486,8 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
                     p_copy = crm_xml_escape(p_value);
                 }
 
-                buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_copy);
+                buffer_print(buffer, max, offset, " %s=\"%s\"",
+                             p_name, crm_str(p_copy));
                 free(p_copy);
             }
 
