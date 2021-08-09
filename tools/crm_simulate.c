@@ -365,36 +365,6 @@ static GOptionEntry source_entries[] = {
 };
 
 static void
-get_date(pe_working_set_t *data_set, bool print_original, char *use_date)
-{
-    pcmk__output_t *out = data_set->priv;
-    time_t original_date = 0;
-
-    crm_element_value_epoch(data_set->input, "execution-date", &original_date);
-
-    if (use_date) {
-        data_set->now = crm_time_new(use_date);
-        out->info(out, "Setting effective cluster time: %s", use_date);
-        crm_time_log(LOG_NOTICE, "Pretending 'now' is", data_set->now,
-                     crm_time_log_date | crm_time_log_timeofday);
-
-
-    } else if (original_date) {
-
-        data_set->now = crm_time_new(NULL);
-        crm_time_set_timet(data_set->now, &original_date);
-
-        if (print_original) {
-            char *when = crm_time_as_string(data_set->now,
-                            crm_time_log_date|crm_time_log_timeofday);
-
-            out->info(out, "Using the original execution date of: %s", when);
-            free(when);
-        }
-    }
-}
-
-static void
 print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
 {
     pcmk__output_t *out = data_set->priv;
@@ -716,7 +686,7 @@ profile_one(const char *xml_file, long long repeat, pe_working_set_t *data_set, 
         xmlNode *input = (repeat == 1)? cib_object : copy_xml(cib_object);
 
         data_set->input = input;
-        get_date(data_set, false, use_date);
+        pcmk__set_effective_date(data_set, false, use_date);
         pcmk__schedule_actions(data_set, input, NULL);
         pe_reset_working_set(data_set);
     }
@@ -915,7 +885,7 @@ main(int argc, char **argv)
 
     data_set->input = input;
     data_set->priv = out;
-    get_date(data_set, true, options.use_date);
+    pcmk__set_effective_date(data_set, true, options.use_date);
     if(options.xml_file) {
         pe__set_working_set_flags(data_set, pe_flag_sanitized);
     }
@@ -971,7 +941,7 @@ main(int argc, char **argv)
         cleanup_calculations(data_set);
         data_set->input = input;
         data_set->priv = out;
-        get_date(data_set, true, options.use_date);
+        pcmk__set_effective_date(data_set, true, options.use_date);
 
         if(options.xml_file) {
             pe__set_working_set_flags(data_set, pe_flag_sanitized);
@@ -1064,7 +1034,7 @@ main(int argc, char **argv)
         printed = pcmk_rc_ok;
 
         if (!out->is_quiet(out)) {
-            get_date(data_set, true, options.use_date);
+            pcmk__set_effective_date(data_set, true, options.use_date);
 
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Revised Cluster Status");
