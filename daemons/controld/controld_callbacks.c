@@ -99,6 +99,8 @@ node_alive(const crm_node_t *node)
 
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
+bool controld_dc_left = false;
+
 void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
@@ -217,7 +219,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                                                cib_scope_local);
                 }
 
-            } else if (AM_I_DC || (fsa_our_dc == NULL)) {
+            } else if (AM_I_DC || controld_dc_left || (fsa_our_dc == NULL)) {
                 /* This only needs to be done once, so normally the DC should do
                  * it. However if there is no DC, every node must do it, since
                  * there is no other way to ensure some one node does it.
