@@ -324,6 +324,8 @@ Deleted crm_config option: id=(null) name=cluster-delay
 * Passed: crm_attribute  - Delete cluster option with -i
 =#=#=#= Begin test: Create node1 and bring it online =#=#=#=
 Current cluster status:
+  * Full List of Resources:
+    * No resources
 
 Performing Requested Modifications:
   * Bringing node node1 online
@@ -335,6 +337,9 @@ Executing Cluster Transition:
 Revised Cluster Status:
   * Node List:
     * Online: [ node1 ]
+
+  * Full List of Resources:
+    * No resources
 =#=#=#= Current cib after: Create node1 and bring it online =#=#=#=
 <cib epoch="9" num_updates="2" admin_epoch="0">
   <configuration>

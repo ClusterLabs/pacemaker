@@ -368,28 +368,22 @@ static void
 print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
 {
     pcmk__output_t *out = data_set->priv;
-    int rc = pcmk_rc_no_output;
+    unsigned int section_opts = pcmk_section_nodes | pcmk_section_resources;
     GList *all = NULL;
 
     all = g_list_prepend(all, (gpointer) "*");
 
-    rc = out->message(out, "node-list", data_set->nodes, all, all, show_opts, FALSE);
-    rc = out->message(out, "resource-list", data_set, show_opts | pcmk_show_inactive_rscs,
-                      FALSE, all, all, rc == pcmk_rc_ok);
-
     if (options.show_attrs) {
-        rc = out->message(out, "node-attribute-list", data_set,
-                          0, rc == pcmk_rc_ok, all, all);
+        section_opts |= pcmk_section_attributes;
     }
 
     if (options.show_failcounts) {
-        rc = out->message(out, "node-summary", data_set, all, all,
-                          0, show_opts, rc == pcmk_rc_ok);
-
-        out->message(out, "failed-action-list", data_set, all, all,
-                     0, rc == pcmk_rc_ok);
+        section_opts |= pcmk_section_failcounts | pcmk_section_failures;
     }
 
+    out->message(out, "cluster-status", data_set, 0, NULL, FALSE,
+                 section_opts, show_opts | pcmk_show_inactive_rscs,
+                 NULL, all, all);
     g_list_free(all);
 }
 
@@ -815,8 +809,6 @@ main(int argc, char **argv)
     cluster_status(data_set);
 
     if (!out->is_quiet(out)) {
-        unsigned int show_opts = options.print_pending ? pcmk_show_pending : 0;
-
         if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
             printed = out->message(out, "maint-mode", data_set->flags);
         }
@@ -834,7 +826,7 @@ main(int argc, char **argv)
          * only has the first word capitalized for compatibility with pcs.
          */
         out->begin_list(out, NULL, NULL, "Current cluster status");
-        print_cluster_status(data_set, show_opts);
+        print_cluster_status(data_set, options.print_pending ? pcmk_show_pending : 0);
         out->end_list(out);
         printed = pcmk_rc_ok;
     }
