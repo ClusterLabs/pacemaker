@@ -765,49 +765,6 @@ profile_all(const char *dir, long long repeat, pe_working_set_t *data_set, char 
     }
 }
 
-PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
-static int
-profile_default(pcmk__output_t *out, va_list args) {
-    const char *xml_file = va_arg(args, const char *);
-    clock_t start = va_arg(args, clock_t);
-    clock_t end = va_arg(args, clock_t);
-
-    out->list_item(out, NULL, "Testing %s ... %.2f secs", xml_file,
-                   (end - start) / (float) CLOCKS_PER_SEC);
-
-    return pcmk_rc_ok;
-}
-
-PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
-static int
-profile_xml(pcmk__output_t *out, va_list args) {
-    const char *xml_file = va_arg(args, const char *);
-    clock_t start = va_arg(args, clock_t);
-    clock_t end = va_arg(args, clock_t);
-
-    char *duration = pcmk__ftoa((end - start) / (float) CLOCKS_PER_SEC);
-
-    pcmk__output_create_xml_node(out, "timing",
-                                 "file", xml_file,
-                                 "duration", duration,
-                                 NULL);
-
-    free(duration);
-    return pcmk_rc_ok;
-}
-
-static pcmk__message_entry_t fmt_functions[] = {
-    { "profile", "default", profile_default, },
-    { "profile", "xml", profile_xml },
-
-    { NULL }
-};
-
-static void
-crm_simulate_register_messages(pcmk__output_t *out) {
-    pcmk__register_messages(out, fmt_functions);
-}
-
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
@@ -893,7 +850,6 @@ main(int argc, char **argv)
         pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
     }
 
-    crm_simulate_register_messages(out);
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
 
