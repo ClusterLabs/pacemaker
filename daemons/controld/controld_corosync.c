@@ -87,6 +87,61 @@ crmd_cs_destroy(gpointer user_data)
     }
 }
 
+extern bool controld_dc_left;
+
+/*!
+ * \brief Handle a Corosync notification of a CPG configuration change
+ *
+ * \param[in] handle               CPG connection
+ * \param[in] cpg_name             CPG group name
+ * \param[in] member_list          List of current CPG members
+ * \param[in] member_list_entries  Number of entries in \p member_list
+ * \param[in] left_list            List of CPG members that left
+ * \param[in] left_list_entries    Number of entries in \p left_list
+ * \param[in] joined_list          List of CPG members that joined
+ * \param[in] joined_list_entries  Number of entries in \p joined_list
+ */
+static void
+cpg_membership_callback(cpg_handle_t handle, const struct cpg_name *cpg_name,
+                        const struct cpg_address *member_list,
+                        size_t member_list_entries,
+                        const struct cpg_address *left_list,
+                        size_t left_list_entries,
+                        const struct cpg_address *joined_list,
+                        size_t joined_list_entries)
+{
+    /* When nodes leave CPG, the DC clears their transient node attributes.
+     *
+     * However if there is no DC, or the DC is among the nodes that left, each
+     * remaining node needs to do the clearing, to ensure it gets done.
+     * Otherwise, the attributes would persist when the nodes rejoin, which
+     * could have serious consequences for unfencing, agents that use attributes
+     * for internal logic, etc.
+     *
+     * Here, we set a global boolean if the DC is among the nodes that left, for
+     * use by the peer callback.
+     */
+    if (fsa_our_dc != NULL) {
+        crm_node_t *peer = pcmk__search_cluster_node_cache(0, fsa_our_dc);
+
+        if (peer != NULL) {
+            for (int i = 0; i < left_list_entries; ++i) {
+                if (left_list[i].nodeid == peer->id) {
+                    controld_dc_left = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Process the change normally, which will call the peer callback as needed
+    pcmk_cpg_membership(handle, cpg_name, member_list, member_list_entries,
+                        left_list, left_list_entries,
+                        joined_list, joined_list_entries);
+
+    controld_dc_left = false;
+}
+
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 
 gboolean
@@ -95,7 +150,7 @@ crm_connect_corosync(crm_cluster_t * cluster)
     if (is_corosync_cluster()) {
         crm_set_status_callback(&peer_update_callback);
         cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
-        cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+        cluster->cpg.cpg_confchg_fn = cpg_membership_callback;
         cluster->destroy = crmd_cs_destroy;
 
         if (crm_cluster_connect(cluster)) {
