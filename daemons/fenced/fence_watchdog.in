@@ -12,6 +12,7 @@ import sys
 import atexit
 import getopt
 
+AGENT_VERSION = "1.0.0"
 SHORT_DESC = "Dummy watchdog fence agent"
 LONG_DESC = """fence_watchdog just provides
 meta-data - actual fencing is done by the pacemaker internal watchdog agent."""
