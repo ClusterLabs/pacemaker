@@ -927,7 +927,6 @@ probe_resources(pe_working_set_t * data_set)
 static void
 rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
 {
-    GList *gIter = rsc->children;
     pe_resource_t *top = uber_parent(rsc);
     pe_node_t *match;
 
@@ -935,10 +934,7 @@ rsc_discover_filter(pe_resource_t *rsc, pe_node_t *node)
         return;
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-        rsc_discover_filter(child_rsc, node);
-    }
+    g_list_foreach(rsc->children, (GFunc) rsc_discover_filter, node);
 
     match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
     if (match && match->rsc_discover_mode != pe_discover_exclusive) {
@@ -969,10 +965,7 @@ apply_shutdown_lock(pe_resource_t *rsc, pe_working_set_t *data_set)
 
     // Only primitives and (uncloned) groups may be locked
     if (rsc->variant == pe_group) {
-        for (GList *item = rsc->children; item != NULL;
-             item = item->next) {
-            apply_shutdown_lock((pe_resource_t *) item->data, data_set);
-        }
+        g_list_foreach(rsc->children, (GFunc) apply_shutdown_lock, data_set);
     } else if (rsc->variant != pe_native) {
         return;
     }
@@ -1056,9 +1049,7 @@ stage2(pe_working_set_t * data_set)
     GList *gIter = NULL;
 
     if (pcmk_is_set(data_set->flags, pe_flag_shutdown_lock)) {
-        for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-            apply_shutdown_lock((pe_resource_t *) gIter->data, data_set);
-        }
+        g_list_foreach(data_set->resources, (GFunc) apply_shutdown_lock, data_set);
     }
 
     if (!pcmk_is_set(data_set->flags, pe_flag_no_compat)) {
@@ -2620,11 +2611,7 @@ order_first_rsc_probes(pe_resource_t * rsc, pe_working_set_t * data_set)
     GList *gIter = NULL;
     GList *probes = NULL;
 
-    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t * child = (pe_resource_t *) gIter->data;
-
-        order_first_rsc_probes(child, data_set);
-    }
+    g_list_foreach(rsc->children, (GFunc) order_first_rsc_probes, data_set);
 
     if (rsc->variant != pe_native) {
         return;
@@ -2822,21 +2809,13 @@ stage7(pe_working_set_t * data_set)
         }
     }
 
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        update_colo_start_chain(action, data_set);
-    }
+    g_list_foreach(data_set->actions, (GFunc) update_colo_start_chain, data_set);
 
     crm_trace("Ordering probes");
     order_probes(data_set);
 
     crm_trace("Updating %d actions", g_list_length(data_set->actions));
-    for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *action = (pe_action_t *) gIter->data;
-
-        update_action(action, data_set);
-    }
+    g_list_foreach(data_set->actions, (GFunc) update_action, data_set);
 
     // Check for invalid orderings
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
@@ -2867,11 +2846,7 @@ stage7(pe_working_set_t * data_set)
     out->begin_list(out, NULL, NULL, "Actions");
     LogNodeActions(data_set);
 
-    for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-        LogActions(rsc, data_set);
-    }
+    g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
 
     out->end_list(out);
     out->finish(out, CRM_EX_OK, true, NULL);

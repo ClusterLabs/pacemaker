@@ -2394,13 +2394,7 @@ LogActions(pe_resource_t * rsc, pe_working_set_t * data_set)
     }
 
     if (rsc->children) {
-        GList *gIter = NULL;
-
-        for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            LogActions(child_rsc, data_set);
-        }
+        g_list_foreach(rsc->children, (GFunc) LogActions, data_set);
         return;
     }
 

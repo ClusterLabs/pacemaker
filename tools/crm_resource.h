@@ -55,8 +55,7 @@ int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, int cib_optio
                                    const char *rsc, const char *node, gboolean promoted_role_only);
 
 /* print */
-void cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc);
-void cli_resource_print_raw(pcmk__output_t *out, pe_resource_t * rsc);
+void cli_resource_print_cts(pe_resource_t * rsc, pcmk__output_t *out);
 void cli_resource_print_cts_constraints(pe_working_set_t * data_set);
 
 int cli_resource_print(pe_resource_t *rsc, pe_working_set_t *data_set, bool expanded);

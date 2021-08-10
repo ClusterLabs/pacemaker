@@ -1087,18 +1087,11 @@ main(int argc, char **argv)
         }
 
         if (!out->is_quiet(out)) {
-            GList *gIter = NULL;
-
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Transition Summary");
 
             LogNodeActions(data_set);
-            for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-                pe_resource_t *rsc = (pe_resource_t *) gIter->data;
-
-                LogActions(rsc, data_set);
-            }
-
+            g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
             out->end_list(out);
             printed = pcmk_rc_ok;
         }

@@ -600,13 +600,7 @@ setup_container(pe_resource_t * rsc, pe_working_set_t * data_set)
     const char *container_id = NULL;
 
     if (rsc->children) {
-        GList *gIter = rsc->children;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-            setup_container(child_rsc, data_set);
-        }
+        g_list_foreach(rsc->children, (GFunc) setup_container, data_set);
         return;
     }
 

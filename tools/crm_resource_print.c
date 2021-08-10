@@ -52,9 +52,8 @@ cli_resource_print_cts_constraints(pe_working_set_t * data_set)
 }
 
 void
-cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
+cli_resource_print_cts(pe_resource_t * rsc, pcmk__output_t *out)
 {
-    GList *lpc = NULL;
     const char *host = NULL;
     bool needs_quorum = TRUE;
     const char *rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
@@ -78,11 +77,7 @@ cli_resource_print_cts(pcmk__output_t *out, pe_resource_t * rsc)
               rprov ? rprov : "NA", rclass, rtype, host ? host : "NA", needs_quorum, rsc->flags,
               rsc->flags);
 
-    for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *child = (pe_resource_t *) lpc->data;
-
-        cli_resource_print_cts(out, child);
-    }
+    g_list_foreach(rsc->children, (GFunc) cli_resource_print_cts, out);
 }
 
 // \return Standard Pacemaker return code
@@ -737,14 +732,11 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 }
 
 static void
-add_resource_name(pcmk__output_t *out, pe_resource_t *rsc) {
+add_resource_name(pe_resource_t *rsc, pcmk__output_t *out) {
     if (rsc->children == NULL) {
         out->list_item(out, "resource", "%s", rsc->id);
     } else {
-        for (GList *lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
-            pe_resource_t *child = (pe_resource_t *) lpc->data;
-            add_resource_name(out, child);
-        }
+        g_list_foreach(rsc->children, (GFunc) add_resource_name, out);
     }
 }
 
@@ -759,12 +751,7 @@ resource_names(pcmk__output_t *out, va_list args) {
     }
 
     out->begin_list(out, NULL, NULL, "Resource Names");
-
-    for (GList *lpc = resources; lpc != NULL; lpc = lpc->next) {
-        pe_resource_t *rsc = (pe_resource_t *) lpc->data;
-        add_resource_name(out, rsc);
-    }
-
+    g_list_foreach(resources, (GFunc) add_resource_name, out);
     out->end_list(out);
     return pcmk_rc_ok;
 }

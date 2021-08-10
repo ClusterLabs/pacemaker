@@ -640,19 +640,13 @@ set_role_unpromoted(pe_resource_t *rsc, bool current)
 }
 
 static void
-set_role_promoted(pe_resource_t *rsc)
+set_role_promoted(pe_resource_t *rsc, gpointer user_data)
 {
-    GList *gIter = rsc->children;
-
     if (rsc->next_role == RSC_ROLE_UNKNOWN) {
         pe__set_next_role(rsc, RSC_ROLE_PROMOTED, "promoted instance");
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_resource_t *child_rsc = (pe_resource_t *) gIter->data;
-
-        set_role_promoted(child_rsc);
-    }
+    g_list_foreach(rsc->children, (GFunc) set_role_promoted, NULL);
 }
 
 pe_node_t *
@@ -798,7 +792,7 @@ pcmk__set_instance_roles(pe_resource_t *rsc, pe_working_set_t *data_set)
         chosen->count++;
         pe_rsc_info(rsc, "Promoting %s (%s %s)",
                     child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
-        set_role_promoted(child_rsc);
+        set_role_promoted(child_rsc, NULL);
         promoted++;
     }
 
