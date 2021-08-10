@@ -184,14 +184,11 @@ native_add_running(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t * dat
 }
 
 static void
-recursive_clear_unique(pe_resource_t *rsc)
+recursive_clear_unique(pe_resource_t *rsc, gpointer user_data)
 {
     pe__clear_resource_flags(rsc, pe_rsc_unique);
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
-
-    for (GList *child = rsc->children; child != NULL; child = child->next) {
-        recursive_clear_unique((pe_resource_t *) child->data);
-    }
+    g_list_foreach(rsc->children, (GFunc) recursive_clear_unique, NULL);
 }
 
 gboolean
@@ -223,8 +220,8 @@ native_unpack(pe_resource_t * rsc, pe_working_set_t * data_set)
          * correct). We have to clear this resource explicitly because it isn't
          * hooked into the parent's children yet.
          */
-        recursive_clear_unique(parent);
-        recursive_clear_unique(rsc);
+        recursive_clear_unique(parent, NULL);
+        recursive_clear_unique(rsc, NULL);
     }
     if (!pcmk_is_set(ra_caps, pcmk_ra_cap_promotable)
         && pcmk_is_set(parent->flags, pe_rsc_promotable)) {

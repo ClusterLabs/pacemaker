@@ -1870,14 +1870,7 @@ main(int argc, char **argv)
 
         case cmd_cts:
             rc = pcmk_rc_ok;
-
-            for (GList *lpc = data_set->resources; lpc != NULL;
-                 lpc = lpc->next) {
-
-                rsc = (pe_resource_t *) lpc->data;
-                cli_resource_print_cts(out, rsc);
-            }
-
+            g_list_foreach(data_set->resources, (GFunc) cli_resource_print_cts, out);
             cli_resource_print_cts_constraints(data_set);
             break;
 

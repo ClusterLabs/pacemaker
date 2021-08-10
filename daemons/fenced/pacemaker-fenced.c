@@ -769,7 +769,6 @@ static void cib_device_update(pe_resource_t *rsc, pe_working_set_t *data_set)
 static void
 cib_devices_update(void)
 {
-    GList *gIter = NULL;
     GHashTableIter iter;
     stonith_device_t *device = NULL;
 
@@ -799,10 +798,7 @@ cib_devices_update(void)
      */
     g_list_free_full(stonith_watchdog_targets, free);
     stonith_watchdog_targets = NULL;
-
-    for (gIter = fenced_data_set->resources; gIter != NULL; gIter = gIter->next) {
-        cib_device_update(gIter->data, fenced_data_set);
-    }
+    g_list_foreach(fenced_data_set->resources, (GFunc) cib_device_update, fenced_data_set);
 
     g_hash_table_iter_init(&iter, device_list);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {

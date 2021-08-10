@@ -1304,12 +1304,7 @@ clone_expand(pe_resource_t * rsc, pe_working_set_t * data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    gIter = rsc->actions;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pe_action_t *op = (pe_action_t *) gIter->data;
-
-        rsc->cmds->action_flags(op, NULL);
-    }
+    g_list_foreach(rsc->actions, (GFunc) rsc->cmds->action_flags, NULL);
 
     if (clone_data->start_notify) {
         collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
