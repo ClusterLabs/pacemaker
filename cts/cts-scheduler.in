@@ -15,6 +15,7 @@ import shutil
 import argparse
 import subprocess
 import platform
+import tempfile
 
 DESC = """Regression tests for Pacemaker's scheduler"""
 
@@ -1250,13 +1251,17 @@ class CtsScheduler(object):
         self.summary_dir = os.path.join(self.args.io_dir, "summary")
         self.stderr_expected_dir = os.path.join(self.args.io_dir, "stderr")
 
+        # Create a temporary directory to store diff file
+        self.failed_dir = tempfile.mkdtemp(prefix='cts-scheduler_')
+
         # Where to store generated files
         if self.args.out_dir is None:
             self.args.out_dir = self.args.io_dir
-            self.failed_filename = os.path.join(self.test_home, ".regression.failed.diff")
+            self.failed_filename = os.path.join(self.failed_dir, "test-output.diff")
         else:
-            self.failed_filename = os.path.join(self.args.out_dir, ".regression.failed.diff")
+            self.failed_filename = os.path.join(self.args.out_dir, "test-output.diff")
         os.environ['CIB_shadow_dir'] = self.args.out_dir
+        
         self.failed_file = None
 
         self.outfile_out_dir = os.path.join(self.args.out_dir, "out")
@@ -1314,7 +1319,7 @@ class CtsScheduler(object):
 
         if diff(filename1, filename2, stdout=subprocess.DEVNULL) != 0:
             diff(filename1, filename2, stdout=self.failed_file, stderr=subprocess.DEVNULL)
-            self.failed_file.write("\n");
+            self.failed_file.write("\n")
             return True
         return False
 
@@ -1542,6 +1547,7 @@ class CtsScheduler(object):
 
     def _test_results(self):
         if self.num_failed == 0:
+            shutil.rmtree(self.failed_dir)
             return CrmExit.OK
 
         if os.path.isfile(self.failed_filename) and os.stat(self.failed_filename).st_size != 0:
@@ -1557,7 +1563,7 @@ class CtsScheduler(object):
             self._error("%d (of %d) tests failed (no diff results)" %
                 (self.num_failed, self.num_tests))
             if os.path.isfile(self.failed_filename):
-                os.remove(self.failed_filename)
+                shutil.rmtree(self.failed_dir)
         return CrmExit.ERROR
 
     def run(self):
@@ -1578,7 +1584,10 @@ class CtsScheduler(object):
         else:
             rc = self.run_one(self.args.run, "Single shot", self.single_test_args)
             self.failed_file.close()
-            cat(self.failed_filename)
+            if self.num_failed > 0:
+              print("\nFailures:\nThese have also been written to: " + self.failed_filename + "\n")
+              cat(self.failed_filename)
+              shutil.rmtree(self.failed_dir)
 
         return rc
 
