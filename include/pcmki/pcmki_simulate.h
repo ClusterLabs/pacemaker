@@ -14,6 +14,22 @@
 #include <stdbool.h>
 
 /**
+ * \brief Write out a file in dot(1) format describing the actions that will
+ *        be taken by the scheduler in response to an input CIB file.
+ *
+ * \param[in] data_set    Working set for the cluster.
+ * \param[in] dot_file    The filename to write.
+ * \param[in] all_actions Write all actions, even those that are optional or
+ *                        are on unmanaged resources.
+ * \param[in] verbose     Add extra information, such as action IDs, to the
+ *                        output.
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
+                            bool all_actions, bool verbose);
+
+/**
  * \brief Profile the configuration updates and scheduler actions in a single
  *        CIB file, printing the profiling timings.
  *
