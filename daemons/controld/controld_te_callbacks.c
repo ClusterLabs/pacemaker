@@ -241,13 +241,14 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
     if (xml == NULL) {
         return;
-
-    } else if (strcmp((const char*)xml->name, XML_CIB_TAG_LRM) == 0) {
-        xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
-        crm_trace("Got %p in %s", xml, XML_CIB_TAG_LRM);
     }
 
-    CRM_ASSERT(strcmp((const char*)xml->name, XML_LRM_TAG_RESOURCES) == 0);
+    if (strcmp(TYPE(xml), XML_CIB_TAG_LRM) == 0) {
+        xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
+        CRM_CHECK(xml != NULL, return);
+    }
+
+    CRM_CHECK(strcmp(TYPE(xml), XML_LRM_TAG_RESOURCES) == 0, return);
 
     /*
      * Updates by, or in response to, TE actions will never contain updates
