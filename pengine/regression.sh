@@ -117,6 +117,7 @@ do_test probe-1 "Pending Probe"
 do_test probe-2 "Correctly re-probe cloned groups"
 do_test probe-3 "Probe (pending node)"
 do_test probe-4 "Probe (pending node + stopped resource)"
+do_test probe-pending-node "Probe (pending node + unmanaged resource)"
 do_test standby "Standby"
 do_test comments "Comments"
 

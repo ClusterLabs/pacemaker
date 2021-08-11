@@ -1,0 +1,247 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="395" num_updates="30" admin_epoch="0" cib-last-written="Thu Jun 10 18:01:13 2021" update-origin="gcdoubwap01" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1623419724">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.19-8.el7_6.5-c3c624ea3d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="ascscluster"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="true"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1622815036"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="gcdoubwap01"/>
+      <node id="2" uname="gcdoubwap02"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="stonith_gcdoubwap01" type="fence_gce">
+        <instance_attributes id="stonith_gcdoubwap01-instance_attributes">
+          <nvpair id="stonith_gcdoubwap01-instance_attributes-project" name="project" value="pj-uat-do-nane1-01"/>
+          <nvpair id="stonith_gcdoubwap01-instance_attributes-zone" name="zone" value="northamerica-northeast1-b"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith_gcdoubwap01-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith_gcdoubwap02" type="fence_gce">
+        <instance_attributes id="stonith_gcdoubwap02-instance_attributes">
+          <nvpair id="stonith_gcdoubwap02-instance_attributes-project" name="project" value="pj-uat-do-nane1-01"/>
+          <nvpair id="stonith_gcdoubwap02-instance_attributes-zone" name="zone" value="northamerica-northeast1-c"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith_gcdoubwap02-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="fs_UC5_SAPMNT-clone">
+        <primitive class="ocf" id="fs_UC5_SAPMNT" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="fs_UC5_SAPMNT-instance_attributes">
+            <nvpair id="fs_UC5_SAPMNT-instance_attributes-device" name="device" value="uatdoelfs.igmfinancial.net:UC5_sapmnt/root"/>
+            <nvpair id="fs_UC5_SAPMNT-instance_attributes-directory" name="directory" value="/sapmnt/UC5"/>
+            <nvpair id="fs_UC5_SAPMNT-instance_attributes-fstype" name="fstype" value="nfs"/>
+          </instance_attributes>
+          <operations>
+            <op id="fs_UC5_SAPMNT-monitor-interval-20s" interval="20s" name="monitor" timeout="40s"/>
+            <op id="fs_UC5_SAPMNT-notify-interval-0s" interval="0s" name="notify" timeout="60s"/>
+            <op id="fs_UC5_SAPMNT-start-interval-0s" interval="0s" name="start" timeout="60s"/>
+            <op id="fs_UC5_SAPMNT-stop-interval-0s" interval="0s" name="stop" timeout="60s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="fs_UC5_SAPMNT-clone-meta_attributes">
+          <nvpair id="fs_UC5_SAPMNT-clone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="fs_UC5_SYS-clone">
+        <primitive class="ocf" id="fs_UC5_SYS" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="fs_UC5_SYS-instance_attributes">
+            <nvpair id="fs_UC5_SYS-instance_attributes-device" name="device" value="uatdoelfs.igmfinancial.net:UC5_SYS/root"/>
+            <nvpair id="fs_UC5_SYS-instance_attributes-directory" name="directory" value="/usr/sap/UC5/SYS"/>
+            <nvpair id="fs_UC5_SYS-instance_attributes-fstype" name="fstype" value="nfs"/>
+          </instance_attributes>
+          <operations>
+            <op id="fs_UC5_SYS-monitor-interval-20s" interval="20s" name="monitor" timeout="40s"/>
+            <op id="fs_UC5_SYS-notify-interval-0s" interval="0s" name="notify" timeout="60s"/>
+            <op id="fs_UC5_SYS-start-interval-0s" interval="0s" name="start" timeout="60s"/>
+            <op id="fs_UC5_SYS-stop-interval-0s" interval="0s" name="stop" timeout="60s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="fs_UC5_SYS-clone-meta_attributes">
+          <nvpair id="fs_UC5_SYS-clone-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <group id="grp_UC5_ascs">
+        <primitive class="ocf" id="rsc_vip_int_ascs" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="rsc_vip_int_ascs-instance_attributes">
+            <nvpair id="rsc_vip_int_ascs-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+            <nvpair id="rsc_vip_int_ascs-instance_attributes-ip" name="ip" value="10.4.130.38"/>
+            <nvpair id="rsc_vip_int_ascs-instance_attributes-nic" name="nic" value="eth0"/>
+          </instance_attributes>
+          <operations>
+            <op id="rsc_vip_int_ascs-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+            <op id="rsc_vip_int_ascs-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+            <op id="rsc_vip_int_ascs-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="rsc_vip_gcp_ascs" provider="heartbeat" type="gcp-vpc-move-vip">
+          <instance_attributes id="rsc_vip_gcp_ascs-instance_attributes">
+            <nvpair id="rsc_vip_gcp_ascs-instance_attributes-alias_ip" name="alias_ip" value="10.4.130.38/32"/>
+            <nvpair id="rsc_vip_gcp_ascs-instance_attributes-hostlist" name="hostlist" value="gcdoubwap01 gcdoubwap02"/>
+          </instance_attributes>
+          <operations>
+            <op id="rsc_vip_gcp_ascs-monitor-interval-60s" interval="60s" name="monitor" on-fail="ignore"/>
+            <op id="rsc_vip_gcp_ascs-start-interval-0s" interval="0s" name="start" timeout="300s"/>
+            <op id="rsc_vip_gcp_ascs-stop-interval-0s" interval="0s" name="stop" timeout="15s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="fs_UC5_ascs" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="fs_UC5_ascs-instance_attributes">
+            <nvpair id="fs_UC5_ascs-instance_attributes-device" name="device" value="uatdoelfs.igmfinancial.net:UC5_ASCS/root"/>
+            <nvpair id="fs_UC5_ascs-instance_attributes-directory" name="directory" value="/usr/sap/UC5/ASCS11"/>
+            <nvpair id="fs_UC5_ascs-instance_attributes-force_unmount" name="force_unmount" value="safe"/>
+            <nvpair id="fs_UC5_ascs-instance_attributes-fstype" name="fstype" value="nfs"/>
+          </instance_attributes>
+          <operations>
+            <op id="fs_UC5_ascs-monitor-interval-200" interval="200" name="monitor" timeout="40"/>
+            <op id="fs_UC5_ascs-notify-interval-0s" interval="0s" name="notify" timeout="60s"/>
+            <op id="fs_UC5_ascs-start-interval-0" interval="0" name="start" timeout="60"/>
+            <op id="fs_UC5_ascs-stop-interval-0" interval="0" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="rsc_sap_UC5_ASCS11" provider="heartbeat" type="SAPInstance">
+          <instance_attributes id="rsc_sap_UC5_ASCS11-instance_attributes">
+            <nvpair id="rsc_sap_UC5_ASCS11-instance_attributes-AUTOMATIC_RECOVER" name="AUTOMATIC_RECOVER" value="false"/>
+            <nvpair id="rsc_sap_UC5_ASCS11-instance_attributes-InstanceName" name="InstanceName" value="UC5_ASCS11_uatdobwscs"/>
+            <nvpair id="rsc_sap_UC5_ASCS11-instance_attributes-START_PROFILE" name="START_PROFILE" value="/sapmnt/UC5/profile/UC5_ASCS11_uatdobwscs"/>
+          </instance_attributes>
+          <meta_attributes id="rsc_sap_UC5_ASCS11-meta_attributes">
+            <nvpair id="rsc_sap_UC5_ASCS11-meta_attributes-failure-timeout" name="failure-timeout" value="60"/>
+            <nvpair id="rsc_sap_UC5_ASCS11-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+            <nvpair id="rsc_sap_UC5_ASCS11-meta_attributes-resource-stickiness" name="resource-stickiness" value="5000"/>
+          </meta_attributes>
+          <operations>
+            <op id="rsc_sap_UC5_ASCS11-demote-interval-0s" interval="0s" name="demote" timeout="320s"/>
+            <op id="rsc_sap_UC5_ASCS11-methods-interval-0s" interval="0s" name="methods" timeout="5s"/>
+            <op id="rsc_sap_UC5_ASCS11-monitor-interval-20" interval="20" name="monitor" on-fail="restart" timeout="60"/>
+            <op id="rsc_sap_UC5_ASCS11-promote-interval-0s" interval="0s" name="promote" timeout="320s"/>
+            <op id="rsc_sap_UC5_ASCS11-start-interval-0" interval="0" name="start" timeout="600"/>
+            <op id="rsc_sap_UC5_ASCS11-stop-interval-0" interval="0" name="stop" timeout="600"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grp_UC5_ers">
+        <primitive class="ocf" id="rsc_vip_init_ers" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="rsc_vip_init_ers-instance_attributes">
+            <nvpair id="rsc_vip_init_ers-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+            <nvpair id="rsc_vip_init_ers-instance_attributes-ip" name="ip" value="10.4.130.39"/>
+            <nvpair id="rsc_vip_init_ers-instance_attributes-nic" name="nic" value="eth0"/>
+          </instance_attributes>
+          <operations>
+            <op id="rsc_vip_init_ers-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+            <op id="rsc_vip_init_ers-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+            <op id="rsc_vip_init_ers-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="rsc_vip_gcp_ers" provider="heartbeat" type="gcp-vpc-move-vip">
+          <instance_attributes id="rsc_vip_gcp_ers-instance_attributes">
+            <nvpair id="rsc_vip_gcp_ers-instance_attributes-alias_ip" name="alias_ip" value="10.4.130.39/32"/>
+            <nvpair id="rsc_vip_gcp_ers-instance_attributes-hostlist" name="hostlist" value="gcdoubwap01 gcdoubwap02"/>
+          </instance_attributes>
+          <operations>
+            <op id="rsc_vip_gcp_ers-monitor-interval-60s" interval="60s" name="monitor" on-fail="ignore"/>
+            <op id="rsc_vip_gcp_ers-start-interval-0s" interval="0s" name="start" timeout="300s"/>
+            <op id="rsc_vip_gcp_ers-stop-interval-0s" interval="0s" name="stop" timeout="180s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="fs_UC5_ers" provider="heartbeat" type="Filesystem">
+          <instance_attributes id="fs_UC5_ers-instance_attributes">
+            <nvpair id="fs_UC5_ers-instance_attributes-device" name="device" value="uatdoelfs.igmfinancial.net:UC5_ERS/root"/>
+            <nvpair id="fs_UC5_ers-instance_attributes-directory" name="directory" value="/usr/sap/UC5/ERS12"/>
+            <nvpair id="fs_UC5_ers-instance_attributes-force_unmount" name="force_unmount" value="safe"/>
+            <nvpair id="fs_UC5_ers-instance_attributes-fstype" name="fstype" value="nfs"/>
+          </instance_attributes>
+          <operations>
+            <op id="fs_UC5_ers-monitor-interval-200" interval="200" name="monitor" timeout="40"/>
+            <op id="fs_UC5_ers-notify-interval-0s" interval="0s" name="notify" timeout="60s"/>
+            <op id="fs_UC5_ers-start-interval-0" interval="0" name="start" timeout="60"/>
+            <op id="fs_UC5_ers-stop-interval-0" interval="0" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="rsc_sap_UC5_ERS12" provider="heartbeat" type="SAPInstance">
+          <instance_attributes id="rsc_sap_UC5_ERS12-instance_attributes">
+            <nvpair id="rsc_sap_UC5_ERS12-instance_attributes-AUTOMATIC_RECOVER" name="AUTOMATIC_RECOVER" value="false"/>
+            <nvpair id="rsc_sap_UC5_ERS12-instance_attributes-IS_ERS" name="IS_ERS" value="true"/>
+            <nvpair id="rsc_sap_UC5_ERS12-instance_attributes-InstanceName" name="InstanceName" value="UC5_ERS12_uatdobwers"/>
+            <nvpair id="rsc_sap_UC5_ERS12-instance_attributes-START_PROFILE" name="START_PROFILE" value="/sapmnt/UC5/profile/UC5_ERS12_uatdobwers"/>
+          </instance_attributes>
+          <operations>
+            <op id="rsc_sap_UC5_ERS12-demote-interval-0s" interval="0s" name="demote" timeout="320s"/>
+            <op id="rsc_sap_UC5_ERS12-methods-interval-0s" interval="0s" name="methods" timeout="5s"/>
+            <op id="rsc_sap_UC5_ERS12-monitor-interval-20" interval="20" name="monitor" on-fail="restart" timeout="60"/>
+            <op id="rsc_sap_UC5_ERS12-promote-interval-0s" interval="0s" name="promote" timeout="320s"/>
+            <op id="rsc_sap_UC5_ERS12-start-interval-0" interval="0" name="start" timeout="600"/>
+            <op id="rsc_sap_UC5_ERS12-stop-interval-0" interval="0" name="stop" timeout="600"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation-grp_UC5_ers-grp_UC5_ascs--5000" rsc="grp_UC5_ers" score="-5000" with-rsc="grp_UC5_ascs"/>
+      <rsc_order first="grp_UC5_ascs" first-action="start" id="order-grp_UC5_ascs-grp_UC5_ers-mandatory" symmetrical="false" then="grp_UC5_ers" then-action="stop"/>
+      <rsc_location id="location-rsc_sap_UC5_ASCS11" rsc="rsc_sap_UC5_ASCS11">
+        <rule id="location-rsc_sap_UC5_ASCS11-rule" score="2000">
+          <expression attribute="runs_ERS_UC5" id="location-rsc_sap_UC5_ASCS11-rule-expr" operation="eq" value="1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-stonith_gcdoubwap01-gcdoubwap02" node="gcdoubwap01" rsc="stonith_gcdoubwap01" score="-INFINITY"/>
+      <rsc_location id="location-stonith_gcdoubwap02-gcdoubwap01" node="gcdoubwap02" rsc="stonith_gcdoubwap02" score="-INFINITY"/>
+      <rsc_order first="fs_UC5_SAPMNT-clone" first-action="start" id="order-fs_UC5_SAPMNT-clone-grp_UC5_ascs-mandatory" then="grp_UC5_ascs" then-action="start"/>
+      <rsc_order first="fs_UC5_SAPMNT-clone" first-action="start" id="order-fs_UC5_SAPMNT-clone-grp_UC5_ers-mandatory" then="grp_UC5_ers" then-action="start"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="gcdoubwap01" in_ccm="true" crmd="online" crm-debug-origin="post_cache_update" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="stonith_gcdoubwap01" type="fence_gce" class="stonith">
+            <lrm_rsc_op id="stonith_gcdoubwap01_last_0" operation_key="stonith_gcdoubwap01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="1:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;1:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1623419700" last-rc-change="1623419700" exec-time="27" queue-time="0" op-digest="e6935031dfde569ad30fb442953d3d91"/>
+          </lrm_resource>
+          <lrm_resource id="stonith_gcdoubwap02" type="fence_gce" class="stonith">
+            <lrm_rsc_op id="stonith_gcdoubwap02_last_0" operation_key="stonith_gcdoubwap02_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="2:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;2:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1623419700" last-rc-change="1623419700" exec-time="0" queue-time="0" op-digest="064645c51d6d3a802eb6928f6116222c"/>
+          </lrm_resource>
+          <lrm_resource id="fs_UC5_SAPMNT" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_UC5_SAPMNT_last_0" operation_key="fs_UC5_SAPMNT_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;3:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1623419700" last-rc-change="1623419700" exec-time="126" queue-time="1" op-digest="02c74f325691f1af3c3dd9c2ab702b01"/>
+          </lrm_resource>
+          <lrm_resource id="fs_UC5_SYS" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_UC5_SYS_last_0" operation_key="fs_UC5_SYS_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="4:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;4:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1623419700" last-rc-change="1623419700" exec-time="130" queue-time="0" op-digest="f1f67b01fc16ed22d8fa1fe030d9c06b"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_vip_int_ascs" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_vip_int_ascs_last_0" operation_key="rsc_vip_int_ascs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="5:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;5:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1623419700" last-rc-change="1623419700" exec-time="105" queue-time="0" op-digest="da0b35400002727d7281b8f7051fe400"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_vip_gcp_ascs" type="gcp-vpc-move-vip" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_vip_gcp_ascs_last_0" operation_key="rsc_vip_gcp_ascs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="6:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:0;6:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1623419705" last-rc-change="1623419705" exec-time="1842" queue-time="0" op-digest="face88a40d76658d0caa541eefc02ca8"/>
+            <lrm_rsc_op id="rsc_vip_gcp_ascs_last_failure_0" operation_key="rsc_vip_gcp_ascs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="6:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:0;6:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1623419705" last-rc-change="1623419705" exec-time="1842" queue-time="0" op-digest="face88a40d76658d0caa541eefc02ca8"/>
+          </lrm_resource>
+          <lrm_resource id="fs_UC5_ascs" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_UC5_ascs_last_0" operation_key="fs_UC5_ascs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;7:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1623419705" last-rc-change="1623419705" exec-time="241" queue-time="0" op-digest="acac63abd6c034d7dad4aae73e2ca95d"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sap_UC5_ASCS11" type="SAPInstance" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sap_UC5_ASCS11_last_0" operation_key="rsc_sap_UC5_ASCS11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="8:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;8:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="35" rc-code="7" op-status="0" interval="0" last-run="1623419705" last-rc-change="1623419705" exec-time="969" queue-time="0" op-digest="08c114a33aa3c16b3204ff09cb983107" op-force-restart=" ERS_START_PROFILE  ERS_InstanceName  START_PROFILE  InstanceName " op-restart-digest="315a463141e0ef59afedf7a62a8d6362"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_vip_init_ers" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_vip_init_ers_last_0" operation_key="rsc_vip_init_ers_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="9:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;9:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="39" rc-code="7" op-status="0" interval="0" last-run="1623419705" last-rc-change="1623419705" exec-time="1033" queue-time="0" op-digest="7b29d7af6a7baa6015d1eeac471a9b42"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_vip_gcp_ers" type="gcp-vpc-move-vip" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_vip_gcp_ers_last_0" operation_key="rsc_vip_gcp_ers_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="10:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;10:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="43" rc-code="7" op-status="0" interval="0" last-run="1623419705" last-rc-change="1623419705" exec-time="1702" queue-time="0" op-digest="10365a97fe5a5864a3679c314bf65bfd"/>
+          </lrm_resource>
+          <lrm_resource id="fs_UC5_ers" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_UC5_ers_last_0" operation_key="fs_UC5_ers_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="11:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;11:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="47" rc-code="7" op-status="0" interval="0" last-run="1623419706" last-rc-change="1623419706" exec-time="709" queue-time="0" op-digest="61e45529b2da32c1e53055238a00ca99"/>
+          </lrm_resource>
+          <lrm_resource id="rsc_sap_UC5_ERS12" type="SAPInstance" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rsc_sap_UC5_ERS12_last_0" operation_key="rsc_sap_UC5_ERS12_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" transition-magic="0:7;12:0:7:5e41afa8-15bd-443a-88fb-ec276232a804" exit-reason="" on_node="gcdoubwap01" call-id="51" rc-code="7" op-status="0" interval="0" last-run="1623419706" last-rc-change="1623419706" exec-time="914" queue-time="1" op-digest="b550e70bd4203af88473e4d914b11f87" op-force-restart=" ERS_START_PROFILE  ERS_InstanceName  START_PROFILE  InstanceName " op-restart-digest="2fb6ec6eb77e25302c8dc0dad84dc46f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="gcdoubwap02" crmd="offline" crm-debug-origin="post_cache_update" in_ccm="true"/>
+  </status>
+</cib>
