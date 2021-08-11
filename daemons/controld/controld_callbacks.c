@@ -116,6 +116,22 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         controld_set_fsa_input_flags(R_PEER_DATA);
     }
 
+    if (type == crm_status_processes
+        && pcmk_is_set(node->processes, crm_get_cluster_proc())
+        && !AM_I_DC
+        && !is_remote) {
+        /*
+         * This is a hack until we can send to a nodeid and/or we fix node name lookups
+         * These messages are ignored in crmd_ha_msg_filter()
+         */
+        xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+
+        crm_debug("Sending hello to node %u so that it learns our node name", node->id);
+        send_cluster_message(node, crm_msg_crmd, query, FALSE);
+
+        free_xml(query);
+    }
+
     if (node->uname == NULL) {
         return;
     }
@@ -173,17 +189,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             if (!appeared) {
                 controld_remove_voter(node->uname);
-            } else if (!AM_I_DC && !is_remote) {
-                /*
-                 * This is a hack until we can send to a nodeid and/or we fix node name lookups
-                 * These messages are ignored in crmd_ha_msg_filter()
-                 */
-                xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-
-                crm_debug("Broadcasting our uname because of node %u", node->id);
-                send_cluster_message(node, crm_msg_crmd, query, FALSE);
-
-                free_xml(query);
             }
 
             if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
