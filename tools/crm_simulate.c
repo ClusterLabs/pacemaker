@@ -470,18 +470,14 @@ create_action_name(pe_action_t *action)
     return action_name;
 }
 
-static bool
-create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_actions,
-               GError **error)
+static int
+create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_actions)
 {
     GList *gIter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
 
     if (dot_strm == NULL) {
-        g_set_error(error, PCMK__RC_ERROR, errno,
-                    "Could not open %s for writing: %s", dot_file,
-                    pcmk_rc_str(errno));
-        return false;
+        return errno;
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
@@ -573,7 +569,7 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     fprintf(dot_strm, "}\n");
     fflush(dot_strm);
     fclose(dot_strm);
-    return true;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -1007,7 +1003,11 @@ main(int argc, char **argv)
         }
 
         if (options.dot_file != NULL) {
-            if (!create_dotfile(data_set, options.dot_file, options.all_actions, &error)) {
+            rc = create_dotfile(data_set, options.dot_file, options.all_actions);
+            if (rc != pcmk_rc_ok) {
+                g_set_error(&error, PCMK__RC_ERROR, rc,
+                            "Could not open %s for writing: %s", options.dot_file,
+                            pcmk_rc_str(rc));
                 goto done;
             }
         }
