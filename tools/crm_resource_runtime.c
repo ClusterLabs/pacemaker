@@ -1798,9 +1798,15 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     if (services_action_sync(op)) {
         exit_code = op->rc;
 
+        /* Lookup exit code based on rc for LSB resources */
+        if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei) && 
+                pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
+            exit_code = services_get_ocf_exitcode(action, exit_code);
+        }
+
         out->message(out, "resource-agent-action", resource_verbose, rsc_class,
-                     rsc_prov, rsc_type, rsc_name, rsc_action, override_hash, op->rc,
-                     op->status, op->stdout_data, op->stderr_data);
+                     rsc_prov, rsc_type, rsc_name, rsc_action, override_hash,
+                     exit_code, op->status, op->stdout_data, op->stderr_data);
     } else {
         exit_code = op->rc == 0 ? CRM_EX_ERROR : op->rc;
     }
