@@ -21,6 +21,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/output.h>
@@ -407,34 +408,16 @@ static int
 setup_input(const char *input, const char *output, GError **error)
 {
     int rc = pcmk_rc_ok;
-    cib_t *cib_conn = NULL;
     xmlNode *cib_object = NULL;
     char *local_output = NULL;
 
     if (input == NULL) {
         /* Use live CIB */
-        cib_conn = cib_new();
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-        rc = pcmk_legacy2rc(rc);
-
-        if (rc == pcmk_rc_ok) {
-            rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, cib_scope_local | cib_sync_call);
-        }
-
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-        cib_conn = NULL;
-
+        rc = cib__signon_query(NULL, &cib_object);
         if (rc != pcmk_rc_ok) {
-            rc = pcmk_legacy2rc(rc);
             g_set_error(error, PCMK__RC_ERROR, rc,
-                        "Live CIB query failed: %s (%d)", pcmk_rc_str(rc), rc);
+                        "CIB query failed: %s", pcmk_rc_str(rc));
             return rc;
-
-        } else if (cib_object == NULL) {
-            g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_NOINPUT,
-                        "Live CIB query failed: empty result");
-            return pcmk_rc_no_input;
         }
 
     } else if (pcmk__str_eq(input, "-", pcmk__str_casei)) {
@@ -630,20 +613,10 @@ main(int argc, char **argv)
         goto done;
     }
 
-    global_cib = cib_new();
-    rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
+    rc = cib__signon_query(&global_cib, &input);
     if (rc != pcmk_rc_ok) {
-        rc = pcmk_legacy2rc(rc);
         g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not connect to the CIB: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-
-    rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
-    if (rc != pcmk_rc_ok) {
-        rc = pcmk_legacy2rc(rc);
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Could not get local CIB: %s", pcmk_rc_str(rc));
+                    "CIB query failed: %s", pcmk_rc_str(rc));
         goto done;
     }
 

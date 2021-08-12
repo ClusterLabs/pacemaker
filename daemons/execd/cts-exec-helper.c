@@ -19,6 +19,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/lrmd.h>
 
 static pcmk__cli_option_t long_options[] = {
@@ -121,7 +122,6 @@ static pcmk__cli_option_t long_options[] = {
     { 0, 0, 0, 0 }
 };
 
-static cib_t *cib_conn = NULL;
 static int exec_call_id = 0;
 static int exec_call_opts = 0;
 static gboolean start_test(gpointer user_data);
@@ -443,22 +443,10 @@ generate_params(void)
     }
     pe__set_working_set_flags(data_set, pe_flag_no_counts|pe_flag_no_compat);
 
-    cib_conn = cib_new();
-    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_query);
-    if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
-        rc = -1;
-        goto param_gen_bail;
-    }
+    rc = cib__signon_query(NULL, &cib_xml_copy);
 
-    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
-    if (rc != pcmk_ok) {
-        crm_err("Error retrieving cib copy: %s (%d)", pcmk_strerror(rc), rc);
-        goto param_gen_bail;
-
-    } else if (cib_xml_copy == NULL) {
-        rc = -ENODATA;
-        crm_err("Error retrieving cib copy: %s (%d)", pcmk_strerror(rc), rc);
+    if (rc != pcmk_rc_ok) {
+        crm_err("CIB query failed: %s", pcmk_rc_str(rc));
         goto param_gen_bail;
     }
 
@@ -680,11 +668,6 @@ main(int argc, char **argv)
     crm_info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
-
-    if (cib_conn != NULL) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-    }
 
     test_exit(CRM_EX_OK);
     return CRM_EX_OK;

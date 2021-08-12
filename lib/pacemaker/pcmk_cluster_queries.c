@@ -17,6 +17,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
@@ -431,22 +432,12 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 int
 pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
 {
-    cib_t *the_cib = cib_new();
     xmlNode *xml_node = NULL;
     int rc;
 
-    if (the_cib == NULL) {
-        return ENOMEM;
-    }
-    rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
-    if (rc != pcmk_ok) {
-        cib_delete(the_cib);
-        return pcmk_legacy2rc(rc);
-    }
+    rc = cib__signon_query(NULL, &xml_node);
 
-    rc = the_cib->cmds->query(the_cib, NULL, &xml_node,
-                              cib_scope_local | cib_sync_call);
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         struct node_data data = {
             .out = out,
             .found = 0,
@@ -488,9 +479,8 @@ pcmk__list_nodes(pcmk__output_t *out, char *node_types, gboolean BASH_EXPORT)
 
         free_xml(xml_node);
     }
-    the_cib->cmds->signoff(the_cib);
-    cib_delete(the_cib);
-    return pcmk_legacy2rc(rc);
+
+    return rc;
 }
 
 int
