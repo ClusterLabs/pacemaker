@@ -17,7 +17,7 @@ Current cluster status:
 Transition Summary:
   * Fence (reboot) pcmk-10 'peer process is no longer available'
   * Fence (reboot) pcmk-8 'peer has not been seen by the cluster'
-  * Fence (reboot) pcmk-7 'peer failed the pacemaker membership criteria'
+  * Fence (reboot) pcmk-7 'peer failed Pacemaker membership criteria'
   * Fence (reboot) pcmk-5 'peer has not been seen by the cluster'
   * Start      Fencing     ( pcmk-1 )  blocked
 
