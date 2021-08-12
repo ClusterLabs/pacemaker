@@ -9,7 +9,7 @@ URL:              @PACKAGE_URL@
 Version:          @PACKAGE_VERSION@
 Description:      Scheduler APIs for Pacemaker
 Requires:         pacemaker
-Requires.private: glib-2.0 libxml-2.0 @PC_NAME_CURSES@
+Requires.private: glib-2.0 libxml-2.0
 Conflicts:
 Cflags:           -I${includedir}
 Libs:             -L${libdir} -l${sub}
