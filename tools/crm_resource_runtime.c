@@ -1702,26 +1702,23 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  int timeout_ms, int resource_verbose, gboolean force,
                                  int check_level)
 {
+    const char *class = NULL;
     const char *action = NULL;
     GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
-    if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+    class = !pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei) ?
+                rsc_class : resources_find_service_class(rsc_type);
+
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         out->err(out, "Sorry, the %s option doesn't support %s resources yet",
-                 rsc_action, rsc_class);
+                 rsc_action, class);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
-    } else if (pcmk__strcase_any_of(rsc_class, PCMK_RESOURCE_CLASS_SYSTEMD,
+    } else if (pcmk__strcase_any_of(class, PCMK_RESOURCE_CLASS_SYSTEMD,
                 PCMK_RESOURCE_CLASS_UPSTART, PCMK_RESOURCE_CLASS_NAGIOS, NULL)) {
         out->err(out, "Sorry, the %s option doesn't support %s resources",
-                 rsc_action, rsc_class);
-        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
-    } else if (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE,
-                pcmk__str_casei) && !pcmk__str_eq(
-                resources_find_service_class(rsc_type), PCMK_RESOURCE_CLASS_LSB,
-                pcmk__str_casei)) {
-        out->err(out, "Sorry, the %s option doesn't support %s resources",
-                 rsc_action, resources_find_service_class(rsc_type));
+                 rsc_action, class);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
@@ -1799,9 +1796,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         exit_code = op->rc;
 
         /* Lookup exit code based on rc for LSB resources */
-        if (( pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei) ||
-              (pcmk__str_eq(rsc_class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei) &&
-              pcmk__str_eq(resources_find_service_class(rsc_type), PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) ) &&
+        if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei) &&
               pcmk__str_eq(rsc_action, "force-check", pcmk__str_casei)) {
             exit_code = services_get_ocf_exitcode(action, exit_code);
         }
