@@ -2608,6 +2608,21 @@ bool fencing_peer_active(crm_node_t *peer)
     return FALSE;
 }
 
+void set_fencing_completed(remote_fencing_op_t * op)
+{
+#ifdef CLOCK_MONOTONIC
+    struct timespec tv;
+
+    clock_gettime(CLOCK_MONOTONIC, &tv);
+
+    op->completed = tv.tv_sec;
+    op->completed_nsec = tv.tv_nsec;
+#else
+    op->completed = time(NULL);
+    op->completed_nsec = 0L;
+#endif
+}
+
 /*!
  * \internal
  * \brief Determine if we need to use an alternate node to
