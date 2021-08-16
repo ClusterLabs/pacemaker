@@ -99,6 +99,8 @@ node_alive(const crm_node_t *node)
 
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
+bool controld_dc_left = false;
+
 void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
@@ -112,6 +114,22 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
      */
     if (!is_remote) {
         controld_set_fsa_input_flags(R_PEER_DATA);
+    }
+
+    if (type == crm_status_processes
+        && pcmk_is_set(node->processes, crm_get_cluster_proc())
+        && !AM_I_DC
+        && !is_remote) {
+        /*
+         * This is a hack until we can send to a nodeid and/or we fix node name lookups
+         * These messages are ignored in crmd_ha_msg_filter()
+         */
+        xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+
+        crm_debug("Sending hello to node %u so that it learns our node name", node->id);
+        send_cluster_message(node, crm_msg_crmd, query, FALSE);
+
+        free_xml(query);
     }
 
     if (node->uname == NULL) {
@@ -171,17 +189,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
             if (!appeared) {
                 controld_remove_voter(node->uname);
-            } else if (!AM_I_DC && !is_remote) {
-                /*
-                 * This is a hack until we can send to a nodeid and/or we fix node name lookups
-                 * These messages are ignored in crmd_ha_msg_filter()
-                 */
-                xmlNode *query = create_request(CRM_OP_HELLO, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
-
-                crm_debug("Broadcasting our uname because of node %u", node->id);
-                send_cluster_message(node, crm_msg_crmd, query, FALSE);
-
-                free_xml(query);
             }
 
             if (!pcmk_is_set(fsa_input_register, R_CIB_CONNECTED)) {
@@ -217,7 +224,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                                                cib_scope_local);
                 }
 
-            } else if (AM_I_DC || (fsa_our_dc == NULL)) {
+            } else if (AM_I_DC || controld_dc_left || (fsa_our_dc == NULL)) {
                 /* This only needs to be done once, so normally the DC should do
                  * it. However if there is no DC, every node must do it, since
                  * there is no other way to ensure some one node does it.

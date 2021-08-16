@@ -68,6 +68,12 @@ HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource ma
 #       and all wrappers to C code.
 %.8:	% $(MAN8DEPS)
 	$(AM_V_at)chmod a+x $(abs_builddir)/$<
+	PATH=$(abs_builddir):$$PATH $(abs_builddir)/$< --version >/dev/null
+	if [ -f $(abs_srcdir)/$@.inc ]; then \
+		PATH=$(abs_builddir):$$PATH $(abs_builddir)/$< --help-all >/dev/null; \
+	else \
+		PATH=$(abs_builddir):$$PATH $(abs_builddir)/$< --help >/dev/null; \
+	fi
 	$(AM_V_MAN)if [ -f $(abs_srcdir)/$@.inc ]; then			\
 		PATH=$(abs_builddir):$$PATH $(HELP2MAN) $(HELP2MAN_ARGS)	\
 			-h --help-all 						\
