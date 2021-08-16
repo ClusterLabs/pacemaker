@@ -18,8 +18,6 @@
 #include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 
-static crm_graph_functions_t *graph_fns = NULL;
-
 
 /*
  * Functions for updating graph
@@ -126,122 +124,178 @@ pcmk__update_graph(crm_graph_t *graph, crm_action_t *action)
     }
 }
 
-static gboolean
-should_fire_synapse(crm_graph_t * graph, synapse_t * synapse)
+
+/*
+ * Functions for executing graph
+ */
+
+/* A transition graph consists of various types of actions. The library caller
+ * registers execution functions for each action type, which will be stored
+ * here.
+ */
+static crm_graph_functions_t *graph_fns = NULL;
+
+/*!
+ * \internal
+ * \brief Set transition graph execution functions
+ *
+ * \param[in]  Execution functions to use
+ */
+void
+pcmk__set_graph_functions(crm_graph_functions_t *fns)
+{
+    crm_debug("Setting custom functions for executing transition graphs");
+    graph_fns = fns;
+
+    CRM_ASSERT(graph_fns != NULL);
+    CRM_ASSERT(graph_fns->rsc != NULL);
+    CRM_ASSERT(graph_fns->crmd != NULL);
+    CRM_ASSERT(graph_fns->pseudo != NULL);
+    CRM_ASSERT(graph_fns->stonith != NULL);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a graph synapse is ready to be executed
+ *
+ * \param[in] graph    Transition graph that synapse is part of
+ * \param[in] synapse  Synapse to check
+ *
+ * \return true if synapse is ready, false otherwise
+ */
+static bool
+should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 {
     GList *lpc = NULL;
 
-    CRM_CHECK(synapse->executed == FALSE, return FALSE);
-    CRM_CHECK(synapse->confirmed == FALSE, return FALSE);
-
-    crm_trace("Checking pre-reqs for synapse %d", synapse->id);
-    /* lookup prereqs */
     synapse->ready = TRUE;
     for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
-        crm_trace("Processing input %d", prereq->id);
-        if (prereq->confirmed == FALSE) {
-            crm_trace("Input %d for synapse %d not satisfied: not confirmed", prereq->id, synapse->id);
+        if (!(prereq->confirmed)) {
+            crm_trace("Input %d for synapse %d not yet confirmed",
+                      prereq->id, synapse->id);
             synapse->ready = FALSE;
             break;
-        } else if(prereq->failed && prereq->can_fail == FALSE) {
-            crm_trace("Input %d for synapse %d not satisfied: failed", prereq->id, synapse->id);
+
+        } else if (prereq->failed && !(prereq->can_fail)) {
+            crm_trace("Input %d for synapse %d confirmed but failed",
+                      prereq->id, synapse->id);
             synapse->ready = FALSE;
             break;
         }
     }
+    if (synapse->ready) {
+        crm_trace("Synapse %d is ready to execute", synapse->id);
+    } else {
+        return false;
+    }
 
-    for (lpc = synapse->actions; synapse->ready && lpc != NULL; lpc = lpc->next) {
+    for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *a = (crm_action_t *) lpc->data;
 
         if (a->type == action_type_pseudo) {
             /* None of the below applies to pseudo ops */
 
         } else if (synapse->priority < graph->abort_priority) {
-            crm_trace("Skipping synapse %d: abort level %d", synapse->id, graph->abort_priority);
+            crm_trace("Skipping synapse %d: priority %d is less than "
+                      "abort priority %d",
+                      synapse->id, synapse->priority, graph->abort_priority);
             graph->skipped++;
-            return FALSE;
+            return false;
 
-        } else if(graph_fns->allowed && graph_fns->allowed(graph, a) == FALSE) {
-            crm_trace("Deferring synapse %d: allowed", synapse->id);
-            return FALSE;
+        } else if (graph_fns->allowed && !(graph_fns->allowed(graph, a))) {
+            crm_trace("Deferring synapse %d: not allowed", synapse->id);
+            return false;
         }
     }
 
-    return synapse->ready;
+    return true;
 }
 
+/*!
+ * \internal
+ * \brief Initiate an action from a transition graph
+ *
+ * \param[in] graph   Transition graph containing action
+ * \parma[in] action  Action to execute
+ *
+ * \return TRUE if action was initiated, FALSE otherwise
+ */
 static gboolean
-initiate_action(crm_graph_t * graph, crm_action_t * action)
+initiate_action(crm_graph_t *graph, crm_action_t *action)
 {
-    const char *id = NULL;
+    const char *id = ID(action->xml);
 
-    CRM_CHECK(action->executed == FALSE, return FALSE);
-
-    id = ID(action->xml);
+    CRM_CHECK(!(action->executed), return FALSE);
     CRM_CHECK(id != NULL, return FALSE);
 
     action->executed = TRUE;
-    if (action->type == action_type_pseudo) {
-        crm_trace("Executing pseudo-event: %s (%d)", id, action->id);
-        return graph_fns->pseudo(graph, action);
+    switch (action->type) {
+        case action_type_pseudo:
+            crm_trace("Executing pseudo-action %d (%s)", action->id, id);
+            return graph_fns->pseudo(graph, action);
 
-    } else if (action->type == action_type_rsc) {
-        crm_trace("Executing rsc-event: %s (%d)", id, action->id);
-        return graph_fns->rsc(graph, action);
+        case action_type_rsc:
+            crm_trace("Executing resource action %d (%s)", action->id, id);
+            return graph_fns->rsc(graph, action);
 
-    } else if (action->type == action_type_crm) {
-        const char *task = NULL;
+        case action_type_crm:
+            if (pcmk__str_eq(crm_element_value(action->xml, XML_LRM_ATTR_TASK),
+                             CRM_OP_FENCE, pcmk__str_casei)) {
+                crm_trace("Executing fencing action %d (%s)",
+                          action->id, id);
+                return graph_fns->stonith(graph, action);
+            }
+            crm_trace("Executing control action %d (%s)", action->id, id);
+            return graph_fns->crmd(graph, action);
 
-        task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-        CRM_CHECK(task != NULL, return FALSE);
-
-        if (pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
-            crm_trace("Executing STONITH-event: %s (%d)", id, action->id);
-            return graph_fns->stonith(graph, action);
-        }
-
-        crm_trace("Executing crm-event: %s (%d)", id, action->id);
-        return graph_fns->crmd(graph, action);
+        default:
+            crm_err("Unsupported graph action type <%s id='%s'> (bug?)",
+                    crm_element_name(action->xml), id);
+            return FALSE;
     }
-
-    crm_err("Failed on unsupported command type: %s (id=%s)", crm_element_name(action->xml), id);
-    return FALSE;
 }
 
-static gboolean
-fire_synapse(crm_graph_t * graph, synapse_t * synapse)
+/*!
+ * \internal
+ * \brief Execute a graph synapse
+ *
+ * \param[in] graph    Transition graph with synapse to execute
+ * \param[in] synapse  Synapse to execute
+ *
+ * \return Standard Pacemaker return value
+ */
+static int
+fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 {
-    GList *lpc = NULL;
-
-    CRM_CHECK(synapse != NULL, return FALSE);
-    CRM_CHECK(synapse->ready, return FALSE);
-    CRM_CHECK(synapse->confirmed == FALSE, return TRUE);
-
-    crm_trace("Synapse %d fired", synapse->id);
     synapse->executed = TRUE;
-    for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
 
-        /* allow some leeway */
-        gboolean passed = FALSE;
-
-        /* Invoke the action and start the timer */
-        passed = initiate_action(graph, action);
-        if (passed == FALSE) {
+        if (!initiate_action(graph, action)) {
             crm_err("Failed initiating <%s id=%d> in synapse %d",
                     crm_element_name(action->xml), action->id, synapse->id);
             synapse->confirmed = TRUE;
             action->confirmed = TRUE;
             action->failed = TRUE;
-            return FALSE;
+            return pcmk_rc_error;
         }
     }
-
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Dummy graph method that can be used with simulations
+ *
+ * \param[in] graph   Transition graph containing action
+ * \param[in] action  Action to be initiated
+ *
+ * \retval TRUE   Action initiation was (simulated to be) successful
+ * \retval FALSE  Action initiation was (simulated to be) failed (due to the
+ *                PE_fail environment variable being set to the action ID)
+ */
 static gboolean
 pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
 {
@@ -258,11 +312,12 @@ pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
         }
     }
 
-    crm_trace("Dummy event handler: action %d executed", action->id);
     if (action->id == fail) {
         crm_err("Dummy event handler: pretending action %d failed", action->id);
         action->failed = TRUE;
         graph->abort_priority = INFINITY;
+    } else {
+        crm_trace("Dummy event handler: action %d initiated", action->id);
     }
     action->confirmed = TRUE;
     pcmk__update_graph(graph, action);
@@ -276,14 +331,21 @@ static crm_graph_functions_t default_fns = {
     pseudo_action_dummy
 };
 
-int
-run_graph(crm_graph_t * graph)
+/*!
+ * \internal
+ * \brief Execute all actions in a transition graph
+ *
+ * \param[in] graph  Transition graph to execute
+ *
+ * \return Status of transition after execution
+ */
+enum transition_status
+pcmk__execute_graph(crm_graph_t *graph)
 {
     GList *lpc = NULL;
-    int stat_log_level = LOG_DEBUG;
-    int pass_result = transition_active;
-
-    const char *status = "In-progress";
+    int log_level = LOG_DEBUG;
+    enum transition_status pass_result = transition_active;
+    const char *status = "In progress";
 
     if (graph_fns == NULL) {
         graph_fns = &default_fns;
@@ -297,50 +359,50 @@ run_graph(crm_graph_t * graph)
     graph->skipped = 0;
     graph->completed = 0;
     graph->incomplete = 0;
-    crm_trace("Entering graph %d callback", graph->id);
 
-    /* Pre-calculate the number of completed and in-flight operations */
+    // Count completed and in-flight synapses
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
         if (synapse->confirmed) {
-            crm_trace("Synapse %d complete", synapse->id);
             graph->completed++;
 
-        } else if (synapse->failed == FALSE && synapse->executed) {
-            crm_trace("Synapse %d: confirmation pending", synapse->id);
+        } else if (!(synapse->failed) && synapse->executed) {
             graph->pending++;
         }
     }
+    crm_trace("Executing graph %d (%d synapses already completed, %d pending)",
+              graph->id, graph->completed, graph->pending);
 
-    /* Now check if there is work to do */
+    // Execute any synapses that are ready
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
-        if (graph->batch_limit > 0 && graph->pending >= graph->batch_limit) {
-            crm_debug("Throttling output: batch limit (%d) reached", graph->batch_limit);
+        if ((graph->batch_limit > 0)
+            && (graph->pending >= graph->batch_limit)) {
+
+            crm_debug("Throttling graph execution: batch limit (%d) reached",
+                      graph->batch_limit);
             break;
+
         } else if (synapse->failed) {
             graph->skipped++;
             continue;
 
         } else if (synapse->confirmed || synapse->executed) {
-            /* Already handled */
-            continue;
-        }
+            continue; // Already handled
 
-        if (should_fire_synapse(graph, synapse)) {
-            crm_trace("Synapse %d fired", synapse->id);
+        } else if (should_fire_synapse(graph, synapse)) {
             graph->fired++;
-            if(fire_synapse(graph, synapse) == FALSE) {
+            if (fire_synapse(graph, synapse) != pcmk_rc_ok) {
                 crm_err("Synapse %d failed to fire", synapse->id);
-                stat_log_level = LOG_ERR;
+                log_level = LOG_ERR;
                 graph->abort_priority = INFINITY;
                 graph->incomplete++;
                 graph->fired--;
             }
 
-            if (synapse->confirmed == FALSE) {
+            if (!(synapse->confirmed)) {
                 graph->pending++;
             }
 
@@ -350,26 +412,30 @@ run_graph(crm_graph_t * graph)
         }
     }
 
-    if (graph->pending == 0 && graph->fired == 0) {
+    if ((graph->pending == 0) && (graph->fired == 0)) {
         graph->complete = TRUE;
-        stat_log_level = LOG_NOTICE;
-        pass_result = transition_complete;
-        status = "Complete";
 
-        if (graph->incomplete != 0 && graph->abort_priority <= 0) {
-            stat_log_level = LOG_WARNING;
+        if ((graph->incomplete != 0) && (graph->abort_priority <= 0)) {
+            log_level = LOG_WARNING;
             pass_result = transition_terminated;
             status = "Terminated";
 
         } else if (graph->skipped != 0) {
+            log_level = LOG_NOTICE;
+            pass_result = transition_complete;
             status = "Stopped";
+
+        } else {
+            log_level = LOG_NOTICE;
+            pass_result = transition_complete;
+            status = "Complete";
         }
 
     } else if (graph->fired == 0) {
         pass_result = transition_pending;
     }
 
-    do_crm_log(stat_log_level,
+    do_crm_log(log_level,
                "Transition %d (Complete=%d, Pending=%d,"
                " Fired=%d, Skipped=%d, Incomplete=%d, Source=%s): %s",
                graph->id, graph->completed, graph->pending, graph->fired,
@@ -377,6 +443,7 @@ run_graph(crm_graph_t * graph)
 
     return pass_result;
 }
+
 
 static crm_action_t *
 unpack_action(synapse_t * parent, xmlNode * xml_action)
@@ -702,19 +769,6 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
 
     op->call_id++;
     return op;
-}
-
-void
-set_graph_functions(crm_graph_functions_t * fns)
-{
-    crm_info("Setting custom graph functions");
-    graph_fns = fns;
-
-    CRM_ASSERT(graph_fns != NULL);
-    CRM_ASSERT(graph_fns->rsc != NULL);
-    CRM_ASSERT(graph_fns->crmd != NULL);
-    CRM_ASSERT(graph_fns->pseudo != NULL);
-    CRM_ASSERT(graph_fns->stonith != NULL);
 }
 
 static const char *

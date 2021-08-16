@@ -798,7 +798,7 @@ int
 run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 {
     crm_graph_t *transition = NULL;
-    enum transition_status graph_rc = -1;
+    enum transition_status graph_rc;
 
     crm_graph_functions_t exec_fns = {
         exec_pseudo_action,
@@ -816,13 +816,13 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->begin_list(out, NULL, NULL, "Executing Cluster Transition");
     }
 
-    set_graph_functions(&exec_fns);
+    pcmk__set_graph_functions(&exec_fns);
     transition = unpack_graph(data_set->graph, crm_system_name);
     print_graph(LOG_DEBUG, transition);
 
     fake_resource_list = data_set->resources;
     do {
-        graph_rc = run_graph(transition);
+        graph_rc = pcmk__execute_graph(transition);
 
     } while (graph_rc == transition_active);
     fake_resource_list = NULL;

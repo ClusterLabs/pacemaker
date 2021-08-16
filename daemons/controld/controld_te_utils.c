@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,8 +34,6 @@ stop_te_timer(crm_action_timer_t * timer)
 gboolean
 te_graph_trigger(gpointer user_data)
 {
-    enum transition_status graph_rc = -1;
-
     if (transition_graph == NULL) {
         crm_debug("Nothing to do");
         return TRUE;
@@ -57,10 +55,11 @@ te_graph_trigger(gpointer user_data)
     }
 
     if (transition_graph->complete == FALSE) {
+        enum transition_status graph_rc;
         int limit = transition_graph->batch_limit;
 
         transition_graph->batch_limit = throttle_get_total_job_limit(limit);
-        graph_rc = run_graph(transition_graph);
+        graph_rc = pcmk__execute_graph(transition_graph);
         transition_graph->batch_limit = limit; /* Restore the configured value */
 
         /* significant overhead... */

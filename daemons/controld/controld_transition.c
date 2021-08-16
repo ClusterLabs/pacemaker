@@ -96,7 +96,7 @@ do_te_control(long long action,
     }
 
     if (init_ok) {
-        set_graph_functions(&te_graph_fns);
+        pcmk__set_graph_functions(&te_graph_fns);
 
         if (transition_graph) {
             destroy_graph(transition_graph);
