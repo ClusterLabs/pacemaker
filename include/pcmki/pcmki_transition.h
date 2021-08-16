@@ -121,7 +121,6 @@ enum transition_status {
     transition_failed,
 };
 
-void set_default_graph_functions(void);
 void set_graph_functions(crm_graph_functions_t * fns);
 crm_graph_t *unpack_graph(xmlNode * xml_graph, const char *reference);
 int run_graph(crm_graph_t * graph);
