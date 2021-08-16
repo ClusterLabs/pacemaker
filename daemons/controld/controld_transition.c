@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2020 the Pacemaker project contributors
+ * Copyright 2004-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@ global_cib_callback(const xmlNode * msg, int callid, int rc, xmlNode * output)
 static crm_graph_t *
 create_blank_graph(void)
 {
-    crm_graph_t *a_graph = unpack_graph(NULL, NULL);
+    crm_graph_t *a_graph = pcmk__unpack_graph(NULL, NULL);
 
     a_graph->complete = TRUE;
     a_graph->abort_reason = "DC Takeover";
@@ -180,7 +180,7 @@ do_te_invoke(long long action,
                   return);
 
         destroy_graph(transition_graph);
-        transition_graph = unpack_graph(graph_data, graph_input);
+        transition_graph = pcmk__unpack_graph(graph_data, graph_input);
         if (transition_graph == NULL) {
             CRM_CHECK(transition_graph != NULL,);
             transition_graph = create_blank_graph();

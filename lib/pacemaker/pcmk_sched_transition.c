@@ -817,7 +817,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
     }
 
     pcmk__set_graph_functions(&exec_fns);
-    transition = unpack_graph(data_set->graph, crm_system_name);
+    transition = pcmk__unpack_graph(data_set->graph, crm_system_name);
     print_graph(LOG_DEBUG, transition);
 
     fake_resource_list = data_set->resources;

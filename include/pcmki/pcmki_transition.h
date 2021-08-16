@@ -122,7 +122,7 @@ enum transition_status {
 };
 
 void pcmk__set_graph_functions(crm_graph_functions_t *fns);
-crm_graph_t *unpack_graph(xmlNode * xml_graph, const char *reference);
+crm_graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
 enum transition_status pcmk__execute_graph(crm_graph_t *graph);
 void pcmk__update_graph(crm_graph_t *graph, crm_action_t *action);
 void destroy_graph(crm_graph_t * graph);

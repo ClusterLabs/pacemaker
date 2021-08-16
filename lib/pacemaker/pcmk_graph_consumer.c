@@ -445,22 +445,55 @@ pcmk__execute_graph(crm_graph_t *graph)
 }
 
 
+/*
+ * Functions for unpacking transition graph XML into structs
+ */
+
+/*!
+ * \internal
+ * \brief Unpack a transition graph action from XML
+ *
+ * \param[in] parent      Synapse that action is part of
+ * \param[in] xml_action  Action XML to unparse
+ *
+ * \return Newly allocated action on success, or NULL otherwise
+ */
 static crm_action_t *
-unpack_action(synapse_t * parent, xmlNode * xml_action)
+unpack_action(synapse_t *parent, xmlNode *xml_action)
 {
+    action_type_e action_type;
     crm_action_t *action = NULL;
-    const char *value = crm_element_value(xml_action, XML_ATTR_ID);
+    const char *element = TYPE(xml_action);
+    const char *value = ID(xml_action);
 
     if (value == NULL) {
-        crm_err("Actions must have an id!");
-        crm_log_xml_trace(xml_action, "Action with missing id");
+        crm_err("Ignoring transition graph action without id (bug?)");
+        crm_log_xml_trace(xml_action, "invalid");
+        return NULL;
+    }
+
+    if (pcmk__str_eq(element, XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
+        action_type = action_type_rsc;
+
+    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_PSEUDO_EVENT,
+                            pcmk__str_casei)) {
+        action_type = action_type_pseudo;
+
+    } else if (pcmk__str_eq(element, XML_GRAPH_TAG_CRM_EVENT,
+                            pcmk__str_casei)) {
+        action_type = action_type_crm;
+
+    } else {
+        crm_err("Ignoring transition graph action of unknown type '%s' (bug?)",
+                element);
+        crm_log_xml_trace(xml_action, "invalid");
         return NULL;
     }
 
     action = calloc(1, sizeof(crm_action_t));
     if (action == NULL) {
-        crm_perror(LOG_CRIT, "Cannot unpack action");
-        crm_log_xml_trace(xml_action, "Lost action");
+        crm_perror(LOG_CRIT, "Cannot unpack transition graph action");
+        crm_log_xml_trace(xml_action, "lost");
         return NULL;
     }
 
@@ -468,17 +501,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     action->type = action_type_rsc;
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
-
-    if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_RSC_OP, pcmk__str_casei)) {
-        action->type = action_type_rsc;
-
-    } else if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_PSEUDO_EVENT, pcmk__str_casei)) {
-        action->type = action_type_pseudo;
-
-    } else if (pcmk__str_eq(crm_element_name(action->xml), XML_GRAPH_TAG_CRM_EVENT, pcmk__str_casei)) {
-        action->type = action_type_crm;
-    }
-
+    action->type = action_type;
     action->params = xml2list(action->xml);
 
     value = g_hash_table_lookup(action->params, "CRM_meta_timeout");
@@ -515,78 +538,84 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     return action;
 }
 
+/*!
+ * \internal
+ * \brief Unpack transition graph synapse from XML
+ *
+ * \param[in] new_graph    Transition graph that synapse is part of
+ * \param[in] xml_synapse  Synapse XML
+ *
+ * \return Newly allocated synapse on success, or NULL otherwise
+ */
 static synapse_t *
-unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
+unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
 {
     const char *value = NULL;
-    xmlNode *inputs = NULL;
     xmlNode *action_set = NULL;
     synapse_t *new_synapse = NULL;
 
-    CRM_CHECK(xml_synapse != NULL, return NULL);
-    crm_trace("looking in synapse %s", ID(xml_synapse));
+    crm_trace("Unpacking synapse %s", ID(xml_synapse));
 
     new_synapse = calloc(1, sizeof(synapse_t));
+    if (new_synapse == NULL) {
+        return NULL;
+    }
+
     pcmk__scan_min_int(ID(xml_synapse), &(new_synapse->id), 0);
 
     value = crm_element_value(xml_synapse, XML_CIB_ATTR_PRIORITY);
     pcmk__scan_min_int(value, &(new_synapse->priority), 0);
 
     CRM_CHECK(new_synapse->id >= 0, free(new_synapse);
-              return NULL);
+                                    return NULL);
 
     new_graph->num_synapses++;
 
-    crm_trace("look for actions in synapse %s", crm_element_value(xml_synapse, XML_ATTR_ID));
+    crm_trace("Unpacking synapse %s action sets",
+              crm_element_value(xml_synapse, XML_ATTR_ID));
 
-    for (action_set = pcmk__xml_first_child(xml_synapse); action_set != NULL;
-         action_set = pcmk__xml_next(action_set)) {
+    for (action_set = first_named_child(xml_synapse, "action_set");
+         action_set != NULL; action_set = crm_next_same_xml(action_set)) {
 
-        if (pcmk__str_eq((const char *)action_set->name, "action_set",
-                         pcmk__str_none)) {
-            xmlNode *action = NULL;
+        for (xmlNode *action = pcmk__xml_first_child(action_set);
+             action != NULL; action = pcmk__xml_next(action)) {
 
-            for (action = pcmk__xml_first_child(action_set); action != NULL;
-                 action = pcmk__xml_next(action)) {
-                crm_action_t *new_action = unpack_action(new_synapse, action);
+            crm_action_t *new_action = unpack_action(new_synapse, action);
 
-                if (new_action == NULL) {
-                    continue;
-                }
-
-                new_graph->num_actions++;
-
-                crm_trace("Adding action %d to synapse %d", new_action->id, new_synapse->id);
-
-                new_synapse->actions = g_list_append(new_synapse->actions, new_action);
+            if (new_action == NULL) {
+                continue;
             }
+
+            crm_trace("Adding action %d to synapse %d",
+                      new_action->id, new_synapse->id);
+            new_graph->num_actions++;
+            new_synapse->actions = g_list_append(new_synapse->actions,
+                                                 new_action);
         }
     }
 
-    crm_trace("look for inputs in synapse %s", ID(xml_synapse));
+    crm_trace("Unpacking synapse %s inputs", ID(xml_synapse));
 
-    for (inputs = pcmk__xml_first_child(xml_synapse); inputs != NULL;
-         inputs = pcmk__xml_next(inputs)) {
+    for (xmlNode *inputs = first_named_child(xml_synapse, "inputs");
+         inputs != NULL; inputs = crm_next_same_xml(inputs)) {
 
-        if (pcmk__str_eq((const char *)inputs->name, "inputs", pcmk__str_none)) {
-            xmlNode *trigger = NULL;
+        for (xmlNode *trigger = first_named_child(inputs, "trigger");
+             trigger != NULL; trigger = crm_next_same_xml(trigger)) {
 
-            for (trigger = pcmk__xml_first_child(inputs); trigger != NULL;
-                 trigger = pcmk__xml_next(trigger)) {
-                xmlNode *input = NULL;
+            for (xmlNode *input = pcmk__xml_first_child(trigger);
+                 input != NULL; input = pcmk__xml_next(input)) {
 
-                for (input = pcmk__xml_first_child(trigger); input != NULL;
-                     input = pcmk__xml_next(input)) {
-                    crm_action_t *new_input = unpack_action(new_synapse, input);
+                crm_action_t *new_input = unpack_action(new_synapse, input);
 
-                    if (new_input == NULL) {
-                        continue;
-                    }
-
-                    crm_trace("Adding input %d to synapse %d", new_input->id, new_synapse->id);
-
-                    new_synapse->inputs = g_list_append(new_synapse->inputs, new_input);
+                if (new_input == NULL) {
+                    continue;
                 }
+
+                crm_trace("Adding input %d to synapse %d",
+                           new_input->id, new_synapse->id);
+
+                new_synapse->inputs = g_list_append(new_synapse->inputs,
+                                                    new_input);
             }
         }
     }
@@ -594,25 +623,48 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     return new_synapse;
 }
 
+/*!
+ * \internal
+ * \brief Unpack transition graph XML
+ *
+ * \param[in] xml_graph  Transition graph XML to unpack
+ * \param[in] reference  Where the XML came from (for logging)
+ *
+ * \return Newly allocated transition graph on success, NULL otherwise
+ * \note The caller is responsible for freeing the return value using
+ *       destroy_graph().
+ * \note The XML is expected to be structured like:
+         <transition_graph ...>
+           <synapse id="0">
+             <action_set>
+               <rsc_op id="2" ...>
+               ...
+             </action_set>
+             <inputs>
+                 <rsc_op id="1" ...
+                 ...
+             </inputs>
+           </synapse>
+           ...
+         </transition_graph>
+ */
 crm_graph_t *
-unpack_graph(xmlNode * xml_graph, const char *reference)
+pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
 {
-/*
-  <transition_graph>
-  <synapse>
-  <action_set>
-  <rsc_op id="2"
-  ...
-  <inputs>
-  <rsc_op id="2"
-  ...
-*/
     crm_graph_t *new_graph = NULL;
     const char *t_id = NULL;
     const char *time = NULL;
-    xmlNode *synapse = NULL;
 
     new_graph = calloc(1, sizeof(crm_graph_t));
+    if (new_graph == NULL) {
+        return NULL;
+    }
+
+    new_graph->source = strdup((reference == NULL)? "unknown" : reference);
+    if (new_graph->source == NULL) {
+        free(new_graph);
+        return NULL;
+    }
 
     new_graph->id = -1;
     new_graph->abort_priority = 0;
@@ -620,21 +672,16 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     new_graph->stonith_timeout = 0;
     new_graph->completion_action = tg_done;
 
-    if (reference) {
-        new_graph->source = strdup(reference);
-    } else {
-        new_graph->source = strdup("unknown");
-    }
-
+    // Parse top-level attributes from <transition_graph>
     if (xml_graph != NULL) {
         t_id = crm_element_value(xml_graph, "transition_id");
         CRM_CHECK(t_id != NULL, free(new_graph);
-                  return NULL);
+                                return NULL);
         pcmk__scan_min_int(t_id, &(new_graph->id), -1);
 
         time = crm_element_value(xml_graph, "cluster-delay");
         CRM_CHECK(time != NULL, free(new_graph);
-                  return NULL);
+                                return NULL);
         new_graph->network_delay = crm_parse_interval_spec(time);
 
         time = crm_element_value(xml_graph, "stonith-timeout");
@@ -656,23 +703,25 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
         pcmk__scan_min_int(t_id, &(new_graph->migration_limit), -1);
     }
 
-    for (synapse = pcmk__xml_first_child(xml_graph); synapse != NULL;
-         synapse = pcmk__xml_next(synapse)) {
+    // Unpack each child <synapse> element
+    for (xmlNode *synapse_xml = first_named_child(xml_graph, "synapse");
+         synapse_xml != NULL; synapse_xml = crm_next_same_xml(synapse_xml)) {
 
-        if (pcmk__str_eq((const char *)synapse->name, "synapse", pcmk__str_none)) {
-            synapse_t *new_synapse = unpack_synapse(new_graph, synapse);
+        synapse_t *new_synapse = unpack_synapse(new_graph, synapse_xml);
 
-            if (new_synapse != NULL) {
-                new_graph->synapses = g_list_append(new_graph->synapses, new_synapse);
-            }
+        if (new_synapse != NULL) {
+            new_graph->synapses = g_list_append(new_graph->synapses,
+                                                new_synapse);
         }
     }
 
-    crm_debug("Unpacked transition %d: %d actions in %d synapses",
-              new_graph->id, new_graph->num_actions, new_graph->num_synapses);
+    crm_debug("Unpacked transition %d from %s: %d actions in %d synapses",
+              new_graph->id, new_graph->source, new_graph->num_actions,
+              new_graph->num_synapses);
 
     return new_graph;
 }
+
 
 static void
 destroy_action(crm_action_t * action)
