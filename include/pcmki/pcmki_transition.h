@@ -124,7 +124,7 @@ enum transition_status {
 void set_graph_functions(crm_graph_functions_t * fns);
 crm_graph_t *unpack_graph(xmlNode * xml_graph, const char *reference);
 int run_graph(crm_graph_t * graph);
-gboolean update_graph(crm_graph_t * graph, crm_action_t * action);
+void pcmk__update_graph(crm_graph_t *graph, crm_action_t *action);
 void destroy_graph(crm_graph_t * graph);
 const char *transition_status(enum transition_status state);
 void print_graph(unsigned int log_level, crm_graph_t * graph);

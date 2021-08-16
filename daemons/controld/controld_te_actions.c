@@ -361,7 +361,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         action->confirmed = TRUE; /* Just mark confirmed.
                                    * Don't bump the job count only to immediately decrement it
                                    */
-        update_graph(transition_graph, action);
+        pcmk__update_graph(transition_graph, action);
         trigger_graph();
 
     } else if (action->confirmed == TRUE) {
@@ -560,7 +560,7 @@ te_action_confirmed(crm_action_t *action, crm_graph_t *graph)
         action->confirmed = TRUE;
     }
     if (graph) {
-        update_graph(graph, action);
+        pcmk__update_graph(graph, action);
         trigger_graph();
     }
 }

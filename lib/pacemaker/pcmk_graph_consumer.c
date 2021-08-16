@@ -20,104 +20,110 @@
 
 static crm_graph_functions_t *graph_fns = NULL;
 
-static gboolean
+
+/*
+ * Functions for updating graph
+ */
+
+/*!
+ * \internal
+ * \brief Update synapse after completed prerequisite
+ *
+ * A synapse is ready to be executed once all its prerequisite actions (inputs)
+ * complete. Given a completed action, check whether it is an input for a given
+ * synapse, and if so, mark the input as confirmed, and mark the synapse as
+ * ready if appropriate.
+ *
+ * \param[in] synapse    Transition graph synapse to update
+ * \param[in] action_id  ID of an action that completed
+ *
+ * \note The only substantial effect here is confirming synapse inputs.
+ *       should_fire_synapse() will recalculate synapse->ready, so the only
+ *       thing that uses the synapse->ready value from here is
+ *       synapse_state_str().
+ */
+static void
 update_synapse_ready(synapse_t *synapse, int action_id)
 {
-    GList *lpc = NULL;
-    gboolean updates = FALSE;
-
-    CRM_CHECK(synapse->executed == FALSE, return FALSE);
-    CRM_CHECK(synapse->confirmed == FALSE, return FALSE);
-
-    synapse->ready = TRUE;
-    for (lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
+    if (synapse->ready) {
+        return; // All inputs have already been confirmed
+    }
+    synapse->ready = TRUE; // Presume ready until proven otherwise
+    for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         crm_action_t *prereq = (crm_action_t *) lpc->data;
 
-        crm_trace("Processing input %d", prereq->id);
-
         if (prereq->id == action_id) {
-            crm_trace("Marking input %d of synapse %d confirmed", action_id, synapse->id);
+            crm_trace("Confirming input %d of synapse %d",
+                      action_id, synapse->id);
             prereq->confirmed = TRUE;
-            updates = TRUE;
 
-        } else if (prereq->confirmed == FALSE) {
+        } else if (!(prereq->confirmed)) {
             synapse->ready = FALSE;
+            crm_trace("Synapse %d still not ready after action %d",
+                      synapse->id, action_id);
         }
-
     }
-
-    if (updates) {
-        crm_trace("Updated synapse %d", synapse->id);
+    if (synapse->ready) {
+        crm_trace("Synapse %d is now ready to execute", synapse->id);
     }
-    return updates;
 }
 
-static gboolean
-update_synapse_confirmed(synapse_t * synapse, int action_id)
+/*!
+ * \internal
+ * \brief Update action and synapse confirmation after action completion
+ *
+ * \param[in] synapse    Transition graph synapse that action belongs to
+ * \param[in] action_id  ID of action that completed
+ */
+static void
+update_synapse_confirmed(synapse_t *synapse, int action_id)
 {
-    GList *lpc = NULL;
-    gboolean updates = FALSE;
-    gboolean is_confirmed = TRUE;
+    bool all_confirmed = true;
 
-    CRM_CHECK(synapse->executed, return FALSE);
-    CRM_CHECK(synapse->confirmed == FALSE, return TRUE);
-
-    is_confirmed = TRUE;
-    for (lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = synapse->actions; lpc != NULL; lpc = lpc->next) {
         crm_action_t *action = (crm_action_t *) lpc->data;
 
-        crm_trace("Processing action %d", action->id);
-
         if (action->id == action_id) {
-            crm_trace("Confirmed: Action %d of Synapse %d", action_id, synapse->id);
+            crm_trace("Confirmed action %d of synapse %d",
+                      action_id, synapse->id);
             action->confirmed = TRUE;
-            updates = TRUE;
 
-        } else if (action->confirmed == FALSE) {
-            is_confirmed = FALSE;
-            crm_trace("Synapse %d still not confirmed after action %d", synapse->id, action_id);
+        } else if (all_confirmed && !(action->confirmed)) {
+            all_confirmed = false;
+            crm_trace("Synapse %d still not confirmed after action %d",
+                      synapse->id, action_id);
         }
     }
 
-    if (is_confirmed && synapse->confirmed == FALSE) {
-        crm_trace("Confirmed: Synapse %d", synapse->id);
+    if (all_confirmed && !(synapse->confirmed)) {
+        crm_trace("Confirmed synapse %d", synapse->id);
         synapse->confirmed = TRUE;
-        updates = TRUE;
     }
-
-    if (updates) {
-        crm_trace("Updated synapse %d", synapse->id);
-    }
-    return updates;
 }
 
-gboolean
-update_graph(crm_graph_t * graph, crm_action_t * action)
+/*!
+ * \internal
+ * \brief Update the transition graph with a completed action result
+ *
+ * \param[in,out] graph   Transition graph to update
+ * \param[in]     action  Action that completed
+ */
+void
+pcmk__update_graph(crm_graph_t *graph, crm_action_t *action)
 {
-    gboolean rc = FALSE;
-    gboolean updates = FALSE;
-    GList *lpc = NULL;
-
-    for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
+    for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
         synapse_t *synapse = (synapse_t *) lpc->data;
 
         if (synapse->confirmed || synapse->failed) {
-            crm_trace("Synapse complete");
+            continue; // This synapse already completed
 
         } else if (synapse->executed) {
-            crm_trace("Synapse executed");
-            rc = update_synapse_confirmed(synapse, action->id);
+            update_synapse_confirmed(synapse, action->id);
 
-        } else if (action->failed == FALSE || synapse->priority == INFINITY) {
-            rc = update_synapse_ready(synapse, action->id);
+        } else if (!(action->failed) || (synapse->priority == INFINITY)) {
+            update_synapse_ready(synapse, action->id);
         }
-        updates = updates || rc;
     }
-
-    if (updates) {
-        crm_trace("Updated graph with completed action %d", action->id);
-    }
-    return updates;
 }
 
 static gboolean
@@ -259,7 +265,7 @@ pseudo_action_dummy(crm_graph_t * graph, crm_action_t * action)
         graph->abort_priority = INFINITY;
     }
     action->confirmed = TRUE;
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 

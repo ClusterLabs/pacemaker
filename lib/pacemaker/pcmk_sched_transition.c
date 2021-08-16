@@ -602,7 +602,7 @@ exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
     action->confirmed = TRUE;
     out->message(out, "inject-pseudo-action", node, task);
 
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -739,7 +739,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     free(node); free(uuid);
     free_xml(cib_node);
     action->confirmed = TRUE;
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -752,7 +752,7 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
 
     action->confirmed = TRUE;
     out->message(out, "inject-cluster-action", node, task, rsc);
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -789,7 +789,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     action->confirmed = TRUE;
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     free(target);
     return TRUE;
 }
