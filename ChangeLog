@@ -1,3 +1,11 @@
+* Mon Aug 16 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1-rc3
+- Changesets: 7
+- Diff: 5 files changed, 118 insertions(+), 45 deletions(-)
+
+- Fixes since Pacemaker-2.1.1-rc2
+  + controller: ensure lost node's transient attributes are cleared without DC
+  + controller: ensure newly joining node learns the node names of non-DCs
+
 * Fri Aug 06 2021 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.1-rc2
 - Changesets: 10
 - Diff: 10 files changed, 122 insertions(+), 66 deletions(-)
