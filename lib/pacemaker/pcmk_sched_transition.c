@@ -831,7 +831,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->err(out, "Transition failed: %s", transition_status(graph_rc));
         print_graph(LOG_ERR, transition);
     }
-    destroy_graph(transition);
+    pcmk__free_graph(transition);
     if (graph_rc != transition_complete) {
         out->err(out, "An invalid transition was produced");
     }

@@ -44,7 +44,7 @@ do_te_control(long long action,
 
     if (action & A_TE_STOP) {
         if (transition_graph) {
-            destroy_graph(transition_graph);
+            pcmk__free_graph(transition_graph);
             transition_graph = NULL;
         }
 
@@ -99,7 +99,7 @@ do_te_control(long long action,
         pcmk__set_graph_functions(&te_graph_fns);
 
         if (transition_graph) {
-            destroy_graph(transition_graph);
+            pcmk__free_graph(transition_graph);
         }
 
         /* create a blank one */
@@ -179,7 +179,7 @@ do_te_invoke(long long action,
                   crm_log_xml_err(input->msg, "Bad command");
                   return);
 
-        destroy_graph(transition_graph);
+        pcmk__free_graph(transition_graph);
         transition_graph = pcmk__unpack_graph(graph_data, graph_input);
         if (transition_graph == NULL) {
             CRM_CHECK(transition_graph != NULL,);

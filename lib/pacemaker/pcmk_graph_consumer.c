@@ -632,7 +632,7 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
  *
  * \return Newly allocated transition graph on success, NULL otherwise
  * \note The caller is responsible for freeing the return value using
- *       destroy_graph().
+ *       pcmk__free_graph().
  * \note The XML is expected to be structured like:
          <transition_graph ...>
            <synapse id="0">
@@ -723,14 +723,26 @@ pcmk__unpack_graph(xmlNode *xml_graph, const char *reference)
 }
 
 
+/*
+ * Functions for freeing transition graph objects
+ */
+
+/*!
+ * \internal
+ * \brief Free a transition graph action object
+ *
+ * \param[in] user_data  Action to free
+ */
 static void
-destroy_action(crm_action_t * action)
+free_graph_action(gpointer user_data)
 {
-    if (action->timer && action->timer->source_id != 0) {
-        crm_warn("Cancelling timer for action %d (src=%d)", action->id, action->timer->source_id);
+    crm_action_t *action = user_data;
+
+    if ((action->timer != NULL) && (action->timer->source_id != 0)) {
+        crm_warn("Cancelling timer for graph action %d", action->id);
         g_source_remove(action->timer->source_id);
     }
-    if (action->params) {
+    if (action->params != NULL) {
         g_hash_table_destroy(action->params);
     }
     free_xml(action->xml);
@@ -738,41 +750,38 @@ destroy_action(crm_action_t * action)
     free(action);
 }
 
+/*!
+ * \internal
+ * \brief Free a transition graph synapse object
+ *
+ * \param[in] user_data  Synapse to free
+ */
 static void
-destroy_synapse(synapse_t * synapse)
+free_graph_synapse(gpointer user_data)
 {
-    while (synapse->actions != NULL) {
-        crm_action_t *action = g_list_nth_data(synapse->actions, 0);
+    synapse_t *synapse = user_data;
 
-        synapse->actions = g_list_remove(synapse->actions, action);
-        destroy_action(action);
-    }
-
-    while (synapse->inputs != NULL) {
-        crm_action_t *action = g_list_nth_data(synapse->inputs, 0);
-
-        synapse->inputs = g_list_remove(synapse->inputs, action);
-        destroy_action(action);
-    }
+    g_list_free_full(synapse->actions, free_graph_action);
+    g_list_free_full(synapse->inputs, free_graph_action);
     free(synapse);
 }
 
+/*!
+ * \internal
+ * \brief Free a transition graph object
+ *
+ * \param[in] graph  Transition graph to free
+ */
 void
-destroy_graph(crm_graph_t * graph)
+pcmk__free_graph(crm_graph_t *graph)
 {
-    if (graph == NULL) {
-        return;
+    if (graph != NULL) {
+        g_list_free_full(graph->synapses, free_graph_synapse);
+        free(graph->source);
+        free(graph);
     }
-    while (graph->synapses != NULL) {
-        synapse_t *synapse = g_list_nth_data(graph->synapses, 0);
-
-        graph->synapses = g_list_remove(graph->synapses, synapse);
-        destroy_synapse(synapse);
-    }
-
-    free(graph->source);
-    free(graph);
 }
+
 
 lrmd_event_data_t *
 convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int rc)
