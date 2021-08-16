@@ -959,36 +959,44 @@ GList *
 resources_list_standards(void)
 {
     GList *standards = NULL;
-    GList *agents = NULL;
 
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_OCF));
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_LSB));
     standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_SERVICE));
 
 #if SUPPORT_SYSTEMD
-    agents = systemd_unit_listall();
-    if (agents) {
-        standards = g_list_append(standards,
-                                  strdup(PCMK_RESOURCE_CLASS_SYSTEMD));
-        g_list_free_full(agents, free);
+    {
+        GList *agents = systemd_unit_listall();
+
+        if (agents != NULL) {
+            standards = g_list_append(standards,
+                                      strdup(PCMK_RESOURCE_CLASS_SYSTEMD));
+            g_list_free_full(agents, free);
+        }
     }
 #endif
 
 #if SUPPORT_UPSTART
-    agents = upstart_job_listall();
-    if (agents) {
-        standards = g_list_append(standards,
-                                  strdup(PCMK_RESOURCE_CLASS_UPSTART));
-        g_list_free_full(agents, free);
+    {
+        GList *agents = upstart_job_listall();
+
+        if (agents != NULL) {
+            standards = g_list_append(standards,
+                                      strdup(PCMK_RESOURCE_CLASS_UPSTART));
+            g_list_free_full(agents, free);
+        }
     }
 #endif
 
 #if SUPPORT_NAGIOS
-    agents = services__list_nagios_agents();
-    if (agents) {
-        standards = g_list_append(standards,
-                                  strdup(PCMK_RESOURCE_CLASS_NAGIOS));
-        g_list_free_full(agents, free);
+    {
+        GList *agents = services__list_nagios_agents();
+
+        if (agents != NULL) {
+            standards = g_list_append(standards,
+                                      strdup(PCMK_RESOURCE_CLASS_NAGIOS));
+            g_list_free_full(agents, free);
+        }
     }
 #endif
 
