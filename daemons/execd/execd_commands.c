@@ -221,7 +221,7 @@ log_finished(lrmd_cmd_t * cmd, int exec_time, int queue_time)
                (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc,
                exec_time, queue_time);
 #else
-    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d"
+    do_crm_log(log_level, "%s %s (call %d%s%s) exited with status %d",
                cmd->rsc_id, cmd->action, cmd->call_id,
                (cmd->last_pid? ", PID " : ""), pid_str, cmd->exec_rc);
 #endif
@@ -918,9 +918,9 @@ action_complete(svc_action_t * action)
 {
     lrmd_rsc_t *rsc;
     lrmd_cmd_t *cmd = action->cb_data;
-    const char *rclass = NULL;
 
 #ifdef PCMK__TIME_USE_CGT
+    const char *rclass = NULL;
     bool goagain = false;
 #endif
 
@@ -941,13 +941,13 @@ action_complete(svc_action_t * action)
     cmd->lrmd_op_status = action->status;
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
+#ifdef PCMK__TIME_USE_CGT
     if (rsc && pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE, pcmk__str_casei)) {
         rclass = resources_find_service_class(rsc->type);
     } else if(rsc) {
         rclass = rsc->class;
     }
 
-#ifdef PCMK__TIME_USE_CGT
     if (pcmk__str_eq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD, pcmk__str_casei)) {
         if ((cmd->exec_rc == PCMK_OCF_OK)
             && pcmk__strcase_any_of(cmd->action, "start", "stop", NULL)) {
