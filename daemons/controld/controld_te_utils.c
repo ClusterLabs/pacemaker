@@ -134,6 +134,52 @@ abort_after_delay(int abort_priority, enum transition_action abort_action,
     abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, NULL);
 }
 
+static const char *
+abort2text(enum transition_action abort_action)
+{
+    switch (abort_action) {
+        case tg_done:
+            return "done";
+        case tg_stop:
+            return "stop";
+        case tg_restart:
+            return "restart";
+        case tg_shutdown:
+            return "shutdown";
+    }
+    return "unknown";
+}
+
+static bool
+update_abort_priority(crm_graph_t *graph, int priority,
+                      enum transition_action action, const char *abort_reason)
+{
+    bool change = FALSE;
+
+    if (graph == NULL) {
+        return change;
+    }
+
+    if (graph->abort_priority < priority) {
+        crm_debug("Abort priority upgraded from %d to %d", graph->abort_priority, priority);
+        graph->abort_priority = priority;
+        if (graph->abort_reason != NULL) {
+            crm_debug("'%s' abort superseded by %s", graph->abort_reason, abort_reason);
+        }
+        graph->abort_reason = abort_reason;
+        change = TRUE;
+    }
+
+    if (graph->completion_action < action) {
+        crm_debug("Abort action %s superseded by %s: %s",
+                  abort2text(graph->completion_action), abort2text(action), abort_reason);
+        graph->completion_action = action;
+        change = TRUE;
+    }
+
+    return change;
+}
+
 void
 abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        const char *abort_text, xmlNode * reason, const char *fn, int line)
