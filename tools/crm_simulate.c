@@ -48,8 +48,6 @@ struct {
     gboolean process;
     char *quorum;
     long long repeat;
-    gboolean show_attrs;
-    gboolean show_failcounts;
     gboolean show_scores;
     gboolean show_utilization;
     gboolean simulate;
@@ -67,6 +65,7 @@ struct {
     .repeat = 1
 };
 
+unsigned int section_opts = 0;
 cib_t *global_cib = NULL;
 char *temp_shadow = NULL;
 extern gboolean bringing_nodes_online;
@@ -80,6 +79,18 @@ static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
+
+static gboolean
+attrs_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    section_opts |= pcmk_section_attributes;
+    return TRUE;
+}
+
+static gboolean
+failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    section_opts |= pcmk_section_failcounts | pcmk_section_failures;
+    return TRUE;
+}
 
 static gboolean
 in_place_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
@@ -259,10 +270,10 @@ static GOptionEntry operation_entries[] = {
     { "in-place", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, in_place_cb,
       "Like --simulate, but also store the results back to the input file",
       NULL },
-    { "show-attrs", 'A', 0, G_OPTION_ARG_NONE, &options.show_attrs,
+    { "show-attrs", 'A', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attrs_cb,
       "Show node attributes",
       NULL },
-    { "show-failcounts", 'c', 0, G_OPTION_ARG_NONE, &options.show_failcounts,
+    { "show-failcounts", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, failcounts_cb,
       "Show resource fail counts",
       NULL },
     { "show-scores", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, show_scores_cb,
@@ -366,21 +377,14 @@ static GOptionEntry source_entries[] = {
 
 static void
 print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts,
-                     const char *title, bool print_spacer)
+                     unsigned int section_opts, const char *title, bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
-    unsigned int section_opts = pcmk_section_nodes | pcmk_section_resources;
     GList *all = NULL;
 
+    section_opts |= pcmk_section_nodes | pcmk_section_resources;
+
     all = g_list_prepend(all, (gpointer) "*");
-
-    if (options.show_attrs) {
-        section_opts |= pcmk_section_attributes;
-    }
-
-    if (options.show_failcounts) {
-        section_opts |= pcmk_section_failcounts | pcmk_section_failures;
-    }
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
@@ -640,7 +644,7 @@ main(int argc, char **argv)
          * only has the first word capitalized for compatibility with pcs.
          */
         print_cluster_status(data_set, options.print_pending ? pcmk_show_pending : 0,
-                             "Current cluster status", printed == pcmk_rc_ok);
+                             section_opts, "Current cluster status", printed == pcmk_rc_ok);
         printed = pcmk_rc_ok;
     }
 
@@ -751,7 +755,7 @@ main(int argc, char **argv)
             }
 
             cluster_status(data_set);
-            print_cluster_status(data_set, 0, "Revised Cluster Status", true);
+            print_cluster_status(data_set, 0, section_opts, "Revised Cluster Status", true);
         }
     }
 
