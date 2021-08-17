@@ -365,7 +365,8 @@ static GOptionEntry source_entries[] = {
 };
 
 static void
-print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
+print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts,
+                     const char *title, bool print_spacer)
 {
     pcmk__output_t *out = data_set->priv;
     unsigned int section_opts = pcmk_section_nodes | pcmk_section_resources;
@@ -381,10 +382,26 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
         section_opts |= pcmk_section_failcounts | pcmk_section_failures;
     }
 
+    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+    out->begin_list(out, NULL, NULL, "%s", title);
     out->message(out, "cluster-status", data_set, 0, NULL, FALSE,
                  section_opts, show_opts | pcmk_show_inactive_rscs,
                  NULL, all, all);
+    out->end_list(out);
+
     g_list_free(all);
+}
+
+static void
+print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
+{
+    pcmk__output_t *out = data_set->priv;
+
+    PCMK__OUTPUT_SPACER_IF(out, print_spacer);
+    out->begin_list(out, NULL, NULL, "Transition Summary");
+    LogNodeActions(data_set);
+    g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
+    out->end_list(out);
 }
 
 static char *
@@ -821,13 +838,11 @@ main(int argc, char **argv)
                                 data_set->blocked_resources);
         }
 
-        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
         /* Most formatted output headers use caps for each word, but this one
          * only has the first word capitalized for compatibility with pcs.
          */
-        out->begin_list(out, NULL, NULL, "Current cluster status");
-        print_cluster_status(data_set, options.print_pending ? pcmk_show_pending : 0);
-        out->end_list(out);
+        print_cluster_status(data_set, options.print_pending ? pcmk_show_pending : 0,
+                             "Current cluster status", printed == pcmk_rc_ok);
         printed = pcmk_rc_ok;
     }
 
@@ -926,13 +941,7 @@ main(int argc, char **argv)
         }
 
         if (!out->is_quiet(out)) {
-            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            out->begin_list(out, NULL, NULL, "Transition Summary");
-
-            LogNodeActions(data_set);
-            g_list_foreach(data_set->resources, (GFunc) LogActions, data_set);
-            out->end_list(out);
-            printed = pcmk_rc_ok;
+            print_transition_summary(data_set, printed == pcmk_rc_ok);
         }
     }
 
@@ -944,13 +953,8 @@ main(int argc, char **argv)
             rc = pcmk_rc_error;
         }
 
-        printed = pcmk_rc_ok;
-
         if (!out->is_quiet(out)) {
             pcmk__set_effective_date(data_set, true, options.use_date);
-
-            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            out->begin_list(out, NULL, NULL, "Revised Cluster Status");
 
             if (options.show_scores) {
                 pe__set_working_set_flags(data_set, pe_flag_show_scores);
@@ -960,9 +964,7 @@ main(int argc, char **argv)
             }
 
             cluster_status(data_set);
-            print_cluster_status(data_set, 0);
-
-            out->end_list(out);
+            print_cluster_status(data_set, 0, "Revised Cluster Status", true);
         }
     }
 
