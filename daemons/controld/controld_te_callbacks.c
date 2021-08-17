@@ -683,7 +683,7 @@ action_timer_callback(gpointer data)
                 (on_node? on_node : ""), (task? task : "unknown action"),
                 (via_node? via_node : "controller"),
                 timer->timeout + transition_graph->network_delay);
-        print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
+        pcmk__log_graph_action(LOG_ERR, timer->action);
 
         timer->action->failed = TRUE;
         te_action_confirmed(timer->action, transition_graph);

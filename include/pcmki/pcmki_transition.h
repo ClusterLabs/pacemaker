@@ -126,9 +126,9 @@ crm_graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
 enum transition_status pcmk__execute_graph(crm_graph_t *graph);
 void pcmk__update_graph(crm_graph_t *graph, crm_action_t *action);
 void pcmk__free_graph(crm_graph_t *graph);
-const char *transition_status(enum transition_status state);
-void print_graph(unsigned int log_level, crm_graph_t * graph);
-void print_action(int log_level, const char *prefix, crm_action_t * action);
+const char *pcmk__graph_status2text(enum transition_status state);
+void pcmk__log_graph(unsigned int log_level, crm_graph_t *graph);
+void pcmk__log_graph_action(int log_level, crm_action_t *action);
 lrmd_event_data_t *pcmk__event_from_graph_action(xmlNode *resource,
                                                  crm_action_t *action,
                                                  int status, int rc);

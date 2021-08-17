@@ -14,8 +14,16 @@
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
+/*!
+ * \internal
+ * \brief Return text equivalent of an enum transition_status for logging
+ *
+ * \param[in] state  Transition status
+ *
+ * \return Human-readable text equivalent of \p state
+ */
 const char *
-transition_status(enum transition_status state)
+pcmk__graph_status2text(enum transition_status state)
 {
     switch (state) {
         case transition_active:
@@ -50,20 +58,28 @@ actiontype2text(action_type_e type)
     return "invalid";
 }
 
+/*!
+ * \internal
+ * \brief Find a transition graph action by ID
+ *
+ * \param[in] graph  Transition graph to search
+ * \param[in] id     Action ID to search for
+ *
+ * \return Transition graph action corresponding to \p id, or NULL if none
+ */
 static crm_action_t *
-find_action(crm_graph_t *graph, int id)
+find_graph_action_by_id(crm_graph_t *graph, int id)
 {
-    GList *sIter = NULL;
-
     if (graph == NULL) {
         return NULL;
     }
 
-    for (sIter = graph->synapses; sIter != NULL; sIter = sIter->next) {
-        GList *aIter = NULL;
+    for (GList *sIter = graph->synapses; sIter != NULL; sIter = sIter->next) {
         synapse_t *synapse = (synapse_t *) sIter->data;
 
-        for (aIter = synapse->actions; aIter != NULL; aIter = aIter->next) {
+        for (GList *aIter = synapse->actions; aIter != NULL;
+             aIter = aIter->next) {
+
             crm_action_t *action = (crm_action_t *) aIter->data;
 
             if (action->id == id) {
@@ -108,7 +124,7 @@ synapse_pending_inputs(crm_graph_t *graph, synapse_t *synapse)
         } else if (input->confirmed) {
             // Confirmed successful inputs are not pending
 
-        } else if (find_action(graph, input->id) != NULL) {
+        } else if (find_graph_action_by_id(graph, input->id) != NULL) {
             // In-flight or pending
             pcmk__add_word(&pending, &pending_len, ID(input->xml));
         }
@@ -129,7 +145,7 @@ log_unresolved_inputs(unsigned int log_level, crm_graph_t *graph,
         const char *key = crm_element_value(input->xml, XML_LRM_ATTR_TASK_KEY);
         const char *host = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
 
-        if (find_action(graph, input->id) == NULL) {
+        if (find_graph_action_by_id(graph, input->id) == NULL) {
             do_crm_log(log_level,
                        " * [Input %2d]: Unresolved dependency %s op %s%s%s",
                        input->id, actiontype2text(input->type), key,
@@ -156,7 +172,7 @@ log_synapse_action(unsigned int log_level, synapse_t *synapse,
 }
 
 static void
-print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t * synapse)
+log_synapse(unsigned int log_level, crm_graph_t *graph, synapse_t *synapse)
 {
     char *pending = NULL;
 
@@ -174,17 +190,15 @@ print_synapse(unsigned int log_level, crm_graph_t * graph, synapse_t * synapse)
 }
 
 void
-print_action(int log_level, const char *prefix, crm_action_t *action)
+pcmk__log_graph_action(int log_level, crm_action_t *action)
 {
-    print_synapse(log_level, NULL, action->synapse);
+    log_synapse(log_level, NULL, action->synapse);
 }
 
 void
-print_graph(unsigned int log_level, crm_graph_t *graph)
+pcmk__log_graph(unsigned int log_level, crm_graph_t *graph)
 {
-    GList *lpc = NULL;
-
-    if (graph == NULL || graph->num_actions == 0) {
+    if ((graph == NULL) || (graph->num_actions == 0)) {
         if (log_level == LOG_TRACE) {
             crm_debug("Empty transition graph");
         }
@@ -196,9 +210,7 @@ print_graph(unsigned int log_level, crm_graph_t *graph)
                graph->id, graph->num_actions,
                graph->batch_limit, graph->network_delay);
 
-    for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
-        synapse_t *synapse = (synapse_t *) lpc->data;
-
-        print_synapse(log_level, graph, synapse);
+    for (GList *lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
+        log_synapse(log_level, graph, (synapse_t *) lpc->data);
     }
 }

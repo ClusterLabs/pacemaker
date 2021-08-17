@@ -62,9 +62,6 @@ te_graph_trigger(gpointer user_data)
         graph_rc = pcmk__execute_graph(transition_graph);
         transition_graph->batch_limit = limit; /* Restore the configured value */
 
-        /* significant overhead... */
-        /* print_graph(LOG_TRACE, transition_graph); */
-
         if (graph_rc == transition_active) {
             crm_trace("Transition not yet complete");
             return TRUE;
@@ -75,8 +72,9 @@ te_graph_trigger(gpointer user_data)
         }
 
         if (graph_rc != transition_complete) {
-            crm_warn("Transition failed: %s", transition_status(graph_rc));
-            print_graph(LOG_NOTICE, transition_graph);
+            crm_warn("Transition failed: %s",
+                     pcmk__graph_status2text(graph_rc));
+            pcmk__log_graph(LOG_NOTICE, transition_graph);
         }
     }
 

@@ -818,7 +818,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 
     pcmk__set_graph_functions(&exec_fns);
     transition = pcmk__unpack_graph(data_set->graph, crm_system_name);
-    print_graph(LOG_DEBUG, transition);
+    pcmk__log_graph(LOG_DEBUG, transition);
 
     fake_resource_list = data_set->resources;
     do {
@@ -828,8 +828,9 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
     fake_resource_list = NULL;
 
     if (graph_rc != transition_complete) {
-        out->err(out, "Transition failed: %s", transition_status(graph_rc));
-        print_graph(LOG_ERR, transition);
+        out->err(out, "Transition failed: %s",
+                 pcmk__graph_status2text(graph_rc));
+        pcmk__log_graph(LOG_ERR, transition);
     }
     pcmk__free_graph(transition);
     if (graph_rc != transition_complete) {
