@@ -126,8 +126,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
                 if (node->details != replica->node->details) {
                     node->weight = -INFINITY;
-                } else if (pcmk__threshold_reached(replica->child, node,
-                                                   data_set) == NULL) {
+                } else if (!pcmk__threshold_reached(replica->child, node,
+                                                    data_set, NULL)) {
                     node->weight = INFINITY;
                 }
             }

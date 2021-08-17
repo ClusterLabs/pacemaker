@@ -668,9 +668,9 @@ common_apply_stickiness(pe_resource_t * rsc, pe_node_t * node, pe_working_set_t 
      * then move it back next transition.
      */
     if (failcount_clear_action_exists(node, rsc) == FALSE) {
-        pe_resource_t *failed = pcmk__threshold_reached(rsc, node, data_set);
+        pe_resource_t *failed = NULL;
 
-        if (failed != NULL) {
+        if (pcmk__threshold_reached(rsc, node, data_set, &failed)) {
             resource_location(failed, node, -INFINITY, "__fail_limit__",
                               data_set);
         }
