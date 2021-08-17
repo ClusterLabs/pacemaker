@@ -27,6 +27,41 @@ extern "C" {
 #  include <crm/stonith-ng.h>
 
 /*!
+ * \brief Synthetic cluster events that can be injected into the cluster
+ *        for running simulations.
+ */
+typedef struct {
+    /*! A list of node names (gchar *) to simulate bringing online */
+    GList *node_up;
+    /*! A list of node names (gchar *) to simulate bringing offline */
+    GList *node_down;
+    /*! A list of node names (gchar *) to simulate failing */
+    GList *node_fail;
+    /*! A list of operations (gchar *) to inject.  The format of these strings
+     * is described in the "Operation Specification" section of crm_simulate
+     * help output.
+     */
+    GList *op_inject;
+    /*! A list of operations (gchar *) that should return a given error code
+     * if they fail.  The format of these strings is described in the
+     * "Operation Specification" section of crm_simulate help output.
+     */
+    GList *op_fail;
+    /*! A list of tickets (gchar *) to simulate granting */
+    GList *ticket_grant;
+    /*! A list of tickets (gchar *) to simulate revoking */
+    GList *ticket_revoke;
+    /*! A list of tickets (gchar *) to simulate putting on standby */
+    GList *ticket_standby;
+    /*! A list of tickets (gchar *) to simulate activating */
+    GList *ticket_activate;
+    /*! Does the cluster have an active watchdog device? */
+    char *watchdog;
+    /*! Does the cluster have quorum? */
+    char *quorum;
+} pcmk_injections_t;
+
+/*!
  * \brief Get controller status
  *
  * \param[in,out] xml                The destination for the result, as an XML tree.

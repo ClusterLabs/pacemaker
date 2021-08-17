@@ -29,6 +29,7 @@
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
+#include <pacemaker.h>
 
 #define SUMMARY "crm_simulate - simulate a Pacemaker cluster's response to events"
 
@@ -38,27 +39,17 @@ struct {
     char *graph_file;
     gchar *input_file;
     guint modified;
-    GList *node_up;
-    GList *node_down;
-    GList *node_fail;
-    GList *op_fail;
-    GList *op_inject;
+    pcmk_injections_t *injections;
     gchar *output_file;
     gboolean print_pending;
     gboolean process;
-    char *quorum;
     long long repeat;
     gboolean show_scores;
     gboolean show_utilization;
     gboolean simulate;
     gboolean store;
     gchar *test_dir;
-    GList *ticket_grant;
-    GList *ticket_revoke;
-    GList *ticket_standby;
-    GList *ticket_activate;
     char *use_date;
-    char *watchdog;
     char *xml_file;
 } options = {
     .print_pending = TRUE,
@@ -113,14 +104,14 @@ live_check_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 static gboolean
 node_down_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
-    options.node_down = g_list_append(options.node_down, (gchar *) g_strdup(optarg));
+    options.injections->node_down = g_list_append(options.injections->node_down, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 node_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
-    options.node_fail = g_list_append(options.node_fail, (gchar *) g_strdup(optarg));
+    options.injections->node_fail = g_list_append(options.injections->node_fail, g_strdup(optarg));
     return TRUE;
 }
 
@@ -128,7 +119,7 @@ static gboolean
 node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
     bringing_nodes_online = TRUE;
-    options.node_up = g_list_append(options.node_up, (gchar *) g_strdup(optarg));
+    options.injections->node_up = g_list_append(options.injections->node_up, g_strdup(optarg));
     return TRUE;
 }
 
@@ -136,25 +127,25 @@ static gboolean
 op_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.process = TRUE;
     options.simulate = TRUE;
-    options.op_fail = g_list_append(options.op_fail, (gchar *) g_strdup(optarg));
+    options.injections->op_fail = g_list_append(options.injections->op_fail, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 op_inject_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
-    options.op_inject = g_list_append(options.op_inject, (gchar *) g_strdup(optarg));
+    options.injections->op_inject = g_list_append(options.injections->op_inject, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 quorum_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.quorum) {
-        free(options.quorum);
+    if (options.injections->quorum) {
+        free(options.injections->quorum);
     }
 
     options.modified++;
-    options.quorum = strdup(optarg);
+    options.injections->quorum = strdup(optarg);
     return TRUE;
 }
 
@@ -197,28 +188,28 @@ simulate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 static gboolean
 ticket_activate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
-    options.ticket_activate = g_list_append(options.ticket_activate, (gchar *) g_strdup(optarg));
+    options.injections->ticket_activate = g_list_append(options.injections->ticket_activate, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 ticket_grant_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
-    options.ticket_grant = g_list_append(options.ticket_grant, (gchar *) g_strdup(optarg));
+    options.injections->ticket_grant = g_list_append(options.injections->ticket_grant, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 ticket_revoke_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
-    options.ticket_revoke = g_list_append(options.ticket_revoke, (gchar *) g_strdup(optarg));
+    options.injections->ticket_revoke = g_list_append(options.injections->ticket_revoke, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 ticket_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
-    options.ticket_standby = g_list_append(options.ticket_standby, (gchar *) g_strdup(optarg));
+    options.injections->ticket_standby = g_list_append(options.injections->ticket_standby, g_strdup(optarg));
     return TRUE;
 }
 
@@ -231,12 +222,12 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 
 static gboolean
 watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    if (options.watchdog) {
-        free(options.watchdog);
+    if (options.injections->watchdog) {
+        free(options.injections->watchdog);
     }
 
     options.modified++;
-    options.watchdog = strdup(optarg);
+    options.injections->watchdog = strdup(optarg);
     return TRUE;
 }
 
@@ -546,6 +537,12 @@ main(int argc, char **argv)
     gchar **processed_args = pcmk__cmdline_preproc(argv, "bdefgiqrtuwxDFGINOP");
     GOptionContext *context = build_arg_context(args, &output_group);
 
+    options.injections = calloc(1, sizeof(pcmk_injections_t));
+    if (options.injections == NULL) {
+        rc = ENOMEM;
+        goto done;
+    }
+
     /* This must come before g_option_context_parse_strv. */
     options.xml_file = strdup("-");
 
@@ -650,10 +647,7 @@ main(int argc, char **argv)
 
     if (options.modified) {
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        modify_configuration(data_set, global_cib, options.quorum, options.watchdog, options.node_up,
-                             options.node_down, options.node_fail, options.op_inject,
-                             options.ticket_grant, options.ticket_revoke, options.ticket_standby,
-                             options.ticket_activate);
+        modify_configuration(data_set, global_cib, options.injections);
         printed = pcmk_rc_ok;
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
@@ -740,7 +734,7 @@ main(int argc, char **argv)
 
     if (options.simulate) {
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        if (run_simulation(data_set, global_cib, options.op_fail) != pcmk_rc_ok) {
+        if (run_simulation(data_set, global_cib, options.injections->op_fail) != pcmk_rc_ok) {
             rc = pcmk_rc_error;
         }
 
@@ -766,21 +760,22 @@ main(int argc, char **argv)
     free(options.dot_file);
     free(options.graph_file);
     g_free(options.input_file);
-    g_list_free_full(options.node_up, g_free);
-    g_list_free_full(options.node_down, g_free);
-    g_list_free_full(options.node_fail, g_free);
-    g_list_free_full(options.op_fail, g_free);
-    g_list_free_full(options.op_inject, g_free);
+    g_list_free_full(options.injections->node_up, g_free);
+    g_list_free_full(options.injections->node_down, g_free);
+    g_list_free_full(options.injections->node_fail, g_free);
+    g_list_free_full(options.injections->op_fail, g_free);
+    g_list_free_full(options.injections->op_inject, g_free);
     g_free(options.output_file);
-    free(options.quorum);
     g_free(options.test_dir);
-    g_list_free_full(options.ticket_grant, g_free);
-    g_list_free_full(options.ticket_revoke, g_free);
-    g_list_free_full(options.ticket_standby, g_free);
-    g_list_free_full(options.ticket_activate, g_free);
+    g_list_free_full(options.injections->ticket_grant, g_free);
+    g_list_free_full(options.injections->ticket_revoke, g_free);
+    g_list_free_full(options.injections->ticket_standby, g_free);
+    g_list_free_full(options.injections->ticket_activate, g_free);
+    free(options.injections->quorum);
+    free(options.injections->watchdog);
     free(options.use_date);
-    free(options.watchdog);
     free(options.xml_file);
+    free(options.injections);
 
     pcmk__free_arg_context(context);
     g_strfreev(processed_args);
