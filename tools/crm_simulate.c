@@ -526,6 +526,23 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out)
+{
+    data_set->input = input;
+    data_set->priv = out;
+    pcmk__set_effective_date(data_set, true, options.use_date);
+    if(options.xml_file) {
+        pe__set_working_set_flags(data_set, pe_flag_sanitized);
+    }
+    if (options.show_scores) {
+        pe__set_working_set_flags(data_set, pe_flag_show_scores);
+    }
+    if (options.show_utilization) {
+        pe__set_working_set_flags(data_set, pe_flag_show_utilization);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -630,18 +647,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    data_set->input = input;
-    data_set->priv = out;
-    pcmk__set_effective_date(data_set, true, options.use_date);
-    if(options.xml_file) {
-        pe__set_working_set_flags(data_set, pe_flag_sanitized);
-    }
-    if (options.show_scores) {
-        pe__set_working_set_flags(data_set, pe_flag_show_scores);
-    }
-    if (options.show_utilization) {
-        pe__set_working_set_flags(data_set, pe_flag_show_utilization);
-    }
+    reset(data_set, input, out);
     cluster_status(data_set);
 
     if (!out->is_quiet(out)) {
@@ -682,19 +688,7 @@ main(int argc, char **argv)
         }
 
         cleanup_calculations(data_set);
-        data_set->input = input;
-        data_set->priv = out;
-        pcmk__set_effective_date(data_set, true, options.use_date);
-
-        if(options.xml_file) {
-            pe__set_working_set_flags(data_set, pe_flag_sanitized);
-        }
-        if (options.show_scores) {
-            pe__set_working_set_flags(data_set, pe_flag_show_scores);
-        }
-        if (options.show_utilization) {
-            pe__set_working_set_flags(data_set, pe_flag_show_utilization);
-        }
+        reset(data_set, input, out);
         cluster_status(data_set);
     }
 
