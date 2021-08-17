@@ -30,6 +30,7 @@ libpacemaker_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 libpacemaker_la_SOURCES	=
 libpacemaker_la_SOURCES += pcmk_cluster_queries.c
 libpacemaker_la_SOURCES += pcmk_fence.c
+libpacemaker_la_SOURCES += pcmk_graph_logging.c
 libpacemaker_la_SOURCES += pcmk_output.c
 libpacemaker_la_SOURCES += pcmk_output_utils.c
 libpacemaker_la_SOURCES += pcmk_resource.c
