@@ -682,7 +682,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    op = convert_graph_action(cib_resource, action, 0, target_outcome);
+    op = pcmk__event_from_graph_action(cib_resource, action, 0, target_outcome);
 
     out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
 

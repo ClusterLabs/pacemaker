@@ -783,10 +783,25 @@ pcmk__free_graph(crm_graph_t *graph)
 }
 
 
+/*
+ * Other transition graph utilities
+ */
+
+/*!
+ * \internal
+ * \brief Synthesize an executor event from a graph action
+ *
+ * \param[in] resource  If not NULL, use greater call ID than in this XML
+ * \param[in] action    Graph action
+ * \param[in] status    What to use as event execution status
+ * \param[in] rc        What to use as event exit status
+ *
+ * \return Newly allocated executor event on success, or NULL otherwise
+ */
 lrmd_event_data_t *
-convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int rc)
+pcmk__event_from_graph_action(xmlNode *resource, crm_action_t *action,
+                              int status, int rc)
 {
-    xmlNode *xop = NULL;
     lrmd_event_data_t *op = NULL;
     GHashTableIter iter;
     const char *name = NULL;
@@ -797,8 +812,8 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     CRM_CHECK(action->type == action_type_rsc, return NULL);
 
     action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
-    CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad");
-              return NULL);
+    CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");
+                                       return NULL);
 
     op = lrmd_new_event(ID(action_resource),
                         crm_element_value(action->xml, XML_LRM_ATTR_TASK),
@@ -814,7 +829,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
         g_hash_table_insert(op->params, strdup(name), strdup(value));
     }
 
-    for (xop = pcmk__xml_first_child(resource); xop != NULL;
+    for (xmlNode *xop = pcmk__xml_first_child(resource); xop != NULL;
          xop = pcmk__xml_next(xop)) {
         int tmp = 0;
 

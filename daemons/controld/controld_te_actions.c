@@ -241,8 +241,8 @@ controld_record_action_timeout(crm_action_t *action)
      * to distinguish those situations, but perhaps PCMK_OCF_TIMEOUT would be
      * preferable anyway.
      */
-    op = convert_graph_action(NULL, action, PCMK_LRM_OP_TIMEOUT,
-                              PCMK_OCF_UNKNOWN_ERROR);
+    op = pcmk__event_from_graph_action(NULL, action, PCMK_LRM_OP_TIMEOUT,
+                                       PCMK_OCF_UNKNOWN_ERROR);
     op->call_id = -1;
     op->user_data = pcmk__transition_key(transition_graph->id, action->id,
                                          target_rc, te_uuid);
