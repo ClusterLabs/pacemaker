@@ -72,7 +72,7 @@ fail_incompletable_actions(crm_graph_t * graph, const char *down_node)
                 synapse->failed = TRUE;
                 last_action = action->xml;
                 stop_te_timer(action->timer);
-                update_graph(graph, action);
+                pcmk__update_graph(graph, action);
 
                 if (synapse->executed) {
                     crm_notice("Action %d (%s) was pending on %s (offline)",

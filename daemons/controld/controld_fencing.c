@@ -388,7 +388,7 @@ fail_incompletable_stonith(crm_graph_t *graph)
             if (task && pcmk__str_eq(task, CRM_OP_FENCE, pcmk__str_casei)) {
                 action->failed = TRUE;
                 last_action = action->xml;
-                update_graph(graph, action);
+                pcmk__update_graph(graph, action);
                 crm_notice("Failing action %d (%s): fencer terminated",
                            action->id, ID(action->xml));
             }
@@ -814,7 +814,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         abort_for_stonith_failure(abort_action, target, NULL);
     }
 
-    update_graph(transition_graph, action);
+    pcmk__update_graph(transition_graph, action);
     trigger_graph();
 
   bail:

@@ -2939,14 +2939,6 @@ stage8(pe_working_set_t * data_set)
         free(recheck_epoch);
     }
 
-/* errors...
-   slist_iter(action, pe_action_t, action_list, lpc,
-   if(action->optional == FALSE && action->runnable == FALSE) {
-   print_action("Ignoring", action, TRUE);
-   }
-   );
-*/
-
     /* The following code will de-duplicate action inputs, so nothing past this
      * should rely on the action input type flags retaining their original
      * values.

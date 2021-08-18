@@ -241,8 +241,8 @@ controld_record_action_timeout(crm_action_t *action)
      * to distinguish those situations, but perhaps PCMK_OCF_TIMEOUT would be
      * preferable anyway.
      */
-    op = convert_graph_action(NULL, action, PCMK_LRM_OP_TIMEOUT,
-                              PCMK_OCF_UNKNOWN_ERROR);
+    op = pcmk__event_from_graph_action(NULL, action, PCMK_LRM_OP_TIMEOUT,
+                                       PCMK_OCF_UNKNOWN_ERROR);
     op->call_id = -1;
     op->user_data = pcmk__transition_key(transition_graph->id, action->id,
                                          target_rc, te_uuid);
@@ -361,7 +361,7 @@ te_rsc_command(crm_graph_t * graph, crm_action_t * action)
         action->confirmed = TRUE; /* Just mark confirmed.
                                    * Don't bump the job count only to immediately decrement it
                                    */
-        update_graph(transition_graph, action);
+        pcmk__update_graph(transition_graph, action);
         trigger_graph();
 
     } else if (action->confirmed == TRUE) {
@@ -560,7 +560,7 @@ te_action_confirmed(crm_action_t *action, crm_graph_t *graph)
         action->confirmed = TRUE;
     }
     if (graph) {
-        update_graph(graph, action);
+        pcmk__update_graph(graph, action);
         trigger_graph();
     }
 }

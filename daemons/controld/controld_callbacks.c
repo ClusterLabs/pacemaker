@@ -276,7 +276,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 } else {
                     crm_notice("%s of peer %s is complete " CRM_XS " action=%d",
                                task, node->uname, down->id);
-                    update_graph(transition_graph, down);
+                    pcmk__update_graph(transition_graph, down);
                     trigger_graph();
                 }
 

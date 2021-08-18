@@ -602,7 +602,7 @@ exec_pseudo_action(crm_graph_t * graph, crm_action_t * action)
     action->confirmed = TRUE;
     out->message(out, "inject-pseudo-action", node, task);
 
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -682,7 +682,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         return FALSE;
     }
 
-    op = convert_graph_action(cib_resource, action, 0, target_outcome);
+    op = pcmk__event_from_graph_action(cib_resource, action, 0, target_outcome);
 
     out->message(out, "inject-rsc-action", resource, op->op_type, node, op->interval_ms);
 
@@ -739,7 +739,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     free(node); free(uuid);
     free_xml(cib_node);
     action->confirmed = TRUE;
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -752,7 +752,7 @@ exec_crmd_action(crm_graph_t * graph, crm_action_t * action)
 
     action->confirmed = TRUE;
     out->message(out, "inject-cluster-action", node, task, rsc);
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     return TRUE;
 }
 
@@ -789,7 +789,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     action->confirmed = TRUE;
-    update_graph(graph, action);
+    pcmk__update_graph(graph, action);
     free(target);
     return TRUE;
 }
@@ -798,7 +798,7 @@ int
 run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 {
     crm_graph_t *transition = NULL;
-    enum transition_status graph_rc = -1;
+    enum transition_status graph_rc;
 
     crm_graph_functions_t exec_fns = {
         exec_pseudo_action,
@@ -816,22 +816,23 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->begin_list(out, NULL, NULL, "Executing Cluster Transition");
     }
 
-    set_graph_functions(&exec_fns);
-    transition = unpack_graph(data_set->graph, crm_system_name);
-    print_graph(LOG_DEBUG, transition);
+    pcmk__set_graph_functions(&exec_fns);
+    transition = pcmk__unpack_graph(data_set->graph, crm_system_name);
+    pcmk__log_graph(LOG_DEBUG, transition);
 
     fake_resource_list = data_set->resources;
     do {
-        graph_rc = run_graph(transition);
+        graph_rc = pcmk__execute_graph(transition);
 
     } while (graph_rc == transition_active);
     fake_resource_list = NULL;
 
     if (graph_rc != transition_complete) {
-        out->err(out, "Transition failed: %s", transition_status(graph_rc));
-        print_graph(LOG_ERR, transition);
+        out->err(out, "Transition failed: %s",
+                 pcmk__graph_status2text(graph_rc));
+        pcmk__log_graph(LOG_ERR, transition);
     }
-    destroy_graph(transition);
+    pcmk__free_graph(transition);
     if (graph_rc != transition_complete) {
         out->err(out, "An invalid transition was produced");
     }

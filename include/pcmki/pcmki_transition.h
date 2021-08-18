@@ -121,20 +121,17 @@ enum transition_status {
     transition_failed,
 };
 
-void set_default_graph_functions(void);
-void set_graph_functions(crm_graph_functions_t * fns);
-crm_graph_t *unpack_graph(xmlNode * xml_graph, const char *reference);
-int run_graph(crm_graph_t * graph);
-gboolean update_graph(crm_graph_t * graph, crm_action_t * action);
-void destroy_graph(crm_graph_t * graph);
-const char *transition_status(enum transition_status state);
-void print_graph(unsigned int log_level, crm_graph_t * graph);
-void print_action(int log_level, const char *prefix, crm_action_t * action);
-bool update_abort_priority(crm_graph_t * graph, int priority,
-                           enum transition_action action, const char *abort_reason);
-const char *actiontype2text(action_type_e type);
-lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
-                                        int rc);
+void pcmk__set_graph_functions(crm_graph_functions_t *fns);
+crm_graph_t *pcmk__unpack_graph(xmlNode *xml_graph, const char *reference);
+enum transition_status pcmk__execute_graph(crm_graph_t *graph);
+void pcmk__update_graph(crm_graph_t *graph, crm_action_t *action);
+void pcmk__free_graph(crm_graph_t *graph);
+const char *pcmk__graph_status2text(enum transition_status state);
+void pcmk__log_graph(unsigned int log_level, crm_graph_t *graph);
+void pcmk__log_graph_action(int log_level, crm_action_t *action);
+lrmd_event_data_t *pcmk__event_from_graph_action(xmlNode *resource,
+                                                 crm_action_t *action,
+                                                 int status, int rc);
 
 #ifdef __cplusplus
 }
