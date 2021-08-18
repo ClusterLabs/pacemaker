@@ -540,6 +540,76 @@ readability and logging consistency.
 
 
 .. index::
+   pair: C; booleans
+   pair: C; bool
+   pair: C; gboolean
+
+Booleans
+########
+
+Boolean Types
+_____________
+
+Booleans in C can be represented by an integer type, ``bool``, or ``gboolean``.
+
+Integers are sometimes useful for storing booleans when they must be converted
+to and from a string, such as an XML attribute value (for which
+``crm_element_value_int()`` can be used). Integer booleans use 0 for false and
+nonzero (usually 1) for true.
+
+``gboolean`` should be used with glib APIs that specify it. ``gboolean`` should
+always be used with glib's ``TRUE`` and ``FALSE`` constants.
+
+Otherwise, ``bool`` should be preferred. ``bool`` should be used with the
+``true`` and ``false`` constants from the ``stdbool.h`` header.
+
+Testing Booleans
+________________
+
+Do not use equality operators when testing booleans. For example:
+
+.. code-block:: c
+
+   // Do this
+   if (bool1) {
+       fn();
+   }
+   if (!bool2) {
+       fn2();
+   }
+
+   // Not this
+   if (bool1 == true) {
+       fn();
+   }
+   if (bool2 == false) {
+       fn2();
+   }
+
+   // Otherwise there's no logical end ...
+   if ((bool1 == false) == true) {
+       fn();
+   }
+
+Conversely, equality operators *should* be used with non-boolean variables,
+even when just testing zero or nonzero:
+
+.. code-block:: c
+
+   int var1 = fn();
+
+   // Prefer this, because it gives a hint to the type when reading it
+   if (var1 == 0) {
+       fn2();
+   }
+
+   // Not this, because a reader could mistakenly assume it is a boolean
+   if (!var1) {
+       fn2();
+   }
+
+
+.. index::
    pair: C; function
 
 Functions
