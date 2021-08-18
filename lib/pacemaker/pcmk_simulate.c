@@ -111,8 +111,6 @@ pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
         const char *color = "black";
         char *action_name = create_action_name(action, verbose);
 
-        crm_trace("Action %d: %s %s %p", action->id, action_name, action->uuid, action);
-
         if (pcmk_is_set(action->flags, pe_action_pseudo)) {
             font = "orange";
         }
@@ -141,8 +139,6 @@ pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
         }
 
         pe__set_action_flags(action, pe_action_dumped);
-        crm_trace("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]",
-                action_name, style, color, font);
         fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"]\n",
                 action_name, style, color, font);
   do_not_write:
@@ -179,8 +175,6 @@ pcmk__write_sim_dotfile(pe_working_set_t *data_set, const char *dot_file,
             if (all_actions || !optional) {
                 before_name = create_action_name(before->action, verbose);
                 after_name = create_action_name(action, verbose);
-                crm_trace("\"%s\" -> \"%s\" [ style = %s]",
-                        before_name, after_name, style);
                 fprintf(dot_strm, "\"%s\" -> \"%s\" [ style = %s]\n",
                         before_name, after_name, style);
                 free(before_name);
