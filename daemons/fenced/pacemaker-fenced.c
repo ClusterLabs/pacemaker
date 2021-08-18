@@ -1515,7 +1515,8 @@ main(int argc, char **argv)
                "different delays are configured on the nodes.\nUse this to "
                "enable a static delay for fencing actions.\nThe overall delay "
                "is derived from a random delay value adding this static delay "
-               "so that the sum is kept below the maximum delay.</longdesc>\n");
+               "so that the sum is kept below the maximum delay.\nSet to eg. "
+               "node1:1s;node2:5 to set different value per node.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 

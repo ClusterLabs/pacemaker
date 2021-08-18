@@ -139,18 +139,45 @@ get_action_delay_max(stonith_device_t * device, const char * action)
 }
 
 static int
-get_action_delay_base(stonith_device_t * device, const char * action)
+get_action_delay_base(stonith_device_t *device, const char *action, const char *victim)
 {
-    const char *value = NULL;
+    char *hash_value = NULL;
     int delay_base = 0;
 
     if (!pcmk__strcase_any_of(action, "off", "reboot", NULL)) {
         return 0;
     }
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
-    if (value) {
-       delay_base = crm_parse_interval_spec(value) / 1000;
+    hash_value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
+
+    if (hash_value) {
+        char *value = strdup(hash_value);
+        char *valptr = value;
+
+        CRM_ASSERT(value != NULL);
+
+        if (victim) {
+            for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
+                char *mapval = strchr(val, ':');
+
+                if (mapval == NULL || mapval[1] == 0) {
+                    crm_err("pcmk_delay_base: empty value in mapping", val);
+                    continue;
+                }
+
+                if (mapval != val && strncasecmp(victim, val, (size_t)(mapval - val)) == 0) {
+                    value = mapval + 1;
+                    crm_debug("pcmk_delay_base mapped to %s for %s", value, victim);
+                    break;
+                }
+            }
+        }
+
+        if (strchr(value, ':') == 0) {
+           delay_base = crm_parse_interval_spec(value) / 1000;
+        }
+
+        free(valptr);
     }
 
     return delay_base;
@@ -545,7 +572,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     delay_max = get_action_delay_max(device, cmd->action);
-    delay_base = get_action_delay_base(device, cmd->action);
+    delay_base = get_action_delay_base(device, cmd->action, cmd->victim);
     if (delay_max == 0) {
         delay_max = delay_base;
     }
@@ -1984,10 +2011,11 @@ struct st_query_data {
  * \param[in,out] xml     XML to add attributes to
  * \param[in]     action  Fence action
  * \param[in]     device  Fence device
+ * \param[in]     target  Fence target
  */
 static void
 add_action_specific_attributes(xmlNode *xml, const char *action,
-                               stonith_device_t *device)
+                               stonith_device_t *device, const char *target)
 {
     int action_specific_timeout;
     int delay_max;
@@ -2014,7 +2042,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
         crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max / 1000);
     }
 
-    delay_base = get_action_delay_base(device, action);
+    delay_base = get_action_delay_base(device, action, target);
     if (delay_base > 0) {
         crm_xml_add_int(xml, F_STONITH_DELAY_BASE, delay_base / 1000);
     }
@@ -2070,7 +2098,7 @@ add_action_reply(xmlNode *xml, const char *action, stonith_device_t *device,
     xmlNode *child = create_xml_node(xml, F_STONITH_ACTION);
 
     crm_xml_add(child, XML_ATTR_ID, action);
-    add_action_specific_attributes(child, action, device);
+    add_action_specific_attributes(child, action, device, target);
     add_disallowed(child, action, device, target, allow_suicide);
 }
 
@@ -2115,7 +2143,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         }
 
         /* Add action-specific values if available */
-        add_action_specific_attributes(dev, action, device);
+        add_action_specific_attributes(dev, action, device, query->target);
         if (pcmk__str_eq(query->action, "reboot", pcmk__str_casei)) {
             /* A "reboot" *might* get remapped to "off" then "on", so after
              * sending the "reboot"-specific values in the main element, we add
