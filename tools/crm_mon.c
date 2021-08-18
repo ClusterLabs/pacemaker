@@ -2173,6 +2173,11 @@ mon_refresh_display(gpointer user_data)
     unames = pe__build_node_name_list(mon_data_set, options.only_node);
     resources = pe__build_rsc_list(mon_data_set, options.only_rsc);
 
+    /* Always print DC if NULL. */
+    if (mon_data_set->dc_node == NULL) {
+        show |= pcmk_section_dc;
+    }
+
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:

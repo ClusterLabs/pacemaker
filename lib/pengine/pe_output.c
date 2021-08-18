@@ -325,8 +325,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         out->message(out, "cluster-stack", stack_s);
     }
 
-    /* Always print DC if none, even if not requested */
-    if (data_set->dc_node == NULL || pcmk_is_set(section_opts, pcmk_section_dc)) {
+    if (pcmk_is_set(section_opts, pcmk_section_dc)) {
         xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
                                                data_set->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
