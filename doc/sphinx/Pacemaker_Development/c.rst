@@ -673,6 +673,59 @@ Logging
 
 
 .. index::
+   pair: C; strings
+
+String Handling
+###############
+
+Define Constants for Magic Strings
+__________________________________
+
+A "magic" string is one used for control purposes rather than human reading,
+and which must be exactly the same every time it is used. Examples would be
+configuration option names, XML attribute names, or environment variable names.
+
+These should always be defined constants, rather than using the string literal
+everywhere. If someone mistypes a defined constant, the code won't compile, but
+if they mistype a literal, it could go unnoticed until a user runs into a
+problem.
+
+
+Library Functions
+_________________
+
+Pacemaker's libcrmcommon has a large number of functions to assist in string
+handling. The most commonly used ones are:
+
+* ``pcmk__str_eq()`` tests string equality (similar to ``strcmp()``), but can
+  handle NULL, and takes options for case-insensitive, whether NULL should be
+  considered a match, etc.
+* ``crm_strdup_printf()`` takes ``printf()``-style arguments and creates a
+  string from them (dynamically allocated, so it must be freed with
+  ``free()``). It asserts on memory failure, so the return value is always
+  non-NULL.
+
+String handling functions should almost always be internal API, since Pacemaker
+isn't intended to be used as a general-purpose library. Most are declared in
+``include/crm/common/strings_internal.h``. ``util.h`` has some older ones that
+are public API (for now, but will eventually be made internal).
+
+
+char*, gchar*, and GString
+__________________________
+
+When using dynamically allocated strings, be careful to always use the
+appropriate free function.
+
+* ``char*`` strings allocated with something like ``calloc()`` must be freed
+  with ``free()``. Most Pacemaker library functions that allocate strings use
+  this implementation.
+* glib functions often use ``gchar*`` instead, which must be freed with
+  ``g_free()``.
+* Occasionally, it's convenient to use glib's flexible ``GString*`` type, which
+  must be freed with ``g_string_free()``.
+
+.. index::
    pair: C; regular expression
 
 Regular Expressions
