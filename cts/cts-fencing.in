@@ -1423,6 +1423,13 @@ class Tests(object):
         test.add_stonith_log_pattern("perform 'reboot' action targeting node_fake using true2")
         test.add_stonith_neg_log_pattern("node_fake with true3")
 
+    def build_query_tests(self):
+        """ run stonith_admin --metadata for the fence_dummy agent and check command output """
+
+        test = self.new_test("get_metadata",
+                             "Run stonith_admin --metadata for the fence_dummy agent", 1)
+        test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -a fence_dummy --metadata", '<shortdesc lang')
+
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
 
@@ -1551,6 +1558,7 @@ def main(argv):
         tests.build_unfence_on_target_tests()
         tests.build_nodeid_tests()
         tests.build_remap_tests()
+        tests.build_query_tests()
 
         if opts.options['list-tests']:
             tests.print_list()
