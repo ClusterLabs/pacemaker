@@ -355,6 +355,10 @@ cib_new_variant(void)
 
     new_cib = calloc(1, sizeof(cib_t));
 
+    if (new_cib == NULL) {
+        return NULL;
+    }
+
     remove_cib_op_callback(0, TRUE); /* remove all */
 
     new_cib->call_id = 1;
@@ -369,6 +373,11 @@ cib_new_variant(void)
 
     /* the rest will get filled in by the variant constructor */
     new_cib->cmds = calloc(1, sizeof(cib_api_operations_t));
+
+    if (new_cib->cmds == NULL) {
+        free(new_cib);
+        return NULL;
+    }
 
     new_cib->cmds->set_op_callback = cib_client_set_op_callback;
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;

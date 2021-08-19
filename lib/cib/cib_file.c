@@ -497,8 +497,16 @@ cib_file_new(const char *cib_location)
     cib_file_opaque_t *private = NULL;
     cib_t *cib = cib_new_variant();
 
+    if (cib == NULL) {
+        return NULL;
+    }
+
     private = calloc(1, sizeof(cib_file_opaque_t));
-    CRM_ASSERT((cib != NULL) && (private != NULL));
+
+    if (private == NULL) {
+        free(cib);
+        return NULL;
+    }
 
     cib->variant = cib_file;
     cib->variant_opaque = private;
