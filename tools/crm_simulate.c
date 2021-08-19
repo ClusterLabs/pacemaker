@@ -52,7 +52,6 @@ struct {
 };
 
 unsigned int section_opts = 0;
-cib_t *global_cib = NULL;
 char *temp_shadow = NULL;
 extern gboolean bringing_nodes_online;
 crm_exit_t exit_code = CRM_EX_OK;
@@ -513,30 +512,184 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
 }
 
 static void
-reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out)
+reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
+      char *use_date, char *xml_file, unsigned int flags)
 {
     data_set->input = input;
     data_set->priv = out;
-    pcmk__set_effective_date(data_set, true, options.use_date);
-    if(options.xml_file) {
+    pcmk__set_effective_date(data_set, true, use_date);
+    if (xml_file) {
         pe__set_working_set_flags(data_set, pe_flag_sanitized);
     }
-    if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
+    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
         pe__set_working_set_flags(data_set, pe_flag_show_scores);
     }
-    if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
+    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
         pe__set_working_set_flags(data_set, pe_flag_show_utilization);
     }
+}
+
+static int
+simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_t *injections,
+         unsigned int flags, unsigned int section_opts, bool verbose,
+         int modified, char *use_date, char *input_file, char *graph_file,
+         char *dot_file, char *xml_file)
+{
+    int printed = pcmk_rc_no_output;
+    int rc = pcmk_rc_ok;
+    xmlNodePtr input = NULL;
+    cib_t *cib = NULL;
+
+    rc = cib__signon_query(&cib, &input);
+    if (rc != pcmk_rc_ok) {
+        goto simulate_done;
+    }
+
+    reset(data_set, input, out, use_date, xml_file, flags);
+    cluster_status(data_set);
+
+    if (!out->is_quiet(out)) {
+        if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
+            printed = out->message(out, "maint-mode", data_set->flags);
+        }
+
+        if (data_set->disabled_resources || data_set->blocked_resources) {
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            printed = out->info(out, "%d of %d resource instances DISABLED and %d BLOCKED "
+                                "from further action due to failure",
+                                data_set->disabled_resources, data_set->ninstances,
+                                data_set->blocked_resources);
+        }
+
+        /* Most formatted output headers use caps for each word, but this one
+         * only has the first word capitalized for compatibility with pcs.
+         */
+        print_cluster_status(data_set, pcmk_is_set(flags, pcmk_sim_show_pending) ? pcmk_show_pending : 0,
+                             section_opts, "Current cluster status", printed == pcmk_rc_ok);
+        printed = pcmk_rc_ok;
+    }
+
+    if (modified) {
+        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+        modify_configuration(data_set, cib, injections);
+        printed = pcmk_rc_ok;
+
+        rc = cib->cmds->query(cib, NULL, &input, cib_sync_call);
+        if (rc != pcmk_rc_ok) {
+            rc = pcmk_legacy2rc(rc);
+            goto simulate_done;
+        }
+
+        cleanup_calculations(data_set);
+        reset(data_set, input, out, use_date, xml_file, flags);
+        cluster_status(data_set);
+    }
+
+    if (input_file != NULL) {
+        rc = write_xml_file(input, input_file, FALSE);
+        if (rc < 0) {
+            rc = pcmk_legacy2rc(rc);
+            goto simulate_done;
+        }
+    }
+
+    if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
+        crm_time_t *local_date = NULL;
+        pcmk__output_t *logger_out = NULL;
+
+        if (pcmk_all_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)) {
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Allocation Scores and Utilization Information");
+            printed = pcmk_rc_ok;
+        } else if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Allocation Scores");
+            printed = pcmk_rc_ok;
+        } else if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
+            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+            out->begin_list(out, NULL, NULL, "Utilization Information");
+            printed = pcmk_rc_ok;
+        } else {
+            logger_out = pcmk__new_logger();
+            if (logger_out == NULL) {
+                goto simulate_done;
+            }
+
+            data_set->priv = logger_out;
+        }
+
+        pcmk__schedule_actions(data_set, input, local_date);
+
+        if (logger_out == NULL) {
+            out->end_list(out);
+        } else {
+            logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+            pcmk__output_free(logger_out);
+            data_set->priv = out;
+        }
+
+        input = NULL;           /* Don't try and free it twice */
+
+        if (graph_file != NULL) {
+            write_xml_file(data_set->graph, graph_file, FALSE);
+            if (rc < 0) {
+                rc = pcmk_legacy2rc(rc);
+                goto simulate_done;
+            }
+        }
+
+        if (dot_file != NULL) {
+            rc = pcmk__write_sim_dotfile(data_set, dot_file,
+                                         pcmk_is_set(flags, pcmk_sim_all_actions),
+                                         verbose);
+            if (rc != pcmk_rc_ok) {
+                goto simulate_done;
+            }
+        }
+
+        if (!out->is_quiet(out)) {
+            print_transition_summary(data_set, printed == pcmk_rc_ok);
+        }
+    }
+
+    rc = pcmk_rc_ok;
+
+    if (pcmk_is_set(flags, pcmk_sim_simulate)) {
+        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
+        if (run_simulation(data_set, cib, injections->op_fail) != pcmk_rc_ok) {
+            rc = pcmk_rc_error;
+        }
+
+        if (!out->is_quiet(out)) {
+            pcmk__set_effective_date(data_set, true, use_date);
+
+            if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+                pe__set_working_set_flags(data_set, pe_flag_show_scores);
+            }
+            if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+                pe__set_working_set_flags(data_set, pe_flag_show_utilization);
+            }
+
+            cluster_status(data_set);
+            print_cluster_status(data_set, 0, section_opts, "Revised Cluster Status", true);
+        }
+    }
+
+simulate_done:
+    if (cib) {
+        cib->cmds->signoff(cib);
+        cib_delete(cib);
+    }
+
+    return rc;
 }
 
 int
 main(int argc, char **argv)
 {
-    int printed = pcmk_rc_no_output;
     int rc = pcmk_rc_ok;
     pe_working_set_t *data_set = NULL;
     pcmk__output_t *out = NULL;
-    xmlNode *input = NULL;
 
     GError *error = NULL;
 
@@ -623,145 +776,10 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = cib__signon_query(&global_cib, &input);
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "CIB query failed: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-
-    reset(data_set, input, out);
-    cluster_status(data_set);
-
-    if (!out->is_quiet(out)) {
-        if (pcmk_is_set(data_set->flags, pe_flag_maintenance_mode)) {
-            printed = out->message(out, "maint-mode", data_set->flags);
-        }
-
-        if (data_set->disabled_resources || data_set->blocked_resources) {
-            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            printed = out->info(out, "%d of %d resource instances DISABLED and %d BLOCKED "
-                                "from further action due to failure",
-                                data_set->disabled_resources, data_set->ninstances,
-                                data_set->blocked_resources);
-        }
-
-        /* Most formatted output headers use caps for each word, but this one
-         * only has the first word capitalized for compatibility with pcs.
-         */
-        print_cluster_status(data_set, pcmk_is_set(options.flags, pcmk_sim_show_pending) ? pcmk_show_pending : 0,
-                             section_opts, "Current cluster status", printed == pcmk_rc_ok);
-        printed = pcmk_rc_ok;
-    }
-
-    if (options.modified) {
-        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        modify_configuration(data_set, global_cib, options.injections);
-        printed = pcmk_rc_ok;
-
-        rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
-        if (rc != pcmk_rc_ok) {
-            rc = pcmk_legacy2rc(rc);
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Could not get modified CIB: %s", pcmk_rc_str(rc));
-            goto done;
-        }
-
-        cleanup_calculations(data_set);
-        reset(data_set, input, out);
-        cluster_status(data_set);
-    }
-
-    if (options.input_file != NULL) {
-        rc = write_xml_file(input, options.input_file, FALSE);
-        if (rc < 0) {
-            rc = pcmk_legacy2rc(rc);
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Could not create '%s': %s", options.input_file, pcmk_rc_str(rc));
-            goto done;
-        }
-    }
-
-    if (pcmk_any_flags_set(options.flags, pcmk_sim_process | pcmk_sim_simulate)) {
-        crm_time_t *local_date = NULL;
-        pcmk__output_t *logger_out = NULL;
-
-        if (pcmk_all_flags_set(data_set->flags, pe_flag_show_scores|pe_flag_show_utilization)) {
-            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            out->begin_list(out, NULL, NULL, "Allocation Scores and Utilization Information");
-            printed = pcmk_rc_ok;
-        } else if (pcmk_is_set(data_set->flags, pe_flag_show_scores)) {
-            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            out->begin_list(out, NULL, NULL, "Allocation Scores");
-            printed = pcmk_rc_ok;
-        } else if (pcmk_is_set(data_set->flags, pe_flag_show_utilization)) {
-            PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-            out->begin_list(out, NULL, NULL, "Utilization Information");
-            printed = pcmk_rc_ok;
-        } else {
-            logger_out = pcmk__new_logger();
-            if (logger_out == NULL) {
-                goto done;
-            }
-
-            data_set->priv = logger_out;
-        }
-
-        pcmk__schedule_actions(data_set, input, local_date);
-
-        if (logger_out == NULL) {
-            out->end_list(out);
-        } else {
-            logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
-            pcmk__output_free(logger_out);
-            data_set->priv = out;
-        }
-
-        input = NULL;           /* Don't try and free it twice */
-
-        if (options.graph_file != NULL) {
-            write_xml_file(data_set->graph, options.graph_file, FALSE);
-        }
-
-        if (options.dot_file != NULL) {
-            rc = pcmk__write_sim_dotfile(data_set, options.dot_file,
-                                         pcmk_is_set(options.flags, pcmk_sim_all_actions),
-                                         args->verbosity > 0);
-            if (rc != pcmk_rc_ok) {
-                g_set_error(&error, PCMK__RC_ERROR, rc,
-                            "Could not open %s for writing: %s", options.dot_file,
-                            pcmk_rc_str(rc));
-                goto done;
-            }
-        }
-
-        if (!out->is_quiet(out)) {
-            print_transition_summary(data_set, printed == pcmk_rc_ok);
-        }
-    }
-
-    rc = pcmk_rc_ok;
-
-    if (pcmk_is_set(options.flags, pcmk_sim_simulate)) {
-        PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        if (run_simulation(data_set, global_cib, options.injections->op_fail) != pcmk_rc_ok) {
-            rc = pcmk_rc_error;
-        }
-
-        if (!out->is_quiet(out)) {
-            pcmk__set_effective_date(data_set, true, options.use_date);
-
-            if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
-                pe__set_working_set_flags(data_set, pe_flag_show_scores);
-            }
-            if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
-                pe__set_working_set_flags(data_set, pe_flag_show_utilization);
-            }
-
-            cluster_status(data_set);
-            print_cluster_status(data_set, 0, section_opts, "Revised Cluster Status", true);
-        }
-    }
+    rc = simulate(data_set, out, options.injections, options.flags, section_opts,
+                  args->verbosity > 0, options.modified, options.use_date,
+                  options.input_file, options.graph_file, options.dot_file,
+                  options.xml_file);
 
   done:
     pcmk__output_and_clear_error(error, NULL);
@@ -781,11 +799,6 @@ main(int argc, char **argv)
 
     if (data_set) {
         pe_free_working_set(data_set);
-    }
-
-    if (global_cib) {
-        global_cib->cmds->signoff(global_cib);
-        cib_delete(global_cib);
     }
 
     fflush(stderr);
