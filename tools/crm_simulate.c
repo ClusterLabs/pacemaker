@@ -34,25 +34,20 @@
 #define SUMMARY "crm_simulate - simulate a Pacemaker cluster's response to events"
 
 struct {
-    gboolean all_actions;
     char *dot_file;
     char *graph_file;
     gchar *input_file;
     guint modified;
     pcmk_injections_t *injections;
+    unsigned int flags;
     gchar *output_file;
-    gboolean print_pending;
-    gboolean process;
     long long repeat;
-    gboolean show_scores;
-    gboolean show_utilization;
-    gboolean simulate;
     gboolean store;
     gchar *test_dir;
     char *use_date;
     char *xml_file;
 } options = {
-    .print_pending = TRUE,
+    .flags = pcmk_sim_show_pending,
     .repeat = 1
 };
 
@@ -72,6 +67,12 @@ static pcmk__supported_format_t formats[] = {
 };
 
 static gboolean
+all_actions_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.flags |= pcmk_sim_all_actions;
+    return TRUE;
+}
+
+static gboolean
 attrs_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     section_opts |= pcmk_section_attributes;
     return TRUE;
@@ -86,8 +87,7 @@ failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 static gboolean
 in_place_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.store = TRUE;
-    options.process = TRUE;
-    options.simulate = TRUE;
+    options.flags |= pcmk_sim_process | pcmk_sim_simulate;
     return TRUE;
 }
 
@@ -125,8 +125,7 @@ node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
 static gboolean
 op_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.process = TRUE;
-    options.simulate = TRUE;
+    options.flags |= pcmk_sim_process | pcmk_sim_simulate;
     options.injections->op_fail = g_list_append(options.injections->op_fail, g_strdup(optarg));
     return TRUE;
 }
@@ -135,6 +134,18 @@ static gboolean
 op_inject_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.modified++;
     options.injections->op_inject = g_list_append(options.injections->op_inject, g_strdup(optarg));
+    return TRUE;
+}
+
+static gboolean
+pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.flags |= pcmk_sim_show_pending;
+    return TRUE;
+}
+
+static gboolean
+process_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+    options.flags |= pcmk_sim_process;
     return TRUE;
 }
 
@@ -155,7 +166,7 @@ save_dotfile_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
         free(options.dot_file);
     }
 
-    options.process = TRUE;
+    options.flags |= pcmk_sim_process;
     options.dot_file = strdup(optarg);
     return TRUE;
 }
@@ -166,22 +177,20 @@ save_graph_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
         free(options.graph_file);
     }
 
-    options.process = TRUE;
+    options.flags |= pcmk_sim_process;
     options.graph_file = strdup(optarg);
     return TRUE;
 }
 
 static gboolean
 show_scores_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.process = TRUE;
-    options.show_scores = TRUE;
+    options.flags |= pcmk_sim_process | pcmk_sim_show_scores;
     return TRUE;
 }
 
 static gboolean
 simulate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.process = TRUE;
-    options.simulate = TRUE;
+    options.flags |= pcmk_sim_process | pcmk_sim_simulate;
     return TRUE;
 }
 
@@ -215,8 +224,7 @@ ticket_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, 
 
 static gboolean
 utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.process = TRUE;
-    options.show_utilization = TRUE;
+    options.flags |= pcmk_sim_process | pcmk_sim_show_utilization;
     return TRUE;
 }
 
@@ -252,7 +260,7 @@ xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 }
 
 static GOptionEntry operation_entries[] = {
-    { "run", 'R', 0, G_OPTION_ARG_NONE, &options.process,
+    { "run", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, process_cb,
       "Process the supplied input and show what actions the cluster will take in response",
       NULL },
     { "simulate", 'S', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, simulate_cb,
@@ -280,7 +288,7 @@ static GOptionEntry operation_entries[] = {
       "With --profile, repeat each test N times and print timings",
       "N" },
     /* Deprecated */
-    { "pending", 'j', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.print_pending,
+    { "pending", 'j', G_OPTION_FLAG_NO_ARG|G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, pending_cb,
       "Display pending state if 'record-pending' is enabled",
       NULL },
 
@@ -345,7 +353,7 @@ static GOptionEntry artifact_entries[] = {
     { "save-dotfile", 'D', 0, G_OPTION_ARG_CALLBACK, save_dotfile_cb,
       "Save the transition graph (DOT format) to the named file",
       "FILE" },
-    { "all-actions", 'a', 0, G_OPTION_ARG_NONE, &options.all_actions,
+    { "all-actions", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, all_actions_cb,
       "Display all possible actions in DOT graph (even if not part of transition)",
       NULL },
 
@@ -513,10 +521,10 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out)
     if(options.xml_file) {
         pe__set_working_set_flags(data_set, pe_flag_sanitized);
     }
-    if (options.show_scores) {
+    if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
         pe__set_working_set_flags(data_set, pe_flag_show_scores);
     }
-    if (options.show_utilization) {
+    if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
         pe__set_working_set_flags(data_set, pe_flag_show_utilization);
     }
 }
@@ -563,7 +571,8 @@ main(int argc, char **argv)
     }
 
     if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches) &&
-        !options.show_scores && !options.show_utilization) {
+        !pcmk_is_set(options.flags, pcmk_sim_show_scores) &&
+        !pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
         pcmk__force_args(context, &error, "%s --text-fancy", g_get_prgname());
     } else if (pcmk__str_eq(args->output_ty, "xml", pcmk__str_none)) {
         pcmk__force_args(context, &error, "%s --xml-simple-list --xml-substitute", g_get_prgname());
@@ -594,10 +603,10 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.show_scores) {
+    if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
         pe__set_working_set_flags(data_set, pe_flag_show_scores);
     }
-    if (options.show_utilization) {
+    if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
         pe__set_working_set_flags(data_set, pe_flag_show_utilization);
     }
     pe__set_working_set_flags(data_set, pe_flag_no_compat);
@@ -640,7 +649,7 @@ main(int argc, char **argv)
         /* Most formatted output headers use caps for each word, but this one
          * only has the first word capitalized for compatibility with pcs.
          */
-        print_cluster_status(data_set, options.print_pending ? pcmk_show_pending : 0,
+        print_cluster_status(data_set, pcmk_is_set(options.flags, pcmk_sim_show_pending) ? pcmk_show_pending : 0,
                              section_opts, "Current cluster status", printed == pcmk_rc_ok);
         printed = pcmk_rc_ok;
     }
@@ -673,7 +682,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (options.process || options.simulate) {
+    if (pcmk_any_flags_set(options.flags, pcmk_sim_process | pcmk_sim_simulate)) {
         crm_time_t *local_date = NULL;
         pcmk__output_t *logger_out = NULL;
 
@@ -715,7 +724,8 @@ main(int argc, char **argv)
         }
 
         if (options.dot_file != NULL) {
-            rc = pcmk__write_sim_dotfile(data_set, options.dot_file, options.all_actions,
+            rc = pcmk__write_sim_dotfile(data_set, options.dot_file,
+                                         pcmk_is_set(options.flags, pcmk_sim_all_actions),
                                          args->verbosity > 0);
             if (rc != pcmk_rc_ok) {
                 g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -732,7 +742,7 @@ main(int argc, char **argv)
 
     rc = pcmk_rc_ok;
 
-    if (options.simulate) {
+    if (pcmk_is_set(options.flags, pcmk_sim_simulate)) {
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
         if (run_simulation(data_set, global_cib, options.injections->op_fail) != pcmk_rc_ok) {
             rc = pcmk_rc_error;
@@ -741,10 +751,10 @@ main(int argc, char **argv)
         if (!out->is_quiet(out)) {
             pcmk__set_effective_date(data_set, true, options.use_date);
 
-            if (options.show_scores) {
+            if (pcmk_is_set(options.flags, pcmk_sim_show_scores)) {
                 pe__set_working_set_flags(data_set, pe_flag_show_scores);
             }
-            if (options.show_utilization) {
+            if (pcmk_is_set(options.flags, pcmk_sim_show_utilization)) {
                 pe__set_working_set_flags(data_set, pe_flag_show_utilization);
             }
 

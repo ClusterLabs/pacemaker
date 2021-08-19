@@ -27,6 +27,19 @@ extern "C" {
 #  include <crm/stonith-ng.h>
 
 /*!
+ * \brief Modify operation of running a cluster simulation.
+ */
+enum pcmk_sim_flags {
+    pcmk_sim_none             = 0,
+    pcmk_sim_all_actions      = 1 << 0,
+    pcmk_sim_show_pending     = 1 << 1,
+    pcmk_sim_process          = 1 << 2,
+    pcmk_sim_show_scores      = 1 << 3,
+    pcmk_sim_show_utilization = 1 << 4,
+    pcmk_sim_simulate         = 1 << 5,
+};
+
+/*!
  * \brief Synthetic cluster events that can be injected into the cluster
  *        for running simulations.
  */
