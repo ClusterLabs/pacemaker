@@ -12,6 +12,7 @@
 #include <crm/lrmd.h>       // lrmd_event_data_t
 #include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
+#include <pacemaker.h>
 
 pe__location_t *
 rsc2node_new(const char *id, pe_resource_t *rsc,
@@ -849,4 +850,26 @@ pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
              rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
              node->details->uname, rsc->migration_threshold);
     return false;
+}
+
+void
+pcmk_free_injections(pcmk_injections_t *injections)
+{
+    if (injections == NULL) {
+        return;
+    }
+
+    g_list_free_full(injections->node_up, g_free);
+    g_list_free_full(injections->node_down, g_free);
+    g_list_free_full(injections->node_fail, g_free);
+    g_list_free_full(injections->op_fail, g_free);
+    g_list_free_full(injections->op_inject, g_free);
+    g_list_free_full(injections->ticket_grant, g_free);
+    g_list_free_full(injections->ticket_revoke, g_free);
+    g_list_free_full(injections->ticket_standby, g_free);
+    g_list_free_full(injections->ticket_activate, g_free);
+    free(injections->quorum);
+    free(injections->watchdog);
+
+    free(injections);
 }

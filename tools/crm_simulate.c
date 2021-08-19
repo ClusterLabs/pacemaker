@@ -760,23 +760,12 @@ main(int argc, char **argv)
     free(options.dot_file);
     free(options.graph_file);
     g_free(options.input_file);
-    g_list_free_full(options.injections->node_up, g_free);
-    g_list_free_full(options.injections->node_down, g_free);
-    g_list_free_full(options.injections->node_fail, g_free);
-    g_list_free_full(options.injections->op_fail, g_free);
-    g_list_free_full(options.injections->op_inject, g_free);
     g_free(options.output_file);
     g_free(options.test_dir);
-    g_list_free_full(options.injections->ticket_grant, g_free);
-    g_list_free_full(options.injections->ticket_revoke, g_free);
-    g_list_free_full(options.injections->ticket_standby, g_free);
-    g_list_free_full(options.injections->ticket_activate, g_free);
-    free(options.injections->quorum);
-    free(options.injections->watchdog);
     free(options.use_date);
     free(options.xml_file);
-    free(options.injections);
 
+    pcmk_free_injections(options.injections);
     pcmk__free_arg_context(context);
     g_strfreev(processed_args);
 

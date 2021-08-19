@@ -83,6 +83,13 @@ int pcmk_controller_status(xmlNodePtr *xml, char *dest_node, unsigned int messag
 int pcmk_designated_controller(xmlNodePtr *xml, unsigned int message_timeout_ms);
 
 /*!
+ * \brief Free a :pcmk_injections_t structure
+ *
+ * \param[in,out] injections The structure to be freed
+ */
+void pcmk_free_injections(pcmk_injections_t *injections);
+
+/*!
  * \brief Get pacemakerd status
  *
  * \param[in,out] xml                The destination for the result, as an XML tree.
