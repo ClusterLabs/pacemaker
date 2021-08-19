@@ -528,6 +528,8 @@ main(int argc, char **argv)
     }
 
     if (args->verbosity > 0) {
+        options.flags |= pcmk_sim_verbose;
+
 #ifdef PCMK__COMPAT_2_0
         /* Redirect stderr to stdout so we can grep the output */
         close(STDERR_FILENO);
@@ -563,8 +565,8 @@ main(int argc, char **argv)
     }
 
     rc = pcmk__simulate(data_set, out, options.injections, options.flags, section_opts,
-                        args->verbosity > 0, options.use_date, options.input_file,
-                        options.graph_file, options.dot_file);
+                        options.use_date, options.input_file, options.graph_file,
+                        options.dot_file);
 
   done:
     pcmk__output_and_clear_error(error, NULL);

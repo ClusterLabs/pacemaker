@@ -38,6 +38,7 @@ enum pcmk_sim_flags {
     pcmk_sim_show_utilization = 1 << 4,
     pcmk_sim_simulate         = 1 << 5,
     pcmk_sim_sanitized        = 1 << 6,
+    pcmk_sim_verbose          = 1 << 7,
 };
 
 /*!

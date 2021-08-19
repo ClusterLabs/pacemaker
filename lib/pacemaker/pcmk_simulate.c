@@ -354,8 +354,8 @@ pcmk__set_effective_date(pe_working_set_t *data_set, bool print_original, char *
 
 int
 pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_t *injections,
-               unsigned int flags, unsigned int section_opts, bool verbose,
-               char *use_date, char *input_file, char *graph_file, char *dot_file)
+               unsigned int flags, unsigned int section_opts, char *use_date,
+               char *input_file, char *graph_file, char *dot_file)
 {
     int printed = pcmk_rc_no_output;
     int rc = pcmk_rc_ok;
@@ -470,7 +470,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
         if (dot_file != NULL) {
             rc = pcmk__write_sim_dotfile(data_set, dot_file,
                                          pcmk_is_set(flags, pcmk_sim_all_actions),
-                                         verbose);
+                                         pcmk_is_set(flags, pcmk_sim_verbose));
             if (rc != pcmk_rc_ok) {
                 goto simulate_done;
             }

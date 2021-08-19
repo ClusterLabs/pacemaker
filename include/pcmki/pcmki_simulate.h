@@ -96,8 +96,6 @@ void pcmk__set_effective_date(pe_working_set_t *data_set, bool print_original, c
  *                             operation of the simulation.
  * \param[in]     section_opts Which portions of the cluster status output
  *                             should be displayed?
- * \param[in]     verbose      Add extra information, such as action IDs, to the
- *                             output.
  * \param[in]     use_date     The date to set the cluster's time to
  *                             (may be NULL).
  * \param[in]     input_file   The source CIB file, which may be overwritten by
@@ -113,7 +111,7 @@ void pcmk__set_effective_date(pe_working_set_t *data_set, bool print_original, c
  */
 int pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                    pcmk_injections_t *injections, unsigned int flags,
-                   unsigned int section_opts, bool verbose, char *use_date,
-                   char *input_file, char *graph_file, char *dot_file);
+                   unsigned int section_opts, char *use_date, char *input_file,
+                   char *graph_file, char *dot_file);
 
 #endif
