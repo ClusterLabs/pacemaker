@@ -37,7 +37,6 @@ struct {
     char *dot_file;
     char *graph_file;
     gchar *input_file;
-    guint modified;
     pcmk_injections_t *injections;
     unsigned int flags;
     gchar *output_file;
@@ -102,21 +101,18 @@ live_check_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 
 static gboolean
 node_down_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     options.injections->node_down = g_list_append(options.injections->node_down, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 node_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     options.injections->node_fail = g_list_append(options.injections->node_fail, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     bringing_nodes_online = TRUE;
     options.injections->node_up = g_list_append(options.injections->node_up, g_strdup(optarg));
     return TRUE;
@@ -131,7 +127,6 @@ op_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 
 static gboolean
 op_inject_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     options.injections->op_inject = g_list_append(options.injections->op_inject, g_strdup(optarg));
     return TRUE;
 }
@@ -154,7 +149,6 @@ quorum_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
         free(options.injections->quorum);
     }
 
-    options.modified++;
     options.injections->quorum = strdup(optarg);
     return TRUE;
 }
@@ -195,28 +189,24 @@ simulate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 
 static gboolean
 ticket_activate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     options.injections->ticket_activate = g_list_append(options.injections->ticket_activate, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 ticket_grant_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     options.injections->ticket_grant = g_list_append(options.injections->ticket_grant, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 ticket_revoke_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     options.injections->ticket_revoke = g_list_append(options.injections->ticket_revoke, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
 ticket_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.modified++;
     options.injections->ticket_standby = g_list_append(options.injections->ticket_standby, g_strdup(optarg));
     return TRUE;
 }
@@ -233,7 +223,6 @@ watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
         free(options.injections->watchdog);
     }
 
-    options.modified++;
     options.injections->watchdog = strdup(optarg);
     return TRUE;
 }
@@ -532,13 +521,14 @@ reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
 static int
 simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_t *injections,
          unsigned int flags, unsigned int section_opts, bool verbose,
-         int modified, char *use_date, char *input_file, char *graph_file,
-         char *dot_file, char *xml_file)
+         char *use_date, char *input_file, char *graph_file, char *dot_file,
+         char *xml_file)
 {
     int printed = pcmk_rc_no_output;
     int rc = pcmk_rc_ok;
     xmlNodePtr input = NULL;
     cib_t *cib = NULL;
+    bool modified = false;
 
     rc = cib__signon_query(&cib, &input);
     if (rc != pcmk_rc_ok) {
@@ -568,6 +558,12 @@ simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_t *inj
                              section_opts, "Current cluster status", printed == pcmk_rc_ok);
         printed = pcmk_rc_ok;
     }
+
+    modified = injections->node_down != NULL || injections->node_fail != NULL ||
+               injections->node_up != NULL || injections->op_inject != NULL ||
+               injections->ticket_activate != NULL || injections->ticket_grant != NULL ||
+               injections->ticket_revoke != NULL || injections->ticket_standby != NULL ||
+               injections->watchdog != NULL || injections->watchdog != NULL;
 
     if (modified) {
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
@@ -777,9 +773,8 @@ main(int argc, char **argv)
     }
 
     rc = simulate(data_set, out, options.injections, options.flags, section_opts,
-                  args->verbosity > 0, options.modified, options.use_date,
-                  options.input_file, options.graph_file, options.dot_file,
-                  options.xml_file);
+                  args->verbosity > 0, options.use_date, options.input_file,
+                  options.graph_file, options.dot_file, options.xml_file);
 
   done:
     pcmk__output_and_clear_error(error, NULL);
