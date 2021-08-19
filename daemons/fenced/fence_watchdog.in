@@ -124,7 +124,7 @@ def metadata(avail_opt, options):
     for option, dummy in sorted_options(avail_opt):
         if "shortdesc" in ALL_OPT[option]:
             print('    <parameter name="' + option +
-                  'required="' + ALL_OPT[option]["required"] + '">')
+                  '" required="' + ALL_OPT[option]["required"] + '">')
 
             default = ""
             default_name_arg = "-" + ALL_OPT[option]["getopt"][:-1]
