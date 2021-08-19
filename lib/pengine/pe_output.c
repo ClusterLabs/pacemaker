@@ -363,8 +363,10 @@ cluster_summary(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
-        rc = pcmk_rc_ok;
+    if (pcmk_is_set(section_opts, pcmk_section_maint_mode)) {
+        if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     return rc;
@@ -430,8 +432,10 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
-        rc = pcmk_rc_ok;
+    if (pcmk_is_set(section_opts, pcmk_section_maint_mode)) {
+        if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     return rc;

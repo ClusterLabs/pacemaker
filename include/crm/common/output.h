@@ -40,14 +40,16 @@ typedef enum {
     pcmk_section_tickets       = 1 << 13,
     pcmk_section_bans          = 1 << 14,
     pcmk_section_failures      = 1 << 15,
+    pcmk_section_maint_mode    = 1 << 16,
 } pcmk_section_e;
 
 #define pcmk_section_fencing_all    (pcmk_section_fence_failed | pcmk_section_fence_pending | pcmk_section_fence_worked)
-#define pcmk_section_summary        (pcmk_section_stack | pcmk_section_dc | pcmk_section_times | pcmk_section_counts)
+#define pcmk_section_summary        (pcmk_section_stack | pcmk_section_dc | pcmk_section_times | \
+                                     pcmk_section_counts | pcmk_section_maint_mode)
 #define pcmk_section_all            (pcmk_section_summary | pcmk_section_options | pcmk_section_nodes | \
                                      pcmk_section_resources | pcmk_section_attributes | pcmk_section_failcounts | \
                                      pcmk_section_operations | pcmk_section_fencing_all | pcmk_section_tickets | \
-                                     pcmk_section_bans | pcmk_section_failures)
+                                     pcmk_section_bans | pcmk_section_failures | pcmk_section_maint_mode)
 
 /*!
  * \brief Further modify the output of sections
