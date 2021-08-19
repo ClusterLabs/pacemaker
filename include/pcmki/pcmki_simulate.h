@@ -108,14 +108,12 @@ void pcmk__set_effective_date(pe_working_set_t *data_set, bool print_original, c
  * \param[in]     dot_file     Where to write the dot(1) formatted transition
  *                             graph (may be NULL, in which case no file will
  *                             be written).  See \p pcmk__write_sim_dotfile().
- * \param[in]     xml_file
  *
  * \return Standard Pacemaker return code
  */
 int pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out,
                    pcmk_injections_t *injections, unsigned int flags,
                    unsigned int section_opts, bool verbose, char *use_date,
-                   char *input_file, char *graph_file, char *dot_file,
-                   char *xml_file);
+                   char *input_file, char *graph_file, char *dot_file);
 
 #endif

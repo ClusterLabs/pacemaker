@@ -130,12 +130,12 @@ print_transition_summary(pe_working_set_t *data_set, bool print_spacer)
 
 static void
 reset(pe_working_set_t *data_set, xmlNodePtr input, pcmk__output_t *out,
-      char *use_date, char *xml_file, unsigned int flags)
+      char *use_date, unsigned int flags)
 {
     data_set->input = input;
     data_set->priv = out;
     pcmk__set_effective_date(data_set, true, use_date);
-    if (xml_file) {
+    if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
         pe__set_working_set_flags(data_set, pe_flag_sanitized);
     }
     if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
@@ -355,8 +355,7 @@ pcmk__set_effective_date(pe_working_set_t *data_set, bool print_original, char *
 int
 pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_t *injections,
                unsigned int flags, unsigned int section_opts, bool verbose,
-               char *use_date, char *input_file, char *graph_file, char *dot_file,
-               char *xml_file)
+               char *use_date, char *input_file, char *graph_file, char *dot_file)
 {
     int printed = pcmk_rc_no_output;
     int rc = pcmk_rc_ok;
@@ -369,7 +368,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
         goto simulate_done;
     }
 
-    reset(data_set, input, out, use_date, xml_file, flags);
+    reset(data_set, input, out, use_date, flags);
     cluster_status(data_set);
 
     if (!out->is_quiet(out)) {
@@ -411,7 +410,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
         }
 
         cleanup_calculations(data_set);
-        reset(data_set, input, out, use_date, xml_file, flags);
+        reset(data_set, input, out, use_date, flags);
         cluster_status(data_set);
     }
 

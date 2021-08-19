@@ -46,7 +46,7 @@ struct {
     char *use_date;
     char *xml_file;
 } options = {
-    .flags = pcmk_sim_show_pending,
+    .flags = pcmk_sim_show_pending | pcmk_sim_sanitized,
     .repeat = 1
 };
 
@@ -96,6 +96,7 @@ live_check_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
     }
 
     options.xml_file = NULL;
+    options.flags &= ~pcmk_sim_sanitized;
     return TRUE;
 }
 
@@ -234,6 +235,7 @@ xml_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     }
 
     options.xml_file = strdup(optarg);
+    options.flags |= pcmk_sim_sanitized;
     return TRUE;
 }
 
@@ -244,6 +246,7 @@ xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     }
 
     options.xml_file = strdup("-");
+    options.flags |= pcmk_sim_sanitized;
     return TRUE;
 }
 
@@ -561,7 +564,7 @@ main(int argc, char **argv)
 
     rc = pcmk__simulate(data_set, out, options.injections, options.flags, section_opts,
                         args->verbosity > 0, options.use_date, options.input_file,
-                        options.graph_file, options.dot_file, options.xml_file);
+                        options.graph_file, options.dot_file);
 
   done:
     pcmk__output_and_clear_error(error, NULL);
