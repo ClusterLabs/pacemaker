@@ -1442,6 +1442,18 @@ class Tests(object):
                              "Run stonith_admin --metadata for the fence_dummy agent", 1)
         test.add_cmd_check_stdout("stonith_admin", "--output-as=xml -a fence_dummy --metadata", '<shortdesc lang')
 
+    def build_metadata_tests(self):
+        """ run fence-agents coming with pacemaker with -o metadata and check for valid xml """
+
+        test = self.new_test("check_metadata_dummy",
+                             "Run fence_dummy -o metadata and check for valid xml", 0)
+        test.add_cmd("fence_dummy", "-o metadata", check_rng=False, check_stderr=False)
+        # fence_dummy prints on stderr to check that tools just listen on stdout
+
+        test = self.new_test("check_metadata_watchdog",
+                             "Run fence_watchdog -o metadata and check for valid xml", 0)
+        test.add_cmd("fence_watchdog", "-o metadata", check_rng=False)
+
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
 
@@ -1571,6 +1583,7 @@ def main(argv):
         tests.build_nodeid_tests()
         tests.build_remap_tests()
         tests.build_query_tests()
+        tests.build_metadata_tests()
 
         if opts.options['list-tests']:
             tests.print_list()
