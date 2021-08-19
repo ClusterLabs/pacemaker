@@ -130,6 +130,40 @@ int pcmk_resource_digests(xmlNodePtr *xml, pe_resource_t *rsc,
                           pe_node_t *node, GHashTable *overrides,
                           pe_working_set_t *data_set);
 
+/**
+ * \brief Simulate a cluster's response to events.
+ *
+ * This high-level function essentially implements crm_simulate(8).  It operates
+ * on an input CIB file and various lists of events that can be simulated.  It
+ * optionally writes out a variety of artifacts to show the results of the
+ * simulation.  Output can be modified with various flags.
+ *
+ * \param[in,out] xml          The destination for the result, as an XML tree.
+ * \param[in,out] data_set     Working set for the cluster.
+ * \param[in]     events       A structure containing cluster events
+ *                             (node up/down, tickets, injected operations)
+ * \param[in]     flags        A bitfield of :pcmk_sim_flags to modify
+ *                             operation of the simulation.
+ * \param[in]     section_opts Which portions of the cluster status output
+ *                             should be displayed?
+ * \param[in]     use_date     The date to set the cluster's time to
+ *                             (may be NULL).
+ * \param[in]     input_file   The source CIB file, which may be overwritten by
+ *                             this function (may be NULL).
+ * \param[in]     graph_file   Where to write the XML-formatted transition graph
+ *                             (may be NULL, in which case no file will be
+ *                             written).
+ * \param[in]     dot_file     Where to write the dot(1) formatted transition
+ *                             graph (may be NULL, in which case no file will
+ *                             be written).  See \p pcmk__write_sim_dotfile().
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set,
+                  pcmk_injections_t *injections, unsigned int flags,
+                  unsigned int section_opts, char *use_date, char *input_file,
+                  char *graph_file, char *dot_file);
+
 /*!
  * \brief Get nodes list
  *
@@ -312,7 +346,6 @@ int pcmk_fence_unregister_level(stonith_t *st, char *target, int fence_level);
 int pcmk_fence_validate(xmlNodePtr *xml, stonith_t *st, const char *agent,
                         const char *id, stonith_key_value_t *params,
                         unsigned int timeout);
-
 #endif
 
 #ifdef __cplusplus

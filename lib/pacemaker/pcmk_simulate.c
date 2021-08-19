@@ -512,3 +512,25 @@ simulate_done:
 
     return rc;
 }
+
+int
+pcmk_simulate(xmlNodePtr *xml, pe_working_set_t *data_set, pcmk_injections_t *injections,
+              unsigned int flags, unsigned int section_opts, char *use_date,
+              char *input_file, char *graph_file, char *dot_file)
+{
+    pcmk__output_t *out = NULL;
+    int rc = pcmk_rc_ok;
+
+    rc = pcmk__out_prologue(&out, xml);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    pe__register_messages(out);
+    pcmk__register_lib_messages(out);
+
+    rc = pcmk__simulate(data_set, out, injections, flags, section_opts,
+                        use_date, input_file, graph_file, dot_file);
+    pcmk__out_epilogue(out, xml, rc);
+    return rc;
+}
