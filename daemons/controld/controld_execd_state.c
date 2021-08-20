@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <errno.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/iso8601.h>
@@ -359,30 +362,38 @@ lrm_state_poke_connection(lrm_state_t * lrm_state)
 {
 
     if (!lrm_state->conn) {
-        return -1;
+        return -ENOTCONN;
     }
     return ((lrmd_t *) lrm_state->conn)->cmds->poke_connection(lrm_state->conn);
 }
 
+// \return Standard Pacemaker return code
 int
-lrm_state_ipc_connect(lrm_state_t * lrm_state)
+controld_connect_local_executor(lrm_state_t *lrm_state)
 {
-    int ret;
+    int rc = pcmk_rc_ok;
 
-    if (!lrm_state->conn) {
-        lrm_state->conn = lrmd_api_new();
-        ((lrmd_t *) lrm_state->conn)->cmds->set_callback(lrm_state->conn, lrm_op_callback);
+    if (lrm_state->conn == NULL) {
+        lrmd_t *api = NULL;
+
+        rc = lrmd__new(&api, NULL, NULL, 0);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+        api->cmds->set_callback(api, lrm_op_callback);
+        lrm_state->conn = api;
     }
 
-    ret = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn, CRM_SYSTEM_CRMD, NULL);
+    rc = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn,
+                                                     CRM_SYSTEM_CRMD, NULL);
+    rc = pcmk_legacy2rc(rc);
 
-    if (ret != pcmk_ok) {
-        lrm_state->num_lrm_register_fails++;
-    } else {
+    if (rc == pcmk_rc_ok) {
         lrm_state->num_lrm_register_fails = 0;
+    } else {
+        lrm_state->num_lrm_register_fails++;
     }
-
-    return ret;
+    return rc;
 }
 
 static remote_proxy_t *
@@ -555,33 +566,39 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 }
 
 
+// \return Standard Pacemaker return code
 int
-lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int port,
-                               int timeout_ms)
+controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
+                                 int port, int timeout_ms)
 {
-    int ret;
+    int rc = pcmk_rc_ok;
 
-    if (!lrm_state->conn) {
-        lrm_state->conn = lrmd_remote_api_new(lrm_state->node_name, server, port);
-        if (!lrm_state->conn) {
-            return -1;
+    if (lrm_state->conn == NULL) {
+        lrmd_t *api = NULL;
+
+        rc = lrmd__new(&api, lrm_state->node_name, server, port);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
+                     CRM_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+
+            return rc;
         }
-        ((lrmd_t *) lrm_state->conn)->cmds->set_callback(lrm_state->conn, remote_lrm_op_callback);
-        lrmd_internal_set_proxy_callback(lrm_state->conn, lrm_state, crmd_remote_proxy_cb);
+        lrm_state->conn = api;
+        api->cmds->set_callback(api, remote_lrm_op_callback);
+        lrmd_internal_set_proxy_callback(api, lrm_state, crmd_remote_proxy_cb);
     }
 
-    crm_trace("initiating remote connection to %s at %d with timeout %d", server, port, timeout_ms);
-    ret =
-        ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn, lrm_state->node_name,
-                                                          timeout_ms);
-
-    if (ret != pcmk_ok) {
-        lrm_state->num_lrm_register_fails++;
-    } else {
+    crm_trace("Initiating remote connection to %s:%d with timeout %dms",
+              server, port, timeout_ms);
+    rc = ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn,
+                                                           lrm_state->node_name,
+                                                           timeout_ms);
+    if (rc == pcmk_ok) {
         lrm_state->num_lrm_register_fails = 0;
+    } else {
+        lrm_state->num_lrm_register_fails++; // Ignored for remote connections
     }
-
-    return ret;
+    return pcmk_legacy2rc(rc);
 }
 
 int

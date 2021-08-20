@@ -537,7 +537,6 @@ sched_shutdown_op(pe_node_t *node, pe_working_set_t *data_set)
     pe_action_t *shutdown_op = custom_action(NULL, shutdown_id, CRM_OP_SHUTDOWN,
                                              node, FALSE, TRUE, data_set);
 
-    crm_notice("Scheduling shutdown of node %s", node->details->uname);
     shutdown_constraints(node, shutdown_op, data_set);
     add_hash_param(shutdown_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
     return shutdown_op;
@@ -786,4 +785,68 @@ pcmk__new_logger(void)
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
     return out;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a resource has reached its migration threshold on a node
+ *
+ * \param[in]  rsc       Resource to check
+ * \param[in]  node      Node to check
+ * \param[in]  data_set  Cluster working set
+ * \param[out] failed    If the threshold has been reached, this will be set to
+ *                       the resource that failed (possibly a parent of \p rsc)
+ *
+ * \return true if the migration threshold has been reached, false otherwise
+ */
+bool
+pcmk__threshold_reached(pe_resource_t *rsc, pe_node_t *node,
+                        pe_working_set_t *data_set, pe_resource_t **failed)
+{
+    int fail_count, remaining_tries;
+    pe_resource_t *rsc_to_ban = rsc;
+
+    // Migration threshold of 0 means never force away
+    if (rsc->migration_threshold == 0) {
+        return false;
+    }
+
+    // If we're ignoring failures, also ignore the migration threshold
+    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        return false;
+    }
+
+    // If there are no failures, there's no need to force away
+    fail_count = pe_get_failcount(node, rsc, NULL,
+                                  pe_fc_effective|pe_fc_fillers, NULL,
+                                  data_set);
+    if (fail_count <= 0) {
+        return false;
+    }
+
+    // If failed resource is anonymous clone instance, we'll force clone away
+    if (!pcmk_is_set(rsc->flags, pe_rsc_unique)) {
+        rsc_to_ban = uber_parent(rsc);
+    }
+
+    // How many more times recovery will be tried on this node
+    remaining_tries = rsc->migration_threshold - fail_count;
+
+    if (remaining_tries <= 0) {
+        crm_warn("%s cannot run on %s due to reaching migration threshold "
+                 "(clean up resource to allow again)"
+                 CRM_XS " failures=%d migration-threshold=%d",
+                 rsc_to_ban->id, node->details->uname, fail_count,
+                 rsc->migration_threshold);
+        if (failed != NULL) {
+            *failed = rsc_to_ban;
+        }
+        return true;
+    }
+
+    crm_info("%s can fail %d more time%s on "
+             "%s before reaching migration threshold (%d)",
+             rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
+             node->details->uname, rsc->migration_threshold);
+    return false;
 }

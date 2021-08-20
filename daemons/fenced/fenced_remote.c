@@ -457,6 +457,18 @@ handle_duplicates(remote_fencing_op_t * op, xmlNode * data, int rc)
     }
 }
 
+static char *
+delegate_from_xml(xmlNode *xml)
+{
+    xmlNode *match = get_xpath_object("//@" F_STONITH_DELEGATE, xml, LOG_NEVER);
+
+    if (match == NULL) {
+        return crm_element_value_copy(xml, F_ORIG);
+    } else {
+        return crm_element_value_copy(match, F_STONITH_DELEGATE);
+    }
+}
+
 /*!
  * \internal
  * \brief Finalize a remote operation.
@@ -504,13 +516,14 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
         goto remote_op_done_cleanup;
     }
 
-    if (!op->delegate && data && rc != -ENODEV && rc != -EHOSTUNREACH) {
-        xmlNode *ndata = get_xpath_object("//@" F_STONITH_DELEGATE, data,
-                                          LOG_NEVER);
-        if(ndata) {
-            op->delegate = crm_element_value_copy(ndata, F_STONITH_DELEGATE);
-        } else { 
-            op->delegate = crm_element_value_copy(data, F_ORIG);
+    if (op->delegate == NULL) {
+        switch (rc) {
+            case -ENODEV:
+            case -EHOSTUNREACH:
+                break;
+            default:
+                op->delegate = delegate_from_xml(data);
+                break;
         }
     }
 

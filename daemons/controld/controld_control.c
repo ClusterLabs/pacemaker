@@ -571,7 +571,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
         "A cluster node may receive notification of its own fencing if fencing "
         "is misconfigured, or if fabric fencing is in use that doesn't cut "
         "cluster communication. Allowed values are \"stop\" to attempt to "
-        "immediately stop pacemaker and stay stopped, or \"panic\" to attempt "
+        "immediately stop Pacemaker and stay stopped, or \"panic\" to attempt "
         "to immediately reboot the local node, falling back to stop on failure."
     },
     {
@@ -633,7 +633,7 @@ static pcmk__cluster_option_t crmd_opts[] = {
             "If `stonith-watchdog-timeout` is set to a negative value, and "
             "`SBD_WATCHDOG_TIMEOUT` is set, twice that value will be used. "
             "+WARNING:+ In this case, it's essential (currently not verified by "
-            "pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
+            "Pacemaker) that `SBD_WATCHDOG_TIMEOUT` is set to the same value on "
             "all nodes."
     },
     {

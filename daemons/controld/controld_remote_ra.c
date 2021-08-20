@@ -181,7 +181,7 @@ remote_node_up(const char *node_name)
     enum controld_section_e section = controld_section_all;
 
     CRM_CHECK(node_name != NULL, return);
-    crm_info("Announcing pacemaker_remote node %s", node_name);
+    crm_info("Announcing Pacemaker Remote node %s", node_name);
 
     /* Clear node's entire state (resource history and transient attributes)
      * other than shutdown locks. The transient attributes should and normally
@@ -413,7 +413,7 @@ retry_start_cmd_cb(gpointer data)
     lrm_state_t *lrm_state = data;
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     remote_ra_cmd_t *cmd = NULL;
-    int rc = -1;
+    int rc = pcmk_rc_error;
 
     if (!ra_data || !ra_data->cur_cmd) {
         return FALSE;
@@ -428,7 +428,7 @@ retry_start_cmd_cb(gpointer data)
         rc = handle_remote_ra_start(lrm_state, cmd, cmd->remaining_timeout);
     }
 
-    if (rc != 0) {
+    if (rc != pcmk_rc_ok) {
         cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
         cmd->op_status = PCMK_LRM_OP_ERROR;
         report_remote_ra_result(cmd);
@@ -549,7 +549,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             ra_data->migrate_status = takeover_complete;
 
         } else {
-            crm_err("Unexpected pacemaker_remote client takeover for %s. Disconnecting", op->remote_nodename);
+            crm_err("Disconnecting from Pacemaker Remote node %s due to "
+                    "unexpected client takeover", op->remote_nodename);
             /* In this case, lrmd_tls_connection_destroy() will be called under the control of mainloop. */
             /* Do not free lrm_state->conn yet. */
             /* It'll be freed in the following stop action. */
@@ -729,6 +730,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     }
 }
 
+// \return Standard Pacemaker return code
 static int
 handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms)
 {
@@ -749,7 +751,8 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
         }
     }
 
-    return lrm_state_remote_connect_async(lrm_state, server, port, timeout_used);
+    return controld_connect_remote_executor(lrm_state, server, port,
+                                            timeout_used);
 }
 
 static gboolean
@@ -779,16 +782,14 @@ handle_remote_ra_exec(gpointer user_data)
 
         if (!strcmp(cmd->action, "start") || !strcmp(cmd->action, "migrate_from")) {
             ra_data->migrate_status = 0;
-            rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
-            if (rc == 0) {
+            if (handle_remote_ra_start(lrm_state, cmd,
+                                       cmd->timeout) == pcmk_rc_ok) {
                 /* take care of this later when we get async connection result */
                 crm_debug("Initiated async remote connection, %s action will complete after connect event",
                           cmd->action);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
             } else {
-                crm_debug("Could not initiate remote connection for %s action",
-                          cmd->action);
                 cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
                 cmd->op_status = PCMK_LRM_OP_ERROR;
             }
@@ -1165,7 +1166,7 @@ remote_ra_fail(const char *node_name)
     if (lrm_state && lrm_state_is_connected(lrm_state)) {
         remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
 
-        crm_info("Failing monitors on pacemaker_remote node %s", node_name);
+        crm_info("Failing monitors on Pacemaker Remote node %s", node_name);
         ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
         ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
     }

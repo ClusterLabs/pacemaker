@@ -137,9 +137,9 @@ lrm_state_t *lrm_state_find_or_create(const char *node_name);
  */
 void lrm_state_disconnect_only(lrm_state_t * lrm_state);
 void lrm_state_disconnect(lrm_state_t * lrm_state);
-int lrm_state_ipc_connect(lrm_state_t * lrm_state);
-int lrm_state_remote_connect_async(lrm_state_t * lrm_state, const char *server, int port,
-                                   int timeout);
+int controld_connect_local_executor(lrm_state_t *lrm_state);
+int controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
+                                     int port, int timeout);
 int lrm_state_is_connected(lrm_state_t * lrm_state);
 int lrm_state_poke_connection(lrm_state_t * lrm_state);
 

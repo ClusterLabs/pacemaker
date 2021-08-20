@@ -1268,7 +1268,7 @@ send_remote_state_message(const char *node_name, gboolean node_up)
         xmlNode *msg = create_request(CRM_OP_REMOTE_STATE, NULL, fsa_our_dc,
                                       CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-        crm_info("Notifying DC %s of pacemaker_remote node %s %s",
+        crm_info("Notifying DC %s of Pacemaker Remote node %s %s",
                  fsa_our_dc, node_name, (node_up? "coming up" : "going down"));
         crm_xml_add(msg, XML_ATTR_ID, node_name);
         crm_xml_add_boolean(msg, XML_NODE_IN_CLUSTER, node_up);
@@ -1276,7 +1276,7 @@ send_remote_state_message(const char *node_name, gboolean node_up)
                              TRUE);
         free_xml(msg);
     } else {
-        crm_debug("No DC to notify of pacemaker_remote node %s %s",
+        crm_debug("No DC to notify of Pacemaker Remote node %s %s",
                   node_name, (node_up? "coming up" : "going down"));
     }
 }

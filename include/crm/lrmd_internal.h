@@ -19,6 +19,8 @@
 #include <crm/common/remote_internal.h> // pcmk__remote_t
 #include <crm/lrmd.h>                   // lrmd_t, lrmd_event_data_t
 
+int lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port);
+
 int lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
                               const char *node, uint32_t nodeid,
                               const char *attr_name, const char *attr_value);

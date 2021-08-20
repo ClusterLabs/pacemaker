@@ -60,45 +60,6 @@ get_containers_or_children(pe_resource_t *rsc)
            get_container_list(rsc) : rsc->children;
 }
 
-static bool
-migration_threshold_reached(pe_resource_t *rsc, pe_node_t *node,
-                            pe_working_set_t *data_set)
-{
-    int fail_count, countdown;
-
-    /* Migration threshold of 0 means never force away */
-    if (rsc->migration_threshold == 0) {
-        return FALSE;
-    }
-
-    // If we're ignoring failures, also ignore the migration threshold
-    if (pcmk_is_set(rsc->flags, pe_rsc_failure_ignored)) {
-        return FALSE;
-    }
-
-    /* If there are no failures, there's no need to force away */
-    fail_count = pe_get_failcount(node, rsc, NULL,
-                                  pe_fc_effective|pe_fc_fillers, NULL,
-                                  data_set);
-    if (fail_count <= 0) {
-        return FALSE;
-    }
-
-    /* How many more times recovery will be tried on this node */
-    countdown = QB_MAX(rsc->migration_threshold - fail_count, 0);
-
-    if (countdown == 0) {
-        crm_warn("Forcing %s away from %s after %d failures (max=%d)",
-                 rsc->id, node->details->uname, fail_count,
-                 rsc->migration_threshold);
-        return TRUE;
-    }
-
-    crm_info("%s can fail %d more times on %s before being forced off",
-             rsc->id, countdown, node->details->uname);
-    return FALSE;
-}
-
 pe_node_t *
 pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
                       pe_working_set_t *data_set)
@@ -165,8 +126,8 @@ pcmk__bundle_allocate(pe_resource_t *rsc, pe_node_t *prefer,
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
                 if (node->details != replica->node->details) {
                     node->weight = -INFINITY;
-                } else if (!migration_threshold_reached(replica->child, node,
-                                                        data_set)) {
+                } else if (!pcmk__threshold_reached(replica->child, node,
+                                                    data_set, NULL)) {
                     node->weight = INFINITY;
                 }
             }
