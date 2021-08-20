@@ -1196,7 +1196,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         (op_key == NULL)? ID(xml_op) : op_key,
                                         "node", crm_element_value(xml_op, XML_ATTR_UNAME),
                                         "exitstatus", services_ocf_exitcode_str(rc),
-                                        "exitreason", reason_s,
+                                        "exitreason", crm_str(reason_s),
                                         "exitcode", rc_s,
                                         "call", crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
                                         "status", services_lrm_status_str(status),

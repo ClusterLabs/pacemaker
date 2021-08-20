@@ -1315,15 +1315,14 @@ write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
 
 // Replace a portion of a dynamically allocated string (reallocating memory)
 static char *
-replace_text(char *text, int start, int *length, const char *replace)
+replace_text(char *text, int start, size_t *length, const char *replace)
 {
-    int lpc;
-    int offset = strlen(replace) - 1;   /* We have space for 1 char already */
+    size_t offset = strlen(replace) - 1; // We have space for 1 char already
 
     *length += offset;
     text = pcmk__realloc(text, *length);
 
-    for (lpc = (*length) - 1; lpc > (start + offset); lpc--) {
+    for (size_t lpc = (*length) - 1; lpc > (start + offset); lpc--) {
         text[lpc] = text[lpc - offset];
     }
 
@@ -1331,13 +1330,20 @@ replace_text(char *text, int start, int *length, const char *replace)
     return text;
 }
 
+/*!
+ * \brief Replace special characters with their XML escape sequences
+ *
+ * \param[in] text  Text to escape
+ *
+ * \return Newly allocated string equivalent to \p text but with special
+ *         characters replaced with XML escape sequences (or NULL if \p text
+ *         is NULL)
+ */
 char *
 crm_xml_escape(const char *text)
 {
-    int index;
-    int changes = 0;
-    int length = 1 + strlen(text);
-    char *copy = strdup(text);
+    size_t length;
+    char *copy;
 
     /*
      * When xmlCtxtReadDoc() parses &lt; and friends in a
@@ -1354,64 +1360,51 @@ crm_xml_escape(const char *text)
      * when necessary.
      */
 
-    for (index = 0; index < length; index++) {
+    if (text == NULL) {
+        return NULL;
+    }
+
+    length = 1 + strlen(text);
+    copy = strdup(text);
+    CRM_ASSERT(copy != NULL);
+    for (size_t index = 0; index < length; index++) {
         switch (copy[index]) {
             case 0:
                 break;
             case '<':
                 copy = replace_text(copy, index, &length, "&lt;");
-                changes++;
                 break;
             case '>':
                 copy = replace_text(copy, index, &length, "&gt;");
-                changes++;
                 break;
             case '"':
                 copy = replace_text(copy, index, &length, "&quot;");
-                changes++;
                 break;
             case '\'':
                 copy = replace_text(copy, index, &length, "&apos;");
-                changes++;
                 break;
             case '&':
                 copy = replace_text(copy, index, &length, "&amp;");
-                changes++;
                 break;
             case '\t':
                 /* Might as well just expand to a few spaces... */
                 copy = replace_text(copy, index, &length, "    ");
-                changes++;
                 break;
             case '\n':
-                /* crm_trace("Convert: \\%.3o", copy[index]); */
                 copy = replace_text(copy, index, &length, "\\n");
-                changes++;
                 break;
             case '\r':
                 copy = replace_text(copy, index, &length, "\\r");
-                changes++;
                 break;
-                /* For debugging...
-            case '\\':
-                crm_trace("Passthrough: \\%c", copy[index+1]);
-                break;
-                */
             default:
                 /* Check for and replace non-printing characters with their octal equivalent */
                 if(copy[index] < ' ' || copy[index] > '~') {
                     char *replace = crm_strdup_printf("\\%.3o", copy[index]);
 
-                    /* crm_trace("Convert to octal: \\%.3o", copy[index]); */
                     copy = replace_text(copy, index, &length, replace);
                     free(replace);
-                    changes++;
                 }
         }
-    }
-
-    if (changes) {
-        crm_trace("Dumped '%s'", copy);
     }
     return copy;
 }
@@ -1435,7 +1428,8 @@ dump_xml_attr(xmlAttrPtr attr, int options, char **buffer, int *offset, int *max
 
     p_name = (const char *)attr->name;
     p_value = crm_xml_escape((const char *)attr->children->content);
-    buffer_print(*buffer, *max, *offset, " %s=\"%s\"", p_name, p_value);
+    buffer_print(*buffer, *max, *offset, " %s=\"%s\"",
+                 p_name, crm_str(p_value));
     free(p_value);
 }
 
@@ -1492,7 +1486,8 @@ pcmk__xe_log(int log_level, const char *file, const char *function, int line,
                     p_copy = crm_xml_escape(p_value);
                 }
 
-                buffer_print(buffer, max, offset, " %s=\"%s\"", p_name, p_copy);
+                buffer_print(buffer, max, offset, " %s=\"%s\"",
+                             p_name, crm_str(p_copy));
                 free(p_copy);
             }
 

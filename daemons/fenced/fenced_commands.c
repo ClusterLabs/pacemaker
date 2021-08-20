@@ -432,7 +432,11 @@ stonith_device_execute(stonith_device_t * device)
     if (pcmk__str_eq(cmd->action, "reboot", pcmk__str_casei)
         && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
 
-        crm_warn("Agent '%s' does not advertise support for 'reboot', performing 'off' action instead", device->agent);
+        crm_notice("Remapping 'reboot' action%s%s using %s to 'off' "
+                   "because agent '%s' does not support reboot",
+                   ((cmd->victim == NULL)? "" : " targeting "),
+                   ((cmd->victim == NULL)? "" : cmd->victim),
+                   device->id, device->agent);
         action_str = "off";
     }
 

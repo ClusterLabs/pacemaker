@@ -1928,6 +1928,9 @@ process_orphan_resource(xmlNode * rsc_entry, pe_node_t * node, pe_working_set_t 
 
     crm_debug("Detected orphan resource %s on %s", rsc_id, node->details->uname);
     rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
+    if (rsc == NULL) {
+        return NULL;
+    }
 
     if (!pcmk_is_set(data_set->flags, pe_flag_stop_rsc_orphans)) {
         pe__clear_resource_flags(rsc, pe_rsc_managed);
