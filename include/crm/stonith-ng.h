@@ -110,6 +110,7 @@ typedef struct stonith_history_s {
     int state;
     time_t completed;
     struct stonith_history_s *next;
+    long completed_nsec;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;

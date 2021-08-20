@@ -502,7 +502,7 @@ remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup)
     xmlNode *local_data = NULL;
     gboolean op_merged = FALSE;
 
-    op->completed = time(NULL);
+    set_fencing_completed(op);
     clear_remote_op_timers(op);
     undo_op_remap(op);
 
@@ -989,7 +989,7 @@ stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_ERR);
 
     op->state = st_done;
-    op->completed = time(NULL);
+    set_fencing_completed(op);
     op->delegate = strdup("a human");
 
     crm_notice("Injecting manual confirmation that %s is safely off/down",

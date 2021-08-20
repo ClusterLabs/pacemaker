@@ -1190,6 +1190,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
              op = pcmk__xml_next(op)) {
             stonith_history_t *kvp;
             long long completed;
+            long long completed_nsec = 0L;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -1199,6 +1200,8 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->client = crm_element_value_copy(op, F_STONITH_CLIENTNAME);
             crm_element_value_ll(op, F_STONITH_DATE, &completed);
             kvp->completed = (time_t) completed;
+            crm_element_value_ll(op, F_STONITH_DATE_NSEC, &completed_nsec);
+            kvp->completed_nsec = completed_nsec;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
 
             if (last) {
@@ -2599,7 +2602,8 @@ stonith__later_succeeded(stonith_history_t *event, stonith_history_t *top_histor
             pcmk__str_eq(event->target, prev_hp->target, pcmk__str_casei) &&
             pcmk__str_eq(event->action, prev_hp->action, pcmk__str_casei) &&
             pcmk__str_eq(event->delegate, prev_hp->delegate, pcmk__str_casei) &&
-            (event->completed < prev_hp->completed)) {
+            ((event->completed < prev_hp->completed) || 
+             ((event->completed == prev_hp->completed) && (event->completed_nsec < prev_hp->completed_nsec)))) {
             ret = TRUE;
             break;
         }
@@ -2625,13 +2629,15 @@ stonith__sort_history(stonith_history_t *history)
         tmp = hp->next;
         if ((hp->state == st_done) || (hp->state == st_failed)) {
             /* sort into new */
-            if ((!new) || (hp->completed > new->completed)) {
+            if ((!new) || (hp->completed > new->completed) || 
+                ((hp->completed == new->completed) && (hp->completed_nsec > new->completed_nsec))) {
                 hp->next = new;
                 new = hp;
             } else {
                 np = new;
                 do {
-                    if ((!np->next) || (hp->completed > np->next->completed)) {
+                    if ((!np->next) || (hp->completed > np->next->completed) ||
+                        ((hp->completed == np->next->completed) && (hp->completed_nsec > np->next->completed_nsec))) {
                         hp->next = np->next;
                         np->next = hp;
                         break;

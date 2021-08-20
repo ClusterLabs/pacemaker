@@ -135,6 +135,7 @@ void stonith__device_parameter_flags(uint32_t *device_flags,
 #  define F_STONITH_ORIGIN        "st_origin"
 #  define F_STONITH_HISTORY_LIST  "st_history"
 #  define F_STONITH_DATE          "st_date"
+#  define F_STONITH_DATE_NSEC     "st_date_nsec"
 #  define F_STONITH_STATE         "st_state"
 #  define F_STONITH_ACTIVE        "st_active"
 #  define F_STONITH_DIFFERENTIAL  "st_differential"

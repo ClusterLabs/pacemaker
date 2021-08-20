@@ -155,6 +155,9 @@ typedef struct remote_fencing_op_s {
      * completes, the duplicate operations will be closed out as well. */
     GList *duplicates;
 
+    /*! The point at which the remote operation completed(nsec) */
+    long long completed_nsec;
+
 } remote_fencing_op_t;
 
 /*!
@@ -257,6 +260,8 @@ int stonith_fence_history(xmlNode *msg, xmlNode **output,
 void stonith_fence_history_trim(void);
 
 bool fencing_peer_active(crm_node_t *peer);
+
+void set_fencing_completed(remote_fencing_op_t * op);
 
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 
