@@ -219,7 +219,7 @@ should_fire_synapse(crm_graph_t *graph, synapse_t *synapse)
  * \brief Initiate an action from a transition graph
  *
  * \param[in] graph   Transition graph containing action
- * \parma[in] action  Action to execute
+ * \param[in] action  Action to execute
  *
  * \return TRUE if action was initiated, FALSE otherwise
  */

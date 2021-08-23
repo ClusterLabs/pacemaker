@@ -2670,11 +2670,12 @@ void set_fencing_completed(remote_fencing_op_t * op)
 
 /*!
  * \internal
- * \brief Determine if we need to use an alternate node to
- * fence the target. If so return that node's uname
+ * \brief Look for alternate node needed if local node shouldn't fence target
  *
- * \retval NULL, no alternate host
- * \retval uname, uname of alternate host to use
+ * \param[in] target  Node that must be fenced
+ *
+ * \return Name of an alternate node that should fence \p target if any,
+ *         or NULL otherwise
  */
 static const char *
 check_alternate_host(const char *target)

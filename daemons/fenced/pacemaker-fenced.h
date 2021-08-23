@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2020 the Pacemaker project contributors
+ * Copyright 2009-2021 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -10,13 +10,14 @@
 
 /*!
  * \internal
- * \brief Check to see if target was fenced in the last few seconds.
- * \param tolerance, The number of seconds to look back in time
- * \param target, The node to search for
- * \param action, The action we want to match.
+ * \brief Check whether target has already been fenced recently
  *
- * \retval FALSE, not match
- * \retval TRUE, fencing operation took place in the last 'tolerance' number of seconds.
+ * \param[in] tolerance  Number of seconds to look back in time
+ * \param[in] target     Name of node to search for
+ * \param[in] action     Action we want to match
+ *
+ * \return TRUE if an equivalent fencing operation took place in the last
+ *         \p tolerance seconds, FALSE otherwise
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 

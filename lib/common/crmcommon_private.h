@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the Pacemaker project contributors
+ * Copyright 2018-2021 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -197,7 +197,7 @@ typedef struct pcmk__ipc_methods_s {
      * \internal
      * \brief Check whether an IPC request results in a reply
      *
-     * \parma[in] api      IPC API connection
+     * \param[in] api      IPC API connection
      * \param[in] request  IPC request XML
      *
      * \return true if request would result in an IPC reply, false otherwise

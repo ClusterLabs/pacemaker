@@ -283,14 +283,14 @@ gboolean services_action_kick(const char *name, const char *action,
     gboolean services_action_sync(svc_action_t * op);
 
 /**
- * Run an action asynchronously.
+ * \brief Run an action asynchronously
  *
- * \param[in] op services action data
- * \param[in] action_callback callback for when the action completes
- * \param[in] action_fork_callback callback for when action forked successfully
+ * \param[in] op                    Action to run
+ * \param[in] action_callback       Function to call when the action completes
+ * \param[in] action_fork_callback  Function to call after action process forks
  *
- * \retval TRUE succesfully started execution
- * \retval FALSE failed to start execution, no callback will be received
+ * \return TRUE if execution was successfully initiated, FALSE otherwise (in
+ *              which case the callback will not be called)
  */
     gboolean services_action_async_fork_notify(svc_action_t * op,
         void (*action_callback) (svc_action_t *),

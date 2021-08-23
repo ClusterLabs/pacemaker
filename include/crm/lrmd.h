@@ -154,10 +154,11 @@ bool lrmd_dispatch(lrmd_t * lrmd);
 
 /*!
  * \brief Poll for a specified timeout period to determine if a message
- *        is ready for dispatch.
- * \retval 1 msg is ready
- * \retval 0 timeout occurred
- * \retval negative error code
+ *        is ready for dispatch
+ *
+ * \retval 1               Message is ready
+ * \retval 0               Timeout occurred
+ * \retval negative errno  Error occurred
  */
 int lrmd_poll(lrmd_t * lrmd, int timeout);
 
@@ -301,10 +302,9 @@ typedef struct lrmd_api_operations_s {
     int (*connect_async) (lrmd_t * lrmd, const char *client_name, int timeout /*ms */ );
 
     /*!
-     * \brief Is connected to lrmd daemon?
+     * \brief Check whether connection to executor daemon is (still) active
      *
-     * \retval 0, false
-     * \retval 1, true
+     * \return 1 if the executor connection is active, 0 otherwise
      */
     int (*is_connected) (lrmd_t * lrmd);
 
@@ -337,10 +337,9 @@ typedef struct lrmd_api_operations_s {
                          const char *provider, const char *agent, enum lrmd_call_options options);
 
     /*!
-     * \brief Retrieve registration info for a rsc
+     * \brief Retrieve a resource's registration information
      *
-     * \retval info on success
-     * \retval NULL on failure
+     * \return Resource information on success, otherwise NULL
      */
     lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t * lrmd,
                                       const char *rsc_id, enum lrmd_call_options options);
