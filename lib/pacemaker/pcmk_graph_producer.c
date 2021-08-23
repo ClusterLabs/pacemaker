@@ -714,26 +714,6 @@ shutdown_constraints(pe_node_t * node, pe_action_t * shutdown_op, pe_working_set
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Order all actions appropriately relative to a fencing operation
- *
- * Ensure start operations of affected resources are ordered after fencing,
- * imply stop and demote operations of affected resources by marking them as
- * pseudo-actions, etc.
- *
- * \param[in]     stonith_op  Fencing operation
- * \param[in,out] data_set    Working set of cluster
- */
-void
-pcmk__order_vs_fence(pe_action_t *stonith_op, pe_working_set_t *data_set)
-{
-    CRM_CHECK(stonith_op && data_set, return);
-    for (GList *r = data_set->resources; r != NULL; r = r->next) {
-        rsc_stonith_ordering((pe_resource_t *) r->data, stonith_op, data_set);
-    }
-}
-
 static pe_node_t *
 get_router_node(pe_action_t *action)
 {
