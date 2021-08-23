@@ -1443,7 +1443,7 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
     rc = pcmk__connect_remote(native->server, native->port, timeout, &timer_id,
                               &(native->sock), lrmd, lrmd_tcp_connect_cb);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
+        crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
                  CRM_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         return pcmk_rc2legacy(rc);
@@ -1466,7 +1466,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     rc = pcmk__connect_remote(native->server, native->port, 0, NULL,
                               &(native->sock), NULL, NULL);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
+        crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
                  CRM_XS " rc=%d",
                  native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
