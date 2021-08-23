@@ -417,7 +417,7 @@ print_cluster_status(pe_working_set_t * data_set, unsigned int show_opts)
                           0, show_opts, rc == pcmk_rc_ok);
 
         out->message(out, "failed-action-list", data_set, all, all,
-                     rc == pcmk_rc_ok);
+                     0, rc == pcmk_rc_ok);
     }
 
     g_list_free(all);

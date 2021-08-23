@@ -1504,7 +1504,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         CHECK_RC(rc, out->message(out, "failed-action-list", data_set, unames,
-                                  resources, rc == pcmk_rc_ok));
+                                  resources, show_opts, rc == pcmk_rc_ok));
     }
 
     /* Print failed stonith actions */
@@ -1622,7 +1622,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
-                     FALSE);
+                     show_opts, FALSE);
     }
 
     /* Print stonith history */
@@ -1695,7 +1695,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
         && xml_has_children(data_set->failed)) {
 
         out->message(out, "failed-action-list", data_set, unames, resources,
-                     FALSE);
+                     show_opts, FALSE);
     }
 
     /* Print failed stonith actions */
