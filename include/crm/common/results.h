@@ -169,7 +169,7 @@ enum ocf_exitcode {
     PCMK_OCF_DEGRADED_PROMOTED    = 191, //!< Service promoted but more likely to fail soon
 
     // Pacemaker extensions
-    PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_LRM_OP_NOT_CONNECTED
+    PCMK_OCF_CONNECTION_DIED      = 189, //!< \deprecated See PCMK_EXEC_NOT_CONNECTED
     PCMK_OCF_EXEC_ERROR           = 192, //!< Error executing the agent
     PCMK_OCF_UNKNOWN              = 193, //!< Action is pending
     PCMK_OCF_SIGNAL               = 194, //!< Agent terminated due to signal
@@ -267,6 +267,28 @@ typedef enum crm_exit_e {
     CRM_EX_TIMEOUT              = 124, //!< Convention from timeout(1)
     CRM_EX_MAX                  = 255, //!< Ensure crm_exit_t can hold this
 } crm_exit_t;
+
+/*!
+ * \enum pcmk_exec_status
+ * \brief Execution status
+ *
+ * These codes are used to specify the result of the attempt to execute an
+ * agent, rather than the agent's result itself.
+ */
+enum pcmk_exec_status {
+    PCMK_EXEC_UNKNOWN = -2,     //!< Used only to initialize variables
+    PCMK_EXEC_PENDING = -1,     //!< Action is in progress
+    PCMK_EXEC_DONE,             //!< Action completed, result is known
+    PCMK_EXEC_CANCELLED,        //!< Action was cancelled
+    PCMK_EXEC_TIMEOUT,          //!< Action did not complete in time
+    PCMK_EXEC_NOT_SUPPORTED,    //!< Agent does not implement requested action
+    PCMK_EXEC_ERROR,            //!< Execution failed, may be retried
+    PCMK_EXEC_ERROR_HARD,       //!< Execution failed, do not retry on node
+    PCMK_EXEC_ERROR_FATAL,      //!< Execution failed, do not retry anywhere
+    PCMK_EXEC_NOT_INSTALLED,    //!< Agent or dependency not available locally
+    PCMK_EXEC_NOT_CONNECTED,    //!< No connection to executor
+    PCMK_EXEC_INVALID,          //!< Action cannot be attempted (e.g. shutdown)
+};
 
 const char *pcmk_rc_name(int rc);
 const char *pcmk_rc_str(int rc);
