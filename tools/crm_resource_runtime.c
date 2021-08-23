@@ -12,6 +12,7 @@
 #include <crm_resource.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/lists_internal.h>
+#include <crm/services_internal.h>
 
 resource_checks_t *
 cli_check_resource(pe_resource_t *rsc, char *role_s, char *managed)
@@ -1704,7 +1705,6 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 {
     const char *class = NULL;
     const char *action = NULL;
-    GHashTable *params_copy = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     svc_action_t *op = NULL;
 
@@ -1742,32 +1742,21 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
         free(level);
     }
 
-    /* resources_action_create frees the params hash table it's passed, but we
-     * may need to reuse it in a second call to resources_action_create.  Thus
-     * we'll make a copy here so that gets freed and the original remains for
-     * reuse.
-     */
-    params_copy = pcmk__str_table_dup(params);
+    op = services__create_resource_action(rsc_name? rsc_name : "test",
+                                          rsc_class, rsc_prov, rsc_type, action,
+                                          0, timeout_ms, params, 0);
+    if ((op == NULL) || (op->rc != PCMK_OCF_OK)) {
+        const char *reason = NULL;
 
-    op = resources_action_create(rsc_name ? rsc_name : "test", rsc_class, rsc_prov,
-                                 rsc_type, action, 0, timeout_ms, params_copy, 0);
-    if (op == NULL) {
-        /* Re-run with stderr enabled so we can display a sane error message */
-        crm_enable_stderr(TRUE);
-        params_copy = pcmk__str_table_dup(params);
-        op = resources_action_create(rsc_name ? rsc_name : "test", rsc_class, rsc_prov,
-                                     rsc_type, action, 0, timeout_ms, params_copy, 0);
-
-        /* Callers of cli_resource_execute expect that the params hash table will
-         * be freed.  That function uses this one, so for that reason and for
-         * making the two act the same, we should free the hash table here too.
-         */
-        g_hash_table_destroy(params);
-
-        /* We know op will be NULL, but this makes static analysis happy */
-        services_action_free(op);
-        crm_exit(CRM_EX_DATAERR);
-        return exit_code; // Never reached, but helps static analysis
+        if (op == NULL) {
+            reason = strerror(ENOMEM);
+        } else {
+            reason = crm_exit_str(op->rc);
+        }
+        out->err(out, "Operation %s for %s (%s%s%s:%s) failed: %s",
+                 action, rsc_name, rsc_class, (rsc_prov? ":" : ""),
+                 (rsc_prov? rsc_prov : ""), rsc_type, reason);
+        crm_exit((op == NULL)? CRM_EX_OSERR : op->rc);
     }
 
     setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
