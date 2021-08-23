@@ -11,6 +11,8 @@ include $(top_srcdir)/mk/common.mk
 
 AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
+noinst_HEADERS  = libpacemaker_private.h
+
 ## libraries
 lib_LTLIBRARIES	= libpacemaker.la
 

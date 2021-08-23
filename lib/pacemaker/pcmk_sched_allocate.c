@@ -21,6 +21,7 @@
 
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
+#include "libpacemaker_private.h"
 
 CRM_TRACE_INIT_DATA(pacemaker);
 
