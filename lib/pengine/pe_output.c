@@ -175,77 +175,6 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     *dump_text = new_text;
 }
 
-static GString *
-failed_action_string(xmlNodePtr xml_op, gboolean print_detail)
-{
-    int rc;
-    int status;
-
-    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
-    const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
-    const char *exit_reason = crm_element_value(xml_op,
-                                                XML_LRM_ATTR_EXIT_REASON);
-    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
-    const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
-
-    const char *exit_status = NULL;
-    const char *lrm_status = NULL;
-    const char *last_change_str = NULL;
-    time_t last_change_epoch = 0;
-    GString *str = NULL;
-
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
-    exit_status = services_ocf_exitcode_str(rc);
-
-    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
-                       &status, 0);
-    lrm_status = services_lrm_status_str(status);
-
-    if (pcmk__str_empty(op_key)) {
-        op_key = ID(xml_op);
-        if (pcmk__str_empty(op_key)) {
-            op_key = "unknown operation";
-        }
-    }
-    if (pcmk__str_empty(node_name)) {
-        node_name = "unknown node";
-    }
-    if (pcmk__str_empty(exit_status)) {
-        exit_status = "unknown exit status";
-    }
-    if (pcmk__str_empty(call_id)) {
-        call_id = "unknown";
-    }
-
-    str = g_string_sized_new(strlen(op_key) + strlen(node_name)
-                             + strlen(exit_status) + strlen(call_id)
-                             + strlen(lrm_status) + 50); // rough estimate
-
-    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s",
-                    op_key, node_name, exit_status, rc, call_id, lrm_status);
-
-    if (!pcmk__str_empty(exit_reason)) {
-        g_string_append_printf(str, ", exitreason='%s'", exit_reason);
-    }
-
-    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
-                                &last_change_epoch) == pcmk_ok) {
-        last_change_str = pcmk__epoch2str(&last_change_epoch);
-        if (last_change_str != NULL) {
-            g_string_append_printf(str, ", " XML_RSC_OP_LAST_CHANGE "='%s'",
-                                   last_change_str);
-        }
-    }
-    if (!pcmk__str_empty(queue_time)) {
-        g_string_append_printf(str, ", queued=%sms", queue_time);
-    }
-    if (!pcmk__str_empty(exec_time)) {
-        g_string_append_printf(str, ", exec=%sms", exec_time);
-    }
-    return str;
-}
-
 static const char *
 get_cluster_stack(pe_working_set_t *data_set)
 {
@@ -1183,16 +1112,78 @@ cluster_times_text(pcmk__output_t *out, va_list args) {
 
 PCMK__OUTPUT_ARGS("failed-action", "xmlNodePtr", "unsigned int")
 static int
-failed_action_text(pcmk__output_t *out, va_list args)
+failed_action_default(pcmk__output_t *out, va_list args)
 {
     xmlNodePtr xml_op = va_arg(args, xmlNodePtr);
-    unsigned int show_opts = va_arg(args, unsigned int);
+    unsigned int show_opts G_GNUC_UNUSED = va_arg(args, unsigned int);
 
-    gboolean show_detail = pcmk_is_set(show_opts, pcmk_show_failed_detail);
-    GString *s = failed_action_string(xml_op, show_detail);
+    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+    const char *node_name = crm_element_value(xml_op, XML_ATTR_UNAME);
+    const char *exit_reason = crm_element_value(xml_op,
+                                                XML_LRM_ATTR_EXIT_REASON);
+    const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    const char *queue_time = crm_element_value(xml_op, XML_RSC_OP_T_QUEUE);
+    const char *exec_time = crm_element_value(xml_op, XML_RSC_OP_T_EXEC);
 
-    out->list_item(out, NULL, "%s", s->str);
-    g_string_free(s, TRUE);
+    int rc;
+    int status;
+    const char *exit_status = NULL;
+    const char *lrm_status = NULL;
+    const char *last_change_str = NULL;
+    time_t last_change_epoch = 0;
+    GString *str = NULL;
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_RC), &rc, 0);
+    exit_status = services_ocf_exitcode_str(rc);
+
+    pcmk__scan_min_int(crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS),
+                       &status, 0);
+    lrm_status = services_lrm_status_str(status);
+
+    if (pcmk__str_empty(op_key)) {
+        op_key = ID(xml_op);
+        if (pcmk__str_empty(op_key)) {
+            op_key = "unknown operation";
+        }
+    }
+    if (pcmk__str_empty(node_name)) {
+        node_name = "unknown node";
+    }
+    if (pcmk__str_empty(exit_status)) {
+        exit_status = "unknown exit status";
+    }
+    if (pcmk__str_empty(call_id)) {
+        call_id = "unknown";
+    }
+
+    str = g_string_sized_new(strlen(op_key) + strlen(node_name)
+                             + strlen(exit_status) + strlen(call_id)
+                             + strlen(lrm_status) + 50); // rough estimate
+
+    g_string_printf(str, "%s on %s '%s' (%d): call=%s, status=%s",
+                    op_key, node_name, exit_status, rc, call_id, lrm_status);
+
+    if (!pcmk__str_empty(exit_reason)) {
+        g_string_append_printf(str, ", exitreason='%s'", exit_reason);
+    }
+
+    if (crm_element_value_epoch(xml_op, XML_RSC_OP_LAST_CHANGE,
+                                &last_change_epoch) == pcmk_ok) {
+        last_change_str = pcmk__epoch2str(&last_change_epoch);
+        if (last_change_str != NULL) {
+            g_string_append_printf(str, ", " XML_RSC_OP_LAST_CHANGE "='%s'",
+                                   last_change_str);
+        }
+    }
+    if (!pcmk__str_empty(queue_time)) {
+        g_string_append_printf(str, ", queued=%sms", queue_time);
+    }
+    if (!pcmk__str_empty(exec_time)) {
+        g_string_append_printf(str, ", exec=%sms", exec_time);
+    }
+
+    out->list_item(out, NULL, "%s", str->str);
+    g_string_free(str, TRUE);
     return pcmk_rc_ok;
 }
 
@@ -2717,7 +2708,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "cluster-times", "default", cluster_times_text },
     { "cluster-times", "html", cluster_times_html },
     { "cluster-times", "xml", cluster_times_xml },
-    { "failed-action", "default", failed_action_text },
+    { "failed-action", "default", failed_action_default },
     { "failed-action", "xml", failed_action_xml },
     { "failed-action-list", "default", failed_action_list },
     { "group", "default",  pe__group_default},
