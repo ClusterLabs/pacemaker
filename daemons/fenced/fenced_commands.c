@@ -1979,14 +1979,14 @@ get_capable_devices(const char *host, const char *action, int timeout, bool suic
     search->host = host ? strdup(host) : NULL;
     search->action = action ? strdup(action) : NULL;
     search->per_device_timeout = per_device_timeout;
-    /* We are guaranteed this many replies. Even if a device gets
-     * unregistered some how during the async search, we will get
-     * the correct number of replies. */
-    search->replies_needed = ndevices;
     search->allow_suicide = suicide;
     search->callback = callback;
     search->user_data = user_data;
-    /* kick off the search */
+
+    /* We are guaranteed this many replies, even if a device is
+     * unregistered while the search is in progress.
+     */
+    search->replies_needed = ndevices;
 
     crm_debug("Searching %d device%s to see which can execute '%s' targeting %s",
               ndevices, pcmk__plural_s(ndevices),
