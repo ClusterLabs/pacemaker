@@ -17,6 +17,7 @@
 #include <crm/pengine/pe_types.h>
 #include <crm/pengine/internal.h>
 #include <pcmki/pcmki_scheduler.h>
+#include <pcmki/pcmki_transition.h>
 #include <pacemaker.h>
 
 /* Constraint helper functions */
@@ -90,7 +91,7 @@ xmlNode *pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *event,
 void modify_configuration(pe_working_set_t *data_set, cib_t *cib,
                           pcmk_injections_t *injections);
 
-int run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
+enum transition_status run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list);
 
 pcmk__output_t *pcmk__new_logger(void);
 

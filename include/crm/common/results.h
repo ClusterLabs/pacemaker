@@ -108,6 +108,9 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_invalid_transition  = -1031,
+    pcmk_rc_graph_error         = -1030,
+    pcmk_rc_dot_error           = -1029,
     pcmk_rc_underflow           = -1028,
     pcmk_rc_no_input            = -1027,
     pcmk_rc_no_output           = -1026,

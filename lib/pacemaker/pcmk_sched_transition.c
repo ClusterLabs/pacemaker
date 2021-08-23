@@ -792,7 +792,7 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
     return TRUE;
 }
 
-int
+enum transition_status
 run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
 {
     crm_graph_t *transition = NULL;
@@ -846,8 +846,5 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GList *op_fail_list)
         out->end_list(out);
     }
 
-    if (graph_rc != transition_complete) {
-        return graph_rc;
-    }
-    return 0;
+    return graph_rc;
 }

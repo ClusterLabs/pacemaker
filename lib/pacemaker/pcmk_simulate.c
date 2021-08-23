@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/cib/internal.h>
 #include <crm/common/output.h>
+#include <crm/common/results.h>
 #include <crm/pengine/pe_types.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
@@ -441,6 +442,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
         } else {
             logger_out = pcmk__new_logger();
             if (logger_out == NULL) {
+                rc = pcmk_rc_error;
                 goto simulate_done;
             }
 
@@ -462,7 +464,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
         if (graph_file != NULL) {
             rc = write_xml_file(data_set->graph, graph_file, FALSE);
             if (rc < 0) {
-                rc = pcmk_legacy2rc(rc);
+                rc = pcmk_rc_graph_error;
                 goto simulate_done;
             }
         }
@@ -472,6 +474,7 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
                                          pcmk_is_set(flags, pcmk_sim_all_actions),
                                          pcmk_is_set(flags, pcmk_sim_verbose));
             if (rc != pcmk_rc_ok) {
+                rc = pcmk_rc_dot_error;
                 goto simulate_done;
             }
         }
@@ -485,8 +488,8 @@ pcmk__simulate(pe_working_set_t *data_set, pcmk__output_t *out, pcmk_injections_
 
     if (pcmk_is_set(flags, pcmk_sim_simulate)) {
         PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
-        if (run_simulation(data_set, cib, injections->op_fail) != pcmk_rc_ok) {
-            rc = pcmk_rc_error;
+        if (run_simulation(data_set, cib, injections->op_fail) != transition_complete) {
+            rc = pcmk_rc_invalid_transition;
         }
 
         if (!out->is_quiet(out)) {
