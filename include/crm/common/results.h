@@ -303,6 +303,25 @@ const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);
 
+static inline const char *
+pcmk_exec_status_str(enum pcmk_exec_status status)
+{
+    switch (status) {
+        case PCMK_EXEC_PENDING:         return "pending";
+        case PCMK_EXEC_DONE:            return "complete";
+        case PCMK_EXEC_CANCELLED:       return "Cancelled";
+        case PCMK_EXEC_TIMEOUT:         return "Timed Out";
+        case PCMK_EXEC_NOT_SUPPORTED:   return "NOT SUPPORTED";
+        case PCMK_EXEC_ERROR:           return "Error";
+        case PCMK_EXEC_ERROR_HARD:      return "Hard error";
+        case PCMK_EXEC_ERROR_FATAL:     return "Fatal error";
+        case PCMK_EXEC_NOT_INSTALLED:   return "Not installed";
+        case PCMK_EXEC_NOT_CONNECTED:   return "No executor connection";
+        case PCMK_EXEC_INVALID:         return "Cannot execute now";
+        default:                        return "UNKNOWN!";
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif
