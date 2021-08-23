@@ -163,7 +163,8 @@ default_includes(mon_output_format_t fmt) {
         case mon_output_plain:
         case mon_output_console:
             return pcmk_section_stack | pcmk_section_dc | pcmk_section_times | pcmk_section_counts |
-                   pcmk_section_nodes | pcmk_section_resources | pcmk_section_failures;
+                   pcmk_section_nodes | pcmk_section_resources | pcmk_section_failures |
+                   pcmk_section_maint_mode;
 
         case mon_output_xml:
         case mon_output_legacy_xml:
@@ -193,6 +194,7 @@ struct {
     { "fencing-failed", pcmk_section_fence_failed },
     { "fencing-pending", pcmk_section_fence_pending },
     { "fencing-succeeded", pcmk_section_fence_worked },
+    { "maint-mode", pcmk_section_maint_mode },
     { "nodes", pcmk_section_nodes },
     { "operations", pcmk_section_operations },
     { "options", pcmk_section_options },
@@ -234,8 +236,8 @@ apply_exclude(const gchar *excludes, GError **error) {
             g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--exclude options: all, attributes, bans, counts, dc, "
                         "failcounts, failures, fencing, fencing-failed, "
-                        "fencing-pending, fencing-succeeded, nodes, none, "
-                        "operations, options, resources, stack, summary, "
+                        "fencing-pending, fencing-succeeded, maint-mode, nodes, "
+                        "none, operations, options, resources, stack, summary, "
                         "tickets, times");
             result = FALSE;
             break;
@@ -276,8 +278,8 @@ apply_include(const gchar *includes, GError **error) {
             g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         "--include options: all, attributes, bans[:PREFIX], counts, dc, "
                         "default, failcounts, failures, fencing, fencing-failed, "
-                        "fencing-pending, fencing-succeeded, nodes, none, operations, "
-                        "options, resources, stack, summary, tickets, times");
+                        "fencing-pending, fencing-succeeded, maint-mode, nodes, none, "
+                        "operations, options, resources, stack, summary, tickets, times");
             result = FALSE;
             break;
         }
@@ -2172,6 +2174,11 @@ mon_refresh_display(gpointer user_data)
 
     unames = pe__build_node_name_list(mon_data_set, options.only_node);
     resources = pe__build_rsc_list(mon_data_set, options.only_rsc);
+
+    /* Always print DC if NULL. */
+    if (mon_data_set->dc_node == NULL) {
+        show |= pcmk_section_dc;
+    }
 
     switch (output_format) {
         case mon_output_html:

@@ -325,8 +325,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         out->message(out, "cluster-stack", stack_s);
     }
 
-    /* Always print DC if none, even if not requested */
-    if (data_set->dc_node == NULL || pcmk_is_set(section_opts, pcmk_section_dc)) {
+    if (pcmk_is_set(section_opts, pcmk_section_dc)) {
         xmlNode *dc_version = get_xpath_object("//nvpair[@name='dc-version']",
                                                data_set->input, LOG_DEBUG);
         const char *dc_version_s = dc_version?
@@ -364,8 +363,10 @@ cluster_summary(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
-        rc = pcmk_rc_ok;
+    if (pcmk_is_set(section_opts, pcmk_section_maint_mode)) {
+        if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     return rc;
@@ -431,8 +432,10 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
 
     PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
-    if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
-        rc = pcmk_rc_ok;
+    if (pcmk_is_set(section_opts, pcmk_section_maint_mode)) {
+        if (out->message(out, "maint-mode", data_set->flags) == pcmk_rc_ok) {
+            rc = pcmk_rc_ok;
+        }
     }
 
     return rc;

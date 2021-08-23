@@ -658,6 +658,37 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
+static int
+profile_default(pcmk__output_t *out, va_list args) {
+    const char *xml_file = va_arg(args, const char *);
+    clock_t start = va_arg(args, clock_t);
+    clock_t end = va_arg(args, clock_t);
+
+    out->list_item(out, NULL, "Testing %s ... %.2f secs", xml_file,
+                   (end - start) / (float) CLOCKS_PER_SEC);
+
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("profile", "const char *", "clock_t", "clock_t")
+static int
+profile_xml(pcmk__output_t *out, va_list args) {
+    const char *xml_file = va_arg(args, const char *);
+    clock_t start = va_arg(args, clock_t);
+    clock_t end = va_arg(args, clock_t);
+
+    char *duration = pcmk__ftoa((end - start) / (float) CLOCKS_PER_SEC);
+
+    pcmk__output_create_xml_node(out, "timing",
+                                 "file", xml_file,
+                                 "duration", duration,
+                                 NULL);
+
+    free(duration);
+    return pcmk_rc_ok;
+}
+
 PCMK__OUTPUT_ARGS("dc", "const char *")
 static int
 dc_text(pcmk__output_t *out, va_list args)
@@ -1792,6 +1823,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { "node-action", "xml", node_action_xml },
     { "pacemakerd-health", "default", pacemakerd_health_text },
     { "pacemakerd-health", "xml", pacemakerd_health_xml },
+    { "profile", "default", profile_default, },
+    { "profile", "xml", profile_xml },
     { "rsc-action", "default", rsc_action_default },
     { "rsc-action-item", "default", rsc_action_item },
     { "rsc-action-item", "xml", rsc_action_item_xml },

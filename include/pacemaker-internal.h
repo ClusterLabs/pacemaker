@@ -19,6 +19,7 @@
 #  include <pcmki/pcmki_sched_notif.h>
 #  include <pcmki/pcmki_sched_utils.h>
 #  include <pcmki/pcmki_scheduler.h>
+#  include <pcmki/pcmki_simulate.h>
 #  include <pcmki/pcmki_transition.h>
 
 #endif

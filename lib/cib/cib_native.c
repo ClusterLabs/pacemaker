@@ -58,7 +58,16 @@ cib_native_new(void)
     cib_native_opaque_t *native = NULL;
     cib_t *cib = cib_new_variant();
 
+    if (cib == NULL) {
+        return NULL;
+    }
+
     native = calloc(1, sizeof(cib_native_opaque_t));
+
+    if (native == NULL) {
+        free(cib);
+        return NULL;
+    }
 
     cib->variant = cib_native;
     cib->variant_opaque = native;
