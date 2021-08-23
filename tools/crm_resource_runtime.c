@@ -1819,7 +1819,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
 done:
     out->message(out, "resource-agent-action", resource_verbose, rsc_class,
                  rsc_prov, rsc_type, rsc_name, rsc_action, override_hash,
-                 exit_code, op->status, op->stdout_data, op->stderr_data);
+                 exit_code, op->status, services__exit_reason(op),
+                 op->stdout_data, op->stderr_data);
     services_action_free(op);
     return exit_code;
 }
