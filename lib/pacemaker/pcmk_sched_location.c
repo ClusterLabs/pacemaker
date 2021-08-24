@@ -18,14 +18,6 @@
 
 #include "libpacemaker_private.h"
 
-#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                      \
-        __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
-        if (__rsc == NULL) {                                                    \
-            pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return FALSE;                                                       \
-        }                                                                       \
-    } while (0)
-
 static int
 get_node_score(const char *rule, const char *score, gboolean raw,
                pe_node_t *node, pe_resource_t *rsc)
@@ -370,7 +362,8 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 }
 
-static gboolean
+// \return Standard Pacemaker return code
+static int
 unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                      pe_working_set_t *data_set)
 {
@@ -383,35 +376,35 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return pcmk_rc_schema_validation);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     if (id_lh == NULL) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, id_lh);
-        return FALSE;
+        return pcmk_rc_schema_validation;
 
     } else if (rsc_lh != NULL) {
         // No template is referenced
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
@@ -423,7 +416,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           FALSE, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_lh != NULL) {
@@ -440,10 +433,11 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         *expanded_xml = NULL;
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
-static gboolean
+// \return Standard Pacemaker return code
+static int
 unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
 {
     xmlNode *xml_rsc = NULL;
@@ -452,14 +446,14 @@ unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
     const char *role;
     const char *local_score;
 
-    CRM_CHECK(set != NULL, return FALSE);
+    CRM_CHECK(set != NULL, return pcmk_rc_schema_validation);
 
     set_id = ID(set);
     if (set_id == NULL) {
         pcmk__config_err("Ignoring " XML_CONS_TAG_RSC_SET " without "
                          XML_ATTR_ID " in constraint '%s'",
                          crm_str(ID(location)));
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     role = crm_element_value(set, "role");
@@ -468,12 +462,19 @@ unpack_location_set(xmlNode *location, xmlNode *set, pe_working_set_t *data_set)
     for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-        EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+        resource = pcmk__find_constraint_resource(data_set->resources,
+                                                  ID(xml_rsc));
+        if (resource == NULL) {
+            pcmk__config_err("%s: No resource found for %s",
+                             set_id, ID(xml_rsc));
+            return pcmk_rc_schema_validation;
+        }
+
         unpack_rsc_location(location, resource, role, local_score, data_set,
                             NULL);
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 void
@@ -485,7 +486,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    if (!unpack_location_tags(xml_obj, &expanded_xml, data_set)) {
+    if (unpack_location_tags(xml_obj, &expanded_xml, data_set) != pcmk_rc_ok) {
         return;
     }
 
@@ -500,7 +501,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
         any_sets = TRUE;
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
-            || !unpack_location_set(xml_obj, set, data_set)) {
+            || (unpack_location_set(xml_obj, set, data_set) != pcmk_rc_ok)) {
 
             if (expanded_xml) {
                 free_xml(expanded_xml);
