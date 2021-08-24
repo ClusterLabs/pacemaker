@@ -29,11 +29,6 @@ pe__location_t *rsc2node_new(const char *id, pe_resource_t *rsc, int weight,
                              const char *discovery_mode, pe_node_t *node,
                              pe_working_set_t *data_set);
 
-void pcmk__new_colocation(const char *id, const char *node_attr, int score,
-                          pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
-                          const char *state_lh, const char *state_rh,
-                          bool influence, pe_working_set_t *data_set);
-
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,

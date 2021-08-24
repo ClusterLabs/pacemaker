@@ -14,6 +14,8 @@
 #include <crm/msg_xml.h>
 #include <pacemaker-internal.h>
 
+#include "libpacemaker_private.h"
+
 #define PE__VARIANT_BUNDLE 1
 #include <lib/pengine/variant.h>
 
