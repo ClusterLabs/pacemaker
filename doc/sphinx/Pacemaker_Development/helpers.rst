@@ -4,6 +4,69 @@ C Development Helpers
 .. index::
    single: unit testing
 
+Refactoring
+###########
+
+Pacemaker uses an optional tool called `coccinelle <https://coccinelle.gitlabpages.inria.fr/website/>`_
+to do automatic refactoring.  coccinelle is a very complicated tool that can be
+difficult to understand, and the existing documentation makes it pretty tough
+to get started.  Much of the documentation is either aimed at kernel developers
+or takes the form of grammars.
+
+However, it can apply very complex transformations across an entire source tree.
+This is useful for tasks like code refactoring, changing APIs (number or type of
+arguments, etc.), catching functions that should not be called, and changing
+existing patterns.
+
+coccinelle is driven by input scripts called `semantic patches <https://coccinelle.gitlabpages.inria.fr/website/docs/index.html>`_
+written in its own language.  These scripts bear a passing resemblance to source
+code patches and tell coccinelle how to match and modify a piece of source
+code.  They are stored in ``devel/coccinelle`` and each script either contains
+a single source transformation or several related transformations.  In general,
+we try to keep these as simple as possible.
+
+In Pacemaker development, we use a couple targets in ``devel/Makefile.am`` to
+control coccinelle.  The ``cocci`` target tries to apply each script to every
+Pacemaker source file, printing out any changes it would make to the console.
+The ``cocci-inplace`` target does the same but also makes those changes to the
+source files.  A variety of warnings might also be printed.  If you aren't working
+on a new script, these can usually be ignored.
+
+If you are working on a new coccinelle script, it can be useful (and faster) to
+skip everything else and only run the new script.  The ``COCCI_FILES`` variable
+can be used for this:
+
+.. code-block:: none
+
+   $ make -C devel COCCI_FILES=coccinelle/new-file.cocci cocci
+
+This variable is also used for preventing some coccinelle scripts in the Pacemaker
+source tree from running.  Some scripts are disabled because they are not currently
+fully working or because they are there as templates.  When adding a new script,
+remember to add it to this variable if it should always be run.
+
+One complication when writing coccinelle scripts is that certain Pacemaker source
+files may not use private functions (those whose name starts with ``pcmk__``).
+Handling this requires work in both the Makefile and in the coccinelle scripts.
+
+The Makefile deals with this by maintaining two lists of source files: those that
+may use private functions and those that may not.  For those that may, a special
+argument (``-D internal``) is added to the coccinelle command line.  This creates
+a virtual dependency named ``internal``.
+
+In the coccinelle scripts, those transformations that modify source code to use
+a private function also have a dependency on ``internal``.  If that dependency
+was given on the command line, the transformation will be run.  Otherwise, it will
+be skipped.
+
+This means that not all instances of an older style of code will be changed after
+running a given transformation.  Some developer intervention is still necessary
+to know whether a source code block should have been changed or not.
+
+Probably the easiest way to learn how to use coccinelle is by following other
+people's scripts.  In addition to the ones in the Pacemaker source directory,
+there's several others on the `coccinelle website <https://coccinelle.gitlabpages.inria.fr/website/rules/>`_.
+
 Unit Testing
 ############
 
