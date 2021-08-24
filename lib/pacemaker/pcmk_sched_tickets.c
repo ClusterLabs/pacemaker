@@ -300,7 +300,7 @@ void
 pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *set = NULL;
-    gboolean any_sets = FALSE;
+    bool any_sets = false;
 
     const char *id = NULL;
     const char *ticket_str = crm_element_value(xml_obj, XML_TICKET_ATTR_TICKET);
@@ -350,7 +350,7 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
-        any_sets = TRUE;
+        any_sets = true;
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_rsc_ticket_set(set, ticket, loss_policy,
