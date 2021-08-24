@@ -18,14 +18,6 @@
 
 #include "libpacemaker_private.h"
 
-#define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                      \
-        __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
-        if (__rsc == NULL) {                                                    \
-            pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return FALSE;                                                       \
-        }                                                                       \
-    } while (0)
-
 static void
 rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
                const char *state_lh, const char *loss_policy,
@@ -116,37 +108,44 @@ rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
     }
 }
 
-static gboolean
+// \return Standard Pacemaker return code
+static int
 unpack_rsc_ticket_set(xmlNode *set, pe_ticket_t *ticket,
                       const char *loss_policy, pe_working_set_t *data_set)
 {
-    xmlNode *xml_rsc = NULL;
-    pe_resource_t *resource = NULL;
     const char *set_id = NULL;
     const char *role = NULL;
 
-    CRM_CHECK(set != NULL, return FALSE);
-    CRM_CHECK(ticket != NULL, return FALSE);
+    CRM_CHECK(set != NULL, return EINVAL);
+    CRM_CHECK(ticket != NULL, return EINVAL);
 
     set_id = ID(set);
     if (set_id == NULL) {
         pcmk__config_err("Ignoring <" XML_CONS_TAG_RSC_SET "> without "
                          XML_ATTR_ID);
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     role = crm_element_value(set, "role");
 
-    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+    for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
          xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-        EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+        pe_resource_t *resource = NULL;
+
+        resource = pcmk__find_constraint_resource(data_set->resources,
+                                                  ID(xml_rsc));
+        if (resource == NULL) {
+            pcmk__config_err("%s: No resource found for %s",
+                             set_id, ID(xml_rsc));
+            return pcmk_rc_schema_validation;
+        }
         pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
                      resource->id, ticket->id);
         rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static void
@@ -223,7 +222,8 @@ unpack_simple_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     rsc_ticket_new(id, rsc_lh, ticket, state_lh, loss_policy, data_set);
 }
 
-static gboolean
+// \return Standard Pacemaker return code
+static int
 unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                        pe_working_set_t *data_set)
 {
@@ -238,35 +238,35 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return EINVAL);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_ticket");
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     if (id_lh == NULL) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, id_lh);
-        return FALSE;
+        return pcmk_rc_schema_validation;
 
     } else if (rsc_lh) {
         // No template or tag is referenced
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -278,7 +278,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           FALSE, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_lh != NULL) {
@@ -293,7 +293,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         *expanded_xml = NULL;
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 void
@@ -310,8 +310,6 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
-
-    gboolean rc = TRUE;
 
     CRM_CHECK(xml_obj != NULL, return);
 
@@ -340,13 +338,13 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         }
     }
 
-    rc = unpack_rsc_ticket_tags(xml_obj, &expanded_xml, data_set);
+    if (unpack_rsc_ticket_tags(xml_obj, &expanded_xml,
+                               data_set) != pcmk_rc_ok) {
+        return;
+    }
     if (expanded_xml != NULL) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
-
-    } else if (!rc) {
-        return;
     }
 
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
@@ -355,7 +353,8 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
         any_sets = TRUE;
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
-            || !unpack_rsc_ticket_set(set, ticket, loss_policy, data_set)) {
+            || (unpack_rsc_ticket_set(set, ticket, loss_policy,
+                                      data_set) != pcmk_rc_ok)) {
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
             }
@@ -369,6 +368,6 @@ pcmk__unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
     }
 
     if (!any_sets) {
-        return unpack_simple_rsc_ticket(xml_obj, data_set);
+        unpack_simple_rsc_ticket(xml_obj, data_set);
     }
 }
