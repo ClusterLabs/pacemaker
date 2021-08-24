@@ -1734,3 +1734,61 @@ pcmk__epoch2str(time_t *when)
         return pcmk__trim(since_epoch);
     }
 }
+
+/*!
+ * \internal
+ * \brief Given a millisecond interval, return a log-friendly string
+ *
+ * \param[in] interval_ms  Interval in milliseconds
+ *
+ * \return Readable version of \p interval_ms
+ *
+ * \note The return value is a pointer to static memory that will be
+ *       overwritten by later calls to this function.
+ */
+const char *
+pcmk__readable_interval(guint interval_ms)
+{
+#define MS_IN_S (1000)
+#define MS_IN_M (MS_IN_S * 60)
+#define MS_IN_H (MS_IN_M * 60)
+#define MS_IN_D (MS_IN_H * 24)
+#define MAXSTR sizeof("..d..h..m..s...ms")
+    static char str[MAXSTR] = { '\0', };
+    int offset = 0;
+
+    if (interval_ms > MS_IN_D) {
+        offset += snprintf(str + offset, MAXSTR - offset, "%ud",
+                           interval_ms / MS_IN_D);
+        interval_ms -= (interval_ms / MS_IN_D) * MS_IN_D;
+    }
+    if (interval_ms > MS_IN_H) {
+        offset += snprintf(str + offset, MAXSTR - offset, "%uh",
+                           interval_ms / MS_IN_H);
+        interval_ms -= (interval_ms / MS_IN_H) * MS_IN_H;
+    }
+    if (interval_ms > MS_IN_M) {
+        offset += snprintf(str + offset, MAXSTR - offset, "%um",
+                           interval_ms / MS_IN_M);
+        interval_ms -= (interval_ms / MS_IN_M) * MS_IN_M;
+    }
+
+    // Ns, N.NNNs, or NNNms
+    if (interval_ms > MS_IN_S) {
+        offset += snprintf(str + offset, MAXSTR - offset, "%u",
+                           interval_ms / MS_IN_S);
+        interval_ms -= (interval_ms / MS_IN_S) * MS_IN_S;
+        if (interval_ms > 0) {
+            offset += snprintf(str + offset, MAXSTR - offset, ".%03u",
+                               interval_ms);
+        }
+        (void) snprintf(str + offset, MAXSTR - offset, "s");
+
+    } else if (interval_ms > 0) {
+        (void) snprintf(str + offset, MAXSTR - offset, "%ums", interval_ms);
+
+    } else if (str[0] == '\0') {
+        strcpy(str, "0s");
+    }
+    return str;
+}

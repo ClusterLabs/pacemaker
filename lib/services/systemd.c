@@ -244,7 +244,7 @@ systemd_mask_error(svc_action_t *op, const char *error)
         } else {
             crm_trace("Mapping %s failure for %s: unknown services are not installed", op->action, op->rsc);
             op->rc = PCMK_OCF_NOT_INSTALLED;
-            op->status = PCMK_LRM_OP_NOT_INSTALLED;
+            op->status = PCMK_EXEC_NOT_INSTALLED;
             return FALSE;
         }
     }

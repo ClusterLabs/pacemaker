@@ -378,7 +378,7 @@ lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
     /* Reoccurring operations do not set exec_time, so on timeout, set it
      * to the operation timeout since that's closer to the actual value.
      */
-    if (op->op_status == PCMK_LRM_OP_TIMEOUT && op->exec_time == 0) {
+    if ((op->op_status == PCMK_EXEC_TIMEOUT) && (op->exec_time == 0)) {
         params = alert_key2param_int(params, PCMK__alert_key_exec_time,
                                      op->timeout);
     } else {
@@ -386,12 +386,12 @@ lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
                                      op->exec_time);
     }
 
-    if (op->op_status == PCMK_LRM_OP_DONE) {
+    if (op->op_status == PCMK_EXEC_DONE) {
         params = alert_key2param(params, PCMK__alert_key_desc,
                                  services_ocf_exitcode_str(op->rc));
     } else {
         params = alert_key2param(params, PCMK__alert_key_desc,
-                                 services_lrm_status_str(op->op_status));
+                                 pcmk_exec_status_str(op->op_status));
     }
 
     rc = exec_alert_list(lrmd, alert_list, pcmk__alert_resource, NULL, params);

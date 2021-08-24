@@ -618,8 +618,8 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%u)",
-               origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
-               op->interval_ms);
+               origin, op->rsc_id, op->op_type,
+               pcmk_exec_status_str(op->op_status), op->interval_ms);
 
     crm_trace("DC version: %s", caller_version);
 
@@ -636,7 +636,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
      */
     if (pcmk__str_any_of(task, CRMD_ACTION_RELOAD, CRMD_ACTION_RELOAD_AGENT,
                          NULL)) {
-        if (op->op_status == PCMK_LRM_OP_DONE) {
+        if (op->op_status == PCMK_EXEC_DONE) {
             task = CRMD_ACTION_START;
         } else {
             task = CRMD_ACTION_STATUS;
@@ -652,13 +652,13 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
         CRM_LOG_ASSERT(n_task != NULL);
         op_id = pcmk__notify_key(op->rsc_id, n_type, n_task);
 
-        if (op->op_status != PCMK_LRM_OP_PENDING) {
+        if (op->op_status != PCMK_EXEC_PENDING) {
             /* Ignore notify errors.
              *
              * @TODO It might be better to keep the correct result here, and
              * ignore it in process_graph_event().
              */
-            op->op_status = PCMK_LRM_OP_DONE;
+            op->op_status = PCMK_EXEC_DONE;
             op->rc = 0;
         }
 

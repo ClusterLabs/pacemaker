@@ -25,7 +25,7 @@ void process_graph_event(xmlNode *event, const char *event_node);
 /* utils */
 crm_action_t *controld_get_action(int id);
 extern gboolean stop_te_timer(crm_action_timer_t * timer);
-extern const char *get_rsc_state(const char *task, enum op_status status);
+const char *get_rsc_state(const char *task, enum pcmk_exec_status status);
 
 /* unpack */
 extern gboolean process_te_message(xmlNode * msg, xmlNode * xml_data);

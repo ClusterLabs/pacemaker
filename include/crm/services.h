@@ -83,21 +83,6 @@ enum lsb_status_exitcode {
     PCMK_LSB_STATUS_INSUFFICIENT_PRIV  = 151,
 };
 
-enum op_status {
-    PCMK_LRM_OP_UNKNOWN = -2,
-    PCMK_LRM_OP_PENDING = -1,
-    PCMK_LRM_OP_DONE,
-    PCMK_LRM_OP_CANCELLED,
-    PCMK_LRM_OP_TIMEOUT,
-    PCMK_LRM_OP_NOTSUPPORTED,
-    PCMK_LRM_OP_ERROR,
-    PCMK_LRM_OP_ERROR_HARD,
-    PCMK_LRM_OP_ERROR_FATAL,
-    PCMK_LRM_OP_NOT_INSTALLED,
-    PCMK_LRM_OP_NOT_CONNECTED,
-    PCMK_LRM_OP_INVALID,
-};
-
 enum nagios_exitcode {
     NAGIOS_STATE_OK        = 0,
     NAGIOS_STATE_WARNING   = 1,
@@ -298,22 +283,6 @@ svc_action_t *services_alert_create(const char *id, const char *exec,
 gboolean services_alert_async(svc_action_t *action,
                               void (*cb)(svc_action_t *op));
 
-    static inline const char *services_lrm_status_str(enum op_status status) {
-        switch (status) {
-            case PCMK_LRM_OP_PENDING:
-                return "pending";
-                case PCMK_LRM_OP_DONE:return "complete";
-                case PCMK_LRM_OP_CANCELLED:return "Cancelled";
-                case PCMK_LRM_OP_TIMEOUT:return "Timed Out";
-                case PCMK_LRM_OP_NOTSUPPORTED:return "NOT SUPPORTED";
-                case PCMK_LRM_OP_ERROR:return "Error";
-                case PCMK_LRM_OP_NOT_INSTALLED:return "Not installed";
-                case PCMK_LRM_OP_NOT_CONNECTED:return "No executor connection";
-                case PCMK_LRM_OP_INVALID:return "Cannot execute now";
-                default:return "UNKNOWN!";
-        }
-    }
-
     static inline const char *services_ocf_exitcode_str(enum ocf_exitcode code) {
         switch (code) {
             case PCMK_OCF_OK:
@@ -391,6 +360,10 @@ gboolean services_alert_async(svc_action_t *action,
         }
         return PCMK_OCF_UNKNOWN_ERROR;
     }
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/services_compat.h>
+#endif
 
 #  ifdef __cplusplus
 }

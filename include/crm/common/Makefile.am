@@ -22,4 +22,5 @@ noinst_HEADERS = internal.h alerts_internal.h \
 		 iso8601_internal.h remote_internal.h xml_internal.h \
 		 ipc_internal.h output_internal.h cmdline_internal.h	\
 		 curses_internal.h attrd_internal.h options_internal.h	\
+		 results_internal.h	\
 		 strings_internal.h lists_internal.h logging_internal.h

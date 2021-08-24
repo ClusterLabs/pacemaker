@@ -429,8 +429,6 @@ retry_start_cmd_cb(gpointer data)
     }
 
     if (rc != pcmk_rc_ok) {
-        cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
-        cmd->op_status = PCMK_LRM_OP_ERROR;
         report_remote_ra_result(cmd);
 
         if (ra_data->cmds) {
@@ -474,7 +472,7 @@ monitor_timeout_cb(gpointer data)
     crm_info("Timed out waiting for remote poke response from %s%s",
              cmd->rsc_id, (lrm_state? "" : " (no LRM state)"));
     cmd->monitor_timeout_id = 0;
-    cmd->op_status = PCMK_LRM_OP_TIMEOUT;
+    cmd->op_status = PCMK_EXEC_TIMEOUT;
     cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
     if (lrm_state && lrm_state->remote_ra_data) {
@@ -512,7 +510,7 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
     op.rsc_id = rsc_id;
     op.op_type = op_type;
     op.rc = PCMK_OCF_OK;
-    op.op_status = PCMK_LRM_OP_DONE;
+    op.op_status = PCMK_EXEC_DONE;
     op.t_run = (unsigned int) time(NULL);
     op.t_rcchange = op.t_run;
     op.call_id = generate_callid();
@@ -532,7 +530,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
               (op->op_type? op->op_type : ""), (op->op_type? " " : ""),
               lrmd_event_type2str(op->type), op->remote_nodename,
               services_ocf_exitcode_str(op->rc), op->rc,
-              services_lrm_status_str(op->op_status), op->op_status);
+              pcmk_exec_status_str(op->op_status), op->op_status);
 
     lrm_state = lrm_state_find(op->remote_nodename);
     if (!lrm_state || !lrm_state->remote_ra_data) {
@@ -609,7 +607,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
             if (op->connection_rc == -ENOKEY) {
                 // Hard error, don't retry
-                cmd->op_status = PCMK_LRM_OP_ERROR;
+                cmd->op_status = PCMK_EXEC_ERROR;
                 cmd->rc = PCMK_OCF_INVALID_PARAM;
                 cmd->exit_reason = strdup("Authentication key not readable");
 
@@ -621,14 +619,14 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             } else {
                 crm_trace("can't reschedule start, remaining timeout too small %d",
                           cmd->remaining_timeout);
-                cmd->op_status = PCMK_LRM_OP_TIMEOUT;
+                cmd->op_status = PCMK_EXEC_TIMEOUT;
                 cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
             }
 
         } else {
             lrm_state_reset_tables(lrm_state, TRUE);
             cmd->rc = PCMK_OCF_OK;
-            cmd->op_status = PCMK_LRM_OP_DONE;
+            cmd->op_status = PCMK_EXEC_DONE;
             ra_data->active = TRUE;
         }
 
@@ -648,7 +646,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
          * only fail if the send fails, or the response times out. */
         if (!cmd->reported_success) {
             cmd->rc = PCMK_OCF_OK;
-            cmd->op_status = PCMK_LRM_OP_DONE;
+            cmd->op_status = PCMK_EXEC_DONE;
             report_remote_ra_result(cmd);
             cmd->reported_success = 1;
         }
@@ -667,7 +665,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     } else if (op->type == lrmd_event_disconnect && pcmk__str_eq(cmd->action, "monitor", pcmk__str_casei)) {
         if (ra_data->active == TRUE && (cmd->cancel == FALSE)) {
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
-            cmd->op_status = PCMK_LRM_OP_ERROR;
+            cmd->op_status = PCMK_EXEC_ERROR;
             report_remote_ra_result(cmd);
             crm_err("Remote connection to %s unexpectedly dropped during monitor",
                     lrm_state->node_name);
@@ -724,8 +722,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
 
     if (cmd) {
         cmd->rc = PCMK_OCF_OK;
-        cmd->op_status = PCMK_LRM_OP_DONE;
-
+        cmd->op_status = PCMK_EXEC_DONE;
         report_remote_ra_result(cmd);
     }
 }
@@ -739,6 +736,7 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int port = 0;
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
+    int rc = pcmk_rc_ok;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
         if (pcmk__strcase_any_of(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR,
@@ -751,8 +749,13 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
         }
     }
 
-    return controld_connect_remote_executor(lrm_state, server, port,
-                                            timeout_used);
+    rc = controld_connect_remote_executor(lrm_state, server, port,
+                                          timeout_used);
+    if (rc != pcmk_rc_ok) {
+        cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
+        cmd->op_status = PCMK_EXEC_ERROR;
+    }
+    return rc;
 }
 
 static gboolean
@@ -789,9 +792,6 @@ handle_remote_ra_exec(gpointer user_data)
                           cmd->action);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
-            } else {
-                cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
-                cmd->op_status = PCMK_LRM_OP_ERROR;
             }
             report_remote_ra_result(cmd);
 
@@ -801,11 +801,11 @@ handle_remote_ra_exec(gpointer user_data)
                 rc = lrm_state_poke_connection(lrm_state);
                 if (rc < 0) {
                     cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
-                    cmd->op_status = PCMK_LRM_OP_ERROR;
+                    cmd->op_status = PCMK_EXEC_ERROR;
                 }
             } else {
                 rc = -1;
-                cmd->op_status = PCMK_LRM_OP_DONE;
+                cmd->op_status = PCMK_EXEC_DONE;
                 cmd->rc = PCMK_OCF_NOT_RUNNING;
             }
 
@@ -837,7 +837,7 @@ handle_remote_ra_exec(gpointer user_data)
         } else if (!strcmp(cmd->action, "migrate_to")) {
             ra_data->migrate_status = expect_takeover;
             cmd->rc = PCMK_OCF_OK;
-            cmd->op_status = PCMK_LRM_OP_DONE;
+            cmd->op_status = PCMK_EXEC_DONE;
             report_remote_ra_result(cmd);
         } else if (pcmk__str_any_of(cmd->action, CRMD_ACTION_RELOAD,
                                     CRMD_ACTION_RELOAD_AGENT, NULL))  {
@@ -851,7 +851,7 @@ handle_remote_ra_exec(gpointer user_data)
              * so this would work for that purpose as well.
              */
             cmd->rc = PCMK_OCF_OK;
-            cmd->op_status = PCMK_LRM_OP_DONE;
+            cmd->op_status = PCMK_EXEC_DONE;
             report_remote_ra_result(cmd);
         }
 
@@ -958,7 +958,7 @@ fail_all_monitor_cmds(GList * list)
         cmd = gIter->data;
 
         cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
-        cmd->op_status = PCMK_LRM_OP_ERROR;
+        cmd->op_status = PCMK_EXEC_ERROR;
         crm_trace("Pre-emptively failing %s %s (interval=%u, %s)",
                   cmd->action, cmd->rsc_id, cmd->interval_ms, cmd->userdata);
         report_remote_ra_result(cmd);
