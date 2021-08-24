@@ -792,8 +792,8 @@ apply_system_health(pe_working_set_t * data_set)
         crm_info(" Node %s has an combined system health of %d",
                  node->details->uname, system_health);
 
-        /* If the health is non-zero, then create a new rsc2node so that the
-         * weight will be added later on.
+        /* If the health is non-zero, then create a new location constraint so
+         * that the weight will be added later on.
          */
         if (system_health != 0) {
 
@@ -802,7 +802,8 @@ apply_system_health(pe_working_set_t * data_set)
             for (; gIter2 != NULL; gIter2 = gIter2->next) {
                 pe_resource_t *rsc = (pe_resource_t *) gIter2->data;
 
-                rsc2node_new(health_strategy, rsc, system_health, NULL, node, data_set);
+                pcmk__new_location(health_strategy, rsc, system_health, NULL,
+                                   node, data_set);
             }
         }
     }

@@ -25,10 +25,6 @@ pcmk__colocation_t *invert_constraint(pcmk__colocation_t *constraint);
 
 pe__location_t *copy_constraint(pe__location_t *constraint);
 
-pe__location_t *rsc2node_new(const char *id, pe_resource_t *rsc, int weight,
-                             const char *discovery_mode, pe_node_t *node,
-                             pe_working_set_t *data_set);
-
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
 GList *pcmk__copy_node_list(const GList *list, bool reset);
 GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,

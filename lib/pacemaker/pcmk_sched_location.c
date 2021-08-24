@@ -103,7 +103,8 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         do_and = FALSE;
     }
 
-    location_rule = rsc2node_new(rule_id, rsc, 0, discovery, NULL, data_set);
+    location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL,
+                                       data_set);
 
     if (location_rule == NULL) {
         return NULL;
@@ -231,7 +232,8 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
         if (!match) {
             return;
         }
-        location = rsc2node_new(id, rsc_lh, score_i, discovery, match, data_set);
+        location = pcmk__new_location(id, rsc_lh, score_i, discovery, match,
+                                      data_set);
 
     } else {
         bool empty = TRUE;
@@ -515,4 +517,72 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     if (!any_sets) {
         unpack_simple_location(xml_obj, data_set);
     }
+}
+
+/*!
+ * \internal
+ * \brief Add a new location constraint to a cluster working set
+ *
+ * \param[in] id             XML ID of location constraint
+ * \param[in] rsc            Resource in location constraint
+ * \param[in] node_weight    Constraint score
+ * \param[in] discover_mode  Resource discovery option for constraint
+ * \param[in] node           Node in location constraint (or NULL if rule-based)
+ * \param[in] data_set       Cluster working set to add constraint to
+ *
+ * \return Newly allocated location constraint
+ * \note The result will be added to \p data_set and should not be freed
+ *       separately.
+ */
+pe__location_t *
+pcmk__new_location(const char *id, pe_resource_t *rsc,
+                   int node_weight, const char *discover_mode,
+                   pe_node_t *node, pe_working_set_t *data_set)
+{
+    pe__location_t *new_con = NULL;
+
+    if ((rsc == NULL) || (id == NULL)) {
+        pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
+        return NULL;
+
+    } else if (node == NULL) {
+        CRM_CHECK(node_weight == 0, return NULL);
+    }
+
+    new_con = calloc(1, sizeof(pe__location_t));
+    if (new_con != NULL) {
+        new_con->id = strdup(id);
+        new_con->rsc_lh = rsc;
+        new_con->node_list_rh = NULL;
+        new_con->role_filter = RSC_ROLE_UNKNOWN;
+
+        if (pcmk__str_eq(discover_mode, "always",
+                         pcmk__str_null_matches|pcmk__str_casei)) {
+            new_con->discover_mode = pe_discover_always;
+
+        } else if (pcmk__str_eq(discover_mode, "never", pcmk__str_casei)) {
+            new_con->discover_mode = pe_discover_never;
+
+        } else if (pcmk__str_eq(discover_mode, "exclusive", pcmk__str_casei)) {
+            new_con->discover_mode = pe_discover_exclusive;
+            rsc->exclusive_discover = TRUE;
+
+        } else {
+            pe_err("Invalid " XML_LOCATION_ATTR_DISCOVERY " value %s "
+                   "in location constraint", discover_mode);
+        }
+
+        if (node != NULL) {
+            pe_node_t *copy = pe__copy_node(node);
+
+            copy->weight = node_weight;
+            new_con->node_list_rh = g_list_prepend(NULL, copy);
+        }
+
+        data_set->placement_constraints = g_list_prepend(data_set->placement_constraints,
+                                                         new_con);
+        rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
+    }
+
+    return new_con;
 }
