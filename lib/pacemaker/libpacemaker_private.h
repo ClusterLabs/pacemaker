@@ -58,4 +58,8 @@ void pcmk__new_colocation(const char *id, const char *node_attr, int score,
                           const char *state_lh, const char *state_rh,
                           bool influence, pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pcmk__block_colocated_starts(pe_action_t *action,
+                                  pe_working_set_t *data_set);
+
 #endif // PCMK__LIBPACEMAKER_PRIVATE__H

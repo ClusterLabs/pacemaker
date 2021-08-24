@@ -727,3 +727,74 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
         unpack_simple_colocation(xml_obj, id, influence_s, data_set);
     }
 }
+
+static void
+mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
+                   pe_working_set_t *data_set)
+{
+    char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
+
+    for (GList *gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
+        pe_action_t *action = (pe_action_t *) gIter->data;
+
+        if (pcmk_is_set(action->flags, pe_action_runnable)
+            && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+
+            pe__clear_action_flags(action, pe_action_runnable);
+            pe_action_set_reason(action, reason_text, false);
+            pcmk__block_colocated_starts(action, data_set);
+            update_action(action, data_set);
+        }
+    }
+    free(reason_text);
+}
+
+/*!
+ * \internal
+ * \brief If a start action is unrunnable, block starts of colocated resources
+ *
+ * \param[in] action    Action to check
+ * \param[in] data_set  Cluster working set
+ */
+void
+pcmk__block_colocated_starts(pe_action_t *action, pe_working_set_t *data_set)
+{
+    GList *gIter = NULL;
+    pe_resource_t *rsc = NULL;
+
+    if (!pcmk_is_set(action->flags, pe_action_runnable)
+        && pcmk__str_eq(action->task, RSC_START, pcmk__str_casei)) {
+
+        rsc = uber_parent(action->rsc);
+        if (rsc->parent) {
+            /* For bundles, uber_parent() returns the clone, not the bundle, so
+             * the existence of rsc->parent implies this is a bundle.
+             * In this case, we need the bundle resource, so that we can check
+             * if all containers are stopped/stopping.
+             */
+            rsc = rsc->parent;
+        }
+    }
+
+    if ((rsc == NULL) || (rsc->rsc_cons_lhs == NULL)) {
+        return;
+    }
+
+    // Block colocated starts only if all children (if any) have unrunnable starts
+    for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+        pe_resource_t *child = (pe_resource_t *)gIter->data;
+        pe_action_t *start = find_first_action(child->actions, NULL, RSC_START, NULL);
+
+        if ((start == NULL) || pcmk_is_set(start->flags, pe_action_runnable)) {
+            return;
+        }
+    }
+
+    for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
+        pcmk__colocation_t *colocate_with = (pcmk__colocation_t *) gIter->data;
+
+        if (colocate_with->score == INFINITY) {
+            mark_start_blocked(colocate_with->rsc_lh, action->rsc, data_set);
+        }
+    }
+}
