@@ -565,7 +565,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     xmlNode *rsc_set_lh = NULL;
     xmlNode *rsc_set_rh = NULL;
-    gboolean any_sets = FALSE;
+    bool any_sets = false;
 
     *expanded_xml = NULL;
 
@@ -634,7 +634,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             crm_xml_add(rsc_set_lh, "role", state_lh);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
-        any_sets = TRUE;
+        any_sets = true;
     }
 
     // Convert template/tag reference in "with-rsc" into resource_set under constraint
@@ -651,7 +651,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             crm_xml_add(rsc_set_rh, "role", state_rh);
             xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_TARGET_ROLE);
         }
-        any_sets = TRUE;
+        any_sets = true;
     }
 
     if (any_sets) {
