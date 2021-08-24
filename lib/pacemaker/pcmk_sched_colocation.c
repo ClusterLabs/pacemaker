@@ -22,7 +22,7 @@
         __rsc = pcmk__find_constraint_resource(data_set->resources, __name);    \
         if (__rsc == NULL) {                                                    \
             pcmk__config_err("%s: No resource found for %s", __set, __name);    \
-            return FALSE;                                                       \
+            return;                                                             \
         }                                                                       \
     } while(0)
 
@@ -279,7 +279,7 @@ unpack_influence(const char *coloc_id, const pe_resource_t *rsc,
     return pcmk_is_set(rsc->flags, pe_rsc_critical);
 }
 
-static gboolean
+static void
 unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                       const char *influence_s, pe_working_set_t *data_set)
 {
@@ -300,7 +300,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     if (local_score == 0) {
         crm_trace("Ignoring colocation '%s' for set '%s' because score is 0",
                   coloc_id, set_id);
-        return TRUE;
+        return;
     }
 
     if (ordering == NULL) {
@@ -308,7 +308,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     }
 
     if ((sequential != NULL) && !crm_is_true(sequential)) {
-        return TRUE;
+        return;
 
     } else if ((local_score > 0)
                && pcmk__str_eq(ordering, "group", pcmk__str_casei)) {
@@ -377,11 +377,9 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
             }
         }
     }
-
-    return TRUE;
 }
 
-static gboolean
+static void
 colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
                   const char *influence_s, pe_working_set_t *data_set)
 {
@@ -398,7 +396,7 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
     if (score == 0) {
         crm_trace("Ignoring colocation '%s' between sets because score is 0",
                   id);
-        return TRUE;
+        return;
     }
     if ((sequential_1 == NULL) || crm_is_true(sequential_1)) {
         // Get the first one
@@ -468,8 +466,6 @@ colocate_rsc_sets(const char *id, xmlNode *set1, xmlNode *set2, int score,
             }
         }
     }
-
-    return TRUE;
 }
 
 static void
@@ -550,7 +546,8 @@ unpack_simple_colocation(xmlNode *xml_obj, const char *id,
                          unpack_influence(id, rsc_lh, influence_s), data_set);
 }
 
-static gboolean
+// \return Standard Pacemaker return code
+static int
 unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                        pe_working_set_t *data_set)
 {
@@ -572,50 +569,50 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     *expanded_xml = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return pcmk_rc_schema_validation);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, data_set);
     if (*expanded_xml != NULL) {
         crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     if (id_lh == NULL || id_rh == NULL) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, id_lh, &rsc_lh, &tag_lh)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, id_lh);
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (!pcmk__valid_resource_or_tag(data_set, id_rh, &rsc_rh, &tag_rh)) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, id_rh);
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_lh && rsc_rh) {
         /* Neither side references any template/tag. */
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (tag_lh && tag_rh) {
         // A colocation constraint between two templates/tags makes no sense
         pcmk__config_err("Ignoring constraint '%s' because two templates or "
                          "tags cannot be colocated", id);
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
@@ -628,7 +625,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           TRUE, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_lh != NULL) {
@@ -645,7 +642,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
                           TRUE, data_set)) {
         free_xml(*expanded_xml);
         *expanded_xml = NULL;
-        return FALSE;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_rh != NULL) {
@@ -664,7 +661,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         *expanded_xml = NULL;
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -693,7 +690,8 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
         score_i = char2score(score);
     }
 
-    if (!unpack_colocation_tags(xml_obj, &expanded_xml, data_set)) {
+    if (unpack_colocation_tags(xml_obj, &expanded_xml,
+                               data_set) != pcmk_rc_ok) {
         return;
     }
     if (expanded_xml) {
@@ -705,14 +703,17 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
          set = crm_next_same_xml(set)) {
 
         set = expand_idref(set, data_set->input);
-        if ((set == NULL) // Configuration error, message already logged
-            || !unpack_colocation_set(set, score_i, id, influence_s, data_set)
-            || ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
-                                                     influence_s, data_set))) {
+        if (set == NULL) { // Configuration error, message already logged
             if (expanded_xml != NULL) {
                 free_xml(expanded_xml);
             }
             return;
+        }
+
+        unpack_colocation_set(set, score_i, id, influence_s, data_set);
+
+        if (last != NULL) {
+            colocate_rsc_sets(id, last, set, score_i, influence_s, data_set);
         }
         last = set;
     }
