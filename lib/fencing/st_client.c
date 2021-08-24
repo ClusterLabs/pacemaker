@@ -130,7 +130,7 @@ static void log_action(stonith_action_t *action, pid_t pid);
 enum stonith_namespace
 stonith_text2namespace(const char *namespace_s)
 {
-    if ((namespace_s == NULL) || !strcmp(namespace_s, "any")) {
+    if (pcmk__str_eq(namespace_s, "any", pcmk__str_null_matches)) {
         return st_namespace_any;
 
     } else if (!strcmp(namespace_s, "redhat")
