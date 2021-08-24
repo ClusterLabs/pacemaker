@@ -19,7 +19,7 @@
 #include "libpacemaker_private.h"
 
 static int
-get_node_score(const char *rule, const char *score, gboolean raw,
+get_node_score(const char *rule, const char *score, bool raw,
                pe_node_t *node, pe_resource_t *rsc)
 {
     int score_f = 0;
@@ -61,10 +61,10 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     GList *gIter = NULL;
     GList *match_L = NULL;
 
-    gboolean do_and = TRUE;
-    gboolean accept = TRUE;
-    gboolean raw_score = TRUE;
-    gboolean score_allocated = FALSE;
+    bool do_and = true;
+    bool accept = true;
+    bool raw_score = true;
+    bool score_allocated = false;
 
     pe__location_t *location_rule = NULL;
 
@@ -88,11 +88,11 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     if (score == NULL) {
         score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
         if (score != NULL) {
-            raw_score = FALSE;
+            raw_score = false;
         }
     }
     if (pcmk__str_eq(boolean, "or", pcmk__str_casei)) {
-        do_and = FALSE;
+        do_and = false;
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL,
@@ -109,7 +109,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
 
         if (result != NULL) {
             score = result;
-            score_allocated = TRUE;
+            score_allocated = true;
         }
     }
 
@@ -147,7 +147,7 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
         accept = pe_test_rule(rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN,
                               data_set->now, next_change, &match_data);
 
-        crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
+        crm_trace("Rule %s %s on %s", ID(rule_xml), accept? "passed" : "failed",
                   node->details->uname);
 
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
@@ -228,7 +228,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
                                       data_set);
 
     } else {
-        bool empty = TRUE;
+        bool empty = true;
         crm_time_t *next_change = crm_time_new_undefined();
 
         /* This loop is logically parallel to pe_evaluate_rules(), except
@@ -237,7 +237,7 @@ unpack_rsc_location(xmlNode *xml_obj, pe_resource_t *rsc_lh, const char *role,
          */
         for (xmlNode *rule_xml = first_named_child(xml_obj, XML_TAG_RULE);
              rule_xml != NULL; rule_xml = crm_next_same_xml(rule_xml)) {
-            empty = FALSE;
+            empty = false;
             crm_trace("Unpacking %s/%s", id, ID(rule_xml));
             generate_location_rule(rsc_lh, rule_xml, discovery, next_change,
                                    data_set, re_match_data);
@@ -302,12 +302,12 @@ unpack_simple_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     value = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE_PATTERN);
     if (value) {
         regex_t *r_patt = calloc(1, sizeof(regex_t));
-        bool invert = FALSE;
+        bool invert = false;
         GList *rIter = NULL;
 
         if (value[0] == '!') {
             value++;
-            invert = TRUE;
+            invert = true;
         }
 
         if (regcomp(r_patt, value, REG_EXTENDED)) {
@@ -481,7 +481,7 @@ void
 pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *set = NULL;
-    gboolean any_sets = FALSE;
+    bool any_sets = false;
 
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
@@ -498,7 +498,7 @@ pcmk__unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
     for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
          set = crm_next_same_xml(set)) {
 
-        any_sets = TRUE;
+        any_sets = true;
         set = expand_idref(set, data_set->input);
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_location_set(xml_obj, set, data_set) != pcmk_rc_ok)) {
