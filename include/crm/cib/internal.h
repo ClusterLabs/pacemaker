@@ -74,7 +74,6 @@ gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
 void verify_cib_options(GHashTable * options);
 gboolean cib_internal_config_changed(xmlNode * diff);
 
-extern GHashTable *cib_op_callback_table;
 typedef struct cib_notify_client_s {
     const char *event;
     const char *obj_id;         /* implement one day */
@@ -214,5 +213,7 @@ int cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
                                const char *cib_filename);
 
 void cib__set_output(cib_t *cib, pcmk__output_t *out);
+
+cib_callback_client_t* cib__lookup_id (int call_id);
 
 #endif
