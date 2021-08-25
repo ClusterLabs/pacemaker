@@ -119,4 +119,17 @@ bool pcmk__get_sbd_sync_resource_startup(void);
 long pcmk__auto_watchdog_timeout(void);
 bool pcmk__valid_sbd_timeout(const char *value);
 
+// constants for environment variable names
+#define PCMK__ENV_CLUSTER_TYPE "cluster_type"
+#define PCMK__ENV_QUORUM_TYPE "quorum_type"
+#define PCMK__ENV_DEBUG "debug"
+#define PCMK__ENV_LOGFILE "logfile"
+#define PCMK__ENV_LOGFACILITY "logfacility"
+#define PCMK__ENV_SHUTDOWN_DELAY "shutdown_delay"
+#define PCMK__ENV_NODE_START_STATE "node_start_state"
+#define PCMK__ENV_MCP "mcp"
+#define PCMK__ENV_LOGPRIORITY "logpriority"
+#define PCMK__ENV_STDERR "stderr"
+#define PCMK__ENV_BLACKBOX "blackbox"
+
 #endif // PCMK__OPTIONS_INTERNAL__H
