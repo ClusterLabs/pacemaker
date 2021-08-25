@@ -271,7 +271,9 @@ for ``pacemaker-fenced``.
    |                      |         |                    | overall delay introduced by pacemaker  |
    |                      |         |                    | is derived from this value plus a      |
    |                      |         |                    | random delay such that the sum is kept |
-   |                      |         |                    | below the maximum delay.               |
+   |                      |         |                    | below the maximum delay. Set to eg.    |
+   |                      |         |                    | node1:1s;node2:5 to set different      |
+   |                      |         |                    | value per node.                        |
    +----------------------+---------+--------------------+----------------------------------------+
    | pcmk_action_limit    | integer | 1                  | .. index::                             |
    |                      |         |                    |    single: pcmk_action_limit           |
