@@ -2337,9 +2337,10 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         }
     }
 
-    call_id = lrm_state_exec(lrm_state, rsc->id, op->op_type, op->user_data,
-                             op->interval_ms, op->timeout, op->start_delay,
-                             params);
+    call_id = controld_execute_resource_agent(lrm_state, rsc->id, op->op_type,
+                                              op->user_data, op->interval_ms,
+                                              op->timeout, op->start_delay,
+                                              params);
 
     if (call_id <= 0 && lrm_state_is_local(lrm_state)) {
         crm_err("Operation %s on %s failed: %d", operation, rsc->id, call_id);
