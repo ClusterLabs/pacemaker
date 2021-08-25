@@ -509,7 +509,6 @@ Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped
     * dummy2	(ocf:pacemaker:Dummy):	 Stopped
-unpack_simple_rsc_order 	error: Cannot invert constraint 'ord_1-2' (please specify inverse manually)
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
 unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity

@@ -54,6 +54,8 @@ static pe__location_t *generate_location_rule(pe_resource_t *rsc,
                                               pe_re_match_data_t *match_data);
 static void unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 static void unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
+static void unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set);
+static void unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 static bool
 evaluate_lifetime(xmlNode *lifetime, pe_working_set_t *data_set)
@@ -527,7 +529,40 @@ clone_min_ordering(const char *id,
         }                                                       \
     } while (0)
 
-static gboolean
+/*!
+ * \internal
+ * \brief Create new ordering for inverse of symmetric constraint
+ *
+ * \param[in] id            Ordering ID (for logging only)
+ * \param[in] kind          Ordering kind
+ * \param[in] rsc_first     'First' resource in ordering (a clone)
+ * \param[in] action_first  'First' action in ordering
+ * \param[in] rsc_then      'Then' resource in ordering
+ * \param[in] action_then   'Then' action in ordering
+ * \param[in] data_set      Cluster working set
+ */
+static void
+inverse_ordering(const char *id, enum pe_order_kind kind,
+                 pe_resource_t *rsc_first, const char *action_first,
+                 pe_resource_t *rsc_then, const char *action_then,
+                 pe_working_set_t *data_set)
+{
+    action_then = invert_action(action_then);
+    action_first = invert_action(action_first);
+    if ((action_then == NULL) || (action_first == NULL)) {
+        pcmk__config_warn("Cannot invert constraint '%s' "
+                          "(please specify inverse manually)", id);
+    } else {
+        enum pe_ordering flags = ordering_flags_for_kind(kind, action_first,
+                                                         ordering_symmetric_inverse);
+
+        handle_restart_type(rsc_then, kind, pe_order_implies_first, flags);
+        new_rsc_order(rsc_then, action_then, rsc_first, action_first, flags,
+                      data_set);
+    }
+}
+
+static void
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     pe_resource_t *rsc_then = NULL;
@@ -541,27 +576,27 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *action_first = NULL;
     const char *id = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return);
 
     id = crm_element_value(xml_obj, XML_ATTR_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return;
     }
 
     rsc_first = get_ordering_resource(xml_obj, XML_ORDER_ATTR_FIRST,
                                       XML_ORDER_ATTR_FIRST_INSTANCE,
                                       data_set);
     if (rsc_first == NULL) {
-        return FALSE;
+        return;
     }
 
     rsc_then = get_ordering_resource(xml_obj, XML_ORDER_ATTR_THEN,
                                      XML_ORDER_ATTR_THEN_INSTANCE,
                                      data_set);
     if (rsc_then == NULL) {
-        return FALSE;
+        return;
     }
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
@@ -595,71 +630,57 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                       cons_weight, data_set);
     }
 
-    if (symmetry == ordering_asymmetric) {
-        return TRUE;
+    if (symmetry == ordering_symmetric) {
+        inverse_ordering(id, kind, rsc_first, action_first,
+                         rsc_then, action_then, data_set);
     }
-
-    action_then = invert_action(action_then);
-    action_first = invert_action(action_first);
-    if (action_then == NULL || action_first == NULL) {
-        pcmk__config_err("Cannot invert constraint '%s' "
-                         "(please specify inverse manually)", id);
-        return TRUE;
-    }
-
-    cons_weight = ordering_flags_for_kind(kind, action_first,
-                                          ordering_symmetric_inverse);
-    handle_restart_type(rsc_then, kind, pe_order_implies_first, cons_weight);
-
-    new_rsc_order(rsc_then, action_then, rsc_first, action_first, cons_weight,
-                  data_set);
-
-    return TRUE;
 }
 
-static gboolean
-expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Replace any resource tags with equivalent resource_ref entries
+ *
+ * If a given constraint has resource sets, check each set for resource_ref
+ * entries that list tags rather than resource IDs, and replace any found with
+ * resource_ref entries for the corresponding resource IDs.
+ *
+ * \param[in]  xml_obj       Constraint XML
+ * \param[in]  data_set      Cluster working set
+ *
+ * \return Equivalent XML with resource tags replaced (or NULL if none)
+ * \note It is the caller's responsibility to free the result with free_xml().
+ */
+static xmlNode *
+expand_tags_in_sets(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *new_xml = NULL;
-    xmlNode *set = NULL;
-    gboolean any_refs = FALSE;
-    const char *cons_id = NULL;
+    bool any_refs = false;
 
-    *expanded_xml = NULL;
-
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    // Short-circuit if there are no sets
+    if (first_named_child(xml_obj, XML_CONS_TAG_RSC_SET) == NULL) {
+        return NULL;
+    }
 
     new_xml = copy_xml(xml_obj);
-    cons_id = ID(new_xml);
 
-    for (set = pcmk__xe_first_child(new_xml); set != NULL;
-         set = pcmk__xe_next(set)) {
+    for (xmlNode *set = first_named_child(new_xml, XML_CONS_TAG_RSC_SET);
+         set != NULL; set = crm_next_same_xml(set)) {
 
-        xmlNode *xml_rsc = NULL;
         GList *tag_refs = NULL;
         GList *gIter = NULL;
 
-        if (!pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_casei)) {
-            continue;
-        }
-
-        for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xmlNode *xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             pe_resource_t *rsc = NULL;
             pe_tag_t *tag = NULL;
-            const char *id = ID(xml_rsc);
 
-            if (!pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_casei)) {
-                continue;
-            }
-
-            if (valid_resource_or_tag(data_set, id, &rsc, &tag) == FALSE) {
+            if (!valid_resource_or_tag(data_set, ID(xml_rsc), &rsc, &tag)) {
                 pcmk__config_err("Ignoring resource sets for constraint '%s' "
                                  "because '%s' is not a valid resource or tag",
-                                 cons_id, id);
+                                 ID(xml_obj), ID(xml_rsc));
                 free_xml(new_xml);
-                return FALSE;
+                return NULL;
 
             } else if (rsc) {
                 continue;
@@ -702,12 +723,10 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
                     last_ref = new_rsc_ref;
                 }
 
-                any_refs = TRUE;
+                any_refs = true;
 
-                /* Do not directly free '<resource_ref id="tag1"/>', which would
-                 * break the further pcmk__xe_next(xml_rsc)) and
-                 * cause "Invalid read" seen by valgrind. Just remember it for
-                 * freeing later.
+                /* Freeing the resource_ref now would break the XML child
+                 * iteration, so just remember it for freeing later.
                  */
                 tag_refs = g_list_append(tag_refs, xml_rsc);
             }
@@ -731,13 +750,11 @@ expand_tags_in_sets(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t
         g_list_free(tag_refs);
     }
 
-    if (any_refs) {
-        *expanded_xml = new_xml;
-    } else {
+    if (!any_refs) {
         free_xml(new_xml);
+        new_xml = NULL;
     }
-
-    return TRUE;
+    return new_xml;
 }
 
 static gboolean
@@ -992,10 +1009,7 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     pe_tag_t *tag_lh = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
-
-    *expanded_xml = NULL;
 
     CRM_CHECK(xml_obj != NULL, return FALSE);
 
@@ -1006,12 +1020,10 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
         return FALSE;
     }
 
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_location...");
-        *expanded_xml = new_xml;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
         return TRUE;
     }
 
@@ -1032,11 +1044,13 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
 
     state_lh = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "rsc" into a resource_set under the rsc_location constraint. */
-    if (tag_to_set(new_xml, &rsc_set_lh, XML_LOC_ATTR_SOURCE, FALSE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_lh, XML_LOC_ATTR_SOURCE, FALSE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -1045,14 +1059,14 @@ unpack_location_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_
             /* A "rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_lh, "role", state_lh);
-            xml_remove_prop(new_xml, XML_RULE_ATTR_ROLE);
+            xml_remove_prop(*expanded_xml, XML_RULE_ATTR_ROLE);
         }
-        crm_log_xml_trace(new_xml, "Expanded rsc_location...");
-        *expanded_xml = new_xml;
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_location");
 
     } else {
         /* No sets */
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
     return TRUE;
@@ -1080,13 +1094,11 @@ unpack_location_set(xmlNode * location, xmlNode * set, pe_working_set_t * data_s
     role = crm_element_value(set, "role");
     local_score = crm_element_value(set, XML_RULE_ATTR_SCORE);
 
-    for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
-         xml_rsc = pcmk__xe_next(xml_rsc)) {
+    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+         xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-        if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            unpack_rsc_location(location, resource, role, local_score, data_set, NULL);
-        }
+        EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+        unpack_rsc_location(location, resource, role, local_score, data_set, NULL);
     }
 
     return TRUE;
@@ -1110,18 +1122,17 @@ unpack_location(xmlNode *xml_obj, pe_working_set_t *data_set)
         xml_obj = expanded_xml;
     }
 
-    for (set = pcmk__xe_first_child(xml_obj); set != NULL;
-         set = pcmk__xe_next(set)) {
+    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET);
+         set != NULL; set = crm_next_same_xml(set)) {
 
-        if (pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_none)) {
-            any_sets = TRUE;
-            set = expand_idref(set, data_set->input);
-            if (unpack_location_set(xml_obj, set, data_set) == FALSE) {
-                if (expanded_xml) {
-                    free_xml(expanded_xml);
-                }
-                return;
+        any_sets = TRUE;
+        set = expand_idref(set, data_set->input);
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_location_set(xml_obj, set, data_set)) {
+            if (expanded_xml) {
+                free_xml(expanded_xml);
             }
+            return;
         }
     }
 
@@ -1185,6 +1196,10 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
     pe__location_t *location_rule = NULL;
 
     rule_xml = expand_idref(rule_xml, data_set->input);
+    if (rule_xml == NULL) {
+        return NULL;
+    }
+
     rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
     boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
     role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
@@ -1262,9 +1277,6 @@ generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
                   node->details->uname);
 
         score_f = get_node_score(rule_id, score, raw_score, node, rsc);
-/* 			if(accept && score_f == -INFINITY) { */
-/* 				accept = FALSE; */
-/* 			} */
 
         if (accept) {
             pe_node_t *local = pe_find_node_id(match_L, node->details->id);
@@ -1519,15 +1531,6 @@ new_rsc_order(pe_resource_t * lh_rsc, const char *lh_task,
     CRM_CHECK(rh_rsc != NULL, return -1);
     CRM_CHECK(rh_task != NULL, return -1);
 
-#if 0
-    /* We do not need to test if these reference stonith resources
-     * because the fencer has access to them even when they're not "running"
-     */
-    if (validate_order_resources(lh_rsc, lh_task, rh_rsc, rh_task)) {
-        return -1;
-    }
-#endif
-
     lh_key = pcmk__op_key(lh_rsc->id, lh_task, 0);
     rh_key = pcmk__op_key(rh_rsc->id, rh_task, 0);
 
@@ -1708,8 +1711,6 @@ custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * 
 
     order = calloc(1, sizeof(pe__ordering_t));
 
-    /* CRM_ASSERT(data_set->order_id != 291); */
-
     order->id = data_set->order_id++;
     order->type = type;
     order->lh_rsc = lh_rsc;
@@ -1748,8 +1749,7 @@ custom_action_order(pe_resource_t * lh_rsc, char *lh_action_task, pe_action_t * 
 
 static gboolean
 unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t ** rsc,
-                 pe_action_t ** begin, pe_action_t ** end, pe_action_t ** inv_begin,
-                 pe_action_t ** inv_end, const char *parent_symmetrical_s,
+                 const char *parent_symmetrical_s,
                  pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
@@ -1770,12 +1770,6 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
     const char *sequential_s = crm_element_value(set, "sequential");
     const char *kind_s = crm_element_value(set, XML_ORDER_ATTR_KIND);
 
-    /*
-       char *pseudo_id = NULL;
-       char *end_id    = NULL;
-       char *begin_id  = NULL;
-     */
-
     if (action == NULL) {
         action = RSC_START;
     }
@@ -1792,40 +1786,20 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
     symmetry = get_ordering_symmetry(set, parent_kind, parent_symmetrical_s);
     flags = ordering_flags_for_kind(local_kind, action, symmetry);
 
-    for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
-         xml_rsc = pcmk__xe_next(xml_rsc)) {
+    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+         xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-        if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-            EXPAND_CONSTRAINT_IDREF(id, resource, ID(xml_rsc));
-            resources = g_list_append(resources, resource);
-        }
+        EXPAND_CONSTRAINT_IDREF(id, resource, ID(xml_rsc));
+        resources = g_list_append(resources, resource);
     }
 
     if (pcmk__list_of_1(resources)) {
         crm_trace("Single set: %s", id);
         *rsc = resource;
-        *end = NULL;
-        *begin = NULL;
-        *inv_end = NULL;
-        *inv_begin = NULL;
         goto done;
     }
 
-    /*
-       pseudo_id = crm_strdup_printf("%s-%s", id, action);
-       end_id    = crm_strdup_printf("%s-%s", pseudo_id, "end");
-       begin_id  = crm_strdup_printf("%s-%s", pseudo_id, "begin");
-     */
-
     *rsc = NULL;
-    /*
-     *end = get_pseudo_op(end_id, data_set);
-     *begin = get_pseudo_op(begin_id, data_set);
-
-     free(pseudo_id);
-     free(begin_id);
-     free(end_id);
-     */
 
     set_iter = resources;
     while (set_iter != NULL) {
@@ -1833,14 +1807,6 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
         set_iter = set_iter->next;
 
         key = pcmk__op_key(resource->id, action, 0);
-
-        /*
-           custom_action_order(NULL, NULL, *begin, resource, strdup(key), NULL,
-           flags|pe_order_implies_first_printed, data_set);
-
-           custom_action_order(resource, strdup(key), NULL, NULL, NULL, *end,
-           flags|pe_order_implies_then_printed, data_set);
-         */
 
         if (local_kind == pe_order_kind_serialize) {
             /* Serialize before everything that comes after */
@@ -1878,16 +1844,6 @@ unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, pe_resource_t **
     while (set_iter != NULL) {
         resource = (pe_resource_t *) set_iter->data;
         set_iter = set_iter->next;
-
-        /*
-           key = pcmk__op_key(resource->id, action, 0);
-
-           custom_action_order(NULL, NULL, *inv_begin, resource, strdup(key), NULL,
-           flags|pe_order_implies_first_printed, data_set);
-
-           custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
-           flags|pe_order_implies_then_printed, data_set);
-         */
 
         if (sequential) {
             if (last != NULL) {
@@ -1956,12 +1912,8 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         free(task);
         pe__set_action_flags(unordered_action, pe_action_requires_any);
 
-        for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-            if (!pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                continue;
-            }
+        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
 
@@ -1972,12 +1924,8 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
                                 pe_order_one_or_more|pe_order_implies_then_printed,
                                 data_set);
         }
-        for (xml_rsc_2 = pcmk__xe_first_child(set2); xml_rsc_2 != NULL;
-             xml_rsc_2 = pcmk__xe_next(xml_rsc_2)) {
-
-            if (!pcmk__str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                continue;
-            }
+        for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+             xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
 
@@ -1994,27 +1942,18 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     if (crm_is_true(sequential_1)) {
         if (symmetry == ordering_symmetric_inverse) {
             /* get the first one */
-            for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-                if (pcmk__str_eq((const char *)xml_rsc->name,
-                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-                    break;
-                }
+            xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+            if (xml_rsc != NULL) {
+                EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
             }
 
         } else {
             /* get the last one */
             const char *rid = NULL;
 
-            for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-                if (pcmk__str_eq((const char *)xml_rsc->name,
-                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    rid = ID(xml_rsc);
-                }
+            for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+                 xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+                rid = ID(xml_rsc);
             }
             EXPAND_CONSTRAINT_IDREF(id, rsc_1, rid);
         }
@@ -2025,26 +1964,18 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
             /* get the last one */
             const char *rid = NULL;
 
-            for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
+            for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+                 xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-                if (pcmk__str_eq((const char *)xml_rsc->name,
-                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    rid = ID(xml_rsc);
-                }
+                rid = ID(xml_rsc);
             }
             EXPAND_CONSTRAINT_IDREF(id, rsc_2, rid);
 
         } else {
             /* get the first one */
-            for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
-                 xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-                if (pcmk__str_eq((const char *)xml_rsc->name,
-                                 XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                    EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-                    break;
-                }
+            xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+            if (xml_rsc != NULL) {
+                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
             }
         }
     }
@@ -2053,45 +1984,36 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
         new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
 
     } else if (rsc_1 != NULL) {
-        for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-                new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-            }
+            EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
+            new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
         }
 
     } else if (rsc_2 != NULL) {
         xmlNode *xml_rsc = NULL;
 
-        for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-                new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-            }
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
         }
 
     } else {
-        for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                xmlNode *xml_rsc_2 = NULL;
+            xmlNode *xml_rsc_2 = NULL;
 
-                EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
 
-                for (xml_rsc_2 = pcmk__xe_first_child(set2);
-                     xml_rsc_2 != NULL;
-                     xml_rsc_2 = pcmk__xe_next(xml_rsc_2)) {
+            for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+                 xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
-                    if (pcmk__str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                        EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
-                        new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-                    }
-                }
+                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
+                new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
             }
         }
     }
@@ -2099,10 +2021,21 @@ order_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, enum pe_order_kin
     return TRUE;
 }
 
-static gboolean
-unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief If an ordering constraint uses resource tags, expand them
+ *
+ * \param[in]  xml_obj       Ordering constraint XML
+ * \param[out] expanded_xml  Equivalent XML with tags expanded
+ * \param[in]  data_set      Cluster working set
+ *
+ * \return Standard Pacemaker return code (specifically, pcmk_rc_ok on success,
+ *         and pcmk_rc_schema_validation on invalid configuration)
+ */
+static int
+unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
+                  pe_working_set_t *data_set)
 {
-    const char *id = NULL;
     const char *id_first = NULL;
     const char *id_then = NULL;
     const char *action_first = NULL;
@@ -2113,63 +2046,51 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
     pe_tag_t *tag_first = NULL;
     pe_tag_t *tag_then = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_first = NULL;
     xmlNode *rsc_set_then = NULL;
     gboolean any_sets = FALSE;
 
-    *expanded_xml = NULL;
-
-    CRM_CHECK(xml_obj != NULL, return FALSE);
-
-    id = ID(xml_obj);
-    if (id == NULL) {
-        pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
-                         crm_element_name(xml_obj));
-        return FALSE;
-    }
-
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates/tags. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_order...");
-        *expanded_xml = new_xml;
-        return TRUE;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
+        return pcmk_rc_ok;
     }
 
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
     id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
     if (id_first == NULL || id_then == NULL) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     if (valid_resource_or_tag(data_set, id_first, &rsc_first, &tag_first) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_first);
-        return FALSE;
+                         "valid resource or tag", ID(xml_obj), id_first);
+        return pcmk_rc_schema_validation;
     }
 
     if (valid_resource_or_tag(data_set, id_then, &rsc_then, &tag_then) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
-                         "valid resource or tag", id, id_then);
-        return FALSE;
+                         "valid resource or tag", ID(xml_obj), id_then);
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_first && rsc_then) {
         /* Neither side references any template/tag. */
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
     action_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "first" into a resource_set under the order constraint. */
-    if (tag_to_set(new_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
-        return FALSE;
+    if (!tag_to_set(*expanded_xml, &rsc_set_first, XML_ORDER_ATTR_FIRST, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_first) {
@@ -2177,15 +2098,17 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
             /* A "first-action" is specified.
                Move it into the converted resource_set as an "action" attribute. */
             crm_xml_add(rsc_set_first, "action", action_first);
-            xml_remove_prop(new_xml, XML_ORDER_ATTR_FIRST_ACTION);
+            xml_remove_prop(*expanded_xml, XML_ORDER_ATTR_FIRST_ACTION);
         }
         any_sets = TRUE;
     }
 
     /* Convert the template/tag reference in "then" into a resource_set under the order constraint. */
-    if (tag_to_set(new_xml, &rsc_set_then, XML_ORDER_ATTR_THEN, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
-        return FALSE;
+    if (!tag_to_set(*expanded_xml, &rsc_set_then, XML_ORDER_ATTR_THEN, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
+        return pcmk_rc_schema_validation;
     }
 
     if (rsc_set_then) {
@@ -2193,37 +2116,32 @@ unpack_order_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t *
             /* A "then-action" is specified.
                Move it into the converted resource_set as an "action" attribute. */
             crm_xml_add(rsc_set_then, "action", action_then);
-            xml_remove_prop(new_xml, XML_ORDER_ATTR_THEN_ACTION);
+            xml_remove_prop(*expanded_xml, XML_ORDER_ATTR_THEN_ACTION);
         }
         any_sets = TRUE;
     }
 
     if (any_sets) {
-        crm_log_xml_trace(new_xml, "Expanded rsc_order...");
-        *expanded_xml = new_xml;
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_order");
     } else {
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
-gboolean
-unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
+/*!
+ * \internal
+ * \brief Unpack ordering constraint XML
+ *
+ * \param[in]     xml_obj   Ordering constraint XML to unpack
+ * \param[in,out] data_set  Cluster working set
+ */
+static void
+unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
-    gboolean any_sets = FALSE;
-
     pe_resource_t *rsc = NULL;
-
-    /*
-       pe_resource_t *last_rsc = NULL;
-     */
-
-    pe_action_t *set_end = NULL;
-    pe_action_t *set_begin = NULL;
-
-    pe_action_t *set_inv_end = NULL;
-    pe_action_t *set_inv_begin = NULL;
 
     xmlNode *set = NULL;
     xmlNode *last = NULL;
@@ -2231,51 +2149,45 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    /*
-       pe_action_t *last_end = NULL;
-       pe_action_t *last_begin = NULL;
-       pe_action_t *last_inv_end = NULL;
-       pe_action_t *last_inv_begin = NULL;
-     */
-
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
     enum ordering_symmetry symmetry = get_ordering_symmetry(xml_obj, kind, NULL);
-    gboolean rc = TRUE;
 
-    rc = unpack_order_tags(xml_obj, &expanded_xml, data_set);
-    if (expanded_xml) {
+    // Expand any resource tags in the constraint XML
+    if (unpack_order_tags(xml_obj, &expanded_xml, data_set) != pcmk_rc_ok) {
+        return;
+    }
+    if (expanded_xml != NULL) {
         orig_xml = xml_obj;
         xml_obj = expanded_xml;
-
-    } else if (rc == FALSE) {
-        return FALSE;
     }
 
-    for (set = pcmk__xe_first_child(xml_obj); set != NULL;
-         set = pcmk__xe_next(set)) {
+    // If the constraint has resource sets, unpack them
+    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
+         set = crm_next_same_xml(set)) {
 
-        if (pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_none)) {
-            any_sets = TRUE;
-            set = expand_idref(set, data_set->input);
-            if (unpack_order_set(set, kind, &rsc, &set_begin, &set_end,
-                                 &set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
-                return FALSE;
-
-            } else if (last != NULL) {
-                if (!order_rsc_sets(id, last, set, kind, data_set, symmetry)) {
-                    return FALSE;
-                }
-                if ((symmetry == ordering_symmetric)
-                    && !order_rsc_sets(id, set, last, kind, data_set,
-                                       ordering_symmetric_inverse)) {
-                    return FALSE;
-                }
+        set = expand_idref(set, data_set->input);
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_order_set(set, kind, &rsc, invert, data_set)) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
             }
-            last = set;
+            return;
         }
+
+        if ((last != NULL)
+            && (!order_rsc_sets(id, last, set, kind, data_set, symmetry)
+                || ((symmetry == ordering_symmetric)
+                    && !order_rsc_sets(id, set, last, kind, data_set,
+                                       ordering_symmetric_inverse)))) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
+            }
+            return;
+        }
+        last = set;
     }
 
     if (expanded_xml) {
@@ -2283,11 +2195,10 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         xml_obj = orig_xml;
     }
 
-    if (any_sets == FALSE) {
-        return unpack_simple_rsc_order(xml_obj, data_set);
+    // If the constraint has no resource sets, unpack it as a simple ordering
+    if (last == NULL) {
+        unpack_simple_rsc_order(xml_obj, data_set);
     }
-
-    return TRUE;
 }
 
 /*!
@@ -2352,41 +2263,36 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
 
     } else if ((local_score > 0)
                && pcmk__str_eq(ordering, "group", pcmk__str_casei)) {
-        for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-                if (with != NULL) {
-                    pe_rsc_trace(resource, "Colocating %s with %s", resource->id, with->id);
-                    pcmk__new_colocation(set_id, NULL, local_score, resource,
-                                         with, role, role,
-                                         unpack_influence(coloc_id, resource,
-                                                          influence_s),
-                                         data_set);
-                }
-
-                with = resource;
+            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+            if (with != NULL) {
+                pe_rsc_trace(resource, "Colocating %s with %s", resource->id, with->id);
+                pcmk__new_colocation(set_id, NULL, local_score, resource,
+                                     with, role, role,
+                                     unpack_influence(coloc_id, resource,
+                                                      influence_s),
+                                     data_set);
             }
+            with = resource;
         }
     } else if (local_score > 0) {
         pe_resource_t *last = NULL;
-        for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-                if (last != NULL) {
-                    pe_rsc_trace(resource, "Colocating %s with %s", last->id, resource->id);
-                    pcmk__new_colocation(set_id, NULL, local_score, last,
-                                         resource, role, role,
-                                         unpack_influence(coloc_id, last,
-                                                          influence_s),
-                                         data_set);
-                }
-
-                last = resource;
+            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+            if (last != NULL) {
+                pe_rsc_trace(resource, "Colocating %s with %s", last->id, resource->id);
+                pcmk__new_colocation(set_id, NULL, local_score, last,
+                                     resource, role, role,
+                                     unpack_influence(coloc_id, last,
+                                                      influence_s),
+                                     data_set);
             }
+
+            last = resource;
         }
 
     } else {
@@ -2395,32 +2301,28 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
          * (i.e. that no one in the set can run with anyone else in the set)
          */
 
-        for (xml_rsc = pcmk__xe_first_child(set); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                xmlNode *xml_rsc_with = NULL;
-                bool influence = true;
+            xmlNode *xml_rsc_with = NULL;
+            bool influence = true;
 
-                EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-                influence = unpack_influence(coloc_id, resource, influence_s);
+            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+            influence = unpack_influence(coloc_id, resource, influence_s);
 
-                for (xml_rsc_with = pcmk__xe_first_child(set);
-                     xml_rsc_with != NULL;
-                     xml_rsc_with = pcmk__xe_next(xml_rsc_with)) {
+            for (xml_rsc_with = first_named_child(set, XML_TAG_RESOURCE_REF);
+                 xml_rsc_with != NULL;
+                 xml_rsc_with = crm_next_same_xml(xml_rsc_with)) {
 
-                    if (pcmk__str_eq((const char *)xml_rsc_with->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                        if (pcmk__str_eq(resource->id, ID(xml_rsc_with), pcmk__str_casei)) {
-                            break;
-                        }
-                        EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
-                        pe_rsc_trace(resource, "Anti-Colocating %s with %s", resource->id,
-                                     with->id);
-                        pcmk__new_colocation(set_id, NULL, local_score,
-                                             resource, with, role, role,
-                                             influence, data_set);
-                    }
+                if (pcmk__str_eq(resource->id, ID(xml_rsc_with), pcmk__str_casei)) {
+                    break;
                 }
+                EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
+                pe_rsc_trace(resource, "Anti-Colocating %s with %s", resource->id,
+                             with->id);
+                pcmk__new_colocation(set_id, NULL, local_score,
+                                     resource, with, role, role,
+                                     influence, data_set);
             }
         }
     }
@@ -2449,13 +2351,9 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     }
     if (sequential_1 == NULL || crm_is_true(sequential_1)) {
         /* get the first one */
-        for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-                break;
-            }
+        xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+        if (xml_rsc != NULL) {
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
         }
     }
 
@@ -2463,12 +2361,9 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
         /* get the last one */
         const char *rid = NULL;
 
-        for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
-
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                rid = ID(xml_rsc);
-            }
+        for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+            rid = ID(xml_rsc);
         }
         EXPAND_CONSTRAINT_IDREF(id, rsc_2, rid);
     }
@@ -2481,51 +2376,42 @@ colocate_rsc_sets(const char *id, xmlNode * set1, xmlNode * set2, int score,
     } else if (rsc_1 != NULL) {
         bool influence = unpack_influence(id, rsc_1, influence_s);
 
-        for (xml_rsc = pcmk__xe_first_child(set2); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set2, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
-                pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
-                                     role_2, influence, data_set);
-            }
+            EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc));
+            pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
+                                 role_2, influence, data_set);
         }
 
     } else if (rsc_2 != NULL) {
-        for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-                pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
-                                     role_2,
-                                     unpack_influence(id, rsc_1, influence_s),
-                                     data_set);
-            }
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2, role_1,
+                                 role_2,
+                                 unpack_influence(id, rsc_1, influence_s),
+                                 data_set);
         }
 
     } else {
-        for (xml_rsc = pcmk__xe_first_child(set1); xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc)) {
+        for (xml_rsc = first_named_child(set1, XML_TAG_RESOURCE_REF);
+             xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
 
-            if (pcmk__str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                xmlNode *xml_rsc_2 = NULL;
-                bool influence = true;
+            xmlNode *xml_rsc_2 = NULL;
+            bool influence = true;
 
-                EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
-                influence = unpack_influence(id, rsc_1, influence_s);
+            EXPAND_CONSTRAINT_IDREF(id, rsc_1, ID(xml_rsc));
+            influence = unpack_influence(id, rsc_1, influence_s);
 
-                for (xml_rsc_2 = pcmk__xe_first_child(set2);
-                     xml_rsc_2 != NULL;
-                     xml_rsc_2 = pcmk__xe_next(xml_rsc_2)) {
+            for (xml_rsc_2 = first_named_child(set2, XML_TAG_RESOURCE_REF);
+                 xml_rsc_2 != NULL; xml_rsc_2 = crm_next_same_xml(xml_rsc_2)) {
 
-                    if (pcmk__str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, pcmk__str_none)) {
-                        EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
-                        pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
-                                             role_1, role_2, influence,
-                                             data_set);
-                    }
-                }
+                EXPAND_CONSTRAINT_IDREF(id, rsc_2, ID(xml_rsc_2));
+                pcmk__new_colocation(id, NULL, score, rsc_1, rsc_2,
+                                     role_1, role_2, influence,
+                                     data_set);
             }
         }
     }
@@ -2626,7 +2512,6 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     pe_tag_t *tag_lh = NULL;
     pe_tag_t *tag_rh = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
     xmlNode *rsc_set_rh = NULL;
     gboolean any_sets = FALSE;
@@ -2642,12 +2527,10 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
         return FALSE;
     }
 
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates/tags. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_colocation...");
-        *expanded_xml = new_xml;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
         return TRUE;
     }
 
@@ -2684,11 +2567,13 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "rsc" into a resource_set under the colocation constraint. */
-    if (tag_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -2697,14 +2582,16 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
             /* A "rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_lh, "role", state_lh);
-            xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
         any_sets = TRUE;
     }
 
     /* Convert the template/tag reference in "with-rsc" into a resource_set under the colocation constraint. */
-    if (tag_to_set(new_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET, TRUE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_rh, XML_COLOC_ATTR_TARGET, TRUE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -2713,16 +2600,16 @@ unpack_colocation_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
             /* A "with-rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_rh, "role", state_rh);
-            xml_remove_prop(new_xml, XML_COLOC_ATTR_TARGET_ROLE);
+            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_TARGET_ROLE);
         }
         any_sets = TRUE;
     }
 
     if (any_sets) {
-        crm_log_xml_trace(new_xml, "Expanded rsc_colocation...");
-        *expanded_xml = new_xml;
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_colocation");
     } else {
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
     return TRUE;
@@ -2734,7 +2621,6 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
     int score_i = 0;
     xmlNode *set = NULL;
     xmlNode *last = NULL;
-    gboolean any_sets = FALSE;
 
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
@@ -2756,22 +2642,20 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
         xml_obj = expanded_xml;
     }
 
-    for (set = pcmk__xe_first_child(xml_obj); set != NULL;
-         set = pcmk__xe_next(set)) {
+    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
+         set = crm_next_same_xml(set)) {
 
-        if (pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_none)) {
-            any_sets = TRUE;
-            set = expand_idref(set, data_set->input);
-            if (!unpack_colocation_set(set, score_i, id, influence_s,
-                                       data_set)) {
-                return;
+        set = expand_idref(set, data_set->input);
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_colocation_set(set, score_i, id, influence_s, data_set)
+            || ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
+                                                     influence_s, data_set))) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
             }
-            if ((last != NULL) && !colocate_rsc_sets(id, last, set, score_i,
-                                                     influence_s, data_set)) {
-                return;
-            }
-            last = set;
+            return;
         }
+        last = set;
     }
 
     if (expanded_xml) {
@@ -2779,26 +2663,27 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
         xml_obj = orig_xml;
     }
 
-    if (!any_sets) {
+    if (last == NULL) {
         unpack_simple_colocation(xml_obj, id, influence_s, data_set);
     }
 }
 
-gboolean
-rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
-               const char *state_lh, const char *loss_policy, pe_working_set_t * data_set)
+static void
+rsc_ticket_new(const char *id, pe_resource_t *rsc_lh, pe_ticket_t *ticket,
+               const char *state_lh, const char *loss_policy,
+               pe_working_set_t *data_set)
 {
     rsc_ticket_t *new_rsc_ticket = NULL;
 
     if (rsc_lh == NULL) {
         pcmk__config_err("Ignoring ticket '%s' because resource "
                          "does not exist", id);
-        return FALSE;
+        return;
     }
 
     new_rsc_ticket = calloc(1, sizeof(rsc_ticket_t));
     if (new_rsc_ticket == NULL) {
-        return FALSE;
+        return;
     }
 
     if (pcmk__str_eq(state_lh, RSC_ROLE_STARTED_S, pcmk__str_null_matches | pcmk__str_casei)) {
@@ -2869,8 +2754,6 @@ rsc_ticket_new(const char *id, pe_resource_t * rsc_lh, pe_ticket_t * ticket,
     if (new_rsc_ticket->ticket->granted == FALSE || new_rsc_ticket->ticket->standby) {
         rsc_ticket_constraint(rsc_lh, new_rsc_ticket, data_set);
     }
-
-    return TRUE;
 }
 
 static gboolean
@@ -2906,7 +2789,7 @@ unpack_rsc_ticket_set(xmlNode * set, pe_ticket_t * ticket, const char *loss_poli
     return TRUE;
 }
 
-static gboolean
+static void
 unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     const char *id = NULL;
@@ -2923,19 +2806,19 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     pe_resource_t *rsc_lh = NULL;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return;
     }
 
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket specified",
                          id);
-        return FALSE;
+        return;
     } else {
         ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
     }
@@ -2943,12 +2826,12 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (ticket == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because ticket '%s' "
                          "does not exist", id, ticket_str);
-        return FALSE;
+        return;
     }
 
     if (id_lh == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without resource", id);
-        return FALSE;
+        return;
     } else {
         rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     }
@@ -2956,13 +2839,13 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (rsc_lh == NULL) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "does not exist", id, id_lh);
-        return FALSE;
+        return;
 
     } else if (instance_lh && pe_rsc_is_clone(rsc_lh) == FALSE) {
         pcmk__config_err("Ignoring constraint '%s' because resource '%s' "
                          "is not a clone but instance '%s' was requested",
                          id, id_lh, instance_lh);
-        return FALSE;
+        return;
     }
 
     if (instance_lh) {
@@ -2971,12 +2854,11 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
             pcmk__config_warn("Ignoring constraint '%s' because resource '%s' "
                               "does not have an instance '%s'",
                               "'%s'", id, id_lh, instance_lh);
-            return FALSE;
+            return;
         }
     }
 
     rsc_ticket_new(id, rsc_lh, ticket, state_lh, loss_policy, data_set);
-    return TRUE;
 }
 
 static gboolean
@@ -2989,11 +2871,7 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
     pe_resource_t *rsc_lh = NULL;
     pe_tag_t *tag_lh = NULL;
 
-    xmlNode *new_xml = NULL;
     xmlNode *rsc_set_lh = NULL;
-    gboolean any_sets = FALSE;
-
-    *expanded_xml = NULL;
 
     CRM_CHECK(xml_obj != NULL, return FALSE);
 
@@ -3004,12 +2882,10 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
         return FALSE;
     }
 
-    /* Attempt to expand any template/tag references in possible resource sets. */
-    expand_tags_in_sets(xml_obj, &new_xml, data_set);
-    if (new_xml) {
-        /* There are resource sets referencing templates/tags. Return with the expanded XML. */
-        crm_log_xml_trace(new_xml, "Expanded rsc_ticket...");
-        *expanded_xml = new_xml;
+    // Check whether there are any resource sets with template or tag references
+    *expanded_xml = expand_tags_in_sets(xml_obj, data_set);
+    if (*expanded_xml != NULL) {
+        crm_log_xml_trace(*expanded_xml, "Expanded rsc_ticket");
         return TRUE;
     }
 
@@ -3030,11 +2906,13 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
 
     state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
 
-    new_xml = copy_xml(xml_obj);
+    *expanded_xml = copy_xml(xml_obj);
 
     /* Convert the template/tag reference in "rsc" into a resource_set under the rsc_ticket constraint. */
-    if (tag_to_set(new_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, FALSE, data_set) == FALSE) {
-        free_xml(new_xml);
+    if (!tag_to_set(*expanded_xml, &rsc_set_lh, XML_COLOC_ATTR_SOURCE, FALSE,
+                    data_set)) {
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
         return FALSE;
     }
 
@@ -3043,23 +2921,18 @@ unpack_rsc_ticket_tags(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_se
             /* A "rsc-role" is specified.
                Move it into the converted resource_set as a "role"" attribute. */
             crm_xml_add(rsc_set_lh, "role", state_lh);
-            xml_remove_prop(new_xml, XML_COLOC_ATTR_SOURCE_ROLE);
+            xml_remove_prop(*expanded_xml, XML_COLOC_ATTR_SOURCE_ROLE);
         }
-        any_sets = TRUE;
-    }
-
-    if (any_sets) {
-        crm_log_xml_trace(new_xml, "Expanded rsc_ticket...");
-        *expanded_xml = new_xml;
     } else {
-        free_xml(new_xml);
+        free_xml(*expanded_xml);
+        *expanded_xml = NULL;
     }
 
     return TRUE;
 }
 
-gboolean
-unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
+static void
+unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
     xmlNode *set = NULL;
     gboolean any_sets = FALSE;
@@ -3075,13 +2948,13 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     gboolean rc = TRUE;
 
-    CRM_CHECK(xml_obj != NULL, return FALSE);
+    CRM_CHECK(xml_obj != NULL, return);
 
     id = ID(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " XML_ATTR_ID,
                          crm_element_name(xml_obj));
-        return FALSE;
+        return;
     }
 
     if (data_set->tickets == NULL) {
@@ -3090,7 +2963,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     if (ticket_str == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without ticket", id);
-        return FALSE;
+        return;
     } else {
         ticket = g_hash_table_lookup(data_set->tickets, ticket_str);
     }
@@ -3098,7 +2971,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     if (ticket == NULL) {
         ticket = ticket_new(ticket_str, data_set);
         if (ticket == NULL) {
-            return FALSE;
+            return;
         }
     }
 
@@ -3108,18 +2981,20 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
         xml_obj = expanded_xml;
 
     } else if (rc == FALSE) {
-        return FALSE;
+        return;
     }
 
-    for (set = pcmk__xe_first_child(xml_obj); set != NULL;
-         set = pcmk__xe_next(set)) {
+    for (set = first_named_child(xml_obj, XML_CONS_TAG_RSC_SET); set != NULL;
+         set = crm_next_same_xml(set)) {
 
-        if (pcmk__str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, pcmk__str_none)) {
-            any_sets = TRUE;
-            set = expand_idref(set, data_set->input);
-            if (unpack_rsc_ticket_set(set, ticket, loss_policy, data_set) == FALSE) {
-                return FALSE;
+        any_sets = TRUE;
+        set = expand_idref(set, data_set->input);
+        if ((set == NULL) // Configuration error, message already logged
+            || !unpack_rsc_ticket_set(set, ticket, loss_policy, data_set)) {
+            if (expanded_xml != NULL) {
+                free_xml(expanded_xml);
             }
+            return;
         }
     }
 
@@ -3129,8 +3004,6 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
     }
 
     if (any_sets == FALSE) {
-        return unpack_simple_rsc_ticket(xml_obj, data_set);
+        unpack_simple_rsc_ticket(xml_obj, data_set);
     }
-
-    return TRUE;
 }

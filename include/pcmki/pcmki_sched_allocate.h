@@ -139,10 +139,6 @@ void promotable_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_alloc_functions_t resource_class_alloc_functions[];
 
-extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set);
-
-extern gboolean unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set);
-
 void LogNodeActions(pe_working_set_t * data_set);
 void LogActions(pe_resource_t * rsc, pe_working_set_t * data_set);
 void pcmk__bundle_log_actions(pe_resource_t *rsc, pe_working_set_t *data_set);
