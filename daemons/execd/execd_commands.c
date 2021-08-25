@@ -1155,6 +1155,11 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
         }
     }
 
+    // Give the user more detail than an OCF code
+    if (rc != -pcmk_err_generic) {
+        cmd->result.exit_reason = strdup(pcmk_strerror(rc));
+    }
+
     /* The recurring timer should not be running at this point in any case, but
      * as a failsafe, stop it if it is.
      */
