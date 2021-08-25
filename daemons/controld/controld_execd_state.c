@@ -692,8 +692,9 @@ lrm_state_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
     }
 
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        return remote_ra_exec(lrm_state, rsc_id, action, userdata, interval_ms,
-                              timeout, start_delay, params);
+        return controld_execute_remote_agent(lrm_state, rsc_id, action,
+                                             userdata, interval_ms, timeout,
+                                             start_delay, params);
     }
 
     return ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn,

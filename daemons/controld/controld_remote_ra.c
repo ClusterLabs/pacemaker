@@ -1094,12 +1094,28 @@ handle_dup:
     return cmd;
 }
 
+/*!
+ * \internal
+ * \brief Execute an action using the (internal) ocf:pacemaker:remote agent
+ *
+ * \param[in]  lrm_state       Executor state object for remote connection
+ * \param[in]  rsc_id          Connection resource ID
+ * \param[in]  action          Action to execute
+ * \param[in]  userdata        String to copy and pass to execution callback
+ * \param[in]  interval_ms     Action interval (in milliseconds)
+ * \param[in]  timeout_ms      Action timeout (in milliseconds)
+ * \param[in]  start_delay_ms  Delay (in milliseconds) before initiating action
+ * \param[in]  params          Connection resource parameters
+ *
+ * \return Call ID on success, negative legacy error code otherwise
+ * \note This takes ownership of \p params, which should not be used or freed
+ *       after calling this function.
+ */
 int
-remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
-               const char *userdata, guint interval_ms,
-               int timeout,     /* ms */
-               int start_delay, /* ms */
-               lrmd_key_value_t * params)
+controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
+                              const char *action, const char *userdata,
+                              guint interval_ms, int timeout_ms,
+                              int start_delay_ms, lrmd_key_value_t *params)
 {
     int rc = 0;
     lrm_state_t *connection_rsc = NULL;
@@ -1132,8 +1148,8 @@ remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
     cmd->action = strdup(action);
     cmd->userdata = strdup(userdata);
     cmd->interval_ms = interval_ms;
-    cmd->timeout = timeout;
-    cmd->start_delay = start_delay;
+    cmd->timeout = timeout_ms;
+    cmd->start_delay = start_delay_ms;
     cmd->params = params;
     cmd->start_time = time(NULL);
 

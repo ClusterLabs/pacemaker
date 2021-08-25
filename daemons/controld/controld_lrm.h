@@ -169,11 +169,10 @@ gboolean is_remote_lrmd_ra(const char *agent, const char *provider, const char *
 lrmd_rsc_info_t *remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id);
 int remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
                      const char *action, guint interval_ms);
-int remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id,
-                   const char *action, const char *userdata, guint interval_ms,
-                   int timeout, /* ms */
-                   int start_delay,     /* ms */
-                   lrmd_key_value_t * params);
+int controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
+                                  const char *action, const char *userdata,
+                                  guint interval_ms, int timeout_ms,
+                                  int start_delay_ms, lrmd_key_value_t *params);
 void remote_ra_cleanup(lrm_state_t * lrm_state);
 void remote_ra_fail(const char *node_name);
 void remote_ra_process_pseudo(xmlNode *xml);
