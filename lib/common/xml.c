@@ -2825,10 +2825,10 @@ crm_next_same_xml(const xmlNode *sibling)
 void
 crm_xml_init(void)
 {
-    static bool init = TRUE;
+    static bool init = true;
 
     if(init) {
-        init = FALSE;
+        init = false;
         /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
          * pcmk__realloc()s and it can take upwards of 18 seconds (yes, seconds)
          * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
