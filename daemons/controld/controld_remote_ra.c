@@ -1125,15 +1125,19 @@ controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
 
     *call_id = 0;
 
-    if (is_remote_ra_supported_action(action) == FALSE) {
+    CRM_CHECK((lrm_state != NULL) && (rsc_id != NULL) && (action != NULL)
+              && (userdata != NULL) && (call_id != NULL),
+              lrmd_key_value_freeall(params); return EINVAL);
+
+    if (!is_remote_ra_supported_action(action)) {
         lrmd_key_value_freeall(params);
-        return EINVAL;
+        return EOPNOTSUPP;
     }
 
     connection_rsc = lrm_state_find(rsc_id);
-    if (!connection_rsc) {
+    if (connection_rsc == NULL) {
         lrmd_key_value_freeall(params);
-        return EINVAL;
+        return ENOTCONN;
     }
 
     remote_ra_data_init(connection_rsc);
@@ -1147,10 +1151,22 @@ controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
     }
 
     cmd = calloc(1, sizeof(remote_ra_cmd_t));
+    if (cmd == NULL) {
+        lrmd_key_value_freeall(params);
+        return ENOMEM;
+    }
+
     cmd->owner = strdup(lrm_state->node_name);
     cmd->rsc_id = strdup(rsc_id);
     cmd->action = strdup(action);
     cmd->userdata = strdup(userdata);
+    if ((cmd->owner == NULL) || (cmd->rsc_id == NULL) || (cmd->action == NULL)
+        || (cmd->userdata == NULL)) {
+        free_cmd(cmd);
+        lrmd_key_value_freeall(params);
+        return ENOMEM;
+    }
+
     cmd->interval_ms = interval_ms;
     cmd->timeout = timeout_ms;
     cmd->start_delay = start_delay_ms;

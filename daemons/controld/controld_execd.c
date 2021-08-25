@@ -2380,12 +2380,14 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         op->params = NULL;
 
     } else if (lrm_state_is_local(lrm_state)) {
-        crm_err("Operation %s on %s failed: %d", operation, rsc->id, rc);
+        crm_err("Could not initiate %s action for resource %s locally: %s "
+                CRM_XS " rc=%d", operation, rsc->id, pcmk_rc_str(rc), rc);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
     } else {
-        crm_err("Operation %s on resource %s failed to execute on remote node %s: %d",
-                operation, rsc->id, lrm_state->node_name, rc);
+        crm_err("Could not initiate %s action for resource %s remotely on %s: "
+                "%s " CRM_XS " rc=%d",
+                operation, rsc->id, lrm_state->node_name, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR);
         process_lrm_event(lrm_state, op, NULL, NULL);
     }
