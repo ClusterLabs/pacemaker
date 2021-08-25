@@ -690,8 +690,9 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
  * \param[in]  timeout_ms      Action timeout (in milliseconds)
  * \param[in]  start_delay_ms  Delay (in milliseconds) before initiating action
  * \param[in]  params          Resource parameters
+ * \param[out] call_id         Where to store call ID on success
  *
- * \return Call ID on success, negative legacy error code otherwise
+ * \return Standard Pacemaker return code
  * \note This takes ownership of \p params, which should not be used or freed
  *       after calling this function.
  */
@@ -699,32 +700,35 @@ int
 controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                 const char *action, const char *userdata,
                                 guint interval_ms, int timeout_ms,
-                                int start_delay_ms, lrmd_key_value_t *params)
+                                int start_delay_ms, lrmd_key_value_t *params,
+                                int *call_id)
 {
+    int rc = pcmk_rc_ok;
 
-    if (!lrm_state->conn) {
+    if (lrm_state->conn == NULL) {
         lrmd_key_value_freeall(params);
-        return -ENOTCONN;
-    }
+        rc = ENOTCONN;
 
-    if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        int rc;
-        int call_id;
-
+    } else if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         rc = controld_execute_remote_agent(lrm_state, rsc_id, action,
                                            userdata, interval_ms, timeout_ms,
-                                           start_delay_ms, params, &call_id);
-        return (rc == pcmk_rc_ok)? call_id : pcmk_rc2legacy(rc);
-    }
+                                           start_delay_ms, params, call_id);
 
-    return ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn,
-                                                    rsc_id,
-                                                    action,
-                                                    userdata,
-                                                    interval_ms,
-                                                    timeout_ms,
-                                                    start_delay_ms,
-                                                    lrmd_opt_notify_changes_only, params);
+    } else {
+        rc = ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn, rsc_id,
+                                                      action, userdata,
+                                                      interval_ms, timeout_ms,
+                                                      start_delay_ms,
+                                                      lrmd_opt_notify_changes_only,
+                                                      params);
+        if (rc < 0) {
+            rc = pcmk_legacy2rc(rc);
+        } else {
+            *call_id = rc;
+            rc = pcmk_rc_ok;
+        }
+    }
+    return rc;
 }
 
 int

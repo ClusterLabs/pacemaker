@@ -2229,6 +2229,7 @@ static void
 do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
               const char *operation, xmlNode *msg)
 {
+    int rc;
     int call_id = 0;
     char *op_id = NULL;
     lrmd_event_data_t *op = NULL;
@@ -2337,22 +2338,11 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
         }
     }
 
-    call_id = controld_execute_resource_agent(lrm_state, rsc->id, op->op_type,
-                                              op->user_data, op->interval_ms,
-                                              op->timeout, op->start_delay,
-                                              params);
-
-    if (call_id <= 0 && lrm_state_is_local(lrm_state)) {
-        crm_err("Operation %s on %s failed: %d", operation, rsc->id, call_id);
-        register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-
-    } else if (call_id <= 0) {
-        crm_err("Operation %s on resource %s failed to execute on remote node %s: %d",
-                operation, rsc->id, lrm_state->node_name, call_id);
-        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR);
-        process_lrm_event(lrm_state, op, NULL, NULL);
-
-    } else {
+    rc = controld_execute_resource_agent(lrm_state, rsc->id, op->op_type,
+                                         op->user_data, op->interval_ms,
+                                         op->timeout, op->start_delay, params,
+                                         &call_id);
+    if (rc == pcmk_rc_ok) {
         /* record all operations so we can wait
          * for them to complete during shutdown
          */
@@ -2388,11 +2378,20 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
 
         pending->params = op->params;
         op->params = NULL;
+
+    } else if (lrm_state_is_local(lrm_state)) {
+        crm_err("Operation %s on %s failed: %d", operation, rsc->id, rc);
+        register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+
+    } else {
+        crm_err("Operation %s on resource %s failed to execute on remote node %s: %d",
+                operation, rsc->id, lrm_state->node_name, rc);
+        fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR);
+        process_lrm_event(lrm_state, op, NULL, NULL);
     }
 
     free(op_id);
     lrmd_free_event(op);
-    return;
 }
 
 int last_resource_update = 0;
