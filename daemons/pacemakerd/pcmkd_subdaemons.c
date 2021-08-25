@@ -319,7 +319,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     {
-        const char *delay = pcmk__env_option("shutdown_delay");
+        const char *delay = pcmk__env_option(PCMK__ENV_SHUTDOWN_DELAY);
         if(delay) {
             sync();
             pcmk__sleep_ms(crm_get_msec(delay));

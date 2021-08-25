@@ -308,23 +308,23 @@ mcp_read_config(void)
 
     crm_info("Reading configuration for %s stack",
              name_for_cluster_type(stack));
-    pcmk__set_env_option("cluster_type", "corosync");
-    pcmk__set_env_option("quorum_type", "corosync");
+    pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, "corosync");
+    pcmk__set_env_option(PCMK__ENV_QUORUM_TYPE, "corosync");
 
     // If debug logging is not configured, check whether corosync has it
-    if (pcmk__env_option("debug") == NULL) {
+    if (pcmk__env_option(PCMK__ENV_DEBUG) == NULL) {
         char *debug_enabled = NULL;
 
         get_config_opt(config, local_handle, "logging.debug", &debug_enabled, "off");
 
         if (crm_is_true(debug_enabled)) {
-            pcmk__set_env_option("debug", "1");
+            pcmk__set_env_option(PCMK__ENV_DEBUG, "1");
             if (get_crm_log_level() < LOG_DEBUG) {
                 set_crm_log_level(LOG_DEBUG);
             }
 
         } else {
-            pcmk__set_env_option("debug", "0");
+            pcmk__set_env_option(PCMK__ENV_DEBUG, "0");
         }
 
         free(debug_enabled);
