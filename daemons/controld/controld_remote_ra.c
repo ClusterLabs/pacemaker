@@ -1106,8 +1106,9 @@ handle_dup:
  * \param[in]  timeout_ms      Action timeout (in milliseconds)
  * \param[in]  start_delay_ms  Delay (in milliseconds) before initiating action
  * \param[in]  params          Connection resource parameters
+ * \param[out] call_id         Where to store call ID on success
  *
- * \return Call ID on success, negative legacy error code otherwise
+ * \return Standard Pacemaker return code
  * \note This takes ownership of \p params, which should not be used or freed
  *       after calling this function.
  */
@@ -1115,22 +1116,24 @@ int
 controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
                               const char *action, const char *userdata,
                               guint interval_ms, int timeout_ms,
-                              int start_delay_ms, lrmd_key_value_t *params)
+                              int start_delay_ms, lrmd_key_value_t *params,
+                              int *call_id)
 {
-    int rc = 0;
     lrm_state_t *connection_rsc = NULL;
     remote_ra_cmd_t *cmd = NULL;
     remote_ra_data_t *ra_data = NULL;
 
+    *call_id = 0;
+
     if (is_remote_ra_supported_action(action) == FALSE) {
-        rc = -EINVAL;
-        goto exec_done;
+        lrmd_key_value_freeall(params);
+        return EINVAL;
     }
 
     connection_rsc = lrm_state_find(rsc_id);
     if (!connection_rsc) {
-        rc = -EINVAL;
-        goto exec_done;
+        lrmd_key_value_freeall(params);
+        return EINVAL;
     }
 
     remote_ra_data_init(connection_rsc);
@@ -1138,8 +1141,9 @@ controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
 
     cmd = handle_dup_monitor(ra_data, interval_ms, userdata);
     if (cmd) {
-        rc = cmd->call_id;
-        goto exec_done;
+        *call_id = cmd->call_id;
+        lrmd_key_value_freeall(params);
+        return pcmk_rc_ok;
     }
 
     cmd = calloc(1, sizeof(remote_ra_cmd_t));
@@ -1162,11 +1166,8 @@ controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
     ra_data->cmds = g_list_append(ra_data->cmds, cmd);
     mainloop_set_trigger(ra_data->work);
 
-    return cmd->call_id;
-  exec_done:
-
-    lrmd_key_value_freeall(params);
-    return rc;
+    *call_id = cmd->call_id;
+    return pcmk_rc_ok;
 }
 
 /*!

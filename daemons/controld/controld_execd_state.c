@@ -692,9 +692,13 @@ lrm_state_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
     }
 
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        return controld_execute_remote_agent(lrm_state, rsc_id, action,
-                                             userdata, interval_ms, timeout,
-                                             start_delay, params);
+        int rc;
+        int call_id;
+
+        rc = controld_execute_remote_agent(lrm_state, rsc_id, action,
+                                           userdata, interval_ms, timeout,
+                                           start_delay, params, &call_id);
+        return (rc == pcmk_rc_ok)? call_id : pcmk_rc2legacy(rc);
     }
 
     return ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn,

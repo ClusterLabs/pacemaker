@@ -172,7 +172,8 @@ int remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
 int controld_execute_remote_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                   const char *action, const char *userdata,
                                   guint interval_ms, int timeout_ms,
-                                  int start_delay_ms, lrmd_key_value_t *params);
+                                  int start_delay_ms, lrmd_key_value_t *params,
+                                  int *call_id);
 void remote_ra_cleanup(lrm_state_t * lrm_state);
 void remote_ra_fail(const char *node_name);
 void remote_ra_process_pseudo(xmlNode *xml);
