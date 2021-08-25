@@ -475,16 +475,16 @@ main(int argc, char **argv, char **envp)
         bump_log_num--;
     }
 
-    option = pcmk__env_option("logfacility");
+    option = pcmk__env_option(PCMK__ENV_LOGFACILITY);
     if (option && !pcmk__strcase_any_of(option, "none", "/dev/null", NULL)) {
         setenv("HA_LOGFACILITY", option, 1);  /* Used by the ocf_log/ha_log OCF macro */
     }
 
-    option = pcmk__env_option("logfile");
+    option = pcmk__env_option(PCMK__ENV_LOGFILE);
     if(option && !pcmk__str_eq(option, "none", pcmk__str_casei)) {
         setenv("HA_LOGFILE", option, 1);      /* Used by the ocf_log/ha_log OCF macro */
 
-        if (pcmk__env_option_enabled(crm_system_name, "debug")) {
+        if (pcmk__env_option_enabled(crm_system_name, PCMK__ENV_DEBUG)) {
             setenv("HA_DEBUGLOG", option, 1); /* Used by the ocf_log/ha_debug OCF macro */
         }
     }

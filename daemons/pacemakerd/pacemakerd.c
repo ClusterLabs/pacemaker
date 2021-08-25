@@ -354,7 +354,7 @@ main(int argc, char **argv)
 
     // OCF shell functions and cluster-glue need facility under different name
     {
-        const char *facility = pcmk__env_option("logfacility");
+        const char *facility = pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
         if (facility && !pcmk__str_eq(facility, "none", pcmk__str_casei)) {
             setenv("HA_LOGFACILITY", facility, 1);

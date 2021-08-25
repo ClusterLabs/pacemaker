@@ -225,7 +225,7 @@ do_cl_join_finalize_respond(long long action,
     gboolean was_nack = TRUE;
     static gboolean first_join = TRUE;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-    const char *start_state = pcmk__env_option("node_start_state");
+    const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
     int join_id = -1;
     const char *op = crm_element_value(input->msg, F_CRM_TASK);
