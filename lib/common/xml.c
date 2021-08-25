@@ -1044,7 +1044,7 @@ filename2xml(const char *filename)
 {
     xmlNode *xml = NULL;
     xmlDocPtr output = NULL;
-    gboolean uncompressed = TRUE;
+    bool uncompressed = true;
     xmlParserCtxtPtr ctxt = NULL;
     xmlErrorPtr last_error = NULL;
 
