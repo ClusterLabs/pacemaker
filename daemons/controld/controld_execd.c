@@ -2382,6 +2382,9 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
     } else if (lrm_state_is_local(lrm_state)) {
         crm_err("Could not initiate %s action for resource %s locally: %s "
                 CRM_XS " rc=%d", operation, rsc->id, pcmk_rc_str(rc), rc);
+        fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
+                       PCMK_OCF_UNKNOWN_ERROR);
+        process_lrm_event(lrm_state, op, NULL, NULL);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
     } else {
