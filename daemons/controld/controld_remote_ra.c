@@ -754,6 +754,7 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     if (rc != pcmk_rc_ok) {
         cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
         cmd->op_status = PCMK_EXEC_ERROR;
+        cmd->exit_reason = strdup(pcmk_rc_str(rc));
     }
     return rc;
 }
